@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Route action, attack, weapon, and stat-block battle subjects"
     },
     {
@@ -87,6 +87,24 @@
       "id": "L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE",
       "status": "blocked",
       "title": "Package a fresh cleanroom-ready level 1-5 route evidence gate"
+    },
+    {
+      "number": 15,
+      "id": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
+      "status": "blocked",
+      "title": "Split after-hit rider routes by durable battle owner"
+    },
+    {
+      "number": 16,
+      "id": "L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES",
+      "status": "blocked",
+      "title": "Route chained attack sequences through procedure owners"
+    },
+    {
+      "number": 17,
+      "id": "L15-RR17-WEAPON-HOSTED-RIDER-ROUTES",
+      "status": "blocked",
+      "title": "Split weapon-hosted attack and rider routes"
     }
   ]
 }
@@ -224,7 +242,7 @@ The route classes are deliberately not all `reducer-routed`:
 |   2 | L15-RR02-ROUTE-VOCABULARY-AND-GATES - Generalize executable route vocabulary and checker gates                | done               | L15-RR01-DENOMINATOR-AND-CLASSIFIER                                                                                                                      | Added source-side route vocabularies and connector gates before broad connector work.         |
 |   3 | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE - Route the remaining current reducer-spine diagnostic drivers       | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Completed death-save and Concentration route connectors from the diagnostic queue.            |
 |   4 | L15-RR04-RULE-CORE-COMPONENT-CONNECTORS - Add component-first QNT connectors for rule-core drivers            | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Keeps reusable components out of battle-local replay islands.                                 |
-|   5 | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES - Route action, attack, weapon, and stat-block battle subjects | ready-for-research | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Uses HP/action/attack owners before larger spell families.                                    |
+|   5 | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES - Route action, attack, weapon, and stat-block battle subjects | done               | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Routes generic attack/stat-block families; rider bundles split to Tasks 15-17.               |
 |   6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects         | ready-for-research | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Extends routed spell/effect subjects without selected-identity dispatch.                      |
 |   7 | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES - Route feature, species, metamagic, and mastery battle substrates   | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Converts selected-identity battle pressure into shape/profile substrate.                      |
 |   8 | L15-RR08-CHARACTER-CREATION-ROUTES - Add QNT route connectors for character creation drivers                  | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for Draft/Fill/finalization rather than battle subjects.                     |
@@ -232,8 +250,11 @@ The route classes are deliberately not all `reducer-routed`:
 |  10 | L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES - Add QNT route connectors for character-battle handoff drivers      | blocked            | L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES; L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE                                            | Handoff routes depend on both sheet and battle state owners.                                  |
 |  11 | L15-RR11-LEVEL3-4-SCOPE-PROMOTION - Promote level 3-4 branch scope into route connector tasks                 | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES | Widen current level-1/2 branch-scope rows only after generic route shapes exist.              |
 |  12 | L15-RR12-LEVEL5-SCOPE-PROMOTION - Promote level 5 class and spell-level-3 route connector tasks               | blocked            | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES; L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES; L15-RR11-LEVEL3-4-SCOPE-PROMOTION                                    | Handles level-5 features and spell-level-3 pressure; does not promote spell level 4/5.        |
-|  13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom              | blocked            | L15-RR12-LEVEL5-SCOPE-PROMOTION                                                                                                                          | Uses the existing dirty cleanroom as a diagnostic target with current source package.         |
+|  13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom              | blocked            | L15-RR12-LEVEL5-SCOPE-PROMOTION; L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT; L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES; L15-RR17-WEAPON-HOSTED-RIDER-ROUTES     | Uses the existing dirty cleanroom as a diagnostic target with current source package.         |
 |  14 | L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE - Package a fresh cleanroom-ready level 1-5 route evidence gate         | blocked            | L15-RR13-DIRTY-CLEANROOM-REHEARSAL                                                                                                                       | Produces the fresh-run package and acceptance gate; does not depend on stale dirty artifacts. |
+|  15 | L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT - Split after-hit rider routes by durable battle owner                   | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Prevents one route connector from accumulating interrupt, condition, Concentration, and HP owners. |
+|  16 | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES - Route chained attack sequences through procedure owners            | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Requires the generic multi-step spell/attack procedure route owner before routing chain continuation. |
+|  17 | L15-RR17-WEAPON-HOSTED-RIDER-ROUTES - Split weapon-hosted attack and rider routes                             | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                            | Splits hosted attacks, damage riders, active effects, item-target effects, and cleanup owners. |
 
 ## Shared Verification
 
@@ -465,7 +486,7 @@ Plan Impact:
 
 ### Task 5 - L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -508,7 +529,8 @@ Verification:
 
 Plan Impact:
 
-- Split attack-hit rider families when they require independent durable owners.
+- Split attack-hit rider families into follow-up Tasks 15-17 when they require
+  independent durable owners.
 
 ### Task 6 - L15-RR06-BATTLE-SPELL-EFFECT-ROUTES
 
@@ -839,6 +861,135 @@ Plan Impact:
 - Add follow-up Ralph tasks for spell-level-3 families that need new source QNT
   before cleanroom routing is meaningful.
 
+### Task 15 - L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT
+
+Status: `blocked`
+
+Depends on:
+
+- L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES
+- L15-RR06-BATTLE-SPELL-EFFECT-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-after-hit-damage-riders.mbt.qnt`
+
+Output:
+
+- Split after-hit rider route evidence by durable battle owner before adding
+  route connectors.
+- Keep interrupt decision, slot/free-cast spend, Concentration, condition
+  lifecycle, turn-start damage/save, escape checks, illumination boundary facts,
+  and HP damage in separate owner-shaped route surfaces where the source driver
+  combines them.
+- Update `reducer-route-inventory.json` with each split connector path or a
+  precise `source-qnt-corpus-blocker`.
+
+Acceptance:
+
+- No connector acts as a whole-battle accumulator for unrelated rider owners.
+- Rider routes dispatch by procedure state, typed fills, and owner state, not
+  by spell, feature, weapon, or unit identity.
+- Each landed split has a focused source QNT route witness and TS MBT parity.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for each touched after-hit split connector.
+- `pnpm check:reducer-route-connectors`
+- `pnpm check:mbt-driver-closure`
+
+Plan Impact:
+
+- Add narrower tasks if a split still mixes independent durable owner families.
+
+### Task 16 - L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES
+
+Status: `blocked`
+
+Depends on:
+
+- L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES
+- L15-RR06-BATTLE-SPELL-EFFECT-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-chained-attack-sequence.mbt.qnt`
+
+Output:
+
+- Promote a generic multi-step spell/attack procedure route owner before
+  routing chained attack sequence evidence.
+- Route target history, damage-type choice, attack-roll resolution, damage,
+  and chain continuation through procedure-shaped owners instead of a single
+  attack route connector.
+- Update `reducer-route-inventory.json` with the procedure connector path or a
+  precise blocker if source QNT lacks target-independent shape.
+
+Acceptance:
+
+- Chained attack sequence routing preserves the procedure lifecycle rather than
+  replaying isolated attack steps.
+- Route evidence uses spell/attack shape and typed procedure state, not selected
+  spell identity.
+- The source connector stays leaf-budget compliant or records why a computed
+  oracle is unavoidable.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for the chained attack source driver and route connector.
+- `pnpm check:reducer-route-connectors`
+- `pnpm check:mbt-driver-closure`
+
+Plan Impact:
+
+- Add narrower tasks if chain continuation needs an owner separate from the
+  generic procedure route.
+
+### Task 17 - L15-RR17-WEAPON-HOSTED-RIDER-ROUTES
+
+Status: `blocked`
+
+Depends on:
+
+- L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES
+- L15-RR06-BATTLE-SPELL-EFFECT-ROUTES
+- L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt`
+
+Output:
+
+- Split weapon-hosted attack/rider route evidence into hosted attack,
+  damage-rider, held-weapon active-effect, weapon-enhancement item-target, and
+  cleanup owner surfaces.
+- Reuse battle action economy, target selection, attack-roll, HP, active-effect,
+  item-target boundary, and support-profile owners as applicable.
+- Update `reducer-route-inventory.json` with each split connector path or a
+  precise blocker.
+
+Acceptance:
+
+- No connector combines action economy, active-effect duration, item targeting,
+  attack-roll, damage-rider, and cleanup owners into one accumulator.
+- Route evidence is admitted by weapon/attack/effect shape and typed facts, not
+  by authored weapon, spell, or unit identity.
+- Each landed split has focused source QNT route evidence and TS MBT parity.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for each touched weapon-hosted split connector.
+- `pnpm check:reducer-route-connectors`
+- `pnpm check:mbt-driver-closure`
+
+Plan Impact:
+
+- Add narrower tasks if a split still requires an independent durable owner.
+
 ### Task 13 - L15-RR13-DIRTY-CLEANROOM-REHEARSAL
 
 Status: `blocked`
@@ -846,6 +997,9 @@ Status: `blocked`
 Depends on:
 
 - L15-RR12-LEVEL5-SCOPE-PROMOTION
+- L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT
+- L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES
+- L15-RR17-WEAPON-HOSTED-RIDER-ROUTES
 
 Output:
 

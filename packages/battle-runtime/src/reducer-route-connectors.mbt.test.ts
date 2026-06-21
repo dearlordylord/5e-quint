@@ -5,18 +5,24 @@ import { describe, it } from "vitest";
 import {
   MBT_TEST_TIMEOUT_MS,
   createConcentrationBreakTeardownRouteDriver,
+  createBattleRuntimeRouteDriver,
   createDeathSavingThrowRouteDriver,
   createHitPointRestorationOrderingRouteDriver,
   createMagicMissileRouteDriver,
   createSaveGatedSpellOrderingRouteDriver,
+  createSpellAttackOrderingRouteDriver,
+  createWeaponAttackOrderingRouteDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
+  reducerRoutedSpellAttackOrderingStateCheck,
   reducerRoutedConcentrationBreakTeardownStateCheck,
   reducerRoutedDeathSavingThrowStateCheck,
   reducerRoutedHitPointRestorationOrderingStateCheck,
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedSaveGatedSpellOrderingStateCheck,
+  reducerRoutedWeaponAttackOrderingStateCheck,
+  reducerRoutedWeaponAttackSkeletonStateCheck,
   run,
 } from "./battle-runtime-mbt-driver-kit.ts";
 
@@ -37,6 +43,38 @@ describe("battle reducer route connector MBT", () => {
     });
   }, MBT_TEST_TIMEOUT_MS);
 
+  it("routes weapon Attack skeleton replay through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createBattleRuntimeRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(4),
+      stateCheck: reducerRoutedWeaponAttackSkeletonStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes weapon Attack ordering through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createWeaponAttackOrderingRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(4),
+      stateCheck: reducerRoutedWeaponAttackOrderingStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
   it("routes save-gated spell ordering through the shared reducer surface", async () => {
     await run({
       spec: mbtSpecPath(
@@ -50,6 +88,22 @@ describe("battle reducer route connector MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(5),
       stateCheck: reducerRoutedSaveGatedSpellOrderingStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes spell Attack ordering through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-spell-attack-ordering.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createSpellAttackOrderingRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(5),
+      stateCheck: reducerRoutedSpellAttackOrderingStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 

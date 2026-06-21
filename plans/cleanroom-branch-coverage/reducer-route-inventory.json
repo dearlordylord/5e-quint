@@ -184,10 +184,27 @@
     {
       "denominatorId": "level-1-5-cleanroom-route-v1",
       "purpose": "Defines the driver and branch denominator for routing current cleanroom branch coverage through reducer-route QNT architecture up to character level 5.",
-      "characterLevels": [1, 2, 3, 4, 5],
-      "includedSpellLevels": [0, 1, 2, 3],
-      "excludedCharacterLevels": [6, 7],
-      "excludedSpellLevels": [4, 5],
+      "characterLevels": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "includedSpellLevels": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "excludedCharacterLevels": [
+        6,
+        7
+      ],
+      "excludedSpellLevels": [
+        4,
+        5
+      ],
       "sourceBranchInventory": {
         "driverFiles": 97,
         "branchObligations": 699,
@@ -259,7 +276,7 @@
           "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
           "route": "substrate-first",
           "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "subjectFamily": "battle attack/rider bundle requiring split durable route owners",
           "branchObligations": 26,
           "currentOutOfScopeBranchObligations": 4,
           "derivability": {
@@ -267,10 +284,12 @@
               "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt is present in source-branch-inventory.json with 26 branch obligation(s)."
             ],
             "rawDomainFacts": [
-              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
+              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
+              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
             ],
             "blockers": [
-              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+              "Split after-hit riders by durable owner before routing: interrupt decision, spell slot/free-cast spend, concentration, condition lifecycle, turn-start damage/save, escape checks, illumination, and HP damage do not belong in one whole-battle accumulator connector."
             ]
           }
         },
@@ -297,7 +316,7 @@
           "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
           "route": "substrate-first",
           "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "subjectFamily": "battle attack/rider bundle requiring split durable route owners",
           "branchObligations": 10,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
@@ -305,10 +324,12 @@
               "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s)."
             ],
             "rawDomainFacts": [
-              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
+              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
+              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
             ],
             "blockers": [
-              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+              "Split chained spell-attack sequence routing after the generic multi-step spell procedure owner is promoted; the driver carries spell procedure state, target history, damage-type choice, attack-roll, damage, and leap continuation state beyond a single attack/stat-block route connector."
             ]
           }
         },
@@ -1201,22 +1222,24 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
           "branchObligations": 12,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt records SpellAttackRouteSubject evidence through battle action economy, target selection, attack-roll, hole-frontier, and HP owners."
             ],
             "rawDomainFacts": [
-              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
+              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
+              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
             ],
-            "blockers": [
-              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
@@ -1239,60 +1262,66 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
           "branchObligations": 12,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt records StatBlockActionRouteSubject evidence through stat-block action, target selection, attack-roll, recharge, and HP owners."
             ],
             "rawDomainFacts": [
-              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
+              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
+              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
             ],
-            "blockers": [
-              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt records StatBlockActionRouteSubject evidence for rolled and static damage notation through stat-block action, target selection, attack-roll, and HP owners."
             ],
             "rawDomainFacts": [
-              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
+              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
+              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
             ],
-            "blockers": [
-              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt records StatBlockActionRouteSubject evidence through stat-block action, target selection, condition lifecycle, and HP owners."
             ],
             "rawDomainFacts": [
-              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
+              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
+              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
             ],
-            "blockers": [
-              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
@@ -1334,47 +1363,51 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
           "branchObligations": 7,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt records WeaponAttackRouteSubject evidence through battle action economy, target selection, attack-roll, hole-frontier, and HP owners."
             ],
             "rawDomainFacts": [
-              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
+              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
+              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
             ],
-            "blockers": [
-              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
           "branchObligations": 14,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt is present in source-branch-inventory.json with 14 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt is present in source-branch-inventory.json with 14 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt records WeaponAttackRouteSubject, BattleActionRouteSubject, and StatBlockActionRouteSubject evidence through shared BattleState action economy, attack-roll, HP, and stat-block action owners."
             ],
             "rawDomainFacts": [
-              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
+              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
+              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
             ],
-            "blockers": [
-              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
           "route": "substrate-first",
           "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "subjectFamily": "battle attack/rider bundle requiring split durable route owners",
           "branchObligations": 23,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
@@ -1382,10 +1415,12 @@
               "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt is present in source-branch-inventory.json with 23 branch obligation(s)."
             ],
             "rawDomainFacts": [
-              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
+              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
+              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
             ],
             "blockers": [
-              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+              "Split into independent route connectors for spell-hosted weapon attacks, weapon damage riders, held-weapon active effects, and magic-weapon item-target effects; one connector would otherwise combine action economy, active-effect duration, item targeting, attack-roll, damage-rider, and cleanup owners."
             ]
           }
         },
@@ -1429,29 +1464,33 @@
         },
         {
           "driverPath": "packages/battle-runtime/creature-attack.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/creature-attack.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/battle-runtime/creature-attack.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "packages/battle-runtime/creature-attack.route.mbt.qnt records CreatureAttackRouteSubject evidence for the minimal hit/damage pilot through attack-roll and HP owners without inventing target/action state outside that slice."
             ],
             "rawDomainFacts": [
-              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
+              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
+              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
             ],
-            "blockers": [
-              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/battle-runtime/creature-attack.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
-          "componentOwners": ["RuleCoreAbilitySkillCommandOwner"],
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR11-LEVEL3-4-SCOPE-PROMOTION"
@@ -1475,7 +1514,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
-          "componentOwners": ["RuleCoreAttackDamageDispositionOwner"],
+          "componentOwners": [
+            "RuleCoreAttackDamageDispositionOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES"
           ],
@@ -1498,7 +1539,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-          "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
+          "componentOwners": [
+            "RuleCoreFeatureProfileSemanticsOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
             "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
@@ -1523,7 +1566,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
-          "componentOwners": ["RuleCoreHitPointDamageOwner"],
+          "componentOwners": [
+            "RuleCoreHitPointDamageOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES"
@@ -1547,7 +1592,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
-          "componentOwners": ["RuleCoreMovementGrappleOwner"],
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
@@ -1572,7 +1619,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
-          "componentOwners": ["RuleCoreReactionContinuationConcentrationOwner"],
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES"
@@ -1596,7 +1645,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
-          "componentOwners": ["RuleCoreShoveOutcomeOwner"],
+          "componentOwners": [
+            "RuleCoreShoveOutcomeOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES"
@@ -1620,7 +1671,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-          "componentOwners": ["RuleCoreSpellProcedureProfileOwner"],
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR12-LEVEL5-SCOPE-PROMOTION"
@@ -1644,7 +1697,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
-          "componentOwners": ["RuleCoreStatBlockControlOwner"],
+          "componentOwners": [
+            "RuleCoreStatBlockControlOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES"
           ],

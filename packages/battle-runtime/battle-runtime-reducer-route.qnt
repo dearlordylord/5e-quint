@@ -9,10 +9,14 @@ module battleRuntimeReducerRoute {
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
 
   type ReducerRouteSubjectFamily =
+    | BattleActionRouteSubject
     | SlotSpellRouteSubject
     | SaveGatedSpellRouteSubject
     | HitPointRestorationRouteSubject
     | WeaponAttackRouteSubject
+    | SpellAttackRouteSubject
+    | StatBlockActionRouteSubject
+    | CreatureAttackRouteSubject
     | DeathSavingThrowRouteSubject
     | ConcentrationTeardownRouteSubject
 
@@ -20,8 +24,12 @@ module battleRuntimeReducerRoute {
     | BattleActionEconomyOwner
     | BattleSpellSlotAndActionEconomyOwner
     | BattleHoleFrontierOwner
+    | BattleTargetSelectionOwner
+    | BattleAttackRollOwner
     | BattleHitPointOwner
     | BattleHitPointAndZeroHpLifecycleOwner
+    | BattleConditionLifecycleOwner
+    | BattleStatBlockActionOwner
     | BattleConcentrationOwner
 
   type ReducerRouteEvent =
