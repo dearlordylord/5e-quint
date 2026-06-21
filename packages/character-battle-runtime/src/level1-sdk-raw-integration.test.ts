@@ -46,8 +46,12 @@ import {
   type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
 import {
+  characterSheetResources,
   characterSheetPactSlots,
   characterSheetSpellSlots,
+  completeLongRest,
+  finishLongRest,
+  startLongRest,
 } from "@dnd/character-sheet-runtime";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
@@ -61,6 +65,7 @@ import {
   Hp,
   movementDeltaFeet,
   movementFeet,
+  resourceCount,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
@@ -165,6 +170,12 @@ const eldritchBlastWarlockId = combatantId(
   "combatant:l1-sdk-eldritch-blast-warlock",
 );
 const hexWarlockId = combatantId("combatant:l1-sdk-hex-warlock");
+const huntersMarkRangerId = combatantId(
+  "combatant:l1-sdk-hunters-mark-ranger",
+);
+const huntersMarkSpellSlotRangerId = combatantId(
+  "combatant:l1-sdk-hunters-mark-spell-slot-ranger",
+);
 const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
 const fireBoltWizardId = combatantId("combatant:l1-sdk-fire-bolt-wizard");
 const rayOfFrostSorcererId = combatantId(
@@ -236,6 +247,8 @@ const inflictWoundsSpellId = "inflict_wounds";
 const chillTouchSpellId = "chill_touch";
 const eldritchBlastSpellId = "eldritch_blast";
 const hexSpellId = "hex";
+const huntersMarkSpellId = "hunters_mark";
+const rangerFavoredEnemyUnitId = "ranger_favored_enemy";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
 const rayOfFrostSpellId = "ray_of_frost";
@@ -254,6 +267,7 @@ const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
 const shillelaghDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 const thaumaturgyDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 const sanctuaryDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
+const huntersMarkDurationTicks = requireRight(elapsedTimeTicksFromHours(1));
 
 describe("level 1 SDK RAW integration", () => {
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
@@ -1372,6 +1386,67 @@ describe("level 1 SDK RAW integration", () => {
       slotLevel: 1,
       count: 1,
       expended: 1,
+    });
+  });
+
+  test("Ranger Favored Enemy casts Hunter's Mark from a level-1 sheet without spending a Spell Slot and restores its free-cast pool on Long Rest", () => {
+    const rangerBuild = finalizedLevelOneRangerHuntersMarkBuild();
+    const rangerSpellcasting = rangerBuild.spellcasting?.sources.find(
+      (source) => source.sourceUnitId === "class_ranger",
+    );
+
+    expect(rangerSpellcasting).toMatchObject({
+      sourceUnitId: "class_ranger",
+      spellcastingAbility: "wis",
+      preparedSpells: expect.arrayContaining([
+        "cure_wounds",
+        "ensnaring_strike",
+      ]),
+    });
+    expect(rangerSpellcasting?.preparedSpells).not.toContain(
+      huntersMarkSpellId,
+    );
+    expect(rangerBuild.spellcasting?.slotPools).toMatchObject({
+      spellcasting: {
+        kind: "spellcasting",
+        slots: [{ spellLevel: 1, count: 2 }],
+      },
+    });
+
+    assertLevelOneHuntersMark({
+      battleIdText: "battle:l1-sdk-hunters-mark-ranger",
+      characterIdText: "character:l1-sdk-hunters-mark-ranger",
+      build: rangerBuild,
+      casterId: huntersMarkRangerId,
+    });
+  });
+
+  test("Ranger Hunter's Mark resolves from a level-1 prepared spell-list choice through a Spell Slot", () => {
+    const rangerBuild = finalizedLevelOneRangerSpellListHuntersMarkBuild();
+    const rangerSpellcasting = rangerBuild.spellcasting?.sources.find(
+      (source) => source.sourceUnitId === "class_ranger",
+    );
+
+    expect(rangerSpellcasting).toMatchObject({
+      sourceUnitId: "class_ranger",
+      spellcastingAbility: "wis",
+      preparedSpells: expect.arrayContaining([
+        huntersMarkSpellId,
+        "cure_wounds",
+      ]),
+    });
+    expect(rangerBuild.spellcasting?.slotPools).toMatchObject({
+      spellcasting: {
+        kind: "spellcasting",
+        slots: [{ spellLevel: 1, count: 2 }],
+      },
+    });
+
+    assertLevelOneHuntersMarkSpellSlot({
+      battleIdText: "battle:l1-sdk-hunters-mark-spell-slot-ranger",
+      characterIdText: "character:l1-sdk-hunters-mark-spell-slot-ranger",
+      build: rangerBuild,
+      casterId: huntersMarkSpellSlotRangerId,
     });
   });
 
@@ -3580,6 +3655,322 @@ function assertLevelOneHealingWord(input: {
   ]);
 }
 
+function assertLevelOneHuntersMark(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+}): void {
+  const rangerSheet = characterSheet({
+    characterIdText: input.characterIdText,
+    build: input.build,
+    combatantId: input.casterId,
+    initiative: 20,
+    maximumHp: 12,
+  });
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [rangerSheet],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const rangerBefore = requireCharacterCombatant(state, input.casterId);
+  const act = huntersMarkFavoredEnemyBonusActionSpellAct(state, input.casterId);
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+
+  expect(rangerBefore.origin.spellcasting).toMatchObject({
+    spellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
+  });
+  expect(characterResources(rangerBefore)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        unit: expect.objectContaining({ id: rangerFavoredEnemyUnitId }),
+        usesRemaining: 2,
+      }),
+    ]),
+  );
+  expect(act.subject).toMatchObject({
+    tag: "bonusActionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "classFeatureFreeCast",
+      spellId: huntersMarkSpellId,
+      resourceUnitId: rangerFavoredEnemyUnitId,
+      procedure: "markedDamageRider",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(target).toMatchObject({
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([monsterId]),
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(target, huntersMarkSpellId, input.casterId, monsterId),
+      ],
+    }),
+  );
+  const ranger = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([]);
+  expect(ranger.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+  expect(characterResources(ranger)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        unit: expect.objectContaining({ id: rangerFavoredEnemyUnitId }),
+        usesRemaining: 1,
+      }),
+    ]),
+  );
+  expect(ranger.concentration).toEqual({
+    sourceSpellId: huntersMarkSpellId,
+    effectKind: "spellEffect",
+  });
+  expectLevelOneHuntersMarkActiveEffect({
+    ranger,
+    casterId: input.casterId,
+  });
+  expect(
+    settleCharacterSheetFromBattle({
+      sheet: rangerSheet.sheet,
+      state: resolved.state,
+      combatant: ranger,
+      unitLibrary,
+    }),
+  ).toMatchObject({
+    _tag: "Left",
+    left: {
+      message:
+        "Battle handoff while active battle effects or Concentration are present is blocked; end or resolve battle-local effects before Character Sheet handoff.",
+    },
+  });
+
+  const concentrationEnded = breakBattleConcentration(
+    resolved.state,
+    input.casterId,
+  );
+  const cleanedRanger = requireCharacterCombatant(
+    concentrationEnded,
+    input.casterId,
+  );
+  expect(cleanedRanger.concentration).toBeNull();
+  expect(cleanedRanger.activeEffects).toEqual([]);
+
+  const settled = requireRight(
+    settleCharacterSheetFromBattle({
+      sheet: rangerSheet.sheet,
+      state: concentrationEnded,
+      combatant: cleanedRanger,
+      unitLibrary,
+    }),
+  );
+  expect(characterSheetSpellSlots(settled)).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+  expect(settled.resourceExpenditures).toEqual([
+    { tag: "favoredEnemyHuntersMarkFreeCasts", expended: 1 },
+  ]);
+  expect(characterSheetResources(settled, unitLibrary)).toMatchObject({
+    _tag: "Right",
+    right: expect.arrayContaining([
+      expect.objectContaining({
+        unitId: rangerFavoredEnemyUnitId,
+        count: 2,
+        expended: 1,
+      }),
+    ]),
+  });
+
+  const longRest = requireRight(
+    startLongRest({
+      sheet: settled,
+      timing: { tag: "noPriorLongRest" },
+    }),
+  );
+  const longRestCompletion = requireRight(
+    finishLongRest({
+      rest: longRest,
+      restedTicks: longRest.requiredRestTicks,
+    }),
+  );
+  const rested = requireRight(
+    completeLongRest({ completion: longRestCompletion, unitLibrary }),
+  );
+  expect(rested.resourceExpenditures).toEqual([]);
+  expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
+    _tag: "Right",
+    right: expect.arrayContaining([
+      expect.objectContaining({
+        unitId: rangerFavoredEnemyUnitId,
+        count: 2,
+        expended: 0,
+      }),
+    ]),
+  });
+  expect(characterSheetSpellSlots(rested)).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+}
+
+function assertLevelOneHuntersMarkSpellSlot(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+}): void {
+  const rangerSheet = characterSheet({
+    characterIdText: input.characterIdText,
+    build: input.build,
+    combatantId: input.casterId,
+    initiative: 20,
+    maximumHp: 12,
+    resourceExpenditures: [
+      {
+        tag: "favoredEnemyHuntersMarkFreeCasts",
+        expended: resourceCount(2),
+      },
+    ],
+  });
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [rangerSheet],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const rangerBefore = requireCharacterCombatant(state, input.casterId);
+  const act = huntersMarkSpellSlotBonusActionSpellAct(state, input.casterId);
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+
+  expect(rangerBefore.origin.spellcasting).toMatchObject({
+    spellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
+  });
+  expect(characterResources(rangerBefore)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        unit: expect.objectContaining({ id: rangerFavoredEnemyUnitId }),
+        usesRemaining: 0,
+      }),
+    ]),
+  );
+  expect(act.subject).toMatchObject({
+    tag: "bonusActionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: huntersMarkSpellId,
+      slotLevel: 1,
+      procedure: "markedDamageRider",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(target).toMatchObject({
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([monsterId]),
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(target, huntersMarkSpellId, input.casterId, monsterId),
+      ],
+    }),
+  );
+  const ranger = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(ranger.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+  expect(characterResources(ranger)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        unit: expect.objectContaining({ id: rangerFavoredEnemyUnitId }),
+        usesRemaining: 0,
+      }),
+    ]),
+  );
+  expect(ranger.concentration).toEqual({
+    sourceSpellId: huntersMarkSpellId,
+    effectKind: "spellEffect",
+  });
+  expectLevelOneHuntersMarkActiveEffect({
+    ranger,
+    casterId: input.casterId,
+  });
+
+  const concentrationEnded = breakBattleConcentration(
+    resolved.state,
+    input.casterId,
+  );
+  const cleanedRanger = requireCharacterCombatant(
+    concentrationEnded,
+    input.casterId,
+  );
+  expect(cleanedRanger.concentration).toBeNull();
+  expect(cleanedRanger.activeEffects).toEqual([]);
+
+  const settled = requireRight(
+    settleCharacterSheetFromBattle({
+      sheet: rangerSheet.sheet,
+      state: concentrationEnded,
+      combatant: cleanedRanger,
+      unitLibrary,
+    }),
+  );
+  expect(characterSheetSpellSlots(settled)).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+  expect(settled.resourceExpenditures).toEqual([
+    { tag: "favoredEnemyHuntersMarkFreeCasts", expended: 2 },
+  ]);
+}
+
+function expectLevelOneHuntersMarkActiveEffect(input: {
+  readonly ranger: ReturnType<typeof requireCharacterCombatant>;
+  readonly casterId: CombatantId;
+}): void {
+  expect(input.ranger.activeEffects).toEqual([
+    expect.objectContaining({
+      kind: "spellMarkedDamageRider",
+      sourceSpellId: huntersMarkSpellId,
+      sourceCombatantId: input.casterId,
+      targetCombatantId: monsterId,
+      abilityCheckBehavior: {
+        kind: "findingAdvantage",
+        ability: "wis",
+        skills: ["perception", "survival"],
+      },
+      damage: expect.objectContaining({
+        expr: { dice: 1, dieSize: 6 },
+        damageType: "force",
+      }),
+      expiresAt: {
+        kind: "concentration",
+        combatantId: input.casterId,
+        durationTicks: huntersMarkDurationTicks,
+      },
+      transfer: {
+        kind: "awaitingTargetDrop",
+        retargetTiming: "sameTurn",
+      },
+    }),
+  ]);
+}
+
 function assertLevelOneGuidingBolt(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -5736,6 +6127,147 @@ const defaultDruidWeaponPurchase = {
   loadout: "not_wielded",
 } as const satisfies LevelOneDruidWeaponPurchase;
 
+function finalizedLevelOneRangerHuntersMarkBuild(): CharacterBuild {
+  return finalizedLevelOneRangerBuild({
+    draftIdText: "draft:l1-sdk-ranger-hunters-mark",
+    expectedBuildLabel: "Ranger Hunter's Mark",
+    preparedSpells: ["cure_wounds", "ensnaring_strike"],
+  });
+}
+
+function finalizedLevelOneRangerSpellListHuntersMarkBuild(): CharacterBuild {
+  return finalizedLevelOneRangerBuild({
+    draftIdText: "draft:l1-sdk-ranger-hunters-mark-spell-slot",
+    expectedBuildLabel: "Ranger Hunter's Mark Spell Slot",
+    preparedSpells: [huntersMarkSpellId, "cure_wounds"],
+  });
+}
+
+function finalizedLevelOneRangerBuild(input: {
+  readonly draftIdText: string;
+  readonly expectedBuildLabel: string;
+  readonly preparedSpells: readonly [UnitRecord["id"], UnitRecord["id"]];
+}): CharacterBuild {
+  const draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId(input.draftIdText),
+  });
+  const afterInitial = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        creationChoiceFill(
+          "cc:draft:draft.progression.initial",
+          "12:class_ranger:level_1:maximum_hit_die",
+        ),
+        creationChoiceFill("cc:draft:draft.background", "background_criminal"),
+        creationChoiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: requireRight(
+            abilityScoreAssignment({
+              str: 10,
+              dex: 15,
+              con: 14,
+              int: 8,
+              wis: 13,
+              cha: 12,
+            }),
+          ),
+        },
+        creationChoiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        creationChoiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "class_ranger",
+            "class_skill_proficiency_choice",
+          ),
+          "animal_handling",
+          "perception",
+          "survival",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_ranger", "class_prepared_spell_choices"),
+          ...input.preparedSpells,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("ranger_weapon_mastery", "weapon_mastery_options"),
+          "weapon_longsword",
+          "weapon_spear",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:dex:con",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          "thieves_tools",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_ranger", "class_equipment_choice"),
+          "option_b",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_equipment_choice",
+          ),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_ranger", "equipment_purchase"),
+          "weapon_longsword",
+        ),
+      ],
+    }),
+  );
+  const afterLoadout = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        creationChoiceFill(
+          testLoadoutHoleId("weapon_longsword", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
+    );
+  }
+  return result.build;
+}
+
 function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-fire-bolt",
@@ -6804,6 +7336,46 @@ function hexBonusActionSpellSlotAct(
   );
   if (act === undefined) {
     throw new Error("Expected Hex Bonus Action spell-slot act.");
+  }
+  return act;
+}
+
+function huntersMarkFavoredEnemyBonusActionSpellAct(
+  state: BattleState,
+  actorId: CombatantId,
+): CastBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is CastBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.mode.tag === "cast" &&
+      candidate.subject.invocation.tag === "classFeatureFreeCast" &&
+      candidate.subject.invocation.spellId === huntersMarkSpellId &&
+      candidate.subject.invocation.resourceUnitId === rangerFavoredEnemyUnitId &&
+      candidate.subject.invocation.procedure === "markedDamageRider",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Favored Enemy Hunter's Mark Bonus Action act.");
+  }
+  return act;
+}
+
+function huntersMarkSpellSlotBonusActionSpellAct(
+  state: BattleState,
+  actorId: CombatantId,
+): CastBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is CastBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.mode.tag === "cast" &&
+      candidate.subject.invocation.tag === "spellSlot" &&
+      candidate.subject.invocation.spellId === huntersMarkSpellId &&
+      candidate.subject.invocation.slotLevel === 1 &&
+      candidate.subject.invocation.procedure === "markedDamageRider",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Hunter's Mark Bonus Action spell-slot act.");
   }
   return act;
 }

@@ -1788,6 +1788,39 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "ranger_favored_enemy",
+    className: "Ranger",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Ranger Favored Enemy casts Hunter's Mark from a level-1 sheet without spending a Spell Slot and restores its free-cast pool on Long Rest",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Ranger.md:58-81",
+      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1275-1289",
+    ],
+    rowId:
+      "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
+    tracerNeedles: rangerFavoredEnemyHuntersMarkSdkTracerNeedles(),
+    helperNeedles: rangerFavoredEnemyHuntersMarkSdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "hunters_mark",
+    className: "Ranger",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Ranger Hunter's Mark resolves from a level-1 prepared spell-list choice through a Spell Slot",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Ranger.md:58-81",
+      ".references/srd-5.2.1/Classes/Ranger.md:173",
+      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1275-1289",
+    ],
+    rowId:
+      "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
+    tracerNeedles: rangerSpellListHuntersMarkSdkTracerNeedles(),
+    helperNeedles: rangerSpellListHuntersMarkSdkHelperNeedles(),
+  },
+  {
     candidateUnitId: "healing_word",
     className: "Bard",
     levelBand: "spell-level-1",
@@ -3351,6 +3384,169 @@ function indexUnitEvidence(records) {
 
 function evidenceRowsByRowId(filePath) {
   return new Map(Object.entries(readJson(filePath).rows ?? {}));
+}
+
+function rangerFavoredEnemyHuntersMarkSdkTracerNeedles() {
+  return [
+    "const rangerBuild = finalizedLevelOneRangerHuntersMarkBuild();",
+    'sourceUnitId: "class_ranger"',
+    'spellcastingAbility: "wis"',
+    '"cure_wounds"',
+    '"ensnaring_strike"',
+    "expect(rangerSpellcasting?.preparedSpells).not.toContain(",
+    "huntersMarkSpellId",
+    "slots: [{ spellLevel: 1, count: 2 }]",
+    "assertLevelOneHuntersMark({",
+    "casterId: huntersMarkRangerId",
+  ];
+}
+
+function rangerSpellListHuntersMarkSdkTracerNeedles() {
+  return [
+    "const rangerBuild = finalizedLevelOneRangerSpellListHuntersMarkBuild();",
+    'sourceUnitId: "class_ranger"',
+    'spellcastingAbility: "wis"',
+    "huntersMarkSpellId",
+    '"cure_wounds"',
+    "slots: [{ spellLevel: 1, count: 2 }]",
+    "assertLevelOneHuntersMarkSpellSlot({",
+    "casterId: huntersMarkSpellSlotRangerId",
+  ];
+}
+
+function rangerFavoredEnemyHuntersMarkSdkHelperNeedles() {
+  return [
+    {
+      anchor: "function finalizedLevelOneRangerHuntersMarkBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneRangerBuild({",
+        'draftIdText: "draft:l1-sdk-ranger-hunters-mark"',
+        'expectedBuildLabel: "Ranger Hunter\'s Mark"',
+        'preparedSpells: ["cure_wounds", "ensnaring_strike"]',
+      ],
+    },
+    rangerHuntersMarkBuildHelperNeedle(),
+    {
+      anchor: "function assertLevelOneHuntersMark",
+      needles: [
+        "huntersMarkFavoredEnemyBonusActionSpellAct(state, input.casterId)",
+        "usesRemaining: 2",
+        'tag: "classFeatureFreeCast"',
+        "resourceUnitId: rangerFavoredEnemyUnitId",
+        "requiresTableSpatialFact: true",
+        "spellSlotUsesThisTurn).toEqual([])",
+        "usesRemaining: 1",
+        "expectLevelOneHuntersMarkActiveEffect({",
+        "Battle handoff while active battle effects or Concentration are present is blocked",
+        "breakBattleConcentration(",
+        "settleCharacterSheetFromBattle({",
+        "characterSheetSpellSlots(settled)",
+        "favoredEnemyHuntersMarkFreeCasts",
+        "characterSheetResources(settled, unitLibrary)",
+        "startLongRest({",
+        'timing: { tag: "noPriorLongRest" }',
+        "finishLongRest({",
+        "restedTicks: longRest.requiredRestTicks",
+        "completeLongRest({ completion: longRestCompletion, unitLibrary })",
+        "characterSheetResources(rested, unitLibrary)",
+      ],
+    },
+    rangerHuntersMarkActiveEffectHelperNeedle(),
+    {
+      anchor: "function huntersMarkFavoredEnemyBonusActionSpellAct",
+      needles: [
+        'candidate.subject.tag === "bonusActionSpell"',
+        'candidate.subject.invocation.tag === "classFeatureFreeCast"',
+        "candidate.subject.invocation.spellId === huntersMarkSpellId",
+        "candidate.subject.invocation.resourceUnitId === rangerFavoredEnemyUnitId",
+        'candidate.subject.invocation.procedure === "markedDamageRider"',
+      ],
+    },
+  ];
+}
+
+function rangerSpellListHuntersMarkSdkHelperNeedles() {
+  return [
+    {
+      anchor:
+        "function finalizedLevelOneRangerSpellListHuntersMarkBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneRangerBuild({",
+        'draftIdText: "draft:l1-sdk-ranger-hunters-mark-spell-slot"',
+        'expectedBuildLabel: "Ranger Hunter\'s Mark Spell Slot"',
+        'preparedSpells: [huntersMarkSpellId, "cure_wounds"]',
+      ],
+    },
+    rangerHuntersMarkBuildHelperNeedle(),
+    {
+      anchor: "function assertLevelOneHuntersMarkSpellSlot",
+      needles: [
+        'tag: "favoredEnemyHuntersMarkFreeCasts"',
+        "expended: resourceCount(2)",
+        "huntersMarkSpellSlotBonusActionSpellAct(state, input.casterId)",
+        "usesRemaining: 0",
+        'tag: "spellSlot"',
+        "slotLevel: 1",
+        "requiresTableSpatialFact: true",
+        "spellSlotUsesThisTurn).toEqual([",
+        '{ kind: "committed", combatantId: input.casterId }',
+        "{ spellLevel: 1, count: 2, expended: 1 }",
+        "expectLevelOneHuntersMarkActiveEffect({",
+        "characterSheetSpellSlots(settled)",
+        '{ tag: "favoredEnemyHuntersMarkFreeCasts", expended: 2 }',
+      ],
+    },
+    rangerHuntersMarkActiveEffectHelperNeedle(),
+    {
+      anchor: "function huntersMarkSpellSlotBonusActionSpellAct",
+      needles: [
+        'candidate.subject.tag === "bonusActionSpell"',
+        'candidate.subject.invocation.tag === "spellSlot"',
+        "candidate.subject.invocation.spellId === huntersMarkSpellId",
+        "candidate.subject.invocation.slotLevel === 1",
+        'candidate.subject.invocation.procedure === "markedDamageRider"',
+      ],
+    },
+  ];
+}
+
+function rangerHuntersMarkBuildHelperNeedle() {
+  return {
+    anchor: "function finalizedLevelOneRangerBuild(input:",
+    needles: [
+      "createCharacterDraft({",
+      "draftId: characterDraftId(input.draftIdText)",
+      '"class_ranger"',
+      '"class_prepared_spell_choices"',
+      "...input.preparedSpells",
+      '"ranger_weapon_mastery"',
+      '"weapon_longsword"',
+      '"weapon_spear"',
+      '"background_criminal"',
+      '"class_equipment_choice"',
+      '"equipment_purchase"',
+      '"wielded_one_handed"',
+      "input.expectedBuildLabel",
+      "return result.build;",
+    ],
+  };
+}
+
+function rangerHuntersMarkActiveEffectHelperNeedle() {
+  return {
+    anchor: "function expectLevelOneHuntersMarkActiveEffect",
+    needles: [
+      'kind: "spellMarkedDamageRider"',
+      "sourceSpellId: huntersMarkSpellId",
+      "sourceCombatantId: input.casterId",
+      "targetCombatantId: monsterId",
+      'kind: "findingAdvantage"',
+      'skills: ["perception", "survival"]',
+      'damageType: "force"',
+      "durationTicks: huntersMarkDurationTicks",
+      'retargetTiming: "sameTurn"',
+    ],
+  };
 }
 
 function writeSdkRawArtifact(filePath, text) {

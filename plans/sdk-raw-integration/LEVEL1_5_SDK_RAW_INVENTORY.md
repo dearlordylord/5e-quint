@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 448 |
+| sdk-scenario-needed | 446 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 56 |
+| seed-scenario-present | 58 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -85,7 +85,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 88 |
+| battle-spell-sdk | 87 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -93,9 +93,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure | 60 |
 | feature-owner-review | 4 |
 | future-owner-before-sdk | 24 |
-| multi-owner-feature-sdk | 10 |
+| multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
-| seed-present | 56 |
+| seed-present | 58 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -179,6 +179,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch` / `spell-level-0:Wizard:chill_touch`: level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention
 - `srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast` / `spell-level-0:Warlock:eldritch_blast`: level1-sdk-raw-integration: Warlock Eldritch Blast cantrip resolves from a level-1 sheet as a ranged one-beam Spell Attack sequence without spending slots
 - `srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex` / `spell-level-1:Warlock:hex`: level1-sdk-raw-integration: Warlock Hex resolves from a level-1 sheet through Pact Magic as a marked Necrotic rider and chosen Ability Check Disadvantage
+- `srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy` / `level-1:Ranger:ranger_favored_enemy`: level1-sdk-raw-integration: Ranger Favored Enemy casts Hunter's Mark from a level-1 sheet without spending a Spell Slot and restores its free-cast pool on Long Rest
+- `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark` / `spell-level-1:Ranger:hunters_mark`: level1-sdk-raw-integration: Ranger Hunter's Mark resolves from a level-1 prepared spell-list choice through a Spell Slot
 - `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word` / `spell-level-1:Bard:healing_word`: level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration
 - `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word` / `spell-level-1:Cleric:healing_word`: level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration
 - `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word` / `spell-level-1:Druid:healing_word`: level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration

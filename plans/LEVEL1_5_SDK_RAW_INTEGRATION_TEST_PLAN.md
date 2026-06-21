@@ -107,7 +107,7 @@ coverage.
 Current generated findings:
 
 - The JSON inventory is schema version 4. It persists all 770 mined level 1-5
-  rows with SDK dispositions, owner-boundary evidence where used, and 401
+  rows with SDK dispositions, owner-boundary evidence where used, and 403
   scenario groups. The Markdown report stays summarized, with the level-5
   completion rows and scenario groups expanded for the next implementation
   slice. Schema version 4 preserves each row's full source `supportSnapshot`,
@@ -298,6 +298,24 @@ Current generated findings:
   possession, derived line-of-sight, attack rider damage execution, later-turn
   transfer resolution, or higher-level duration scaling; those remain
   lower-runtime or future SDK slices.
+- The level-1 Ranger Favored Enemy seed covers the `ranger_favored_enemy`
+  class-feature row through level-1 Ranger character creation, normal prepared
+  spell choices that exclude Hunter's Mark, Favored Enemy free-cast act
+  discovery, creature target selection, Concentration, 1d6 Force marked-damage
+  rider facts, Wisdom (Perception or Survival) finding Advantage, same-turn
+  transfer timing, Bonus Action spend, no Spell Slot spend, settlement of the
+  Favored Enemy resource expenditure back to the Character Sheet, and Long Rest
+  reset of the free-cast pool.
+- The level-1 Ranger Hunter's Mark seed covers the Ranger `hunters_mark`
+  spell-list row through level-1 Ranger character creation, Hunter's Mark as an
+  ordinary prepared spell-list choice, a sheet with the Favored Enemy free-cast
+  pool already spent, Bonus Action spell-slot act discovery, creature target
+  selection, Concentration, the same marked-damage rider facts, Spell Slot
+  commitment, battle Spell Slot spend, and settlement of that Spell Slot
+  expenditure back to the Character Sheet. These Ranger seeds do not claim later
+  Favored Enemy scaling, line-of-sight derivation, attack rider damage
+  execution, transfer resolution, or higher-level Hunter's Mark duration
+  scaling.
 - The level-1 Healing Word seed covers the Bard, Cleric, and Druid spell-list
   rows through level-1 character creation, prepared-spell sheet projection,
   Bonus Action spell-slot act discovery, creature target selection, 2d4 plus
@@ -337,15 +355,15 @@ Current generated findings:
   count, visible-target/table-spatial witness requirement, 120-foot range,
   1d4+1 Force damage per dart, split simultaneous dart damage, and spell-slot
   spend.
-- The generated scenario groups are split by task: 164 groups for level 1,
+- The generated scenario groups are split by task: 166 groups for level 1,
   33 for level 2, 107 for level 3/spell level 2, 25 for level 4, and 72 for
   level 5/spell level 3.
 - The current level-5 SDK dispositions are: 6 seed scenarios present, 35 SDK
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 56 seed scenarios
-  present, 448 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 58 seed scenarios
+  present, 446 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -560,8 +578,9 @@ First implementation slice:
   Bard Dissonant Whispers, Bard Vicious Mockery, Druid/Warlock Poison Spray,
   Druid Produce Flame, Druid Shillelagh, Cleric Sacred Flame, Cleric
   Thaumaturgy, Cleric Guiding Bolt, Cleric Inflict Wounds, Cleric Sanctuary,
-  Sorcerer Sorcerous Burst, Warlock Chill Touch, Warlock Eldritch Blast, and
-  Warlock Hex, plus Bard/Cleric/Druid Healing Word.
+  Sorcerer Sorcerous Burst, Warlock Chill Touch, Warlock Eldritch Blast,
+  Warlock Hex, Ranger Favored Enemy, Ranger Hunter's Mark, plus
+  Bard/Cleric/Druid Healing Word.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 
