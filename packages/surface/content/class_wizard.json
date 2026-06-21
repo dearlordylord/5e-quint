@@ -76,6 +76,7 @@
         "shield",
         "sleep",
         "thunderwave",
+        "burning_hands",
         "chromatic_orb",
         "acid_arrow",
         "continual_flame",
@@ -129,6 +130,10 @@
         },
         {
           "spellId": "thunderwave",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "burning_hands",
           "spellLevel": 1
         },
         {

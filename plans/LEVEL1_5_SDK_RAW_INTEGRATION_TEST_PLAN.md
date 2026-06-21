@@ -107,7 +107,7 @@ coverage.
 Current generated findings:
 
 - The JSON inventory is schema version 4. It persists all 770 mined level 1-5
-  rows with SDK dispositions, owner-boundary evidence where used, and 384
+  rows with SDK dispositions, owner-boundary evidence where used, and 385
   scenario groups. The Markdown report stays summarized, with the level-5
   completion rows and scenario groups expanded for the next implementation
   slice. Schema version 4 preserves each row's full source `supportSnapshot`,
@@ -130,14 +130,14 @@ Current generated findings:
   `prestidigitation`, but the current executable Unit catalog does not install
   that spell Unit; full level-1 Sorcerer spell access closure remains part of
   Task 3 rather than this battle-feature seed.
-- The level-1 Burning Hands seed covers the Sorcerer spell-list row through
-  level-1 sheet projection, battle act discovery, self-origin Cone Saving Throw
-  resolution, Fire damage, and spell-slot spend. It does not claim the Wizard
-  row yet because the current `class_wizard` spellbook access content does not
-  expose `burning_hands` through the character-creation owner. It also does not
-  assert the RAW flammable-object clause, which `burning_hands.dhall` explicitly
-  closes as non-deterministic table narrative outside executable combat
-  mechanics.
+- The level-1 Burning Hands seeds cover the Sorcerer and Wizard spell-list rows
+  through level-1 sheet projection, battle act discovery, self-origin Cone
+  Saving Throw resolution, Fire damage, and spell-slot spend. The Wizard seed
+  is paired with a targeted `class_wizard` spellbook/prepared-access correction
+  plus a character-creation finalization assertion so the row is not claimed
+  through a hand-authored spellbook bypass. The seeds do not assert the RAW
+  flammable-object clause; `burning_hands.dhall` now records that clause as a
+  future object/area witness owner gap rather than table narrative.
 - The generated scenario groups are split by task: 148 groups for level 1,
   33 for level 2, 107 for level 3/spell level 2, 25 for level 4, and 72 for
   level 5/spell level 3.
@@ -145,8 +145,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 13 seed scenarios
-  present, 491 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 14 seed scenarios
+  present, 490 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -352,7 +352,8 @@ First implementation slice:
 - Add a package-local level-1 battle-feature SDK suite for Fighter Second Wind,
   Barbarian Rage, Bardic Inspiration, Rogue Sneak Attack, Sorcerer Innate
   Sorcery, and Monk Martial Arts.
-- Add a level-1 spell SDK seed for Burning Hands from a Sorcerer sheet.
+- Add level-1 spell SDK seeds for Burning Hands from Sorcerer and Wizard
+  sheets.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

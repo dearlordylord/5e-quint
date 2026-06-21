@@ -7921,13 +7921,18 @@ describe("character creation finalization", () => {
           cantrips: ["light", "fire_bolt", "ray_of_frost"],
           spellbook: [
             "detect_magic",
+            "burning_hands",
             "mage_armor",
             "magic_missile",
             "shield",
             "sleep",
-            "thunderwave",
           ],
-          preparedSpells: ["detect_magic", "magic_missile", "shield", "sleep"],
+          preparedSpells: [
+            "burning_hands",
+            "detect_magic",
+            "magic_missile",
+            "shield",
+          ],
           spellcastingFocuses: ["arcane_focus", "spellbook"],
         },
       ],
@@ -7963,11 +7968,11 @@ describe("character creation finalization", () => {
       "fire_bolt",
       "ray_of_frost",
       "detect_magic",
+      "burning_hands",
       "mage_armor",
       "magic_missile",
       "shield",
       "sleep",
-      "thunderwave",
     ]);
   });
 
@@ -10413,18 +10418,18 @@ function completeWizardDraft(): CharacterDraft {
         choiceFill(
           testUnitHoleId("class_wizard", "wizard_spellbook_choices"),
           "detect_magic",
+          "burning_hands",
           "mage_armor",
           "magic_missile",
           "shield",
           "sleep",
-          "thunderwave",
         ),
         choiceFill(
           testUnitHoleId("class_wizard", "wizard_prepared_spell_choices"),
+          "burning_hands",
           "detect_magic",
           "magic_missile",
           "shield",
-          "sleep",
         ),
         choiceFill(
           testUnitHoleId(

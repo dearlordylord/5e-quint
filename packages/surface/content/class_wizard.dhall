@@ -82,6 +82,7 @@ let wizard =
                 , { spellId = "shield", spellLevel = 1 }
                 , { spellId = "sleep", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
+                , { spellId = "burning_hands", spellLevel = 1 }
                 , { spellId = "chromatic_orb", spellLevel = 1 }
                 , { spellId = "acid_arrow", spellLevel = 2 }
                 , { spellId = "continual_flame", spellLevel = 2 }
@@ -104,6 +105,7 @@ let wizard =
                 , "shield"
                 , "sleep"
                 , "thunderwave"
+                , "burning_hands"
                 , "chromatic_orb"
                 , "acid_arrow"
                 , "continual_flame"

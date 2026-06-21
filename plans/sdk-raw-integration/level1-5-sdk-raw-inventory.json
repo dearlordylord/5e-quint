@@ -45672,6 +45672,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Burning Hands",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Wizard Burning Hands resolves from a level-1 spellbook sheet, applies Fire damage, and spends a spell slot",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -45679,7 +45683,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 163,
         "lineStart": 163,
@@ -56157,16 +56161,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 491,
+      "sdk-scenario-needed": 490,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 13,
+      "seed-scenario-present": 14,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 385,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 113,
+      "battle-spell-sdk": 112,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56176,7 +56180,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 13,
+      "seed-present": 14,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -56511,61 +56515,6 @@
       "sampleConcepts": [
         "Cleric spell list Bless",
         "Paladin spell list Bless"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "burning_hands"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:burning-hands",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"burning_hands\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Wizard.md:163"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "burning_hands",
-          "className": "Wizard",
-          "concept": "Wizard spell list Burning Hands",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 163,
-            "lineStart": 163,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Wizard spell list Burning Hands"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65742,6 +65691,61 @@
       ],
       "sampleConcepts": [
         "Sorcerer spell list Burning Hands"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "burning_hands"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-wizard-burning-hands",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Wizard:burning_hands\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:163"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "burning_hands",
+          "className": "Wizard",
+          "concept": "Wizard spell list Burning Hands",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 163,
+            "lineStart": 163,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Burning Hands"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -84275,6 +84279,7 @@
         "label": "level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "level-1",
       "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
       "rowKey": "level-1:Barbarian:barbarian_rage",
@@ -84289,6 +84294,7 @@
         "label": "level1-sdk-raw-integration: Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "level-1",
       "rowId": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
       "rowKey": "level-1:Bard:bard_bardic_inspiration",
@@ -84303,6 +84309,7 @@
         "label": "level1-sdk-raw-integration: Fighter Second Wind heals through sheet projection and spends one Bonus Action use",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "level-1",
       "rowId": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
       "rowKey": "level-1:Fighter:fighter_second_wind",
@@ -84317,6 +84324,7 @@
         "label": "level1-sdk-raw-integration: Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "level-1",
       "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
       "rowKey": "level-1:Monk:monk_martial_arts",
@@ -84331,6 +84339,7 @@
         "label": "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "level-1",
       "rowId": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
       "rowKey": "level-1:Rogue:rogue_sneak_attack",
@@ -84345,6 +84354,7 @@
         "label": "level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "level-1",
       "rowId": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
       "rowKey": "level-1:Sorcerer:sorcerer_innate_sorcery",
@@ -84360,11 +84370,42 @@
         "label": "level1-sdk-raw-integration: Sorcerer Burning Hands resolves from a level-1 sheet, applies Fire damage, and spends a spell slot",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "spell-level-1",
       "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
       "rowKey": "spell-level-1:Sorcerer:burning_hands",
       "tracerNeedles": [
         "levelOneSorcererBurningHandsBuild",
+        "burningHandsSpellId"
+      ]
+    },
+    {
+      "candidateUnitId": "burning_hands",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Wizard Burning Hands resolves from a level-1 spellbook sheet, applies Fire damage, and spends a spell slot",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWizardBurningHandsBuild(): CharacterBuild",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
+      "rowKey": "spell-level-1:Wizard:burning_hands",
+      "tracerNeedles": [
+        "const wizardBuild = finalizedLevelOneWizardBurningHandsBuild();",
+        "build: wizardBuild,",
+        "sourceUnitId: \"class_wizard\"",
+        "spellbook:",
+        "preparedSpells:",
         "burningHandsSpellId"
       ]
     },
@@ -84375,6 +84416,7 @@
         "label": "level5-sdk-tracer-bullets: Extra Attack",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "level-5",
       "rowId": "srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack",
       "rowKey": "level-5:Monk:monk_extra_attack",
@@ -84389,6 +84431,7 @@
         "label": "level5-sdk-tracer-bullets: Stunning Strike",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "level-5",
       "rowId": "srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike",
       "rowKey": "level-5:Monk:monk_stunning_strike",
@@ -84403,6 +84446,7 @@
         "label": "level5-sdk-tracer-bullets: Cunning Strike",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "level-5",
       "rowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_cunning_strike",
       "rowKey": "level-5:Rogue:rogue_cunning_strike",
@@ -84417,6 +84461,7 @@
         "label": "level5-sdk-tracer-bullets: Sorcerous Restoration",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "level-5",
       "rowId": "srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration",
       "rowKey": "level-5:Sorcerer:sorcerer_sorcerous_restoration",
@@ -84431,6 +84476,7 @@
         "label": "level5-sdk-tracer-bullets: Haste",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "spell-level-3",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste",
       "rowKey": "spell-level-3:Wizard:haste",
@@ -84445,6 +84491,7 @@
         "label": "level5-sdk-tracer-bullets: Protection from Energy",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
       },
+      "helperNeedles": [],
       "levelBand": "spell-level-3",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy",
       "rowKey": "spell-level-3:Wizard:protection_from_energy",

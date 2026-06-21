@@ -190,6 +190,36 @@ const seededSdkScenarioRows = [
     tracerNeedles: ["levelOneSorcererBurningHandsBuild", "burningHandsSpellId"],
   },
   {
+    candidateUnitId: "burning_hands",
+    className: "Wizard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Wizard Burning Hands resolves from a level-1 spellbook sheet, applies Fire damage, and spends a spell slot",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
+    tracerNeedles: [
+      "const wizardBuild = finalizedLevelOneWizardBurningHandsBuild();",
+      "build: wizardBuild,",
+      'sourceUnitId: "class_wizard"',
+      "spellbook:",
+      "preparedSpells:",
+      "burningHandsSpellId",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneWizardBurningHandsBuild(): CharacterBuild",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+    ],
+  },
+  {
     candidateUnitId: "monk_extra_attack",
     className: "Monk",
     levelBand: "level-5",
@@ -256,6 +286,7 @@ const seededSdkScenarioRecords = seededSdkScenarioRows.map((row) => ({
   className: row.className,
   candidateUnitId: row.candidateUnitId,
   tracerNeedles: row.tracerNeedles,
+  helperNeedles: row.helperNeedles ?? [],
   existingSdkScenario: {
     label: row.label,
     path: toRepoPath(root, row.path),
@@ -944,6 +975,25 @@ function assertSeedScenarios(seedScenarioSources, rows) {
         );
       }
     }
+    for (const helper of seed.helperNeedles ?? []) {
+      const helperText =
+        seedSourceText === undefined
+          ? undefined
+          : seedHelperSourceText(seedSourceText, helper.anchor);
+      if (helperText === undefined) {
+        seedErrors.push(
+          `${seed.rowId} helper anchor "${helper.anchor}" is absent from ${toRepoPath(root, seed.path)}`,
+        );
+        continue;
+      }
+      for (const needle of helper.needles) {
+        if (!helperText.includes(needle)) {
+          seedErrors.push(
+            `${seed.rowId} helper needle "${needle}" is absent from helper "${helper.anchor}"`,
+          );
+        }
+      }
+    }
     return seedErrors;
   });
   if (errors.length === 0) return;
@@ -967,6 +1017,16 @@ function seedScenarioSourceText(tracerText, title) {
     /\n\s+test\(|\n\}\);\n\n(?:type|function|const|class)\b/.exec(
       rest.slice(1),
     );
+  return endMatch === null ? rest : rest.slice(0, endMatch.index + 1);
+}
+
+function seedHelperSourceText(tracerText, anchor) {
+  const anchorIndex = tracerText.indexOf(anchor);
+  if (anchorIndex === -1) return undefined;
+  const rest = tracerText.slice(anchorIndex);
+  const endMatch = /\nfunction\s+\w|\ntype\s+\w|\nconst\s+\w|\nclass\s+\w/.exec(
+    rest.slice(1),
+  );
   return endMatch === null ? rest : rest.slice(0, endMatch.index + 1);
 }
 
