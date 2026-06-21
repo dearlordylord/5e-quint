@@ -37,6 +37,11 @@ module battleRuntimeReducerRoute {
         holes: Set[BattleHoleFamilyKind],
         owner: ReducerRouteOwnerGroup,
       })
+    | RouteResolveBattleSubjectWithoutFill({
+        subject: ReducerRouteSubjectFamily,
+        holes: Set[BattleHoleFamilyKind],
+        owner: ReducerRouteOwnerGroup,
+      })
 
   pure def routeStartBattle(
     owner: ReducerRouteOwnerGroup,
@@ -63,6 +68,17 @@ module battleRuntimeReducerRoute {
     RouteResolveBattleSubject({
       subject: subject,
       fill: fill,
+      holes: holes,
+      owner: owner,
+    })
+
+  pure def routeResolveBattleSubjectWithoutFill(
+    subject: ReducerRouteSubjectFamily,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    RouteResolveBattleSubjectWithoutFill({
+      subject: subject,
       holes: holes,
       owner: owner,
     })

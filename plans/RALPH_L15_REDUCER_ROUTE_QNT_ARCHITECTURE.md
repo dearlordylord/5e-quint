@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Route the remaining current reducer-spine diagnostic drivers"
     },
     {
@@ -222,7 +222,7 @@ The route classes are deliberately not all `reducer-routed`:
 | --: | ------------------------------------------------------------------------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 |   1 | L15-RR01-DENOMINATOR-AND-CLASSIFIER - Define the level 1-5 reducer-route denominator and route classes        | done               | none                                                                                                                                                     | Established the exact driver/branch denominator in `reducer-route-inventory.json`.            |
 |   2 | L15-RR02-ROUTE-VOCABULARY-AND-GATES - Generalize executable route vocabulary and checker gates                | done               | L15-RR01-DENOMINATOR-AND-CLASSIFIER                                                                                                                      | Added source-side route vocabularies and connector gates before broad connector work.         |
-|   3 | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE - Route the remaining current reducer-spine diagnostic drivers       | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Finishes death-save and Concentration from the existing diagnostic queue.                     |
+|   3 | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE - Route the remaining current reducer-spine diagnostic drivers       | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Completed death-save and Concentration route connectors from the diagnostic queue.            |
 |   4 | L15-RR04-RULE-CORE-COMPONENT-CONNECTORS - Add component-first QNT connectors for rule-core drivers            | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Keeps reusable components out of battle-local replay islands.                                 |
 |   5 | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES - Route action, attack, weapon, and stat-block battle subjects | blocked            | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Uses HP/action/attack owners before larger spell families.                                    |
 |   6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects         | blocked            | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Extends routed spell/effect subjects without selected-identity dispatch.                      |
@@ -370,7 +370,7 @@ Plan Impact:
 
 ### Task 3 - L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -407,8 +407,12 @@ Verification:
 
 Plan Impact:
 
-- Add follow-up tasks if either driver requires a missing generic HP,
-  condition, or active-effect substrate not stated in source QNT/guidance.
+- Applied. Death Saving Throw and Concentration teardown now have copied route
+  connectors, TS route MBT coverage, and `reducer-routed` inventory rows tied
+  to BattleState HP/death lifecycle and Concentration owners.
+- No follow-up task was added because the required generic HP, condition, and
+  active-effect substrates were already present in the battle runtime owner
+  model.
 
 ### Task 4 - L15-RR04-RULE-CORE-COMPONENT-CONNECTORS
 

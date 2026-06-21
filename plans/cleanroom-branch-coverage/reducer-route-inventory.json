@@ -127,14 +127,20 @@
         {
           "order": 4,
           "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt",
+          "route": "reducer-routed",
           "subjectFamily": "start-turn Death Saving Throw lifecycle",
-          "requiredReducerEntrypoints": ["resolve_battle_subject"],
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
           "durableStateOwner": "BattleState owns target Hit Points, Stable, Unconscious, Dead, and death-save counters; the adapter owns only sampled roll evidence.",
           "acceptanceCondition": "Target replay evidence routes Death Saving Throw discovery/fill through turn advancement or subject resolution using the same HP lifecycle owner as damage and healing.",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt samples natural 1, ordinary failure, ordinary success, and natural 20 outcomes over the DeathSavingThrow hole.",
+              "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt exposes qRoute for DeathSavingThrowRouteSubject through BattleHitPointAndZeroHpLifecycleOwner.",
               "packages/battle-runtime/battle-runtime-hit-points.qnt and packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt own the copied reusable death-save and zero-HP lifecycle facts."
             ],
             "rawDomainFacts": [
@@ -142,31 +148,33 @@
               ".references/srd-5.2.1/Playing-the-Game.md#Death Saving Throws defines success, failure, natural 1, natural 20, Stable, and death outcomes.",
               "UBIQUITOUS_LANGUAGE.md#Hit Points and Death names the lifecycle."
             ],
-            "blockers": [
-              "If the target engine has no durable death-save counters or Stable/Unconscious state owner, record the missing owner before treating replay evidence as meaningful."
-            ]
+            "blockers": []
           }
         },
         {
           "order": 5,
           "driverPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt",
+          "route": "reducer-routed",
           "subjectFamily": "Concentration break teardown",
-          "requiredReducerEntrypoints": ["resolve_battle_subject"],
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
           "durableStateOwner": "BattleState owns concentrating source, active Spell Effect instances, and teardown before the next command; no adapter-local concentration ledger is allowed.",
           "acceptanceCondition": "Target replay evidence proves failed damage save, voluntary end, and replacement Concentration teardown through one durable Concentration owner.",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt covers damage-save failure, voluntary end, and replacement Concentration teardown.",
+              "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt exposes qRoute for ConcentrationTeardownRouteSubject through BattleConcentrationOwner.",
               "packages/battle-runtime/battle-runtime-concentration.qnt is the semantic owner for Concentration break facts."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Rules-Glossary.md#Concentration defines effect end, voluntary end, replacement Concentration, and damage save DC.",
               "UBIQUITOUS_LANGUAGE.md#Spellcasting defines Concentration and Spell Effect terms."
             ],
-            "blockers": [
-              "Before implementation, identify the minimal durable concentration owner. If QNT/guidance does not state enough to choose that owner, record a source-qnt-corpus blocker."
-            ]
+            "blockers": []
           }
         }
       ]
@@ -344,21 +352,21 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
-          "subjectFamily": "remaining current reducer-spine diagnostic lifecycle subject",
+          "subjectFamily": "Concentration break teardown",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt records ConcentrationTeardownRouteSubject evidence through BattleConcentrationOwner."
             ],
             "rawDomainFacts": [
-              "Local SRD Hit Point, Death Saving Throw, and Concentration rules define the durable lifecycle owner before replay evidence is meaningful."
+              "Local SRD Concentration rules and UBIQUITOUS_LANGUAGE.md Spell Effect terms define BattleState-owned concentration source, active effects, and teardown state."
             ],
-            "blockers": [
-              "Add the minimal durable death-save or Concentration owner before marking this reducer-routed."
-            ]
+            "blockers": []
           }
         },
         {
@@ -420,21 +428,21 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
-          "subjectFamily": "remaining current reducer-spine diagnostic lifecycle subject",
+          "subjectFamily": "start-turn Death Saving Throw lifecycle",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt records DeathSavingThrowRouteSubject evidence through BattleHitPointAndZeroHpLifecycleOwner."
             ],
             "rawDomainFacts": [
-              "Local SRD Hit Point, Death Saving Throw, and Concentration rules define the durable lifecycle owner before replay evidence is meaningful."
+              "Local SRD Hit Point and Death Saving Throw rules and UBIQUITOUS_LANGUAGE.md Hit Points and Death terms define BattleState-owned death-save counters and Stable/Unconscious/Dead lifecycle state."
             ],
-            "blockers": [
-              "Add the minimal durable death-save or Concentration owner before marking this reducer-routed."
-            ]
+            "blockers": []
           }
         },
         {

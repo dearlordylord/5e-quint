@@ -4,12 +4,16 @@ import { describe, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  createConcentrationBreakTeardownRouteDriver,
+  createDeathSavingThrowRouteDriver,
   createHitPointRestorationOrderingRouteDriver,
   createMagicMissileRouteDriver,
   createSaveGatedSpellOrderingRouteDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
+  reducerRoutedConcentrationBreakTeardownStateCheck,
+  reducerRoutedDeathSavingThrowStateCheck,
   reducerRoutedHitPointRestorationOrderingStateCheck,
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedSaveGatedSpellOrderingStateCheck,
@@ -62,6 +66,38 @@ describe("battle reducer route connector MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(4),
       stateCheck: reducerRoutedHitPointRestorationOrderingStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes Death Saving Throw through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-death-saving-throw.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createDeathSavingThrowRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(3),
+      stateCheck: reducerRoutedDeathSavingThrowStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes Concentration teardown through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-concentration-break-teardown.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createConcentrationBreakTeardownRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(3),
+      stateCheck: reducerRoutedConcentrationBreakTeardownStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 });

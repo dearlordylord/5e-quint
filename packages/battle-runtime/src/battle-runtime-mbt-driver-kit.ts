@@ -50,6 +50,12 @@ import {
   ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
 } from "./battle-reducer/attack-main.ts";
+import {
+  attackTargetFill as creatureAttackTargetFill,
+  statBlockAttackAct,
+  statBlockCreature,
+  statBlockWithCreatureType,
+} from "./unit-profile-admission-creature-fixture-support.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -58,6 +64,7 @@ import {
   battleUnitRefWithSupportProfiles,
   battleId,
   battleCombatantSide,
+  breakBattleConcentration,
   cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
@@ -765,6 +772,69 @@ type HitPointRestorationOrderingProjection = {
   readonly featureTargetHp: number;
   readonly featureTargetZeroHpLifecycleCleared: boolean;
 };
+const DEATH_SAVING_THROW_MBT_HOLES = ["DeathSavingThrow"] as const;
+type DeathSavingThrowMbtHole =
+  (typeof DEATH_SAVING_THROW_MBT_HOLES)[number];
+const DEATH_SAVING_THROW_MBT_TURN_ROLES = ["actor", "target"] as const;
+type DeathSavingThrowMbtTurnRole =
+  (typeof DEATH_SAVING_THROW_MBT_TURN_ROLES)[number];
+type DeathSavingThrowProjection = {
+  readonly currentTurnRole: DeathSavingThrowMbtTurnRole;
+  readonly targetHp: number;
+  readonly targetUnconscious: boolean;
+  readonly targetStable: boolean;
+  readonly targetDead: boolean;
+  readonly targetDeathSuccesses: number;
+  readonly targetDeathFailures: number;
+  readonly holes: readonly DeathSavingThrowMbtHole[];
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+const CONCENTRATION_BREAK_TEARDOWN_SCENARIOS = [
+  "init",
+  "concentrationSpellCast",
+  "damageSaveNeeded",
+  "damageFailedTeardownBeforeNextCommand",
+  "voluntaryEndTeardown",
+  "replacementTeardownBeforeNewEffect",
+] as const;
+type ConcentrationBreakTeardownScenario =
+  (typeof CONCENTRATION_BREAK_TEARDOWN_SCENARIOS)[number];
+type ConcentrationBreakTeardownProjection = {
+  readonly scenario: ConcentrationBreakTeardownScenario;
+  readonly damageTaken: number;
+  readonly saveDc: number;
+  readonly saveRollTotal: number;
+  readonly concentrationSaveOffered: boolean;
+  readonly casterConcentrating: boolean;
+  readonly blurredEffectCount: number;
+  readonly spellSlotExpended: number;
+  readonly teardownBeforeNextCommand: boolean;
+  readonly replacementStartedAfterTeardown: boolean;
+};
+type PendingConcentrationSave = {
+  readonly state: BattleState;
+  readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+  readonly fills: readonly BattleFill[];
+  readonly holes: readonly [
+    Extract<BattleHole, { readonly kind: "concentrationSavingThrow" }>,
+  ];
+};
+type ConcentrationBreakTeardownRuntimeState = {
+  readonly battle: BattleState;
+  readonly scenario: ConcentrationBreakTeardownScenario;
+  readonly damageTaken: number;
+  readonly saveDc: number;
+  readonly saveRollTotal: number;
+  readonly concentrationSaveOffered: boolean;
+  readonly teardownBeforeNextCommand: boolean;
+  readonly replacementStartedAfterTeardown: boolean;
+  readonly pendingConcentrationSave: PendingConcentrationSave | null;
+};
+type BattleCombatantState =
+  BattleState["combatants"] extends ReadonlyMap<CombatantId, infer Combatant>
+    ? Combatant
+    : never;
 const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "slotSpell",
   "saveGatedSpell",
@@ -785,7 +855,9 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
 ] as const;
 type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
 const REDUCER_ROUTE_HOLES = [
+  "concentrationSavingThrow",
   "conditionChoice",
+  "deathSavingThrow",
   "hitPointHealingDistribution",
   "rolledDice",
   "savingThrowOutcome",
@@ -795,7 +867,9 @@ const REDUCER_ROUTE_HOLES = [
 ] as const;
 type ReducerRouteHole = (typeof REDUCER_ROUTE_HOLES)[number];
 const REDUCER_ROUTE_FILLS = [
+  "concentrationSavingThrow",
   "conditionChoice",
+  "deathSavingThrow",
   "hitPointHealingDistribution",
   "rolledDice",
   "savingThrowOutcome",
@@ -821,6 +895,12 @@ type ReducerRouteEvent =
       readonly fill: ReducerRouteFill;
       readonly holes: readonly ReducerRouteHole[];
       readonly owner: ReducerRouteOwnerGroup;
+    }
+  | {
+      readonly kind: "resolveBattleSubjectWithoutFill";
+      readonly subject: ReducerRouteSubjectFamily;
+      readonly holes: readonly ReducerRouteHole[];
+      readonly owner: ReducerRouteOwnerGroup;
     };
 type ReducerRoutedMagicMissileProjection = MbtProjection & {
   readonly route: readonly ReducerRouteEvent[];
@@ -831,6 +911,13 @@ type ReducerRoutedSaveGatedSpellOrderingProjection =
   };
 type ReducerRoutedHitPointRestorationOrderingProjection =
   HitPointRestorationOrderingProjection & {
+    readonly route: readonly ReducerRouteEvent[];
+  };
+type ReducerRoutedDeathSavingThrowProjection = DeathSavingThrowProjection & {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedConcentrationBreakTeardownProjection =
+  ConcentrationBreakTeardownProjection & {
     readonly route: readonly ReducerRouteEvent[];
   };
 type CommandOrderingProjection = {
@@ -946,6 +1033,10 @@ type ScalarBuffMbtProjection = {
 
 const fighterId = combatantId("fighter");
 const skeletonId = combatantId("skeleton");
+const deathSavingThrowTargetId = combatantId("death-saving-throw-target");
+const concentrationBreakAttackerId = combatantId(
+  "concentration-break-attacker",
+);
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 const statBlockCatalogResult = buildStatBlockCatalog({
@@ -994,6 +1085,19 @@ function reducerRouteResolveBattleSubject(input: {
     kind: "resolveBattleSubject",
     subject: input.subject,
     fill: input.fill,
+    holes: reducerRouteHolesFromRuntime(input.holes),
+    owner: input.owner,
+  };
+}
+
+function reducerRouteResolveBattleSubjectWithoutFill(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly BattleHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
     holes: reducerRouteHolesFromRuntime(input.holes),
     owner: input.owner,
   };
@@ -1084,6 +1188,30 @@ const hitPointRestorationOrderingDriverSchema = {
   doFillSpellHealingRoll: {},
   doDiscoverFeatureHealingPool: {},
   doFillFeatureHealingDistribution: {},
+  step: {},
+} as const;
+
+const deathSavingThrowRouteDriverSchema = {
+  init: {},
+  doDiscoverEndTurnDeathSavingThrow: {},
+  doFillDeathSavingThrow: {
+    roll: mbtPickSchemas.int,
+  },
+  doRejectWrongActorEndTurnAfterResolved: {},
+  step: {},
+} as const;
+
+const concentrationBreakTeardownRouteDriverSchema = {
+  init: {},
+  doCastConcentrationSpell: {},
+  doDamageRequestsConcentrationSave: {
+    damageDiePip: mbtPickSchemas.int,
+  },
+  doFailConcentrationSave: {
+    saveRollTotal: mbtPickSchemas.int,
+  },
+  doVoluntaryEndConcentration: {},
+  doCastReplacementConcentrationSpell: {},
   step: {},
 } as const;
 
@@ -2797,6 +2925,179 @@ export function createHitPointRestorationOrderingRouteDriver() {
   });
 }
 
+export function createDeathSavingThrowRouteDriver() {
+  return defineDriver(deathSavingThrowRouteDriverSchema, () => {
+    const subject = deathSavingThrowEndTurnSubject();
+    const recorder = createBattleSubjectResolutionRecorder({
+      initialState: deathSavingThrowBattle(),
+      subject,
+      noInvalidReason: "",
+    });
+    let fills: readonly BattleFill[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      recorder.reset(deathSavingThrowBattle());
+      fills = [];
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+    }
+
+    function fillDeathSavingThrow(roll: number): void {
+      const deathSavingThrow = requireTypedHole(
+        recorder.snapshot().holes,
+        "deathSavingThrow",
+      );
+      fills = [deathSavingThrowFill(deathSavingThrow, roll)];
+      recorder.submit(fills);
+      route = [
+        ...route,
+        reducerRouteResolveBattleSubject({
+          subject: "deathSavingThrow",
+          fill: "deathSavingThrow",
+          holes: recorder.snapshot().holes,
+          owner: "battleHitPointAndZeroHpLifecycle",
+        }),
+      ];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverEndTurnDeathSavingThrow: () => {
+        recorder.submit([]);
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: "deathSavingThrow",
+            holes: recorder.snapshot().holes,
+            owner: "battleHitPointAndZeroHpLifecycle",
+          }),
+        ];
+      },
+      doFillDeathSavingThrow: ({ roll }) => {
+        fillDeathSavingThrow(roll);
+      },
+      doRejectWrongActorEndTurnAfterResolved: () => {
+        const snapshot = recorder.snapshot();
+        recorder.record(
+          resolveBattleSubject({ state: snapshot.state, subject, fills }),
+        );
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "deathSavingThrow",
+            fill: "deathSavingThrow",
+            holes: recorder.snapshot().holes,
+            owner: "battleHitPointAndZeroHpLifecycle",
+          }),
+        ];
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectDeathSavingThrowState(recorder.snapshot()),
+        route,
+      }),
+    };
+  });
+}
+
+export function createConcentrationBreakTeardownRouteDriver() {
+  return defineDriver(concentrationBreakTeardownRouteDriverSchema, () => {
+    let state = initialConcentrationBreakTeardownState();
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      state = initialConcentrationBreakTeardownState();
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+    }
+
+    function appendConcentrationCastRoute(): void {
+      route = [
+        ...route,
+        reducerRouteDiscoverBattleActs({
+          subject: "concentrationTeardown",
+          holes: [],
+          owner: "battleSpellSlotAndActionEconomy",
+        }),
+        reducerRouteResolveBattleSubjectWithoutFill({
+          subject: "concentrationTeardown",
+          holes: [],
+          owner: "battleConcentration",
+        }),
+      ];
+    }
+
+    function appendConcentrationOwnerNoFillRoute(): void {
+      route = [
+        ...route,
+        reducerRouteResolveBattleSubjectWithoutFill({
+          subject: "concentrationTeardown",
+          holes: [],
+          owner: "battleConcentration",
+        }),
+      ];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doCastConcentrationSpell: () => {
+        state = {
+          ...stateAfterBlurCast(initialConcentrationBreakTeardownState()),
+          scenario: "concentrationSpellCast",
+        };
+        appendConcentrationCastRoute();
+      },
+      doDamageRequestsConcentrationSave: (input: {
+        readonly damageDiePip: number;
+      }) => {
+        state = damageRequestsConcentrationSave(state, input.damageDiePip);
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "concentrationTeardown",
+            fill: "rolledDice",
+            holes: state.pendingConcentrationSave?.holes ?? [],
+            owner: "battleConcentration",
+          }),
+        ];
+      },
+      doFailConcentrationSave: (input: { readonly saveRollTotal: number }) => {
+        state = failConcentrationSave(state, input.saveRollTotal);
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "concentrationTeardown",
+            fill: "concentrationSavingThrow",
+            holes: [],
+            owner: "battleConcentration",
+          }),
+        ];
+      },
+      doVoluntaryEndConcentration: () => {
+        state = voluntarilyEndConcentration(
+          initialConcentrationBreakTeardownState(),
+        );
+        appendConcentrationCastRoute();
+        appendConcentrationOwnerNoFillRoute();
+      },
+      doCastReplacementConcentrationSpell: () => {
+        state = castReplacementConcentrationSpell(
+          initialConcentrationBreakTeardownState(),
+        );
+        appendConcentrationCastRoute();
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectConcentrationBreakTeardownState(state),
+        route,
+      }),
+    };
+  });
+}
+
 export function createCommandOrderingDriver() {
   return defineDriver(commandOrderingDriverSchema, () => {
     let state = commandOrderingBattle();
@@ -3895,7 +4196,9 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
+  ConcentrationSavingThrowHoleKind: "concentrationSavingThrow",
   ConditionChoiceHoleKind: "conditionChoice",
+  DeathSavingThrowHoleKind: "deathSavingThrow",
   HitPointHealingDistributionHoleKind: "hitPointHealingDistribution",
   RolledDiceHoleKind: "rolledDice",
   SavingThrowOutcomeHoleKind: "savingThrowOutcome",
@@ -3905,7 +4208,9 @@ const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
 } as const satisfies Readonly<Record<string, ReducerRouteHole>>;
 
 const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = {
+  ConcentrationSavingThrowFillKind: "concentrationSavingThrow",
   ConditionChoiceFillKind: "conditionChoice",
+  DeathSavingThrowFillKind: "deathSavingThrow",
   HitPointHealingDistributionFillKind: "hitPointHealingDistribution",
   RolledDiceFillKind: "rolledDice",
   SavingThrowOutcomeFillKind: "savingThrowOutcome",
@@ -3942,6 +4247,15 @@ function decodeReducerRouteEvent(raw: unknown): ReducerRouteEvent {
       kind: "resolveBattleSubject",
       subject: reducerRouteSubject(quintField(payload, "subject")),
       fill: reducerRouteFill(quintField(payload, "fill")),
+      holes: reducerRouteHoles(quintField(payload, "holes")),
+      owner: reducerRouteOwner(quintField(payload, "owner")),
+    };
+  }
+  if (tag === "RouteResolveBattleSubjectWithoutFill") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: reducerRouteSubject(quintField(payload, "subject")),
       holes: reducerRouteHoles(quintField(payload, "holes")),
       owner: reducerRouteOwner(quintField(payload, "owner")),
     };
@@ -4161,6 +4475,110 @@ function normalizeReducerRoutedHitPointRestorationOrderingQuintState(
   const state = quintStateRecord(raw);
   return {
     ...normalizeHitPointRestorationOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeDeathSavingThrowQuintState(
+  raw: unknown,
+): DeathSavingThrowProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: deathSavingThrowHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    currentTurnRole: stringLiteralValue(
+      quintField(state, "currentTurnRole"),
+      "qState.currentTurnRole",
+      DEATH_SAVING_THROW_MBT_TURN_ROLES,
+    ),
+    targetHp: numberFromQuintInt(
+      quintField(state, "targetHp"),
+      "qState.targetHp",
+    ),
+    targetUnconscious: booleanField(state, "targetUnconscious"),
+    targetStable: booleanField(state, "targetStable"),
+    targetDead: booleanField(state, "targetDead"),
+    targetDeathSuccesses: numberFromQuintInt(
+      quintField(state, "targetDeathSuccesses"),
+      "qState.targetDeathSuccesses",
+    ),
+    targetDeathFailures: numberFromQuintInt(
+      quintField(state, "targetDeathFailures"),
+      "qState.targetDeathFailures",
+    ),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+  };
+}
+
+function normalizeReducerRoutedDeathSavingThrowQuintState(
+  raw: unknown,
+): ReducerRoutedDeathSavingThrowProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  return {
+    ...normalizeDeathSavingThrowQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeConcentrationBreakTeardownQuintState(
+  raw: unknown,
+): ConcentrationBreakTeardownProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenario = concentrationBreakTeardownScenario(state["qScenario"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: concentrationBreakTeardownHole,
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Concentration break teardown",
+    scenarioResult: scenario,
+    protocol,
+  });
+  return {
+    scenario,
+    damageTaken: numberFromQuintInt(state["qDamageTaken"], "qDamageTaken"),
+    saveDc: numberFromQuintInt(state["qSaveDc"], "qSaveDc"),
+    saveRollTotal: numberFromQuintInt(
+      state["qSaveRollTotal"],
+      "qSaveRollTotal",
+    ),
+    concentrationSaveOffered: booleanField(state, "qConcentrationSaveOffered"),
+    casterConcentrating: booleanField(state, "qCasterConcentrating"),
+    blurredEffectCount: numberFromQuintInt(
+      state["qBlurredEffectCount"],
+      "qBlurredEffectCount",
+    ),
+    spellSlotExpended: numberFromQuintInt(
+      state["qSpellSlotExpended"],
+      "qSpellSlotExpended",
+    ),
+    teardownBeforeNextCommand: booleanField(
+      state,
+      "qTeardownBeforeNextCommand",
+    ),
+    replacementStartedAfterTeardown: booleanField(
+      state,
+      "qReplacementStartedAfterTeardown",
+    ),
+  };
+}
+
+function normalizeReducerRoutedConcentrationBreakTeardownQuintState(
+  raw: unknown,
+): ReducerRoutedConcentrationBreakTeardownProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  return {
+    ...normalizeConcentrationBreakTeardownQuintState(raw),
     route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
@@ -4463,6 +4881,26 @@ export const reducerRoutedHitPointRestorationOrderingStateCheck = stateCheck(
     return true;
   },
 );
+export const reducerRoutedDeathSavingThrowStateCheck = stateCheck(
+  normalizeReducerRoutedDeathSavingThrowQuintState,
+  (
+    spec: ReducerRoutedDeathSavingThrowProjection,
+    impl: ReducerRoutedDeathSavingThrowProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedConcentrationBreakTeardownStateCheck = stateCheck(
+  normalizeReducerRoutedConcentrationBreakTeardownQuintState,
+  (
+    spec: ReducerRoutedConcentrationBreakTeardownProjection,
+    impl: ReducerRoutedConcentrationBreakTeardownProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const commandOrderingStateCheck = stateCheck(
   normalizeCommandOrderingQuintState,
   (spec: CommandOrderingProjection, impl: CommandOrderingProjection) => {
@@ -4611,6 +5049,55 @@ function projectHitPointRestorationOrderingState(input: {
   };
 }
 
+function projectDeathSavingThrowState(
+  input: BattleResolutionRecorderSnapshot<"">,
+): DeathSavingThrowProjection {
+  const snapshot = snapshotBattle(input.state);
+  const target = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === deathSavingThrowTargetId,
+  );
+  if (target === undefined) {
+    throw new Error("Expected Death Saving Throw target in battle snapshot.");
+  }
+  if (target.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
+    throw new Error("Expected Death Saving Throw target lifecycle owner.");
+  }
+
+  return {
+    currentTurnRole:
+      snapshot.currentActorId === deathSavingThrowTargetId ? "target" : "actor",
+    targetHp: target.hp,
+    targetUnconscious: target.conditions.includes("unconscious"),
+    targetStable: target.zeroHpLifecycle.stable,
+    targetDead: target.zeroHpLifecycle.dead,
+    targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
+    targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
+    holes: input.holes.map(deathSavingThrowHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    lastInvalidReason: mbtLastInvalidReason(input.lastInvalidReason),
+  };
+}
+
+function projectConcentrationBreakTeardownState(
+  state: ConcentrationBreakTeardownRuntimeState,
+): ConcentrationBreakTeardownProjection {
+  const caster = requireBattleCombatant(state.battle, fighterId);
+  return {
+    scenario: state.scenario,
+    damageTaken: state.damageTaken,
+    saveDc: state.saveDc,
+    saveRollTotal: state.saveRollTotal,
+    concentrationSaveOffered: state.concentrationSaveOffered,
+    casterConcentrating:
+      caster.concentration?.sourceSpellId === "blur" &&
+      caster.concentration.effectKind === "spellEffect",
+    blurredEffectCount: blurredEffectCount(state.battle),
+    spellSlotExpended: casterSpellSlotExpended(state.battle),
+    teardownBeforeNextCommand: state.teardownBeforeNextCommand,
+    replacementStartedAfterTeardown: state.replacementStartedAfterTeardown,
+  };
+}
+
 function projectCommandOrderingState(input: {
   readonly state: BattleState;
   readonly holes: readonly BattleHole[];
@@ -4727,6 +5214,261 @@ function zeroHpLifecycleClearedByHealing(
     combatant.zeroHpLifecycle.deathSaves.successes === 0 &&
     combatant.zeroHpLifecycle.deathSaves.failures === 0
   );
+}
+
+function requireBattleCombatant(
+  state: BattleState,
+  combatantId: CombatantId,
+): BattleCombatantState {
+  const combatant = state.combatants.get(combatantId);
+  if (combatant === undefined) {
+    throw new Error("Expected combatant in battle state.");
+  }
+  return combatant;
+}
+
+function initialConcentrationBreakTeardownState(): ConcentrationBreakTeardownRuntimeState {
+  return {
+    battle: concentrationBreakTeardownBattle(),
+    scenario: "init",
+    damageTaken: 0,
+    saveDc: 0,
+    saveRollTotal: 0,
+    concentrationSaveOffered: false,
+    teardownBeforeNextCommand: false,
+    replacementStartedAfterTeardown: false,
+    pendingConcentrationSave: null,
+  };
+}
+
+function stateAfterBlurCast(
+  state: ConcentrationBreakTeardownRuntimeState,
+): ConcentrationBreakTeardownRuntimeState {
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: blurSubject(),
+      fills: [],
+    }),
+  );
+  return {
+    ...state,
+    battle: resolved.state,
+    pendingConcentrationSave: null,
+  };
+}
+
+function damageRequestsConcentrationSave(
+  state: ConcentrationBreakTeardownRuntimeState,
+  damageDiePip: number,
+): ConcentrationBreakTeardownRuntimeState {
+  if (state.scenario !== "concentrationSpellCast") {
+    throw new Error("Expected Concentration spell cast before damage.");
+  }
+  const attackerTurn = advanceToConcentrationAttackerTurn(state.battle);
+  const act = statBlockAttackAct(
+    attackerTurn,
+    concentrationBreakAttackerId,
+    "Scimitar",
+  );
+  const subject = act.subject;
+  const target = requireResultHole(
+    resolveBattleSubject({
+      state: attackerTurn,
+      subject,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const targetFillForCaster = creatureAttackTargetFill(
+    target,
+    concentrationBreakAttackerId,
+    fighterId,
+    "Scimitar",
+  );
+  const attackRoll = requireResultHole(
+    resolveBattleSubject({
+      state: attackerTurn,
+      subject,
+      fills: [targetFillForCaster],
+    }),
+    "attackRoll",
+  );
+  const attackFill = attackRollFill(attackRoll, {
+    total: 20,
+    naturalD20: 16,
+    ...(attackRoll.rollMode === undefined
+      ? {}
+      : { rollMode: attackRoll.rollMode }),
+  });
+  const damage = requireResultHole(
+    resolveBattleSubject({
+      state: attackerTurn,
+      subject,
+      fills: [targetFillForCaster, attackFill],
+    }),
+    "rolledDice",
+  );
+  const damageFill = damageRollFill(damage, damageDiePip);
+  const fills = [targetFillForCaster, attackFill, damageFill] as const;
+  const pending = resolveBattleSubject({
+    state: attackerTurn,
+    subject,
+    fills,
+  });
+  if (pending.tag !== "needsHoles") {
+    throw new Error("Expected damage to request a Concentration Saving Throw.");
+  }
+  const concentration = requireTypedHole(
+    pending.holes,
+    "concentrationSavingThrow",
+  );
+  const damageTaken = Number(concentration.damageAmount);
+  return {
+    ...state,
+    battle: pending.state,
+    scenario: "damageSaveNeeded",
+    damageTaken,
+    saveDc: Number(concentration.dc),
+    concentrationSaveOffered: true,
+    pendingConcentrationSave: {
+      state: pending.state,
+      subject,
+      fills,
+      holes: [concentration],
+    },
+  };
+}
+
+function failConcentrationSave(
+  state: ConcentrationBreakTeardownRuntimeState,
+  saveRollTotal: number,
+): ConcentrationBreakTeardownRuntimeState {
+  if (state.scenario !== "damageSaveNeeded") {
+    throw new Error("Expected pending Concentration save.");
+  }
+  const pending = state.pendingConcentrationSave;
+  if (pending === null) {
+    throw new Error("Expected pending Concentration save state.");
+  }
+  const [concentration] = pending.holes;
+  if (saveRollTotal >= Number(concentration.dc)) {
+    throw new Error("Expected failed Concentration save total.");
+  }
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: pending.state,
+      subject: pending.subject,
+      fills: [
+        ...pending.fills,
+        concentrationSavingThrowFill(concentration, false),
+      ],
+    }),
+  );
+  return {
+    ...state,
+    battle: resolved.state,
+    scenario: "damageFailedTeardownBeforeNextCommand",
+    saveRollTotal,
+    concentrationSaveOffered: false,
+    teardownBeforeNextCommand: concentrationTeardownIsVisibleBeforeNextCommand(
+      resolved.state,
+    ),
+    pendingConcentrationSave: null,
+  };
+}
+
+function voluntarilyEndConcentration(
+  state: ConcentrationBreakTeardownRuntimeState,
+): ConcentrationBreakTeardownRuntimeState {
+  const cast = stateAfterBlurCast(state);
+  const broken = breakBattleConcentration(cast.battle, fighterId);
+  return {
+    ...cast,
+    battle: broken,
+    scenario: "voluntaryEndTeardown",
+    teardownBeforeNextCommand:
+      concentrationTeardownIsVisibleBeforeNextCommand(broken),
+  };
+}
+
+function castReplacementConcentrationSpell(
+  state: ConcentrationBreakTeardownRuntimeState,
+): ConcentrationBreakTeardownRuntimeState {
+  const beforeReplacement = stateWithPreexistingBlurConcentration(state.battle);
+  const replaced = stateAfterBlurCast({
+    ...state,
+    battle: beforeReplacement,
+  });
+  return {
+    ...replaced,
+    scenario: "replacementTeardownBeforeNewEffect",
+    replacementStartedAfterTeardown: blurredEffectCount(replaced.battle) === 1,
+  };
+}
+
+function stateWithPreexistingBlurConcentration(state: BattleState): BattleState {
+  const caster = requireBattleCombatant(state, fighterId);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(fighterId, {
+      ...caster,
+      concentration: {
+        sourceSpellId: "blur",
+        effectKind: "spellEffect",
+      },
+      activeEffects: [
+        ...caster.activeEffects,
+        {
+          kind: "blurred",
+          sourceSpellId: "blur",
+          sourceCombatantId: fighterId,
+          expiresAt: {
+            kind: "concentration",
+            combatantId: fighterId,
+          },
+        },
+      ],
+    }),
+  };
+}
+
+function advanceToConcentrationAttackerTurn(state: BattleState): BattleState {
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: endTurnSubjectFor(fighterId),
+      fills: [],
+    }),
+  ).state;
+}
+
+function concentrationTeardownIsVisibleBeforeNextCommand(
+  state: BattleState,
+): boolean {
+  const caster = requireBattleCombatant(state, fighterId);
+  return (
+    discoverBattleActs(state).length > 0 &&
+    caster.concentration === null &&
+    blurredEffectCount(state) === 0
+  );
+}
+
+function blurredEffectCount(state: BattleState): number {
+  return requireBattleCombatant(state, fighterId).activeEffects.filter(
+    (effect) => effect.kind === "blurred",
+  ).length;
+}
+
+function casterSpellSlotExpended(state: BattleState): number {
+  const caster = requireBattleCombatant(state, fighterId);
+  if (caster.origin.kind !== "character") {
+    return 0;
+  }
+  const slot = caster.origin.spellcasting?.spellSlots.find(
+    (candidate) => Number(candidate.spellLevel) === 2,
+  );
+  return Number(slot?.expended ?? 0);
 }
 
 function projectExtraAttackMbtState(input: {
@@ -5115,6 +5857,15 @@ function longstriderSubject(): Extract<
   };
 }
 
+function blurSubject(): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef("blur", 2, "blurAttackRollDefense"),
+    mode: { tag: "cast" },
+  };
+}
+
 function lightningBoltSubject(): Extract<
   BattleSubject,
   { readonly tag: "actionSpell" }
@@ -5410,11 +6161,63 @@ function featureHealingPoolOrderingBattle(): BattleState {
   });
 }
 
+function deathSavingThrowBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-death-saving-throw-route"),
+    combatants: [
+      deathSavingThrowCharacterInit({
+        combatantId: fighterId,
+        characterId: "death-saving-throw-route-actor-character",
+        displayName: "Actor",
+        initiative: 20,
+        currentHp: 12,
+      }),
+      deathSavingThrowCharacterInit({
+        combatantId: deathSavingThrowTargetId,
+        characterId: "death-saving-throw-route-target-character",
+        displayName: "Target",
+        initiative: 10,
+        currentHp: 0,
+        zeroHpLifecycle: {
+          policy: "usesDeathSavingThrows",
+          deathSaves: {
+            deathSaves: { successes: 2, failures: 1 },
+            stable: false,
+            dead: false,
+            hpRegained: false,
+          },
+        },
+      }),
+    ],
+  });
+}
+
+function concentrationBreakTeardownBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-concentration-break-teardown-route"),
+    combatants: [
+      concentrationBreakTeardownCasterInit({ initiative: 20 }),
+      statBlockCreature({
+        combatantId: concentrationBreakAttackerId,
+        statBlock: statBlockWithCreatureType("humanoid"),
+        initiative: 10,
+      }),
+    ],
+  });
+}
+
 function endTurnSubject(): Extract<
   BattleSubject,
   { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
 > {
   return endTurnSubjectFor(fighterId);
+}
+
+function deathSavingThrowEndTurnSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
+> {
+  return { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" };
 }
 
 function commandOrderingCastSubject(): Extract<
@@ -6062,6 +6865,90 @@ function healingOrderingTargetCreatureInit(input: {
   };
 }
 
+function deathSavingThrowCharacterInit(input: {
+  readonly combatantId: CombatantId;
+  readonly characterId: string;
+  readonly displayName: string;
+  readonly initiative: number;
+  readonly currentHp: number;
+  readonly zeroHpLifecycle?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["zeroHpLifecycle"];
+}): BattleCreatureInit {
+  return {
+    combatantId: input.combatantId,
+    displayName: input.displayName,
+    initiative: initiativeScore(input.initiative),
+    side: input.combatantId === fighterId ? partySide : oppositionSide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId(input.characterId),
+      characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: 1 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 10 }),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(input.currentHp),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      conditions: input.currentHp === 0 ? ["unconscious"] : [],
+      ...(input.zeroHpLifecycle === undefined
+        ? {}
+        : { zeroHpLifecycle: input.zeroHpLifecycle }),
+    },
+  };
+}
+
+function concentrationBreakTeardownCasterInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const blur = unitLibrary.requireUnit("blur");
+  if (blur.kind !== "spell") {
+    throw new Error("Expected Blur spell Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Concentration Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("concentration-break-teardown-route-caster"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 3 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 10 }),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [blur],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 2, count: 2 }],
+      },
+    },
+  };
+}
+
 function preserveLifeUnitRef(
   unit: UnitRecord,
   support: Exclude<
@@ -6241,6 +7128,30 @@ function requireHole(
   return hole;
 }
 
+function requireTypedHole<const Kind extends BattleHole["kind"]>(
+  holes: readonly BattleHole[],
+  kind: Kind,
+): Extract<BattleHole, { readonly kind: Kind }> {
+  const hole = requireHole(holes, kind);
+  if (hole.kind === kind) {
+    // The equality check proves the runtime kind; TypeScript cannot express
+    // that refinement for this generic Extract.
+    return hole as Extract<BattleHole, { readonly kind: Kind }>;
+  }
+
+  throw new Error(`Expected ${kind} hole.`);
+}
+
+function requireResultHole<const Kind extends BattleHole["kind"]>(
+  result: BattleResolutionResult,
+  kind: Kind,
+): Extract<BattleHole, { readonly kind: Kind }> {
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected ${kind} hole result, got ${result.tag}.`);
+  }
+  return requireTypedHole(result.holes, kind);
+}
+
 function requireResolved(
   result: BattleResolutionResult,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
@@ -6413,6 +7324,31 @@ function saveGatedSpellSavingThrowOutcomeFill(
             outcomes,
           }
         : { outcomes },
+  };
+}
+
+function deathSavingThrowFill(
+  hole: Extract<BattleHole, { readonly kind: "deathSavingThrow" }>,
+  roll: number,
+): Extract<BattleFill, { readonly kind: "deathSavingThrow" }> {
+  return {
+    kind: "deathSavingThrow",
+    holeId: hole.holeId,
+    value: DieRollResult(roll),
+  };
+}
+
+function concentrationSavingThrowFill(
+  hole: Extract<BattleHole, { readonly kind: "concentrationSavingThrow" }>,
+  succeeded: boolean,
+): Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }> {
+  return {
+    kind: "concentrationSavingThrow",
+    holeId: hole.holeId,
+    value: {
+      succeeded,
+      withoutRoll: true,
+    },
   };
 }
 
@@ -6637,7 +7573,11 @@ function reducerRouteHolesFromRuntime(
 function reducerRouteHoleFromRuntime(
   hole: Pick<BattleHole, "kind">,
 ): ReducerRouteHole {
+  if (hole.kind === "concentrationSavingThrow") {
+    return "concentrationSavingThrow";
+  }
   if (hole.kind === "conditionChoice") return "conditionChoice";
+  if (hole.kind === "deathSavingThrow") return "deathSavingThrow";
   if (hole.kind === "hitPointHealingDistribution") {
     return "hitPointHealingDistribution";
   }
@@ -6652,6 +7592,16 @@ function reducerRouteHoleFromRuntime(
 
 function projectHoles(holes: readonly BattleHole[]): readonly MbtHole[] {
   return holes.flatMap(projectHole).sort();
+}
+
+function deathSavingThrowHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): DeathSavingThrowMbtHole {
+  if (hole.kind === "deathSavingThrow") {
+    return "DeathSavingThrow";
+  }
+
+  throw new Error(`Unexpected Death Saving Throw route hole: ${hole.kind}`);
 }
 
 function projectHole(hole: BattleHole): readonly MbtHole[] {
@@ -7119,6 +8069,44 @@ function hitPointRestorationOrderingError(
   throw new Error(
     `Unknown Hit Point restoration ordering error: ${String(raw)}.`,
   );
+}
+
+function deathSavingThrowHole(raw: unknown): DeathSavingThrowMbtHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "DeathSavingThrow") {
+    return tag;
+  }
+
+  throw new Error(`Unknown Death Saving Throw hole: ${tag}`);
+}
+
+function concentrationBreakTeardownHole(raw: unknown): string {
+  const tag = quintVariantTag(raw, "Concentration break teardown witness hole");
+  if (tag === "ConcentrationSavingThrow") return "concentrationSavingThrow";
+  if (tag === "ConcentrationBreakTeardown") {
+    return "concentrationBreakTeardown";
+  }
+  throw new Error(`Unexpected Concentration break teardown hole ${tag}.`);
+}
+
+const CONCENTRATION_BREAK_TEARDOWN_SCENARIO_BY_TAG = {
+  Init: "init",
+  ConcentrationSpellCast: "concentrationSpellCast",
+  DamageSaveNeeded: "damageSaveNeeded",
+  DamageFailedTeardownBeforeNextCommand:
+    "damageFailedTeardownBeforeNextCommand",
+  VoluntaryEndTeardown: "voluntaryEndTeardown",
+  ReplacementTeardownBeforeNewEffect: "replacementTeardownBeforeNewEffect",
+} as const satisfies Readonly<Record<string, ConcentrationBreakTeardownScenario>>;
+
+function concentrationBreakTeardownScenario(
+  raw: unknown,
+): ConcentrationBreakTeardownScenario {
+  const tag = quintVariantTag(raw, "qScenario");
+  if (hasOwnStringKey(CONCENTRATION_BREAK_TEARDOWN_SCENARIO_BY_TAG, tag)) {
+    return CONCENTRATION_BREAK_TEARDOWN_SCENARIO_BY_TAG[tag];
+  }
+  throw new Error(`Unexpected Concentration break teardown scenario ${tag}.`);
 }
 
 function commandOrderingStage(raw: unknown): CommandOrderingStage {

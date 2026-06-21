@@ -32,6 +32,8 @@ For a selected driver:
 - discover first, then resolve through the same reducer.
 - expose typed subject variants only for that task's subject family.
 - expose typed fill variants only for holes the copied QNT driver needs.
+- represent commands with no table-supplied value as no-fill subject resolution;
+  do not invent a synthetic fill to stand in for an absent table choice.
 - keep ordering facts in reducer state or reducer results, not in driver-local
   maps.
 - reject or request earlier fills according to QNT; do not silently reorder by
