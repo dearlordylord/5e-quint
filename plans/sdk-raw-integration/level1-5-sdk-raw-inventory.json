@@ -20336,6 +20336,13 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Guiding Bolt",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Guiding Bolt resolves from a level-1 sheet as a ranged Spell Attack with Advantage on the next Attack Roll against the target before the caster's next turn ends",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Spells/Descriptions-E-L.md:992-1003"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -20343,7 +20350,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 170,
         "lineStart": 170,
@@ -56281,16 +56288,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 460,
+      "sdk-scenario-needed": 459,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 44,
+      "seed-scenario-present": 45,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 401,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 98,
+      "battle-spell-sdk": 97,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56300,7 +56307,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 44,
+      "seed-present": 45,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -57947,61 +57954,6 @@
       "sampleConcepts": [
         "Cleric spell list Guidance",
         "Druid spell list Guidance"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "guiding_bolt"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:guiding-bolt",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"guiding_bolt\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:170"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "guiding_bolt",
-          "className": "Cleric",
-          "concept": "Cleric spell list Guiding Bolt",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 170,
-            "lineStart": 170,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Guiding Bolt"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65688,6 +65640,62 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Shocking Grasp"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "guiding_bolt"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-cleric-guiding-bolt",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Cleric:guiding_bolt\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:170",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md:992-1003"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "guiding_bolt",
+          "className": "Cleric",
+          "concept": "Cleric spell list Guiding Bolt",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 170,
+            "lineStart": 170,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Guiding Bolt"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85492,6 +85500,87 @@
         "build: clericBuild,",
         "casterId: sacredFlameClericId,",
         "expectedSpellSaveDc: 12,"
+      ]
+    },
+    {
+      "candidateUnitId": "guiding_bolt",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Guiding Bolt resolves from a level-1 sheet as a ranged Spell Attack with Advantage on the next Attack Roll against the target before the caster's next turn ends",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Spells/Descriptions-E-L.md:992-1003"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneClericGuidingBoltBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneClericBuild({",
+            "draftIdText: \"draft:l1-sdk-cleric-guiding-bolt\"",
+            "expectedBuildLabel: \"Cleric Guiding Bolt\"",
+            "guidingBoltSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneClericBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_cleric\"",
+            "\"class_cantrip_choices\"",
+            "\"class_prepared_spell_choices\"",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneGuidingBolt",
+          "needles": [
+            "spellSlotActForProcedure(",
+            "guidingBoltSpellId",
+            "\"spellAttackDamage\"",
+            "choices: expect.arrayContaining([monsterId])",
+            "spellTargetFill(",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "resource: { tag: \"spellSlot\", slotLevel: 1 }",
+            "attackKind: \"ranged_spell_attack\"",
+            "targeting: { kind: \"singleCombatant\" }",
+            "rangeFeet: 120",
+            "kind: \"fixedSpellAttackDamage\"",
+            "expr: { dice: 4, dieSize: 6 }",
+            "damageType: \"radiant\"",
+            "kind: \"nextAttackRollAgainstTarget\"",
+            "mode: \"advantage\"",
+            "expiresAt: \"endOfCasterNextTurn\"",
+            "label: \"Guiding Bolt damage (4d6-radiant)\"",
+            "damageRollFillWithGroups(damage, [[2, 2, 2, 2]])",
+            "hp: Hp(5)",
+            "kind: \"nextAttackRollAgainstSelf\"",
+            "sourceSpellId: guidingBoltSpellId",
+            "kind: \"endOfTurn\"",
+            "combatantId: input.casterId",
+            "round: 2",
+            "expect(snapshotBattle(guided.state).turn.actionResources).toEqual([]);",
+            "{ spellLevel: 1, count: 2, expended: 1 }",
+            "attackSubject(allyTurn, input.allyId, \"Longsword\")",
+            "expect(allyAttackRoll).toMatchObject({ rollMode: \"advantage\" });",
+            "expect(requireCombatant(consumed.state, monsterId).activeEffects).toEqual([]);"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
+      "rowKey": "spell-level-1:Cleric:guiding_bolt",
+      "tracerNeedles": [
+        "const clericBuild = finalizedLevelOneClericGuidingBoltBuild();",
+        "sourceUnitId: \"class_cleric\"",
+        "spellcastingAbility: \"wis\"",
+        "preparedSpells: expect.arrayContaining([guidingBoltSpellId])",
+        "build: clericBuild,",
+        "casterId: guidingBoltClericId,",
+        "allyId: guidingBoltAllyId,",
+        "expectedSpellAttackBonus: 4,"
       ]
     },
     {

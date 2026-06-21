@@ -597,6 +597,85 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "guiding_bolt",
+    className: "Cleric",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Cleric Guiding Bolt resolves from a level-1 sheet as a ranged Spell Attack with Advantage on the next Attack Roll against the target before the caster's next turn ends",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [".references/srd-5.2.1/Spells/Descriptions-E-L.md:992-1003"],
+    rowId:
+      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
+    tracerNeedles: [
+      "const clericBuild = finalizedLevelOneClericGuidingBoltBuild();",
+      'sourceUnitId: "class_cleric"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([guidingBoltSpellId])",
+      "build: clericBuild,",
+      "casterId: guidingBoltClericId,",
+      "allyId: guidingBoltAllyId,",
+      "expectedSpellAttackBonus: 4,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneClericGuidingBoltBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneClericBuild({",
+          'draftIdText: "draft:l1-sdk-cleric-guiding-bolt"',
+          'expectedBuildLabel: "Cleric Guiding Bolt"',
+          "guidingBoltSpellId",
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneClericBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          '"class_cleric"',
+          '"class_cantrip_choices"',
+          '"class_prepared_spell_choices"',
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneGuidingBolt",
+        needles: [
+          "spellSlotActForProcedure(",
+          "guidingBoltSpellId",
+          '"spellAttackDamage"',
+          "choices: expect.arrayContaining([monsterId])",
+          "spellTargetFill(",
+          "attackBonus: input.expectedSpellAttackBonus",
+          'resource: { tag: "spellSlot", slotLevel: 1 }',
+          'attackKind: "ranged_spell_attack"',
+          'targeting: { kind: "singleCombatant" }',
+          "rangeFeet: 120",
+          'kind: "fixedSpellAttackDamage"',
+          "expr: { dice: 4, dieSize: 6 }",
+          'damageType: "radiant"',
+          'kind: "nextAttackRollAgainstTarget"',
+          'mode: "advantage"',
+          'expiresAt: "endOfCasterNextTurn"',
+          'label: "Guiding Bolt damage (4d6-radiant)"',
+          "damageRollFillWithGroups(damage, [[2, 2, 2, 2]])",
+          "hp: Hp(5)",
+          'kind: "nextAttackRollAgainstSelf"',
+          "sourceSpellId: guidingBoltSpellId",
+          'kind: "endOfTurn"',
+          "combatantId: input.casterId",
+          "round: 2",
+          "expect(snapshotBattle(guided.state).turn.actionResources).toEqual([]);",
+          "{ spellLevel: 1, count: 2, expended: 1 }",
+          "attackSubject(allyTurn, input.allyId, \"Longsword\")",
+          'expect(allyAttackRoll).toMatchObject({ rollMode: "advantage" });',
+          "expect(requireCombatant(consumed.state, monsterId).activeEffects).toEqual([]);",
+        ],
+      },
+    ],
+  },
+  {
     candidateUnitId: "poison_spray",
     className: "Warlock",
     levelBand: "spell-level-0",
@@ -2398,6 +2477,7 @@ const seededSdkScenarioRecords = seededSdkScenarioRows.map((row) => ({
   existingSdkScenario: {
     label: row.label,
     path: toRepoPath(root, row.path),
+    ...(row.rawSources === undefined ? {} : { rawSources: row.rawSources }),
   },
 }));
 const seededSdkScenarioByRowId = new Map(
@@ -3011,7 +3091,12 @@ function buildScenarioGroups(rows) {
           0,
           8,
         ),
-        rawSources: uniqueSorted(groupRows.map((row) => sourceRef(row.source))),
+        rawSources: uniqueSorted(
+          groupRows.flatMap((row) => [
+            sourceRef(row.source),
+            ...(row.existingSdkScenario?.rawSources ?? []),
+          ]),
+        ),
         rows: groupRows.map((row) => ({
           rowId: row.rowId,
           levelBand: row.levelBand,

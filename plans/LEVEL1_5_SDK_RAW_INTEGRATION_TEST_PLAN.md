@@ -200,6 +200,13 @@ Current generated findings:
   without adding the Thaumaturge extra-cantrip branch. The RAW Half Cover and
   Three-Quarters Cover clause remains a table-spatial concern and is not claimed
   by this SDK seed.
+- The level-1 Guiding Bolt seed covers the Cleric spell-list row through
+  level-1 Cleric character creation, prepared-spell sheet projection, battle act
+  discovery, 120-foot ranged Spell Attack resolution, 4d6 Radiant damage,
+  Magic Action and level-1 Spell Slot expenditure, Advantage on the next Attack
+  Roll against the hit target before the caster's next turn ends, and
+  consumption of that rider by the next allied Attack Roll. The level-1 seed
+  does not claim the RAW higher-level Spell Slot scaling row.
 - The level-1 Chill Touch seed covers the Sorcerer, Warlock, and Wizard
   cantrip spell-list rows through level-1 sheet projection, battle act
   discovery, Touch-range melee Spell Attack resolution, creature-or-object
@@ -255,8 +262,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 44 seed scenarios
-  present, 460 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 45 seed scenarios
+  present, 459 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -468,8 +475,8 @@ First implementation slice:
   Bolt, Ray of Frost, Shocking Grasp, Burning Hands, Mage Armor, False Life,
   Chromatic Orb, Ray of Sickness, Thunderwave, and Magic Missile from Sorcerer
   and Wizard sheets, plus class-specific rows when SRD access differs such as
-  Druid/Warlock Poison Spray, Druid Produce Flame, Cleric Sacred Flame, Warlock
-  Chill Touch, and Warlock Eldritch Blast.
+  Druid/Warlock Poison Spray, Druid Produce Flame, Cleric Sacred Flame, Cleric
+  Guiding Bolt, Warlock Chill Touch, and Warlock Eldritch Blast.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

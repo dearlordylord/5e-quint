@@ -104,6 +104,10 @@ const produceFlameDruidId = combatantId("combatant:l1-sdk-produce-flame-druid");
 const sacredFlameClericId = combatantId(
   "combatant:l1-sdk-sacred-flame-cleric",
 );
+const guidingBoltClericId = combatantId(
+  "combatant:l1-sdk-guiding-bolt-cleric",
+);
+const guidingBoltAllyId = combatantId("combatant:l1-sdk-guiding-bolt-ally");
 const poisonSpraySorcererId = combatantId(
   "combatant:l1-sdk-poison-spray-sorcerer",
 );
@@ -185,6 +189,7 @@ const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
 const produceFlameSpellId = "produce_flame";
 const sacredFlameSpellId = "sacred_flame";
+const guidingBoltSpellId = "guiding_bolt";
 const chillTouchSpellId = "chill_touch";
 const eldritchBlastSpellId = "eldritch_blast";
 const burningHandsSpellId = "burning_hands";
@@ -874,6 +879,29 @@ describe("level 1 SDK RAW integration", () => {
       build: clericBuild,
       casterId: sacredFlameClericId,
       expectedSpellSaveDc: 12,
+    });
+  });
+
+  test("Cleric Guiding Bolt resolves from a level-1 sheet as a ranged Spell Attack with Advantage on the next Attack Roll against the target before the caster's next turn ends", () => {
+    const clericBuild = finalizedLevelOneClericGuidingBoltBuild();
+
+    expect(clericBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([guidingBoltSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneGuidingBolt({
+      battleIdText: "battle:l1-sdk-guiding-bolt-cleric",
+      characterIdText: "character:l1-sdk-guiding-bolt-cleric",
+      build: clericBuild,
+      casterId: guidingBoltClericId,
+      allyId: guidingBoltAllyId,
+      expectedSpellAttackBonus: 4,
     });
   });
 
@@ -2076,6 +2104,200 @@ function assertLevelOneSacredFlame(input: {
   expect(successfulSaveCaster.origin.spellcasting?.spellSlots).toEqual([
     { spellLevel: 1, count: 2, expended: 0 },
   ]);
+}
+
+function assertLevelOneGuidingBolt(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly allyId: CombatantId;
+  readonly expectedSpellAttackBonus: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+      characterSheet({
+        characterIdText: "character:l1-sdk-guiding-bolt-ally",
+        build: levelOneSingleClassBuild({
+          classUnitId: "class_fighter",
+          weaponUnitId: "weapon_longsword",
+        }),
+        combatantId: input.allyId,
+        initiative: 15,
+        maximumHp: 12,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    guidingBoltSpellId,
+    1,
+    "spellAttackDamage",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(
+    target,
+    guidingBoltSpellId,
+    input.casterId,
+    monsterId,
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "attackRoll",
+  );
+
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([monsterId]),
+  });
+  expect(attackRoll).toMatchObject({
+    attackBonus: input.expectedSpellAttackBonus,
+    spell: {
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      attackKind: "ranged_spell_attack",
+      targeting: { kind: "singleCombatant" },
+      rangeFeet: 120,
+      damage: {
+        kind: "fixedSpellAttackDamage",
+        expr: { dice: 4, dieSize: 6 },
+        damageType: "radiant",
+      },
+      postDamageRiders: [
+        {
+          kind: "nextAttackRollAgainstTarget",
+          mode: "advantage",
+          expiresAt: "endOfCasterNextTurn",
+        },
+      ],
+    },
+  });
+
+  const attackFill = attackRollFill(attackRoll, {
+    total: 13 + input.expectedSpellAttackBonus,
+    naturalD20: 13,
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, attackFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Guiding Bolt damage (4d6-radiant)",
+    spell: {
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      damage: {
+        kind: "fixedSpellAttackDamage",
+        expr: { dice: 4, dieSize: 6 },
+        damageType: "radiant",
+      },
+      postDamageRiders: [
+        {
+          kind: "nextAttackRollAgainstTarget",
+          mode: "advantage",
+          expiresAt: "endOfCasterNextTurn",
+        },
+      ],
+    },
+    critical: false,
+  });
+
+  const guided = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(damage, [[2, 2, 2, 2]]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(guided.state, input.casterId);
+
+  expect(requireCombatant(guided.state, monsterId)).toMatchObject({
+    hp: Hp(5),
+    activeEffects: [
+      {
+        kind: "nextAttackRollAgainstSelf",
+        sourceSpellId: guidingBoltSpellId,
+        sourceCombatantId: input.casterId,
+        mode: "advantage",
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: input.casterId,
+          round: 2,
+        },
+      },
+    ],
+  });
+  expect(snapshotBattle(guided.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+
+  const allyTurn = requireResolved(
+    endTurn({ state: guided.state, actorId: input.casterId }),
+  ).state;
+  const allyAttack = attackSubject(allyTurn, input.allyId, "Longsword");
+  const allyTarget = requireHole(
+    resolveBattleSubject({
+      state: allyTurn,
+      subject: allyAttack,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const allyTargetFill = attackTargetFill(
+    allyTarget,
+    input.allyId,
+    monsterId,
+    "Longsword",
+  );
+  const allyAttackRoll = requireHole(
+    resolveBattleSubject({
+      state: allyTurn,
+      subject: allyAttack,
+      fills: [allyTargetFill],
+    }),
+    "attackRoll",
+  );
+
+  expect(allyAttackRoll).toMatchObject({ rollMode: "advantage" });
+
+  const consumed = requireResolved(
+    resolveBattleSubject({
+      state: allyTurn,
+      subject: allyAttack,
+      fills: [
+        allyTargetFill,
+        attackRollFill(allyAttackRoll, {
+          total: 8,
+          naturalD20: 4,
+          rollMode: "advantage",
+        }),
+      ],
+    }),
+  );
+
+  expect(requireCombatant(consumed.state, monsterId).activeEffects).toEqual([]);
 }
 
 function assertLevelOneChillTouch(input: {
@@ -3502,6 +3724,20 @@ function finalizedLevelOneClericSacredFlameBuild(): CharacterBuild {
     expectedBuildLabel: "Cleric Sacred Flame",
     cantrips: ["guidance", sacredFlameSpellId, "thaumaturgy"],
     preparedSpells: ["bless", "cure_wounds", "guiding_bolt", "shield_of_faith"],
+  });
+}
+
+function finalizedLevelOneClericGuidingBoltBuild(): CharacterBuild {
+  return finalizedLevelOneClericBuild({
+    draftIdText: "draft:l1-sdk-cleric-guiding-bolt",
+    expectedBuildLabel: "Cleric Guiding Bolt",
+    cantrips: ["guidance", sacredFlameSpellId, "thaumaturgy"],
+    preparedSpells: [
+      "bless",
+      "cure_wounds",
+      guidingBoltSpellId,
+      "shield_of_faith",
+    ],
   });
 }
 
