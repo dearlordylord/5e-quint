@@ -71,6 +71,12 @@ const sorcererId = combatantId("combatant:l1-sdk-sorcerer");
 const burningHandsCasterId = combatantId("combatant:l1-sdk-burning-hands");
 const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
 const fireBoltWizardId = combatantId("combatant:l1-sdk-fire-bolt-wizard");
+const magicMissileSorcererId = combatantId(
+  "combatant:l1-sdk-magic-missile-sorcerer",
+);
+const magicMissileWizardId = combatantId(
+  "combatant:l1-sdk-magic-missile-wizard",
+);
 const wizardBurningHandsCasterId = combatantId(
   "combatant:l1-sdk-wizard-burning-hands",
 );
@@ -88,6 +94,7 @@ const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
+const magicMissileSpellId = "magic_missile";
 
 describe("level 1 SDK RAW integration", () => {
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
@@ -604,6 +611,42 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
+  test("Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation", () => {
+    const sorcererBuild = finalizedLevelOneSorcererMagicMissileBuild();
+    const wizardBuild = finalizedLevelOneWizardMagicMissileBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          preparedSpells: expect.arrayContaining([magicMissileSpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          spellbook: expect.arrayContaining([magicMissileSpellId]),
+          preparedSpells: expect.arrayContaining([magicMissileSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneMagicMissile({
+      battleIdText: "battle:l1-sdk-magic-missile-sorcerer",
+      characterIdText: "character:l1-sdk-magic-missile-sorcerer",
+      build: sorcererBuild,
+      casterId: magicMissileSorcererId,
+    });
+    assertLevelOneMagicMissile({
+      battleIdText: "battle:l1-sdk-magic-missile-wizard",
+      characterIdText: "character:l1-sdk-magic-missile-wizard",
+      build: wizardBuild,
+      casterId: magicMissileWizardId,
+    });
+  });
+
   test("Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity", () => {
     const state = battleFromSheets({
       battleIdText: "battle:l1-sdk-martial-arts",
@@ -852,6 +895,116 @@ function assertLevelOneFireBolt(input: {
   ]);
 }
 
+function assertLevelOneMagicMissile(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        secondMonsterId,
+        8,
+        srdStatBlock("stat_block_skeleton"),
+      ),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    magicMissileSpellId,
+    1,
+    "repeatedDamageAllocation",
+  );
+  expect(requireCombatant(state, monsterId).hp).toBe(Hp(13));
+  expect(requireCombatant(state, secondMonsterId).hp).toBe(Hp(13));
+  const allocation = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    }),
+    "spellTargetAllocation",
+  );
+
+  expect(allocation).toMatchObject({
+    label: "Magic Missile target allocation",
+    allocationCount: 3,
+    choices: expect.arrayContaining([monsterId, secondMonsterId]),
+    requiresTableSpatialFact: true,
+    spell: {
+      spell: {
+        id: magicMissileSpellId,
+        mechanics: {
+          range: { kind: "point", feet: 120 },
+          phases: [
+            expect.objectContaining({
+              effects: [
+                expect.objectContaining({
+                  kind: "damage",
+                  damageType: "force",
+                  amount: {
+                    expr: { dice: 1, dieSize: 4, flat: 1 },
+                    kind: "fixed",
+                  },
+                }),
+              ],
+            }),
+          ],
+        },
+      },
+    },
+  });
+
+  const allocationFill = spellTargetAllocationFill(
+    allocation,
+    [
+      { targetId: monsterId, count: 2 },
+      { targetId: secondMonsterId, count: 1 },
+    ],
+    input.casterId,
+  );
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [allocationFill],
+    }),
+    "rolledDice",
+  );
+  expect(damage).toMatchObject({
+    label: "Magic Missile damage (3d4+3-force)",
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [allocationFill, damageRollFillWithGroups(damage, [[2, 3], [4]])],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(6));
+  expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(8));
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
 type UnitFeatureSubject = Extract<
   BattleSubject,
   { readonly tag: "unitFeature" }
@@ -976,9 +1129,42 @@ function levelOneSorcererBurningHandsBuild(): CharacterBuild {
 }
 
 function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-fire-bolt",
+    expectedBuildLabel: "Sorcerer Fire Bolt",
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      "shocking_grasp",
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [burningHandsSpellId, "detect_magic"],
+  });
+}
+
+function finalizedLevelOneSorcererMagicMissileBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-magic-missile",
+    expectedBuildLabel: "Sorcerer Magic Missile",
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      "shocking_grasp",
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [magicMissileSpellId, burningHandsSpellId],
+  });
+}
+
+function finalizedLevelOneSorcererBuild(input: {
+  readonly draftIdText: string;
+  readonly expectedBuildLabel: string;
+  readonly cantrips: readonly string[];
+  readonly preparedSpells: readonly string[];
+}): CharacterBuild {
   const draft = createCharacterDraft({
     unitLibrary,
-    draftId: characterDraftId("draft:l1-sdk-sorcerer-fire-bolt"),
+    draftId: characterDraftId(input.draftIdText),
   });
   const afterInitial = requireAcceptedCreationBatch(
     fillCreationHoles({
@@ -1028,18 +1214,14 @@ function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild {
         ),
         creationChoiceFill(
           testUnitChoiceHoleId("class_sorcerer", "class_cantrip_choices"),
-          fireBoltSpellId,
-          "light",
-          "shocking_grasp",
-          sorcerousBurstSpellId,
+          ...input.cantrips,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
             "class_sorcerer",
             "class_prepared_spell_choices",
           ),
-          burningHandsSpellId,
-          "detect_magic",
+          ...input.preparedSpells,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
@@ -1082,7 +1264,7 @@ function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild {
   const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
   if (result.tag !== "ready") {
     throw new Error(
-      `Expected finalized Sorcerer Fire Bolt build, received ${creationFinalizationResultSummary(result)}`,
+      `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
     );
   }
   return result.build;
@@ -1124,6 +1306,28 @@ function finalizedLevelOneWizardFireBoltBuild(): CharacterBuild {
       "thunderwave",
     ],
     preparedSpells: ["detect_magic", "mage_armor", "magic_missile", "shield"],
+  });
+}
+
+function finalizedLevelOneWizardMagicMissileBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-magic-missile",
+    expectedBuildLabel: "Wizard Magic Missile",
+    cantrips: ["light", fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      "detect_magic",
+      "feather_fall",
+      "mage_armor",
+      magicMissileSpellId,
+      "sleep",
+      "thunderwave",
+    ],
+    preparedSpells: [
+      "detect_magic",
+      "mage_armor",
+      magicMissileSpellId,
+      "sleep",
+    ],
   });
 }
 
@@ -1272,6 +1476,27 @@ function creationFinalizationResultSummary(
     )}`;
   }
   return `invalid with issues ${JSON.stringify(result.issues)}`;
+}
+
+function spellTargetAllocationFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>,
+  allocations: readonly {
+    readonly targetId: CombatantId;
+    readonly count: number;
+  }[],
+  casterId: CombatantId,
+): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }> {
+  return {
+    kind: "spellTargetAllocation",
+    holeId: hole.holeId,
+    value: { allocations },
+    spatialFacts: allocations.map((allocation) => ({
+      kind: "spellTarget",
+      casterId,
+      targetId: allocation.targetId,
+      spellId: hole.spell.spell.id,
+    })),
+  };
 }
 
 function creationChoiceFill(

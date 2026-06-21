@@ -17,7 +17,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
 | Existing level-5 SDK seed scenario rows | 6 |
-| Scenario groups | 386 |
+| Scenario groups | 387 |
 | Level 5 scenario groups | 72 |
 
 ### All Level 1-5 Rows by Level Band
@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 488 |
+| sdk-scenario-needed | 486 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 16 |
+| seed-scenario-present | 18 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -74,7 +74,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Task | Groups |
 | --- | ---: |
-| L15-SDK-RAW-03 | 149 |
+| L15-SDK-RAW-03 | 150 |
 | L15-SDK-RAW-04 | 33 |
 | L15-SDK-RAW-05 | 107 |
 | L15-SDK-RAW-06 | 25 |
@@ -85,7 +85,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 111 |
+| battle-spell-sdk | 110 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 10 |
 | owner-review | 6 |
-| seed-present | 16 |
+| seed-present | 18 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -160,6 +160,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery` / `level-1:Sorcerer:sorcerer_innate_sorcery`: level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses
 - `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands` / `spell-level-1:Sorcerer:burning_hands`: level1-sdk-raw-integration: Sorcerer Burning Hands resolves from a level-1 sheet, applies Fire damage, and spends a spell slot
 - `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands` / `spell-level-1:Wizard:burning_hands`: level1-sdk-raw-integration: Wizard Burning Hands resolves from a level-1 spellbook sheet, applies Fire damage, and spends a spell slot
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile` / `spell-level-1:Sorcerer:magic_missile`: level1-sdk-raw-integration: Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile` / `spell-level-1:Wizard:magic_missile`: level1-sdk-raw-integration: Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation
 - `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt` / `spell-level-0:Sorcerer:fire_bolt`: level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots
 - `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt` / `spell-level-0:Wizard:fire_bolt`: level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots
 - `srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack` / `level-5:Monk:monk_extra_attack`: level5-sdk-tracer-bullets: Extra Attack

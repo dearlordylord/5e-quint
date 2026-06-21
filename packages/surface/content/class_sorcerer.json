@@ -41,7 +41,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Sorcerer.md:3-24,33-76,123-129,219-227"
+    "section": "Classes/Sorcerer.md:3-24,33-76,123-129,219-227,240-259"
   },
   "savingThrowProficiencies": [
     "con",
@@ -98,6 +98,10 @@
         },
         {
           "spellId": "thunderwave",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "magic_missile",
           "spellLevel": 1
         },
         {

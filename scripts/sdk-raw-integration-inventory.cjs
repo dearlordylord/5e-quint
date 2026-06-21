@@ -219,6 +219,129 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "magic_missile",
+    className: "Sorcerer",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile",
+    tracerNeedles: [
+      "const sorcererBuild = finalizedLevelOneSorcererMagicMissileBuild();",
+      'sourceUnitId: "class_sorcerer"',
+      "preparedSpells: expect.arrayContaining([magicMissileSpellId])",
+      "build: sorcererBuild,",
+      "casterId: magicMissileSorcererId,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneSorcererMagicMissileBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneSorcererBuild({",
+          'draftIdText: "draft:l1-sdk-sorcerer-magic-missile"',
+          "preparedSpells: [magicMissileSpellId, burningHandsSpellId]",
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneSorcererBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneMagicMissile",
+        needles: [
+          "spellSlotActForProcedure(",
+          '"repeatedDamageAllocation"',
+          '"spellTargetAllocation"',
+          "allocationCount: 3",
+          "requiresTableSpatialFact: true",
+          'range: { kind: "point", feet: 120 }',
+          'damageType: "force"',
+          "expr: { dice: 1, dieSize: 4, flat: 1 }",
+          "expect(requireCombatant(state, monsterId).hp).toBe(Hp(13));",
+          "expect(requireCombatant(state, secondMonsterId).hp).toBe(Hp(13));",
+          "spellTargetAllocationFill(",
+          "{ targetId: monsterId, count: 2 }",
+          "{ targetId: secondMonsterId, count: 1 }",
+          "damageRollFillWithGroups(damage,",
+          "damageRollFillWithGroups(damage, [[2, 3], [4]])",
+          'label: "Magic Missile damage (3d4+3-force)"',
+          "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(6));",
+          "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(8));",
+          "{ spellLevel: 1, count: 2, expended: 1 }",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "magic_missile",
+    className: "Wizard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile",
+    tracerNeedles: [
+      "const wizardBuild = finalizedLevelOneWizardMagicMissileBuild();",
+      'sourceUnitId: "class_wizard"',
+      "spellbook: expect.arrayContaining([magicMissileSpellId])",
+      "preparedSpells: expect.arrayContaining([magicMissileSpellId])",
+      "build: wizardBuild,",
+      "casterId: magicMissileWizardId,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneWizardMagicMissileBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneWizardBuild({",
+          'draftIdText: "draft:l1-sdk-wizard-magic-missile"',
+          "magicMissileSpellId",
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneWizardBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneMagicMissile",
+        needles: [
+          "spellSlotActForProcedure(",
+          '"repeatedDamageAllocation"',
+          '"spellTargetAllocation"',
+          "allocationCount: 3",
+          "requiresTableSpatialFact: true",
+          'range: { kind: "point", feet: 120 }',
+          'damageType: "force"',
+          "expr: { dice: 1, dieSize: 4, flat: 1 }",
+          "expect(requireCombatant(state, monsterId).hp).toBe(Hp(13));",
+          "expect(requireCombatant(state, secondMonsterId).hp).toBe(Hp(13));",
+          "spellTargetAllocationFill(",
+          "{ targetId: monsterId, count: 2 }",
+          "{ targetId: secondMonsterId, count: 1 }",
+          "damageRollFillWithGroups(damage,",
+          "damageRollFillWithGroups(damage, [[2, 3], [4]])",
+          'label: "Magic Missile damage (3d4+3-force)"',
+          "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(6));",
+          "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(8));",
+          "{ spellLevel: 1, count: 2, expended: 1 }",
+        ],
+      },
+    ],
+  },
+  {
     candidateUnitId: "fire_bolt",
     className: "Sorcerer",
     levelBand: "spell-level-0",
@@ -240,10 +363,17 @@ const seededSdkScenarioRows = [
         anchor:
           "function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild",
         needles: [
+          "finalizedLevelOneSorcererBuild({",
+          'draftIdText: "draft:l1-sdk-sorcerer-fire-bolt"',
+          "fireBoltSpellId,",
+          'preparedSpells: [burningHandsSpellId, "detect_magic"]',
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneSorcererBuild(input:",
+        needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          'testUnitChoiceHoleId("class_sorcerer", "class_cantrip_choices")',
-          "fireBoltSpellId,",
           "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
           "return result.build;",
         ],

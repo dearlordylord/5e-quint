@@ -24,7 +24,7 @@ let sorcerer =
       , multiclassProficiencies = { kind = "none" }
       , name = "Sorcerer"
       , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Sorcerer.md:3-24,33-76,123-129,219-227" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Sorcerer.md:3-24,33-76,123-129,219-227,240-259" }
       , savingThrowProficiencies = [ "con", "cha" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "arcana", "deception", "insight", "intimidation", "persuasion", "religion" ] }
@@ -52,6 +52,7 @@ let sorcerer =
                 , { spellId = "detect_magic", spellLevel = 1 }
                 , { spellId = "chromatic_orb", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
+                , { spellId = "magic_missile", spellLevel = 1 }
                 , { spellId = "alter_self", spellLevel = 2 }
                 , { spellId = "scorching_ray", spellLevel = 2 }
                 ] : List ClassSpellAccess

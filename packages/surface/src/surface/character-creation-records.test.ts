@@ -765,6 +765,7 @@ describe("character-creation Surface records", () => {
               "detect_magic",
               "chromatic_orb",
               "thunderwave",
+              "magic_missile",
               { spellId: "alter_self", spellLevel: 2 },
               { spellId: "scorching_ray", spellLevel: 2 },
             ],
