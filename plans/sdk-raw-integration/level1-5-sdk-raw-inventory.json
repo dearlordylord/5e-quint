@@ -38356,6 +38356,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Mage Armor",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -38363,7 +38367,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 258,
         "lineStart": 258,
@@ -46641,6 +46645,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Mage Armor",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -46648,7 +46656,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 183,
         "lineStart": 183,
@@ -56209,16 +56217,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 478,
+      "sdk-scenario-needed": 476,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 26,
+      "seed-scenario-present": 28,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 391,
+    "scenarioGroups": 392,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 106,
+      "battle-spell-sdk": 105,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56228,13 +56236,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 26,
+      "seed-present": 28,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 154,
+      "L15-SDK-RAW-03": 155,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -59042,79 +59050,6 @@
         "Druid spell list Longstrider",
         "Ranger spell list Longstrider",
         "Wizard spell list Longstrider"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "mage_armor"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:mage-armor",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"mage_armor\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md:258",
-        ".references/srd-5.2.1/Classes/Wizard.md:183"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "mage_armor",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Mage Armor",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 258,
-            "lineStart": 258,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "mage_armor",
-          "className": "Wizard",
-          "concept": "Wizard spell list Mage Armor",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 183,
-            "lineStart": 183,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Sorcerer spell list Mage Armor",
-        "Wizard spell list Mage Armor"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65805,6 +65740,61 @@
     },
     {
       "candidateUnitIds": [
+        "mage_armor"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-sorcerer-mage-armor",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Sorcerer:mage_armor\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:258"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "mage_armor",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Mage Armor",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 258,
+            "lineStart": 258,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Mage Armor"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "magic_missile"
       ],
       "categories": [
@@ -65961,6 +65951,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Chromatic Orb"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "mage_armor"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-wizard-mage-armor",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Wizard:mage_armor\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:183"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "mage_armor",
+          "className": "Wizard",
+          "concept": "Wizard spell list Mage Armor",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 183,
+            "lineStart": 183,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Mage Armor"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85065,6 +85110,125 @@
         "spellbook:",
         "preparedSpells:",
         "burningHandsSpellId"
+      ]
+    },
+    {
+      "candidateUnitId": "mage_armor",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneSorcererMageArmorBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneSorcererBuild({",
+            "draftIdText: \"draft:l1-sdk-sorcerer-mage-armor\"",
+            "preparedSpells: [mageArmorSpellId, burningHandsSpellId]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneSorcererBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneMageArmor",
+          "needles": [
+            "spellSlotActForProcedure(",
+            "mageArmorSpellId",
+            "\"persistentArmorEffect\"",
+            "\"targetChoice\"",
+            "choices: [input.casterId]",
+            "spellTargetFill(",
+            "snapshotCombatant(resolved.state, input.casterId)",
+            "armorClass: input.expectedArmorClass",
+            "kind: \"spellBaseArmorClass\"",
+            "sourceSpellId: mageArmorSpellId",
+            "sourceCombatantId: input.casterId",
+            "base: 13",
+            "ability: \"dex\"",
+            "durationTicks: mageArmorDurationTicks",
+            "earlyEnds: [{ kind: \"targetDonsArmor\" }]",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
+      "rowKey": "spell-level-1:Sorcerer:mage_armor",
+      "tracerNeedles": [
+        "const sorcererBuild = finalizedLevelOneSorcererMageArmorBuild();",
+        "sourceUnitId: \"class_sorcerer\"",
+        "preparedSpells: expect.arrayContaining([mageArmorSpellId])",
+        "build: sorcererBuild,",
+        "casterId: mageArmorSorcererId,",
+        "expectedArmorClass: 16,"
+      ]
+    },
+    {
+      "candidateUnitId": "mage_armor",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWizardMageArmorBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWizardBuild({",
+            "draftIdText: \"draft:l1-sdk-wizard-mage-armor\"",
+            "mageArmorSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWizardBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneMageArmor",
+          "needles": [
+            "spellSlotActForProcedure(",
+            "mageArmorSpellId",
+            "\"persistentArmorEffect\"",
+            "\"targetChoice\"",
+            "choices: [input.casterId]",
+            "spellTargetFill(",
+            "snapshotCombatant(resolved.state, input.casterId)",
+            "armorClass: input.expectedArmorClass",
+            "kind: \"spellBaseArmorClass\"",
+            "sourceSpellId: mageArmorSpellId",
+            "sourceCombatantId: input.casterId",
+            "base: 13",
+            "ability: \"dex\"",
+            "durationTicks: mageArmorDurationTicks",
+            "earlyEnds: [{ kind: \"targetDonsArmor\" }]",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
+      "rowKey": "spell-level-1:Wizard:mage_armor",
+      "tracerNeedles": [
+        "const wizardBuild = finalizedLevelOneWizardMageArmorBuild();",
+        "sourceUnitId: \"class_wizard\"",
+        "spellbook: expect.arrayContaining([mageArmorSpellId])",
+        "preparedSpells: expect.arrayContaining([mageArmorSpellId])",
+        "build: wizardBuild,",
+        "casterId: mageArmorWizardId,",
+        "expectedArmorClass: 15,"
       ]
     },
     {

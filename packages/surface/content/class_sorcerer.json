@@ -99,6 +99,10 @@
           "spellLevel": 1
         },
         {
+          "spellId": "mage_armor",
+          "spellLevel": 1
+        },
+        {
           "spellId": "thunderwave",
           "spellLevel": 1
         },

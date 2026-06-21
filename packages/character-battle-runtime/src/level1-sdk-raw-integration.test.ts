@@ -36,6 +36,7 @@ import {
   type CreationHoleIdText,
   type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
+import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Hp, movementDeltaFeet, movementFeet } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
@@ -92,6 +93,8 @@ const chromaticOrbSorcererId = combatantId(
 const chromaticOrbWizardId = combatantId(
   "combatant:l1-sdk-chromatic-orb-wizard",
 );
+const mageArmorSorcererId = combatantId("combatant:l1-sdk-mage-armor-sorcerer");
+const mageArmorWizardId = combatantId("combatant:l1-sdk-mage-armor-wizard");
 const magicMissileSorcererId = combatantId(
   "combatant:l1-sdk-magic-missile-sorcerer",
 );
@@ -119,7 +122,9 @@ const fireBoltSpellId = "fire_bolt";
 const rayOfFrostSpellId = "ray_of_frost";
 const shockingGraspSpellId = "shocking_grasp";
 const chromaticOrbSpellId = "chromatic_orb";
+const mageArmorSpellId = "mage_armor";
 const magicMissileSpellId = "magic_missile";
+const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
 
 describe("level 1 SDK RAW integration", () => {
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
@@ -782,6 +787,44 @@ describe("level 1 SDK RAW integration", () => {
       build: wizardBuild,
       casterId: chromaticOrbWizardId,
       expectedSpellAttackBonus: 5,
+    });
+  });
+
+  test("Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect", () => {
+    const sorcererBuild = finalizedLevelOneSorcererMageArmorBuild();
+    const wizardBuild = finalizedLevelOneWizardMageArmorBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          preparedSpells: expect.arrayContaining([mageArmorSpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          spellbook: expect.arrayContaining([mageArmorSpellId]),
+          preparedSpells: expect.arrayContaining([mageArmorSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneMageArmor({
+      battleIdText: "battle:l1-sdk-mage-armor-sorcerer",
+      characterIdText: "character:l1-sdk-mage-armor-sorcerer",
+      build: sorcererBuild,
+      casterId: mageArmorSorcererId,
+      expectedArmorClass: 16,
+    });
+    assertLevelOneMageArmor({
+      battleIdText: "battle:l1-sdk-mage-armor-wizard",
+      characterIdText: "character:l1-sdk-mage-armor-wizard",
+      build: wizardBuild,
+      casterId: mageArmorWizardId,
+      expectedArmorClass: 15,
     });
   });
 
@@ -1639,6 +1682,81 @@ function assertLevelOneChromaticOrb(input: {
   ]);
 }
 
+function assertLevelOneMageArmor(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedArmorClass: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    mageArmorSpellId,
+    1,
+    "persistentArmorEffect",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+
+  expect(target).toMatchObject({
+    choices: [input.casterId],
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          target,
+          mageArmorSpellId,
+          input.casterId,
+          input.casterId,
+        ),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(snapshotCombatant(resolved.state, input.casterId)).toMatchObject({
+    armorClass: input.expectedArmorClass,
+  });
+  expect(caster.activeEffects).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "spellBaseArmorClass",
+        sourceSpellId: mageArmorSpellId,
+        sourceCombatantId: input.casterId,
+        base: 13,
+        ability: "dex",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: mageArmorDurationTicks,
+        },
+        earlyEnds: [{ kind: "targetDonsArmor" }],
+      }),
+    ]),
+  );
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
 function assertLevelOneMagicMissile(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -1942,6 +2060,20 @@ function finalizedLevelOneSorcererChromaticOrbBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererMageArmorBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-mage-armor",
+    expectedBuildLabel: "Sorcerer Mage Armor",
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      shockingGraspSpellId,
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [mageArmorSpellId, burningHandsSpellId],
+  });
+}
+
 function finalizedLevelOneSorcererMagicMissileBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-magic-missile",
@@ -2177,6 +2309,28 @@ function finalizedLevelOneWizardChromaticOrbBuild(): CharacterBuild {
       "detect_magic",
       "mage_armor",
       chromaticOrbSpellId,
+      "sleep",
+    ],
+  });
+}
+
+function finalizedLevelOneWizardMageArmorBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-mage-armor",
+    expectedBuildLabel: "Wizard Mage Armor",
+    cantrips: ["light", fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      "detect_magic",
+      "feather_fall",
+      mageArmorSpellId,
+      magicMissileSpellId,
+      "sleep",
+      "thunderwave",
+    ],
+    preparedSpells: [
+      "detect_magic",
+      mageArmorSpellId,
+      magicMissileSpellId,
       "sleep",
     ],
   });

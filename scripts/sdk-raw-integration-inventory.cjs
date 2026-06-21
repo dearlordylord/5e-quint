@@ -607,6 +607,125 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "mage_armor",
+    className: "Sorcerer",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
+    tracerNeedles: [
+      "const sorcererBuild = finalizedLevelOneSorcererMageArmorBuild();",
+      'sourceUnitId: "class_sorcerer"',
+      "preparedSpells: expect.arrayContaining([mageArmorSpellId])",
+      "build: sorcererBuild,",
+      "casterId: mageArmorSorcererId,",
+      "expectedArmorClass: 16,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneSorcererMageArmorBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneSorcererBuild({",
+          'draftIdText: "draft:l1-sdk-sorcerer-mage-armor"',
+          "preparedSpells: [mageArmorSpellId, burningHandsSpellId]",
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneSorcererBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneMageArmor",
+        needles: [
+          "spellSlotActForProcedure(",
+          "mageArmorSpellId",
+          '"persistentArmorEffect"',
+          '"targetChoice"',
+          "choices: [input.casterId]",
+          "spellTargetFill(",
+          "snapshotCombatant(resolved.state, input.casterId)",
+          "armorClass: input.expectedArmorClass",
+          'kind: "spellBaseArmorClass"',
+          "sourceSpellId: mageArmorSpellId",
+          "sourceCombatantId: input.casterId",
+          "base: 13",
+          'ability: "dex"',
+          "durationTicks: mageArmorDurationTicks",
+          'earlyEnds: [{ kind: "targetDonsArmor" }]',
+          "{ spellLevel: 1, count: 2, expended: 1 }",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "mage_armor",
+    className: "Wizard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
+    tracerNeedles: [
+      "const wizardBuild = finalizedLevelOneWizardMageArmorBuild();",
+      'sourceUnitId: "class_wizard"',
+      "spellbook: expect.arrayContaining([mageArmorSpellId])",
+      "preparedSpells: expect.arrayContaining([mageArmorSpellId])",
+      "build: wizardBuild,",
+      "casterId: mageArmorWizardId,",
+      "expectedArmorClass: 15,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneWizardMageArmorBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneWizardBuild({",
+          'draftIdText: "draft:l1-sdk-wizard-mage-armor"',
+          "mageArmorSpellId",
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneWizardBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneMageArmor",
+        needles: [
+          "spellSlotActForProcedure(",
+          "mageArmorSpellId",
+          '"persistentArmorEffect"',
+          '"targetChoice"',
+          "choices: [input.casterId]",
+          "spellTargetFill(",
+          "snapshotCombatant(resolved.state, input.casterId)",
+          "armorClass: input.expectedArmorClass",
+          'kind: "spellBaseArmorClass"',
+          "sourceSpellId: mageArmorSpellId",
+          "sourceCombatantId: input.casterId",
+          "base: 13",
+          'ability: "dex"',
+          "durationTicks: mageArmorDurationTicks",
+          'earlyEnds: [{ kind: "targetDonsArmor" }]',
+          "{ spellLevel: 1, count: 2, expended: 1 }",
+        ],
+      },
+    ],
+  },
+  {
     candidateUnitId: "chromatic_orb",
     className: "Sorcerer",
     levelBand: "spell-level-1",
