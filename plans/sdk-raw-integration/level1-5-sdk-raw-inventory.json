@@ -19921,6 +19921,18 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Thaumaturgy",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Thaumaturgy Booming Voice cantrip resolves from a level-1 sheet with Advantage on Charisma (Intimidation) Ability Checks",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:31-35",
+          ".references/srd-5.2.1/Classes/Cleric.md:56-60",
+          ".references/srd-5.2.1/Classes/Cleric.md:146-156",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:40-58",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:848-861"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -19928,7 +19940,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 156,
         "lineStart": 156,
@@ -56326,16 +56338,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 455,
+      "sdk-scenario-needed": 454,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 49,
+      "seed-scenario-present": 50,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 401,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 93,
+      "battle-spell-sdk": 92,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56345,7 +56357,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 49,
+      "seed-present": 50,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -59523,61 +59535,6 @@
       "sampleConcepts": [
         "Bard spell list Starry Wisp",
         "Druid spell list Starry Wisp"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "thaumaturgy"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:thaumaturgy",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-0"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"thaumaturgy\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:156"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "thaumaturgy",
-          "className": "Cleric",
-          "concept": "Cleric spell list Thaumaturgy",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 156,
-            "lineStart": 156,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Thaumaturgy"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -64581,6 +64538,67 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Sacred Flame"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "thaumaturgy"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-cleric-thaumaturgy",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Cleric:thaumaturgy\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:146-156",
+        ".references/srd-5.2.1/Classes/Cleric.md:156",
+        ".references/srd-5.2.1/Classes/Cleric.md:31-35",
+        ".references/srd-5.2.1/Classes/Cleric.md:56-60",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:848-861",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:40-58",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "thaumaturgy",
+          "className": "Cleric",
+          "concept": "Cleric spell list Thaumaturgy",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 156,
+            "lineStart": 156,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Thaumaturgy"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85758,7 +85776,7 @@
             "finalizedLevelOneClericBuild({",
             "draftIdText: \"draft:l1-sdk-cleric-sacred-flame\"",
             "expectedBuildLabel: \"Cleric Sacred Flame\"",
-            "cantrips: [\"guidance\", sacredFlameSpellId, \"thaumaturgy\"]",
+            "cantrips: [\"guidance\", sacredFlameSpellId, thaumaturgySpellId]",
             "\"bless\"",
             "\"shield_of_faith\""
           ]
@@ -85811,6 +85829,91 @@
         "build: clericBuild,",
         "casterId: sacredFlameClericId,",
         "expectedSpellSaveDc: 12,"
+      ]
+    },
+    {
+      "candidateUnitId": "thaumaturgy",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Thaumaturgy Booming Voice cantrip resolves from a level-1 sheet with Advantage on Charisma (Intimidation) Ability Checks",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:31-35",
+          ".references/srd-5.2.1/Classes/Cleric.md:56-60",
+          ".references/srd-5.2.1/Classes/Cleric.md:146-156",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:40-58",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:848-861"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneClericThaumaturgyBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneClericBuild({",
+            "draftIdText: \"draft:l1-sdk-cleric-thaumaturgy\"",
+            "expectedBuildLabel: \"Cleric Thaumaturgy\"",
+            "thaumaturgySpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneClericBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_cleric\"",
+            "\"class_cantrip_choices\"",
+            "\"class_prepared_spell_choices\"",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneThaumaturgyBoomingVoice",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "thaumaturgySpellId",
+            "\"thaumaturgyBoomingVoice\"",
+            "\"thaumaturgyActiveOneMinuteEffectCount\"",
+            "label: \"Thaumaturgy total active 1-minute effects\"",
+            "maximumActiveOneMinuteEffects: 3",
+            "requiresTableSpellEffectCount: true",
+            "noActiveThaumaturgyOneMinuteEffectsFill(countHole)",
+            "kind: \"thaumaturgyBoomingVoice\"",
+            "sourceSpellId: thaumaturgySpellId",
+            "sourceCombatantId: input.casterId",
+            "kind: \"duration\"",
+            "durationTicks: thaumaturgyDurationTicks",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([]);",
+            "expect(caster.concentration).toBeNull();",
+            "input.expectedSpellSlots",
+            "thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(",
+            "difficultyClass(13)",
+            "ability: \"cha\"",
+            "skill: \"intimidation\"",
+            "rollMode: \"advantage\""
+          ]
+        },
+        {
+          "anchor": "function noActiveThaumaturgyOneMinuteEffectsFill",
+          "needles": [
+            "kind: \"thaumaturgyActiveOneMinuteEffectCount\"",
+            "value: { activeOneMinuteEffectCount: 0 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
+      "rowKey": "spell-level-0:Cleric:thaumaturgy",
+      "tracerNeedles": [
+        "const clericBuild = finalizedLevelOneClericThaumaturgyBuild();",
+        "sourceUnitId: \"class_cleric\"",
+        "spellcastingAbility: \"wis\"",
+        "cantrips: expect.arrayContaining([thaumaturgySpellId])",
+        "build: clericBuild,",
+        "casterId: thaumaturgyClericId,",
+        "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
       ]
     },
     {

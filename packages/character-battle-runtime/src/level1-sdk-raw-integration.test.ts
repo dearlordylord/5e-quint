@@ -8,6 +8,7 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   spellSaveDcForCaster,
+  thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
@@ -41,8 +42,16 @@ import {
   type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { Hp, movementDeltaFeet, movementFeet } from "@dnd/shared/types";
+import {
+  elapsedTimeTicksFromHours,
+  elapsedTimeTicksFromMinutes,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  difficultyClass,
+  Hp,
+  movementDeltaFeet,
+  movementFeet,
+} from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 
@@ -113,6 +122,7 @@ const produceFlameDruidId = combatantId("combatant:l1-sdk-produce-flame-druid");
 const sacredFlameClericId = combatantId(
   "combatant:l1-sdk-sacred-flame-cleric",
 );
+const thaumaturgyClericId = combatantId("combatant:l1-sdk-thaumaturgy-cleric");
 const guidingBoltClericId = combatantId(
   "combatant:l1-sdk-guiding-bolt-cleric",
 );
@@ -203,6 +213,7 @@ const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
 const produceFlameSpellId = "produce_flame";
 const sacredFlameSpellId = "sacred_flame";
+const thaumaturgySpellId = "thaumaturgy";
 const guidingBoltSpellId = "guiding_bolt";
 const inflictWoundsSpellId = "inflict_wounds";
 const chillTouchSpellId = "chill_touch";
@@ -218,6 +229,7 @@ const mageArmorSpellId = "mage_armor";
 const magicMissileSpellId = "magic_missile";
 const thunderwaveSpellId = "thunderwave";
 const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
+const thaumaturgyDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 
 describe("level 1 SDK RAW integration", () => {
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
@@ -960,6 +972,28 @@ describe("level 1 SDK RAW integration", () => {
       build: clericBuild,
       casterId: sacredFlameClericId,
       expectedSpellSaveDc: 12,
+    });
+  });
+
+  test("Cleric Thaumaturgy Booming Voice cantrip resolves from a level-1 sheet with Advantage on Charisma (Intimidation) Ability Checks", () => {
+    const clericBuild = finalizedLevelOneClericThaumaturgyBuild();
+
+    expect(clericBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          cantrips: expect.arrayContaining([thaumaturgySpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneThaumaturgyBoomingVoice({
+      battleIdText: "battle:l1-sdk-thaumaturgy-cleric",
+      characterIdText: "character:l1-sdk-thaumaturgy-cleric",
+      build: clericBuild,
+      casterId: thaumaturgyClericId,
+      expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
     });
   });
 
@@ -2728,6 +2762,92 @@ function assertLevelOneSacredFlame(input: {
   expect(successfulSaveCaster.origin.spellcasting?.spellSlots).toEqual([
     { spellLevel: 1, count: 2, expended: 0 },
   ]);
+}
+
+function assertLevelOneThaumaturgyBoomingVoice(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSlots: readonly {
+    readonly spellLevel: number;
+    readonly count: number;
+    readonly expended: number;
+  }[];
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = cantripCastActionSpellAct(
+    state,
+    input.casterId,
+    thaumaturgySpellId,
+    "thaumaturgyBoomingVoice",
+  );
+  const countHole = requireHoleFromList(
+    act.initialHoles,
+    "thaumaturgyActiveOneMinuteEffectCount",
+  );
+
+  expect(act.initialHoles).toHaveLength(1);
+  expect(countHole).toMatchObject({
+    label: "Thaumaturgy total active 1-minute effects",
+    maximumActiveOneMinuteEffects: 3,
+    requiresTableSpellEffectCount: true,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [noActiveThaumaturgyOneMinuteEffectsFill(countHole)],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(caster.activeEffects).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "thaumaturgyBoomingVoice",
+        sourceSpellId: thaumaturgySpellId,
+        sourceCombatantId: input.casterId,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: thaumaturgyDurationTicks,
+        },
+      }),
+    ]),
+  );
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([]);
+  expect(caster.concentration).toBeNull();
+  expect(caster.origin.spellcasting?.spellSlots).toEqual(
+    input.expectedSpellSlots,
+  );
+  expect(
+    thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
+      resolved.state,
+      input.casterId,
+      difficultyClass(13),
+    ),
+  ).toMatchObject({
+    kind: "abilityCheck",
+    ability: "cha",
+    skill: "intimidation",
+    rollMode: "advantage",
+  });
 }
 
 function assertLevelOneInflictWounds(input: {
@@ -4632,7 +4752,16 @@ function finalizedLevelOneClericSacredFlameBuild(): CharacterBuild {
   return finalizedLevelOneClericBuild({
     draftIdText: "draft:l1-sdk-cleric-sacred-flame",
     expectedBuildLabel: "Cleric Sacred Flame",
-    cantrips: ["guidance", sacredFlameSpellId, "thaumaturgy"],
+    cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
+    preparedSpells: ["bless", "cure_wounds", "guiding_bolt", "shield_of_faith"],
+  });
+}
+
+function finalizedLevelOneClericThaumaturgyBuild(): CharacterBuild {
+  return finalizedLevelOneClericBuild({
+    draftIdText: "draft:l1-sdk-cleric-thaumaturgy",
+    expectedBuildLabel: "Cleric Thaumaturgy",
+    cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
     preparedSpells: ["bless", "cure_wounds", "guiding_bolt", "shield_of_faith"],
   });
 }
@@ -4641,7 +4770,7 @@ function finalizedLevelOneClericGuidingBoltBuild(): CharacterBuild {
   return finalizedLevelOneClericBuild({
     draftIdText: "draft:l1-sdk-cleric-guiding-bolt",
     expectedBuildLabel: "Cleric Guiding Bolt",
-    cantrips: ["guidance", sacredFlameSpellId, "thaumaturgy"],
+    cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
     preparedSpells: [
       "bless",
       "cure_wounds",
@@ -4655,7 +4784,7 @@ function finalizedLevelOneClericInflictWoundsBuild(): CharacterBuild {
   return finalizedLevelOneClericBuild({
     draftIdText: "draft:l1-sdk-cleric-inflict-wounds",
     expectedBuildLabel: "Cleric Inflict Wounds",
-    cantrips: ["guidance", sacredFlameSpellId, "thaumaturgy"],
+    cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
     preparedSpells: [
       "bless",
       "cure_wounds",
@@ -5997,6 +6126,22 @@ function thunderwaveArea(
       sound: "thunderous boom",
       audibleRadiusFeet: movementFeet(300),
     },
+  };
+}
+
+function noActiveThaumaturgyOneMinuteEffectsFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
+  >,
+): Extract<
+  BattleFill,
+  { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
+> {
+  return {
+    kind: "thaumaturgyActiveOneMinuteEffectCount",
+    holeId: hole.holeId,
+    value: { activeOneMinuteEffectCount: 0 },
   };
 }
 
