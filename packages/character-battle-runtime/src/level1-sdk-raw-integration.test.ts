@@ -80,6 +80,12 @@ const rayOfFrostSorcererId = combatantId(
   "combatant:l1-sdk-ray-of-frost-sorcerer",
 );
 const rayOfFrostWizardId = combatantId("combatant:l1-sdk-ray-of-frost-wizard");
+const chromaticOrbSorcererId = combatantId(
+  "combatant:l1-sdk-chromatic-orb-sorcerer",
+);
+const chromaticOrbWizardId = combatantId(
+  "combatant:l1-sdk-chromatic-orb-wizard",
+);
 const magicMissileSorcererId = combatantId(
   "combatant:l1-sdk-magic-missile-sorcerer",
 );
@@ -105,6 +111,7 @@ const acidSplashSpellId = "acid_splash";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
 const rayOfFrostSpellId = "ray_of_frost";
+const chromaticOrbSpellId = "chromatic_orb";
 const magicMissileSpellId = "magic_missile";
 
 describe("level 1 SDK RAW integration", () => {
@@ -696,6 +703,44 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
+  test("Sorcerer and Wizard Chromatic Orb resolve from level-1 spell access with chosen damage and one duplicate-dice leap", () => {
+    const sorcererBuild = finalizedLevelOneSorcererChromaticOrbBuild();
+    const wizardBuild = finalizedLevelOneWizardChromaticOrbBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          preparedSpells: expect.arrayContaining([chromaticOrbSpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          spellbook: expect.arrayContaining([chromaticOrbSpellId]),
+          preparedSpells: expect.arrayContaining([chromaticOrbSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneChromaticOrb({
+      battleIdText: "battle:l1-sdk-chromatic-orb-sorcerer",
+      characterIdText: "character:l1-sdk-chromatic-orb-sorcerer",
+      build: sorcererBuild,
+      casterId: chromaticOrbSorcererId,
+      expectedSpellAttackBonus: 4,
+    });
+    assertLevelOneChromaticOrb({
+      battleIdText: "battle:l1-sdk-chromatic-orb-wizard",
+      characterIdText: "character:l1-sdk-chromatic-orb-wizard",
+      build: wizardBuild,
+      casterId: chromaticOrbWizardId,
+      expectedSpellAttackBonus: 5,
+    });
+  });
+
   test("Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation", () => {
     const sorcererBuild = finalizedLevelOneSorcererMagicMissileBuild();
     const wizardBuild = finalizedLevelOneWizardMagicMissileBuild();
@@ -1205,6 +1250,213 @@ function assertLevelOneRayOfFrost(input: {
   });
 }
 
+function assertLevelOneChromaticOrb(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellAttackBonus: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        secondMonsterId,
+        8,
+        srdStatBlock("stat_block_skeleton"),
+      ),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    chromaticOrbSpellId,
+    1,
+    "chainedSpellAttackDamage",
+  );
+  const damageType = requireHoleFromList(act.initialHoles, "damageTypeChoice");
+
+  expect(damageType).toMatchObject({
+    label: "Chromatic Orb damage type",
+    choices: ["acid", "cold", "fire", "lightning", "poison", "thunder"],
+    spell: {
+      procedure: "chainedSpellAttackDamage",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      targeting: { kind: "singleCombatant" },
+      attackKind: "ranged_spell_attack",
+      attackBonus: input.expectedSpellAttackBonus,
+      damage: { expr: { dice: 3, dieSize: 8 } },
+      damageTypeChoices: [
+        "acid",
+        "cold",
+        "fire",
+        "lightning",
+        "poison",
+        "thunder",
+      ],
+      rangeFeet: 90,
+      leapRangeFeet: 30,
+    },
+  });
+
+  const damageTypeFill = damageTypeChoiceFill(damageType, "poison");
+  const primaryTarget = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageTypeFill],
+    }),
+    "targetChoice",
+  );
+  const primaryTargetFill = spellTargetFill(
+    primaryTarget,
+    chromaticOrbSpellId,
+    input.casterId,
+    monsterId,
+  );
+  const primaryAttackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageTypeFill, primaryTargetFill],
+    }),
+    "attackRoll",
+  );
+
+  expect(primaryAttackRoll).toMatchObject({
+    attackBonus: input.expectedSpellAttackBonus,
+    spell: {
+      attackKind: "ranged_spell_attack",
+      damage: { expr: { dice: 3, dieSize: 8 } },
+      damageTypeChoices: [
+        "acid",
+        "cold",
+        "fire",
+        "lightning",
+        "poison",
+        "thunder",
+      ],
+      rangeFeet: 90,
+      leapRangeFeet: 30,
+    },
+  });
+
+  const primaryAttackFill = attackRollFill(primaryAttackRoll, {
+    total: 14,
+    naturalD20: 10,
+  });
+  const primaryDamage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageTypeFill, primaryTargetFill, primaryAttackFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(primaryDamage).toMatchObject({
+    label: "Chromatic Orb damage 1 (3d8-poison)",
+    critical: false,
+  });
+
+  const primaryDamageFill = damageRollFillWithGroups(primaryDamage, [
+    [4, 4, 1],
+  ]);
+  const leapTarget = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        damageTypeFill,
+        primaryTargetFill,
+        primaryAttackFill,
+        primaryDamageFill,
+      ],
+    }),
+    "targetChoice",
+  );
+
+  expect(leapTarget).toMatchObject({
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([secondMonsterId]),
+  });
+  expect(leapTarget.choices).not.toContain(monsterId);
+
+  const leapTargetFill = spellLeapTargetFill(
+    leapTarget,
+    chromaticOrbSpellId,
+    monsterId,
+    secondMonsterId,
+  );
+  const leapAttackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        damageTypeFill,
+        primaryTargetFill,
+        primaryAttackFill,
+        primaryDamageFill,
+        leapTargetFill,
+      ],
+    }),
+    "attackRoll",
+  );
+  const leapDamage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        damageTypeFill,
+        primaryTargetFill,
+        primaryAttackFill,
+        primaryDamageFill,
+        leapTargetFill,
+        attackRollFill(leapAttackRoll, { total: 14, naturalD20: 10 }),
+      ],
+    }),
+    "rolledDice",
+  );
+
+  expect(leapDamage).toMatchObject({
+    label: "Chromatic Orb damage 2 (3d8-poison)",
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        damageTypeFill,
+        primaryTargetFill,
+        primaryAttackFill,
+        primaryDamageFill,
+        leapTargetFill,
+        attackRollFill(leapAttackRoll, { total: 14, naturalD20: 10 }),
+        damageRollFillWithGroups(leapDamage, [[2, 2, 2]]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(13));
+  expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
 function assertLevelOneMagicMissile(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -1480,6 +1732,20 @@ function finalizedLevelOneSorcererRayOfFrostBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererChromaticOrbBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-chromatic-orb",
+    expectedBuildLabel: "Sorcerer Chromatic Orb",
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      "shocking_grasp",
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [chromaticOrbSpellId, burningHandsSpellId],
+  });
+}
+
 function finalizedLevelOneSorcererMagicMissileBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-magic-missile",
@@ -1678,6 +1944,28 @@ function finalizedLevelOneWizardRayOfFrostBuild(): CharacterBuild {
       "thunderwave",
     ],
     preparedSpells: ["detect_magic", "mage_armor", "magic_missile", "shield"],
+  });
+}
+
+function finalizedLevelOneWizardChromaticOrbBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-chromatic-orb",
+    expectedBuildLabel: "Wizard Chromatic Orb",
+    cantrips: ["light", fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      "detect_magic",
+      "mage_armor",
+      "magic_missile",
+      chromaticOrbSpellId,
+      "sleep",
+      "thunderwave",
+    ],
+    preparedSpells: [
+      "detect_magic",
+      "mage_armor",
+      chromaticOrbSpellId,
+      "sleep",
+    ],
   });
 }
 
@@ -1969,6 +2257,28 @@ function spellTargetFill(
     holeId: hole.holeId,
     value: targetId,
     spatialFacts: [{ kind: "spellTarget", casterId, targetId, spellId }],
+  };
+}
+
+function spellLeapTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: UnitRecord["id"],
+  previousTargetId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spellLeapTargetWithinRange",
+        previousTargetId,
+        targetId,
+        spellId,
+        rangeFeet: movementFeet(30),
+      },
+    ],
   };
 }
 
