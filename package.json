@@ -8,6 +8,7 @@
     "check:character-sheet-runtime-split": "node scripts/audit-character-sheet-runtime-split.mjs",
     "check:qa-generated-identity": "python3 scripts/qa/generate_assertions.py --self-test",
     "check:mbt-driver-closure": "node scripts/check-mbt-driver-closure.cjs",
+    "check:reducer-route-connectors": "node scripts/check-reducer-route-connectors.cjs",
     "raw-coverage:check": "node scripts/raw-coverage-check.cjs",
     "raw-coverage:check:self-test": "node scripts/raw-coverage-check.cjs --self-test",
     "rules-kernel-coverage:check": "node scripts/rules-kernel-coverage-check.cjs",
@@ -23,7 +24,7 @@
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
     "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
     "circular": "pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",
-    "quality": "pnpm check:authored-id-dispatch && pnpm check:character-sheet-runtime-split && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm rules-kernel-coverage:check && pnpm cleanroom-branch-coverage:check && pnpm cleanroom-sync:check && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && pnpm lint && pnpm circular && pnpm typecheck",
+    "quality": "pnpm check:authored-id-dispatch && pnpm check:character-sheet-runtime-split && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm check:reducer-route-connectors && pnpm rules-kernel-coverage:check && pnpm cleanroom-branch-coverage:check && pnpm cleanroom-sync:check && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && pnpm lint && pnpm circular && pnpm typecheck",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
   },

@@ -63,6 +63,7 @@
     "test:mbt:rule-core-reactions": "vitest run src/rule-core-reactions.mbt.test.ts",
     "test:mbt:rule-core-stat-block-controls": "vitest run src/rule-core-stat-block-controls.mbt.test.ts",
     "test:mbt:rule-core-spells": "vitest run src/rule-core-spells.mbt.test.ts",
+    "test:mbt:reducer-route-connectors": "vitest run src/reducer-route-connectors.mbt.test.ts",
     "test:mbt:scalar-buff-active-effects": "vitest run src/scalar-buff-active-effects.mbt.test.ts",
     "typecheck": "tsc --noEmit"
   },

@@ -765,6 +765,74 @@ type HitPointRestorationOrderingProjection = {
   readonly featureTargetHp: number;
   readonly featureTargetZeroHpLifecycleCleared: boolean;
 };
+const REDUCER_ROUTE_SUBJECT_FAMILIES = [
+  "slotSpell",
+  "saveGatedSpell",
+  "hitPointRestoration",
+  "weaponAttack",
+  "deathSavingThrow",
+  "concentrationTeardown",
+] as const;
+type ReducerRouteSubjectFamily =
+  (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
+const REDUCER_ROUTE_OWNER_GROUPS = [
+  "battleActionEconomy",
+  "battleSpellSlotAndActionEconomy",
+  "battleHoleFrontier",
+  "battleHitPoint",
+  "battleHitPointAndZeroHpLifecycle",
+  "battleConcentration",
+] as const;
+type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
+const REDUCER_ROUTE_HOLES = [
+  "conditionChoice",
+  "hitPointHealingDistribution",
+  "rolledDice",
+  "savingThrowOutcome",
+  "spellTargetAllocation",
+  "spellTargetList",
+  "targetChoice",
+] as const;
+type ReducerRouteHole = (typeof REDUCER_ROUTE_HOLES)[number];
+const REDUCER_ROUTE_FILLS = [
+  "conditionChoice",
+  "hitPointHealingDistribution",
+  "rolledDice",
+  "savingThrowOutcome",
+  "spellTargetAllocation",
+  "spellTargetList",
+  "targetChoice",
+] as const;
+type ReducerRouteFill = (typeof REDUCER_ROUTE_FILLS)[number];
+type ReducerRouteEvent =
+  | {
+      readonly kind: "startBattle";
+      readonly owner: ReducerRouteOwnerGroup;
+    }
+  | {
+      readonly kind: "discoverBattleActs";
+      readonly subject: ReducerRouteSubjectFamily;
+      readonly holes: readonly ReducerRouteHole[];
+      readonly owner: ReducerRouteOwnerGroup;
+    }
+  | {
+      readonly kind: "resolveBattleSubject";
+      readonly subject: ReducerRouteSubjectFamily;
+      readonly fill: ReducerRouteFill;
+      readonly holes: readonly ReducerRouteHole[];
+      readonly owner: ReducerRouteOwnerGroup;
+    };
+type ReducerRoutedMagicMissileProjection = MbtProjection & {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedSaveGatedSpellOrderingProjection =
+  SaveGatedSpellOrderingProjection & {
+    readonly route: readonly ReducerRouteEvent[];
+  };
+type ReducerRoutedHitPointRestorationOrderingProjection =
+  HitPointRestorationOrderingProjection & {
+    readonly route: readonly ReducerRouteEvent[];
+  };
 type CommandOrderingProjection = {
   readonly stage: CommandOrderingStage;
   readonly holes: readonly CommandOrderingHole[];
@@ -895,6 +963,40 @@ function startBattleRight(
     throw new Error(result.left.message);
   }
   return result.right;
+}
+
+function reducerRouteStartBattle(
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return { kind: "startBattle", owner };
+}
+
+function reducerRouteDiscoverBattleActs(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly BattleHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: input.subject,
+    holes: reducerRouteHolesFromRuntime(input.holes),
+    owner: input.owner,
+  };
+}
+
+function reducerRouteResolveBattleSubject(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly BattleHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: input.subject,
+    fill: input.fill,
+    holes: reducerRouteHolesFromRuntime(input.holes),
+    owner: input.owner,
+  };
 }
 
 if (statBlockCatalogResult.tag !== "ok" || unitCatalogResult.tag !== "ok") {
@@ -1737,6 +1839,274 @@ export function createSaveGatedSpellOrderingDriver() {
   });
 }
 
+export function createSaveGatedSpellOrderingRouteDriver() {
+  return defineDriver(saveGatedSpellOrderingDriverSchema, () => {
+    let state = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+    let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
+      lightningBoltSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+    let stage: SaveGatedSpellOrderingProjection["stage"] = "actSelection";
+    let lastResult: SaveGatedSpellOrderingProjection["lastResult"] = "init";
+    let orderingError: SaveGatedSpellOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      state = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+      subject = lightningBoltSubject();
+      fills = [];
+      holes = [];
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function discoverSpell(
+      spellId: "lightning_bolt" | "blindness_deafness",
+      slotLevel: 2 | 3,
+      procedure: "saveGatedDamage" | "saveGatedCondition",
+      nextStage: SaveGatedSpellOrderingProjection["stage"],
+    ): void {
+      state = saveGatedSpellOrderingBattle(spellId, slotLevel);
+      subject = saveGatedSpellSubject(spellId, slotLevel, procedure);
+      fills = [];
+      holes = discoverSaveGatedSpellHoles(state, subject, spellId);
+      route = [
+        ...route,
+        reducerRouteDiscoverBattleActs({
+          subject: "saveGatedSpell",
+          holes,
+          owner: "battleSpellSlotAndActionEconomy",
+        }),
+      ];
+      stage = nextStage;
+      lastResult = "needsHoles";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: SaveGatedSpellOrderingProjection["stage"],
+      fill: ReducerRouteFill,
+      owner: ReducerRouteOwnerGroup,
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "saveGatedSpell",
+            fill,
+            holes,
+            owner,
+          }),
+        ];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "saveGatedSpell",
+            fill,
+            holes,
+            owner,
+          }),
+        ];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted save-gated spell ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        SaveGatedSpellOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: SaveGatedSpellOrderingProjection["stage"],
+      fill: ReducerRouteFill,
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error(
+          "Expected save-gated spell fill to request earlier holes.",
+        );
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      route = [
+        ...route,
+        reducerRouteResolveBattleSubject({
+          subject: "saveGatedSpell",
+          fill,
+          holes,
+          owner: "battleHoleFrontier",
+        }),
+      ];
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverAreaSaveDamage: () => {
+        discoverSpell(
+          "lightning_bolt",
+          3,
+          "saveGatedDamage",
+          "damageSavingThrowOutcome",
+        );
+      },
+      doSubmitDamageBeforeSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        const damage = requireHole(
+          saveGatedSpellHolesAfterFills(state, subject, [
+            saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+              { targetId: skeletonId, succeeded: false },
+            ]),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              damageRollFillWithGroups(damage, [[6, 6, 6, 6, 6, 6, 6, 6]]),
+            ],
+          }),
+          "savingThrowRequired",
+          "damageSavingThrowOutcome",
+          "rolledDice",
+        );
+      },
+      doFillAreaSaveFailed: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+          "savingThrowOutcome",
+          "battleHoleFrontier",
+        );
+      },
+      doFillAreaDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [
+          ...fills,
+          damageRollFillWithGroups(damage, [[6, 6, 6, 6, 6, 6, 6, 6]]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+          "rolledDice",
+          "battleHitPoint",
+        );
+      },
+      doDiscoverTargetListConditionChoice: () => {
+        discoverSpell(
+          "blindness_deafness",
+          2,
+          "saveGatedCondition",
+          "targetListAndConditionChoice",
+        );
+      },
+      doFillTargetListBeforeConditionChoice: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          spellTargetListFill(targetList, "blindness_deafness", [skeletonId]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionChoice",
+          "spellTargetList",
+          "battleHoleFrontier",
+        );
+      },
+      doFillConditionChoiceAfterTargetList: () => {
+        const conditionChoice = requireHole(holes, "conditionChoice");
+        fills = [
+          ...fills,
+          saveGatedSpellConditionChoiceFill(conditionChoice, "blinded"),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionSavingThrowOutcome",
+          "conditionChoice",
+          "battleHoleFrontier",
+        );
+      },
+      doFillConditionChoiceBeforeTargetList: () => {
+        const conditionChoice = requireHole(holes, "conditionChoice");
+        fills = [saveGatedSpellConditionChoiceFill(conditionChoice, "blinded")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "targetList",
+          "conditionChoice",
+          "battleHoleFrontier",
+        );
+      },
+      doFillTargetListAfterConditionChoice: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          ...fills,
+          spellTargetListFill(targetList, "blindness_deafness", [skeletonId]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionSavingThrowOutcome",
+          "spellTargetList",
+          "battleHoleFrontier",
+        );
+      },
+      doFillConditionSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          ...fills,
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+          "savingThrowOutcome",
+          "battleHoleFrontier",
+        );
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectSaveGatedSpellOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+        }),
+        route,
+      }),
+    };
+  });
+}
+
 export function createSpellAttackOrderingDriver() {
   return defineDriver(spellAttackOrderingDriverSchema, () => {
     // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
@@ -2149,6 +2519,280 @@ export function createHitPointRestorationOrderingDriver() {
           featureTargetHp,
           featureTargetZeroHpLifecycleCleared,
         }),
+    };
+  });
+}
+
+export function createHitPointRestorationOrderingRouteDriver() {
+  return defineDriver(hitPointRestorationOrderingDriverSchema, () => {
+    let state = healingSpellOrderingBattle();
+    let subject: BattleSubject = healingWordSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+    let stage: HitPointRestorationOrderingProjection["stage"] = "actSelection";
+    let lastResult: HitPointRestorationOrderingProjection["lastResult"] =
+      "init";
+    let orderingError: HitPointRestorationOrderingProjection["orderingError"] =
+      "";
+    let spellTargetHp = 0;
+    let spellTargetZeroHpLifecycleCleared = false;
+    let featureTargetHp = 0;
+    let featureTargetZeroHpLifecycleCleared = false;
+
+    function reset(): void {
+      state = healingSpellOrderingBattle();
+      subject = healingWordSubject();
+      fills = [];
+      holes = [];
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+      spellTargetHp = 0;
+      spellTargetZeroHpLifecycleCleared = false;
+      featureTargetHp = 0;
+      featureTargetZeroHpLifecycleCleared = false;
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: HitPointRestorationOrderingProjection["stage"],
+      fill: ReducerRouteFill,
+      owner: ReducerRouteOwnerGroup,
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "hitPointRestoration",
+            fill,
+            holes,
+            owner,
+          }),
+        ];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "hitPointRestoration",
+            fill,
+            holes,
+            owner,
+          }),
+        ];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted Hit Point restoration ordering fill, got ${
+          result.tag
+        }: ${"message" in result ? result.message : ""}`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        HitPointRestorationOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: HitPointRestorationOrderingProjection["stage"],
+      fill: ReducerRouteFill,
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error(
+          "Expected Hit Point restoration fill to request earlier holes.",
+        );
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      route = [
+        ...route,
+        reducerRouteResolveBattleSubject({
+          subject: "hitPointRestoration",
+          fill,
+          holes,
+          owner: "battleHoleFrontier",
+        }),
+      ];
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    function discoverHealingAct(input: {
+      readonly nextState: BattleState;
+      readonly nextSubject: BattleSubject;
+      readonly nextStage: HitPointRestorationOrderingProjection["stage"];
+      readonly owner: ReducerRouteOwnerGroup;
+    }): void {
+      state = input.nextState;
+      subject = input.nextSubject;
+      fills = [];
+      holes = healingOrderingHolesAfterFills(state, subject, []);
+      route = [
+        ...route,
+        reducerRouteDiscoverBattleActs({
+          subject: "hitPointRestoration",
+          holes,
+          owner: input.owner,
+        }),
+      ];
+      stage = input.nextStage;
+      lastResult = "needsHoles";
+      orderingError = "";
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverSingleTargetSpellHealing: () => {
+        discoverHealingAct({
+          nextState: healingSpellOrderingBattle(),
+          nextSubject: healingWordSubject(),
+          nextStage: "spellHealingTargetChoice",
+          owner: "battleSpellSlotAndActionEconomy",
+        });
+        spellTargetHp = 0;
+        spellTargetZeroHpLifecycleCleared = false;
+      },
+      doSubmitHealingRollBeforeTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        const healingRoll = requireHole(
+          healingOrderingHolesAfterFills(state, subject, [
+            spellTargetChoiceFill(target, skeletonId, "healing_word"),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [damageRollFillWithGroups(healingRoll, [[1, 1]])],
+          }),
+          "healingTargetRequired",
+          "spellHealingTargetChoice",
+          "rolledDice",
+        );
+      },
+      doFillSpellHealingTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [spellTargetChoiceFill(target, skeletonId, "healing_word")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "spellHealingRoll",
+          "targetChoice",
+          "battleHoleFrontier",
+        );
+      },
+      doDiscoverTargetListSpellHealing: () => {
+        discoverHealingAct({
+          nextState: healingTargetListSpellOrderingBattle(),
+          nextSubject: massHealingWordSubject(),
+          nextStage: "spellHealingTargetList",
+          owner: "battleSpellSlotAndActionEconomy",
+        });
+        spellTargetHp = 0;
+        spellTargetZeroHpLifecycleCleared = false;
+      },
+      doSubmitHealingRollBeforeTargetList: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        const healingRoll = requireHole(
+          healingOrderingHolesAfterFills(state, subject, [
+            spellTargetListFill(targetList, "mass_healing_word", [skeletonId]),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [damageRollFillWithGroups(healingRoll, [[1, 1]])],
+          }),
+          "healingTargetRequired",
+          "spellHealingTargetList",
+          "rolledDice",
+        );
+      },
+      doFillSpellHealingTargetList: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          spellTargetListFill(targetList, "mass_healing_word", [skeletonId]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "spellHealingRoll",
+          "spellTargetList",
+          "battleHoleFrontier",
+        );
+      },
+      doFillSpellHealingRoll: () => {
+        const healingRoll = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFillWithGroups(healingRoll, [[1, 1]])];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+          "rolledDice",
+          "battleHitPointAndZeroHpLifecycle",
+        );
+        const healedTarget = snapshotCombatant(state, skeletonId);
+        spellTargetHp = healedTarget.hp;
+        spellTargetZeroHpLifecycleCleared =
+          zeroHpLifecycleClearedByHealing(healedTarget);
+      },
+      doDiscoverFeatureHealingPool: () => {
+        discoverHealingAct({
+          nextState: featureHealingPoolOrderingBattle(),
+          nextSubject: preserveLifeSubject(),
+          nextStage: "featureHealingPoolDistribution",
+          owner: "battleActionEconomy",
+        });
+        featureTargetHp = 0;
+        featureTargetZeroHpLifecycleCleared = false;
+      },
+      doFillFeatureHealingDistribution: () => {
+        const distribution = requireHole(holes, "hitPointHealingDistribution");
+        fills = [
+          preserveLifeDistributionFill(distribution, [
+            { targetId: skeletonId, hitPoints: 8 },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+          "hitPointHealingDistribution",
+          "battleHitPointAndZeroHpLifecycle",
+        );
+        const healedTarget = snapshotCombatant(state, skeletonId);
+        featureTargetHp = healedTarget.hp;
+        featureTargetZeroHpLifecycleCleared =
+          zeroHpLifecycleClearedByHealing(healedTarget);
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectHitPointRestorationOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+          spellTargetHp,
+          spellTargetZeroHpLifecycleCleared,
+          featureTargetHp,
+          featureTargetZeroHpLifecycleCleared,
+        }),
+        route,
+      }),
     };
   });
 }
@@ -2674,6 +3318,113 @@ export function createMagicMissileDriver() {
   });
 }
 
+export function createMagicMissileRouteDriver() {
+  return defineDriver(magicMissileDriverSchema, () => {
+    let state = fighterVsSkeletonBattle();
+    const subject = magicMissileSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+    let lastResult: MbtProjection["lastResult"] = "init";
+    let lastInvalidReason: MbtProjection["lastInvalidReason"] = "";
+
+    function reset(): void {
+      state = fighterVsSkeletonBattle();
+      const initialHoles = discoverMagicMissileHoles(state, subject);
+      fills = [];
+      holes = initialHoles;
+      route = [
+        reducerRouteStartBattle("battleActionEconomy"),
+        reducerRouteDiscoverBattleActs({
+          subject: "slotSpell",
+          holes: initialHoles,
+          owner: "battleSpellSlotAndActionEconomy",
+        }),
+      ];
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function submit(
+      fill: ReducerRouteFill,
+      owner: ReducerRouteOwnerGroup,
+      nextFills: readonly BattleFill[],
+    ): void {
+      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
+      const result = resolveBattleSubject({ state, subject, fills });
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "slotSpell",
+            fill,
+            holes,
+            owner,
+          }),
+        ];
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "slotSpell",
+            fill,
+            holes,
+            owner,
+          }),
+        ];
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doFillMagicMissileAllocation: () => {
+        const allocation = requireHole(holes, "spellTargetAllocation");
+        submit(
+          "spellTargetAllocation",
+          "battleHoleFrontier",
+          [spellTargetAllocationFill(allocation, skeletonId, 3)],
+        );
+      },
+      doFillMagicMissileDamage: ({ dartRollTotal }) => {
+        const damage = requireHole(holes, "rolledDice");
+        submit(
+          "rolledDice",
+          "battleHitPoint",
+          [
+            ...fills,
+            damageRollFillWithGroups(damage, [
+              magicMissileDamageRollGroup(dartRollTotal),
+            ]),
+          ],
+        );
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectMbtState({
+          state,
+          holes,
+          lastResult,
+          lastInvalidReason,
+        }),
+        route,
+      }),
+    };
+  });
+}
+
 export function createReducerSpineContractDriver() {
   return defineDriver(reducerSpineContractDriverSchema, () => {
     let state: BattleState | null = null;
@@ -3125,6 +3876,132 @@ export function createRogueSteadyAimDriver(
   });
 }
 
+const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
+  SlotSpellRouteSubject: "slotSpell",
+  SaveGatedSpellRouteSubject: "saveGatedSpell",
+  HitPointRestorationRouteSubject: "hitPointRestoration",
+  WeaponAttackRouteSubject: "weaponAttack",
+  DeathSavingThrowRouteSubject: "deathSavingThrow",
+  ConcentrationTeardownRouteSubject: "concentrationTeardown",
+} as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
+
+const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
+  BattleActionEconomyOwner: "battleActionEconomy",
+  BattleSpellSlotAndActionEconomyOwner: "battleSpellSlotAndActionEconomy",
+  BattleHoleFrontierOwner: "battleHoleFrontier",
+  BattleHitPointOwner: "battleHitPoint",
+  BattleHitPointAndZeroHpLifecycleOwner: "battleHitPointAndZeroHpLifecycle",
+  BattleConcentrationOwner: "battleConcentration",
+} as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
+
+const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
+  ConditionChoiceHoleKind: "conditionChoice",
+  HitPointHealingDistributionHoleKind: "hitPointHealingDistribution",
+  RolledDiceHoleKind: "rolledDice",
+  SavingThrowOutcomeHoleKind: "savingThrowOutcome",
+  SpellTargetAllocationHoleKind: "spellTargetAllocation",
+  SpellTargetListHoleKind: "spellTargetList",
+  TargetChoiceHoleKind: "targetChoice",
+} as const satisfies Readonly<Record<string, ReducerRouteHole>>;
+
+const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = {
+  ConditionChoiceFillKind: "conditionChoice",
+  HitPointHealingDistributionFillKind: "hitPointHealingDistribution",
+  RolledDiceFillKind: "rolledDice",
+  SavingThrowOutcomeFillKind: "savingThrowOutcome",
+  SpellTargetAllocationFillKind: "spellTargetAllocation",
+  SpellTargetListFillKind: "spellTargetList",
+  TargetChoiceFillKind: "targetChoice",
+} as const satisfies Readonly<Record<string, ReducerRouteFill>>;
+
+function decodeReducerRoute(raw: unknown): readonly ReducerRouteEvent[] {
+  return quintList(raw, "qRoute").map(decodeReducerRouteEvent);
+}
+
+function decodeReducerRouteEvent(raw: unknown): ReducerRouteEvent {
+  const tag = quintVariantTag(raw, "qRoute[]");
+  if (tag === "RouteStartBattle") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "startBattle",
+      owner: reducerRouteOwner(quintField(payload, "owner")),
+    };
+  }
+  if (tag === "RouteDiscoverBattleActs") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "discoverBattleActs",
+      subject: reducerRouteSubject(quintField(payload, "subject")),
+      holes: reducerRouteHoles(quintField(payload, "holes")),
+      owner: reducerRouteOwner(quintField(payload, "owner")),
+    };
+  }
+  if (tag === "RouteResolveBattleSubject") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "resolveBattleSubject",
+      subject: reducerRouteSubject(quintField(payload, "subject")),
+      fill: reducerRouteFill(quintField(payload, "fill")),
+      holes: reducerRouteHoles(quintField(payload, "holes")),
+      owner: reducerRouteOwner(quintField(payload, "owner")),
+    };
+  }
+
+  throw new Error(`Unknown reducer-route event: ${tag}.`);
+}
+
+function reducerRoutePayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qRoute[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected reducer-route ${tag} payload record.`);
+}
+
+function reducerRouteSubject(raw: unknown): ReducerRouteSubjectFamily {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].subject",
+    REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG,
+    "reducer-route subject",
+  );
+}
+
+function reducerRouteOwner(raw: unknown): ReducerRouteOwnerGroup {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].owner",
+    REDUCER_ROUTE_OWNER_BY_VARIANT_TAG,
+    "reducer-route owner",
+  );
+}
+
+function reducerRouteHole(raw: unknown): ReducerRouteHole {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].holes[]",
+    REDUCER_ROUTE_HOLE_BY_VARIANT_TAG,
+    "reducer-route hole",
+  );
+}
+
+function reducerRouteHoles(raw: unknown): readonly ReducerRouteHole[] {
+  return quintSet(raw, "qRoute[].holes").map(reducerRouteHole).sort();
+}
+
+function reducerRouteFill(raw: unknown): ReducerRouteFill {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].fill",
+    REDUCER_ROUTE_FILL_BY_VARIANT_TAG,
+    "reducer-route fill",
+  );
+}
+
 function normalizeQuintState(raw: unknown): MbtProjection {
   const root = quintStateRecord(raw);
   const state = Object.hasOwn(root, "qState")
@@ -3154,6 +4031,19 @@ function normalizeQuintState(raw: unknown): MbtProjection {
     holes: protocol.holes,
     lastResult: mbtLastResult(protocol.lastResult),
     lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+  };
+}
+
+function normalizeReducerRoutedMagicMissileQuintState(
+  raw: unknown,
+): ReducerRoutedMagicMissileProjection {
+  const root = quintStateRecord(raw);
+  const state = Object.hasOwn(root, "qState")
+    ? quintRecordField(root, "qState")
+    : root;
+  return {
+    ...normalizeQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 
@@ -3194,6 +4084,16 @@ function normalizeSaveGatedSpellOrderingQuintState(
     holes: protocol.holes,
     lastResult: mbtLastResult(protocol.lastResult),
     orderingError: saveGatedSpellOrderingError(state["qLastOrderingError"]),
+  };
+}
+
+function normalizeReducerRoutedSaveGatedSpellOrderingQuintState(
+  raw: unknown,
+): ReducerRoutedSaveGatedSpellOrderingProjection {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeSaveGatedSpellOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 
@@ -3252,6 +4152,16 @@ function normalizeHitPointRestorationOrderingQuintState(
       state,
       "qFeatureTargetZeroHpLifecycleCleared",
     ),
+  };
+}
+
+function normalizeReducerRoutedHitPointRestorationOrderingQuintState(
+  raw: unknown,
+): ReducerRoutedHitPointRestorationOrderingProjection {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeHitPointRestorationOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 
@@ -3483,6 +4393,16 @@ export const battleRuntimeStateCheck = stateCheck(
   normalizeQuintState,
   compareState,
 );
+export const reducerRoutedMagicMissileStateCheck = stateCheck(
+  normalizeReducerRoutedMagicMissileQuintState,
+  (
+    spec: ReducerRoutedMagicMissileProjection,
+    impl: ReducerRoutedMagicMissileProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const weaponAttackOrderingStateCheck = stateCheck(
   normalizeWeaponAttackOrderingQuintState,
   (
@@ -3503,6 +4423,16 @@ export const saveGatedSpellOrderingStateCheck = stateCheck(
     return true;
   },
 );
+export const reducerRoutedSaveGatedSpellOrderingStateCheck = stateCheck(
+  normalizeReducerRoutedSaveGatedSpellOrderingQuintState,
+  (
+    spec: ReducerRoutedSaveGatedSpellOrderingProjection,
+    impl: ReducerRoutedSaveGatedSpellOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const spellAttackOrderingStateCheck = stateCheck(
   normalizeSpellAttackOrderingQuintState,
   (
@@ -3518,6 +4448,16 @@ export const hitPointRestorationOrderingStateCheck = stateCheck(
   (
     spec: HitPointRestorationOrderingProjection,
     impl: HitPointRestorationOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedHitPointRestorationOrderingStateCheck = stateCheck(
+  normalizeReducerRoutedHitPointRestorationOrderingQuintState,
+  (
+    spec: ReducerRoutedHitPointRestorationOrderingProjection,
+    impl: ReducerRoutedHitPointRestorationOrderingProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;
@@ -5686,6 +6626,28 @@ function rolledDiceGroup(
   return {
     results: [DieRollResult(first), ...rest.map(DieRollResult)],
   };
+}
+
+function reducerRouteHolesFromRuntime(
+  holes: readonly BattleHole[],
+): readonly ReducerRouteHole[] {
+  return holes.map(reducerRouteHoleFromRuntime).sort();
+}
+
+function reducerRouteHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): ReducerRouteHole {
+  if (hole.kind === "conditionChoice") return "conditionChoice";
+  if (hole.kind === "hitPointHealingDistribution") {
+    return "hitPointHealingDistribution";
+  }
+  if (hole.kind === "rolledDice") return "rolledDice";
+  if (hole.kind === "savingThrowOutcome") return "savingThrowOutcome";
+  if (hole.kind === "spellTargetAllocation") return "spellTargetAllocation";
+  if (hole.kind === "spellTargetList") return "spellTargetList";
+  if (hole.kind === "targetChoice") return "targetChoice";
+
+  throw new Error(`Unexpected reducer-route hole: ${hole.kind}.`);
 }
 
 function projectHoles(holes: readonly BattleHole[]): readonly MbtHole[] {

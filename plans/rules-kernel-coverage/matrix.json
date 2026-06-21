@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 130,
-    "covered": 124,
+    "total": 131,
+    "covered": 125,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 99,
+      "battle": 100,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 124,
+      "covered": 125,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -4112,6 +4112,54 @@
         "UBIQUITOUS_LANGUAGE.md#Hit Points and Death"
       ],
       "title": "Battle reducer spine composition from battle start through act discovery, subject hole/fill resolution, turn advancement, and battle-owned resource/vital projection"
+    },
+    {
+      "id": "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR",
+      "kind": "composition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-reducer-route.qnt",
+        "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt"
+      ],
+      "reason": "This is executable cleanroom architecture evidence, not a new whole-battle rule owner. The generic route vocabulary defines reducer entrypoint events, subject families, fill families, hole-family frontier facts, and battle-owned durable owner groups without authored catalog identity. Each route connector driver composes an existing focused rule witness with qRoute, requiring the TS MBT driver and cleanroom rehearsal to prove that the same QNT-observed behavior is reachable through startBattle, discoverBattleActs, and resolveBattleSubject. Detailed spell targeting, save gating, healing, damage, and zero-Hit-Point semantics remain owned by their focused rule QNT rows.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#The Order of Combat",
+        ".references/srd-5.2.1/Playing-the-Game.md#Hit Points",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
+        "UBIQUITOUS_LANGUAGE.md#Hit Points and Death"
+      ],
+      "title": "Focused battle drivers expose executable reducer-route connectors through start battle, act discovery, and subject resolution instead of local replay islands"
     },
     {
       "id": "BATTLE.ATTACK.MINIMAL_RESOLUTION",
@@ -9865,6 +9913,38 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-reducer-route.qnt defines the generic reducer-route event, subject-family, fill-family, hole-frontier, and battle-owner vocabulary consumed by route connector MBT drivers and cleanroom guidance. It carries architecture vocabulary, not standalone rule semantics.",
+      "obligationIds": [
+        "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-reducer-route.qnt",
+      "role": "bridge"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt is the reducer-route connector fixture for the focused Magic Missile allocation witness. It proves the observed route goes through start battle, act discovery, and subject resolution rather than a local driver island.",
+      "obligationIds": [
+        "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt is the reducer-route connector fixture for the focused save-gated spell ordering witness. It proves action economy, hole frontier, and Hit Point ownership are routed through shared reducer events.",
+      "obligationIds": [
+        "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt is the reducer-route connector fixture for the focused Hit Point restoration ordering witness. It proves healing fills are routed through shared reducer events and the zero-Hit-Point lifecycle owner.",
+      "obligationIds": [
+        "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+      "role": "mbt-fixture"
     }
   ],
   "qntRegistry": [
@@ -10110,6 +10190,12 @@
       "role": "semantic-core"
     },
     {
+      "category": "proof-only-example",
+      "classification": "exempt",
+      "evidence": "Literal Magic Missile fixture facts shared by the focused witness and the reducer-route connector; the active route contract is owned by battle-runtime-magic-missile.route.mbt.qnt.",
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-facts.qnt"
+    },
+    {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-marked-riders.qnt",
       "role": "semantic-core"
@@ -10223,6 +10309,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-reducer-route.qnt",
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",

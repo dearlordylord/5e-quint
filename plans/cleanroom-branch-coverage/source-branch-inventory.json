@@ -3853,7 +3853,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt#step:doFillMagicMissileAllocation",
-      "qntFileSha256": "17051290852258760a487ed74848c1c1c9c803e30e3ab1b48aa37a52f26948b9",
+      "qntFileSha256": "3600c6ce32c66a6130d128059c8d1f6f8256153ab0fcc28e45c5b1183816ee35",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -3872,7 +3872,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt#step:doFillMagicMissileDamage",
-      "qntFileSha256": "17051290852258760a487ed74848c1c1c9c803e30e3ab1b48aa37a52f26948b9",
+      "qntFileSha256": "3600c6ce32c66a6130d128059c8d1f6f8256153ab0fcc28e45c5b1183816ee35",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -13507,7 +13507,7 @@
       "branchFamily": "step",
       "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
       "pickName": "dartRollTotal",
-      "qntFileSha256": "17051290852258760a487ed74848c1c1c9c803e30e3ab1b48aa37a52f26948b9"
+      "qntFileSha256": "3600c6ce32c66a6130d128059c8d1f6f8256153ab0fcc28e45c5b1183816ee35"
     },
     {
       "branchAction": "doFillDivineFavorDamage",

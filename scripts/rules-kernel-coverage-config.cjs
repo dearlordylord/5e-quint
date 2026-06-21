@@ -198,6 +198,13 @@ const qntRegistryExemptions = [
   },
   {
     ownerPath:
+      "packages/battle-runtime/battle-runtime-magic-missile-facts.qnt",
+    category: "proof-only-example",
+    evidence:
+      "Literal Magic Missile fixture facts shared by the focused witness and the reducer-route connector; the active route contract is owned by battle-runtime-magic-missile.route.mbt.qnt.",
+  },
+  {
+    ownerPath:
       "packages/battle-runtime/battle-runtime-movement-bridge-examples.qnt",
     category: "proof-only-example",
     evidence:

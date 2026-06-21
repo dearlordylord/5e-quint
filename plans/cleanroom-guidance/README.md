@@ -12,8 +12,10 @@ Core rules:
 
 - Treat copied `.qnt` files as formal rule statements and `.mbt.qnt` files as
   conformance specifications.
-- Use `cleanroom-input/branch-coverage/reducer-route-inventory.json` when the
-  selected assignment is a reducer-spine diagnostic assignment.
+- Use copied `*.route.mbt.qnt` connectors as the executable reducer-route
+  contract when the selected assignment is a reducer-spine diagnostic
+  assignment. The reducer-route inventory selects and orders tasks; it is not
+  a substitute for route evidence.
 - Keep QNT/MBT replay adapters quarantined from production modules.
 - Treat forbidden source-code reads and production reducer dispatch on
   authored or fixture identity as the same cleanroom-boundary violation class.

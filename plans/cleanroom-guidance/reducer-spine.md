@@ -43,6 +43,12 @@ is a thin composition witness. It proves the shared route shape. It is not a
 rule owner for spell targeting, damage math, attack resolution, turn-boundary
 effects, or interrupt behavior.
 
+Focused route connectors named `*.route.mbt.qnt` are the executable routing
+obligations for diagnostic drivers. They project `qRoute` over the shared
+reducer-route vocabulary. A target replay proves reducer routing only when its
+observed route events match the copied connector; matching the focused
+non-route projection alone proves behavior parity, not reducer architecture.
+
 ## Durable State Ownership
 
 Durable facts belong to `BattleState` or a nested battle-owned record when they
@@ -120,7 +126,7 @@ For reducer-spine diagnostics, use
 
 - The active diagnostic batch is the intended order.
 - `reducer-routed` means target replay must pass through the shared reducer
-  surface now.
+  surface and match the copied `routeConnectorPath`.
 - `substrate-first` means the substrate and durable owner must be introduced or
   identified before target replay evidence is meaningful.
 - `component-first` means deepen a reusable rule module before admitting it as

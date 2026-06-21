@@ -1,0 +1,69 @@
+// -*- mode: Bluespec; -*-
+
+// KERNEL-COVERAGE: qnt-owner BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
+
+// Executable route vocabulary shared by reducer-route connector drivers. This
+// module describes reducer shape, not authored catalog identity.
+module battleRuntimeReducerRoute {
+  import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
+  import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
+
+  type ReducerRouteSubjectFamily =
+    | SlotSpellRouteSubject
+    | SaveGatedSpellRouteSubject
+    | HitPointRestorationRouteSubject
+    | WeaponAttackRouteSubject
+    | DeathSavingThrowRouteSubject
+    | ConcentrationTeardownRouteSubject
+
+  type ReducerRouteOwnerGroup =
+    | BattleActionEconomyOwner
+    | BattleSpellSlotAndActionEconomyOwner
+    | BattleHoleFrontierOwner
+    | BattleHitPointOwner
+    | BattleHitPointAndZeroHpLifecycleOwner
+    | BattleConcentrationOwner
+
+  type ReducerRouteEvent =
+    | RouteStartBattle({ owner: ReducerRouteOwnerGroup })
+    | RouteDiscoverBattleActs({
+        subject: ReducerRouteSubjectFamily,
+        holes: Set[BattleHoleFamilyKind],
+        owner: ReducerRouteOwnerGroup,
+      })
+    | RouteResolveBattleSubject({
+        subject: ReducerRouteSubjectFamily,
+        fill: BattleFillKind,
+        holes: Set[BattleHoleFamilyKind],
+        owner: ReducerRouteOwnerGroup,
+      })
+
+  pure def routeStartBattle(
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    RouteStartBattle({ owner: owner })
+
+  pure def routeDiscoverBattleActs(
+    subject: ReducerRouteSubjectFamily,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    RouteDiscoverBattleActs({
+      subject: subject,
+      holes: holes,
+      owner: owner,
+    })
+
+  pure def routeResolveBattleSubject(
+    subject: ReducerRouteSubjectFamily,
+    fill: BattleFillKind,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    RouteResolveBattleSubject({
+      subject: subject,
+      fill: fill,
+      holes: holes,
+      owner: owner,
+    })
+}

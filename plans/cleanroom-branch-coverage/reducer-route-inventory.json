@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedBy": "curated-source-guidance",
+  "generatedBy": "curated-source-guidance-with-qnt-route-connectors",
   "activeDiagnosticBatchId": "reducer-spine-diagnostic-v1",
+  "qntRouteConnectorPattern": "packages/battle-runtime/*.route.mbt.qnt",
   "routeTags": [
     "reducer-routed",
     "component-first",
@@ -46,6 +47,7 @@
         {
           "order": 1,
           "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt",
           "route": "reducer-routed",
           "subjectFamily": "slot spell with target allocation and damage roll fills",
           "requiredReducerEntrypoints": [
@@ -71,6 +73,7 @@
         {
           "order": 2,
           "driverPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
           "route": "reducer-routed",
           "subjectFamily": "save-gated spell frontier ordering",
           "requiredReducerEntrypoints": [
@@ -97,14 +100,15 @@
         {
           "order": 3,
           "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+          "route": "reducer-routed",
           "subjectFamily": "Hit Point restoration frontier ordering and zero-HP cleanup",
           "requiredReducerEntrypoints": [
             "discover_battle_acts",
             "resolve_battle_subject"
           ],
           "durableStateOwner": "BattleState owns restored target Hit Points and zero-Hit-Point lifecycle cleanup; the healing frontier does not own a duplicate HP ledger.",
-          "acceptanceCondition": "Target replay evidence adds HP restoration through the battle-owned HP lifecycle and keeps spell target/distribution fills as reducer subject progress.",
+          "acceptanceCondition": "Target replay evidence adds HP restoration through the battle-owned HP lifecycle and keeps spell target/distribution fills as reducer subject progress through the shared reducer surface.",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt exposes spell healing target choice/list, healing roll, feature healing-pool distribution, and zero-HP cleanup projections.",
