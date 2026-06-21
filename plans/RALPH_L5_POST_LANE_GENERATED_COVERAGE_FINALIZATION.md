@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L5-FINAL-GENERATED-COVERAGE-REFRESH",
-      "status": "blocked",
+      "status": "done",
       "title": "Refresh generated level 5 coverage after lanes merge"
     }
   ]
@@ -47,17 +47,18 @@ outputs are aggregate artifacts, so they need one owner after lane merges.
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L5-FINAL-GENERATED-COVERAGE-REFRESH - Refresh generated level 5 coverage after lanes merge | blocked | none | Owner must unblock only after lane A-D integration work has landed. |
+| 1 | L5-FINAL-GENERATED-COVERAGE-REFRESH - Refresh generated level 5 coverage after lanes merge | done | none | Lane A-D integration work landed; aggregate write refresh and check passed with no generated artifact delta. |
 
 ## Task Details
 
 ### Task 1 - L5-FINAL-GENERATED-COVERAGE-REFRESH
 
-Status: `blocked`
+Status: `done`
 
-Blocker Type: owner-decision
-Blocker Detail: owner/operator must confirm lanes A-D are merged into the
-target branch before unblocking this aggregate refresh.
+Completion Detail: lane A-D integration work is merged into `master`;
+`pnpm unit-profile-coverage:check --write` and
+`pnpm unit-profile-coverage:check` passed. The write refresh produced no
+generated artifact delta.
 
 Depends on:
 
