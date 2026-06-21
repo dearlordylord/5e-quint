@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 498 |
+| sdk-scenario-needed | 494 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 6 |
+| seed-scenario-present | 10 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -84,7 +84,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Lane | Groups |
 | --- | ---: |
-| battle-feature-sdk | 27 |
+| battle-feature-sdk | 23 |
 | battle-spell-sdk | 113 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 10 |
 | owner-review | 6 |
-| seed-present | 6 |
+| seed-present | 10 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -150,8 +150,12 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Character Levels 1-3 | level-1, level-2, level-3, spell-level-0, spell-level-1, spell-level-2 | 197 | 51 | 197/197 (100%) | 606/607 (99.8%) | plans/unit-profile-coverage/level1-3-full-support.json |
 | Character Levels 1-4 | level-1, level-2, level-3, level-4, spell-level-0, spell-level-1, spell-level-2 | 210 | 63 | 210/210 (100%) | 631/632 (99.8%) | plans/unit-profile-coverage/level1-4-full-support.json |
 
-## Existing Level 5 SDK Seed Scenario Rows
+## Existing SDK Seed Scenario Rows
 
+- `srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage` / `level-1:Barbarian:barbarian_rage`: level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders
+- `srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind` / `level-1:Fighter:fighter_second_wind`: level1-sdk-raw-integration: Fighter Second Wind heals through sheet projection and spends one Bonus Action use
+- `srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts` / `level-1:Monk:monk_martial_arts`: level1-sdk-raw-integration: Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity
+- `srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack` / `level-1:Rogue:rogue_sneak_attack`: level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use
 - `srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack` / `level-5:Monk:monk_extra_attack`: level5-sdk-tracer-bullets: Extra Attack
 - `srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike` / `level-5:Monk:monk_stunning_strike`: level5-sdk-tracer-bullets: Stunning Strike
 - `srd521:classes/rogue:level-5:class-feature-grant:rogue_cunning_strike` / `level-5:Rogue:rogue_cunning_strike`: level5-sdk-tracer-bullets: Cunning Strike
@@ -398,6 +402,6 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
   `spell-effect-owner-review` means the row lacks recorded closure evidence
   or has a recorded closure kind that is not typed enough to split
   future-owner from table-only closure.
-- `seed-scenario-present` means the current level-5 tracer suite exercises the
-  SDK path for that Unit, not that every row for that Unit is exhaustively
-  complete.
+- `seed-scenario-present` means one of the tracked SDK seed scenario files
+  exercises the SDK path for that Unit, not that every row for that Unit is
+  exhaustively complete.

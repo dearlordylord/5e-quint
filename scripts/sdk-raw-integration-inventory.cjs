@@ -44,10 +44,16 @@ const paths = {
     root,
     "plans/unit-profile-coverage/character-sheet-owner-evidence.json",
   ),
-  currentTracer: path.join(
-    root,
-    "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts",
-  ),
+  seedScenarioFiles: {
+    level1BattleFeatures: path.join(
+      root,
+      "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+    ),
+    level5Tracer: path.join(
+      root,
+      "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts",
+    ),
+  },
   plan: path.join(root, "plans/LEVEL1_5_SDK_RAW_INTEGRATION_TEST_PLAN.md"),
   json: path.join(outputDir, "level1-5-sdk-raw-inventory.json"),
   report: path.join(outputDir, "LEVEL1_5_SDK_RAW_INVENTORY.md"),
@@ -108,10 +114,54 @@ const ownerPathPrefixes = [
 
 const seededSdkScenarioRows = [
   {
+    candidateUnitId: "barbarian_rage",
+    className: "Barbarian",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
+    tracerNeedles: ["barbarianRageUnitId"],
+  },
+  {
+    candidateUnitId: "fighter_second_wind",
+    className: "Fighter",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Fighter Second Wind heals through sheet projection and spends one Bonus Action use",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
+    tracerNeedles: ["fighterSecondWindUnitId"],
+  },
+  {
+    candidateUnitId: "monk_martial_arts",
+    className: "Monk",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId: "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+    tracerNeedles: ["monkMartialArtsUnitId"],
+  },
+  {
+    candidateUnitId: "rogue_sneak_attack",
+    className: "Rogue",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
+    tracerNeedles: ["rogueSneakAttackUnitId"],
+  },
+  {
     candidateUnitId: "monk_extra_attack",
     className: "Monk",
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Extra Attack",
+    path: paths.seedScenarioFiles.level5Tracer,
     rowId: "srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack",
     tracerNeedles: ["monkExtraAttackUnitId"],
   },
@@ -120,6 +170,7 @@ const seededSdkScenarioRows = [
     className: "Monk",
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Stunning Strike",
+    path: paths.seedScenarioFiles.level5Tracer,
     rowId:
       "srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike",
     tracerNeedles: ["monkStunningStrikeUnitId"],
@@ -129,6 +180,7 @@ const seededSdkScenarioRows = [
     className: "Rogue",
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Cunning Strike",
+    path: paths.seedScenarioFiles.level5Tracer,
     rowId:
       "srd521:classes/rogue:level-5:class-feature-grant:rogue_cunning_strike",
     tracerNeedles: ["rogueCunningStrikeUnitId"],
@@ -138,6 +190,7 @@ const seededSdkScenarioRows = [
     className: "Sorcerer",
     levelBand: "level-5",
     label: "level5-sdk-tracer-bullets: Sorcerous Restoration",
+    path: paths.seedScenarioFiles.level5Tracer,
     rowId:
       "srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration",
     tracerNeedles: ["sorcerousRestoration"],
@@ -147,6 +200,7 @@ const seededSdkScenarioRows = [
     className: "Wizard",
     levelBand: "spell-level-3",
     label: "level5-sdk-tracer-bullets: Haste",
+    path: paths.seedScenarioFiles.level5Tracer,
     rowId:
       "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste",
     tracerNeedles: ["hasteSpellId"],
@@ -156,6 +210,7 @@ const seededSdkScenarioRows = [
     className: "Wizard",
     levelBand: "spell-level-3",
     label: "level5-sdk-tracer-bullets: Protection from Energy",
+    path: paths.seedScenarioFiles.level5Tracer,
     rowId:
       "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy",
     tracerNeedles: ["protectionFromEnergySpellId"],
@@ -170,7 +225,7 @@ const seededSdkScenarioRecords = seededSdkScenarioRows.map((row) => ({
   tracerNeedles: row.tracerNeedles,
   existingSdkScenario: {
     label: row.label,
-    path: toRepoPath(root, paths.currentTracer),
+    path: toRepoPath(root, row.path),
   },
 }));
 const seededSdkScenarioByRowId = new Map(
@@ -476,7 +531,7 @@ function seedScenarioRowKey(row) {
 }
 
 function seedScenarioTitle(row) {
-  return row.label.replace(/^level5-sdk-tracer-bullets:\s*/, "");
+  return row.label.replace(/^[^:]+:\s*/, "");
 }
 
 function levelReportFrontier(report) {
@@ -821,7 +876,7 @@ function assertLocalRawSources(rows) {
   );
 }
 
-function assertSeedScenarios(tracerText, rows) {
+function assertSeedScenarios(seedScenarioSources, rows) {
   const rowsById = new Map(rows.map((row) => [row.rowId, row]));
   const errors = seededSdkScenarioRows.flatMap((seed) => {
     const matchedRow = rowsById.get(seed.rowId);
@@ -833,13 +888,22 @@ function assertSeedScenarios(tracerText, rows) {
         `${seed.rowId} no longer matches ${seedScenarioRowKey(seed)}`,
       );
     }
-    const title = seedScenarioTitle(seed);
-    if (!tracerText.includes(title)) {
+    const seedSourceText = seedScenarioSources.get(seed.path);
+    if (seedSourceText === undefined) {
       seedErrors.push(
-        `${seed.rowId} scenario title "${title}" is absent from the tracer file`,
+        `${seed.rowId} seed file ${toRepoPath(root, seed.path)} was not read`,
       );
     }
-    const scenarioText = seedScenarioSourceText(tracerText, title);
+    const title = seedScenarioTitle(seed);
+    if (seedSourceText !== undefined && !seedSourceText.includes(title)) {
+      seedErrors.push(
+        `${seed.rowId} scenario title "${title}" is absent from ${toRepoPath(root, seed.path)}`,
+      );
+    }
+    const scenarioText =
+      seedSourceText === undefined
+        ? undefined
+        : seedScenarioSourceText(seedSourceText, title);
     for (const needle of seed.tracerNeedles) {
       if (scenarioText === undefined || !scenarioText.includes(needle)) {
         seedErrors.push(
@@ -983,13 +1047,18 @@ function buildInventory() {
       paths.characterSheetOwnerEvidence,
     ),
   };
-  const tracerText = fs.readFileSync(paths.currentTracer, "utf8");
+  const seedScenarioSources = new Map(
+    Object.values(paths.seedScenarioFiles).map((seedPath) => [
+      seedPath,
+      fs.readFileSync(seedPath, "utf8"),
+    ]),
+  );
   const miningRows = miningAudit.rows
     .filter((row) => levelOneFiveBands.has(row.levelBand))
     .map((row) => projectMiningRow(row, ownerEvidence))
     .sort((left, right) => left.rowId.localeCompare(right.rowId));
   assertLocalRawSources(miningRows);
-  assertSeedScenarios(tracerText, miningRows);
+  assertSeedScenarios(seedScenarioSources, miningRows);
   const levelOneFourRows = miningRows.filter(
     (row) => row.levelBand !== "level-5" && row.levelBand !== "spell-level-3",
   );
@@ -1034,7 +1103,9 @@ function buildInventory() {
         root,
         paths.characterSheetOwnerEvidence,
       ),
-      seedTracer: toRepoPath(root, paths.currentTracer),
+      seedScenarioFiles: Object.values(paths.seedScenarioFiles).map(
+        (seedPath) => toRepoPath(root, seedPath),
+      ),
     },
     scope: {
       title: "Level 1-5 SDK RAW Integration Inventory",
@@ -1272,7 +1343,7 @@ function renderInventory(inventory) {
     "| --- | --- | ---: | ---: | --- | --- | --- |",
     ...renderLevelReportRows(inventory),
     "",
-    "## Existing Level 5 SDK Seed Scenario Rows",
+    "## Existing SDK Seed Scenario Rows",
     "",
     ...inventory.seededSdkScenarioRows.map(
       (row) =>
@@ -1310,9 +1381,9 @@ function renderInventory(inventory) {
     "  `spell-effect-owner-review` means the row lacks recorded closure evidence",
     "  or has a recorded closure kind that is not typed enough to split",
     "  future-owner from table-only closure.",
-    "- `seed-scenario-present` means the current level-5 tracer suite exercises the",
-    "  SDK path for that Unit, not that every row for that Unit is exhaustively",
-    "  complete.",
+    "- `seed-scenario-present` means one of the tracked SDK seed scenario files",
+    "  exercises the SDK path for that Unit, not that every row for that Unit is",
+    "  exhaustively complete.",
     "",
   ].join("\n")}`;
 }

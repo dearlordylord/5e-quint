@@ -9,7 +9,6 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleSubject,
   type CombatantId,
 } from "@dnd/battle-runtime";
 import {
@@ -39,6 +38,7 @@ import {
   levelFiveSorcererBuild,
   levelFiveWizardBuild,
   monsterBattleInput,
+  ordinaryAttackDamageFills,
   requireCharacterCombatant,
   requireCombatant,
   requireHole,
@@ -767,53 +767,6 @@ function resolveWeaponAttackMiss(input: {
       ],
     }),
   );
-}
-
-function ordinaryAttackDamageFills(input: {
-  readonly state: BattleState;
-  readonly subject: BattleSubject;
-  readonly prefixFills: readonly BattleFill[];
-  readonly damage: Extract<BattleHole, { readonly kind: "rolledDice" }>;
-  readonly damageDice: readonly (readonly number[])[];
-  readonly selectedAttackDamageRiderUnitIds?: readonly string[];
-  readonly cunningStrikeOption?: Extract<
-    BattleFill,
-    { readonly kind: "rolledDice" }
-  >["cunningStrikeOption"];
-}): readonly BattleFill[] {
-  const throughDamage = [
-    ...input.prefixFills,
-    damageRollFillWithGroups(input.damage, input.damageDice, {
-      ...(input.selectedAttackDamageRiderUnitIds === undefined
-        ? {}
-        : {
-            selectedAttackDamageRiderUnitIds:
-              input.selectedAttackDamageRiderUnitIds,
-          }),
-      ...(input.cunningStrikeOption === undefined
-        ? {}
-        : { cunningStrikeOption: input.cunningStrikeOption }),
-    }),
-  ];
-  const next = resolveBattleSubject({
-    state: input.state,
-    subject: input.subject,
-    fills: throughDamage,
-  });
-  const disposition =
-    next.tag === "needsHoles"
-      ? next.holes.find((hole) => hole.kind === "attackDamageDisposition")
-      : undefined;
-  return disposition === undefined
-    ? throughDamage
-    : [
-        ...throughDamage,
-        {
-          kind: "attackDamageDisposition",
-          holeId: disposition.holeId,
-          value: { kind: "ordinaryDamage" },
-        },
-      ];
 }
 
 function protectionFromEnergyDamageTypeChoiceFill(

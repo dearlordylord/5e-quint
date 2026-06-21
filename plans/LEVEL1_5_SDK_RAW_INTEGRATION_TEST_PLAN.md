@@ -188,7 +188,7 @@ Current generated findings:
 | --: | ------------------------------------------------------------------------- | ------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 |   1 | L15-SDK-RAW-01 - Build the level 1-5 SDK RAW inventory                    | active | none          | Full row-grained artifact and scenario groups exist; next work is typed owner/closure evidence for the 144 unresolved-review rows. |
 |   2 | L15-SDK-RAW-02 - Harden the shared SDK scenario harness                   | done   | 1             | Package-local character-battle SDK harness exists; scenario-specific ordered fills remain file-local.                              |
-|   3 | L15-SDK-RAW-03 - Level 1 baseline integration suite                       | todo   | 1, 2          | Character creation, starting equipment, basic attacks, cantrips, level-1 spell access, and first resource projections.             |
+|   3 | L15-SDK-RAW-03 - Level 1 baseline integration suite                       | active | 1, 2          | Character creation, starting equipment, basic attacks, cantrips, level-1 spell access, and first resource projections.             |
 |   4 | L15-SDK-RAW-04 - Level 2 resource and rest integration suite              | todo   | 3             | Short-rest/long-rest resource owners, early class features, pact/slot recovery, and battle projection.                             |
 |   5 | L15-SDK-RAW-05 - Level 3 subclass and spell-level-2 integration suite     | todo   | 4             | Subclass choice/projection, expanded class features, metamagic/frontier rules, and level-2 spells available at character level 3.  |
 |   6 | L15-SDK-RAW-06 - Level 4 ASI/feat/progression integration suite           | todo   | 5             | Ability score improvement, feat selection, feature-choice closure, and no-new-spell-level regression coverage.                     |
@@ -269,11 +269,11 @@ Output:
   - `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
     holds package-local SRD catalog setup, sheet-to-battle fixtures,
     level-five build fixtures, primitive target/roll/save/damage fill builders,
-    spell/attack act lookup, and typed assertion helpers.
+    ordinary attack-damage fill choreography, spell/attack act lookup, and
+    typed assertion helpers.
   - The level-5 tracer imports those helpers and keeps Protection from Energy
     synthetic stat-block setup, the Protection from Energy damage-type fill, the
-    Extra Attack miss helper, and ordered ordinary attack-damage fill choreography
-    file-local.
+    Extra Attack miss helper file-local.
 
 Acceptance:
 
@@ -292,11 +292,12 @@ Verification:
 - Focused typechecks/tests for any package where helper code lands.
 - Reviewer-loop convergence, including connascence review for shared literals,
   fill order, and helper sequencing. Findings resolved by narrowing shared
-  helper exports and keeping ordered attack-damage choreography local.
+  helper exports and promoting the repeated ordinary attack-damage choreography
+  into package-local SDK test support.
 
 ### Task 3 - L15-SDK-RAW-03 - Level 1 baseline integration suite
 
-Status: `todo`
+Status: `active`
 
 Depends on:
 
@@ -330,6 +331,15 @@ Verification:
 - `pnpm unit-profile-coverage:check` and `pnpm rules-kernel-coverage:check`
   only if coverage/evidence artifacts are changed.
 - Reviewer-loop convergence.
+
+First implementation slice:
+
+- Add a package-local level-1 battle-feature SDK suite for Fighter Second Wind,
+  Barbarian Rage, Rogue Sneak Attack, and Monk Martial Arts.
+- Defer Bardic Inspiration to the next level-1 battle-feature slice because it
+  needs its own target perception/range spatial-fact helper.
+- Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
+  is Warlock level 3, not character level 1.
 
 ### Task 4 - L15-SDK-RAW-04 - Level 2 resource and rest integration suite
 

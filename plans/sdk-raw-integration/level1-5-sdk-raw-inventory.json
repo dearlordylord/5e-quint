@@ -12576,6 +12576,10 @@
       "category": "class feature",
       "className": "Barbarian",
       "concept": "Barbarian Rage",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -12606,7 +12610,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 79,
         "lineStart": 56,
@@ -26857,6 +26861,10 @@
       "category": "class feature",
       "className": "Fighter",
       "concept": "Fighter Second Wind",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Fighter Second Wind heals through sheet projection and spends one Bonus Action use",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -26887,7 +26895,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 69,
         "lineStart": 62,
@@ -28054,6 +28062,10 @@
       "category": "class feature",
       "className": "Monk",
       "concept": "Monk Martial Arts",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -28086,7 +28098,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 71,
         "lineStart": 57,
@@ -34513,6 +34525,10 @@
       "category": "class feature",
       "className": "Rogue",
       "concept": "Rogue Sneak Attack",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -34543,7 +34559,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 70,
         "lineStart": 63,
@@ -56129,15 +56145,15 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 498,
+      "sdk-scenario-needed": 494,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 6,
+      "seed-scenario-present": 10,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 384,
     "scenarioGroupsByLane": {
-      "battle-feature-sdk": 27,
+      "battle-feature-sdk": 23,
       "battle-spell-sdk": 113,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
@@ -56148,7 +56164,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 6,
+      "seed-present": 10,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -56162,61 +56178,6 @@
     }
   },
   "scenarioGroups": [
-    {
-      "candidateUnitIds": [
-        "barbarian_rage"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Barbarian"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-feature-sdk:barbarian-rage",
-      "lane": "battle-feature-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-feature-sdk\",\"barbarian_rage\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Barbarian.md:56"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "barbarian_rage",
-          "className": "Barbarian",
-          "concept": "Barbarian Rage",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 79,
-            "lineStart": 56,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Barbarian Rage"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Build or sheet the class at the required level, project to battle, discover/resolve the feature act or trigger, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
     {
       "candidateUnitIds": [
         "bard_bardic_inspiration"
@@ -56265,171 +56226,6 @@
       ],
       "sampleConcepts": [
         "Bard Bardic Inspiration"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Build or sheet the class at the required level, project to battle, discover/resolve the feature act or trigger, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "fighter_second_wind"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Fighter"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-feature-sdk:fighter-second-wind",
-      "lane": "battle-feature-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-feature-sdk\",\"fighter_second_wind\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Fighter.md:62"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "fighter_second_wind",
-          "className": "Fighter",
-          "concept": "Fighter Second Wind",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 69,
-            "lineStart": 62,
-            "path": ".references/srd-5.2.1/Classes/Fighter.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Fighter Second Wind"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Build or sheet the class at the required level, project to battle, discover/resolve the feature act or trigger, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "monk_martial_arts"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Monk"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-feature-sdk:monk-martial-arts",
-      "lane": "battle-feature-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-feature-sdk\",\"monk_martial_arts\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Monk.md:57"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "monk_martial_arts",
-          "className": "Monk",
-          "concept": "Monk Martial Arts",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 71,
-            "lineStart": 57,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Monk Martial Arts"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Build or sheet the class at the required level, project to battle, discover/resolve the feature act or trigger, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "rogue_sneak_attack"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Rogue"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-feature-sdk:rogue-sneak-attack",
-      "lane": "battle-feature-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-feature-sdk\",\"rogue_sneak_attack\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Rogue.md:63"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "rogue_sneak_attack",
-          "className": "Rogue",
-          "concept": "Rogue Sneak Attack",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 70,
-            "lineStart": 63,
-            "path": ".references/srd-5.2.1/Classes/Rogue.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Rogue Sneak Attack"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65682,6 +65478,226 @@
         "sdk-scenario-needed"
       ],
       "suggestedScenario": "Split the SDK coverage by profile owner: assert build/sheet facts at their owner, then add battle projection/resolution only for the executable profile facts.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "barbarian_rage"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Barbarian"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-barbarian-barbarian-rage",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Barbarian:barbarian_rage\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Barbarian.md:56"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "barbarian_rage",
+          "className": "Barbarian",
+          "concept": "Barbarian Rage",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 79,
+            "lineStart": 56,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Barbarian Rage"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "fighter_second_wind"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Fighter"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-fighter-fighter-second-wind",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Fighter:fighter_second_wind\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Fighter.md:62"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "fighter_second_wind",
+          "className": "Fighter",
+          "concept": "Fighter Second Wind",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 69,
+            "lineStart": 62,
+            "path": ".references/srd-5.2.1/Classes/Fighter.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Fighter Second Wind"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "monk_martial_arts"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Monk"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-monk-monk-martial-arts",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Monk:monk_martial_arts\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Monk.md:57"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "monk_martial_arts",
+          "className": "Monk",
+          "concept": "Monk Martial Arts",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 71,
+            "lineStart": 57,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Monk Martial Arts"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "rogue_sneak_attack"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Rogue"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-rogue-rogue-sneak-attack",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Rogue:rogue_sneak_attack\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Rogue.md:63"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "rogue_sneak_attack",
+          "className": "Rogue",
+          "concept": "Rogue Sneak Attack",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 70,
+            "lineStart": 63,
+            "path": ".references/srd-5.2.1/Classes/Rogue.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Rogue Sneak Attack"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
       "taskId": "L15-SDK-RAW-03"
     },
     {
@@ -84204,6 +84220,62 @@
   },
   "seededSdkScenarioRows": [
     {
+      "candidateUnitId": "barbarian_rage",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
+      "rowKey": "level-1:Barbarian:barbarian_rage",
+      "tracerNeedles": [
+        "barbarianRageUnitId"
+      ]
+    },
+    {
+      "candidateUnitId": "fighter_second_wind",
+      "className": "Fighter",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Fighter Second Wind heals through sheet projection and spends one Bonus Action use",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
+      "rowKey": "level-1:Fighter:fighter_second_wind",
+      "tracerNeedles": [
+        "fighterSecondWindUnitId"
+      ]
+    },
+    {
+      "candidateUnitId": "monk_martial_arts",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+      "rowKey": "level-1:Monk:monk_martial_arts",
+      "tracerNeedles": [
+        "monkMartialArtsUnitId"
+      ]
+    },
+    {
+      "candidateUnitId": "rogue_sneak_attack",
+      "className": "Rogue",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
+      "rowKey": "level-1:Rogue:rogue_sneak_attack",
+      "tracerNeedles": [
+        "rogueSneakAttackUnitId"
+      ]
+    },
+    {
       "candidateUnitId": "monk_extra_attack",
       "className": "Monk",
       "existingSdkScenario": {
@@ -84299,7 +84371,10 @@
     },
     "miningAudit": "plans/unit-profile-coverage/level1-7-mining-audit.json",
     "plan": "plans/LEVEL1_5_SDK_RAW_INTEGRATION_TEST_PLAN.md",
-    "seedTracer": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts",
+    "seedScenarioFiles": [
+      "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+      "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+    ],
     "unitClaims": "plans/unit-profile-coverage/unit-claims.jsonl",
     "unitEvidence": "plans/unit-profile-coverage/unit-evidence.jsonl"
   }

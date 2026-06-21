@@ -4,6 +4,7 @@ import {
   battleId,
   discoverBattleActs,
   initiativeScore,
+  resolveBattleSubject,
   spellSlotInvocationRef,
   startBattle,
   type BattleCreatureState,
@@ -111,6 +112,7 @@ export function characterSheet(input: {
   readonly build: CharacterBuild;
   readonly initiative: number;
   readonly maximumHp: number;
+  readonly currentHp?: number;
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
 }): SheetFixture {
   return {
@@ -122,7 +124,7 @@ export function characterSheet(input: {
         build: input.build,
         maximumHp: Hp(input.maximumHp),
         hitPointMaximumReduction: Hp(0),
-        currentHp: Hp(input.maximumHp),
+        currentHp: Hp(input.currentHp ?? input.maximumHp),
         tempHp: Hp(0),
         conditions: [],
         unitLibrary,
@@ -450,6 +452,53 @@ export function damageRollFillWithGroups(
       ? {}
       : { cunningStrikeOption: input.cunningStrikeOption }),
   };
+}
+
+export function ordinaryAttackDamageFills(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly prefixFills: readonly BattleFill[];
+  readonly damage: Extract<BattleHole, { readonly kind: "rolledDice" }>;
+  readonly damageDice: readonly (readonly number[])[];
+  readonly selectedAttackDamageRiderUnitIds?: readonly string[];
+  readonly cunningStrikeOption?: Extract<
+    BattleFill,
+    { readonly kind: "rolledDice" }
+  >["cunningStrikeOption"];
+}): readonly BattleFill[] {
+  const throughDamage = [
+    ...input.prefixFills,
+    damageRollFillWithGroups(input.damage, input.damageDice, {
+      ...(input.selectedAttackDamageRiderUnitIds === undefined
+        ? {}
+        : {
+            selectedAttackDamageRiderUnitIds:
+              input.selectedAttackDamageRiderUnitIds,
+          }),
+      ...(input.cunningStrikeOption === undefined
+        ? {}
+        : { cunningStrikeOption: input.cunningStrikeOption }),
+    }),
+  ];
+  const next = resolveBattleSubject({
+    state: input.state,
+    subject: input.subject,
+    fills: throughDamage,
+  });
+  const disposition =
+    next.tag === "needsHoles"
+      ? next.holes.find((hole) => hole.kind === "attackDamageDisposition")
+      : undefined;
+  return disposition === undefined
+    ? throughDamage
+    : [
+        ...throughDamage,
+        {
+          kind: "attackDamageDisposition",
+          holeId: disposition.holeId,
+          value: { kind: "ordinaryDamage" },
+        },
+      ];
 }
 
 export function unitFeatureDecisionFill(
