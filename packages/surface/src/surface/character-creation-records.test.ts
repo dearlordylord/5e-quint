@@ -345,6 +345,7 @@ describe("character-creation Surface records", () => {
               "ray_of_frost",
               "minor_illusion",
               "acid_splash",
+              "chill_touch",
               "poison_spray",
               "shocking_grasp",
             ],
@@ -476,6 +477,7 @@ describe("character-creation Surface records", () => {
             choose: 2,
             kind: "known_cantrips_from_class_spell_list",
             spellIds: [
+              "chill_touch",
               "eldritch_blast",
               "minor_illusion",
               "poison_spray",
@@ -792,6 +794,7 @@ describe("character-creation Surface records", () => {
               "sorcerous_burst",
               "fire_bolt",
               "acid_splash",
+              "chill_touch",
               "poison_spray",
               "ray_of_frost",
             ],

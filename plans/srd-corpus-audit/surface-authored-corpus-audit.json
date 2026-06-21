@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-21T12:26:46.086Z",
+  "generatedAt": "2026-06-21T12:40:24.481Z",
   "scope": "SRD 5.2.1 authored Surface corpus provenance audit over generated packages/surface/content JSON records. Includes Unit records and StatBlock records with SRD provenance.",
   "metrics": {
     "authoredRecords": 575,
@@ -1174,11 +1174,11 @@
       "id": "class_sorcerer",
       "kind": "class",
       "name": "Sorcerer",
-      "section": "Classes/Sorcerer.md:3-24,33-76,123-129,219-227,240-259",
+      "section": "Classes/Sorcerer.md:3-24,33-76,123-129,219-259",
       "catalogBoundary": "srd-unit-collection",
-      "part": "Classes/Sorcerer.md:3-24,33-76,123-129,219-227,240-259",
+      "part": "Classes/Sorcerer.md:3-24,33-76,123-129,219-259",
       "status": "ok-line-range",
-      "canonical": "Classes/Sorcerer.md:3-24,33-76,123-129,219-227,240-259",
+      "canonical": "Classes/Sorcerer.md:3-24,33-76,123-129,219-259",
       "legacyBase": false,
       "invalidRanges": [],
       "severity": "ok"

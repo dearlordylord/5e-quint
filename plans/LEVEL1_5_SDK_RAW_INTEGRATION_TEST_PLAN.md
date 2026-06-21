@@ -175,14 +175,22 @@ Current generated findings:
   spell-slot spend.
 - The level-1 Poison Spray seed covers the Druid, Sorcerer, Warlock, and
   Wizard cantrip spell-list rows through level-1 sheet projection, battle act
-  discovery,
-  30-foot ranged Spell Attack resolution, creature-only target shape, 1d12
+  discovery, 30-foot ranged Spell Attack resolution, creature-only target shape, 1d12
   Poison damage, action spend, and no spell-slot spend. The seed exposed and
   fixed narrow `class_druid`, `class_sorcerer`, and `class_wizard`
   cantrip-access gaps so all four rows are claimed through character creation
   rather than hand-authored cantrip lists. The Warlock row also asserts the
   level-1 Pact Magic pool at build time while the cantrip battle projection
   remains ordinary-slot-free.
+- The level-1 Chill Touch seed covers the Sorcerer, Warlock, and Wizard
+  cantrip spell-list rows through level-1 sheet projection, battle act
+  discovery, Touch-range melee Spell Attack resolution, creature-or-object
+  target shape with a combatant target witness, 1d10 Necrotic damage, Hit Point
+  regain prevention until the end of the caster's next turn, action spend, and
+  no spell-slot spend. The seed exposed and fixed narrow `class_sorcerer`,
+  `class_warlock`, and `class_wizard` cantrip-access gaps. The Warlock row also
+  asserts the level-1 Pact Magic pool at build time while the cantrip battle
+  projection remains ordinary-slot-free.
 - The level-1 Ray of Frost seed covers the Sorcerer and Wizard cantrip
   spell-list rows through level-1 sheet projection, battle act discovery,
   60-foot ranged Spell Attack resolution, 1d8 Cold damage, Speed reduction by
@@ -213,15 +221,15 @@ Current generated findings:
   count, visible-target/table-spatial witness requirement, 120-foot range,
   1d4+1 Force damage per dart, split simultaneous dart damage, and spell-slot
   spend.
-- The generated scenario groups are split by task: 162 groups for level 1,
+- The generated scenario groups are split by task: 164 groups for level 1,
   33 for level 2, 107 for level 3/spell level 2, 25 for level 4, and 72 for
   level 5/spell level 3.
 - The current level-5 SDK dispositions are: 6 seed scenarios present, 35 SDK
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 38 seed scenarios
-  present, 466 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 41 seed scenarios
+  present, 463 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -427,10 +435,11 @@ First implementation slice:
 - Add a package-local level-1 battle-feature SDK suite for Fighter Second Wind,
   Barbarian Rage, Bardic Inspiration, Rogue Sneak Attack, Sorcerer Innate
   Sorcery, and Monk Martial Arts.
-- Add level-1 spell SDK seeds for Acid Splash, Poison Spray, Fire Bolt, Ray of
-  Frost, Shocking Grasp, Burning Hands, Mage Armor, False Life, Chromatic Orb,
-  Ray of Sickness, Thunderwave, and Magic Missile from Sorcerer and Wizard
-  sheets.
+- Add level-1 spell SDK seeds for Acid Splash, Poison Spray, Chill Touch, Fire
+  Bolt, Ray of Frost, Shocking Grasp, Burning Hands, Mage Armor, False Life,
+  Chromatic Orb, Ray of Sickness, Thunderwave, and Magic Missile from
+  Sorcerer and Wizard sheets, plus class-specific rows when SRD access differs
+  such as Druid/Warlock Poison Spray and Warlock Chill Touch.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

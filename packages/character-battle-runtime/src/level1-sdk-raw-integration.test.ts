@@ -108,6 +108,13 @@ const poisonSprayWarlockId = combatantId(
 const poisonSprayWizardId = combatantId(
   "combatant:l1-sdk-poison-spray-wizard",
 );
+const chillTouchSorcererId = combatantId(
+  "combatant:l1-sdk-chill-touch-sorcerer",
+);
+const chillTouchWarlockId = combatantId(
+  "combatant:l1-sdk-chill-touch-warlock",
+);
+const chillTouchWizardId = combatantId("combatant:l1-sdk-chill-touch-wizard");
 const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
 const fireBoltWizardId = combatantId("combatant:l1-sdk-fire-bolt-wizard");
 const rayOfFrostSorcererId = combatantId(
@@ -168,6 +175,7 @@ const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
+const chillTouchSpellId = "chill_touch";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
 const rayOfFrostSpellId = "ray_of_frost";
@@ -811,6 +819,65 @@ describe("level 1 SDK RAW integration", () => {
       casterId: poisonSprayWarlockId,
       expectedSpellAttackBonus: 4,
       expectedSpellSlots: [],
+    });
+  });
+
+  test("Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention", () => {
+    const sorcererBuild = finalizedLevelOneSorcererChillTouchBuild();
+    const warlockBuild = finalizedLevelOneWarlockChillTouchBuild();
+    const wizardBuild = finalizedLevelOneWizardChillTouchBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          cantrips: expect.arrayContaining([chillTouchSpellId]),
+        }),
+      ]),
+    );
+    expect(warlockBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_warlock",
+          cantrips: expect.arrayContaining([chillTouchSpellId]),
+        }),
+      ]),
+    );
+    expect(warlockBuild.spellcasting?.slotPools).toMatchObject({
+      pactMagic: { kind: "pactMagic", slotLevel: 1, count: 1 },
+    });
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          cantrips: expect.arrayContaining([chillTouchSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneChillTouch({
+      battleIdText: "battle:l1-sdk-chill-touch-sorcerer",
+      characterIdText: "character:l1-sdk-chill-touch-sorcerer",
+      build: sorcererBuild,
+      casterId: chillTouchSorcererId,
+      expectedSpellAttackBonus: 4,
+      expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
+    });
+    assertLevelOneChillTouch({
+      battleIdText: "battle:l1-sdk-chill-touch-warlock",
+      characterIdText: "character:l1-sdk-chill-touch-warlock",
+      build: warlockBuild,
+      casterId: chillTouchWarlockId,
+      expectedSpellAttackBonus: 4,
+      expectedSpellSlots: [],
+    });
+    assertLevelOneChillTouch({
+      battleIdText: "battle:l1-sdk-chill-touch-wizard",
+      characterIdText: "character:l1-sdk-chill-touch-wizard",
+      build: wizardBuild,
+      casterId: chillTouchWizardId,
+      expectedSpellAttackBonus: 5,
+      expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
     });
   });
 
@@ -1604,6 +1671,157 @@ function assertLevelOnePoisonSpray(input: {
   const caster = requireCharacterCombatant(resolved.state, input.casterId);
 
   expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual(
+    input.expectedSpellSlots,
+  );
+}
+
+function assertLevelOneChillTouch(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellAttackBonus: number;
+  readonly expectedSpellSlots: readonly {
+    readonly spellLevel: number;
+    readonly count: number;
+    readonly expended: number;
+  }[];
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock("stat_block_goblin_warrior"),
+      ),
+    ],
+  });
+  const act = cantripCastActionSpellAct(
+    state,
+    input.casterId,
+    chillTouchSpellId,
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const objectTarget = requireHoleFromList(
+    act.initialHoles,
+    "objectTargetChoice",
+  );
+  const targetFill = spellTargetFill(
+    target,
+    chillTouchSpellId,
+    input.casterId,
+    monsterId,
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "attackRoll",
+  );
+
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([monsterId]),
+  });
+  expect(objectTarget).toMatchObject({
+    requiresTableSpatialFact: true,
+  });
+  expect(attackRoll).toMatchObject({
+    attackBonus: input.expectedSpellAttackBonus,
+    spell: {
+      resource: { tag: "none" },
+      attackKind: "melee_spell_attack",
+      targeting: { kind: "singleCreatureOrObject" },
+      rangeFeet: 5,
+      damage: {
+        kind: "fixedSpellAttackDamage",
+        expr: { dice: 1, dieSize: 10 },
+        damageType: "necrotic",
+      },
+      postDamageRiders: [
+        {
+          kind: "hitPointRegainPrevented",
+          expiresAt: "endOfCasterNextTurn",
+        },
+      ],
+    },
+  });
+
+  const attackFill = attackRollFill(attackRoll, {
+    total: 13 + input.expectedSpellAttackBonus,
+    naturalD20: 13,
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, attackFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Chill Touch damage (1d10-necrotic)",
+    spell: {
+      resource: { tag: "none" },
+      damage: {
+        kind: "fixedSpellAttackDamage",
+        expr: { dice: 1, dieSize: 10 },
+        damageType: "necrotic",
+      },
+      postDamageRiders: [
+        {
+          kind: "hitPointRegainPrevented",
+          expiresAt: "endOfCasterNextTurn",
+        },
+      ],
+    },
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: ordinaryAttackDamageFills({
+        state,
+        subject: act.subject,
+        prefixFills: [targetFill, attackFill],
+        damage,
+        damageDice: [[6]],
+      }),
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId)).toMatchObject({
+    hp: Hp(4),
+    activeEffects: [
+      {
+        kind: "hitPointRegainPrevented",
+        sourceSpellId: chillTouchSpellId,
+        sourceCombatantId: input.casterId,
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: input.casterId,
+          round: 2,
+        },
+      },
+    ],
+  });
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
   expect(caster.origin.spellcasting?.spellSlots).toEqual(
     input.expectedSpellSlots,
@@ -2912,6 +3130,20 @@ function finalizedLevelOneSorcererPoisonSprayBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererChillTouchBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-chill-touch",
+    expectedBuildLabel: "Sorcerer Chill Touch",
+    cantrips: [
+      chillTouchSpellId,
+      fireBoltSpellId,
+      shockingGraspSpellId,
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [burningHandsSpellId, "detect_magic"],
+  });
+}
+
 function finalizedLevelOneSorcererRayOfFrostBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-ray-of-frost",
@@ -3148,6 +3380,16 @@ function finalizedLevelOneWarlockPoisonSprayBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneWarlockChillTouchBuild(): CharacterBuild {
+  return finalizedLevelOneWarlockBuild({
+    draftIdText: "draft:l1-sdk-warlock-chill-touch",
+    expectedBuildLabel: "Warlock Chill Touch",
+    cantrips: [chillTouchSpellId, "eldritch_blast"],
+    preparedSpells: ["hex", "hellish_rebuke"],
+    eldritchInvocation: "eldritch_mind",
+  });
+}
+
 function finalizedLevelOneWarlockBuild(input: {
   readonly draftIdText: string;
   readonly expectedBuildLabel: string;
@@ -3328,6 +3570,23 @@ function finalizedLevelOneWizardPoisonSprayBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-wizard-poison-spray",
     expectedBuildLabel: "Wizard Poison Spray",
     cantrips: [poisonSpraySpellId, fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      "detect_magic",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+      "thunderwave",
+    ],
+    preparedSpells: ["detect_magic", "mage_armor", "magic_missile", "shield"],
+  });
+}
+
+function finalizedLevelOneWizardChillTouchBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-chill-touch",
+    expectedBuildLabel: "Wizard Chill Touch",
+    cantrips: [chillTouchSpellId, fireBoltSpellId, "ray_of_frost"],
     spellbook: [
       "detect_magic",
       "mage_armor",

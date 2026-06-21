@@ -37033,6 +37033,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Chill Touch",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -37040,7 +37044,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 224,
         "lineStart": 224,
@@ -41941,6 +41945,10 @@
       "category": "spell Unit pressure",
       "className": "Warlock",
       "concept": "Warlock spell list Chill Touch",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -41948,7 +41956,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 336,
         "lineStart": 336,
@@ -45050,6 +45058,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Chill Touch",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -45057,7 +45069,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 143,
         "lineStart": 143,
@@ -56257,16 +56269,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 466,
+      "sdk-scenario-needed": 463,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 38,
+      "seed-scenario-present": 41,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 399,
+    "scenarioGroups": 401,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 102,
+      "battle-spell-sdk": 101,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56276,13 +56288,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 38,
+      "seed-present": 41,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 162,
+      "L15-SDK-RAW-03": 164,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -56665,97 +56677,6 @@
         "Sorcerer spell list Charm Person",
         "Warlock spell list Charm Person",
         "Wizard spell list Charm Person"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "chill_touch"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Sorcerer",
-        "Warlock",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:chill-touch",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-0"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"chill_touch\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md:224",
-        ".references/srd-5.2.1/Classes/Warlock.md:336",
-        ".references/srd-5.2.1/Classes/Wizard.md:143"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "chill_touch",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Chill Touch",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 224,
-            "lineStart": 224,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "chill_touch",
-          "className": "Warlock",
-          "concept": "Warlock spell list Chill Touch",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 336,
-            "lineStart": 336,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "candidateUnitId": "chill_touch",
-          "className": "Wizard",
-          "concept": "Wizard spell list Chill Touch",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 143,
-            "lineStart": 143,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Sorcerer spell list Chill Touch",
-        "Warlock spell list Chill Touch",
-        "Wizard spell list Chill Touch"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65049,6 +64970,61 @@
     },
     {
       "candidateUnitIds": [
+        "chill_touch"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-sorcerer-chill-touch",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Sorcerer:chill_touch\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:224"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "chill_touch",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Chill Touch",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 224,
+            "lineStart": 224,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Chill Touch"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "fire_bolt"
       ],
       "categories": [
@@ -65269,6 +65245,61 @@
     },
     {
       "candidateUnitIds": [
+        "chill_touch"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Warlock"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-warlock-chill-touch",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Warlock:chill_touch\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Warlock.md:336"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "chill_touch",
+          "className": "Warlock",
+          "concept": "Warlock spell list Chill Touch",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 336,
+            "lineStart": 336,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Warlock spell list Chill Touch"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "poison_spray"
       ],
       "categories": [
@@ -65370,6 +65401,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Acid Splash"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "chill_touch"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-wizard-chill-touch",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Wizard:chill_touch\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:143"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "chill_touch",
+          "className": "Wizard",
+          "concept": "Wizard spell list Chill Touch",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 143,
+            "lineStart": 143,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Chill Touch"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85354,6 +85440,225 @@
         "cantrips: expect.arrayContaining([poisonSpraySpellId])",
         "build: wizardBuild,",
         "casterId: poisonSprayWizardId,",
+        "expectedSpellAttackBonus: 5,",
+        "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
+      ]
+    },
+    {
+      "candidateUnitId": "chill_touch",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneSorcererChillTouchBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneSorcererBuild({",
+            "draftIdText: \"draft:l1-sdk-sorcerer-chill-touch\"",
+            "expectedBuildLabel: \"Sorcerer Chill Touch\"",
+            "chillTouchSpellId,"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneSorcererBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneChillTouch",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "chillTouchSpellId",
+            "srdStatBlock(\"stat_block_goblin_warrior\")",
+            "\"objectTargetChoice\"",
+            "spellTargetFill(",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "resource: { tag: \"none\" }",
+            "attackKind: \"melee_spell_attack\"",
+            "targeting: { kind: \"singleCreatureOrObject\" }",
+            "requiresTableSpatialFact: true",
+            "rangeFeet: 5",
+            "kind: \"fixedSpellAttackDamage\"",
+            "expr: { dice: 1, dieSize: 10 }",
+            "damageType: \"necrotic\"",
+            "kind: \"hitPointRegainPrevented\"",
+            "expiresAt: \"endOfCasterNextTurn\"",
+            "label: \"Chill Touch damage (1d10-necrotic)\"",
+            "ordinaryAttackDamageFills({",
+            "damageDice: [[6]]",
+            "hp: Hp(4)",
+            "sourceSpellId: chillTouchSpellId",
+            "sourceCombatantId: input.casterId",
+            "combatantId: input.casterId",
+            "round: 2",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "input.expectedSpellSlots"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
+      "rowKey": "spell-level-0:Sorcerer:chill_touch",
+      "tracerNeedles": [
+        "const sorcererBuild = finalizedLevelOneSorcererChillTouchBuild();",
+        "sourceUnitId: \"class_sorcerer\"",
+        "cantrips: expect.arrayContaining([chillTouchSpellId])",
+        "build: sorcererBuild,",
+        "casterId: chillTouchSorcererId,",
+        "expectedSpellAttackBonus: 4,",
+        "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
+      ]
+    },
+    {
+      "candidateUnitId": "chill_touch",
+      "className": "Warlock",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWarlockChillTouchBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWarlockBuild({",
+            "draftIdText: \"draft:l1-sdk-warlock-chill-touch\"",
+            "expectedBuildLabel: \"Warlock Chill Touch\"",
+            "cantrips: [chillTouchSpellId, \"eldritch_blast\"]",
+            "eldritchInvocation: \"eldritch_mind\""
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWarlockBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_warlock\"",
+            "\"class_cantrip_choices\"",
+            "\"warlock_eldritch_invocations\"",
+            "\"eldritch_invocations\"",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneChillTouch",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "chillTouchSpellId",
+            "srdStatBlock(\"stat_block_goblin_warrior\")",
+            "\"objectTargetChoice\"",
+            "spellTargetFill(",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "resource: { tag: \"none\" }",
+            "attackKind: \"melee_spell_attack\"",
+            "targeting: { kind: \"singleCreatureOrObject\" }",
+            "requiresTableSpatialFact: true",
+            "rangeFeet: 5",
+            "kind: \"fixedSpellAttackDamage\"",
+            "expr: { dice: 1, dieSize: 10 }",
+            "damageType: \"necrotic\"",
+            "kind: \"hitPointRegainPrevented\"",
+            "expiresAt: \"endOfCasterNextTurn\"",
+            "label: \"Chill Touch damage (1d10-necrotic)\"",
+            "ordinaryAttackDamageFills({",
+            "damageDice: [[6]]",
+            "hp: Hp(4)",
+            "sourceSpellId: chillTouchSpellId",
+            "sourceCombatantId: input.casterId",
+            "combatantId: input.casterId",
+            "round: 2",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "input.expectedSpellSlots"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
+      "rowKey": "spell-level-0:Warlock:chill_touch",
+      "tracerNeedles": [
+        "const warlockBuild = finalizedLevelOneWarlockChillTouchBuild();",
+        "sourceUnitId: \"class_warlock\"",
+        "cantrips: expect.arrayContaining([chillTouchSpellId])",
+        "pactMagic: { kind: \"pactMagic\", slotLevel: 1, count: 1 }",
+        "build: warlockBuild,",
+        "casterId: chillTouchWarlockId,",
+        "expectedSpellAttackBonus: 4,",
+        "expectedSpellSlots: [],"
+      ]
+    },
+    {
+      "candidateUnitId": "chill_touch",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWizardChillTouchBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWizardBuild({",
+            "draftIdText: \"draft:l1-sdk-wizard-chill-touch\"",
+            "expectedBuildLabel: \"Wizard Chill Touch\"",
+            "cantrips: [chillTouchSpellId, fireBoltSpellId, \"ray_of_frost\"]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWizardBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneChillTouch",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "chillTouchSpellId",
+            "srdStatBlock(\"stat_block_goblin_warrior\")",
+            "\"objectTargetChoice\"",
+            "spellTargetFill(",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "resource: { tag: \"none\" }",
+            "attackKind: \"melee_spell_attack\"",
+            "targeting: { kind: \"singleCreatureOrObject\" }",
+            "requiresTableSpatialFact: true",
+            "rangeFeet: 5",
+            "kind: \"fixedSpellAttackDamage\"",
+            "expr: { dice: 1, dieSize: 10 }",
+            "damageType: \"necrotic\"",
+            "kind: \"hitPointRegainPrevented\"",
+            "expiresAt: \"endOfCasterNextTurn\"",
+            "label: \"Chill Touch damage (1d10-necrotic)\"",
+            "ordinaryAttackDamageFills({",
+            "damageDice: [[6]]",
+            "hp: Hp(4)",
+            "sourceSpellId: chillTouchSpellId",
+            "sourceCombatantId: input.casterId",
+            "combatantId: input.casterId",
+            "round: 2",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "input.expectedSpellSlots"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
+      "rowKey": "spell-level-0:Wizard:chill_touch",
+      "tracerNeedles": [
+        "const wizardBuild = finalizedLevelOneWizardChillTouchBuild();",
+        "sourceUnitId: \"class_wizard\"",
+        "cantrips: expect.arrayContaining([chillTouchSpellId])",
+        "build: wizardBuild,",
+        "casterId: chillTouchWizardId,",
         "expectedSpellAttackBonus: 5,",
         "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
       ]

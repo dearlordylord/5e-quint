@@ -411,6 +411,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       creationChoiceOptionId("ray_of_frost"),
       creationChoiceOptionId("minor_illusion"),
       creationChoiceOptionId("acid_splash"),
+      creationChoiceOptionId("chill_touch"),
       creationChoiceOptionId("poison_spray"),
       creationChoiceOptionId("shocking_grasp"),
     ],

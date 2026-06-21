@@ -38,7 +38,8 @@ let warlock =
               , choose = 2
               , kind = "known_cantrips_from_class_spell_list"
               , spellIds =
-                [ "eldritch_blast"
+                [ "chill_touch"
+                , "eldritch_blast"
                 , "minor_illusion"
                 , "poison_spray"
                 , "prestidigitation"
