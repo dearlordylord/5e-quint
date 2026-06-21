@@ -38644,6 +38644,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Thunderwave",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -38651,7 +38655,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 264,
         "lineStart": 264,
@@ -46984,6 +46988,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Thunderwave",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -46991,7 +46999,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 190,
         "lineStart": 190,
@@ -56233,13 +56241,13 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 472,
+      "sdk-scenario-needed": 470,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 32,
+      "seed-scenario-present": 34,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 394,
+    "scenarioGroups": 396,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
       "battle-spell-sdk": 103,
@@ -56252,13 +56260,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 32,
+      "seed-present": 34,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 157,
+      "L15-SDK-RAW-03": 159,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -60086,9 +60094,7 @@
       ],
       "classNames": [
         "Bard",
-        "Druid",
-        "Sorcerer",
-        "Wizard"
+        "Druid"
       ],
       "groupId": "l15-sdk-raw-03:battle-spell-sdk:thunderwave",
       "lane": "battle-spell-sdk",
@@ -60104,11 +60110,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"thunderwave\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Bard.md:183",
-        ".references/srd-5.2.1/Classes/Druid.md:221",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:264",
-        ".references/srd-5.2.1/Classes/Wizard.md:190"
+        ".references/srd-5.2.1/Classes/Druid.md:221"
       ],
-      "rowCount": 4,
+      "rowCount": 2,
       "rowKinds": [
         "spell-unit-pressure"
       ],
@@ -60142,43 +60146,11 @@
             "lineStart": 221,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
           }
-        },
-        {
-          "candidateUnitId": "thunderwave",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Thunderwave",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 264,
-            "lineStart": 264,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "thunderwave",
-          "className": "Wizard",
-          "concept": "Wizard spell list Thunderwave",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 190,
-            "lineStart": 190,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
         }
       ],
       "sampleConcepts": [
         "Bard spell list Thunderwave",
-        "Druid spell list Thunderwave",
-        "Sorcerer spell list Thunderwave",
-        "Wizard spell list Thunderwave"
+        "Druid spell list Thunderwave"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65830,6 +65802,61 @@
     },
     {
       "candidateUnitIds": [
+        "thunderwave"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-sorcerer-thunderwave",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Sorcerer:thunderwave\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:264"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "thunderwave",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Thunderwave",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 264,
+            "lineStart": 264,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Thunderwave"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "burning_hands"
       ],
       "categories": [
@@ -66151,6 +66178,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Ray of Sickness"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "thunderwave"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-wizard-thunderwave",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Wizard:thunderwave\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:190"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "thunderwave",
+          "className": "Wizard",
+          "concept": "Wizard spell list Thunderwave",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 190,
+            "lineStart": 190,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Thunderwave"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85576,6 +85658,224 @@
         "build: wizardBuild,",
         "casterId: rayOfSicknessWizardId,",
         "expectedSpellAttackBonus: 5,"
+      ]
+    },
+    {
+      "candidateUnitId": "thunderwave",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneSorcererThunderwaveBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneSorcererBuild({",
+            "draftIdText: \"draft:l1-sdk-sorcerer-thunderwave\"",
+            "expectedBuildLabel: \"Sorcerer Thunderwave\"",
+            "preparedSpells: [thunderwaveSpellId, burningHandsSpellId]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneSorcererBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneThunderwave",
+          "needles": [
+            "spellSlotActForProcedure(",
+            "thunderwaveSpellId",
+            "\"saveGatedDamage\"",
+            "\"savingThrowOutcome\"",
+            "requireThunderwaveSavingThrowHole(",
+            "label: \"Thunderwave self-origin Cube Saving Throw outcomes\"",
+            "ability: \"con\"",
+            "dc: { kind: \"caster_spell_save_dc\" }",
+            "targeting: { kind: \"selfOriginCube\", sideFeet: 15 }",
+            "damage: { expr: { dice: 2, dieSize: 8 }, damageType: \"thunder\" }",
+            "successDamage: \"half\"",
+            "rangeFeet: 0",
+            "failedSavePostDamageRiders: []",
+            "postSaveAreaEffect:",
+            "kind: \"thunderwave\"",
+            "creaturePush:",
+            "unsecuredObjectPush:",
+            "objectLocation: \"entirely_within_area\"",
+            "audibleBoom:",
+            "sound: \"thunderous boom\"",
+            "audibleRadiusFeet: 300",
+            "thunderwaveSavingThrowOutcomeFill(save, input.casterId",
+            "expect(saveFill.value).toEqual({",
+            "originAnchorId: input.casterId",
+            "affectedTargetIds: [monsterId, secondMonsterId]",
+            "objectId: thunderwaveUnsecuredObjectId",
+            "audibleRadiusFeet: movementFeet(300)",
+            "label: \"Thunderwave damage (2d8-thunder)\"",
+            "damageRollFillWithGroups(damage, [[4, 4]])",
+            "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(5));",
+            "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(9));",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function thunderwaveSavingThrowOutcomeFill",
+          "needles": [
+            "area: thunderwaveArea(",
+            "outcomes.flatMap(",
+            "originAnchorId"
+          ]
+        },
+        {
+          "anchor": "function requireThunderwaveSavingThrowHole",
+          "needles": [
+            "Expected Thunderwave spell Saving Throw outcome hole.",
+            "spell.procedure !== \"saveGatedDamage\"",
+            "spell.spell.id !== thunderwaveSpellId",
+            "spell.targeting.kind !== \"selfOriginCube\"",
+            "spell.postSaveAreaEffect?.kind !== \"thunderwave\""
+          ]
+        },
+        {
+          "anchor": "function thunderwaveArea",
+          "needles": [
+            "kind: \"thunderwaveArea\"",
+            "creaturePushes:",
+            "distanceFeet: movementFeet(10)",
+            "battleTablePositionId(",
+            "unsecuredObjectPushes:",
+            "objectId: thunderwaveUnsecuredObjectId",
+            "audibleBoom:",
+            "audibleRadiusFeet: movementFeet(300)"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
+      "rowKey": "spell-level-1:Sorcerer:thunderwave",
+      "tracerNeedles": [
+        "const sorcererBuild = finalizedLevelOneSorcererThunderwaveBuild();",
+        "sourceUnitId: \"class_sorcerer\"",
+        "preparedSpells: expect.arrayContaining([thunderwaveSpellId])",
+        "build: sorcererBuild,",
+        "casterId: thunderwaveSorcererId,",
+        "expectedSpellSaveDc: 12,"
+      ]
+    },
+    {
+      "candidateUnitId": "thunderwave",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWizardThunderwaveBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWizardBuild({",
+            "draftIdText: \"draft:l1-sdk-wizard-thunderwave\"",
+            "expectedBuildLabel: \"Wizard Thunderwave\"",
+            "const thunderwaveWizardSpellbook = [",
+            "const thunderwaveWizardPreparedSpells = [",
+            "spellbook: thunderwaveWizardSpellbook",
+            "preparedSpells: thunderwaveWizardPreparedSpells"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWizardBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneThunderwave",
+          "needles": [
+            "spellSlotActForProcedure(",
+            "thunderwaveSpellId",
+            "\"saveGatedDamage\"",
+            "\"savingThrowOutcome\"",
+            "requireThunderwaveSavingThrowHole(",
+            "label: \"Thunderwave self-origin Cube Saving Throw outcomes\"",
+            "ability: \"con\"",
+            "dc: { kind: \"caster_spell_save_dc\" }",
+            "targeting: { kind: \"selfOriginCube\", sideFeet: 15 }",
+            "damage: { expr: { dice: 2, dieSize: 8 }, damageType: \"thunder\" }",
+            "successDamage: \"half\"",
+            "rangeFeet: 0",
+            "failedSavePostDamageRiders: []",
+            "postSaveAreaEffect:",
+            "kind: \"thunderwave\"",
+            "creaturePush:",
+            "unsecuredObjectPush:",
+            "objectLocation: \"entirely_within_area\"",
+            "audibleBoom:",
+            "sound: \"thunderous boom\"",
+            "audibleRadiusFeet: 300",
+            "thunderwaveSavingThrowOutcomeFill(save, input.casterId",
+            "expect(saveFill.value).toEqual({",
+            "originAnchorId: input.casterId",
+            "affectedTargetIds: [monsterId, secondMonsterId]",
+            "objectId: thunderwaveUnsecuredObjectId",
+            "audibleRadiusFeet: movementFeet(300)",
+            "label: \"Thunderwave damage (2d8-thunder)\"",
+            "damageRollFillWithGroups(damage, [[4, 4]])",
+            "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(5));",
+            "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(9));",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function thunderwaveSavingThrowOutcomeFill",
+          "needles": [
+            "area: thunderwaveArea(",
+            "outcomes.flatMap(",
+            "originAnchorId"
+          ]
+        },
+        {
+          "anchor": "function requireThunderwaveSavingThrowHole",
+          "needles": [
+            "Expected Thunderwave spell Saving Throw outcome hole.",
+            "spell.procedure !== \"saveGatedDamage\"",
+            "spell.spell.id !== thunderwaveSpellId",
+            "spell.targeting.kind !== \"selfOriginCube\"",
+            "spell.postSaveAreaEffect?.kind !== \"thunderwave\""
+          ]
+        },
+        {
+          "anchor": "function thunderwaveArea",
+          "needles": [
+            "kind: \"thunderwaveArea\"",
+            "creaturePushes:",
+            "distanceFeet: movementFeet(10)",
+            "battleTablePositionId(",
+            "unsecuredObjectPushes:",
+            "objectId: thunderwaveUnsecuredObjectId",
+            "audibleBoom:",
+            "audibleRadiusFeet: movementFeet(300)"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
+      "rowKey": "spell-level-1:Wizard:thunderwave",
+      "tracerNeedles": [
+        "const wizardBuild = finalizedLevelOneWizardThunderwaveBuild();",
+        "sourceUnitId: \"class_wizard\"",
+        "spellbook: expect.arrayContaining([thunderwaveSpellId])",
+        "preparedSpells: expect.arrayContaining([thunderwaveSpellId])",
+        "build: wizardBuild,",
+        "casterId: thunderwaveWizardId,",
+        "expectedSpellSaveDc: 13,"
       ]
     },
     {

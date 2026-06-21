@@ -107,7 +107,7 @@ coverage.
 Current generated findings:
 
 - The JSON inventory is schema version 4. It persists all 770 mined level 1-5
-  rows with SDK dispositions, owner-boundary evidence where used, and 394
+  rows with SDK dispositions, owner-boundary evidence where used, and 396
   scenario groups. The Markdown report stays summarized, with the level-5
   completion rows and scenario groups expanded for the next implementation
   slice. Schema version 4 preserves each row's full source `supportSnapshot`,
@@ -160,6 +160,14 @@ Current generated findings:
   and fixed narrow `class_sorcerer` and `class_wizard` spell-access gaps so
   both rows are claimed through character creation rather than hand-authored
   spell lists.
+- The level-1 Thunderwave seed covers the Sorcerer and Wizard spell-list rows
+  through level-1 sheet projection, battle act discovery, self-origin 15-foot
+  Cube Constitution Saving Throw shape, failed-save 2d8 Thunder damage,
+  successful-save half damage, failed-save 10-foot creature-push table fact,
+  unsecured-object 10-foot push table fact, 300-foot thunderous-boom table
+  fact, action spend, and spell-slot spend. RAW also lists Bard and Druid;
+  those class-access rows remain future Task 3 SDK slices rather than being
+  claimed by this Sorcerer/Wizard seed.
 - The level-1 Acid Splash seed covers the Sorcerer and Wizard cantrip
   spell-list rows through level-1 sheet projection, battle act discovery,
   point-origin 5-foot Sphere Saving Throw shape, Dexterity save, failed-save
@@ -195,15 +203,15 @@ Current generated findings:
   count, visible-target/table-spatial witness requirement, 120-foot range,
   1d4+1 Force damage per dart, split simultaneous dart damage, and spell-slot
   spend.
-- The generated scenario groups are split by task: 157 groups for level 1,
+- The generated scenario groups are split by task: 159 groups for level 1,
   33 for level 2, 107 for level 3/spell level 2, 25 for level 4, and 72 for
   level 5/spell level 3.
 - The current level-5 SDK dispositions are: 6 seed scenarios present, 35 SDK
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 32 seed scenarios
-  present, 472 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 34 seed scenarios
+  present, 470 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:

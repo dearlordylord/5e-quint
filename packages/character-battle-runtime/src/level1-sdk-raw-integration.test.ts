@@ -1,4 +1,6 @@
 import {
+  battleObjectId,
+  battleTablePositionId,
   cantripSpellInvocationRef,
   combatantId,
   discoverBattleActs,
@@ -11,6 +13,8 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
+  type BattleSpellAreaChoice,
+  type BattleSpellSavingThrowOutcomeHole,
   type BattleSubject,
   type CantripSpellProcedure,
   type CombatantId,
@@ -64,6 +68,24 @@ import {
   unitLibrary,
 } from "./sdk-integration-test-support.ts";
 
+type SavingThrowOutcomeHole = Extract<
+  BattleHole,
+  { readonly kind: "savingThrowOutcome" }
+>;
+type ThunderwaveSavingThrowOutcomeHole = BattleSpellSavingThrowOutcomeHole & {
+  readonly spell: Extract<
+    BattleSpellSavingThrowOutcomeHole["spell"],
+    { readonly procedure: "saveGatedDamage" }
+  > & {
+    readonly spell: { readonly id: typeof thunderwaveSpellId };
+    readonly targeting: {
+      readonly kind: "selfOriginCube";
+      readonly sideFeet: 15;
+    };
+    readonly postSaveAreaEffect: { readonly kind: "thunderwave" };
+  };
+};
+
 const fighterId = combatantId("combatant:l1-sdk-fighter");
 const barbarianId = combatantId("combatant:l1-sdk-barbarian");
 const bardId = combatantId("combatant:l1-sdk-bard");
@@ -110,12 +132,21 @@ const magicMissileSorcererId = combatantId(
 const magicMissileWizardId = combatantId(
   "combatant:l1-sdk-magic-missile-wizard",
 );
+const thunderwaveSorcererId = combatantId(
+  "combatant:l1-sdk-thunderwave-sorcerer",
+);
+const thunderwaveWizardId = combatantId(
+  "combatant:l1-sdk-thunderwave-wizard",
+);
 const wizardBurningHandsCasterId = combatantId(
   "combatant:l1-sdk-wizard-burning-hands",
 );
 const monkId = combatantId("combatant:l1-sdk-monk");
 const monsterId = combatantId("combatant:l1-sdk-monster");
 const secondMonsterId = combatantId("combatant:l1-sdk-second-monster");
+const thunderwaveUnsecuredObjectId = battleObjectId(
+  "object:l1-sdk-thunderwave-unsecured",
+);
 
 const fighterSecondWindUnitId = "fighter_second_wind";
 const barbarianRageUnitId = "barbarian_rage";
@@ -135,6 +166,7 @@ const falseLifeSpellId = "false_life";
 const rayOfSicknessSpellId = "ray_of_sickness";
 const mageArmorSpellId = "mage_armor";
 const magicMissileSpellId = "magic_missile";
+const thunderwaveSpellId = "thunderwave";
 const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
 
 describe("level 1 SDK RAW integration", () => {
@@ -615,6 +647,44 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
+  test("Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts", () => {
+    const sorcererBuild = finalizedLevelOneSorcererThunderwaveBuild();
+    const wizardBuild = finalizedLevelOneWizardThunderwaveBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          preparedSpells: expect.arrayContaining([thunderwaveSpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          spellbook: expect.arrayContaining([thunderwaveSpellId]),
+          preparedSpells: expect.arrayContaining([thunderwaveSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneThunderwave({
+      battleIdText: "battle:l1-sdk-thunderwave-sorcerer",
+      characterIdText: "character:l1-sdk-thunderwave-sorcerer",
+      build: sorcererBuild,
+      casterId: thunderwaveSorcererId,
+      expectedSpellSaveDc: 12,
+    });
+    assertLevelOneThunderwave({
+      battleIdText: "battle:l1-sdk-thunderwave-wizard",
+      characterIdText: "character:l1-sdk-thunderwave-wizard",
+      build: wizardBuild,
+      casterId: thunderwaveWizardId,
+      expectedSpellSaveDc: 13,
+    });
+  });
+
   test("Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots", () => {
     const sorcererBuild = finalizedLevelOneSorcererAcidSplashBuild();
     const wizardBuild = finalizedLevelOneWizardAcidSplashBuild();
@@ -1083,6 +1153,155 @@ function assertLevelOneBurningHands(input: {
 
   expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(1));
   expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(7));
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
+function assertLevelOneThunderwave(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        secondMonsterId,
+        8,
+        srdStatBlock("stat_block_skeleton"),
+      ),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    thunderwaveSpellId,
+    1,
+    "saveGatedDamage",
+  );
+  const save = requireThunderwaveSavingThrowHole(
+    requireHoleFromList(act.initialHoles, "savingThrowOutcome"),
+  );
+
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(save).toMatchObject({
+    label: "Thunderwave self-origin Cube Saving Throw outcomes",
+    ability: "con",
+    dc: { kind: "caster_spell_save_dc" },
+    spell: {
+      targeting: { kind: "selfOriginCube", sideFeet: 15 },
+      damage: { expr: { dice: 2, dieSize: 8 }, damageType: "thunder" },
+      successDamage: "half",
+      rangeFeet: 0,
+      failedSavePostDamageRiders: [],
+      postSaveAreaEffect: {
+        kind: "thunderwave",
+        creaturePush: {
+          distanceFeet: 10,
+          originDirection: "away_from_caster",
+        },
+        unsecuredObjectPush: {
+          distanceFeet: 10,
+          originDirection: "away_from_caster",
+          objectLocation: "entirely_within_area",
+        },
+        audibleBoom: {
+          sound: "thunderous boom",
+          audibleRadiusFeet: 300,
+        },
+      },
+    },
+  });
+
+  const saveFill = thunderwaveSavingThrowOutcomeFill(save, input.casterId, [
+    { targetId: monsterId, succeeded: false },
+    { targetId: secondMonsterId, succeeded: true },
+  ]);
+  expect(saveFill.value).toEqual({
+    area: {
+      kind: "thunderwaveArea",
+      originAnchorId: input.casterId,
+      affectedTargetIds: [monsterId, secondMonsterId],
+      creaturePushes: [
+        {
+          targetId: monsterId,
+          disposition: {
+            kind: "pushed",
+            distanceFeet: movementFeet(10),
+            destinationId: battleTablePositionId(
+              `pushed:l1-sdk-thunderwave:${monsterId}`,
+            ),
+            provokesOpportunityAttacks: false,
+          },
+        },
+      ],
+      unsecuredObjectPushes: [
+        {
+          objectId: thunderwaveUnsecuredObjectId,
+          disposition: {
+            kind: "pushed",
+            distanceFeet: movementFeet(10),
+            destinationId: battleTablePositionId(
+              "pushed:l1-sdk-thunderwave-object",
+            ),
+            provokesOpportunityAttacks: false,
+          },
+        },
+      ],
+      audibleBoom: {
+        sound: "thunderous boom",
+        audibleRadiusFeet: movementFeet(300),
+      },
+    },
+    outcomes: [
+      { targetId: monsterId, succeeded: false },
+      { targetId: secondMonsterId, succeeded: true },
+    ],
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [saveFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Thunderwave damage (2d8-thunder)",
+    spell: {
+      damage: { expr: { dice: 2, dieSize: 8 }, damageType: "thunder" },
+      successDamage: "half",
+    },
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [saveFill, damageRollFillWithGroups(damage, [[4, 4]])],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(5));
+  expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(9));
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
   expect(caster.origin.spellcasting?.spellSlots).toEqual([
     { spellLevel: 1, count: 2, expended: 1 },
@@ -2425,6 +2644,20 @@ function finalizedLevelOneSorcererRayOfSicknessBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererThunderwaveBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-thunderwave",
+    expectedBuildLabel: "Sorcerer Thunderwave",
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      shockingGraspSpellId,
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [thunderwaveSpellId, burningHandsSpellId],
+  });
+}
+
 function finalizedLevelOneSorcererMagicMissileBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-magic-missile",
@@ -2755,6 +2988,30 @@ function finalizedLevelOneWizardMagicMissileBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneWizardThunderwaveBuild(): CharacterBuild {
+  const thunderwaveWizardSpellbook = [
+    "detect_magic",
+    "feather_fall",
+    "mage_armor",
+    magicMissileSpellId,
+    "sleep",
+    thunderwaveSpellId,
+  ] as const;
+  const thunderwaveWizardPreparedSpells = [
+    "detect_magic",
+    "mage_armor",
+    magicMissileSpellId,
+    thunderwaveSpellId,
+  ] as const;
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-thunderwave",
+    expectedBuildLabel: "Wizard Thunderwave",
+    cantrips: ["light", fireBoltSpellId, "ray_of_frost"],
+    spellbook: thunderwaveWizardSpellbook,
+    preparedSpells: thunderwaveWizardPreparedSpells,
+  });
+}
+
 function finalizedLevelOneWizardBuild(input: {
   readonly draftIdText: string;
   readonly expectedBuildLabel: string;
@@ -3001,6 +3258,91 @@ function martialArtsBonusUnarmedStrikeAct(
     throw new Error("Expected Martial Arts Bonus Action Unarmed Strike act.");
   }
   return act;
+}
+
+function requireThunderwaveSavingThrowHole(
+  hole: SavingThrowOutcomeHole,
+): ThunderwaveSavingThrowOutcomeHole {
+  if (!("spell" in hole)) {
+    throw new Error("Expected Thunderwave spell Saving Throw outcome hole.");
+  }
+  const spell = hole.spell;
+  if (
+    spell.procedure !== "saveGatedDamage" ||
+    spell.spell.id !== thunderwaveSpellId ||
+    spell.targeting.kind !== "selfOriginCube" ||
+    spell.targeting.sideFeet !== 15 ||
+    spell.postSaveAreaEffect?.kind !== "thunderwave"
+  ) {
+    throw new Error("Expected Thunderwave self-origin Cube Saving Throw hole.");
+  }
+  // The checks above establish the exact Thunderwave spell-hole shape; the cast
+  // carries those literal refinements through the mixed Saving Throw hole union.
+  return hole as ThunderwaveSavingThrowOutcomeHole;
+}
+
+function thunderwaveSavingThrowOutcomeFill(
+  hole: ThunderwaveSavingThrowOutcomeHole,
+  originAnchorId: CombatantId,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: thunderwaveArea(
+        originAnchorId,
+        outcomes.map((outcome) => outcome.targetId),
+        outcomes.flatMap((outcome) =>
+          outcome.succeeded ? [] : [outcome.targetId],
+        ),
+      ),
+      outcomes,
+    },
+  };
+}
+
+function thunderwaveArea(
+  originAnchorId: CombatantId,
+  affectedTargetIds: readonly CombatantId[],
+  failedTargetIds: readonly CombatantId[],
+): Extract<BattleSpellAreaChoice, { readonly kind: "thunderwaveArea" }> {
+  return {
+    kind: "thunderwaveArea",
+    originAnchorId,
+    affectedTargetIds,
+    creaturePushes: failedTargetIds.map((targetId) => ({
+      targetId,
+      disposition: {
+        kind: "pushed" as const,
+        distanceFeet: movementFeet(10),
+        destinationId: battleTablePositionId(
+          `pushed:l1-sdk-thunderwave:${targetId}`,
+        ),
+        provokesOpportunityAttacks: false as const,
+      },
+    })),
+    unsecuredObjectPushes: [
+      {
+        objectId: thunderwaveUnsecuredObjectId,
+        disposition: {
+          kind: "pushed",
+          distanceFeet: movementFeet(10),
+          destinationId: battleTablePositionId(
+            "pushed:l1-sdk-thunderwave-object",
+          ),
+          provokesOpportunityAttacks: false,
+        },
+      },
+    ],
+    audibleBoom: {
+      sound: "thunderous boom",
+      audibleRadiusFeet: movementFeet(300),
+    },
+  };
 }
 
 function damageTypeChoiceFill(

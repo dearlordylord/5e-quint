@@ -17,7 +17,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
 | Existing level-5 SDK seed scenario rows | 6 |
-| Scenario groups | 394 |
+| Scenario groups | 396 |
 | Level 5 scenario groups | 72 |
 
 ### All Level 1-5 Rows by Level Band
@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 472 |
+| sdk-scenario-needed | 470 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 32 |
+| seed-scenario-present | 34 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -74,7 +74,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Task | Groups |
 | --- | ---: |
-| L15-SDK-RAW-03 | 157 |
+| L15-SDK-RAW-03 | 159 |
 | L15-SDK-RAW-04 | 33 |
 | L15-SDK-RAW-05 | 107 |
 | L15-SDK-RAW-06 | 25 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 10 |
 | owner-review | 6 |
-| seed-present | 32 |
+| seed-present | 34 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -172,6 +172,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life` / `spell-level-1:Wizard:false_life`: level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points
 - `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness` / `spell-level-1:Sorcerer:ray_of_sickness`: level1-sdk-raw-integration: Sorcerer and Wizard Ray of Sickness resolve from level-1 spell access as Poison damage plus a turn-scoped Poisoned rider
 - `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness` / `spell-level-1:Wizard:ray_of_sickness`: level1-sdk-raw-integration: Sorcerer and Wizard Ray of Sickness resolve from level-1 spell access as Poison damage plus a turn-scoped Poisoned rider
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave` / `spell-level-1:Sorcerer:thunderwave`: level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave` / `spell-level-1:Wizard:thunderwave`: level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts
 - `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb` / `spell-level-1:Sorcerer:chromatic_orb`: level1-sdk-raw-integration: Sorcerer and Wizard Chromatic Orb resolve from level-1 spell access with chosen damage and one duplicate-dice leap
 - `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb` / `spell-level-1:Wizard:chromatic_orb`: level1-sdk-raw-integration: Sorcerer and Wizard Chromatic Orb resolve from level-1 spell access with chosen damage and one duplicate-dice leap
 - `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile` / `spell-level-1:Sorcerer:magic_missile`: level1-sdk-raw-integration: Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation
