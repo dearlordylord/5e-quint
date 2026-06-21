@@ -298,6 +298,15 @@ Current generated findings:
   possession, derived line-of-sight, attack rider damage execution, later-turn
   transfer resolution, or higher-level duration scaling; those remain
   lower-runtime or future SDK slices.
+- The level-1 Healing Word seed covers the Bard, Cleric, and Druid spell-list
+  rows through level-1 character creation, prepared-spell sheet projection,
+  Bonus Action spell-slot act discovery, creature target selection, 2d4 plus
+  spellcasting ability modifier Hit Point restoration, Bonus Action spend, and
+  spell-slot spend. The seed exposed and fixed a narrow `class_druid`
+  prepared-spell access gap so the Druid row is claimed through character
+  creation rather than a hand-authored spell list. It does not claim
+  line-of-sight derivation or higher-level slot scaling; those remain lower
+  battle-runtime or future SDK slices.
 - The level-1 Ray of Frost seed covers the Sorcerer and Wizard cantrip
   spell-list rows through level-1 sheet projection, battle act discovery,
   60-foot ranged Spell Attack resolution, 1d8 Cold damage, Speed reduction by
@@ -335,8 +344,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 53 seed scenarios
-  present, 451 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 56 seed scenarios
+  present, 448 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -552,7 +561,7 @@ First implementation slice:
   Druid Produce Flame, Druid Shillelagh, Cleric Sacred Flame, Cleric
   Thaumaturgy, Cleric Guiding Bolt, Cleric Inflict Wounds, Cleric Sanctuary,
   Sorcerer Sorcerous Burst, Warlock Chill Touch, Warlock Eldritch Blast, and
-  Warlock Hex.
+  Warlock Hex, plus Bard/Cleric/Druid Healing Word.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

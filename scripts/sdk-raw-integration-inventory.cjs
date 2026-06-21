@@ -1788,6 +1788,78 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "healing_word",
+    className: "Bard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Bard.md:79-89",
+      ".references/srd-5.2.1/Classes/Bard.md:174",
+      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132",
+    ],
+    rowId:
+      "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
+    tracerNeedles: [
+      "const bardBuild = finalizedLevelOneBardHealingWordBuild();",
+      'sourceUnitId: "class_bard"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([healingWordSpellId])",
+      "build: bardBuild,",
+      "casterId: healingWordBardId,",
+    ],
+    helperNeedles: healingWordSdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "healing_word",
+    className: "Cleric",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Cleric.md:66-76",
+      ".references/srd-5.2.1/Classes/Cleric.md:171",
+      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132",
+    ],
+    rowId:
+      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
+    tracerNeedles: [
+      "const clericBuild = finalizedLevelOneClericHealingWordBuild();",
+      'sourceUnitId: "class_cleric"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([healingWordSpellId])",
+      "build: clericBuild,",
+      "casterId: healingWordClericId,",
+    ],
+    helperNeedles: healingWordSdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "healing_word",
+    className: "Druid",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Druid.md:67-77",
+      ".references/srd-5.2.1/Classes/Druid.md:214",
+      ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132",
+    ],
+    rowId:
+      "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
+    tracerNeedles: [
+      "const druidBuild = finalizedLevelOneDruidHealingWordBuild();",
+      'sourceUnitId: "class_druid"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([healingWordSpellId])",
+      "build: druidBuild,",
+      "casterId: healingWordDruidId,",
+    ],
+    helperNeedles: healingWordSdkHelperNeedles(),
+  },
+  {
     candidateUnitId: "ray_of_frost",
     className: "Sorcerer",
     levelBand: "spell-level-0",
@@ -3155,6 +3227,65 @@ const seededSdkScenarioRows = [
     tracerNeedles: ["protectionFromEnergySpellId"],
   },
 ];
+
+function healingWordSdkHelperNeedles() {
+  return [
+    {
+      anchor: "function finalizedLevelOneBardHealingWordBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneBardBuild({",
+        'draftIdText: "draft:l1-sdk-bard-healing-word"',
+        'expectedBuildLabel: "Bard Healing Word"',
+        "healingWordSpellId",
+      ],
+    },
+    {
+      anchor:
+        "function finalizedLevelOneClericHealingWordBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneClericBuild({",
+        'draftIdText: "draft:l1-sdk-cleric-healing-word"',
+        'expectedBuildLabel: "Cleric Healing Word"',
+        "healingWordSpellId",
+      ],
+    },
+    {
+      anchor: "function finalizedLevelOneDruidHealingWordBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneDruidBuild({",
+        'draftIdText: "draft:l1-sdk-druid-healing-word"',
+        'expectedBuildLabel: "Druid Healing Word"',
+        "healingWordSpellId",
+      ],
+    },
+    {
+      anchor: "function assertLevelOneHealingWord",
+      needles: [
+        "healingWordBonusActionSpellSlotAct(state, input.casterId)",
+        "requiresTableSpatialFact: true",
+        'label: "Healing Word healing (2d4+2)"',
+        "healing: { expr: { dice: 2, dieSize: 4, flat: 2 } }",
+        "rangeFeet: 60",
+        'targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 }',
+        "damageRollFillWithGroups(healingRoll, [[2, 3]])",
+        "expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(10));",
+        "{ spellLevel: 1, count: 2, expended: 1 }",
+      ],
+    },
+    {
+      anchor: "function healingWordBonusActionSpellSlotAct",
+      needles: [
+        'candidate.subject.tag === "bonusActionSpell"',
+        "candidate.subject.actorId === actorId",
+        'candidate.subject.invocation.tag === "spellSlot"',
+        "candidate.subject.invocation.spellId === healingWordSpellId",
+        "candidate.subject.invocation.slotLevel === 1",
+        'candidate.subject.invocation.procedure === "directHitPointRestoration"',
+      ],
+    },
+  ];
+}
+
 const seededSdkScenarioRecords = seededSdkScenarioRows.map((row) => ({
   rowId: row.rowId,
   rowKey: seedScenarioRowKey(row),

@@ -116,6 +116,10 @@
           "spellLevel": 1
         },
         {
+          "spellId": "healing_word",
+          "spellLevel": 1
+        },
+        {
           "spellId": "thunderwave",
           "spellLevel": 1
         },

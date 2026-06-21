@@ -17,7 +17,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
 | Existing level-5 SDK seed scenario rows | 6 |
-| Scenario groups | 401 |
+| Scenario groups | 403 |
 | Level 5 scenario groups | 72 |
 
 ### All Level 1-5 Rows by Level Band
@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 451 |
+| sdk-scenario-needed | 448 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 53 |
+| seed-scenario-present | 56 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -74,7 +74,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Task | Groups |
 | --- | ---: |
-| L15-SDK-RAW-03 | 164 |
+| L15-SDK-RAW-03 | 166 |
 | L15-SDK-RAW-04 | 33 |
 | L15-SDK-RAW-05 | 107 |
 | L15-SDK-RAW-06 | 25 |
@@ -85,7 +85,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 89 |
+| battle-spell-sdk | 88 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 10 |
 | owner-review | 6 |
-| seed-present | 53 |
+| seed-present | 56 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -179,6 +179,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch` / `spell-level-0:Wizard:chill_touch`: level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention
 - `srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast` / `spell-level-0:Warlock:eldritch_blast`: level1-sdk-raw-integration: Warlock Eldritch Blast cantrip resolves from a level-1 sheet as a ranged one-beam Spell Attack sequence without spending slots
 - `srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex` / `spell-level-1:Warlock:hex`: level1-sdk-raw-integration: Warlock Hex resolves from a level-1 sheet through Pact Magic as a marked Necrotic rider and chosen Ability Check Disadvantage
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word` / `spell-level-1:Bard:healing_word`: level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word` / `spell-level-1:Cleric:healing_word`: level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration
+- `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word` / `spell-level-1:Druid:healing_word`: level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration
 - `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost` / `spell-level-0:Sorcerer:ray_of_frost`: level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction
 - `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost` / `spell-level-0:Wizard:ray_of_frost`: level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction
 - `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp` / `spell-level-0:Sorcerer:shocking_grasp`: level1-sdk-raw-integration: Sorcerer and Wizard Shocking Grasp cantrips resolve from level-1 sheets as melee spell attacks with Lightning damage and Opportunity Attack denial

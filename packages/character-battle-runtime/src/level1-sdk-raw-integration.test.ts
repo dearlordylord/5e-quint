@@ -117,6 +117,7 @@ const dissonantWhispersBardId = combatantId(
 const viciousMockeryBardId = combatantId(
   "combatant:l1-sdk-vicious-mockery-bard",
 );
+const healingWordBardId = combatantId("combatant:l1-sdk-healing-word-bard");
 const inspiredAllyId = combatantId("combatant:l1-sdk-inspired-ally");
 const rogueId = combatantId("combatant:l1-sdk-rogue");
 const rogueAllyId = combatantId("combatant:l1-sdk-rogue-ally");
@@ -135,6 +136,11 @@ const shillelaghDruidId = combatantId("combatant:l1-sdk-shillelagh-druid");
 const sacredFlameClericId = combatantId("combatant:l1-sdk-sacred-flame-cleric");
 const thaumaturgyClericId = combatantId("combatant:l1-sdk-thaumaturgy-cleric");
 const sanctuaryClericId = combatantId("combatant:l1-sdk-sanctuary-cleric");
+const healingWordClericId = combatantId(
+  "combatant:l1-sdk-healing-word-cleric",
+);
+const healingWordDruidId = combatantId("combatant:l1-sdk-healing-word-druid");
+const healingWordTargetId = combatantId("combatant:l1-sdk-healing-word-target");
 const sanctuaryWardedAllyId = combatantId(
   "combatant:l1-sdk-sanctuary-warded-ally",
 );
@@ -216,6 +222,7 @@ const rogueSneakAttackName = "Dagger";
 const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const dissonantWhispersSpellId = "dissonant_whispers";
 const viciousMockerySpellId = "vicious_mockery";
+const healingWordSpellId = "healing_word";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
@@ -1099,6 +1106,62 @@ describe("level 1 SDK RAW integration", () => {
       build: clericBuild,
       casterId: sanctuaryClericId,
       wardedId: sanctuaryWardedAllyId,
+    });
+  });
+
+  test("Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration", () => {
+    const bardBuild = finalizedLevelOneBardHealingWordBuild();
+    const clericBuild = finalizedLevelOneClericHealingWordBuild();
+    const druidBuild = finalizedLevelOneDruidHealingWordBuild();
+
+    expect(bardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_bard",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([healingWordSpellId]),
+        }),
+      ]),
+    );
+    expect(clericBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([healingWordSpellId]),
+        }),
+      ]),
+    );
+    expect(druidBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_druid",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([healingWordSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneHealingWord({
+      battleIdText: "battle:l1-sdk-healing-word-bard",
+      characterIdText: "character:l1-sdk-healing-word-bard",
+      build: bardBuild,
+      casterId: healingWordBardId,
+      targetId: healingWordTargetId,
+    });
+    assertLevelOneHealingWord({
+      battleIdText: "battle:l1-sdk-healing-word-cleric",
+      characterIdText: "character:l1-sdk-healing-word-cleric",
+      build: clericBuild,
+      casterId: healingWordClericId,
+      targetId: healingWordTargetId,
+    });
+    assertLevelOneHealingWord({
+      battleIdText: "battle:l1-sdk-healing-word-druid",
+      characterIdText: "character:l1-sdk-healing-word-druid",
+      build: druidBuild,
+      casterId: healingWordDruidId,
+      targetId: healingWordTargetId,
     });
   });
 
@@ -3419,6 +3482,104 @@ function assertLevelOneSanctuary(input: {
   ]);
 }
 
+function assertLevelOneHealingWord(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly targetId: CombatantId;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+      characterSheet({
+        characterIdText: `${input.characterIdText}-target`,
+        build: levelOneSingleClassBuild({
+          classUnitId: "class_fighter",
+          weaponUnitId: "weapon_longsword",
+        }),
+        combatantId: input.targetId,
+        initiative: 15,
+        maximumHp: 12,
+        currentHp: 3,
+      }),
+    ],
+    monsters: [],
+  });
+  const act = healingWordBonusActionSpellSlotAct(state, input.casterId);
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+
+  expect(act.subject).toMatchObject({
+    tag: "bonusActionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: healingWordSpellId,
+      slotLevel: 1,
+      procedure: "directHitPointRestoration",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(target).toMatchObject({
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([input.targetId]),
+  });
+
+  const targetFill = spellTargetFill(
+    target,
+    healingWordSpellId,
+    input.casterId,
+    input.targetId,
+  );
+  const healingRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(healingRoll).toMatchObject({
+    label: "Healing Word healing (2d4+2)",
+    spell: {
+      procedure: "directHitPointRestoration",
+      actionCost: "bonusAction",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+      healing: { expr: { dice: 2, dieSize: 4, flat: 2 } },
+      rangeFeet: 60,
+    },
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, damageRollFillWithGroups(healingRoll, [[2, 3]])],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(10));
+  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(caster.concentration).toBeNull();
+  expect(caster.activeEffects).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
 function assertLevelOneGuidingBolt(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -5038,7 +5199,7 @@ function finalizedLevelOneBardDissonantWhispersBuild(): CharacterBuild {
       "charm_person",
       "color_spray",
       dissonantWhispersSpellId,
-      "healing_word",
+      healingWordSpellId,
     ],
   });
 }
@@ -5051,8 +5212,22 @@ function finalizedLevelOneBardViciousMockeryBuild(): CharacterBuild {
     preparedSpells: [
       "charm_person",
       "color_spray",
-      "healing_word",
+      healingWordSpellId,
       thunderwaveSpellId,
+    ],
+  });
+}
+
+function finalizedLevelOneBardHealingWordBuild(): CharacterBuild {
+  return finalizedLevelOneBardBuild({
+    draftIdText: "draft:l1-sdk-bard-healing-word",
+    expectedBuildLabel: "Bard Healing Word",
+    cantrips: ["dancing_lights", viciousMockerySpellId],
+    preparedSpells: [
+      "charm_person",
+      "color_spray",
+      dissonantWhispersSpellId,
+      healingWordSpellId,
     ],
   });
 }
@@ -5232,6 +5407,20 @@ function finalizedLevelOneClericSanctuaryBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneClericHealingWordBuild(): CharacterBuild {
+  return finalizedLevelOneClericBuild({
+    draftIdText: "draft:l1-sdk-cleric-healing-word",
+    expectedBuildLabel: "Cleric Healing Word",
+    cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
+    preparedSpells: [
+      "bless",
+      "cure_wounds",
+      healingWordSpellId,
+      "shield_of_faith",
+    ],
+  });
+}
+
 function finalizedLevelOneClericBuild(input: {
   readonly draftIdText: string;
   readonly expectedBuildLabel: string;
@@ -5390,6 +5579,20 @@ function finalizedLevelOneDruidShillelaghBuild(): CharacterBuild {
       unitId: "weapon_quarterstaff",
       loadout: "wielded_one_handed",
     },
+  });
+}
+
+function finalizedLevelOneDruidHealingWordBuild(): CharacterBuild {
+  return finalizedLevelOneDruidBuild({
+    draftIdText: "draft:l1-sdk-druid-healing-word",
+    expectedBuildLabel: "Druid Healing Word",
+    cantrips: [produceFlameSpellId, poisonSpraySpellId],
+    preparedSpells: [
+      "animal_friendship",
+      "cure_wounds",
+      healingWordSpellId,
+      "faerie_fire",
+    ],
   });
 }
 
@@ -6561,6 +6764,26 @@ function sanctuaryBonusActionSpellSlotAct(
   );
   if (act === undefined) {
     throw new Error("Expected Sanctuary Bonus Action spell-slot act.");
+  }
+  return act;
+}
+
+function healingWordBonusActionSpellSlotAct(
+  state: BattleState,
+  actorId: CombatantId,
+): CastBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is CastBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.mode.tag === "cast" &&
+      candidate.subject.invocation.tag === "spellSlot" &&
+      candidate.subject.invocation.spellId === healingWordSpellId &&
+      candidate.subject.invocation.slotLevel === 1 &&
+      candidate.subject.invocation.procedure === "directHitPointRestoration",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Healing Word Bonus Action spell-slot act.");
   }
   return act;
 }

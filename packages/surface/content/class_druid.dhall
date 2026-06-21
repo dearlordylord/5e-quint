@@ -57,6 +57,7 @@ let druid =
                 , { spellId = "cure_wounds", spellLevel = 1 }
                 , { spellId = "entangle", spellLevel = 1 }
                 , { spellId = "faerie_fire", spellLevel = 1 }
+                , { spellId = "healing_word", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
                 , { spellId = "aid", spellLevel = 2 }
                 ] : List ClassSpellAccess

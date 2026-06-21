@@ -16013,6 +16013,15 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Healing Word",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:79-89",
+          ".references/srd-5.2.1/Classes/Bard.md:174",
+          ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -16020,7 +16029,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 174,
         "lineStart": 174,
@@ -20417,6 +20426,15 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Healing Word",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:66-76",
+          ".references/srd-5.2.1/Classes/Cleric.md:171",
+          ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -20424,7 +20442,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 171,
         "lineStart": 171,
@@ -24760,6 +24778,15 @@
       "category": "spell Unit pressure",
       "className": "Druid",
       "concept": "Druid spell list Healing Word",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:67-77",
+          ".references/srd-5.2.1/Classes/Druid.md:214",
+          ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -24767,7 +24794,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 214,
         "lineStart": 214,
@@ -56364,16 +56391,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 451,
+      "sdk-scenario-needed": 448,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 53,
+      "seed-scenario-present": 56,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 401,
+    "scenarioGroups": 403,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 89,
+      "battle-spell-sdk": 88,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56383,13 +56410,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 53,
+      "seed-present": 56,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 164,
+      "L15-SDK-RAW-03": 166,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -57975,97 +58002,6 @@
       "sampleConcepts": [
         "Cleric spell list Guidance",
         "Druid spell list Guidance"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "healing_word"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Druid"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:healing-word",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"healing_word\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:174",
-        ".references/srd-5.2.1/Classes/Cleric.md:171",
-        ".references/srd-5.2.1/Classes/Druid.md:214"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "healing_word",
-          "className": "Bard",
-          "concept": "Bard spell list Healing Word",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 174,
-            "lineStart": 174,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "healing_word",
-          "className": "Cleric",
-          "concept": "Cleric spell list Healing Word",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 171,
-            "lineStart": 171,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "healing_word",
-          "className": "Druid",
-          "concept": "Druid spell list Healing Word",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 214,
-            "lineStart": 214,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Healing Word",
-        "Cleric spell list Healing Word",
-        "Druid spell list Healing Word"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65574,6 +65510,63 @@
     },
     {
       "candidateUnitIds": [
+        "healing_word"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-bard-healing-word",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Bard:healing_word\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:174",
+        ".references/srd-5.2.1/Classes/Bard.md:79-89",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "healing_word",
+          "className": "Bard",
+          "concept": "Bard spell list Healing Word",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 174,
+            "lineStart": 174,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Healing Word"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "guiding_bolt"
       ],
       "categories": [
@@ -65621,6 +65614,63 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Guiding Bolt"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "healing_word"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-cleric-healing-word",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Cleric:healing_word\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:171",
+        ".references/srd-5.2.1/Classes/Cleric.md:66-76",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "healing_word",
+          "className": "Cleric",
+          "concept": "Cleric spell list Healing Word",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 171,
+            "lineStart": 171,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Healing Word"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -65745,6 +65795,63 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Sanctuary"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "healing_word"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-druid-healing-word",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Druid:healing_word\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:214",
+        ".references/srd-5.2.1/Classes/Druid.md:67-77",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "healing_word",
+          "className": "Druid",
+          "concept": "Druid spell list Healing Word",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 214,
+            "lineStart": 214,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid spell list Healing Word"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -86804,6 +86911,240 @@
         "breakBattleConcentration(",
         "settleCharacterSheetFromBattle({",
         "characterSheetPactSlots(settled)"
+      ]
+    },
+    {
+      "candidateUnitId": "healing_word",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:79-89",
+          ".references/srd-5.2.1/Classes/Bard.md:174",
+          ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneBardHealingWordBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneBardBuild({",
+            "draftIdText: \"draft:l1-sdk-bard-healing-word\"",
+            "expectedBuildLabel: \"Bard Healing Word\"",
+            "healingWordSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneClericHealingWordBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneClericBuild({",
+            "draftIdText: \"draft:l1-sdk-cleric-healing-word\"",
+            "expectedBuildLabel: \"Cleric Healing Word\"",
+            "healingWordSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneDruidHealingWordBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneDruidBuild({",
+            "draftIdText: \"draft:l1-sdk-druid-healing-word\"",
+            "expectedBuildLabel: \"Druid Healing Word\"",
+            "healingWordSpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneHealingWord",
+          "needles": [
+            "healingWordBonusActionSpellSlotAct(state, input.casterId)",
+            "requiresTableSpatialFact: true",
+            "label: \"Healing Word healing (2d4+2)\"",
+            "healing: { expr: { dice: 2, dieSize: 4, flat: 2 } }",
+            "rangeFeet: 60",
+            "targeting: { kind: \"targetList\", minTargets: 1, maxTargets: 1 }",
+            "damageRollFillWithGroups(healingRoll, [[2, 3]])",
+            "expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(10));",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function healingWordBonusActionSpellSlotAct",
+          "needles": [
+            "candidate.subject.tag === \"bonusActionSpell\"",
+            "candidate.subject.actorId === actorId",
+            "candidate.subject.invocation.tag === \"spellSlot\"",
+            "candidate.subject.invocation.spellId === healingWordSpellId",
+            "candidate.subject.invocation.slotLevel === 1",
+            "candidate.subject.invocation.procedure === \"directHitPointRestoration\""
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
+      "rowKey": "spell-level-1:Bard:healing_word",
+      "tracerNeedles": [
+        "const bardBuild = finalizedLevelOneBardHealingWordBuild();",
+        "sourceUnitId: \"class_bard\"",
+        "spellcastingAbility: \"cha\"",
+        "preparedSpells: expect.arrayContaining([healingWordSpellId])",
+        "build: bardBuild,",
+        "casterId: healingWordBardId,"
+      ]
+    },
+    {
+      "candidateUnitId": "healing_word",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:66-76",
+          ".references/srd-5.2.1/Classes/Cleric.md:171",
+          ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneBardHealingWordBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneBardBuild({",
+            "draftIdText: \"draft:l1-sdk-bard-healing-word\"",
+            "expectedBuildLabel: \"Bard Healing Word\"",
+            "healingWordSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneClericHealingWordBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneClericBuild({",
+            "draftIdText: \"draft:l1-sdk-cleric-healing-word\"",
+            "expectedBuildLabel: \"Cleric Healing Word\"",
+            "healingWordSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneDruidHealingWordBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneDruidBuild({",
+            "draftIdText: \"draft:l1-sdk-druid-healing-word\"",
+            "expectedBuildLabel: \"Druid Healing Word\"",
+            "healingWordSpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneHealingWord",
+          "needles": [
+            "healingWordBonusActionSpellSlotAct(state, input.casterId)",
+            "requiresTableSpatialFact: true",
+            "label: \"Healing Word healing (2d4+2)\"",
+            "healing: { expr: { dice: 2, dieSize: 4, flat: 2 } }",
+            "rangeFeet: 60",
+            "targeting: { kind: \"targetList\", minTargets: 1, maxTargets: 1 }",
+            "damageRollFillWithGroups(healingRoll, [[2, 3]])",
+            "expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(10));",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function healingWordBonusActionSpellSlotAct",
+          "needles": [
+            "candidate.subject.tag === \"bonusActionSpell\"",
+            "candidate.subject.actorId === actorId",
+            "candidate.subject.invocation.tag === \"spellSlot\"",
+            "candidate.subject.invocation.spellId === healingWordSpellId",
+            "candidate.subject.invocation.slotLevel === 1",
+            "candidate.subject.invocation.procedure === \"directHitPointRestoration\""
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
+      "rowKey": "spell-level-1:Cleric:healing_word",
+      "tracerNeedles": [
+        "const clericBuild = finalizedLevelOneClericHealingWordBuild();",
+        "sourceUnitId: \"class_cleric\"",
+        "spellcastingAbility: \"wis\"",
+        "preparedSpells: expect.arrayContaining([healingWordSpellId])",
+        "build: clericBuild,",
+        "casterId: healingWordClericId,"
+      ]
+    },
+    {
+      "candidateUnitId": "healing_word",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:67-77",
+          ".references/srd-5.2.1/Classes/Druid.md:214",
+          ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1121-1132"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneBardHealingWordBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneBardBuild({",
+            "draftIdText: \"draft:l1-sdk-bard-healing-word\"",
+            "expectedBuildLabel: \"Bard Healing Word\"",
+            "healingWordSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneClericHealingWordBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneClericBuild({",
+            "draftIdText: \"draft:l1-sdk-cleric-healing-word\"",
+            "expectedBuildLabel: \"Cleric Healing Word\"",
+            "healingWordSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneDruidHealingWordBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneDruidBuild({",
+            "draftIdText: \"draft:l1-sdk-druid-healing-word\"",
+            "expectedBuildLabel: \"Druid Healing Word\"",
+            "healingWordSpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneHealingWord",
+          "needles": [
+            "healingWordBonusActionSpellSlotAct(state, input.casterId)",
+            "requiresTableSpatialFact: true",
+            "label: \"Healing Word healing (2d4+2)\"",
+            "healing: { expr: { dice: 2, dieSize: 4, flat: 2 } }",
+            "rangeFeet: 60",
+            "targeting: { kind: \"targetList\", minTargets: 1, maxTargets: 1 }",
+            "damageRollFillWithGroups(healingRoll, [[2, 3]])",
+            "expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(10));",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function healingWordBonusActionSpellSlotAct",
+          "needles": [
+            "candidate.subject.tag === \"bonusActionSpell\"",
+            "candidate.subject.actorId === actorId",
+            "candidate.subject.invocation.tag === \"spellSlot\"",
+            "candidate.subject.invocation.spellId === healingWordSpellId",
+            "candidate.subject.invocation.slotLevel === 1",
+            "candidate.subject.invocation.procedure === \"directHitPointRestoration\""
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
+      "rowKey": "spell-level-1:Druid:healing_word",
+      "tracerNeedles": [
+        "const druidBuild = finalizedLevelOneDruidHealingWordBuild();",
+        "sourceUnitId: \"class_druid\"",
+        "spellcastingAbility: \"wis\"",
+        "preparedSpells: expect.arrayContaining([healingWordSpellId])",
+        "build: druidBuild,",
+        "casterId: healingWordDruidId,"
       ]
     },
     {

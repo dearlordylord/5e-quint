@@ -652,6 +652,7 @@ describe("character-creation Surface records", () => {
               "cure_wounds",
               "entangle",
               "faerie_fire",
+              "healing_word",
               "thunderwave",
               { spellId: "aid", spellLevel: 2 },
             ],
