@@ -41,7 +41,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Sorcerer.md:3-24,33-76,123-129"
+    "section": "Classes/Sorcerer.md:3-24,33-76,123-129,219-227"
   },
   "savingThrowProficiencies": [
     "con",
@@ -70,7 +70,8 @@
         "light",
         "prestidigitation",
         "shocking_grasp",
-        "sorcerous_burst"
+        "sorcerous_burst",
+        "fire_bolt"
       ]
     },
     "featureLevel": 1,

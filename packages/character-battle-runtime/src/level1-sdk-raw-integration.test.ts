@@ -69,6 +69,8 @@ const rogueId = combatantId("combatant:l1-sdk-rogue");
 const rogueAllyId = combatantId("combatant:l1-sdk-rogue-ally");
 const sorcererId = combatantId("combatant:l1-sdk-sorcerer");
 const burningHandsCasterId = combatantId("combatant:l1-sdk-burning-hands");
+const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
+const fireBoltWizardId = combatantId("combatant:l1-sdk-fire-bolt-wizard");
 const wizardBurningHandsCasterId = combatantId(
   "combatant:l1-sdk-wizard-burning-hands",
 );
@@ -85,6 +87,7 @@ const rogueSneakAttackName = "Dagger";
 const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const burningHandsSpellId = "burning_hands";
+const fireBoltSpellId = "fire_bolt";
 
 describe("level 1 SDK RAW integration", () => {
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
@@ -564,6 +567,43 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
+  test("Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots", () => {
+    const sorcererBuild = finalizedLevelOneSorcererFireBoltBuild();
+    const wizardBuild = finalizedLevelOneWizardFireBoltBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          cantrips: expect.arrayContaining([fireBoltSpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          cantrips: expect.arrayContaining([fireBoltSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneFireBolt({
+      battleIdText: "battle:l1-sdk-fire-bolt-sorcerer",
+      characterIdText: "character:l1-sdk-fire-bolt-sorcerer",
+      build: sorcererBuild,
+      casterId: fireBoltSorcererId,
+      expectedSpellAttackBonus: 4,
+    });
+    assertLevelOneFireBolt({
+      battleIdText: "battle:l1-sdk-fire-bolt-wizard",
+      characterIdText: "character:l1-sdk-fire-bolt-wizard",
+      build: wizardBuild,
+      casterId: fireBoltWizardId,
+      expectedSpellAttackBonus: 5,
+    });
+  });
+
   test("Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity", () => {
     const state = battleFromSheets({
       battleIdText: "battle:l1-sdk-martial-arts",
@@ -704,6 +744,114 @@ function assertLevelOneBurningHands(input: {
   ]);
 }
 
+function assertLevelOneFireBolt(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellAttackBonus: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = cantripCastActionSpellAct(state, input.casterId, fireBoltSpellId);
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const objectTarget = requireHoleFromList(
+    act.initialHoles,
+    "objectTargetChoice",
+  );
+  const targetFill = spellTargetFill(
+    target,
+    fireBoltSpellId,
+    input.casterId,
+    monsterId,
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "attackRoll",
+  );
+
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([monsterId]),
+  });
+  expect(objectTarget).toMatchObject({
+    requiresTableSpatialFact: true,
+  });
+  expect(attackRoll).toMatchObject({
+    attackBonus: input.expectedSpellAttackBonus,
+    spell: {
+      targeting: { kind: "singleCreatureOrObject" },
+      attackKind: "ranged_spell_attack",
+      rangeFeet: 120,
+      objectHitEffect: { kind: "igniteFlammableUnattended" },
+      damage: {
+        expr: { dice: 1, dieSize: 10 },
+        damageType: "fire",
+      },
+    },
+  });
+
+  const attackFill = attackRollFill(attackRoll, {
+    total: 18,
+    naturalD20: 13,
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, attackFill],
+    }),
+    "rolledDice",
+  );
+  expect(damage).toMatchObject({
+    label: "Fire Bolt damage (1d10-fire)",
+    spell: {
+      damage: {
+        expr: { dice: 1, dieSize: 10 },
+        damageType: "fire",
+      },
+    },
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: ordinaryAttackDamageFills({
+        state,
+        subject: act.subject,
+        prefixFills: [targetFill, attackFill],
+        damage,
+        damageDice: [[7]],
+      }),
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(6));
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+}
+
 type UnitFeatureSubject = Extract<
   BattleSubject,
   { readonly tag: "unitFeature" }
@@ -827,10 +975,168 @@ function levelOneSorcererBurningHandsBuild(): CharacterBuild {
   });
 }
 
-function finalizedLevelOneWizardBurningHandsBuild(): CharacterBuild {
+function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild {
   const draft = createCharacterDraft({
     unitLibrary,
-    draftId: characterDraftId("draft:l1-sdk-wizard-burning-hands"),
+    draftId: characterDraftId("draft:l1-sdk-sorcerer-fire-bolt"),
+  });
+  const afterInitial = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        creationChoiceFill(
+          "cc:draft:draft.progression.initial",
+          "14:class_sorcerer:level_1:maximum_hit_die",
+        ),
+        creationChoiceFill("cc:draft:draft.background", "background_criminal"),
+        creationChoiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: requireRight(
+            abilityScoreAssignment({
+              str: 8,
+              dex: 14,
+              con: 13,
+              int: 10,
+              wis: 12,
+              cha: 15,
+            }),
+          ),
+        },
+        creationChoiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        creationChoiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "class_sorcerer",
+            "class_skill_proficiency_choice",
+          ),
+          "arcana",
+          "persuasion",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_sorcerer", "class_cantrip_choices"),
+          fireBoltSpellId,
+          "light",
+          "shocking_grasp",
+          sorcerousBurstSpellId,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "class_sorcerer",
+            "class_prepared_spell_choices",
+          ),
+          burningHandsSpellId,
+          "detect_magic",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:dex:con",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          "thieves_tools",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_sorcerer", "class_equipment_choice"),
+          "option_b",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_equipment_choice",
+          ),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_sorcerer", "equipment_purchase"),
+          "weapon_dagger",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized Sorcerer Fire Bolt build, received ${creationFinalizationResultSummary(result)}`,
+    );
+  }
+  return result.build;
+}
+
+function finalizedLevelOneWizardBurningHandsBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-burning-hands",
+    expectedBuildLabel: "Wizard Burning Hands",
+    cantrips: ["light", fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      "detect_magic",
+      burningHandsSpellId,
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+    ],
+    preparedSpells: [
+      burningHandsSpellId,
+      "detect_magic",
+      "magic_missile",
+      "shield",
+    ],
+  });
+}
+
+function finalizedLevelOneWizardFireBoltBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-fire-bolt",
+    expectedBuildLabel: "Wizard Fire Bolt",
+    cantrips: ["light", fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      "detect_magic",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+      "thunderwave",
+    ],
+    preparedSpells: ["detect_magic", "mage_armor", "magic_missile", "shield"],
+  });
+}
+
+function finalizedLevelOneWizardBuild(input: {
+  readonly draftIdText: string;
+  readonly expectedBuildLabel: string;
+  readonly cantrips: readonly string[];
+  readonly spellbook: readonly string[];
+  readonly preparedSpells: readonly string[];
+}): CharacterBuild {
+  const draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId(input.draftIdText),
   });
   const afterInitial = requireAcceptedCreationBatch(
     fillCreationHoles({
@@ -880,25 +1186,15 @@ function finalizedLevelOneWizardBurningHandsBuild(): CharacterBuild {
         ),
         creationChoiceFill(
           testUnitChoiceHoleId("class_wizard", "wizard_cantrip_choices"),
-          "light",
-          "fire_bolt",
-          "ray_of_frost",
+          ...input.cantrips,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId("class_wizard", "wizard_spellbook_choices"),
-          "detect_magic",
-          burningHandsSpellId,
-          "mage_armor",
-          "magic_missile",
-          "shield",
-          "sleep",
+          ...input.spellbook,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId("class_wizard", "wizard_prepared_spell_choices"),
-          burningHandsSpellId,
-          "detect_magic",
-          "magic_missile",
-          "shield",
+          ...input.preparedSpells,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
@@ -941,7 +1237,7 @@ function finalizedLevelOneWizardBurningHandsBuild(): CharacterBuild {
   const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
   if (result.tag !== "ready") {
     throw new Error(
-      `Expected finalized Wizard Burning Hands build, received ${JSON.stringify(result)}`,
+      `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
     );
   }
   return result.build;
@@ -952,10 +1248,30 @@ function requireAcceptedCreationBatch(
 ): CharacterDraft {
   if (result.tag !== "accepted") {
     throw new Error(
-      `Expected character-creation fill batch to be accepted, received ${JSON.stringify(result)}`,
+      `Expected character-creation fill batch to be accepted, received ${creationBatchResultSummary(result)}`,
     );
   }
   return result.draft;
+}
+
+function creationBatchResultSummary(result: CreationBatchFillResult): string {
+  return result.tag === "accepted"
+    ? "accepted"
+    : `rejected with issues ${JSON.stringify(result.issues)}`;
+}
+
+function creationFinalizationResultSummary(
+  result: ReturnType<typeof finalizeCharacterDraft>,
+): string {
+  if (result.tag === "ready") {
+    return "ready";
+  }
+  if (result.tag === "incomplete") {
+    return `incomplete with holes ${JSON.stringify(
+      result.holes.map((hole) => hole.holeId),
+    )}`;
+  }
+  return `invalid with issues ${JSON.stringify(result.issues)}`;
 }
 
 function creationChoiceFill(

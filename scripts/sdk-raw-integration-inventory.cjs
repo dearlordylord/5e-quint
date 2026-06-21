@@ -208,13 +208,123 @@ const seededSdkScenarioRows = [
     ],
     helperNeedles: [
       {
-        anchor:
-          "function finalizedLevelOneWizardBurningHandsBuild(): CharacterBuild",
+        anchor: "function finalizedLevelOneWizardBuild(input:",
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
           "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
           "return result.build;",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "fire_bolt",
+    className: "Sorcerer",
+    levelBand: "spell-level-0",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
+    tracerNeedles: [
+      "const sorcererBuild = finalizedLevelOneSorcererFireBoltBuild();",
+      'sourceUnitId: "class_sorcerer"',
+      "cantrips: expect.arrayContaining([fireBoltSpellId])",
+      "build: sorcererBuild,",
+      "casterId: fireBoltSorcererId,",
+      "expectedSpellAttackBonus: 4,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          'testUnitChoiceHoleId("class_sorcerer", "class_cantrip_choices")',
+          "fireBoltSpellId,",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneFireBolt",
+        needles: [
+          "cantripCastActionSpellAct(",
+          '"objectTargetChoice"',
+          "attackBonus: input.expectedSpellAttackBonus",
+          'targeting: { kind: "singleCreatureOrObject" }',
+          'attackKind: "ranged_spell_attack"',
+          "rangeFeet: 120",
+          "requiresTableSpatialFact: true",
+          'objectHitEffect: { kind: "igniteFlammableUnattended" }',
+          "expr: { dice: 1, dieSize: 10 }",
+          'damageType: "fire"',
+          'label: "Fire Bolt damage (1d10-fire)"',
+          "spellTargetFill(",
+          "attackRollFill(",
+          "ordinaryAttackDamageFills({",
+          "{ spellLevel: 1, count: 2, expended: 0 }",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "fire_bolt",
+    className: "Wizard",
+    levelBand: "spell-level-0",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
+    tracerNeedles: [
+      "const wizardBuild = finalizedLevelOneWizardFireBoltBuild();",
+      'sourceUnitId: "class_wizard"',
+      "cantrips: expect.arrayContaining([fireBoltSpellId])",
+      "build: wizardBuild,",
+      "casterId: fireBoltWizardId,",
+      "expectedSpellAttackBonus: 5,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneWizardFireBoltBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneWizardBuild({",
+          'draftIdText: "draft:l1-sdk-wizard-fire-bolt"',
+          'expectedBuildLabel: "Wizard Fire Bolt"',
+          'cantrips: ["light", fireBoltSpellId, "ray_of_frost"]',
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneWizardBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneFireBolt",
+        needles: [
+          "cantripCastActionSpellAct(",
+          '"objectTargetChoice"',
+          "attackBonus: input.expectedSpellAttackBonus",
+          'targeting: { kind: "singleCreatureOrObject" }',
+          'attackKind: "ranged_spell_attack"',
+          "rangeFeet: 120",
+          "requiresTableSpatialFact: true",
+          'objectHitEffect: { kind: "igniteFlammableUnattended" }',
+          "expr: { dice: 1, dieSize: 10 }",
+          'damageType: "fire"',
+          'label: "Fire Bolt damage (1d10-fire)"',
+          "spellTargetFill(",
+          "attackRollFill(",
+          "ordinaryAttackDamageFills({",
+          "{ spellLevel: 1, count: 2, expended: 0 }",
         ],
       },
     ],

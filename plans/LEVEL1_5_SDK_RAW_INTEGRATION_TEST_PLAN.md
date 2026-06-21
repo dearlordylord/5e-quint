@@ -107,7 +107,7 @@ coverage.
 Current generated findings:
 
 - The JSON inventory is schema version 4. It persists all 770 mined level 1-5
-  rows with SDK dispositions, owner-boundary evidence where used, and 385
+  rows with SDK dispositions, owner-boundary evidence where used, and 386
   scenario groups. The Markdown report stays summarized, with the level-5
   completion rows and scenario groups expanded for the next implementation
   slice. Schema version 4 preserves each row's full source `supportSnapshot`,
@@ -138,15 +138,20 @@ Current generated findings:
   through a hand-authored spellbook bypass. The seeds do not assert the RAW
   flammable-object clause; `burning_hands.dhall` now records that clause as a
   future object/area witness owner gap rather than table narrative.
-- The generated scenario groups are split by task: 148 groups for level 1,
+- The level-1 Fire Bolt seed covers the Sorcerer and Wizard cantrip spell-list
+  rows through level-1 sheet projection, battle act discovery, creature target
+  selection, object-target witness availability for unattended flammable-object
+  ignition, ranged spell attack resolution, 1d10 Fire damage, action spend, and
+  no spell-slot spend.
+- The generated scenario groups are split by task: 149 groups for level 1,
   33 for level 2, 107 for level 3/spell level 2, 25 for level 4, and 72 for
   level 5/spell level 3.
 - The current level-5 SDK dispositions are: 6 seed scenarios present, 35 SDK
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 14 seed scenarios
-  present, 490 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 16 seed scenarios
+  present, 488 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:

@@ -86,13 +86,14 @@ const listPreparedSpellcasting = (input: {
     | { readonly spellId: string; readonly spellLevel: number }
   )[];
   readonly cantrips?: readonly string[];
+  readonly cantripChoose?: number;
 }) => ({
   ...(input.cantrips === undefined
     ? {}
     : {
         cantripAccess: {
           changeOn: { count: 1, kind: "class_level" },
-          choose: input.cantrips.length,
+          choose: input.cantripChoose ?? input.cantrips.length,
           kind: "known_cantrips_from_class_spell_list",
           spellIds: input.cantrips,
         },
@@ -244,6 +245,11 @@ describe("character-creation Surface records", () => {
           { level: 4, unitId: "sorcerer_ability_score_improvement_l4" },
           { level: 5, unitId: "sorcerer_sorcerous_restoration" },
         ]),
+        spellcasting: expect.objectContaining({
+          cantripAccess: expect.objectContaining({
+            spellIds: expect.arrayContaining(["fire_bolt"]),
+          }),
+        }),
       },
     });
   });
@@ -767,7 +773,9 @@ describe("character-creation Surface records", () => {
               "prestidigitation",
               "shocking_grasp",
               "sorcerous_burst",
+              "fire_bolt",
             ],
+            cantripChoose: 4,
           }),
           kind: "list_prepared_spellcasting_progression_creation",
           spellcastingProgression: [

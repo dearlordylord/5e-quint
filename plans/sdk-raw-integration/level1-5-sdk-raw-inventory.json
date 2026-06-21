@@ -37155,6 +37155,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Fire Bolt",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -37162,7 +37166,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 227,
         "lineStart": 227,
@@ -45124,6 +45128,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Fire Bolt",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -45131,7 +45139,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 146,
         "lineStart": 146,
@@ -56161,16 +56169,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 490,
+      "sdk-scenario-needed": 488,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 14,
+      "seed-scenario-present": 16,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 385,
+    "scenarioGroups": 386,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 112,
+      "battle-spell-sdk": 111,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56180,13 +56188,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 14,
+      "seed-present": 16,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 148,
+      "L15-SDK-RAW-03": 149,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -57937,79 +57945,6 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Find Familiar"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "fire_bolt"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:fire-bolt",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-0"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"fire_bolt\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md:227",
-        ".references/srd-5.2.1/Classes/Wizard.md:146"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "fire_bolt",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Fire Bolt",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 227,
-            "lineStart": 227,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "fire_bolt",
-          "className": "Wizard",
-          "concept": "Wizard spell list Fire Bolt",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 146,
-            "lineStart": 146,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Sorcerer spell list Fire Bolt",
-        "Wizard spell list Fire Bolt"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65636,6 +65571,116 @@
       ],
       "sampleConcepts": [
         "Sorcerer Innate Sorcery"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "fire_bolt"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-sorcerer-fire-bolt",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Sorcerer:fire_bolt\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:227"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "fire_bolt",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Fire Bolt",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 227,
+            "lineStart": 227,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Fire Bolt"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "fire_bolt"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-wizard-fire-bolt",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Wizard:fire_bolt\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:146"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "fire_bolt",
+          "className": "Wizard",
+          "concept": "Wizard spell list Fire Bolt",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 146,
+            "lineStart": 146,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Fire Bolt"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -84388,7 +84433,7 @@
       },
       "helperNeedles": [
         {
-          "anchor": "function finalizedLevelOneWizardBurningHandsBuild(): CharacterBuild",
+          "anchor": "function finalizedLevelOneWizardBuild(input:",
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
@@ -84407,6 +84452,117 @@
         "spellbook:",
         "preparedSpells:",
         "burningHandsSpellId"
+      ]
+    },
+    {
+      "candidateUnitId": "fire_bolt",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "testUnitChoiceHoleId(\"class_sorcerer\", \"class_cantrip_choices\")",
+            "fireBoltSpellId,",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneFireBolt",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "\"objectTargetChoice\"",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "targeting: { kind: \"singleCreatureOrObject\" }",
+            "attackKind: \"ranged_spell_attack\"",
+            "rangeFeet: 120",
+            "requiresTableSpatialFact: true",
+            "objectHitEffect: { kind: \"igniteFlammableUnattended\" }",
+            "expr: { dice: 1, dieSize: 10 }",
+            "damageType: \"fire\"",
+            "label: \"Fire Bolt damage (1d10-fire)\"",
+            "spellTargetFill(",
+            "attackRollFill(",
+            "ordinaryAttackDamageFills({",
+            "{ spellLevel: 1, count: 2, expended: 0 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
+      "rowKey": "spell-level-0:Sorcerer:fire_bolt",
+      "tracerNeedles": [
+        "const sorcererBuild = finalizedLevelOneSorcererFireBoltBuild();",
+        "sourceUnitId: \"class_sorcerer\"",
+        "cantrips: expect.arrayContaining([fireBoltSpellId])",
+        "build: sorcererBuild,",
+        "casterId: fireBoltSorcererId,",
+        "expectedSpellAttackBonus: 4,"
+      ]
+    },
+    {
+      "candidateUnitId": "fire_bolt",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWizardFireBoltBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWizardBuild({",
+            "draftIdText: \"draft:l1-sdk-wizard-fire-bolt\"",
+            "expectedBuildLabel: \"Wizard Fire Bolt\"",
+            "cantrips: [\"light\", fireBoltSpellId, \"ray_of_frost\"]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWizardBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneFireBolt",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "\"objectTargetChoice\"",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "targeting: { kind: \"singleCreatureOrObject\" }",
+            "attackKind: \"ranged_spell_attack\"",
+            "rangeFeet: 120",
+            "requiresTableSpatialFact: true",
+            "objectHitEffect: { kind: \"igniteFlammableUnattended\" }",
+            "expr: { dice: 1, dieSize: 10 }",
+            "damageType: \"fire\"",
+            "label: \"Fire Bolt damage (1d10-fire)\"",
+            "spellTargetFill(",
+            "attackRollFill(",
+            "ordinaryAttackDamageFills({",
+            "{ spellLevel: 1, count: 2, expended: 0 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
+      "rowKey": "spell-level-0:Wizard:fire_bolt",
+      "tracerNeedles": [
+        "const wizardBuild = finalizedLevelOneWizardFireBoltBuild();",
+        "sourceUnitId: \"class_wizard\"",
+        "cantrips: expect.arrayContaining([fireBoltSpellId])",
+        "build: wizardBuild,",
+        "casterId: fireBoltWizardId,",
+        "expectedSpellAttackBonus: 5,"
       ]
     },
     {

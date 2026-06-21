@@ -4554,7 +4554,13 @@ describe("character creation finalization", () => {
       if (result.tag !== "ready") continue;
 
       const spellcasting = classFacts.spellcasting;
-      const expectedClassCantrips = spellcasting.cantripAccess?.spellIds ?? [];
+      const expectedClassCantrips =
+        spellcasting.cantripAccess === undefined
+          ? []
+          : spellcasting.cantripAccess.spellIds.slice(
+              0,
+              spellcasting.cantripAccess.choose,
+            );
       const expectedCantrips = selectedChoiceOptionIdsByChoiceKey(
         draft,
         CLASS_CANTRIP_CHOICE_KEY,

@@ -24,7 +24,7 @@ let sorcerer =
       , multiclassProficiencies = { kind = "none" }
       , name = "Sorcerer"
       , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Sorcerer.md:3-24,33-76,123-129" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Sorcerer.md:3-24,33-76,123-129,219-227" }
       , savingThrowProficiencies = [ "con", "cha" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "arcana", "deception", "insight", "intimidation", "persuasion", "religion" ] }
@@ -40,6 +40,7 @@ let sorcerer =
                 , "prestidigitation"
                 , "shocking_grasp"
                 , "sorcerous_burst"
+                , "fire_bolt"
                 ]
               , changeOn = { kind = "class_level", count = 1 }
               }

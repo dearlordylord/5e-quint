@@ -3350,8 +3350,11 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
           ? unit.spellcasting.cantripAccess === undefined
           : unit.spellcasting.cantripAccess?.choose ===
               classFacts.cantripCount &&
-            unit.spellcasting.cantripAccess.spellIds.length ===
-              classFacts.cantripCount &&
+            (unit.spellcasting.kind === "list_prepared_spellcasting_creation"
+              ? unit.spellcasting.cantripAccess.spellIds.length ===
+                classFacts.cantripCount
+              : unit.spellcasting.cantripAccess.spellIds.length >=
+                classFacts.cantripCount) &&
             allCantripsFromClassSpellList(
               unit.className,
               unit.spellcasting.cantripAccess.spellIds,
