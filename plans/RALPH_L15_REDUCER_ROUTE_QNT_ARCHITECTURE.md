@@ -13,19 +13,19 @@
     {
       "number": 2,
       "id": "L15-RR02-ROUTE-VOCABULARY-AND-GATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Generalize executable route vocabulary and checker gates"
     },
     {
       "number": 3,
       "id": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Route the remaining current reducer-spine diagnostic drivers"
     },
     {
       "number": 4,
       "id": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add component-first QNT connectors for rule-core drivers"
     },
     {
@@ -49,13 +49,13 @@
     {
       "number": 8,
       "id": "L15-RR08-CHARACTER-CREATION-ROUTES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add QNT route connectors for character creation drivers"
     },
     {
       "number": 9,
       "id": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add QNT route connectors for character sheet drivers"
     },
     {
@@ -172,6 +172,9 @@ Task 1 must recompute this number after any branch-scope or driver changes.
 - `packages/battle-runtime/battle-runtime-reducer-route.qnt`
 - `packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts`
 - `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-creation-runtime/character-creation-reducer-route.qnt`
+- `packages/character-sheet-runtime/character-sheet-reducer-route.qnt`
+- `packages/character-battle-runtime/character-battle-reducer-route.qnt`
 - `packages/character-creation-runtime/*.mbt.qnt`
 - `packages/character-sheet-runtime/*.mbt.qnt`
 - `packages/character-battle-runtime/*.mbt.qnt`
@@ -218,14 +221,14 @@ The route classes are deliberately not all `reducer-routed`:
 |   # | Task                                                                                                          | Status             | Depends on                                                                                                                                               | Notes                                                                                         |
 | --: | ------------------------------------------------------------------------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 |   1 | L15-RR01-DENOMINATOR-AND-CLASSIFIER - Define the level 1-5 reducer-route denominator and route classes        | done               | none                                                                                                                                                     | Established the exact driver/branch denominator in `reducer-route-inventory.json`.            |
-|   2 | L15-RR02-ROUTE-VOCABULARY-AND-GATES - Generalize executable route vocabulary and checker gates                | ready-for-research | L15-RR01-DENOMINATOR-AND-CLASSIFIER                                                                                                                      | Adds source-side architecture gates before broad connector work.                              |
-|   3 | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE - Route the remaining current reducer-spine diagnostic drivers       | blocked            | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Finishes death-save and Concentration from the existing diagnostic queue.                     |
-|   4 | L15-RR04-RULE-CORE-COMPONENT-CONNECTORS - Add component-first QNT connectors for rule-core drivers            | blocked            | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Keeps reusable components out of battle-local replay islands.                                 |
+|   2 | L15-RR02-ROUTE-VOCABULARY-AND-GATES - Generalize executable route vocabulary and checker gates                | done               | L15-RR01-DENOMINATOR-AND-CLASSIFIER                                                                                                                      | Added source-side route vocabularies and connector gates before broad connector work.         |
+|   3 | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE - Route the remaining current reducer-spine diagnostic drivers       | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Finishes death-save and Concentration from the existing diagnostic queue.                     |
+|   4 | L15-RR04-RULE-CORE-COMPONENT-CONNECTORS - Add component-first QNT connectors for rule-core drivers            | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Keeps reusable components out of battle-local replay islands.                                 |
 |   5 | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES - Route action, attack, weapon, and stat-block battle subjects | blocked            | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Uses HP/action/attack owners before larger spell families.                                    |
 |   6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects         | blocked            | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Extends routed spell/effect subjects without selected-identity dispatch.                      |
 |   7 | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES - Route feature, species, metamagic, and mastery battle substrates   | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Converts selected-identity battle pressure into shape/profile substrate.                      |
-|   8 | L15-RR08-CHARACTER-CREATION-ROUTES - Add QNT route connectors for character creation drivers                  | blocked            | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for Draft/Fill/finalization rather than battle subjects.                     |
-|   9 | L15-RR09-CHARACTER-SHEET-ROUTES - Add QNT route connectors for character sheet drivers                        | blocked            | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for sheet resource/rest/projection state.                                    |
+|   8 | L15-RR08-CHARACTER-CREATION-ROUTES - Add QNT route connectors for character creation drivers                  | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for Draft/Fill/finalization rather than battle subjects.                     |
+|   9 | L15-RR09-CHARACTER-SHEET-ROUTES - Add QNT route connectors for character sheet drivers                        | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for sheet resource/rest/projection state.                                    |
 |  10 | L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES - Add QNT route connectors for character-battle handoff drivers      | blocked            | L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES; L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE                                            | Handoff routes depend on both sheet and battle state owners.                                  |
 |  11 | L15-RR11-LEVEL3-4-SCOPE-PROMOTION - Promote level 3-4 branch scope into route connector tasks                 | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES | Widen current level-1/2 branch-scope rows only after generic route shapes exist.              |
 |  12 | L15-RR12-LEVEL5-SCOPE-PROMOTION - Promote level 5 class and spell-level-3 route connector tasks               | blocked            | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES; L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES; L15-RR11-LEVEL3-4-SCOPE-PROMOTION                                    | Handles level-5 features and spell-level-3 pressure; does not promote spell level 4/5.        |
@@ -327,7 +330,7 @@ Plan Impact:
 
 ### Task 2 - L15-RR02-ROUTE-VOCABULARY-AND-GATES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -362,12 +365,12 @@ Verification:
 
 Plan Impact:
 
-- Update later tasks if the checker exposes that a planned route class needs to
-  split into component/substrate work first.
+- Applied. The checker did not expose a planned route class that needs a new
+  component/substrate split before Task 3, Task 4, Task 8, or Task 9.
 
 ### Task 3 - L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
@@ -409,7 +412,7 @@ Plan Impact:
 
 ### Task 4 - L15-RR04-RULE-CORE-COMPONENT-CONNECTORS
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
@@ -603,7 +606,7 @@ Plan Impact:
 
 ### Task 8 - L15-RR08-CHARACTER-CREATION-ROUTES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
@@ -650,7 +653,7 @@ Plan Impact:
 
 ### Task 9 - L15-RR09-CHARACTER-SHEET-ROUTES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 

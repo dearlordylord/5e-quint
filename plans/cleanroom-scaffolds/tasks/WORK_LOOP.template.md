@@ -101,7 +101,9 @@ For the selected branch set:
 4. Check `cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md`.
 5. Check `cleanroom-input/domain/CLEANROOM_ASSUMPTIONS.md`.
 6. Check `cleanroom-input/branch-coverage/reducer-route-inventory.json` when
-   the selected assignment is reducer-routed or substrate-first.
+   the selected assignment is reducer-routed or substrate-first. For
+   reducer-routed work, also read the copied route connector and use its
+   `qRoute` projection as the executable route obligation.
 7. Check the relevant guidance files in `cleanroom-input/guidance/**`.
 8. Implement the smallest {{targetLabel}} slice in `{{enginePath}}` that makes
    the branch set conform.

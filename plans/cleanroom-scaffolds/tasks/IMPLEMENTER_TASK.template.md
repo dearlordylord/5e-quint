@@ -32,8 +32,10 @@ and record a bootstrap blocker in `tasks/BLOCKERS.md`.
 - When the selected driver appears in
   `cleanroom-input/branch-coverage/reducer-route-inventory.json`, implement
   the listed route class. `reducer-routed` tasks must replay through the shared
-  battle reducer surface. `substrate-first` tasks must introduce or identify
-  the durable owner before replay evidence is accepted.
+  reducer surface and match the copied route connector's `qRoute`; the
+  inventory selects and orders work but is not route evidence. `substrate-first`
+  tasks must introduce or identify the durable owner before replay evidence is
+  accepted.
 - Generate target replay evidence under `tasks/target-replay-evidence/`.
   Match `tasks/TARGET_REPLAY_EVIDENCE.example.json` exactly. Diagnostic
   target-language tests are allowed, but they do not close branch coverage.

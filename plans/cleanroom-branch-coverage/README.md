@@ -51,9 +51,11 @@ This denominator is not cleanroom replay evidence. It answers queue questions
 such as "how many drivers remain" and tells later tasks which branch decisions
 can be promoted only after the corresponding generic route substrate exists.
 
-`packages/battle-runtime/*.route.mbt.qnt` is the executable source of truth for
-reducer routing. A `reducer-routed` row is meaningful only when the connector
-projects `qRoute` through the reducer-route vocabulary. Guidance prose may
+`*.route.mbt.qnt` connectors are the executable source of truth for reducer
+routing. A `reducer-routed` row is meaningful only when the connector projects
+`qRoute` through the reducer-route vocabulary. Rows should set
+`routeConnectorPath` when the connector is not the default sibling of the
+driver; otherwise the gate derives `<driver>.route.mbt.qnt`. Guidance prose may
 select the task, but it cannot by itself prove the target implementation routed
 through the shared reducer surface.
 

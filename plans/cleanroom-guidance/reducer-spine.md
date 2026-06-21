@@ -48,6 +48,9 @@ obligations for diagnostic drivers. They project `qRoute` over the shared
 reducer-route vocabulary. A target replay proves reducer routing only when its
 observed route events match the copied connector; matching the focused
 non-route projection alone proves behavior parity, not reducer architecture.
+The reducer-route inventory is an ordering and derivability index. A
+`reducer-routed` row is accepted only with copied connector evidence from
+`routeConnectorPath` or the sibling `.route.mbt.qnt` driver.
 
 ## Durable State Ownership
 
@@ -126,7 +129,7 @@ For reducer-spine diagnostics, use
 
 - The active diagnostic batch is the intended order.
 - `reducer-routed` means target replay must pass through the shared reducer
-  surface and match the copied `routeConnectorPath`.
+  surface and match the copied route connector's `qRoute`.
 - `substrate-first` means the substrate and durable owner must be introduced or
   identified before target replay evidence is meaningful.
 - `component-first` means deepen a reusable rule module before admitting it as

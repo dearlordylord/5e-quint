@@ -212,6 +212,27 @@ const qntRegistryExemptions = [
   },
   {
     ownerPath:
+      "packages/character-battle-runtime/character-battle-reducer-route.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Character-battle handoff reducer-route vocabulary leaf for future route connectors; executable handoff route coverage will be registered by connector owners.",
+  },
+  {
+    ownerPath:
+      "packages/character-creation-runtime/character-creation-reducer-route.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Character-creation reducer-route vocabulary leaf for future route connectors; executable creation route coverage will be registered by connector owners.",
+  },
+  {
+    ownerPath:
+      "packages/character-sheet-runtime/character-sheet-reducer-route.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Character-sheet reducer-route vocabulary leaf for future route connectors; executable sheet route coverage will be registered by connector owners.",
+  },
+  {
+    ownerPath:
       "packages/battle-runtime/battle-runtime-public-trace-contract.qnt",
     category: "witness-protocol-leaf",
     evidence:

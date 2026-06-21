@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "curated-source-guidance-with-qnt-route-connectors",
   "activeDiagnosticBatchId": "reducer-spine-diagnostic-v1",
-  "qntRouteConnectorPattern": "packages/battle-runtime/*.route.mbt.qnt",
+  "qntRouteConnectorPattern": "packages/*-runtime/*.route.mbt.qnt",
   "routeTags": [
     "reducer-routed",
     "component-first",
@@ -31,7 +31,7 @@
   "prerequisites": [
     {
       "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
-      "route": "reducer-routed",
+      "route": "replay-refresh-only",
       "role": "baseline composition witness",
       "parityWitness": "packages/battle-runtime/src/reducer-spine-contract.mbt.test.ts",
       "qntFacts": [

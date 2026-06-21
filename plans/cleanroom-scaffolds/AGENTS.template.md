@@ -146,9 +146,10 @@ The corpus is the backlog: each in-scope branch obligation from
 `cleanroom-input/branch-coverage/source-branch-inventory.json` is a unit of
 conformance work. `cleanroom-input/branch-coverage/reducer-route-inventory.json`
 selects the focused reducer-spine diagnostic route when `tasks/ACTIVE_WORK.json`
-uses that assignment. `tasks/ACTIVE_WORK.json` selects the assignment and lane
-order for this run. `tasks/LEVEL_1_2_SCOPE.md` records which drivers are in
-scope for character levels 1-2.
+uses that assignment. It does not prove routing; `reducer-routed` work must
+match the copied route connector's `qRoute`. `tasks/ACTIVE_WORK.json` selects
+the assignment and lane order for this run. `tasks/LEVEL_1_2_SCOPE.md` records
+which drivers are in scope for character levels 1-2.
 `tasks/LEVEL_1_2_SCOPE.md` is source-owned; do not reorder it in the target
 repo.
 
