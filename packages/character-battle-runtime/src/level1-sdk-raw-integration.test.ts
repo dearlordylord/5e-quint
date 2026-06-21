@@ -11,6 +11,7 @@ import {
   spellSaveDcForCaster,
   thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
   type AvailableBattleAct,
+  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -153,6 +154,9 @@ const sanctuaryClericId = combatantId("combatant:l1-sdk-sanctuary-cleric");
 const healingWordClericId = combatantId("combatant:l1-sdk-healing-word-cleric");
 const healingWordDruidId = combatantId("combatant:l1-sdk-healing-word-druid");
 const healingWordTargetId = combatantId("combatant:l1-sdk-healing-word-target");
+const blessClericId = combatantId("combatant:l1-sdk-bless-cleric");
+const blessPaladinId = combatantId("combatant:l1-sdk-bless-paladin");
+const blessTargetId = combatantId("combatant:l1-sdk-bless-target");
 const sanctuaryWardedAllyId = combatantId(
   "combatant:l1-sdk-sanctuary-warded-ally",
 );
@@ -251,6 +255,7 @@ const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const dissonantWhispersSpellId = "dissonant_whispers";
 const viciousMockerySpellId = "vicious_mockery";
 const healingWordSpellId = "healing_word";
+const blessSpellId = "bless";
 const animalFriendshipSpellId = "animal_friendship";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
@@ -1142,6 +1147,45 @@ describe("level 1 SDK RAW integration", () => {
       build: clericBuild,
       casterId: sanctuaryClericId,
       wardedId: sanctuaryWardedAllyId,
+    });
+  });
+
+  test("Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects", () => {
+    const clericBuild = finalizedLevelOneClericBlessBuild();
+    const paladinBuild = finalizedLevelOnePaladinBlessBuild();
+
+    expect(clericBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([blessSpellId]),
+        }),
+      ]),
+    );
+    expect(paladinBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_paladin",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([blessSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneBless({
+      battleIdText: "battle:l1-sdk-bless-cleric",
+      characterIdText: "character:l1-sdk-bless-cleric",
+      build: clericBuild,
+      casterId: blessClericId,
+      targetId: blessTargetId,
+    });
+    assertLevelOneBless({
+      battleIdText: "battle:l1-sdk-bless-paladin",
+      characterIdText: "character:l1-sdk-bless-paladin",
+      build: paladinBuild,
+      casterId: blessPaladinId,
+      targetId: blessTargetId,
     });
   });
 
@@ -3740,6 +3784,113 @@ function assertLevelOneSanctuary(input: {
   ]);
 }
 
+function assertLevelOneBless(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly targetId: CombatantId;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+      characterSheet({
+        characterIdText: "character:l1-sdk-bless-target",
+        build: levelOneSingleClassBuild({
+          classUnitId: "class_fighter",
+          weaponUnitId: "weapon_longsword",
+        }),
+        combatantId: input.targetId,
+        initiative: 15,
+        maximumHp: 12,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = spellSlotActForProcedure(state, blessSpellId, 1, "rollModifier");
+  const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
+  const expectedEffect = expectedLevelOneBlessEffect(input.casterId);
+
+  expect(act.subject).toMatchObject({
+    tag: "actionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: blessSpellId,
+      slotLevel: 1,
+      procedure: "rollModifier",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(targetList).toMatchObject({
+    label: "Bless targets",
+    minTargets: 1,
+    maxTargets: 3,
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([input.casterId, input.targetId]),
+    spell: {
+      access: { tag: "prepared" },
+      procedure: "rollModifier",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      actionCost: "magicAction",
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 3 },
+      rangeFeet: movementFeet(30),
+      effect: expectedEffect,
+    },
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [blessTargetListFill(targetList, input.casterId, input.targetId)],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(
+    requireCombatant(resolved.state, input.targetId).activeEffects,
+  ).toEqual([expectedEffect]);
+  expect(caster.concentration).toEqual({
+    sourceSpellId: blessSpellId,
+    effectKind: "spellEffect",
+  });
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
+function expectedLevelOneBlessEffect(
+  casterId: CombatantId,
+): Extract<BattleActiveEffect, { readonly kind: "d20RollModifier" }> {
+  return {
+    kind: "d20RollModifier",
+    sourceSpellId: blessSpellId,
+    sourceCombatantId: casterId,
+    on: ["attack_roll", "saving_throw"],
+    delta: { sign: "+", dice: 1, dieSize: 4 },
+    skill: null,
+    expiresAt: {
+      kind: "concentration",
+      combatantId: casterId,
+    },
+  };
+}
+
 function assertLevelOneHealingWord(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -6254,6 +6405,20 @@ function finalizedLevelOneClericGuidingBoltBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneClericBlessBuild(): CharacterBuild {
+  return finalizedLevelOneClericBuild({
+    draftIdText: "draft:l1-sdk-cleric-bless",
+    expectedBuildLabel: "Cleric Bless",
+    cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
+    preparedSpells: [
+      blessSpellId,
+      "cure_wounds",
+      guidingBoltSpellId,
+      "shield_of_faith",
+    ],
+  });
+}
+
 function finalizedLevelOneClericInflictWoundsBuild(): CharacterBuild {
   return finalizedLevelOneClericBuild({
     draftIdText: "draft:l1-sdk-cleric-inflict-wounds",
@@ -6658,6 +6823,14 @@ function finalizedLevelOnePaladinCureWoundsBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-paladin-cure-wounds",
     expectedBuildLabel: "Paladin Cure Wounds",
     preparedSpells: [cureWoundsSpellId, "bless"],
+  });
+}
+
+function finalizedLevelOnePaladinBlessBuild(): CharacterBuild {
+  return finalizedLevelOnePaladinBuild({
+    draftIdText: "draft:l1-sdk-paladin-bless",
+    expectedBuildLabel: "Paladin Bless",
+    preparedSpells: [blessSpellId, cureWoundsSpellId],
   });
 }
 
@@ -8258,6 +8431,21 @@ function animalFriendshipTargetListFill(
         targetId,
         spellId: animalFriendshipSpellId,
       },
+    ],
+  };
+}
+
+function blessTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds: [targetId] },
+    spatialFacts: [
+      { kind: "spellTarget", casterId, targetId, spellId: blessSpellId },
     ],
   };
 }

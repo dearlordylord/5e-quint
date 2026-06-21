@@ -17,7 +17,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
 | Existing level-5 SDK seed scenario rows | 6 |
-| Scenario groups | 409 |
+| Scenario groups | 410 |
 | Level 5 scenario groups | 72 |
 
 ### All Level 1-5 Rows by Level Band
@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 438 |
+| sdk-scenario-needed | 436 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 66 |
+| seed-scenario-present | 68 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -74,7 +74,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Task | Groups |
 | --- | ---: |
-| L15-SDK-RAW-03 | 172 |
+| L15-SDK-RAW-03 | 173 |
 | L15-SDK-RAW-04 | 33 |
 | L15-SDK-RAW-05 | 107 |
 | L15-SDK-RAW-06 | 25 |
@@ -85,7 +85,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 85 |
+| battle-spell-sdk | 84 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
-| seed-present | 66 |
+| seed-present | 68 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -184,6 +184,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship` / `spell-level-1:Ranger:animal_friendship`: level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects
 - `srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy` / `level-1:Ranger:ranger_favored_enemy`: level1-sdk-raw-integration: Ranger Favored Enemy casts Hunter's Mark from a level-1 sheet without spending a Spell Slot and restores its free-cast pool on Long Rest
 - `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark` / `spell-level-1:Ranger:hunters_mark`: level1-sdk-raw-integration: Ranger Hunter's Mark resolves from a level-1 prepared spell-list choice through a Spell Slot
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless` / `spell-level-1:Cleric:bless`: level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects
+- `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless` / `spell-level-1:Paladin:bless`: level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects
 - `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds` / `spell-level-1:Bard:cure_wounds`: level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration
 - `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_cure_wounds` / `spell-level-1:Cleric:cure_wounds`: level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration
 - `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds` / `spell-level-1:Druid:cure_wounds`: level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration

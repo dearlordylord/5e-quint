@@ -1896,6 +1896,68 @@ const seededSdkScenarioRows = [
     helperNeedles: rangerSpellListHuntersMarkSdkHelperNeedles(),
   },
   {
+    candidateUnitId: "bless",
+    className: "Cleric",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+      ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+      ".references/srd-5.2.1/Classes/Cleric.md:158-164",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:533-544",
+      ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+    ],
+    rowId:
+      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
+    tracerNeedles: [
+      "const clericBuild = finalizedLevelOneClericBlessBuild();",
+      'sourceUnitId: "class_cleric"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([blessSpellId])",
+      "build: clericBuild,",
+      "casterId: blessClericId,",
+      "targetId: blessTargetId,",
+    ],
+    helperNeedles: blessSdkHelperNeedles("Cleric"),
+  },
+  {
+    candidateUnitId: "bless",
+    className: "Paladin",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+      ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+      ".references/srd-5.2.1/Classes/Paladin.md:168-176",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:533-544",
+      ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+    ],
+    rowId:
+      "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
+    tracerNeedles: [
+      "const paladinBuild = finalizedLevelOnePaladinBlessBuild();",
+      'sourceUnitId: "class_paladin"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([blessSpellId])",
+      "build: paladinBuild,",
+      "casterId: blessPaladinId,",
+      "targetId: blessTargetId,",
+    ],
+    helperNeedles: blessSdkHelperNeedles("Paladin"),
+  },
+  {
     candidateUnitId: "cure_wounds",
     className: "Bard",
     levelBand: "spell-level-1",
@@ -3644,6 +3706,102 @@ function healingWordSdkHelperNeedles() {
       ],
     },
   ];
+}
+
+function blessSdkHelperNeedles(className) {
+  return [
+    blessBuildHelperNeedle(className),
+    ...(className === "Paladin" ? [levelOnePaladinBuildHelperNeedle()] : []),
+    blessResolutionHelperNeedle(),
+    blessActiveEffectHelperNeedle(),
+    blessTargetListFillHelperNeedle(),
+  ];
+}
+
+function blessBuildHelperNeedle(className) {
+  const specs = {
+    Cleric: {
+      anchor: "function finalizedLevelOneClericBlessBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOneClericBuild({",
+      draftIdText: "draft:l1-sdk-cleric-bless",
+      expectedBuildLabel: "Cleric Bless",
+      preparedNeedle: "blessSpellId",
+    },
+    Paladin: {
+      anchor: "function finalizedLevelOnePaladinBlessBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOnePaladinBuild({",
+      draftIdText: "draft:l1-sdk-paladin-bless",
+      expectedBuildLabel: "Paladin Bless",
+      preparedNeedle: "preparedSpells: [blessSpellId, cureWoundsSpellId]",
+    },
+  };
+  const spec = specs[className];
+  if (spec === undefined) {
+    throw new Error(`Unsupported Bless seed class ${className}.`);
+  }
+  return {
+    anchor: spec.anchor,
+    needles: [
+      spec.buildHelper,
+      `draftIdText: "${spec.draftIdText}"`,
+      `expectedBuildLabel: "${spec.expectedBuildLabel}"`,
+      spec.preparedNeedle,
+    ],
+  };
+}
+
+function blessResolutionHelperNeedle() {
+  return {
+    anchor: "function assertLevelOneBless",
+    needles: [
+      'spellSlotActForProcedure(state, blessSpellId, 1, "rollModifier")',
+      "const expectedEffect = expectedLevelOneBlessEffect(input.casterId)",
+      'label: "Bless targets"',
+      "maxTargets: 3",
+      'procedure: "rollModifier"',
+      'actionCost: "magicAction"',
+      "rangeFeet: movementFeet(30)",
+      "effect: expectedEffect",
+      "blessTargetListFill(",
+      "activeEffects",
+      "toEqual([expectedEffect])",
+      "caster.concentration",
+      'effectKind: "spellEffect"',
+      "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+      "expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);",
+      "{ spellLevel: 1, count: 2, expended: 1 }",
+    ],
+  };
+}
+
+function blessActiveEffectHelperNeedle() {
+  return {
+    anchor: "function expectedLevelOneBlessEffect",
+    needles: [
+      'kind: "d20RollModifier"',
+      "sourceSpellId: blessSpellId",
+      'on: ["attack_roll", "saving_throw"]',
+      'delta: { sign: "+", dice: 1, dieSize: 4 }',
+      "skill: null",
+      "expiresAt: {",
+      'kind: "concentration"',
+      "combatantId: casterId",
+    ],
+  };
+}
+
+function blessTargetListFillHelperNeedle() {
+  return {
+    anchor: "function blessTargetListFill",
+    needles: [
+      'kind: "spellTargetList"',
+      "value: { targetIds: [targetId] }",
+      'kind: "spellTarget"',
+      "casterId",
+      "targetId",
+      "spellId: blessSpellId",
+    ],
+  };
 }
 
 const seededSdkScenarioRecords = seededSdkScenarioRows.map((row) => ({

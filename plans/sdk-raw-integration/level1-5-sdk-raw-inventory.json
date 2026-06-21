@@ -20058,6 +20058,21 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Bless",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+          ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+          ".references/srd-5.2.1/Classes/Cleric.md:158-164",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:533-544",
+          ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+          ".references/srd-5.2.1/Rules-Glossary.md:698-700"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -20065,7 +20080,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 163,
         "lineStart": 163,
@@ -30925,6 +30940,21 @@
       "category": "spell Unit pressure",
       "className": "Paladin",
       "concept": "Paladin spell list Bless",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+          ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+          ".references/srd-5.2.1/Classes/Paladin.md:168-176",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:533-544",
+          ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+          ".references/srd-5.2.1/Rules-Glossary.md:698-700"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -30932,7 +30962,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 176,
         "lineStart": 176,
@@ -56520,16 +56550,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 438,
+      "sdk-scenario-needed": 436,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 66,
+      "seed-scenario-present": 68,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 409,
+    "scenarioGroups": 410,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 85,
+      "battle-spell-sdk": 84,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56539,13 +56569,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 66,
+      "seed-present": 68,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 172,
+      "L15-SDK-RAW-03": 173,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -56637,79 +56667,6 @@
         "Bard spell list Bane",
         "Cleric spell list Bane",
         "Warlock spell list Bane"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "bless"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric",
-        "Paladin"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:bless",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"bless\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:163",
-        ".references/srd-5.2.1/Classes/Paladin.md:176"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "bless",
-          "className": "Cleric",
-          "concept": "Cleric spell list Bless",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 163,
-            "lineStart": 163,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "bless",
-          "className": "Paladin",
-          "concept": "Paladin spell list Bless",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 176,
-            "lineStart": 176,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Bless",
-        "Paladin spell list Bless"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65549,6 +65506,70 @@
     },
     {
       "candidateUnitIds": [
+        "bless"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-cleric-bless",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Cleric:bless\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:158-164",
+        ".references/srd-5.2.1/Classes/Cleric.md:163",
+        ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+        ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+        ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+        ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:533-544",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "bless",
+          "className": "Cleric",
+          "concept": "Cleric spell list Bless",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 163,
+            "lineStart": 163,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Bless"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "cure_wounds"
       ],
       "categories": [
@@ -66024,6 +66045,70 @@
       ],
       "sampleConcepts": [
         "Druid spell list Healing Word"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "bless"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Paladin"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-paladin-bless",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Paladin:bless\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Paladin.md:168-176",
+        ".references/srd-5.2.1/Classes/Paladin.md:176",
+        ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+        ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+        ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+        ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:533-544",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "bless",
+          "className": "Paladin",
+          "concept": "Paladin spell list Bless",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 176,
+            "lineStart": 176,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Paladin spell list Bless"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -87802,6 +87887,199 @@
         "slots: [{ spellLevel: 1, count: 2 }]",
         "assertLevelOneHuntersMarkSpellSlot({",
         "casterId: huntersMarkSpellSlotRangerId"
+      ]
+    },
+    {
+      "candidateUnitId": "bless",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+          ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+          ".references/srd-5.2.1/Classes/Cleric.md:158-164",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:533-544",
+          ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+          ".references/srd-5.2.1/Rules-Glossary.md:698-700"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneClericBlessBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneClericBuild({",
+            "draftIdText: \"draft:l1-sdk-cleric-bless\"",
+            "expectedBuildLabel: \"Cleric Bless\"",
+            "blessSpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneBless",
+          "needles": [
+            "spellSlotActForProcedure(state, blessSpellId, 1, \"rollModifier\")",
+            "const expectedEffect = expectedLevelOneBlessEffect(input.casterId)",
+            "label: \"Bless targets\"",
+            "maxTargets: 3",
+            "procedure: \"rollModifier\"",
+            "actionCost: \"magicAction\"",
+            "rangeFeet: movementFeet(30)",
+            "effect: expectedEffect",
+            "blessTargetListFill(",
+            "activeEffects",
+            "toEqual([expectedEffect])",
+            "caster.concentration",
+            "effectKind: \"spellEffect\"",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function expectedLevelOneBlessEffect",
+          "needles": [
+            "kind: \"d20RollModifier\"",
+            "sourceSpellId: blessSpellId",
+            "on: [\"attack_roll\", \"saving_throw\"]",
+            "delta: { sign: \"+\", dice: 1, dieSize: 4 }",
+            "skill: null",
+            "expiresAt: {",
+            "kind: \"concentration\"",
+            "combatantId: casterId"
+          ]
+        },
+        {
+          "anchor": "function blessTargetListFill",
+          "needles": [
+            "kind: \"spellTargetList\"",
+            "value: { targetIds: [targetId] }",
+            "kind: \"spellTarget\"",
+            "casterId",
+            "targetId",
+            "spellId: blessSpellId"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
+      "rowKey": "spell-level-1:Cleric:bless",
+      "tracerNeedles": [
+        "const clericBuild = finalizedLevelOneClericBlessBuild();",
+        "sourceUnitId: \"class_cleric\"",
+        "spellcastingAbility: \"wis\"",
+        "preparedSpells: expect.arrayContaining([blessSpellId])",
+        "build: clericBuild,",
+        "casterId: blessClericId,",
+        "targetId: blessTargetId,"
+      ]
+    },
+    {
+      "candidateUnitId": "bless",
+      "className": "Paladin",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+          ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+          ".references/srd-5.2.1/Classes/Paladin.md:168-176",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:533-544",
+          ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+          ".references/srd-5.2.1/Rules-Glossary.md:698-700"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOnePaladinBlessBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOnePaladinBuild({",
+            "draftIdText: \"draft:l1-sdk-paladin-bless\"",
+            "expectedBuildLabel: \"Paladin Bless\"",
+            "preparedSpells: [blessSpellId, cureWoundsSpellId]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOnePaladinBuild(input:",
+          "needles": [
+            "createCharacterDraft({",
+            "draftId: characterDraftId(input.draftIdText)",
+            "\"class_paladin\"",
+            "\"class_prepared_spell_choices\"",
+            "...input.preparedSpells",
+            "\"paladin_weapon_mastery\"",
+            "\"weapon_longsword\"",
+            "\"weapon_spear\"",
+            "\"background_criminal\"",
+            "\"class_equipment_choice\"",
+            "\"equipment_purchase\"",
+            "\"wielded_one_handed\"",
+            "input.expectedBuildLabel",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneBless",
+          "needles": [
+            "spellSlotActForProcedure(state, blessSpellId, 1, \"rollModifier\")",
+            "const expectedEffect = expectedLevelOneBlessEffect(input.casterId)",
+            "label: \"Bless targets\"",
+            "maxTargets: 3",
+            "procedure: \"rollModifier\"",
+            "actionCost: \"magicAction\"",
+            "rangeFeet: movementFeet(30)",
+            "effect: expectedEffect",
+            "blessTargetListFill(",
+            "activeEffects",
+            "toEqual([expectedEffect])",
+            "caster.concentration",
+            "effectKind: \"spellEffect\"",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function expectedLevelOneBlessEffect",
+          "needles": [
+            "kind: \"d20RollModifier\"",
+            "sourceSpellId: blessSpellId",
+            "on: [\"attack_roll\", \"saving_throw\"]",
+            "delta: { sign: \"+\", dice: 1, dieSize: 4 }",
+            "skill: null",
+            "expiresAt: {",
+            "kind: \"concentration\"",
+            "combatantId: casterId"
+          ]
+        },
+        {
+          "anchor": "function blessTargetListFill",
+          "needles": [
+            "kind: \"spellTargetList\"",
+            "value: { targetIds: [targetId] }",
+            "kind: \"spellTarget\"",
+            "casterId",
+            "targetId",
+            "spellId: blessSpellId"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
+      "rowKey": "spell-level-1:Paladin:bless",
+      "tracerNeedles": [
+        "const paladinBuild = finalizedLevelOnePaladinBlessBuild();",
+        "sourceUnitId: \"class_paladin\"",
+        "spellcastingAbility: \"cha\"",
+        "preparedSpells: expect.arrayContaining([blessSpellId])",
+        "build: paladinBuild,",
+        "casterId: blessPaladinId,",
+        "targetId: blessTargetId,"
       ]
     },
     {
