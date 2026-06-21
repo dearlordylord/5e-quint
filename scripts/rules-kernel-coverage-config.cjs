@@ -226,6 +226,13 @@ const qntRegistryExemptions = [
   },
   {
     ownerPath:
+      "packages/character-creation-runtime/character-creation-route-fixtures.qnt",
+    category: "witness-protocol-leaf",
+    evidence:
+      "Character-creation reducer-route fixture leaf shared by route connector MBT drivers; semantic creation owners remain the focused QNT slices.",
+  },
+  {
+    ownerPath:
       "packages/character-sheet-runtime/character-sheet-reducer-route.qnt",
     category: "leaf-type-vocabulary",
     evidence:

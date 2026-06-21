@@ -50,7 +50,34 @@ const ROUTE_SURFACES = [
     routeVocabularyPath:
       "packages/character-creation-runtime/character-creation-reducer-route.qnt",
     vocabularyImport: /\bimport\s+characterCreationReducerRoute\.\*\s+from\s+"\.\/character-creation-reducer-route"/,
-    requiredEvidenceCalls: [],
+    requiredEvidenceCalls: [
+      {
+        label: "routeCreateCharacterDraft or completedFighterCreationRoute",
+        calls: ["routeCreateCharacterDraft", "completedFighterCreationRoute"],
+      },
+      {
+        label: "routeDiscoverCreationHoles or completedFighterCreationRoute",
+        calls: ["routeDiscoverCreationHoles", "completedFighterCreationRoute"],
+      },
+      {
+        label:
+          "routeApplyCreationFillBatch, routeProjectCharacterBuildFacts, or completedFighterCreationRoute",
+        calls: [
+          "routeApplyCreationFillBatch",
+          "routeProjectCharacterBuildFacts",
+          "completedFighterCreationRoute",
+        ],
+      },
+      {
+        label:
+          "routeFinalizeCharacterDraft, routeRetainCreationSelectedReferences, or completedFighterCreationRoute",
+        calls: [
+          "routeFinalizeCharacterDraft",
+          "routeRetainCreationSelectedReferences",
+          "completedFighterCreationRoute",
+        ],
+      },
+    ],
   },
   {
     packageDir: "packages/character-sheet-runtime",
@@ -289,6 +316,13 @@ function componentBridgePath(repoPath) {
   return path.join("packages/battle-runtime/src", fileName);
 }
 
+function hasRouteEvidence(text, call) {
+  if (call === "completedFighterCreationRoute") {
+    return /\bcompletedFighterCreationRoute\b/.test(text);
+  }
+  return new RegExp(`\\b${call}\\s*\\(`).test(text);
+}
+
 function validateConnector(root, repoPath, failures) {
   const surface = surfaceForRepoPath(repoPath);
   if (surface === undefined) {
@@ -306,7 +340,7 @@ function validateConnector(root, repoPath, failures) {
   for (const evidenceCall of surface.requiredEvidenceCalls) {
     const calls =
       typeof evidenceCall === "string" ? [evidenceCall] : evidenceCall.calls;
-    if (!calls.some((call) => new RegExp(`\\b${call}\\s*\\(`).test(text))) {
+    if (!calls.some((call) => hasRouteEvidence(text, call))) {
       const label =
         typeof evidenceCall === "string" ? evidenceCall : evidenceCall.label;
       failures.push(`${repoPath}: must record ${label} route evidence.`);

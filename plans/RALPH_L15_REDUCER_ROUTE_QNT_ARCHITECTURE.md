@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L15-RR08-CHARACTER-CREATION-ROUTES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add QNT route connectors for character creation drivers"
     },
     {
@@ -329,7 +329,7 @@ The route classes are deliberately not all `reducer-routed`:
 |   5 | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES - Route action, attack, weapon, and stat-block battle subjects | done               | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Routes generic attack/stat-block families; rider bundles split to Tasks 15-17.               |
 |   6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects         | done               | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Extends routed spell/effect subjects without selected-identity dispatch.                      |
 |   7 | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES - Route feature, species, metamagic, and mastery battle substrates   | done               | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Routed bonus-action Unit feature Dash with Temporary Hit Points; split remaining missing substrate families to follow-up tasks. |
-|   8 | L15-RR08-CHARACTER-CREATION-ROUTES - Add QNT route connectors for character creation drivers                  | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for Draft/Fill/finalization rather than battle subjects.                     |
+|   8 | L15-RR08-CHARACTER-CREATION-ROUTES - Add QNT route connectors for character creation drivers                  | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for Draft/Fill/finalization rather than battle subjects.                     |
 |   9 | L15-RR09-CHARACTER-SHEET-ROUTES - Add QNT route connectors for character sheet drivers                        | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for sheet resource/rest/projection state.                                    |
 |  10 | L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES - Add QNT route connectors for character-battle handoff drivers      | blocked            | L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES; L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE                                            | Handoff routes depend on both sheet and battle state owners.                                  |
 |  11 | L15-RR11-LEVEL3-4-SCOPE-PROMOTION - Promote level 3-4 branch scope into route connector tasks                 | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES | Widen current level-1/2 branch-scope rows only after generic route shapes exist.              |
@@ -1124,7 +1124,7 @@ Plan Impact:
 
 ### Task 8 - L15-RR08-CHARACTER-CREATION-ROUTES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1166,8 +1166,10 @@ Verification:
 
 Plan Impact:
 
-- Update Task 11 or 12 if character-creation selected-identity branches need
-  separate level-band promotion.
+- Applied. Character-creation route connectors now cover the level-1/2 draft,
+  fill, selected-reference, projection, and finalization surface. The existing
+  Task 11 and Task 12 level-band promotion tasks remain the executable follow-up
+  surface for level-3/5 Warlock invocation replacement branches.
 
 ### Task 9 - L15-RR09-CHARACTER-SHEET-ROUTES
 

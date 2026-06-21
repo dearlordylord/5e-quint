@@ -10529,6 +10529,12 @@
       "ownerPath": "packages/character-creation-runtime/character-creation-reducer-route.qnt"
     },
     {
+      "category": "witness-protocol-leaf",
+      "classification": "exempt",
+      "evidence": "Character-creation reducer-route fixture leaf shared by route connector MBT drivers; semantic creation owners remain the focused QNT slices.",
+      "ownerPath": "packages/character-creation-runtime/character-creation-route-fixtures.qnt"
+    },
+    {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
       "role": "semantic-core"

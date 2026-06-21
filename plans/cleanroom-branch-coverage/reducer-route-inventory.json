@@ -1978,155 +1978,163 @@
         },
         {
           "driverPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-          "subjectFamily": "character creation draft/fill/finalize reducer",
+          "subjectFamily": "character creation build projection through draft/finalize route",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt exposes qRoute for build fact projection through CharacterBuildOwner without duplicating resource/source facts."
             ],
             "rawDomainFacts": [
-              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+              "Character creation records class features during creation; package vocabulary keeps derived resource/source facts projected from retained build facts plus the Unit catalog.",
+              "Route events are shape/domain evidence over draft state, option discovery, fill batches, selected-reference retention, CharacterBuild projection, and finalization; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
           "subjectFamily": "character creation selected-reference retention",
           "branchObligations": 12,
           "currentOutOfScopeBranchObligations": 1,
           "derivability": {
             "qntFacts": [
-              "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s)."
+              "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s).",
+              "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt exposes qRoute for in-scope selected class-feature references through fill, retention, projection, and finalization events."
             ],
             "rawDomainFacts": [
-              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+              "Character creation class features can offer choices; Unit-backed selections are retained build facts and not downstream mechanics dispatch keys.",
+              "Route events are shape/domain evidence over draft state, option discovery, fill batches, selected-reference retention, CharacterBuild projection, and finalization; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-          "subjectFamily": "character creation selected-reference retention",
+          "subjectFamily": "character creation class-feature option retention",
           "branchObligations": 4,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+              "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s).",
+              "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.route.mbt.qnt exposes qRoute for class-feature option selection through support-profile admission, retained selected reference, build projection, and finalization events."
             ],
             "rawDomainFacts": [
-              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+              "Cleric Divine Order and Druid Primal Order are class-feature choices; finalization retains selected option evidence while downstream option behavior remains separately owned.",
+              "Route events are shape/domain evidence over draft state, option discovery, fill batches, selected-reference retention, CharacterBuild projection, and finalization; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-          "subjectFamily": "character creation selected-reference retention",
+          "subjectFamily": "character creation class-feature feat retention and replacement",
           "branchObligations": 8,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+              "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s).",
+              "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt exposes qRoute for initial Fighting Style feat retention and Fighter level-gain replacement through selected-reference and CharacterBuild owners."
             ],
             "rawDomainFacts": [
-              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+              "Fighter Fighting Style chooses a Fighting Style feat and permits replacement when gaining a Fighter level; Character Build Class Level Gain owns that replacement operation.",
+              "Route events are shape/domain evidence over draft state, option discovery, fill batches, selected-reference retention, CharacterBuild projection, and finalization; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-          "subjectFamily": "character creation selected-reference retention",
+          "subjectFamily": "character creation skill Expertise retention",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 1,
           "derivability": {
             "qntFacts": [
-              "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.route.mbt.qnt exposes qRoute for level-1 Rogue Expertise selected skill retention through support-profile admission and finalization."
             ],
             "rawDomainFacts": [
-              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+              "Rogue level 1 Expertise chooses two owned skill proficiencies; Expertise finalization projects proficiency levels without duplicating skill proficiency state.",
+              "Route events are shape/domain evidence over draft state, option discovery, fill batches, selected-reference retention, CharacterBuild projection, and finalization; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
           "subjectFamily": "character creation draft/fill/finalize reducer",
           "branchObligations": 16,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-creation-runtime/character-creation-runtime.mbt.qnt is present in source-branch-inventory.json with 16 branch obligation(s)."
+              "packages/character-creation-runtime/character-creation-runtime.mbt.qnt is present in source-branch-inventory.json with 16 branch obligation(s).",
+              "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt exposes qRoute for draft creation, option discovery, atomic fill batches, hole rediscovery, rejection owners, and finalization."
             ],
             "rawDomainFacts": [
-              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+              "Local SRD character creation and level advancement define required choices; package vocabulary models Character Draft, Creation Hole, Creation Fill, Support Profile, and Finalization Gate.",
+              "Route events are shape/domain evidence over draft state, option discovery, fill batches, selected-reference retention, CharacterBuild projection, and finalization; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-          "subjectFamily": "character creation selected-reference retention",
+          "subjectFamily": "character creation invocation option retention and Pact Magic projection",
           "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 3,
           "derivability": {
             "qntFacts": [
-              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
+              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt exposes qRoute for level-1/2 invocation selection, duplicate rejection, retained selected references, Pact Magic projection, and finalization."
             ],
             "rawDomainFacts": [
-              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+              "Warlock Eldritch Invocation choices are option ownership facts; Pact Magic spell access and Pact Slot facts project from Warlock class facts without making invocation execution a creation reducer responsibility.",
+              "Route events are shape/domain evidence over draft state, option discovery, fill batches, selected-reference retention, CharacterBuild projection, and finalization; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-          "subjectFamily": "character creation selected-reference retention",
+          "subjectFamily": "character creation Weapon Mastery selected weapon retention",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+              "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
+              "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.route.mbt.qnt exposes qRoute for Weapon Mastery selected weapon references through support-profile admission and finalization."
             ],
             "rawDomainFacts": [
-              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+              "Weapon Mastery class features select weapons whose mastery properties become usable by the character; selected weapon refs are retained build facts, not mastery-property behavior dispatch.",
+              "Route events are shape/domain evidence over draft state, option discovery, fill batches, selected-reference retention, CharacterBuild projection, and finalization; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
@@ -3209,7 +3217,9 @@
               "This prerequisite-retained invocation replacement rejection uses Warlock level 5 facts.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 8 routes the level-1/2 Warlock invocation creation surface only; this level-band replacement branch remains deferred to L15-RR12-LEVEL5-SCOPE-PROMOTION."
+            ]
           }
         },
         {
@@ -3229,7 +3239,9 @@
               "This invocation replacement projection uses Warlock level 3 facts.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 8 routes the level-1/2 Warlock invocation creation surface only; this level-band replacement branch remains deferred to L15-RR11-LEVEL3-4-SCOPE-PROMOTION."
+            ]
           }
         },
         {
@@ -3249,7 +3261,9 @@
               "This repeatable invocation replacement projection uses Warlock level 3 facts.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 8 routes the level-1/2 Warlock invocation creation surface only; this level-band replacement branch remains deferred to L15-RR11-LEVEL3-4-SCOPE-PROMOTION."
+            ]
           }
         },
         {

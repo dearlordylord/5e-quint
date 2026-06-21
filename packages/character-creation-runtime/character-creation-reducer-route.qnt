@@ -8,6 +8,7 @@ module characterCreationReducerRoute {
     | CreationOptionDiscoveryRouteSubject
     | CreationFillBatchRouteSubject
     | CreationSelectedReferenceRouteSubject
+    | CreationBuildProjectionRouteSubject
     | CreationFinalizationRouteSubject
 
   type CharacterCreationRouteHoleFamily =
@@ -39,8 +40,16 @@ module characterCreationReducerRoute {
       })
     | RouteApplyCreationFillBatch({
         subject: CharacterCreationRouteSubjectFamily,
-        fill: CharacterCreationRouteFillFamily,
+        fills: Set[CharacterCreationRouteFillFamily],
         holes: Set[CharacterCreationRouteHoleFamily],
+        owner: CharacterCreationRouteOwnerGroup,
+      })
+    | RouteRetainCreationSelectedReferences({
+        subject: CharacterCreationRouteSubjectFamily,
+        owner: CharacterCreationRouteOwnerGroup,
+      })
+    | RouteProjectCharacterBuildFacts({
+        subject: CharacterCreationRouteSubjectFamily,
         owner: CharacterCreationRouteOwnerGroup,
       })
     | RouteFinalizeCharacterDraft({
@@ -66,14 +75,32 @@ module characterCreationReducerRoute {
 
   pure def routeApplyCreationFillBatch(
     subject: CharacterCreationRouteSubjectFamily,
-    fill: CharacterCreationRouteFillFamily,
+    fills: Set[CharacterCreationRouteFillFamily],
     holes: Set[CharacterCreationRouteHoleFamily],
     owner: CharacterCreationRouteOwnerGroup,
   ): CharacterCreationRouteEvent =
     RouteApplyCreationFillBatch({
       subject: subject,
-      fill: fill,
+      fills: fills,
       holes: holes,
+      owner: owner,
+    })
+
+  pure def routeRetainCreationSelectedReferences(
+    subject: CharacterCreationRouteSubjectFamily,
+    owner: CharacterCreationRouteOwnerGroup,
+  ): CharacterCreationRouteEvent =
+    RouteRetainCreationSelectedReferences({
+      subject: subject,
+      owner: owner,
+    })
+
+  pure def routeProjectCharacterBuildFacts(
+    subject: CharacterCreationRouteSubjectFamily,
+    owner: CharacterCreationRouteOwnerGroup,
+  ): CharacterCreationRouteEvent =
+    RouteProjectCharacterBuildFacts({
+      subject: subject,
       owner: owner,
     })
 
