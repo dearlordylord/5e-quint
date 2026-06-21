@@ -255,21 +255,23 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-adrenaline-rush.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle feature or species substrate",
+          "subjectFamily": "bonus-action Unit feature Dash with Temporary Hit Points and feature resource spend",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-adrenaline-rush.route.mbt.qnt exposes qRoute for UnitFeatureBonusActionRouteSubject through action-economy, feature-resource, movement-resource, and Temporary Hit Point owners."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              ".references/srd-5.2.1/Character-Origins.md#Orc defines a Bonus Action Dash trait that grants Temporary Hit Points equal to Proficiency Bonus and spends a Proficiency Bonus use pool that restores on Short or Long Rest.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Actions defines Dash as extra Movement equal to Speed; #Bonus Actions defines one Bonus Action per turn when a feature grants it; #Temporary Hit Points defines Temporary Hit Points as a separate non-stacking buffer.",
+              "UBIQUITOUS_LANGUAGE.md defines Bonus Action, Movement, Speed, Pool, Spend, and Temporary Hit Points."
             ],
-            "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
-            ]
+            "blockers": []
           }
         },
         {
@@ -295,22 +297,27 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
           "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
+              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
@@ -401,60 +408,74 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
           "branchObligations": 9,
           "currentOutOfScopeBranchObligations": 5,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s).",
+              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
           "branchObligations": 7,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s).",
+              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "feature-hosted condition and d20 roll modifier substrates",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "No copied source qRoute connector currently extracts feature-hosted condition and d20 roll modifier substrates from packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is feature-hosted condition and d20 roll modifier substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Extract generic roll-modifier, condition-suppression, and saving-throw/ability-check support-profile routes without branching on feature identity."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
@@ -477,41 +498,49 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
-          "route": "substrate-first",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle feature or species substrate",
+          "subjectFamily": "attack-action area save damage replacement feature substrate",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
+              "No copied source qRoute connector currently extracts attack-action area save damage replacement feature substrate from packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is attack-action area save damage replacement feature substrate."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE before cleanroom target replay may infer this selected-identity behavior.",
+              "Add a route connector for generic attack-action area save damage replacement with feature resource, area shape, saving throw, damage type, damage roll, and extra-attack continuation owners."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
-          "route": "substrate-first",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle feature or species substrate",
+          "subjectFamily": "feature movement, Dash, teleport, and form lifecycle substrates",
           "branchObligations": 7,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s).",
+              "No copied source qRoute connector currently extracts feature movement, Dash, teleport, and form lifecycle substrates from packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is feature movement, Dash, teleport, and form lifecycle substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split movement-resource, active-form, climb/swim/fly speed, forced movement, and teleport route owners before selected movement or form identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
@@ -534,22 +563,26 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "active feature spell-save and spell-attack benefit substrate",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
+              "No copied source qRoute connector currently extracts active feature spell-save and spell-attack benefit substrate from packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is active feature spell-save and spell-attack benefit substrate."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE before cleanroom target replay may infer this selected-identity behavior.",
+              "Route active feature benefits to spell save DC and spell attack roll mode by typed active-effect facts, not feature identity."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
@@ -572,60 +605,73 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
           "branchObligations": 4,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s).",
+              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "species passive trait damage, save, movement, and size substrates",
           "branchObligations": 4,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s).",
+              "No copied source qRoute connector currently extracts species passive trait damage, save, movement, and size substrates from packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is species passive trait damage, save, movement, and size substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Extract passive trait route owners for typed damage adjustment, saving throw roll modes, grapple escape roll modes, movement through occupied spaces, and size/speed state before selected species identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "zero-Hit-Point stabilization feature/spell substrate",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "No copied source qRoute connector currently extracts zero-Hit-Point stabilization feature/spell substrate from packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is zero-Hit-Point stabilization feature/spell substrate."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE before cleanroom target replay may infer this selected-identity behavior.",
+              "Route stabilization through the BattleState zero-Hit-Point lifecycle owner before selected healing/stabilization identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
@@ -665,79 +711,99 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
           "branchObligations": 12,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s).",
+              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
           "branchObligations": 10,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s).",
+              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
           "branchObligations": 10,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s).",
+              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
           "branchObligations": 4,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s).",
+              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
@@ -758,41 +824,49 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "feature movement, Dash, teleport, and form lifecycle substrates",
           "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 2,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
+              "No copied source qRoute connector currently extracts feature movement, Dash, teleport, and form lifecycle substrates from packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is feature movement, Dash, teleport, and form lifecycle substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split movement-resource, active-form, climb/swim/fly speed, forced movement, and teleport route owners before selected movement or form identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
-          "route": "substrate-first",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle feature or species substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 11,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
@@ -815,22 +889,27 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 1,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
+              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
@@ -872,41 +951,50 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "feature-hosted condition and d20 roll modifier substrates",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
+              "No copied source qRoute connector currently extracts feature-hosted condition and d20 roll modifier substrates from packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is feature-hosted condition and d20 roll modifier substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Extract generic roll-modifier, condition-suppression, and saving-throw/ability-check support-profile routes without branching on feature identity."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
           "branchObligations": 9,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s).",
+              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
@@ -990,250 +1078,302 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "species passive trait damage, save, movement, and size substrates",
           "branchObligations": 4,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s).",
+              "No copied source qRoute connector currently extracts species passive trait damage, save, movement, and size substrates from packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is species passive trait damage, save, movement, and size substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Extract passive trait route owners for typed damage adjustment, saving throw roll modes, grapple escape roll modes, movement through occupied spaces, and size/speed state before selected species identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
@@ -1340,22 +1480,27 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
@@ -1441,22 +1586,26 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "subjectFamily": "weapon mastery property attack, save, condition, and rider substrates",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
+              "No copied source qRoute connector currently extracts weapon mastery property attack, save, condition, and rider substrates from packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES supplies the generic substrate."
             ],
             "rawDomainFacts": [
-              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
+              "The missing generic substrate family is weapon mastery property attack, save, condition, and rider substrates."
             ],
             "blockers": [
-              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+              "source-qnt-corpus-blocker: add L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
+              "Route mastery properties by property fact, attack/save holes, and durable rider owners before selected mastery identity replay counts."
             ]
-          }
+          },
+          "followUpTaskId": "L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
@@ -3275,6 +3424,72 @@
         ".references/srd-5.2.1/Rules-Glossary.md",
         "UBIQUITOUS_LANGUAGE.md",
         "ASSUMPTIONS.md"
+      ],
+      "task7FollowUpTasks": [
+        {
+          "taskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "requiredSourceWork": [
+            "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
+            "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
+          ]
+        },
+        {
+          "taskId": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES",
+          "subjectFamily": "species passive trait damage, save, movement, and size substrates",
+          "requiredSourceWork": [
+            "Extract passive trait route owners for typed damage adjustment, saving throw roll modes, grapple escape roll modes, movement through occupied spaces, and size/speed state before selected species identity replay counts."
+          ]
+        },
+        {
+          "taskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
+          "subjectFamily": "feature-hosted condition and d20 roll modifier substrates",
+          "requiredSourceWork": [
+            "Extract generic roll-modifier, condition-suppression, and saving-throw/ability-check support-profile routes without branching on feature identity."
+          ]
+        },
+        {
+          "taskId": "L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE",
+          "subjectFamily": "zero-Hit-Point stabilization feature/spell substrate",
+          "requiredSourceWork": [
+            "Route stabilization through the BattleState zero-Hit-Point lifecycle owner before selected healing/stabilization identity replay counts."
+          ]
+        },
+        {
+          "taskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
+          "subjectFamily": "feature movement, Dash, teleport, and form lifecycle substrates",
+          "requiredSourceWork": [
+            "Split movement-resource, active-form, climb/swim/fly speed, forced movement, and teleport route owners before selected movement or form identity replay counts."
+          ]
+        },
+        {
+          "taskId": "L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES",
+          "subjectFamily": "weapon mastery property attack, save, condition, and rider substrates",
+          "requiredSourceWork": [
+            "Route mastery properties by property fact, attack/save holes, and durable rider owners before selected mastery identity replay counts."
+          ]
+        },
+        {
+          "taskId": "L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE",
+          "subjectFamily": "attack-action area save damage replacement feature substrate",
+          "requiredSourceWork": [
+            "Add a route connector for generic attack-action area save damage replacement with feature resource, area shape, saving throw, damage type, damage roll, and extra-attack continuation owners."
+          ]
+        },
+        {
+          "taskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "requiredSourceWork": [
+            "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
+          ]
+        },
+        {
+          "taskId": "L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE",
+          "subjectFamily": "active feature spell-save and spell-attack benefit substrate",
+          "requiredSourceWork": [
+            "Route active feature benefits to spell save DC and spell attack roll mode by typed active-effect facts, not feature identity."
+          ]
+        }
       ]
     }
   ]

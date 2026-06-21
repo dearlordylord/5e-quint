@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  createAdrenalineRushRouteDriver,
   createConcentrationBreakTeardownRouteDriver,
   createBattleRuntimeRouteDriver,
   createCommandOrderingRouteDriver,
@@ -21,6 +22,7 @@ import {
   reducerRoutedConcentrationBreakTeardownStateCheck,
   reducerRoutedDeathSavingThrowStateCheck,
   reducerRoutedHitPointRestorationOrderingStateCheck,
+  reducerRoutedAdrenalineRushStateCheck,
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedCommandOrderingStateCheck,
   reducerRoutedScalarBuffStateCheck,
@@ -214,6 +216,22 @@ describe("battle reducer route connector MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(2),
       stateCheck: reducerRoutedScalarBuffStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes bonus-action feature Dash with Temporary Hit Points through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-adrenaline-rush.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createAdrenalineRushRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(2),
+      stateCheck: reducerRoutedAdrenalineRushStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 });

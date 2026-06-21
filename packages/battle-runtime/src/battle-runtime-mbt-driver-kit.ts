@@ -849,6 +849,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "concentrationTeardown",
   "commandEffect",
   "scalarBuffEffect",
+  "unitFeatureBonusAction",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -866,6 +867,8 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleActiveEffect",
   "battleMovementResource",
   "battleInterruptStack",
+  "battleFeatureResource",
+  "battleTemporaryHitPoint",
 ] as const;
 type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
 const REDUCER_ROUTE_HOLES = [
@@ -1094,6 +1097,9 @@ export type AdrenalineRushMbtProjection = {
   readonly featureUsesRemaining: number;
   readonly lastResult: MbtLastResult;
   readonly lastInvalidReason: MbtLastInvalidReason;
+};
+type ReducerRoutedAdrenalineRushProjection = AdrenalineRushMbtProjection & {
+  readonly route: readonly ReducerRouteEvent[];
 };
 
 export type RogueSteadyAimMbtProjection = {
@@ -5061,31 +5067,94 @@ function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
 export function createAdrenalineRushDriver(
   schema: typeof adrenalineRushDriverSchema = adrenalineRushDriverSchema,
 ) {
+  return createAdrenalineRushDriverWithRoute(false, schema);
+}
+
+export function createAdrenalineRushRouteDriver(
+  schema: typeof adrenalineRushDriverSchema = adrenalineRushDriverSchema,
+) {
+  return createAdrenalineRushDriverWithRoute(true, schema);
+}
+
+const FEATURE_DASH_TEMPORARY_HIT_POINT_ROUTE_SUBJECT =
+  "unitFeatureBonusAction" satisfies ReducerRouteSubjectFamily;
+const FEATURE_DASH_TEMPORARY_HIT_POINT_RESOLVED_OWNERS = [
+  "battleActionEconomy",
+  "battleFeatureResource",
+  "battleMovementResource",
+  "battleTemporaryHitPoint",
+] as const satisfies readonly ReducerRouteOwnerGroup[];
+const FEATURE_DASH_TEMPORARY_HIT_POINT_STALE_OWNERS = [
+  "battleActionEconomy",
+] as const satisfies readonly ReducerRouteOwnerGroup[];
+
+function createAdrenalineRushDriverWithRoute<const IncludeRoute extends boolean>(
+  includeRoute: IncludeRoute,
+  schema: typeof adrenalineRushDriverSchema,
+) {
   return defineDriver(schema, () => {
     let state = adrenalineRushBattle();
     let lastResult: AdrenalineRushMbtProjection["lastResult"] = "init";
     let lastInvalidReason: AdrenalineRushMbtProjection["lastInvalidReason"] =
       "";
+    let route: readonly ReducerRouteEvent[] = initialAdrenalineRushRoute();
 
     function reset(): void {
       state = adrenalineRushBattle();
       lastResult = "init";
       lastInvalidReason = "";
+      route = initialAdrenalineRushRoute();
     }
 
-    function recordResult(result: BattleResolutionResult): void {
+    function initialAdrenalineRushRoute(): readonly ReducerRouteEvent[] {
+      return [
+        reducerRouteStartBattle("battleActionEconomy"),
+        {
+          kind: "discoverBattleActs",
+          subject: FEATURE_DASH_TEMPORARY_HIT_POINT_ROUTE_SUBJECT,
+          holes: [],
+          owner: "battleFeatureResource",
+        },
+      ];
+    }
+
+    function adrenalineRushResolveRoute(
+      owners: readonly ReducerRouteOwnerGroup[],
+    ): readonly ReducerRouteEvent[] {
+      return owners.map((owner) =>
+        reducerRouteResolveBattleSubjectWithoutFill({
+          subject: FEATURE_DASH_TEMPORARY_HIT_POINT_ROUTE_SUBJECT,
+          holes: [],
+          owner,
+        }),
+      );
+    }
+
+    function recordResult(
+      result: BattleResolutionResult,
+      owners: readonly ReducerRouteOwnerGroup[],
+    ): void {
       lastResult = result.tag;
       if (result.tag === "resolved") {
         state = result.state;
         lastInvalidReason = "";
+        if (includeRoute) {
+          route = [...route, ...adrenalineRushResolveRoute(owners)];
+        }
         return;
       }
       if (result.tag === "needsHoles") {
         state = result.state;
         lastInvalidReason = "";
+        if (includeRoute) {
+          route = [...route, ...adrenalineRushResolveRoute(owners)];
+        }
         return;
       }
       lastInvalidReason = mbtInvalidReason(result.reason);
+      if (includeRoute) {
+        route = [...route, ...adrenalineRushResolveRoute(owners)];
+      }
     }
 
     return {
@@ -5097,6 +5166,7 @@ export function createAdrenalineRushDriver(
             subject: adrenalineRushDashSubject(),
             fills: [],
           }),
+          FEATURE_DASH_TEMPORARY_HIT_POINT_RESOLVED_OWNERS,
         );
       },
       doRejectSecondDash: () => {
@@ -5106,15 +5176,25 @@ export function createAdrenalineRushDriver(
             subject: adrenalineRushDashSubject(),
             fills: [],
           }),
+          FEATURE_DASH_TEMPORARY_HIT_POINT_STALE_OWNERS,
         );
       },
       step: () => {},
-      getState: () =>
-        projectAdrenalineRushMbtState({
+      getState: () => {
+        const projection = projectAdrenalineRushMbtState({
           state,
           lastResult,
           lastInvalidReason,
-        }),
+        });
+        const routedProjection = { ...projection, route };
+        // IncludeRoute is a literal boolean chosen by the public factory, but
+        // TypeScript does not narrow conditional return types from this branch.
+        return (
+          includeRoute ? routedProjection : projection
+        ) as IncludeRoute extends true
+          ? ReducerRoutedAdrenalineRushProjection
+          : AdrenalineRushMbtProjection;
+      },
     };
   });
 }
@@ -5251,6 +5331,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   ConcentrationTeardownRouteSubject: "concentrationTeardown",
   CommandEffectRouteSubject: "commandEffect",
   ScalarBuffEffectRouteSubject: "scalarBuffEffect",
+  UnitFeatureBonusActionRouteSubject: "unitFeatureBonusAction",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -5267,6 +5348,8 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleActiveEffectOwner: "battleActiveEffect",
   BattleMovementResourceOwner: "battleMovementResource",
   BattleInterruptStackOwner: "battleInterruptStack",
+  BattleFeatureResourceOwner: "battleFeatureResource",
+  BattleTemporaryHitPointOwner: "battleTemporaryHitPoint",
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
@@ -5883,6 +5966,16 @@ function normalizeAdrenalineRushQuintState(
   };
 }
 
+function normalizeReducerRoutedAdrenalineRushQuintState(
+  raw: unknown,
+): ReducerRoutedAdrenalineRushProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  return {
+    ...normalizeAdrenalineRushQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
 function adrenalineRushUnexpectedHole(raw: unknown): never {
   throw new Error(
     `Adrenaline Rush witness does not expect holes; received ${String(raw)}.`,
@@ -6167,6 +6260,16 @@ export const adrenalineRushStateCheck = stateCheck(
     return true;
   },
 );
+export const reducerRoutedAdrenalineRushStateCheck = stateCheck(
+  normalizeReducerRoutedAdrenalineRushQuintState,
+  (
+    spec: ReducerRoutedAdrenalineRushProjection,
+    impl: ReducerRoutedAdrenalineRushProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const rogueSteadyAimStateCheck = stateCheck(
   normalizeRogueSteadyAimQuintState,
   (spec: RogueSteadyAimMbtProjection, impl: RogueSteadyAimMbtProjection) => {
@@ -6334,6 +6437,7 @@ function projectConcentrationBreakTeardownState(
     saveRollTotal: state.saveRollTotal,
     concentrationSaveOffered: state.concentrationSaveOffered,
     casterConcentrating:
+      // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
       caster.concentration?.sourceSpellId === "blur" &&
       caster.concentration.effectKind === "spellEffect",
     blurredEffectCount: blurredEffectCount(state.battle),

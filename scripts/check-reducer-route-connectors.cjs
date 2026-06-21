@@ -35,7 +35,14 @@ const ROUTE_SURFACES = [
     requiredEvidenceCalls: [
       "routeStartBattle",
       "routeDiscoverBattleActs",
-      "routeResolveBattleSubject",
+      {
+        label:
+          "routeResolveBattleSubject or routeResolveBattleSubjectWithoutFill",
+        calls: [
+          "routeResolveBattleSubject",
+          "routeResolveBattleSubjectWithoutFill",
+        ],
+      },
     ],
   },
   {
@@ -297,8 +304,12 @@ function validateConnector(root, repoPath, failures) {
     failures.push(`${repoPath}: must expose qRoute route projection.`);
   }
   for (const evidenceCall of surface.requiredEvidenceCalls) {
-    if (!new RegExp(`\\b${evidenceCall}\\s*\\(`).test(text)) {
-      failures.push(`${repoPath}: must record ${evidenceCall} route evidence.`);
+    const calls =
+      typeof evidenceCall === "string" ? [evidenceCall] : evidenceCall.calls;
+    if (!calls.some((call) => new RegExp(`\\b${call}\\s*\\(`).test(text))) {
+      const label =
+        typeof evidenceCall === "string" ? evidenceCall : evidenceCall.label;
+      failures.push(`${repoPath}: must record ${label} route evidence.`);
     }
   }
   if (/\bGoblin\b|\bgoblin\b/.test(text)) {

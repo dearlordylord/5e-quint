@@ -21,6 +21,7 @@ module battleRuntimeReducerRoute {
     | ConcentrationTeardownRouteSubject
     | CommandEffectRouteSubject
     | ScalarBuffEffectRouteSubject
+    | UnitFeatureBonusActionRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner
@@ -36,6 +37,8 @@ module battleRuntimeReducerRoute {
     | BattleActiveEffectOwner
     | BattleMovementResourceOwner
     | BattleInterruptStackOwner
+    | BattleFeatureResourceOwner
+    | BattleTemporaryHitPointOwner
 
   type ReducerRouteEvent =
     | RouteStartBattle({ owner: ReducerRouteOwnerGroup })

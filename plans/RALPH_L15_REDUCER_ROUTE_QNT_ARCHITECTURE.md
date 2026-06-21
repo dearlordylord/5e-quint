@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Route feature, species, metamagic, and mastery battle substrates"
     },
     {
@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "L15-RR17-WEAPON-HOSTED-RIDER-ROUTES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Split weapon-hosted attack and rider routes"
     },
     {
@@ -135,6 +135,60 @@
       "id": "L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES",
       "status": "blocked",
       "title": "Route independent multi-beam spell attack sequence drivers"
+    },
+    {
+      "number": 23,
+      "id": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "status": "ready-for-research",
+      "title": "Split level-1 selected spell identity bundles into generic substrates"
+    },
+    {
+      "number": 24,
+      "id": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES",
+      "status": "ready-for-research",
+      "title": "Route species passive trait battle substrates"
+    },
+    {
+      "number": 25,
+      "id": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
+      "status": "ready-for-research",
+      "title": "Route condition and d20 roll modifier feature substrates"
+    },
+    {
+      "number": 26,
+      "id": "L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE",
+      "status": "ready-for-research",
+      "title": "Route zero-Hit-Point stabilization substrates"
+    },
+    {
+      "number": 27,
+      "id": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
+      "status": "ready-for-research",
+      "title": "Route feature movement and form lifecycle substrates"
+    },
+    {
+      "number": 28,
+      "id": "L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES",
+      "status": "ready-for-research",
+      "title": "Route weapon mastery property substrates"
+    },
+    {
+      "number": 29,
+      "id": "L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE",
+      "status": "ready-for-research",
+      "title": "Route attack-action area save damage replacement feature substrate"
+    },
+    {
+      "number": 30,
+      "id": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "status": "ready-for-research",
+      "title": "Route metamagic governor and option substrates"
+    },
+    {
+      "number": 31,
+      "id": "L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE",
+      "status": "ready-for-research",
+      "title": "Route active feature spell benefit substrates"
     }
   ]
 }
@@ -274,7 +328,7 @@ The route classes are deliberately not all `reducer-routed`:
 |   4 | L15-RR04-RULE-CORE-COMPONENT-CONNECTORS - Add component-first QNT connectors for rule-core drivers            | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Keeps reusable components out of battle-local replay islands.                                 |
 |   5 | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES - Route action, attack, weapon, and stat-block battle subjects | done               | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Routes generic attack/stat-block families; rider bundles split to Tasks 15-17.               |
 |   6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects         | done               | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Extends routed spell/effect subjects without selected-identity dispatch.                      |
-|   7 | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES - Route feature, species, metamagic, and mastery battle substrates   | ready-for-research | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Converts selected-identity battle pressure into shape/profile substrate.                      |
+|   7 | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES - Route feature, species, metamagic, and mastery battle substrates   | done               | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Routed bonus-action Unit feature Dash with Temporary Hit Points; split remaining missing substrate families to follow-up tasks. |
 |   8 | L15-RR08-CHARACTER-CREATION-ROUTES - Add QNT route connectors for character creation drivers                  | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for Draft/Fill/finalization rather than battle subjects.                     |
 |   9 | L15-RR09-CHARACTER-SHEET-ROUTES - Add QNT route connectors for character sheet drivers                        | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for sheet resource/rest/projection state.                                    |
 |  10 | L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES - Add QNT route connectors for character-battle handoff drivers      | blocked            | L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES; L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE                                            | Handoff routes depend on both sheet and battle state owners.                                  |
@@ -284,12 +338,21 @@ The route classes are deliberately not all `reducer-routed`:
 |  14 | L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE - Package a fresh cleanroom-ready level 1-5 route evidence gate         | blocked            | L15-RR13-DIRTY-CLEANROOM-REHEARSAL                                                                                                                       | Produces the fresh-run package and acceptance gate; does not depend on stale dirty artifacts. |
 |  15 | L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT - Split after-hit rider routes by durable battle owner                   | ready-for-research | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Prevents one route connector from accumulating interrupt, condition, Concentration, and HP owners. |
 |  16 | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES - Route chained attack sequences through procedure owners            | ready-for-research | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Requires the generic multi-step spell/attack procedure route owner before routing chain continuation. |
-|  17 | L15-RR17-WEAPON-HOSTED-RIDER-ROUTES - Split weapon-hosted attack and rider routes                             | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                            | Splits hosted attacks, damage riders, active effects, item-target effects, and cleanup owners. |
+|  17 | L15-RR17-WEAPON-HOSTED-RIDER-ROUTES - Split weapon-hosted attack and rider routes                             | ready-for-research | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                            | Splits hosted attacks, damage riders, active effects, item-target effects, and cleanup owners. |
 |  18 | L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES - Route remaining active spell-effect lifecycle drivers        | ready-for-research | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                      | Keeps ongoing spell effects, turn-boundary effects, Concentration, HP, and condition owners split. |
 |  19 | L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES - Route reaction spell and interrupt-stack resume drivers           | ready-for-research | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                      | Routes reaction spending, interrupt-stack continuation, and spell-cast resume without replay islands. |
 |  20 | L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES - Route companion lifecycle and object-target boundary drivers | ready-for-research | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                    | Keeps companion state in battle owners and table-owned object facts as boundary fills.        |
 |  21 | L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES - Route ability-check, Search, and choice spell-effect drivers   | ready-for-research | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                      | Routes Search, skill, and ability-choice holes through reducer subjects and table-supplied facts. |
 |  22 | L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES - Route independent multi-beam spell attack sequence drivers | blocked     | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES                                                                                                                 | Reuses the generic multi-step spell/attack procedure owner before routing independent beam sequences. |
+|  23 | L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES - Split level-1 selected spell identity bundles into generic substrates | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Fixes source QNT/guidance before grouped level-1 selected spell identity replay counts.       |
+|  24 | L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES - Route species passive trait battle substrates                | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Splits passive trait damage, save, movement, and size/speed owners.                           |
+|  25 | L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES - Route condition and d20 roll modifier feature substrates | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                         | Routes feature-hosted roll modes and condition suppression without feature identity dispatch.  |
+|  26 | L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE - Route zero-Hit-Point stabilization substrates                 | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes stabilization through the BattleState zero-Hit-Point lifecycle owner.                  |
+|  27 | L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES - Route feature movement and form lifecycle substrates     | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Splits movement-resource, active-form, speed, forced movement, and teleport owners.            |
+|  28 | L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES - Route weapon mastery property substrates                   | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes mastery properties by property facts, attack/save holes, and durable rider owners.      |
+|  29 | L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE - Route attack-action area save damage replacement feature substrate | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                         | Adds area save damage replacement route owners before selected species replay counts.          |
+|  30 | L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES - Route metamagic governor and option substrates       | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes metamagic by typed option facts, Sorcery Point spend, and spell procedure owners.       |
+|  31 | L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE - Route active feature spell benefit substrates          | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes active feature spell-save and spell-attack benefits by typed active-effect facts.       |
 
 ## Shared Verification
 
@@ -624,7 +687,7 @@ Plan Impact:
 
 ### Task 7 - L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -663,7 +726,401 @@ Verification:
 
 Plan Impact:
 
-- Add one follow-up task per missing generic substrate family discovered here.
+- Added Tasks 23-31 for the nine missing generic substrate families discovered
+  while routing the bonus-action Unit feature Dash with Temporary Hit Points
+  substrate.
+
+### Task 23 - L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-attack-spell-shape-selected-identity.mbt.qnt`
+- `battle-runtime-condition-saving-throw-selected-identity.mbt.qnt`
+- `battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
+- `battle-runtime-find-familiar-selected-identity.mbt.qnt`
+- `battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt`
+- `battle-runtime-level1-damage-spell-selected-identity.mbt.qnt`
+- `battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+- `battle-runtime-mage-armor-selected-identity.mbt.qnt`
+- `battle-runtime-reaction-spell-selected-identity.mbt.qnt`
+- `battle-runtime-sanctuary-selected-identity.mbt.qnt`
+- `battle-runtime-thaumaturgy-selected-identity.mbt.qnt`
+
+Output:
+
+- Split grouped level-1 spell identity witnesses into generic spell invocation,
+  active-effect, protection/charm, object, reaction, spatial, and spell-shape
+  route substrates before target replay counts.
+- Keep spell identity only at catalog, selection, admission, and SRD fixture
+  boundaries.
+- Update `reducer-route-inventory.json` with connector paths or precise
+  `source-qnt-corpus-blocker` records per split substrate.
+
+Acceptance:
+
+- No spell id, name, slug, or provenance section is used as a production
+  mechanics dispatch key.
+- Route evidence is admitted by generic spell/effect shape and typed facts.
+- Each selected-identity branch either points to a source route connector or to
+  a source-QNT blocker that names the missing generic substrate.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for each touched level-1 selected spell route connector.
+- `pnpm check:authored-id-dispatch`
+
+Plan Impact:
+
+- Split this task again if grouped spell identity witnesses still mix unrelated
+  durable owners after the first source-QNT pass.
+
+### Task 24 - L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt`
+- `battle-runtime-species-passive-trait-selected-identity.mbt.qnt`
+
+Output:
+
+- Extract passive trait route owners for typed damage adjustment, saving throw
+  roll modes, grapple escape roll modes, movement through occupied spaces, and
+  size/speed state.
+- Preserve species identity only at catalog, selection, admission, and SRD
+  fixture boundaries.
+- Update `reducer-route-inventory.json` with connector paths or precise
+  `source-qnt-corpus-blocker` records.
+
+Acceptance:
+
+- Species passive trait behavior routes by typed trait facts and creature state,
+  not species or trait identity.
+- Damage, saving throw, movement, and size/speed state owners are split when
+  their lifecycle differs.
+- No selected species replay counts without source-QNT generic substrate
+  evidence.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for each touched species passive trait route connector.
+- `pnpm check:authored-id-dispatch`
+
+Plan Impact:
+
+- Add narrower tasks if passive trait damage, movement, and roll-mode owners
+  cannot stay in one focused task.
+
+### Task 25 - L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-danger-sense-selected-identity.mbt.qnt`
+- `battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt`
+
+Output:
+
+- Extract generic roll-modifier, condition-suppression, and
+  saving-throw/ability-check support-profile routes without branching on feature
+  identity.
+- Route by condition facts, d20 roll facts, support-profile admission, and
+  active effect state.
+- Update `reducer-route-inventory.json` with connector paths or precise
+  `source-qnt-corpus-blocker` records.
+
+Acceptance:
+
+- Feature-hosted roll changes are admitted by roll mode and typed effect facts,
+  not feature names.
+- Condition suppression and roll modifiers use their existing durable owners or
+  split to new owners before replay counts.
+- Route connectors prove behavior by shape and typed facts.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for each touched condition or roll-modifier feature connector.
+- `pnpm check:authored-id-dispatch`
+
+Plan Impact:
+
+- Split roll-mode and condition-suppression work if one connector would combine
+  independent durable owners.
+
+### Task 26 - L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-healing-stabilization-selected-identity.mbt.qnt`
+
+Output:
+
+- Route stabilization through the BattleState zero-Hit-Point lifecycle owner
+  before selected healing/stabilization identity replay counts.
+- Preserve spell or feature identity only where the source rule references an
+  authored record or at admission/fixture boundaries.
+- Update `reducer-route-inventory.json` with connector paths or a precise
+  `source-qnt-corpus-blocker`.
+
+Acceptance:
+
+- Stabilization routing uses HP/death-save lifecycle state and typed effect
+  facts, not selected identity.
+- Temporary HP, true healing, stabilization, and death saving throw state remain
+  distinct runtime concepts.
+- No cleanroom replay infers zero-HP behavior from a spell or feature label.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for the touched stabilization route connector.
+- `pnpm check:authored-id-dispatch`
+
+Plan Impact:
+
+- Add a narrower zero-HP lifecycle task if stabilization requires a split from
+  healing or death-save owners.
+
+### Task 27 - L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt`
+- `battle-runtime-movement-forced-movement-selected-identity.mbt.qnt`
+
+Output:
+
+- Split movement-resource, active-form, climb/swim/fly speed, forced movement,
+  and teleport route owners before selected movement or form identity replay
+  counts.
+- Route by movement mode, speed facts, form lifecycle state, and boundary fills
+  for table-chosen positions.
+- Update `reducer-route-inventory.json` with connector paths or precise
+  `source-qnt-corpus-blocker` records.
+
+Acceptance:
+
+- Feature movement and form behavior routes by state shape and typed movement
+  facts, not feature or form identity.
+- Position/table facts remain boundary fills unless source QNT establishes a
+  target-independent battle owner.
+- Form lifecycle state is not duplicated beside its durable runtime owner.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for each touched movement or form route connector.
+- `pnpm check:authored-id-dispatch`
+
+Plan Impact:
+
+- Split active-form lifecycle from movement-resource routing if their ownership
+  cannot stay local.
+
+### Task 28 - L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-weapon-mastery-selected-identity.mbt.qnt`
+
+Output:
+
+- Route mastery properties by property fact, attack/save holes, and durable
+  rider owners before selected mastery identity replay counts.
+- Preserve mastery identity only at catalog, selection, admission, and SRD
+  fixture boundaries.
+- Update `reducer-route-inventory.json` with connector paths or a precise
+  `source-qnt-corpus-blocker`.
+
+Acceptance:
+
+- Mastery behavior dispatches by typed property facts and weapon/attack shape,
+  not weapon or mastery names.
+- Attack, saving throw, condition, movement, and rider state owners split where
+  their lifecycles differ.
+- Route connectors prove behavior by shape and typed facts.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for the touched weapon mastery route connector.
+- `pnpm check:authored-id-dispatch`
+
+Plan Impact:
+
+- Add narrower tasks for mastery properties whose rider owners cannot share one
+  route surface.
+
+### Task 29 - L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-dragonborn-breath-weapon.mbt.qnt`
+
+Output:
+
+- Add a route connector for generic attack-action area save damage replacement
+  with feature resource, area shape, saving throw, damage type, damage roll, and
+  extra-attack continuation owners.
+- Keep species and trait identity at catalog, selection, admission, and SRD
+  fixture boundaries.
+- Update `reducer-route-inventory.json` with the connector path or a precise
+  `source-qnt-corpus-blocker`.
+
+Acceptance:
+
+- Breath-style area damage replacement routes by feature resource state, area
+  facts, save facts, damage facts, and attack-action procedure state.
+- Extra Attack continuation is represented by procedure state, not by trait
+  identity.
+- Source QNT supplies target-independent substrate evidence before cleanroom
+  replay counts.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for the touched area save damage replacement route connector.
+- `pnpm check:authored-id-dispatch`
+
+Plan Impact:
+
+- Split area-shape, save, and damage owners if one connector would accumulate
+  unrelated durable state.
+
+### Task 30 - L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-quickened-spell-governor.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt`
+- `battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt`
+
+Output:
+
+- Route metamagic by typed option facts, Sorcery Point spend, spell timing
+  governor, one-option-per-spell constraints, and option-specific spell
+  procedure owners.
+- Keep metamagic option identity at catalog, selection, admission, and SRD
+  fixture boundaries only.
+- Update `reducer-route-inventory.json` with connector paths or precise
+  `source-qnt-corpus-blocker` records.
+
+Acceptance:
+
+- Metamagic execution dispatches by typed option facts and spell procedure
+  shape, not option names.
+- Sorcery Point spend and one-option-per-spell governor state are executable
+  runtime facts with one owner.
+- Option-specific effects split when they touch independent durable owners.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for each touched metamagic route connector.
+- `pnpm check:authored-id-dispatch`
+
+Plan Impact:
+
+- Split governor routing from option-specific routing if source QNT shows they
+  need independent tasks.
+
+### Task 31 - L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE
+
+Status: `ready-for-research`
+
+Depends on:
+
+- L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES
+
+Candidate drivers:
+
+- `battle-runtime-feature-selected-identity.mbt.qnt`
+
+Output:
+
+- Route active feature benefits to spell save DC and spell attack roll mode by
+  typed active-effect facts, not feature identity.
+- Keep feature identity only at catalog, selection, admission, and SRD fixture
+  boundaries.
+- Update `reducer-route-inventory.json` with the connector path or a precise
+  `source-qnt-corpus-blocker`.
+
+Acceptance:
+
+- Spell save and spell attack benefits route by active-effect state and typed
+  spell procedure facts.
+- The runtime does not branch on feature id, name, slug, or provenance section.
+- Route connector evidence proves behavior by shape and typed facts.
+
+Verification:
+
+- Shared verification.
+- Focused MBT for the touched active feature spell benefit route connector.
+- `pnpm check:authored-id-dispatch`
+
+Plan Impact:
+
+- Split save DC and spell attack roll-mode benefit owners if they diverge in
+  source QNT.
 
 ### Task 8 - L15-RR08-CHARACTER-CREATION-ROUTES
 
@@ -984,7 +1441,7 @@ Plan Impact:
 
 ### Task 17 - L15-RR17-WEAPON-HOSTED-RIDER-ROUTES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
