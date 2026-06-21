@@ -182,6 +182,14 @@ Current generated findings:
   rather than hand-authored cantrip lists. The Warlock row also asserts the
   level-1 Pact Magic pool at build time while the cantrip battle projection
   remains ordinary-slot-free.
+- The level-1 Produce Flame seed covers the Druid cantrip spell-list row
+  through level-1 sheet projection, Bonus Action held-light discovery and
+  resolution, 20-foot Bright Light plus 20-foot Dim Light, no hurl action before
+  the flame is held, Magic action hurl discovery, creature-or-object target
+  shape with a combatant target witness, 60-foot range, 1d8 Fire damage, held
+  light/emitter cleanup after hurl, action and Bonus Action spend, and no
+  spell-slot spend. It does not claim the RAW no-heat/no-ignition narrative or
+  object hit-point resolution, which remain lower battle-runtime concerns.
 - The level-1 Chill Touch seed covers the Sorcerer, Warlock, and Wizard
   cantrip spell-list rows through level-1 sheet projection, battle act
   discovery, Touch-range melee Spell Attack resolution, creature-or-object
@@ -237,8 +245,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 42 seed scenarios
-  present, 462 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 43 seed scenarios
+  present, 461 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -434,6 +442,8 @@ Verification:
 
 - RAW and ubiquitous-language check for each touched level-1 rule row.
 - Focused level-1 SDK integration test command.
+- `node scripts/sdk-raw-integration-inventory.cjs` after inventory generator
+  or generated artifact changes.
 - Relevant package typechecks.
 - `pnpm unit-profile-coverage:check` and `pnpm rules-kernel-coverage:check`
   only if coverage/evidence artifacts are changed.
@@ -448,7 +458,8 @@ First implementation slice:
   Bolt, Ray of Frost, Shocking Grasp, Burning Hands, Mage Armor, False Life,
   Chromatic Orb, Ray of Sickness, Thunderwave, and Magic Missile from Sorcerer
   and Wizard sheets, plus class-specific rows when SRD access differs such as
-  Druid/Warlock Poison Spray, Warlock Chill Touch, and Warlock Eldritch Blast.
+  Druid/Warlock Poison Spray, Druid Produce Flame, Warlock Chill Touch, and
+  Warlock Eldritch Blast.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

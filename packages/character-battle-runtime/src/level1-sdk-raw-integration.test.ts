@@ -99,6 +99,7 @@ const acidSplashSorcererId = combatantId(
 );
 const acidSplashWizardId = combatantId("combatant:l1-sdk-acid-splash-wizard");
 const poisonSprayDruidId = combatantId("combatant:l1-sdk-poison-spray-druid");
+const produceFlameDruidId = combatantId("combatant:l1-sdk-produce-flame-druid");
 const poisonSpraySorcererId = combatantId(
   "combatant:l1-sdk-poison-spray-sorcerer",
 );
@@ -178,6 +179,7 @@ const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
+const produceFlameSpellId = "produce_flame";
 const chillTouchSpellId = "chill_touch";
 const eldritchBlastSpellId = "eldritch_blast";
 const burningHandsSpellId = "burning_hands";
@@ -823,6 +825,28 @@ describe("level 1 SDK RAW integration", () => {
       casterId: poisonSprayWarlockId,
       expectedSpellAttackBonus: 4,
       expectedSpellSlots: [],
+    });
+  });
+
+  test("Druid Produce Flame cantrip resolves from a level-1 sheet as held light and a ranged hurl without spending slots", () => {
+    const druidBuild = finalizedLevelOneDruidProduceFlameBuild();
+
+    expect(druidBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_druid",
+          cantrips: expect.arrayContaining([produceFlameSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneProduceFlame({
+      battleIdText: "battle:l1-sdk-produce-flame-druid",
+      characterIdText: "character:l1-sdk-produce-flame-druid",
+      build: druidBuild,
+      casterId: produceFlameDruidId,
+      expectedSpellAttackBonus: 4,
+      expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
     });
   });
 
@@ -1700,6 +1724,195 @@ function assertLevelOnePoisonSpray(input: {
 
   expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual(
+    input.expectedSpellSlots,
+  );
+}
+
+function assertLevelOneProduceFlame(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellAttackBonus: number;
+  readonly expectedSpellSlots: readonly {
+    readonly spellLevel: number;
+    readonly count: number;
+    readonly expended: number;
+  }[];
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock("stat_block_goblin_warrior"),
+      ),
+    ],
+  });
+  expect(
+    hasCantripSpellInvocationAct(
+      state,
+      input.casterId,
+      produceFlameSpellId,
+      "heldLightHurl",
+    ),
+  ).toBe(false);
+  const heldLightAct = cantripCastHeldLightBonusActionSpellAct(
+    state,
+    input.casterId,
+    produceFlameSpellId,
+  );
+  expect(heldLightAct.initialHoles).toEqual([]);
+
+  const lit = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: heldLightAct.subject,
+      fills: [],
+    }),
+  );
+  const litCaster = requireCharacterCombatant(lit.state, input.casterId);
+  expect(requireCombatant(lit.state, input.casterId).activeEffects).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "heldLight",
+        sourceSpellId: produceFlameSpellId,
+        sourceCombatantId: input.casterId,
+        brightRadiusFeet: 20,
+        dimAdditionalFeet: 20,
+      }),
+    ]),
+  );
+  expect(snapshotBattle(lit.state)).toMatchObject({
+    lightEmitters: [
+      {
+        kind: "spellLightEmitter",
+        sourceSpellId: produceFlameSpellId,
+        sourceCombatantId: input.casterId,
+        attachment: { kind: "combatant", combatantId: input.casterId },
+        emission: {
+          kind: "brightAndDim",
+          brightRadiusFeet: movementFeet(20),
+          dimAdditionalFeet: movementFeet(20),
+        },
+      },
+    ],
+    turn: { bonusActionAvailable: false },
+  });
+  expect(litCaster.origin.spellcasting?.spellSlots).toEqual(
+    input.expectedSpellSlots,
+  );
+
+  const hurlAct = cantripCastActionSpellAct(
+    lit.state,
+    input.casterId,
+    produceFlameSpellId,
+    "heldLightHurl",
+  );
+  const target = requireHoleFromList(hurlAct.initialHoles, "targetChoice");
+  const objectTarget = requireHoleFromList(
+    hurlAct.initialHoles,
+    "objectTargetChoice",
+  );
+  const targetFill = spellTargetFill(
+    target,
+    produceFlameSpellId,
+    input.casterId,
+    monsterId,
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state: lit.state,
+      subject: hurlAct.subject,
+      fills: [targetFill],
+    }),
+    "attackRoll",
+  );
+
+  expect(hurlAct.initialHoles).toHaveLength(2);
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([monsterId]),
+  });
+  expect(objectTarget).toMatchObject({
+    label: "Produce Flame object target",
+    requiresTableSpatialFact: true,
+  });
+  expect(attackRoll).toMatchObject({
+    attackBonus: input.expectedSpellAttackBonus,
+    spell: {
+      resource: { tag: "none" },
+      attackKind: "ranged_spell_attack",
+      targeting: { kind: "singleCreatureOrObject" },
+      rangeFeet: 60,
+      damage: {
+        expr: { dice: 1, dieSize: 8 },
+        damageType: "fire",
+      },
+    },
+  });
+
+  const attackFill = attackRollFill(attackRoll, {
+    total: 13 + input.expectedSpellAttackBonus,
+    naturalD20: 13,
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state: lit.state,
+      subject: hurlAct.subject,
+      fills: [targetFill, attackFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Produce Flame damage (1d8-fire)",
+    spell: {
+      resource: { tag: "none" },
+      damage: {
+        expr: { dice: 1, dieSize: 8 },
+        damageType: "fire",
+      },
+    },
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: lit.state,
+      subject: hurlAct.subject,
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(damage, [[5]]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(5));
+  expect(
+    requireCombatant(resolved.state, input.casterId).activeEffects.some(
+      (effect) =>
+        effect.kind === "heldLight" &&
+        effect.sourceSpellId === produceFlameSpellId,
+    ),
+  ).toBe(false);
+  expect(snapshotBattle(resolved.state).lightEmitters).toEqual([]);
+  expect(snapshotBattle(resolved.state).turn).toMatchObject({
+    actionResources: [],
+    bonusActionAvailable: false,
+  });
   expect(caster.origin.spellcasting?.spellSlots).toEqual(
     input.expectedSpellSlots,
   );
@@ -3007,6 +3220,16 @@ type CastActionSpellSubject = ActionSpellSubject & {
 type CastActionSpellAct = AvailableBattleAct & {
   readonly subject: CastActionSpellSubject;
 };
+type BonusActionSpellSubject = Extract<
+  BattleSubject,
+  { readonly tag: "bonusActionSpell" }
+>;
+type CastBonusActionSpellSubject = BonusActionSpellSubject & {
+  readonly mode: { readonly tag: "cast" };
+};
+type CastBonusActionSpellAct = AvailableBattleAct & {
+  readonly subject: CastBonusActionSpellSubject;
+};
 type MartialArtsBonusUnarmedStrikeSubject = Extract<
   BattleSubject,
   {
@@ -3118,6 +3341,20 @@ function finalizedLevelOneDruidPoisonSprayBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-druid-poison-spray",
     expectedBuildLabel: "Druid Poison Spray",
     cantrips: [poisonSpraySpellId, "produce_flame"],
+    preparedSpells: [
+      "animal_friendship",
+      "cure_wounds",
+      "entangle",
+      "faerie_fire",
+    ],
+  });
+}
+
+function finalizedLevelOneDruidProduceFlameBuild(): CharacterBuild {
+  return finalizedLevelOneDruidBuild({
+    draftIdText: "draft:l1-sdk-druid-produce-flame",
+    expectedBuildLabel: "Druid Produce Flame",
+    cantrips: [produceFlameSpellId, poisonSpraySpellId],
     preparedSpells: [
       "animal_friendship",
       "cure_wounds",
@@ -4160,6 +4397,51 @@ function cantripCastActionSpellAct(
     throw new Error(`Expected ${spellId} cantrip spell act.`);
   }
   return act;
+}
+
+function cantripCastHeldLightBonusActionSpellAct(
+  state: BattleState,
+  actorId: CombatantId,
+  spellId: UnitRecord["id"],
+): CastBonusActionSpellAct {
+  const expectedInvocation = cantripSpellInvocationRef(spellId, "heldLight");
+  if (expectedInvocation.tag !== "cantrip") {
+    throw new Error(`Expected ${spellId} cantrip invocation.`);
+  }
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is CastBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.mode.tag === "cast" &&
+      candidate.subject.invocation.tag === "cantrip" &&
+      candidate.subject.invocation.spellId === expectedInvocation.spellId &&
+      candidate.subject.invocation.procedure === expectedInvocation.procedure,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected ${spellId} Bonus Action cantrip spell act.`);
+  }
+  return act;
+}
+
+function hasCantripSpellInvocationAct(
+  state: BattleState,
+  actorId: CombatantId,
+  spellId: UnitRecord["id"],
+  procedure: CantripSpellProcedure,
+): boolean {
+  const expectedInvocation = cantripSpellInvocationRef(spellId, procedure);
+  if (expectedInvocation.tag !== "cantrip") {
+    throw new Error(`Expected ${spellId} cantrip invocation.`);
+  }
+  return discoverBattleActs(state).some(
+    (candidate) =>
+      "actorId" in candidate.subject &&
+      "invocation" in candidate.subject &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.invocation.tag === "cantrip" &&
+      candidate.subject.invocation.spellId === expectedInvocation.spellId &&
+      candidate.subject.invocation.procedure === expectedInvocation.procedure,
+  );
 }
 
 function martialArtsBonusUnarmedStrikeAct(

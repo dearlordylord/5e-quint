@@ -24001,6 +24001,10 @@
       "category": "spell Unit pressure",
       "className": "Druid",
       "concept": "Druid spell list Produce Flame",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Produce Flame cantrip resolves from a level-1 sheet as held light and a ranged hurl without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -24008,7 +24012,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 194,
         "lineStart": 194,
@@ -56273,16 +56277,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 462,
+      "sdk-scenario-needed": 461,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 42,
+      "seed-scenario-present": 43,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 401,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 100,
+      "battle-spell-sdk": 99,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56292,7 +56296,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 42,
+      "seed-present": 43,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -58887,61 +58891,6 @@
         "Druid spell list Longstrider",
         "Ranger spell list Longstrider",
         "Wizard spell list Longstrider"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "produce_flame"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Druid"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:produce-flame",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-0"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"produce_flame\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Druid.md:194"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "produce_flame",
-          "className": "Druid",
-          "concept": "Druid spell list Produce Flame",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 194,
-            "lineStart": 194,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Druid spell list Produce Flame"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -64855,6 +64804,61 @@
       ],
       "sampleConcepts": [
         "Druid spell list Poison Spray"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "produce_flame"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-druid-produce-flame",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Druid:produce_flame\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:194"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "produce_flame",
+          "className": "Druid",
+          "concept": "Druid spell list Produce Flame",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 194,
+            "lineStart": 194,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid spell list Produce Flame"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85312,6 +85316,107 @@
         "cantrips: expect.arrayContaining([poisonSpraySpellId])",
         "build: sorcererBuild,",
         "casterId: poisonSpraySorcererId,",
+        "expectedSpellAttackBonus: 4,",
+        "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
+      ]
+    },
+    {
+      "candidateUnitId": "produce_flame",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Produce Flame cantrip resolves from a level-1 sheet as held light and a ranged hurl without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneDruidProduceFlameBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneDruidBuild({",
+            "draftIdText: \"draft:l1-sdk-druid-produce-flame\"",
+            "expectedBuildLabel: \"Druid Produce Flame\"",
+            "cantrips: [produceFlameSpellId, poisonSpraySpellId]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneDruidBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_druid\"",
+            "\"class_cantrip_choices\"",
+            "\"druid_primal_order\"",
+            "\"primal_order\"",
+            "\"warden\"",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneProduceFlame",
+          "needles": [
+            "hasCantripSpellInvocationAct(",
+            "\"heldLightHurl\"",
+            ").toBe(false)",
+            "cantripCastHeldLightBonusActionSpellAct(",
+            "produceFlameSpellId",
+            "expect(heldLightAct.initialHoles).toEqual([])",
+            "kind: \"heldLight\"",
+            "brightRadiusFeet: 20",
+            "dimAdditionalFeet: 20",
+            "lightEmitters",
+            "bonusActionAvailable: false",
+            "litCaster.origin.spellcasting?.spellSlots",
+            "cantripCastActionSpellAct(",
+            "\"heldLightHurl\"",
+            "\"objectTargetChoice\"",
+            "\"Produce Flame object target\"",
+            "requiresTableSpatialFact: true",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "resource: { tag: \"none\" }",
+            "attackKind: \"ranged_spell_attack\"",
+            "targeting: { kind: \"singleCreatureOrObject\" }",
+            "rangeFeet: 60",
+            "expr: { dice: 1, dieSize: 8 }",
+            "damageType: \"fire\"",
+            "label: \"Produce Flame damage (1d8-fire)\"",
+            "damageRollFillWithGroups(damage, [[5]])",
+            "Hp(5)",
+            "effect.kind === \"heldLight\"",
+            "expect(snapshotBattle(resolved.state).lightEmitters).toEqual([]);",
+            "expect(snapshotBattle(resolved.state).turn).toMatchObject({",
+            "actionResources: []",
+            "bonusActionAvailable: false",
+            "input.expectedSpellSlots"
+          ]
+        },
+        {
+          "anchor": "function cantripCastHeldLightBonusActionSpellAct",
+          "needles": [
+            "cantripSpellInvocationRef(spellId, \"heldLight\")",
+            "candidate.subject.tag === \"bonusActionSpell\"",
+            "candidate.subject.invocation.procedure === expectedInvocation.procedure",
+            "return act;"
+          ]
+        },
+        {
+          "anchor": "function hasCantripSpellInvocationAct",
+          "needles": [
+            "\"actorId\" in candidate.subject",
+            "\"invocation\" in candidate.subject",
+            "candidate.subject.invocation.procedure === expectedInvocation.procedure",
+            "return discoverBattleActs(state).some("
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
+      "rowKey": "spell-level-0:Druid:produce_flame",
+      "tracerNeedles": [
+        "const druidBuild = finalizedLevelOneDruidProduceFlameBuild();",
+        "sourceUnitId: \"class_druid\"",
+        "cantrips: expect.arrayContaining([produceFlameSpellId])",
+        "build: druidBuild,",
+        "casterId: produceFlameDruidId,",
         "expectedSpellAttackBonus: 4,",
         "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
       ]
