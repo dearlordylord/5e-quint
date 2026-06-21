@@ -46,7 +46,7 @@ let druid =
           , cantripAccess =
               { kind = "known_cantrips_from_class_spell_list"
               , choose = 2
-              , spellIds = [ "druidcraft", "poison_spray", "produce_flame" ]
+              , spellIds = [ "druidcraft", "poison_spray", "produce_flame", "shillelagh" ]
               , changeOn = { kind = "class_level", count = 1 }
               }
           , preparedAccess =

@@ -198,6 +198,16 @@ Current generated findings:
   light/emitter cleanup after hurl, action and Bonus Action spend, and no
   spell-slot spend. It does not claim the RAW no-heat/no-ignition narrative or
   object hit-point resolution, which remain lower battle-runtime concerns.
+- The level-1 Shillelagh seed covers the Druid cantrip spell-list row through
+  level-1 Druid character creation, sheet projection, held Quarterstaff battle
+  act discovery, Bonus Action resource spend without a Spell Slot, 1-minute
+  weapon override, Wisdom attack/damage ability projection, d8 damage die,
+  Force/normal damage choices, one force hit witness, no Concentration, and no
+  spell-slot spend. It exposed and fixed narrow `class_druid` cantrip-access
+  and Quarterstaff purchase/loadout admission gaps so the row is claimed through
+  character creation rather than a hand-authored cantrip or equipment list. It
+  does not claim Material component/focus possession or substitution, recast or
+  let-go cleanup, or higher-level cantrip scaling.
 - The level-1 Sacred Flame seed covers the Cleric cantrip spell-list row
   through level-1 Cleric character creation, sheet projection, battle act
   discovery, creature-target selection, Dexterity Saving Throw shape, failed-save
@@ -311,8 +321,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 51 seed scenarios
-  present, 453 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 52 seed scenarios
+  present, 452 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -525,9 +535,9 @@ First implementation slice:
   Chromatic Orb, Ray of Sickness, Thunderwave, and Magic Missile from Sorcerer
   and Wizard sheets, plus class-specific rows when SRD access differs such as
   Bard Dissonant Whispers, Bard Vicious Mockery, Druid/Warlock Poison Spray,
-  Druid Produce Flame, Cleric Sacred Flame, Cleric Thaumaturgy, Cleric Guiding
-  Bolt, Cleric Inflict Wounds, Cleric Sanctuary, Sorcerer Sorcerous Burst,
-  Warlock Chill Touch, and Warlock Eldritch Blast.
+  Druid Produce Flame, Druid Shillelagh, Cleric Sacred Flame, Cleric
+  Thaumaturgy, Cleric Guiding Bolt, Cleric Inflict Wounds, Cleric Sanctuary,
+  Sorcerer Sorcerous Burst, Warlock Chill Touch, and Warlock Eldritch Blast.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

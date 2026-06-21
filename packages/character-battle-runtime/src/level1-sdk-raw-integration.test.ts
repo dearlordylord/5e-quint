@@ -31,6 +31,8 @@ import {
   creationHoleId,
   fillCreationHoles,
   finalizeCharacterDraft,
+  loadoutEquipmentUnitId,
+  loadoutSourceHoleIdText,
   unitChoiceKey,
   unitChoiceSourceHoleIdText,
   unitChoiceSourceUnitId,
@@ -39,6 +41,7 @@ import {
   type CreationBatchFillResult,
   type CreationFill,
   type CreationHoleIdText,
+  type LoadoutSlot,
   type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -47,6 +50,8 @@ import {
   elapsedTimeTicksFromMinutes,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
+  abilityModifier,
+  attackBonus,
   difficultyClass,
   Hp,
   movementDeltaFeet,
@@ -119,6 +124,7 @@ const acidSplashSorcererId = combatantId(
 const acidSplashWizardId = combatantId("combatant:l1-sdk-acid-splash-wizard");
 const poisonSprayDruidId = combatantId("combatant:l1-sdk-poison-spray-druid");
 const produceFlameDruidId = combatantId("combatant:l1-sdk-produce-flame-druid");
+const shillelaghDruidId = combatantId("combatant:l1-sdk-shillelagh-druid");
 const sacredFlameClericId = combatantId(
   "combatant:l1-sdk-sacred-flame-cleric",
 );
@@ -216,6 +222,7 @@ const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
 const produceFlameSpellId = "produce_flame";
+const shillelaghSpellId = "shillelagh";
 const sacredFlameSpellId = "sacred_flame";
 const thaumaturgySpellId = "thaumaturgy";
 const sanctuarySpellId = "sanctuary";
@@ -233,7 +240,12 @@ const rayOfSicknessSpellId = "ray_of_sickness";
 const mageArmorSpellId = "mage_armor";
 const magicMissileSpellId = "magic_missile";
 const thunderwaveSpellId = "thunderwave";
+const shillelaghQuarterstaffItemId = characterEquipmentItemId({
+  slot: "main",
+  unitId: requireRight(characterEquipmentItemUnitId("weapon_quarterstaff")),
+});
 const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
+const shillelaghDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 const thaumaturgyDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 const sanctuaryDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 
@@ -955,6 +967,27 @@ describe("level 1 SDK RAW integration", () => {
       build: druidBuild,
       casterId: produceFlameDruidId,
       expectedSpellAttackBonus: 4,
+      expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
+    });
+  });
+
+  test("Druid Shillelagh cantrip resolves from a level-1 sheet as a Bonus Action Quarterstaff weapon override", () => {
+    const druidBuild = finalizedLevelOneDruidShillelaghBuild();
+
+    expect(druidBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_druid",
+          cantrips: expect.arrayContaining([shillelaghSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneShillelagh({
+      battleIdText: "battle:l1-sdk-shillelagh-druid",
+      characterIdText: "character:l1-sdk-shillelagh-druid",
+      build: druidBuild,
+      casterId: shillelaghDruidId,
       expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
     });
   });
@@ -2657,6 +2690,152 @@ function assertLevelOneProduceFlame(input: {
   expect(caster.origin.spellcasting?.spellSlots).toEqual(
     input.expectedSpellSlots,
   );
+}
+
+function assertLevelOneShillelagh(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSlots: readonly {
+    readonly spellLevel: number;
+    readonly count: number;
+    readonly expended: number;
+  }[];
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = shillelaghBonusActionSpellAct(state, input.casterId);
+
+  expect(act).toMatchObject({
+    subject: {
+      tag: "bonusActionSpell",
+      actorId: input.casterId,
+      invocation: {
+        tag: "cantrip",
+        spellId: shillelaghSpellId,
+        procedure: "weaponAttackOverride",
+      },
+      mode: { tag: "cast" },
+      componentWeaponItemId: shillelaghQuarterstaffItemId,
+    },
+    initialHoles: [],
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({ state, subject: act.subject, fills: [] }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(caster.activeEffects).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "spellWeaponAttackOverride",
+        sourceSpellId: shillelaghSpellId,
+        sourceCombatantId: input.casterId,
+        weaponItemId: shillelaghQuarterstaffItemId,
+        spellcastingAbilityModifier: abilityModifier(2),
+        attackBonus: attackBonus(4),
+        damage: { expr: { dice: 1, dieSize: 8 } },
+        damageTypeChoices: ["force", "bludgeoning"],
+        expiresAt: {
+          kind: "duration",
+          durationTicks: shillelaghDurationTicks,
+        },
+      }),
+    ]),
+  );
+  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([]);
+  expect(caster.concentration).toBeNull();
+  expect(caster.origin.spellcasting?.spellSlots).toEqual(
+    input.expectedSpellSlots,
+  );
+
+  const forceAttack = attackSubject(
+    resolved.state,
+    input.casterId,
+    "Quarterstaff (force)",
+  );
+  const target = requireHole(
+    resolveBattleSubject({
+      state: resolved.state,
+      subject: forceAttack,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const targetFill = attackTargetFill(
+    target,
+    input.casterId,
+    monsterId,
+    "Quarterstaff (force)",
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state: resolved.state,
+      subject: forceAttack,
+      fills: [targetFill],
+    }),
+    "attackRoll",
+  );
+
+  expect(attackRoll).toMatchObject({ attackBonus: attackBonus(4) });
+
+  const attackFill = attackRollFill(attackRoll, {
+    total: 13 + 4,
+    naturalD20: 13,
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state: resolved.state,
+      subject: forceAttack,
+      fills: [targetFill, attackFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Quarterstaff (force) damage (1d8+2-force)",
+  });
+  expect(
+    discoverBattleActs(resolved.state).some(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "attack" &&
+        candidate.subject.actorId === input.casterId &&
+        candidate.subject.attackName === "Quarterstaff (bludgeoning)",
+    ),
+  ).toBe(true);
+
+  const hit = requireResolved(
+    resolveBattleSubject({
+      state: resolved.state,
+      subject: forceAttack,
+      fills: ordinaryAttackDamageFills({
+        state: resolved.state,
+        subject: forceAttack,
+        prefixFills: [targetFill, attackFill],
+        damage,
+        damageDice: [[5]],
+      }),
+    }),
+  );
+
+  expect(requireCombatant(hit.state, monsterId).hp).toBe(Hp(6));
 }
 
 function assertLevelOneSacredFlame(input: {
@@ -5072,11 +5251,35 @@ function finalizedLevelOneDruidProduceFlameBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneDruidShillelaghBuild(): CharacterBuild {
+  return finalizedLevelOneDruidBuild({
+    draftIdText: "draft:l1-sdk-druid-shillelagh",
+    expectedBuildLabel: "Druid Shillelagh",
+    cantrips: [produceFlameSpellId, shillelaghSpellId],
+    preparedSpells: [
+      "animal_friendship",
+      "cure_wounds",
+      "entangle",
+      "faerie_fire",
+    ],
+    weaponPurchase: {
+      unitId: "weapon_quarterstaff",
+      loadout: "wielded_one_handed",
+    },
+  });
+}
+
+type LevelOneDruidWeaponPurchase = {
+  readonly unitId: UnitRecord["id"];
+  readonly loadout: "not_wielded" | "wielded_one_handed";
+};
+
 function finalizedLevelOneDruidBuild(input: {
   readonly draftIdText: string;
   readonly expectedBuildLabel: string;
   readonly cantrips: readonly string[];
   readonly preparedSpells: readonly string[];
+  readonly weaponPurchase?: LevelOneDruidWeaponPurchase;
 }): CharacterBuild {
   const draft = createCharacterDraft({
     unitLibrary,
@@ -5170,12 +5373,29 @@ function finalizedLevelOneDruidBuild(input: {
       fills: [
         creationChoiceFill(
           testUnitChoiceHoleId("class_druid", "equipment_purchase"),
-          "weapon_dagger",
+          (input.weaponPurchase ?? defaultDruidWeaponPurchase).unitId,
         ),
       ],
     }),
   );
-  const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
+  const weaponPurchase = input.weaponPurchase ?? defaultDruidWeaponPurchase;
+  const afterLoadout =
+    weaponPurchase.loadout === "not_wielded"
+      ? afterPurchase
+      : requireAcceptedCreationBatch(
+          fillCreationHoles({
+            draft: afterPurchase,
+            unitLibrary,
+            expectedRevision: afterPurchase.revision,
+            fills: [
+              creationChoiceFill(
+                testLoadoutHoleId(weaponPurchase.unitId, "weapon"),
+                weaponPurchase.loadout,
+              ),
+            ],
+          }),
+        );
+  const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });
   if (result.tag !== "ready") {
     throw new Error(
       `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
@@ -5183,6 +5403,11 @@ function finalizedLevelOneDruidBuild(input: {
   }
   return result.build;
 }
+
+const defaultDruidWeaponPurchase = {
+  unitId: "weapon_dagger",
+  loadout: "not_wielded",
+} as const satisfies LevelOneDruidWeaponPurchase;
 
 function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
@@ -6079,6 +6304,17 @@ function testUnitChoiceHoleId(
   });
 }
 
+function testLoadoutHoleId(
+  equipmentUnitId: UnitRecord["id"],
+  slot: LoadoutSlot,
+): CreationHoleIdText {
+  return loadoutSourceHoleIdText({
+    tag: "loadout",
+    equipmentUnitId: requireRight(loadoutEquipmentUnitId(equipmentUnitId)),
+    slot,
+  });
+}
+
 function unitFeatureActForUnitId(
   state: BattleState,
   actorId: CombatantId,
@@ -6141,6 +6377,36 @@ function cantripCastHeldLightBonusActionSpellAct(
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Bonus Action cantrip spell act.`);
+  }
+  return act;
+}
+
+function shillelaghBonusActionSpellAct(
+  state: BattleState,
+  actorId: CombatantId,
+): CastBonusActionSpellAct {
+  const expectedInvocation = cantripSpellInvocationRef(
+    shillelaghSpellId,
+    "weaponAttackOverride",
+  );
+  if (expectedInvocation.tag !== "cantrip") {
+    throw new Error("Expected Shillelagh cantrip invocation.");
+  }
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is CastBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.mode.tag === "cast" &&
+      candidate.subject.invocation.tag === "cantrip" &&
+      candidate.subject.invocation.spellId === expectedInvocation.spellId &&
+      candidate.subject.invocation.procedure ===
+        expectedInvocation.procedure &&
+      candidate.subject.componentWeaponItemId === shillelaghQuarterstaffItemId,
+  );
+  if (act === undefined) {
+    throw new Error(
+      "Expected Shillelagh Quarterstaff Bonus Action cantrip spell act.",
+    );
   }
   return act;
 }

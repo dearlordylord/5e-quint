@@ -24159,6 +24159,10 @@
       "category": "spell Unit pressure",
       "className": "Druid",
       "concept": "Druid spell list Shillelagh",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Shillelagh cantrip resolves from a level-1 sheet as a Bonus Action Quarterstaff weapon override",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -24166,7 +24170,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 196,
         "lineStart": 196,
@@ -56352,16 +56356,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 453,
+      "sdk-scenario-needed": 452,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 51,
+      "seed-scenario-present": 52,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 401,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 91,
+      "battle-spell-sdk": 90,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56371,7 +56375,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 51,
+      "seed-present": 52,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -59202,61 +59206,6 @@
       "sampleConcepts": [
         "Cleric spell list Shield of Faith",
         "Paladin spell list Shield of Faith"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "shillelagh"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Druid"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:shillelagh",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-0"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"shillelagh\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Druid.md:196"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "shillelagh",
-          "className": "Druid",
-          "concept": "Druid spell list Shillelagh",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 196,
-            "lineStart": 196,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Druid spell list Shillelagh"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -64668,6 +64617,61 @@
       ],
       "sampleConcepts": [
         "Druid spell list Produce Flame"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "shillelagh"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-druid-shillelagh",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Druid:shillelagh\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:196"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "shillelagh",
+          "className": "Druid",
+          "concept": "Druid spell list Shillelagh",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 196,
+            "lineStart": 196,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid spell list Shillelagh"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85579,7 +85583,7 @@
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"warden\"",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -85710,7 +85714,7 @@
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"warden\"",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -85781,6 +85785,95 @@
         "build: druidBuild,",
         "casterId: produceFlameDruidId,",
         "expectedSpellAttackBonus: 4,",
+        "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
+      ]
+    },
+    {
+      "candidateUnitId": "shillelagh",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Shillelagh cantrip resolves from a level-1 sheet as a Bonus Action Quarterstaff weapon override",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneDruidShillelaghBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneDruidBuild({",
+            "draftIdText: \"draft:l1-sdk-druid-shillelagh\"",
+            "expectedBuildLabel: \"Druid Shillelagh\"",
+            "cantrips: [produceFlameSpellId, shillelaghSpellId]",
+            "weaponPurchase: {",
+            "unitId: \"weapon_quarterstaff\"",
+            "loadout: \"wielded_one_handed\""
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneDruidBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_druid\"",
+            "\"class_cantrip_choices\"",
+            "\"druid_primal_order\"",
+            "\"primal_order\"",
+            "\"warden\"",
+            "readonly weaponPurchase?: LevelOneDruidWeaponPurchase;",
+            "defaultDruidWeaponPurchase",
+            "(input.weaponPurchase ?? defaultDruidWeaponPurchase).unitId",
+            "testLoadoutHoleId(weaponPurchase.unitId, \"weapon\")",
+            "weaponPurchase.loadout",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneShillelagh",
+          "needles": [
+            "shillelaghBonusActionSpellAct(state, input.casterId)",
+            "tag: \"bonusActionSpell\"",
+            "spellId: shillelaghSpellId",
+            "procedure: \"weaponAttackOverride\"",
+            "componentWeaponItemId: shillelaghQuarterstaffItemId",
+            "kind: \"spellWeaponAttackOverride\"",
+            "spellcastingAbilityModifier: abilityModifier(2)",
+            "attackBonus: attackBonus(4)",
+            "damage: { expr: { dice: 1, dieSize: 8 } }",
+            "damageTypeChoices: [\"force\", \"bludgeoning\"]",
+            "durationTicks: shillelaghDurationTicks",
+            "bonusActionAvailable).toBe(false)",
+            "spellSlotUsesThisTurn).toEqual([])",
+            "caster.concentration).toBeNull()",
+            "input.expectedSpellSlots",
+            "\"Quarterstaff (force)\"",
+            "attackBonus: attackBonus(4)",
+            "label: \"Quarterstaff (force) damage (1d8+2-force)\"",
+            "\"Quarterstaff (bludgeoning)\"",
+            "damageDice: [[5]]",
+            "expect(requireCombatant(hit.state, monsterId).hp).toBe(Hp(6));"
+          ]
+        },
+        {
+          "anchor": "function shillelaghBonusActionSpellAct",
+          "needles": [
+            "cantripSpellInvocationRef(",
+            "shillelaghSpellId",
+            "\"weaponAttackOverride\"",
+            "candidate.subject.tag === \"bonusActionSpell\"",
+            "candidate.subject.componentWeaponItemId === shillelaghQuarterstaffItemId",
+            "return act;"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
+      "rowKey": "spell-level-0:Druid:shillelagh",
+      "tracerNeedles": [
+        "const druidBuild = finalizedLevelOneDruidShillelaghBuild();",
+        "sourceUnitId: \"class_druid\"",
+        "cantrips: expect.arrayContaining([shillelaghSpellId])",
+        "build: druidBuild,",
+        "casterId: shillelaghDruidId,",
         "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
       ]
     },

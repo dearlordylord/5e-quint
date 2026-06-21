@@ -85,7 +85,8 @@
       "spellIds": [
         "druidcraft",
         "poison_spray",
-        "produce_flame"
+        "produce_flame",
+        "shillelagh"
       ]
     },
     "featureLevel": 1,

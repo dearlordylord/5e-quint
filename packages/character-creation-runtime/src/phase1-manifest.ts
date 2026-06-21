@@ -110,6 +110,7 @@ export const PHASE1_WEAPON_LONGSWORD_UNIT_ID = "weapon_longsword";
 export const PHASE1_WEAPON_DAGGER_UNIT_ID = "weapon_dagger";
 export const PHASE1_WEAPON_SPEAR_UNIT_ID = "weapon_spear";
 export const PHASE1_WEAPON_FLAIL_UNIT_ID = "weapon_flail";
+export const PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID = "weapon_quarterstaff";
 export const PHASE1_WEAPON_SHORTSWORD_UNIT_ID = "weapon_shortsword";
 export const PHASE1_SHIELD_UNIT_ID = "equipment_shield";
 export const PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID = "defense";
@@ -131,6 +132,7 @@ export const SUPPORTED_PURCHASE_UNIT_IDS = [
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PHASE1_WEAPON_DAGGER_UNIT_ID,
+  PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_SHIELD_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
@@ -139,6 +141,7 @@ export const SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS = [
   PHASE1_WEAPON_DAGGER_UNIT_ID,
   PHASE1_SHIELD_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
+  PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export function progressionOptionId(
   progression: CharacterProgression,

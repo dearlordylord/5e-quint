@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 453 |
+| sdk-scenario-needed | 452 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 51 |
+| seed-scenario-present | 52 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -85,7 +85,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 91 |
+| battle-spell-sdk | 90 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 10 |
 | owner-review | 6 |
-| seed-present | 51 |
+| seed-present | 52 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -166,6 +166,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray` / `spell-level-0:Druid:poison_spray`: level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage
 - `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray` / `spell-level-0:Sorcerer:poison_spray`: level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage
 - `srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame` / `spell-level-0:Druid:produce_flame`: level1-sdk-raw-integration: Druid Produce Flame cantrip resolves from a level-1 sheet as held light and a ranged hurl without spending slots
+- `srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh` / `spell-level-0:Druid:shillelagh`: level1-sdk-raw-integration: Druid Shillelagh cantrip resolves from a level-1 sheet as a Bonus Action Quarterstaff weapon override
 - `srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame` / `spell-level-0:Cleric:sacred_flame`: level1-sdk-raw-integration: Cleric Sacred Flame cantrip resolves from a level-1 sheet as a Dexterity save with Radiant damage
 - `srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy` / `spell-level-0:Cleric:thaumaturgy`: level1-sdk-raw-integration: Cleric Thaumaturgy Booming Voice cantrip resolves from a level-1 sheet with Advantage on Charisma (Intimidation) Ability Checks
 - `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt` / `spell-level-1:Cleric:guiding_bolt`: level1-sdk-raw-integration: Cleric Guiding Bolt resolves from a level-1 sheet as a ranged Spell Attack with Advantage on the next Attack Roll against the target before the caster's next turn ends

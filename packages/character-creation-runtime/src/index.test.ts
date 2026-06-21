@@ -1903,6 +1903,7 @@ describe("character creation hole discovery", () => {
         { optionId: "armor_chain_mail" },
         { optionId: "weapon_longsword" },
         { optionId: "weapon_dagger" },
+        { optionId: "weapon_quarterstaff" },
         { optionId: "weapon_flail" },
         { optionId: "equipment_shield" },
       ],
@@ -2115,6 +2116,35 @@ describe("character creation hole discovery", () => {
 
     expect(
       holeById(holes, testLoadoutHoleId("weapon_flail", "weapon")),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+      options: [{ optionId: "wielded_one_handed" }],
+    });
+  });
+
+  test("opens Quarterstaff loadout when a coin-equipment Druid purchases a Shillelagh weapon", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        progression: testProgression("class_druid", 1),
+        background: "background_criminal",
+        choices: [
+          selectedChoice("class_druid", "class_equipment_choice", "option_b"),
+          selectedChoice(
+            "background_criminal",
+            "background_equipment_choice",
+            "option_b",
+          ),
+        ],
+        equipment: {
+          selectedUnitIds: ["weapon_quarterstaff"],
+        },
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(holes, testLoadoutHoleId("weapon_quarterstaff", "weapon")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
@@ -7758,8 +7788,8 @@ describe("character creation finalization", () => {
     );
 
     expect(spellcastingSourceCantrips(result, "class_warlock")).toEqual([
+      "chill_touch",
       "prestidigitation",
-      "minor_illusion",
       "true_strike",
     ]);
     expect(

@@ -49,6 +49,7 @@ import {
   PHASE1_SHIELD_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+  PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
   PRIMAL_ORDER_CHOICE_KEY,
   PALADIN_FIGHTING_STYLE_CHOICE_KEY,
   RANGER_FIGHTING_STYLE_CHOICE_KEY,
@@ -503,6 +504,14 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     {
       slot: LOADOUT_WEAPON_SLOT,
       unitId: PHASE1_WEAPON_FLAIL_UNIT_ID,
+      optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
+      label: "Wielded one-handed",
+      buildSlot: "weapon",
+      grip: "one_handed",
+    },
+    {
+      slot: LOADOUT_WEAPON_SLOT,
+      unitId: PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
       optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
       label: "Wielded one-handed",
       buildSlot: "weapon",
