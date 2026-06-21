@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module ruleCoreFeaturesMbt {
+  import ruleCoreComponentRoute.* from "./rule-core-component-route"
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
@@ -46,8 +47,12 @@ module ruleCoreFeaturesMbt {
   var qCritical: bool
   var qProtocol: WitnessProtocol[str]
   var qPendingReaction: bool
+  var qComponentRoute: List[RuleCoreComponentRouteEvent]
 
   pure def qHoles: Set[str] = qProtocol.holes
+
+  pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
+    ruleCoreComponentRoute(RuleCoreFeatureProfileSemanticsOwner)
 
   pure def witnessInvalidReasonForProjection(reason: str): WitnessInvalidReason =
     if (reason == "staleSubject") WStaleSubject else WInvalidFill
@@ -138,6 +143,7 @@ module ruleCoreFeaturesMbt {
     qActorArmorClass' = actorArmorClass,
     qProtocol' = witnessProtocolForProjection(holes, result, invalidReason),
     qPendingReaction' = pendingReaction,
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action recordProjection(

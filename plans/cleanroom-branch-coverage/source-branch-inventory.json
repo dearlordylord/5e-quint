@@ -7720,7 +7720,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandCastGrovel",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7739,7 +7739,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachContinues",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7758,7 +7758,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachNoMovement",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7777,7 +7777,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachWithinFive",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7796,7 +7796,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowDrop",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7815,7 +7815,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFlee",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7834,7 +7834,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeNoMovement",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7853,7 +7853,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeOpportunityAttack",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7872,7 +7872,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleePartialRejected",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7891,7 +7891,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowGrovel",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7910,7 +7910,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandHaltSuppresses",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7929,7 +7929,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doEnhanceAbilityChoice",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "reason": "The sequential driver traverses this level-2 spell branch to reach later level-1 Command branches.",
         "reviewedBy": "codex-2026-06-17",
@@ -7951,7 +7951,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAcrobatics",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7970,7 +7970,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAnimalHandling",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -7989,7 +7989,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillArcana",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8008,7 +8008,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAthletics",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8027,7 +8027,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillDeception",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8046,7 +8046,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillHistory",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8065,7 +8065,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInsight",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8084,7 +8084,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillIntimidation",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8103,7 +8103,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInvestigation",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8122,7 +8122,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillMedicine",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8141,7 +8141,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillNature",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8160,7 +8160,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerception",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8179,7 +8179,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerformance",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8198,7 +8198,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPersuasion",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8217,7 +8217,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillReligion",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8236,7 +8236,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSleightOfHand",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8255,7 +8255,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillStealth",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8274,7 +8274,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSurvival",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8293,7 +8293,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchFails",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8312,7 +8312,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchSucceeds",
-      "qntFileSha256": "cc44aa6908280105e5fc03e9ca3c8312a025525c9d2bceab4f09b93060f5d0ff",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8331,7 +8331,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doMeleeKnockOut",
-      "qntFileSha256": "6662c39d0b1316223964d57de7bc90178c623c073c03500e1833940d54c08451",
+      "qntFileSha256": "6cc621473240f21e0d94e78f51593a4da61f49bc68133d055019c30f6d4cdbf5",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8350,7 +8350,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doRejectRangedKnockOut",
-      "qntFileSha256": "6662c39d0b1316223964d57de7bc90178c623c073c03500e1833940d54c08451",
+      "qntFileSha256": "6cc621473240f21e0d94e78f51593a4da61f49bc68133d055019c30f6d4cdbf5",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8369,7 +8369,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doActionSurgeActivate",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8388,7 +8388,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doActionSurgeRejectTwice",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8407,7 +8407,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doActionSurgeSpendAttack",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8426,7 +8426,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doArcheryAttackRollBonus",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8445,7 +8445,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCombatProwessMissToHit",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8466,7 +8466,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCunningDash",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8485,7 +8485,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCunningDisengage",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8504,7 +8504,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCunningHide",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8523,7 +8523,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCuttingWordsDamage",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8544,7 +8544,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doDefenseArmorClass",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8563,7 +8563,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doDeflectAttacksDamageReduction",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8584,7 +8584,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doDiscoverSecondWind",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8603,7 +8603,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doEvasionFailure",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8624,7 +8624,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doEvasionSuccess",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8645,7 +8645,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doFrenzy",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8666,7 +8666,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doImprovedCritical",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8687,7 +8687,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doMyceliumStepDash",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "blockerId": "MYCELIUM_STEP_NO_SRD_SOURCE",
         "reason": "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level.",
@@ -8710,7 +8710,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doRageActivateAndDamage",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8729,7 +8729,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doRecklessAttack",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8748,7 +8748,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doResolveSecondWindHigh",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8767,7 +8767,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doResolveSecondWindLow",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8786,7 +8786,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doSavageAttackerDamage",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8805,7 +8805,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doSneakAttack",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8824,7 +8824,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doTacticalMindConvertedSuccess",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8843,7 +8843,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doTacticalMindStillFailed",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8862,7 +8862,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doUncannyDodge",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8883,7 +8883,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doZeroHitPointReplacement",
-      "qntFileSha256": "2f0bfa94e320b203e0173a88fa3461b58b9e16c6f95bc89784a74abf77537f28",
+      "qntFileSha256": "dcf58f9fe157cefb192c9cfb278f512afe75f25133fd0c73099a7819232fc85f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8902,7 +8902,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doMonsterDiesAtZero",
-      "qntFileSha256": "8db6c0a1f49686ea6de39fc9b16f48a0fac940584267aea4cd07445a49213a5e",
+      "qntFileSha256": "7486580e6c31ab534c2d3a31572dfe3a05287842607dafb62d96b536cf835fdb",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8921,7 +8921,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doPlayerCharacterDiesFromMassiveDamage",
-      "qntFileSha256": "8db6c0a1f49686ea6de39fc9b16f48a0fac940584267aea4cd07445a49213a5e",
+      "qntFileSha256": "7486580e6c31ab534c2d3a31572dfe3a05287842607dafb62d96b536cf835fdb",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8940,7 +8940,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doPlayerCharacterFallsUnconscious",
-      "qntFileSha256": "8db6c0a1f49686ea6de39fc9b16f48a0fac940584267aea4cd07445a49213a5e",
+      "qntFileSha256": "7486580e6c31ab534c2d3a31572dfe3a05287842607dafb62d96b536cf835fdb",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8959,7 +8959,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doTemporaryHitPointsAbsorbFirst",
-      "qntFileSha256": "8db6c0a1f49686ea6de39fc9b16f48a0fac940584267aea4cd07445a49213a5e",
+      "qntFileSha256": "7486580e6c31ab534c2d3a31572dfe3a05287842607dafb62d96b536cf835fdb",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8978,7 +8978,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDash",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8997,7 +8997,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDeclineOpportunityAttack",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9016,7 +9016,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDiscoverEscapeGrapple",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9035,7 +9035,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDiscoverGrapple",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9054,7 +9054,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDiscoverMovement",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9073,7 +9073,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDisengage",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9092,7 +9092,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doMoveProvokesOpportunityAttack",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9111,7 +9111,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doMoveThreatSuppressedByDisengage",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9130,7 +9130,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doRejectDashAfterActionSpent",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9149,7 +9149,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doRejectMovementOverspend",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9168,7 +9168,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doReleaseGrapple",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9187,7 +9187,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveEscapeFailure",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9206,7 +9206,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveEscapeSuccess",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9225,7 +9225,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveGrappleFailure",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9244,7 +9244,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveGrappleSuccess",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9263,7 +9263,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSelectGrappleTarget",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9282,7 +9282,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSpendFullMovement",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9301,7 +9301,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSpendMovement",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9320,7 +9320,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSpendShortMovement",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9339,7 +9339,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doStandFromProne",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9358,7 +9358,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-movement.mbt.qnt#step:doStartGrappledTargetTurn",
-      "qntFileSha256": "bb9fec86d4ceded75a15850b6284b4c27491f98c9e3cad463356fe82a00cd557",
+      "qntFileSha256": "6637efb49148db364c5d1fc42d244653eda84135fb0fdffcc9cff083b35f6a1c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9377,7 +9377,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doBreakReactorConcentrationAfterLargeDamage",
-      "qntFileSha256": "1ac178137a0567d16d2120454d918ba0c4402ad53a5170c31b134e9b9329b00b",
+      "qntFileSha256": "b7fee7ea93e800a4dfa5d08b433c7eaaa459e5544a7790ca4c31d52c4013d4b7",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9396,7 +9396,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doDeclineOpportunityAttack",
-      "qntFileSha256": "1ac178137a0567d16d2120454d918ba0c4402ad53a5170c31b134e9b9329b00b",
+      "qntFileSha256": "b7fee7ea93e800a4dfa5d08b433c7eaaa459e5544a7790ca4c31d52c4013d4b7",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9415,7 +9415,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doDeclineReadiedMovement",
-      "qntFileSha256": "1ac178137a0567d16d2120454d918ba0c4402ad53a5170c31b134e9b9329b00b",
+      "qntFileSha256": "b7fee7ea93e800a4dfa5d08b433c7eaaa459e5544a7790ca4c31d52c4013d4b7",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9434,7 +9434,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doHoldReactorConcentrationAfterSmallDamage",
-      "qntFileSha256": "1ac178137a0567d16d2120454d918ba0c4402ad53a5170c31b134e9b9329b00b",
+      "qntFileSha256": "b7fee7ea93e800a4dfa5d08b433c7eaaa459e5544a7790ca4c31d52c4013d4b7",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9453,7 +9453,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doOfferOpportunityAttack",
-      "qntFileSha256": "1ac178137a0567d16d2120454d918ba0c4402ad53a5170c31b134e9b9329b00b",
+      "qntFileSha256": "b7fee7ea93e800a4dfa5d08b433c7eaaa459e5544a7790ca4c31d52c4013d4b7",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9472,7 +9472,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doOfferReadiedMovement",
-      "qntFileSha256": "1ac178137a0567d16d2120454d918ba0c4402ad53a5170c31b134e9b9329b00b",
+      "qntFileSha256": "b7fee7ea93e800a4dfa5d08b433c7eaaa459e5544a7790ca4c31d52c4013d4b7",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9491,7 +9491,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doReadyMovementFixture",
-      "qntFileSha256": "1ac178137a0567d16d2120454d918ba0c4402ad53a5170c31b134e9b9329b00b",
+      "qntFileSha256": "b7fee7ea93e800a4dfa5d08b433c7eaaa459e5544a7790ca4c31d52c4013d4b7",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9510,7 +9510,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doRejectReadiedMovementZero",
-      "qntFileSha256": "1ac178137a0567d16d2120454d918ba0c4402ad53a5170c31b134e9b9329b00b",
+      "qntFileSha256": "b7fee7ea93e800a4dfa5d08b433c7eaaa459e5544a7790ca4c31d52c4013d4b7",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9529,7 +9529,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doStartReactorConcentrationFixture",
-      "qntFileSha256": "1ac178137a0567d16d2120454d918ba0c4402ad53a5170c31b134e9b9329b00b",
+      "qntFileSha256": "b7fee7ea93e800a4dfa5d08b433c7eaaa459e5544a7790ca4c31d52c4013d4b7",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9548,7 +9548,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doTakeReadiedMovementFill",
-      "qntFileSha256": "1ac178137a0567d16d2120454d918ba0c4402ad53a5170c31b134e9b9329b00b",
+      "qntFileSha256": "b7fee7ea93e800a4dfa5d08b433c7eaaa459e5544a7790ca4c31d52c4013d4b7",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9567,7 +9567,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doTakeReadiedMovementShort",
-      "qntFileSha256": "1ac178137a0567d16d2120454d918ba0c4402ad53a5170c31b134e9b9329b00b",
+      "qntFileSha256": "b7fee7ea93e800a4dfa5d08b433c7eaaa459e5544a7790ca4c31d52c4013d4b7",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9586,7 +9586,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doInvalidPushDistance",
-      "qntFileSha256": "47a6105beffcc3bef07f37af7b061910a875b754ee13a64a4b7ed5f6cde57193",
+      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9605,7 +9605,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsProne",
-      "qntFileSha256": "47a6105beffcc3bef07f37af7b061910a875b754ee13a64a4b7ed5f6cde57193",
+      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9624,7 +9624,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPush",
-      "qntFileSha256": "47a6105beffcc3bef07f37af7b061910a875b754ee13a64a4b7ed5f6cde57193",
+      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9643,7 +9643,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPushBlocked",
-      "qntFileSha256": "47a6105beffcc3bef07f37af7b061910a875b754ee13a64a4b7ed5f6cde57193",
+      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9662,7 +9662,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPushNoLegalDestination",
-      "qntFileSha256": "47a6105beffcc3bef07f37af7b061910a875b754ee13a64a4b7ed5f6cde57193",
+      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9681,7 +9681,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveSucceeds",
-      "qntFileSha256": "47a6105beffcc3bef07f37af7b061910a875b754ee13a64a4b7ed5f6cde57193",
+      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9700,7 +9700,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashAllSuccess",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9719,7 +9719,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashNeedsDamageRoll",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9738,7 +9738,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashNeedsSavingThrow",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9757,7 +9757,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashOneFail",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9776,7 +9776,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doCureWoundsNeedsHealingRoll",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9795,7 +9795,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doCureWoundsNeedsTarget",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9814,7 +9814,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doCureWoundsWounded",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9833,7 +9833,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordNeedsHealingRoll",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9852,7 +9852,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordNeedsTarget",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9871,7 +9871,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordWounded",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9890,7 +9890,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordZeroHp",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9909,7 +9909,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMageArmor",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9928,7 +9928,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMageArmorNeedsTarget",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9947,7 +9947,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMagicMissileLow",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9966,7 +9966,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMagicMissileNeedsAllocation",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9985,7 +9985,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassCureWoundsNeedsHealingRoll",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10006,7 +10006,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassCureWoundsNeedsTargetList",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10027,7 +10027,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassCureWoundsWounded",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10048,7 +10048,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassHealingWordNeedsHealingRoll",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10069,7 +10069,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassHealingWordNeedsTargetList",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10090,7 +10090,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassHealingWordWounded",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10111,7 +10111,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostCritical",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10130,7 +10130,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostHit",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10149,7 +10149,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostMiss",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10168,7 +10168,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostNeedsAttackRoll",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10187,7 +10187,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostNeedsDamageRoll",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10206,7 +10206,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostNeedsTarget",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10225,7 +10225,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doReadySpellHold",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10244,7 +10244,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRejectSecondSlotSpell",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10263,7 +10263,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doReleaseReadiedSpell",
-      "qntFileSha256": "8f4e05d1ad88c08788ce2f1daf2258f720f03b6e7688ec4a6d2feecb11ff1a91",
+      "qntFileSha256": "fc784f0471aa4a215bae055182c11bd65efe7791c2ac62b5d93eb2cf8007d071",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10282,7 +10282,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doEndTurnClosesDispatches",
-      "qntFileSha256": "27fa154d9c45b4bfc35d6cc092f35e23aad53c7b967f9c8ed1dbc9a94a8663f9",
+      "qntFileSha256": "9dd9ee7724939ddf033490c5885911ae976c95249f9f97a536d0ee23312ad13c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10301,7 +10301,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doMoveDuringDispatch",
-      "qntFileSha256": "27fa154d9c45b4bfc35d6cc092f35e23aad53c7b967f9c8ed1dbc9a94a8663f9",
+      "qntFileSha256": "9dd9ee7724939ddf033490c5885911ae976c95249f9f97a536d0ee23312ad13c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10320,7 +10320,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doRejectBonusActionDuringDispatch",
-      "qntFileSha256": "27fa154d9c45b4bfc35d6cc092f35e23aad53c7b967f9c8ed1dbc9a94a8663f9",
+      "qntFileSha256": "9dd9ee7724939ddf033490c5885911ae976c95249f9f97a536d0ee23312ad13c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10339,7 +10339,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doRejectOrdinaryActionDuringDispatch",
-      "qntFileSha256": "27fa154d9c45b4bfc35d6cc092f35e23aad53c7b967f9c8ed1dbc9a94a8663f9",
+      "qntFileSha256": "9dd9ee7724939ddf033490c5885911ae976c95249f9f97a536d0ee23312ad13c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10358,7 +10358,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doResolvePrimaryDispatch",
-      "qntFileSha256": "27fa154d9c45b4bfc35d6cc092f35e23aad53c7b967f9c8ed1dbc9a94a8663f9",
+      "qntFileSha256": "9dd9ee7724939ddf033490c5885911ae976c95249f9f97a536d0ee23312ad13c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10377,7 +10377,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doResolveSecondaryDispatch",
-      "qntFileSha256": "27fa154d9c45b4bfc35d6cc092f35e23aad53c7b967f9c8ed1dbc9a94a8663f9",
+      "qntFileSha256": "9dd9ee7724939ddf033490c5885911ae976c95249f9f97a536d0ee23312ad13c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10396,7 +10396,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doStartMultiattack",
-      "qntFileSha256": "27fa154d9c45b4bfc35d6cc092f35e23aad53c7b967f9c8ed1dbc9a94a8663f9",
+      "qntFileSha256": "9dd9ee7724939ddf033490c5885911ae976c95249f9f97a536d0ee23312ad13c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"

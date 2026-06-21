@@ -36,6 +36,7 @@ const BUDGET_FILES = 8;
 
 const PURE_VOCABULARY_LEAF_MODULES = new Set([
   "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt",
+  "packages/battle-runtime/rule-core-component-route.qnt",
 ]);
 
 // Legacy mutable protocol names from the pre-WitnessProtocol convention.
@@ -94,6 +95,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-sorcerous-burst-damage-choice.qnt",
   "battle-runtime-witness-protocol.qnt",
   "battle-runtime-weapon-attack-ordering.qnt",
+  "rule-core-component-route.qnt",
 ]);
 
 // Grandfathered heavy drivers (basename -> reason). These import a behavioural

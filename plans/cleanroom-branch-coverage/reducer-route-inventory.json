@@ -197,7 +197,7 @@
         "baselineWitnessDriverFiles": 1,
         "alreadyReducerRoutedDriverFiles": 3,
         "currentNonBaselineRemainingDriverFiles": 93,
-        "currentDriverFilesWithoutRouteOrComponentConnector": 93,
+        "currentDriverFilesWithoutRouteOrComponentConnector": 84,
         "currentOutOfScopeBranchDecisionsInLevelDenominator": 44,
         "currentOutOfScopeBranchDecisionsOutsideLevelDenominator": 8,
         "currentOutOfScopeBranchDecisionSourceBlockers": 1
@@ -1450,171 +1450,216 @@
           "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "componentOwners": ["RuleCoreAbilitySkillCommandOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+            "L15-RR11-LEVEL3-4-SCOPE-PROMOTION"
+          ],
           "subjectFamily": "rule-core reusable component",
           "branchObligations": 32,
           "currentOutOfScopeBranchObligations": 1,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt is present in source-branch-inventory.json with 32 branch obligation(s)."
+              "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt is present in source-branch-inventory.json with 32 branch obligation(s).",
+              "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt exposes qComponentRoute through RuleCoreAbilitySkillCommandOwner."
             ],
             "rawDomainFacts": [
-              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+              "Local SRD Ability Check, Search, Skill, spell procedure, and Command-option rules define reusable ability/skill/command component facts before battle spell/effect routes consume them."
             ],
-            "blockers": [
-              "Add a component connector instead of forcing the rule-core proof through BattleState."
-            ]
+            "blockers": []
           }
         },
         {
           "driverPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+          "componentOwners": ["RuleCoreAttackDamageDispositionOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES"
+          ],
           "subjectFamily": "rule-core reusable component",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt exposes qComponentRoute through RuleCoreAttackDamageDispositionOwner."
             ],
             "rawDomainFacts": [
-              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+              "Local SRD Making an Attack, Damage and Healing, and Knocking Out a Creature rules define reusable attack damage disposition facts before attack routes consume them."
             ],
-            "blockers": [
-              "Add a component connector instead of forcing the rule-core proof through BattleState."
-            ]
+            "blockers": []
           }
         },
         {
           "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+            "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+            "L15-RR12-LEVEL5-SCOPE-PROMOTION"
+          ],
           "subjectFamily": "rule-core reusable component",
           "branchObligations": 27,
           "currentOutOfScopeBranchObligations": 9,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt is present in source-branch-inventory.json with 27 branch obligation(s)."
+              "packages/battle-runtime/rule-core-features.mbt.qnt is present in source-branch-inventory.json with 27 branch obligation(s).",
+              "packages/battle-runtime/rule-core-features.mbt.qnt exposes qComponentRoute through RuleCoreFeatureProfileSemanticsOwner."
             ],
             "rawDomainFacts": [
-              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+              "Local SRD action, attack, damage, reaction, movement, Hit Point, and feature profile facts define reusable feature components before battle feature substrate routes consume them."
             ],
-            "blockers": [
-              "Add a component connector instead of forcing the rule-core proof through BattleState."
-            ]
+            "blockers": []
           }
         },
         {
           "driverPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
+          "componentOwners": ["RuleCoreHitPointDamageOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+            "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES"
+          ],
           "subjectFamily": "rule-core reusable component",
           "branchObligations": 4,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+              "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s).",
+              "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt exposes qComponentRoute through RuleCoreHitPointDamageOwner."
             ],
             "rawDomainFacts": [
-              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+              "Local SRD Hit Points, Temporary Hit Points, and Dropping to 0 Hit Points rules define reusable damage-to-HP facts before attack, spell, and stat-block routes consume them."
             ],
-            "blockers": [
-              "Add a component connector instead of forcing the rule-core proof through BattleState."
-            ]
+            "blockers": []
           }
         },
         {
           "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "componentOwners": ["RuleCoreMovementGrappleOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+            "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+            "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES"
+          ],
           "subjectFamily": "rule-core reusable component",
           "branchObligations": 21,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-movement.mbt.qnt is present in source-branch-inventory.json with 21 branch obligation(s)."
+              "packages/battle-runtime/rule-core-movement.mbt.qnt is present in source-branch-inventory.json with 21 branch obligation(s).",
+              "packages/battle-runtime/rule-core-movement.mbt.qnt exposes qComponentRoute through RuleCoreMovementGrappleOwner."
             ],
             "rawDomainFacts": [
-              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+              "Local SRD Movement and Position, Speed, Difficult Terrain, Opportunity Attack, Grapple, and Shove rules define reusable movement/grapple facts before battle movement and action routes consume them."
             ],
-            "blockers": [
-              "Add a component connector instead of forcing the rule-core proof through BattleState."
-            ]
+            "blockers": []
           }
         },
         {
           "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": ["RuleCoreReactionContinuationConcentrationOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+            "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES"
+          ],
           "subjectFamily": "rule-core reusable component",
           "branchObligations": 11,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-reactions.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s)."
+              "packages/battle-runtime/rule-core-reactions.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s).",
+              "packages/battle-runtime/rule-core-reactions.mbt.qnt exposes qComponentRoute through RuleCoreReactionContinuationConcentrationOwner."
             ],
             "rawDomainFacts": [
-              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+              "Local SRD Reaction, Ready, Opportunity Attack, and Concentration rules define reusable reaction/continuation facts before spell/effect and feature routes consume them."
             ],
-            "blockers": [
-              "Add a component connector instead of forcing the rule-core proof through BattleState."
-            ]
+            "blockers": []
           }
         },
         {
           "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+          "componentOwners": ["RuleCoreShoveOutcomeOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+            "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES"
+          ],
           "subjectFamily": "rule-core reusable component",
           "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+              "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
+              "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt exposes qComponentRoute through RuleCoreShoveOutcomeOwner."
             ],
             "rawDomainFacts": [
-              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+              "Local SRD Unarmed Strike Shove rules define reusable prone and push outcome facts before action and feature routes consume them."
             ],
-            "blockers": [
-              "Add a component connector instead of forcing the rule-core proof through BattleState."
-            ]
+            "blockers": []
           }
         },
         {
           "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "componentOwners": ["RuleCoreSpellProcedureProfileOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+            "L15-RR12-LEVEL5-SCOPE-PROMOTION"
+          ],
           "subjectFamily": "rule-core reusable component",
           "branchObligations": 30,
           "currentOutOfScopeBranchObligations": 6,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-spells.mbt.qnt is present in source-branch-inventory.json with 30 branch obligation(s)."
+              "packages/battle-runtime/rule-core-spells.mbt.qnt is present in source-branch-inventory.json with 30 branch obligation(s).",
+              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
             ],
             "rawDomainFacts": [
-              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+              "Local SRD Magic action, Spell Slot, spell attack, saving throw, healing, and Ready-spell rules define reusable spell procedure facts before battle spell/effect routes consume them."
             ],
-            "blockers": [
-              "Add a component connector instead of forcing the rule-core proof through BattleState."
-            ]
+            "blockers": []
           }
         },
         {
           "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
+          "componentOwners": ["RuleCoreStatBlockControlOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES"
+          ],
           "subjectFamily": "rule-core reusable component",
           "branchObligations": 7,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s)."
+              "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s).",
+              "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt exposes qComponentRoute through RuleCoreStatBlockControlOwner."
             ],
             "rawDomainFacts": [
-              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+              "Local SRD Stat Block and Multiattack rules define reusable monster action-control facts before attack and stat-block routes consume them."
             ],
-            "blockers": [
-              "Add a component connector instead of forcing the rule-core proof through BattleState."
-            ]
+            "blockers": []
           }
         },
         {

@@ -17,6 +17,11 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  decodeRuleCoreComponentRoute,
+  type RuleCoreComponentRoutedProjection,
+  withRuleCoreComponentRoute,
+} from "./rule-core-component-route.ts";
 import { Either } from "effect";
 import { describe, it } from "vitest";
 
@@ -72,7 +77,7 @@ const ruleCoreReactionTriggers = [
 ] as const;
 type RuleCoreReactionTrigger = (typeof ruleCoreReactionTriggers)[number];
 
-type RuleCoreReactionProjection = {
+type RuleCoreReactionProjection = RuleCoreComponentRoutedProjection & {
   readonly interruptedMovementSpentFeet: number;
   readonly reactorReactionAvailable: boolean;
   readonly reactorReadiedMovementHeld: boolean;
@@ -97,6 +102,7 @@ const readiedMovementShortCostFeet = 5;
 const readiedMovementFillCostFeet = 10;
 const concentrationSpellId = "rule_core_concentration_fixture";
 const ruleCoreReactionAttackName = "Longsword";
+const componentOwner = "RuleCoreReactionContinuationConcentrationOwner";
 
 const driverSchema = {
   init: {},
@@ -512,7 +518,7 @@ function projectRuleCoreReactionState(input: {
   if (interrupted === undefined || reactor === undefined) {
     throw new Error("Expected rule-core Reaction combatants.");
   }
-  return {
+  return withRuleCoreComponentRoute(componentOwner, {
     interruptedMovementSpentFeet: interrupted.movement.spentFeet,
     reactorReactionAvailable: reactor.reactionAvailable,
     reactorReadiedMovementHeld: snapshot.readiedResponses.movements.some(
@@ -532,7 +538,7 @@ function projectRuleCoreReactionState(input: {
     lastConcentrationSaveDc: input.lastConcentrationSaveDc,
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
-  };
+  });
 }
 
 function movementFill(
@@ -659,6 +665,7 @@ function normalizeRuleCoreReactionQuintState(
     decodeHole: reactionHoleName,
   });
   return {
+    componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
     interruptedMovementSpentFeet: numberFromQuintInt(
       state["qInterruptedMovementSpentFeet"],
       "qInterruptedMovementSpentFeet",

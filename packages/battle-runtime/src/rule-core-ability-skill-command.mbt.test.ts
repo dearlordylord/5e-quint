@@ -50,6 +50,11 @@ import {
   targetFill,
 } from "./battle-runtime-test-support.ts";
 import {
+  decodeRuleCoreComponentRoute,
+  type RuleCoreComponentRoutedProjection,
+  withRuleCoreComponentRoute,
+} from "./rule-core-component-route.ts";
+import {
   discoverBattleActs,
   endTurn,
   resolveBattleSubject,
@@ -164,7 +169,7 @@ const pendingCommandOptions = [
 ] as const;
 type PendingCommandOption = (typeof pendingCommandOptions)[number];
 
-type Projection = {
+type Projection = RuleCoreComponentRoutedProjection & {
   readonly lastScenario: Scenario;
   readonly targetHidden: boolean;
   readonly targetProne: boolean;
@@ -191,7 +196,9 @@ type RuntimeCommandAct = ReturnType<typeof discoverBattleActs>[number] & {
   readonly subject: RuntimeCommandSubject;
 };
 
-const initialProjection: Projection = {
+const componentOwner = "RuleCoreAbilitySkillCommandOwner";
+
+const initialProjection: Projection = withRuleCoreComponentRoute(componentOwner, {
   lastScenario: "init",
   targetHidden: false,
   targetProne: false,
@@ -208,7 +215,7 @@ const initialProjection: Projection = {
   d20ModifierSkill: "none",
   abilityCheckModeAbility: "none",
   replayIndex: 0,
-};
+});
 
 const driverSchema = {
   init: {},
@@ -838,7 +845,7 @@ function projectState(input: {
   if (targetSnapshot === undefined) {
     throw new Error(`Expected target snapshot ${input.targetId}.`);
   }
-  return {
+  return withRuleCoreComponentRoute(componentOwner, {
     lastScenario: input.scenario,
     targetHidden: target.hidden !== null,
     targetProne: hasCondition(target.conditions, "prone"),
@@ -861,7 +868,7 @@ function projectState(input: {
       ...caster.activeEffects,
     ]),
     replayIndex: replayIndexForScenario(input.scenario),
-  };
+  });
 }
 
 function actorName(actorId: CombatantId): Projection["currentActor"] {
@@ -920,6 +927,7 @@ function normalizeQuintState(raw: unknown): Projection {
     Object.entries(raw),
   );
   return {
+    componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
     lastScenario: scenarioField(state["qLastScenario"]),
     targetHidden: booleanValue(state["qTargetHidden"], "qTargetHidden"),
     targetProne: booleanValue(state["qTargetProne"], "qTargetProne"),

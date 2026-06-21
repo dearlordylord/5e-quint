@@ -54,6 +54,14 @@ The reducer-route inventory is an ordering and derivability index. A
 `reducer-routed` row is accepted only with copied connector evidence from
 `routeConnectorPath` or the sibling `.route.mbt.qnt` driver.
 
+Rule-core `component-first` rows use component connector evidence instead of
+BattleState route evidence. The copied component connector projects
+`qComponentRoute` through `rule-core-component-route.qnt`, with events for
+parse input, admit input, call the reusable rule-core component, and project the
+result. A target replay for a component-first row must match that route and
+record the inventory's `componentOwners`; it must not satisfy the row by
+building a driver-local replay helper that bypasses the reusable component API.
+
 ## Durable State Ownership
 
 Durable facts belong to `BattleState` or a nested battle-owned record when they
@@ -135,7 +143,8 @@ For reducer-spine diagnostics, use
 - `substrate-first` means the substrate and durable owner must be introduced or
   identified before target replay evidence is meaningful.
 - `component-first` means deepen a reusable rule module before admitting it as
-  a battle subject.
+  a battle subject, and target evidence must match its copied `qComponentRoute`
+  component connector.
 - `catalog-after-substrate` means defer selected identity until the generic
   runtime substrate exists.
 - `replay-refresh-only` means rerun evidence without new production behavior.

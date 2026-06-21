@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module ruleCoreShoveOutcomeMbt {
+  import ruleCoreComponentRoute.* from "./rule-core-component-route"
   import shoveOutcome.* from "../shared-algebras/proofs/rule-core/shove-outcome"
 
   var qLastScenario: str
@@ -13,6 +14,10 @@ module ruleCoreShoveOutcomeMbt {
   var qPushProvokesOpportunityAttacks: bool
   var qActionAvailable: bool
   var qReplayIndex: int
+  var qComponentRoute: List[RuleCoreComponentRouteEvent]
+
+  pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
+    ruleCoreComponentRoute(RuleCoreShoveOutcomeOwner)
 
   pure def saveSucceeds: str = "save-succeeds"
   pure def saveFailsProne: str = "save-fails-prone"
@@ -34,6 +39,7 @@ module ruleCoreShoveOutcomeMbt {
       qPushProvokesOpportunityAttacks' = projection.pushProvokesOpportunityAttacks,
       qActionAvailable' = projection.actionAvailable,
       qReplayIndex' = nextReplayIndex,
+      qComponentRoute' = componentRouteEvidence,
     }
   }
 
@@ -48,6 +54,7 @@ module ruleCoreShoveOutcomeMbt {
     qPushProvokesOpportunityAttacks' = false,
     qActionAvailable' = true,
     qReplayIndex' = 0,
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action doSaveSucceeds = all {

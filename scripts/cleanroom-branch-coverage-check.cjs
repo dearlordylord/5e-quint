@@ -714,6 +714,54 @@ function validateDerivability(value, context) {
   return issues;
 }
 
+function componentBridgePathForConnector(connectorPath) {
+  return path.join(
+    "packages/battle-runtime/src",
+    path.basename(connectorPath).replace(/\.qnt$/, ".test.ts"),
+  );
+}
+
+function hasExecutableComponentConnectorEvidence(assignment) {
+  if (
+    !isRecord(assignment) ||
+    assignment.route !== "component-first" ||
+    typeof assignment.driverPath !== "string" ||
+    assignment.driverPath.trim() === "" ||
+    typeof assignment.componentConnectorPath !== "string" ||
+    assignment.componentConnectorPath.trim() === "" ||
+    !Array.isArray(assignment.componentOwners) ||
+    assignment.componentOwners.length === 0 ||
+    assignment.componentOwners.some(
+      (owner) => typeof owner !== "string" || owner.trim() === "",
+    )
+  ) {
+    return false;
+  }
+  const connectorPath = path.join(root, assignment.componentConnectorPath);
+  const bridgePath = path.join(
+    root,
+    componentBridgePathForConnector(assignment.componentConnectorPath),
+  );
+  if (!fs.existsSync(connectorPath) || !fs.existsSync(bridgePath)) {
+    return false;
+  }
+  const connectorText = fs.readFileSync(connectorPath, "utf8");
+  const bridgeText = fs.readFileSync(bridgePath, "utf8");
+  return (
+    /\bvar\s+qComponentRoute\s*:\s*List\[RuleCoreComponentRouteEvent\]/.test(
+      connectorText,
+    ) &&
+    /\bqComponentRoute'\s*=/.test(connectorText) &&
+    /\bruleCoreComponentRoute\s*\(/.test(connectorText) &&
+    /\bwithRuleCoreComponentRoute\s*\(/.test(bridgeText) &&
+    /\bdecodeRuleCoreComponentRoute\s*\(/.test(bridgeText) &&
+    /\bcomponentRoute\b/.test(bridgeText) &&
+    assignment.componentOwners.every(
+      (owner) => connectorText.includes(owner) && bridgeText.includes(`"${owner}"`),
+    )
+  );
+}
+
 function validateLevelDenominator(denominator, context, inventory) {
   const issues = [];
   if (!isRecord(denominator)) {
@@ -809,19 +857,38 @@ function validateLevelDenominator(denominator, context, inventory) {
       baselineWitnessDriverPaths !== undefined &&
       alreadyReducerRoutedDriverPaths !== undefined
     ) {
-      const remaining =
+      const nonBaselineRemaining =
         uniqueDrivers.size -
         baselineWitnessDriverPaths.length -
         alreadyReducerRoutedDriverPaths.length;
-      for (const field of [
-        "currentNonBaselineRemainingDriverFiles",
-        "currentDriverFilesWithoutRouteOrComponentConnector",
-      ]) {
-        if (denominator.sourceBranchInventory[field] !== remaining) {
-          issues.push(
-            `${context}: sourceBranchInventory.${field} must be ${remaining}.`,
-          );
-        }
+      if (
+        denominator.sourceBranchInventory.currentNonBaselineRemainingDriverFiles !==
+        nonBaselineRemaining
+      ) {
+        issues.push(
+          `${context}: sourceBranchInventory.currentNonBaselineRemainingDriverFiles must be ${nonBaselineRemaining}.`,
+        );
+      }
+      const componentConnectedDrivers = new Set(
+        Array.isArray(denominator.driverRouteAssignments)
+          ? denominator.driverRouteAssignments
+              .filter(
+                (assignment) =>
+                  hasExecutableComponentConnectorEvidence(assignment),
+              )
+              .map((assignment) => assignment.driverPath)
+          : [],
+      );
+      const driversWithoutRouteOrComponentConnector =
+        nonBaselineRemaining - componentConnectedDrivers.size;
+      if (
+        denominator.sourceBranchInventory
+          .currentDriverFilesWithoutRouteOrComponentConnector !==
+        driversWithoutRouteOrComponentConnector
+      ) {
+        issues.push(
+          `${context}: sourceBranchInventory.currentDriverFilesWithoutRouteOrComponentConnector must be ${driversWithoutRouteOrComponentConnector}.`,
+        );
       }
     }
   }

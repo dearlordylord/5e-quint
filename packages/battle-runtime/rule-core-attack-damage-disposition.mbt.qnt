@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module ruleCoreAttackDamageDispositionMbt {
+  import ruleCoreComponentRoute.* from "./rule-core-component-route"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -13,6 +14,10 @@ module ruleCoreAttackDamageDispositionMbt {
   var qTargetDead: bool
   var qKnockOutRecovery: bool
   var qReplayIndex: int
+  var qComponentRoute: List[RuleCoreComponentRouteEvent]
+
+  pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
+    ruleCoreComponentRoute(RuleCoreAttackDamageDispositionOwner)
 
   pure def targetVitals: CreatureVitals = {
     kind: PlayerCharacter,
@@ -58,6 +63,7 @@ module ruleCoreAttackDamageDispositionMbt {
     qTargetDead' = targetDead,
     qKnockOutRecovery' = knockOutRecovery,
     qReplayIndex' = replayIndex,
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action init = recordProjection("init", true, 3, false, false, false, 0)

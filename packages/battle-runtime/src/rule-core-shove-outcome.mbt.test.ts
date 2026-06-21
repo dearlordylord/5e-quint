@@ -24,6 +24,11 @@ import {
   shoveOutcomeFill,
   targetFill,
 } from "./battle-runtime-test-support.ts";
+import {
+  decodeRuleCoreComponentRoute,
+  type RuleCoreComponentRoutedProjection,
+  withRuleCoreComponentRoute,
+} from "./rule-core-component-route.ts";
 import type {
   BattleFill,
   BattleSubject,
@@ -51,7 +56,7 @@ const shovePushBlockedReasons = [
 ] as const;
 type ShovePushBlockedReason = (typeof shovePushBlockedReasons)[number];
 
-type ShoveOutcomeProjection = {
+type ShoveOutcomeProjection = RuleCoreComponentRoutedProjection & {
   readonly lastScenario: ShoveOutcomeScenario;
   readonly accepted: boolean;
   readonly targetProne: boolean;
@@ -69,7 +74,11 @@ type ShoveOutcomeValue = Extract<
   { readonly kind: "shoveOutcome" }
 >["value"];
 
-const initialProjection: ShoveOutcomeProjection = {
+const componentOwner = "RuleCoreShoveOutcomeOwner";
+
+const initialProjection: ShoveOutcomeProjection = withRuleCoreComponentRoute(
+  componentOwner,
+  {
   lastScenario: "init",
   accepted: true,
   targetProne: false,
@@ -80,7 +89,8 @@ const initialProjection: ShoveOutcomeProjection = {
   pushProvokesOpportunityAttacks: false,
   actionAvailable: true,
   replayIndex: 0,
-};
+  },
+);
 
 const shoveSubject: BattleSubject = {
   tag: "action",
@@ -262,7 +272,7 @@ function applyScenario(
   if (targetAfter === undefined) {
     throw new Error("Missing Shove target after resolution.");
   }
-  return {
+  return withRuleCoreComponentRoute(componentOwner, {
     lastScenario: scenario,
     accepted: true,
     targetProne: hasCondition(targetAfter.conditions, "prone"),
@@ -278,7 +288,7 @@ function applyScenario(
       pushed?.disposition.provokesOpportunityAttacks ?? false,
     actionAvailable: result.snapshot.turn.actionResources.length > 0,
     replayIndex: replayIndexForScenario(scenario),
-  };
+  });
 }
 
 function normalizeShoveOutcomeQuintState(raw: unknown): ShoveOutcomeProjection {
@@ -289,6 +299,7 @@ function normalizeShoveOutcomeQuintState(raw: unknown): ShoveOutcomeProjection {
     Object.entries(raw),
   );
   return {
+    componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
     lastScenario: scenarioField(state["qLastScenario"]),
     accepted: booleanField(state["qAccepted"], "qAccepted"),
     targetProne: booleanField(state["qTargetProne"], "qTargetProne"),

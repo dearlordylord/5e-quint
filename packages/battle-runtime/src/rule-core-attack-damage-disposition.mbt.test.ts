@@ -31,6 +31,11 @@ import {
   targetFill,
 } from "./battle-runtime-test-support.ts";
 import { ATTACK_DAMAGE_DISPOSITION_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
+import {
+  decodeRuleCoreComponentRoute,
+  type RuleCoreComponentRoutedProjection,
+  withRuleCoreComponentRoute,
+} from "./rule-core-component-route.ts";
 
 const scenarios = [
   "init",
@@ -41,7 +46,7 @@ type Scenario = (typeof scenarios)[number];
 const scenarioSet: ReadonlySet<string> = new Set(scenarios);
 type ReplayAction = "doMeleeKnockOut" | "doRejectRangedKnockOut";
 
-type Projection = {
+type Projection = RuleCoreComponentRoutedProjection & {
   readonly lastScenario: Scenario;
   readonly accepted: boolean;
   readonly targetHp: number;
@@ -59,8 +64,9 @@ const driverSchema = {
 } as const;
 
 const targetCharacterId = combatantId("attack-disposition-target");
+const componentOwner = "RuleCoreAttackDamageDispositionOwner";
 
-const initialProjection: Projection = {
+const initialProjection: Projection = withRuleCoreComponentRoute(componentOwner, {
   lastScenario: "init",
   accepted: true,
   targetHp: 3,
@@ -68,7 +74,7 @@ const initialProjection: Projection = {
   targetDead: false,
   knockOutRecovery: false,
   replayIndex: 0,
-};
+});
 
 function createDriver() {
   return defineDriver(driverSchema, () => {
@@ -179,7 +185,7 @@ function resolveMeleeKnockOut(): Projection {
   if (target === undefined) {
     throw new Error("Missing attack disposition target after Knock Out.");
   }
-  return {
+  return withRuleCoreComponentRoute(componentOwner, {
     lastScenario: "melee-knock-out",
     accepted: true,
     targetHp: Number(target.hp),
@@ -188,7 +194,7 @@ function resolveMeleeKnockOut(): Projection {
     knockOutRecovery:
       Number(target.hp) === 1 && target.conditions.includes("unconscious"),
     replayIndex: 1,
-  };
+  });
 }
 
 function rejectRangedKnockOut(): Projection {
@@ -242,7 +248,7 @@ function rejectRangedKnockOut(): Projection {
   if (target === undefined) {
     throw new Error("Missing attack disposition target after rejection.");
   }
-  return {
+  return withRuleCoreComponentRoute(componentOwner, {
     lastScenario: "ranged-knock-out-rejected",
     accepted: false,
     targetHp: Number(target.hp),
@@ -250,7 +256,7 @@ function rejectRangedKnockOut(): Projection {
     targetDead: target.zeroHpLifecycle.dead,
     knockOutRecovery: false,
     replayIndex: 2,
-  };
+  });
 }
 
 function normalizeQuintState(raw: unknown): Projection {
@@ -261,6 +267,7 @@ function normalizeQuintState(raw: unknown): Projection {
     Object.entries(raw),
   );
   return {
+    componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
     lastScenario: scenarioField(state["qLastScenario"]),
     accepted: booleanValue(state["qAccepted"], "qAccepted"),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),

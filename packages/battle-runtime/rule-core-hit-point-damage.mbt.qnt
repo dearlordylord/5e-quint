@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module ruleCoreHitPointDamageMbt {
+  import ruleCoreComponentRoute.* from "./rule-core-component-route"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
 
   var qLastScenario: str
@@ -12,6 +13,10 @@ module ruleCoreHitPointDamageMbt {
   var qDamageToHitPoints: int
   var qRemainingDamageAtZero: int
   var qReplayIndex: int
+  var qComponentRoute: List[RuleCoreComponentRouteEvent]
+
+  pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
+    ruleCoreComponentRoute(RuleCoreHitPointDamageOwner)
 
   pure def temporaryHitPointsAbsorbFirst: str = "temporary-hit-points-absorb-first"
   pure def monsterDiesAtZero: str = "monster-dies-at-zero"
@@ -28,6 +33,7 @@ module ruleCoreHitPointDamageMbt {
     qDamageToHitPoints' = result.damageToHitPoints,
     qRemainingDamageAtZero' = result.remainingDamageAtZero,
     qReplayIndex' = nextReplayIndex,
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action init = all {
@@ -40,6 +46,7 @@ module ruleCoreHitPointDamageMbt {
     qDamageToHitPoints' = 0,
     qRemainingDamageAtZero' = 0,
     qReplayIndex' = 0,
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action doTemporaryHitPointsAbsorbFirst = all {

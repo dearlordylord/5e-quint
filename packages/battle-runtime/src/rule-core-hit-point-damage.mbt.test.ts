@@ -24,6 +24,11 @@ import {
   statBlockCreatureInit,
 } from "./battle-runtime-test-support.ts";
 import {
+  decodeRuleCoreComponentRoute,
+  type RuleCoreComponentRoutedProjection,
+  withRuleCoreComponentRoute,
+} from "./rule-core-component-route.ts";
+import {
   battleId,
   combatantId,
   type BattleCreatureState,
@@ -41,7 +46,7 @@ const hitPointDamageScenarios = [
 type HitPointDamageScenario = (typeof hitPointDamageScenarios)[number];
 const hitPointDamageReplayStepCount = hitPointDamageScenarios.length - 1;
 
-type HitPointDamageProjection = {
+type HitPointDamageProjection = RuleCoreComponentRoutedProjection & {
   readonly lastScenario: HitPointDamageScenario;
   readonly hitPoints: number;
   readonly hitPointMaximum: number;
@@ -70,8 +75,11 @@ type HitPointDamageScenarioInput =
 
 const playerTargetId = combatantId("rule-core-hit-point-damage-pc");
 const monsterTargetId = combatantId("rule-core-hit-point-damage-monster");
+const hitPointDamageComponentOwner = "RuleCoreHitPointDamageOwner";
 
-const initialProjection: HitPointDamageProjection = {
+const initialProjection: HitPointDamageProjection = withRuleCoreComponentRoute(
+  hitPointDamageComponentOwner,
+  {
   lastScenario: "init",
   hitPoints: 0,
   hitPointMaximum: 1,
@@ -81,7 +89,8 @@ const initialProjection: HitPointDamageProjection = {
   damageToHitPoints: 0,
   remainingDamageAtZero: 0,
   replayIndex: 0,
-};
+  },
+);
 
 const driverSchema = {
   init: {},
@@ -237,7 +246,7 @@ function projectHitPointDamage(
   after: BattleCreatureState,
 ): HitPointDamageProjection {
   const projection = hpDamageProjection(before, damageAmount);
-  return {
+  return withRuleCoreComponentRoute(hitPointDamageComponentOwner, {
     lastScenario: scenario,
     hitPoints: Number(after.hp),
     hitPointMaximum: Number(after.maxHp),
@@ -250,7 +259,7 @@ function projectHitPointDamage(
       projection.hpDamage - projection.currentHp,
     ),
     replayIndex: replayIndexForScenario(scenario),
-  };
+  });
 }
 
 function requireCombatant(
@@ -295,6 +304,7 @@ function normalizeHitPointDamageQuintState(
     Object.entries(raw),
   );
   return {
+    componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
     lastScenario: scenarioField(state["qLastScenario"]),
     hitPoints: numberFromQuintInt(state["qHitPoints"], "qHitPoints"),
     hitPointMaximum: numberFromQuintInt(

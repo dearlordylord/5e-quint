@@ -273,6 +273,12 @@ const qntRegistryExemptions = [
       "Run-block examples for the stat-block bridge; registered stat-block owners carry active coverage.",
   },
   {
+    ownerPath: "packages/battle-runtime/rule-core-component-route.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Rule-core component route vocabulary leaf shared by component-first MBT drivers; executable component evidence is registered on the rule-core driver witnesses.",
+  },
+  {
     ownerPath: "packages/battle-runtime/battle-runtime-witness-protocol.qnt",
     category: "witness-protocol-leaf",
     evidence:

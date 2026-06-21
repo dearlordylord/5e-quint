@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module ruleCoreReactionsMbt {
+  import ruleCoreComponentRoute.* from "./rule-core-component-route"
   import movementSpatialGrapple.* from "../shared-algebras/proofs/rule-core/movement-spatial-grapple"
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
 
@@ -63,8 +64,12 @@ module ruleCoreReactionsMbt {
   var qPendingTrigger: str
   var qProtocol: WitnessProtocol[str]
   var qLastConcentrationSaveDc: int
+  var qComponentRoute: List[RuleCoreComponentRouteEvent]
 
   pure def qHoles: Set[str] = qProtocol.holes
+
+  pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
+    ruleCoreComponentRoute(RuleCoreReactionContinuationConcentrationOwner)
 
   pure def noPendingTrigger: str = "none"
   pure def opportunityAttackTrigger: str = "opportunityAttack"
@@ -116,6 +121,7 @@ module ruleCoreReactionsMbt {
 
   action clearSuccessfulHoles(result: str): bool = all {
     qProtocol' = witnessProtocolForProjection(Set(), result, "none"),
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action recordProtocolState(
@@ -135,6 +141,7 @@ module ruleCoreReactionsMbt {
     qPendingTrigger' = pendingTrigger,
     qProtocol' = witnessProtocolForProjection(holes, result, "none"),
     qLastConcentrationSaveDc' = qLastConcentrationSaveDc,
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action recordInvalid(reason: str): bool = all {
@@ -149,6 +156,7 @@ module ruleCoreReactionsMbt {
     qPendingTrigger' = qPendingTrigger,
     qProtocol' = witnessProtocolForProjection(qHoles, "invalid", reason),
     qLastConcentrationSaveDc' = qLastConcentrationSaveDc,
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action init = all {
@@ -163,6 +171,7 @@ module ruleCoreReactionsMbt {
     qPendingTrigger' = noPendingTrigger,
     qProtocol' = witnessProtocolForProjection(Set(), "init", "none"),
     qLastConcentrationSaveDc' = 0,
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action doOfferOpportunityAttack = {

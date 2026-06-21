@@ -29,11 +29,11 @@ pnpm cleanroom-branch-coverage:check -- --write
 ## Reducer Route Inventory
 
 `reducer-route-inventory.json` is source-side task-selection guidance and an
-index into executable route connectors. It does not duplicate branch
-obligations. It selects focused battle/rule-core drivers for reducer-spine
-diagnostics and records the route class, derivability facts, durable state
-owner expectations, blockers, and `routeConnectorPath` when the route is
-already expressed in QNT.
+index into executable route or component connectors. It does not duplicate
+branch obligations. It selects focused battle/rule-core drivers for
+reducer-spine diagnostics and records the route class, derivability facts,
+durable state owner expectations, blockers, and connector paths when the route
+or reusable component is already expressed in QNT.
 
 `levelDenominators[]` records broader route-readiness denominators without
 changing the active branch-scope harness. The `level-1-5-cleanroom-route-v1`
@@ -58,6 +58,13 @@ routing. A `reducer-routed` row is meaningful only when the connector projects
 driver; otherwise the gate derives `<driver>.route.mbt.qnt`. Guidance prose may
 select the task, but it cannot by itself prove the target implementation routed
 through the shared reducer surface.
+
+Rule-core `component-first` rows are meaningful only when the component
+connector projects `qComponentRoute` through
+`packages/battle-runtime/rule-core-component-route.qnt`. Rows set
+`componentConnectorPath`, `componentOwners`, and `dependentRouteTaskIds` so a
+target can prove parse/admit/call/project through the reusable rule-core
+component before a later battle route consumes that owner.
 
 The checker renders the active diagnostic batch into:
 

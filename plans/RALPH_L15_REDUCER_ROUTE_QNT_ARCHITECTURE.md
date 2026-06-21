@@ -25,19 +25,19 @@
     {
       "number": 4,
       "id": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add component-first QNT connectors for rule-core drivers"
     },
     {
       "number": 5,
       "id": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Route action, attack, weapon, and stat-block battle subjects"
     },
     {
       "number": 6,
       "id": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Route spell, condition, effect, and restoration battle subjects"
     },
     {
@@ -223,9 +223,9 @@ The route classes are deliberately not all `reducer-routed`:
 |   1 | L15-RR01-DENOMINATOR-AND-CLASSIFIER - Define the level 1-5 reducer-route denominator and route classes        | done               | none                                                                                                                                                     | Established the exact driver/branch denominator in `reducer-route-inventory.json`.            |
 |   2 | L15-RR02-ROUTE-VOCABULARY-AND-GATES - Generalize executable route vocabulary and checker gates                | done               | L15-RR01-DENOMINATOR-AND-CLASSIFIER                                                                                                                      | Added source-side route vocabularies and connector gates before broad connector work.         |
 |   3 | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE - Route the remaining current reducer-spine diagnostic drivers       | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Completed death-save and Concentration route connectors from the diagnostic queue.            |
-|   4 | L15-RR04-RULE-CORE-COMPONENT-CONNECTORS - Add component-first QNT connectors for rule-core drivers            | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Keeps reusable components out of battle-local replay islands.                                 |
-|   5 | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES - Route action, attack, weapon, and stat-block battle subjects | blocked            | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Uses HP/action/attack owners before larger spell families.                                    |
-|   6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects         | blocked            | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Extends routed spell/effect subjects without selected-identity dispatch.                      |
+|   4 | L15-RR04-RULE-CORE-COMPONENT-CONNECTORS - Add component-first QNT connectors for rule-core drivers            | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Keeps reusable components out of battle-local replay islands.                                 |
+|   5 | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES - Route action, attack, weapon, and stat-block battle subjects | ready-for-research | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Uses HP/action/attack owners before larger spell families.                                    |
+|   6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects         | ready-for-research | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Extends routed spell/effect subjects without selected-identity dispatch.                      |
 |   7 | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES - Route feature, species, metamagic, and mastery battle substrates   | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Converts selected-identity battle pressure into shape/profile substrate.                      |
 |   8 | L15-RR08-CHARACTER-CREATION-ROUTES - Add QNT route connectors for character creation drivers                  | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for Draft/Fill/finalization rather than battle subjects.                     |
 |   9 | L15-RR09-CHARACTER-SHEET-ROUTES - Add QNT route connectors for character sheet drivers                        | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for sheet resource/rest/projection state.                                    |
@@ -416,7 +416,7 @@ Plan Impact:
 
 ### Task 4 - L15-RR04-RULE-CORE-COMPONENT-CONNECTORS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -465,7 +465,7 @@ Plan Impact:
 
 ### Task 5 - L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
@@ -512,7 +512,7 @@ Plan Impact:
 
 ### Task 6 - L15-RR06-BATTLE-SPELL-EFFECT-ROUTES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 

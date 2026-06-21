@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 "use strict";
 
-// Reducer-route connector gate.
+// Reducer-route and component connector gate.
 //
 // A reducer-routed cleanroom assignment must have an executable QNT connector,
 // not only prose guidance or a curated inventory row. This checker validates
 // that the currently queued route batch is represented by `.route.mbt.qnt`
 // drivers that import the reducer-route vocabulary and expose `qRoute`.
+//
+// A component-first assignment must also point at executable QNT connector
+// evidence. Rule-core components expose `qComponentRoute` over a small leaf
+// vocabulary instead of routing through BattleState.
 
 const fs = require("node:fs");
 const os = require("node:os");
@@ -14,6 +18,15 @@ const path = require("node:path");
 
 const ROOT = path.resolve(__dirname, "..");
 const ROUTE_INVENTORY_PATH = "plans/cleanroom-branch-coverage/reducer-route-inventory.json";
+const COMPONENT_VOCABULARY_PATH =
+  "packages/battle-runtime/rule-core-component-route.qnt";
+const COMPONENT_VOCABULARY_IMPORT =
+  /\bimport\s+ruleCoreComponentRoute\.\*\s+from\s+"\.\/rule-core-component-route"/;
+const COMPONENT_EVIDENCE_CALL = "ruleCoreComponentRoute";
+const COMPONENT_BRIDGE_IMPORT =
+  /\bfrom\s+"\.\/rule-core-component-route\.ts"/;
+const COMPONENT_RUNTIME_BRIDGE_CALL = "withRuleCoreComponentRoute";
+const COMPONENT_QUINT_BRIDGE_DECODER = "decodeRuleCoreComponentRoute";
 const ROUTE_SURFACES = [
   {
     packageDir: "packages/battle-runtime",
@@ -80,6 +93,13 @@ function defaultRouteConnectorPath(driverPath) {
   return driverPath.replace(/\.mbt\.qnt$/, ".route.mbt.qnt");
 }
 
+function defaultComponentConnectorPath(driverPath) {
+  if (typeof driverPath !== "string" || !driverPath.endsWith(".mbt.qnt")) {
+    return undefined;
+  }
+  return driverPath;
+}
+
 function reducerRoutedRows(inventory) {
   const rows = [];
   for (const [index, prerequisite] of (inventory.prerequisites ?? []).entries()) {
@@ -116,6 +136,48 @@ function reducerRoutedRows(inventory) {
   return rows;
 }
 
+function componentFirstDriverRows(inventory) {
+  const rows = [];
+  for (const [index, prerequisite] of (inventory.prerequisites ?? []).entries()) {
+    if (prerequisite.route === "component-first") {
+      rows.push({
+        source: `prerequisite ${index + 1} ${prerequisite.driverPath}`,
+        driverPath: prerequisite.driverPath,
+        componentConnectorPath: prerequisite.componentConnectorPath,
+        componentOwners: prerequisite.componentOwners,
+        dependentRouteTaskIds: prerequisite.dependentRouteTaskIds,
+      });
+    }
+  }
+  for (const batch of inventory.diagnosticBatches ?? []) {
+    for (const entry of batch.entries ?? []) {
+      if (entry.route === "component-first") {
+        rows.push({
+          source: `diagnostic batch ${batch.batchId} entry ${entry.order}`,
+          driverPath: entry.driverPath,
+          componentConnectorPath: entry.componentConnectorPath,
+          componentOwners: entry.componentOwners,
+          dependentRouteTaskIds: entry.dependentRouteTaskIds,
+        });
+      }
+    }
+  }
+  for (const denominator of inventory.levelDenominators ?? []) {
+    for (const assignment of denominator.driverRouteAssignments ?? []) {
+      if (assignment.route === "component-first") {
+        rows.push({
+          source: `${denominator.denominatorId} assignment ${assignment.driverPath}`,
+          driverPath: assignment.driverPath,
+          componentConnectorPath: assignment.componentConnectorPath,
+          componentOwners: assignment.componentOwners,
+          dependentRouteTaskIds: assignment.dependentRouteTaskIds,
+        });
+      }
+    }
+  }
+  return rows;
+}
+
 function expectedRouteConnectors(inventory, failures) {
   const expected = new Map();
   for (const row of reducerRoutedRows(inventory)) {
@@ -144,9 +206,80 @@ function expectedRouteConnectors(inventory, failures) {
   return expected;
 }
 
+function expectedComponentConnectors(inventory, failures) {
+  const expected = new Map();
+  for (const row of componentFirstDriverRows(inventory)) {
+    const connectorPath =
+      typeof row.componentConnectorPath === "string" &&
+      row.componentConnectorPath.length > 0
+        ? row.componentConnectorPath
+        : defaultComponentConnectorPath(row.driverPath);
+    if (connectorPath === undefined) {
+      failures.push(`${row.source}: component-first row needs a componentConnectorPath.`);
+      continue;
+    }
+    if (!connectorPath.endsWith(".mbt.qnt")) {
+      failures.push(
+        `${row.source}: componentConnectorPath must point at an .mbt.qnt driver.`,
+      );
+      continue;
+    }
+    if (!connectorPath.startsWith("packages/battle-runtime/rule-core-")) {
+      failures.push(
+        `${row.source}: componentConnectorPath must point at a battle rule-core driver.`,
+      );
+      continue;
+    }
+    if (!Array.isArray(row.componentOwners) || row.componentOwners.length === 0) {
+      failures.push(`${row.source}: component-first row needs componentOwners.`);
+      continue;
+    }
+    if (
+      row.componentOwners.some(
+        (owner) => typeof owner !== "string" || owner.trim() === "",
+      )
+    ) {
+      failures.push(`${row.source}: componentOwners must be non-empty strings.`);
+      continue;
+    }
+    if (
+      !Array.isArray(row.dependentRouteTaskIds) ||
+      row.dependentRouteTaskIds.length === 0
+    ) {
+      failures.push(`${row.source}: component-first row needs dependentRouteTaskIds.`);
+      continue;
+    }
+    if (
+      row.dependentRouteTaskIds.some(
+        (taskId) => typeof taskId !== "string" || taskId.trim() === "",
+      )
+    ) {
+      failures.push(`${row.source}: dependentRouteTaskIds must be non-empty strings.`);
+      continue;
+    }
+    const sources = expected.get(connectorPath) ?? [];
+    sources.push(row);
+    expected.set(connectorPath, sources);
+  }
+  return expected;
+}
+
 function hasQRouteProjection(text) {
   return /\bvar\s+qRoute\s*:\s*List\[[^\]]+RouteEvent\]/.test(text)
     || /\bpure\s+def\s+qRoute\s*:\s*List\[[^\]]+RouteEvent\]/.test(text);
+}
+
+function hasQComponentRouteProjection(text) {
+  return /\bvar\s+qComponentRoute\s*:\s*List\[RuleCoreComponentRouteEvent\]/.test(text);
+}
+
+function hasQComponentRouteAssignment(text) {
+  return /\bqComponentRoute'\s*=/.test(text);
+}
+
+function componentBridgePath(repoPath) {
+  const fileName = path.basename(repoPath).replace(/\.qnt$/, ".test.ts");
+  return path.join("packages/battle-runtime/src", fileName);
 }
 
 function validateConnector(root, repoPath, failures) {
@@ -173,10 +306,76 @@ function validateConnector(root, repoPath, failures) {
   }
 }
 
+function validateComponentConnector(root, repoPath, rows, failures) {
+  const text = fs.readFileSync(path.join(root, repoPath), "utf8");
+  if (!COMPONENT_VOCABULARY_IMPORT.test(text)) {
+    failures.push(`${repoPath}: must import ${COMPONENT_VOCABULARY_PATH}.`);
+  }
+  if (!hasQComponentRouteProjection(text)) {
+    failures.push(`${repoPath}: must expose qComponentRoute as MBT state.`);
+  }
+  if (!hasQComponentRouteAssignment(text)) {
+    failures.push(`${repoPath}: must assign qComponentRoute in connector actions.`);
+  }
+  if (!new RegExp(`\\b${COMPONENT_EVIDENCE_CALL}\\s*\\(`).test(text)) {
+    failures.push(`${repoPath}: must record ${COMPONENT_EVIDENCE_CALL} evidence.`);
+  }
+  if (/\bimport\s+battleRuntimeModel\.\*\s+from\s+"\.\/battle-runtime-model"/.test(text)) {
+    failures.push(`${repoPath}: component connectors must not import battle-runtime-model.`);
+  }
+  if (/\bimport\s+battleRuntimeReducerRoute\.\*\s+from\s+"\.\/battle-runtime-reducer-route"/.test(text)) {
+    failures.push(
+      `${repoPath}: component connectors must not import the battle reducer-route vocabulary.`,
+    );
+  }
+  for (const row of rows) {
+    for (const owner of row.componentOwners) {
+      if (!new RegExp(`\\b${owner}\\b`).test(text)) {
+        failures.push(`${repoPath}: missing component owner ${owner} for ${row.source}.`);
+      }
+    }
+  }
+  validateComponentBridge(root, repoPath, rows, failures);
+}
+
+function validateComponentBridge(root, repoPath, rows, failures) {
+  const bridgePath = componentBridgePath(repoPath);
+  const absoluteBridgePath = path.join(root, bridgePath);
+  if (!fs.existsSync(absoluteBridgePath)) {
+    failures.push(`${bridgePath}: missing component MBT bridge for ${repoPath}.`);
+    return;
+  }
+  const text = fs.readFileSync(absoluteBridgePath, "utf8");
+  if (!COMPONENT_BRIDGE_IMPORT.test(text)) {
+    failures.push(`${bridgePath}: must import rule-core component route bridge.`);
+  }
+  if (!new RegExp(`\\b${COMPONENT_RUNTIME_BRIDGE_CALL}\\s*\\(`).test(text)) {
+    failures.push(
+      `${bridgePath}: must project runtime component route with ${COMPONENT_RUNTIME_BRIDGE_CALL}.`,
+    );
+  }
+  if (!new RegExp(`\\b${COMPONENT_QUINT_BRIDGE_DECODER}\\s*\\(`).test(text)) {
+    failures.push(
+      `${bridgePath}: must decode qComponentRoute with ${COMPONENT_QUINT_BRIDGE_DECODER}.`,
+    );
+  }
+  if (!/\bcomponentRoute\b/.test(text)) {
+    failures.push(`${bridgePath}: state check must compare componentRoute.`);
+  }
+  for (const row of rows) {
+    for (const owner of row.componentOwners) {
+      if (!text.includes(`"${owner}"`)) {
+        failures.push(`${bridgePath}: missing runtime component owner ${owner} for ${row.source}.`);
+      }
+    }
+  }
+}
+
 function checkReducerRouteConnectors(root) {
   const failures = [];
   const inventory = readJson(root, ROUTE_INVENTORY_PATH);
   const expected = expectedRouteConnectors(inventory, failures);
+  const expectedComponents = expectedComponentConnectors(inventory, failures);
   const connectors = listRouteConnectors(root);
   const connectorPaths = new Set(connectors.map((file) => toRepoPath(root, file)));
 
@@ -184,6 +383,9 @@ function checkReducerRouteConnectors(root) {
     if (!fs.existsSync(path.join(root, surface.routeVocabularyPath))) {
       failures.push(`${surface.routeVocabularyPath}: missing route vocabulary.`);
     }
+  }
+  if (!fs.existsSync(path.join(root, COMPONENT_VOCABULARY_PATH))) {
+    failures.push(`${COMPONENT_VOCABULARY_PATH}: missing component route vocabulary.`);
   }
 
   for (const [repoPath, sources] of expected) {
@@ -197,8 +399,21 @@ function checkReducerRouteConnectors(root) {
   for (const repoPath of connectorPaths) {
     validateConnector(root, repoPath, failures);
   }
+  for (const [repoPath, rows] of expectedComponents) {
+    if (!fs.existsSync(path.join(root, repoPath))) {
+      failures.push(
+        `${repoPath}: missing component connector driver for ${rows.map((row) => row.source).join(", ")}.`,
+      );
+      continue;
+    }
+    validateComponentConnector(root, repoPath, rows, failures);
+  }
 
-  return { failures, expectedConnectorCount: expected.size };
+  return {
+    failures,
+    expectedConnectorCount: expected.size,
+    expectedComponentConnectorCount: expectedComponents.size,
+  };
 }
 
 function writeRouteVocabularies(root) {
@@ -207,9 +422,12 @@ function writeRouteVocabularies(root) {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, `module fixtureRouteVocabulary {}\n`);
   }
+  const componentFile = path.join(root, COMPONENT_VOCABULARY_PATH);
+  fs.mkdirSync(path.dirname(componentFile), { recursive: true });
+  fs.writeFileSync(componentFile, `module fixtureComponentRouteVocabulary {}\n`);
 }
 
-function writeInventory(root, entries, prerequisites = []) {
+function writeInventory(root, entries, prerequisites = [], levelDenominators = []) {
   fs.mkdirSync(path.join(root, "plans/cleanroom-branch-coverage"), {
     recursive: true,
   });
@@ -228,6 +446,7 @@ function writeInventory(root, entries, prerequisites = []) {
             entries,
           },
         ],
+        levelDenominators,
       },
       null,
       2,
@@ -241,6 +460,24 @@ function fixtureEntry(input = {}) {
     driverPath: "packages/battle-runtime/fixture.mbt.qnt",
     routeConnectorPath: "packages/battle-runtime/fixture.route.mbt.qnt",
     route: "reducer-routed",
+    ...input,
+  };
+}
+
+function fixtureComponentAssignment(input = {}) {
+  return {
+    driverPath: "packages/battle-runtime/rule-core-fixture.mbt.qnt",
+    route: "component-first",
+    routeTaskId: "fixture-component-task",
+    subjectFamily: "fixture component",
+    componentConnectorPath: "packages/battle-runtime/rule-core-fixture.mbt.qnt",
+    componentOwners: ["FixtureComponentOwner"],
+    dependentRouteTaskIds: ["fixture-dependent-route-task"],
+    derivability: {
+      qntFacts: [],
+      rawDomainFacts: [],
+      blockers: [],
+    },
     ...input,
   };
 }
@@ -293,6 +530,62 @@ function writeConnectorWithoutQRoute(root, repoPath) {
     [
       "module fixtureRouteMbt {",
       '  import battleRuntimeReducerRoute.* from "./battle-runtime-reducer-route"',
+      "  action init = true",
+      "  action step = true",
+      "}",
+      "",
+    ].join("\n"),
+  );
+}
+
+function writeComponentConnector(root, repoPath, body = "") {
+  const file = path.join(root, repoPath);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(
+    file,
+    [
+      "module fixtureComponentMbt {",
+      '  import ruleCoreComponentRoute.* from "./rule-core-component-route"',
+      "  var qComponentRoute: List[RuleCoreComponentRouteEvent]",
+      "  action init = qComponentRoute' = ruleCoreComponentRoute(FixtureComponentOwner)",
+      "  action step = qComponentRoute' = ruleCoreComponentRoute(FixtureComponentOwner)",
+      body,
+      "}",
+      "",
+    ].join("\n"),
+  );
+}
+
+function writeComponentBridge(root, repoPath, body = "") {
+  const file = path.join(root, componentBridgePath(repoPath));
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(
+    file,
+    [
+      'import { decodeRuleCoreComponentRoute, withRuleCoreComponentRoute } from "./rule-core-component-route.ts";',
+      'const componentOwner = "FixtureComponentOwner";',
+      "function runtimeProjection() {",
+      "  return withRuleCoreComponentRoute(componentOwner, { value: true });",
+      "}",
+      "function quintProjection(state) {",
+      "  return { componentRoute: decodeRuleCoreComponentRoute(state.qComponentRoute) };",
+      "}",
+      "void runtimeProjection;",
+      "void quintProjection;",
+      body,
+      "",
+    ].join("\n"),
+  );
+}
+
+function writeComponentConnectorWithoutQComponentRoute(root, repoPath) {
+  const file = path.join(root, repoPath);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(
+    file,
+    [
+      "module fixtureComponentMbt {",
+      '  import ruleCoreComponentRoute.* from "./rule-core-component-route"',
       "  action init = true",
       "  action step = true",
       "}",
@@ -369,6 +662,127 @@ function runSelfTest() {
     );
   });
 
+  runFixture((fixtureRoot) => {
+    writeInventory(
+      fixtureRoot,
+      [],
+      [],
+      [
+        {
+          denominatorId: "fixture-denominator",
+          driverRouteAssignments: [fixtureComponentAssignment()],
+        },
+      ],
+    );
+    writeComponentConnector(
+      fixtureRoot,
+      "packages/battle-runtime/rule-core-fixture.mbt.qnt",
+    );
+    writeComponentBridge(
+      fixtureRoot,
+      "packages/battle-runtime/rule-core-fixture.mbt.qnt",
+    );
+    assertNoFailures(checkReducerRouteConnectors(fixtureRoot));
+  });
+
+  runFixture((fixtureRoot) => {
+    writeInventory(
+      fixtureRoot,
+      [],
+      [],
+      [
+        {
+          denominatorId: "fixture-denominator",
+          driverRouteAssignments: [fixtureComponentAssignment()],
+        },
+      ],
+    );
+    const result = checkReducerRouteConnectors(fixtureRoot);
+    expectFailure(
+      result.failures,
+      "missing component connector driver",
+      "Self-test expected missing component connector failure",
+    );
+  });
+
+  runFixture((fixtureRoot) => {
+    writeInventory(
+      fixtureRoot,
+      [],
+      [],
+      [
+        {
+          denominatorId: "fixture-denominator",
+          driverRouteAssignments: [fixtureComponentAssignment()],
+        },
+      ],
+    );
+    writeComponentConnectorWithoutQComponentRoute(
+      fixtureRoot,
+      "packages/battle-runtime/rule-core-fixture.mbt.qnt",
+    );
+    writeComponentBridge(
+      fixtureRoot,
+      "packages/battle-runtime/rule-core-fixture.mbt.qnt",
+    );
+    const result = checkReducerRouteConnectors(fixtureRoot);
+    expectFailure(
+      result.failures,
+      "must expose qComponentRoute as MBT state",
+      "Self-test expected missing qComponentRoute failure",
+    );
+  });
+
+  runFixture((fixtureRoot) => {
+    writeInventory(
+      fixtureRoot,
+      [],
+      [],
+      [
+        {
+          denominatorId: "fixture-denominator",
+          driverRouteAssignments: [fixtureComponentAssignment()],
+        },
+      ],
+    );
+    writeComponentConnector(
+      fixtureRoot,
+      "packages/battle-runtime/rule-core-fixture.mbt.qnt",
+    );
+    const result = checkReducerRouteConnectors(fixtureRoot);
+    expectFailure(
+      result.failures,
+      "missing component MBT bridge",
+      "Self-test expected missing component bridge failure",
+    );
+  });
+
+  runFixture((fixtureRoot) => {
+    writeInventory(
+      fixtureRoot,
+      [],
+      [],
+      [
+        {
+          denominatorId: "fixture-denominator",
+          driverRouteAssignments: [
+            fixtureComponentAssignment({ componentOwners: [] }),
+          ],
+        },
+      ],
+    );
+    writeComponentConnector(
+      fixtureRoot,
+      "packages/battle-runtime/rule-core-fixture.mbt.qnt",
+    );
+    const result = checkReducerRouteConnectors(fixtureRoot);
+    expectFailure(
+      result.failures,
+      "component-first row needs componentOwners",
+      "Self-test expected missing component owner failure",
+    );
+  });
+
   console.log("Reducer-route connector self-test OK.");
 }
 
@@ -382,6 +796,6 @@ if (process.argv.includes("--self-test")) {
     process.exit(1);
   }
   console.log(
-    `Reducer-route connector gate passed (${result.expectedConnectorCount} queued connectors discovered).`,
+    `Reducer-route connector gate passed (${result.expectedConnectorCount} queued reducer connectors and ${result.expectedComponentConnectorCount} component connectors discovered).`,
   );
 }

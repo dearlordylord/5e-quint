@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module ruleCoreStatBlockControlsMbt {
+  import ruleCoreComponentRoute.* from "./rule-core-component-route"
   import statBlockControls.* from "../shared-algebras/proofs/rule-core/stat-block-controls"
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
@@ -18,8 +19,12 @@ module ruleCoreStatBlockControlsMbt {
   var qMovementRemainingFeet: int
   var qMultiattackContinuationOpen: bool
   var qProtocol: WitnessProtocol[str]
+  var qComponentRoute: List[RuleCoreComponentRouteEvent]
 
   pure def qHoles: Set[str] = qProtocol.holes
+
+  pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
+    ruleCoreComponentRoute(RuleCoreStatBlockControlOwner)
 
   pure def witnessInvalidReasonForProjection(reason: str): WitnessInvalidReason =
     if (reason == "staleSubject") WStaleSubject else WInvalidFill
@@ -63,6 +68,7 @@ module ruleCoreStatBlockControlsMbt {
     qMovementRemainingFeet' = movementRemainingFeet,
     qMultiattackContinuationOpen' = multiattackContinuationOpen,
     qProtocol' = witnessProtocolForProjection(holes, result, invalidReason),
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action init = recordProjection(

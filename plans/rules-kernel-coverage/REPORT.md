@@ -710,6 +710,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-witness-protocol.qnt` | exempt | witness-protocol-leaf: Typed witness protocol vocabulary leaf for lightweight battle-runtime MBT witnesses. |
 | `packages/battle-runtime/creature-attack.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/rule-core-component-route.qnt` | exempt | leaf-type-vocabulary: Rule-core component route vocabulary leaf shared by component-first MBT drivers; executable component evidence is registered on the rule-core driver witnesses. |
 | `packages/character-battle-runtime/character-battle-reducer-route.qnt` | exempt | leaf-type-vocabulary: Character-battle handoff reducer-route vocabulary leaf for future route connectors; executable handoff route coverage will be registered by connector owners. |
 | `packages/character-creation-runtime/character-creation-reducer-route.qnt` | exempt | leaf-type-vocabulary: Character-creation reducer-route vocabulary leaf for future route connectors; executable creation route coverage will be registered by connector owners. |
 | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | qnt-owner-role | semantic-core |

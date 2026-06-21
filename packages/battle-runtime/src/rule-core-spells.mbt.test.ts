@@ -27,6 +27,11 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  decodeRuleCoreComponentRoute,
+  type RuleCoreComponentRoutedProjection,
+  withRuleCoreComponentRoute,
+} from "./rule-core-component-route.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -106,7 +111,7 @@ const spellActiveEffectKinds = [
 ] as const;
 type SpellActiveEffectKind = (typeof spellActiveEffectKinds)[number];
 
-type RuleCoreSpellProjection = {
+type RuleCoreSpellProjection = RuleCoreComponentRoutedProjection & {
   readonly actionAvailable: boolean;
   readonly bonusActionAvailable: boolean;
   readonly casterReactionAvailable: boolean;
@@ -132,6 +137,7 @@ const targetId = combatantId("rule-core-spell-target");
 const secondTargetId = combatantId("rule-core-spell-second-target");
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
+const componentOwner = "RuleCoreSpellProcedureProfileOwner";
 
 const spellRecords = new Map(
   [
@@ -556,9 +562,9 @@ const selectedUnitIdentityReplays = [
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 function expectedSpellProjection(
-  overrides: Partial<RuleCoreSpellProjection> = {},
+  overrides: Partial<Omit<RuleCoreSpellProjection, "componentRoute">> = {},
 ): RuleCoreSpellProjection {
-  return {
+  return withRuleCoreComponentRoute(componentOwner, {
     actionAvailable: true,
     bonusActionAvailable: true,
     casterReactionAvailable: true,
@@ -578,7 +584,7 @@ function expectedSpellProjection(
     lastResult: "init",
     lastInvalidReason: "none",
     ...overrides,
-  };
+  });
 }
 
 function resetSelectedUnitRuntimeBoundaryIds(): void {
@@ -1984,7 +1990,7 @@ function projectRuleCoreSpellState(input: {
   if (caster === undefined || target === undefined) {
     throw new Error("Expected rule-core Spell caster and target.");
   }
-  return {
+  return withRuleCoreComponentRoute(componentOwner, {
     actionAvailable: snapshot.turn.actionResources.length > 0,
     bonusActionAvailable: snapshot.turn.bonusActionAvailable,
     casterReactionAvailable: caster.reactionAvailable,
@@ -2014,7 +2020,7 @@ function projectRuleCoreSpellState(input: {
     holes: input.holes.map(projectSpellHole),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
-  };
+  });
 }
 
 function activeEffectKind(state: BattleState): SpellActiveEffectKind {
@@ -2069,6 +2075,7 @@ function normalizeRuleCoreSpellQuintState(
     compareHoles: (left, right) => left.localeCompare(right),
   });
   return {
+    componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
     actionAvailable: booleanField(state, "qActionAvailable"),
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
     casterReactionAvailable: booleanField(state, "qCasterReactionAvailable"),
