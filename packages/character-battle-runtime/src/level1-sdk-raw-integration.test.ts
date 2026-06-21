@@ -1,9 +1,11 @@
 import {
+  cantripSpellInvocationRef,
   combatantId,
   discoverBattleActs,
   endTurn,
   resolveBattleSubject,
   snapshotBattle,
+  spellSaveDcForCaster,
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
@@ -48,6 +50,7 @@ const bardId = combatantId("combatant:l1-sdk-bard");
 const inspiredAllyId = combatantId("combatant:l1-sdk-inspired-ally");
 const rogueId = combatantId("combatant:l1-sdk-rogue");
 const rogueAllyId = combatantId("combatant:l1-sdk-rogue-ally");
+const sorcererId = combatantId("combatant:l1-sdk-sorcerer");
 const monkId = combatantId("combatant:l1-sdk-monk");
 const monsterId = combatantId("combatant:l1-sdk-monster");
 
@@ -57,6 +60,8 @@ const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 const monkMartialArtsUnitId = "monk_martial_arts";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const rogueSneakAttackName = "Dagger";
+const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
+const sorcerousBurstSpellId = "sorcerous_burst";
 
 describe("level 1 SDK RAW integration", () => {
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
@@ -65,7 +70,7 @@ describe("level 1 SDK RAW integration", () => {
       characters: [
         characterSheet({
           characterIdText: "character:l1-sdk-second-wind",
-          build: levelOneMartialBuild({
+          build: levelOneSingleClassBuild({
             classUnitId: "class_fighter",
             weaponUnitId: "weapon_longsword",
           }),
@@ -123,7 +128,7 @@ describe("level 1 SDK RAW integration", () => {
       characters: [
         characterSheet({
           characterIdText: "character:l1-sdk-rage",
-          build: levelOneMartialBuild({
+          build: levelOneSingleClassBuild({
             classUnitId: "class_barbarian",
             weaponUnitId: "weapon_longsword",
             abilityScores: {
@@ -205,7 +210,7 @@ describe("level 1 SDK RAW integration", () => {
       characters: [
         characterSheet({
           characterIdText: "character:l1-sdk-sneak-attack",
-          build: levelOneMartialBuild({
+          build: levelOneSingleClassBuild({
             classUnitId: "class_rogue",
             weaponUnitId: "weapon_dagger",
             abilityScores: {
@@ -223,7 +228,7 @@ describe("level 1 SDK RAW integration", () => {
         }),
         characterSheet({
           characterIdText: "character:l1-sdk-sneak-attack-ally",
-          build: levelOneMartialBuild({
+          build: levelOneSingleClassBuild({
             classUnitId: "class_fighter",
             weaponUnitId: "weapon_longsword",
           }),
@@ -311,7 +316,7 @@ describe("level 1 SDK RAW integration", () => {
       characters: [
         characterSheet({
           characterIdText: "character:l1-sdk-bardic-inspiration",
-          build: levelOneMartialBuild({
+          build: levelOneSingleClassBuild({
             classUnitId: "class_bard",
             abilityScores: {
               str: 10,
@@ -328,7 +333,7 @@ describe("level 1 SDK RAW integration", () => {
         }),
         characterSheet({
           characterIdText: "character:l1-sdk-bardic-inspiration-ally",
-          build: levelOneMartialBuild({
+          build: levelOneSingleClassBuild({
             classUnitId: "class_fighter",
             weaponUnitId: "weapon_longsword",
           }),
@@ -380,13 +385,138 @@ describe("level 1 SDK RAW integration", () => {
     );
   });
 
+  test("Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses", () => {
+    const state = battleFromSheets({
+      battleIdText: "battle:l1-sdk-innate-sorcery",
+      characters: [
+        characterSheet({
+          characterIdText: "character:l1-sdk-innate-sorcery",
+          build: levelOneSingleClassBuild({
+            classUnitId: "class_sorcerer",
+            abilityScores: {
+              str: 8,
+              dex: 14,
+              con: 14,
+              int: 10,
+              wis: 10,
+              cha: 16,
+            },
+            spellcasting: {
+              sources: [
+                {
+                  sourceUnitId: "class_sorcerer",
+                  spellcastingAbility: "cha",
+                  cantrips: [
+                    "fire_bolt",
+                    "light",
+                    "shocking_grasp",
+                    sorcerousBurstSpellId,
+                  ],
+                  spellbook: [],
+                  preparedSpells: ["burning_hands", "detect_magic"],
+                  spellcastingFocuses: ["arcane_focus"],
+                },
+              ],
+              slotPools: {
+                spellcasting: {
+                  kind: "spellcasting",
+                  slots: [{ spellLevel: 1, count: 2 }],
+                },
+              },
+            },
+          }),
+          combatantId: sorcererId,
+          initiative: 20,
+          maximumHp: 8,
+        }),
+      ],
+      monsters: [
+        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      ],
+    });
+    const act = unitFeatureActForUnitId(
+      state,
+      sorcererId,
+      sorcererInnateSorceryUnitId,
+    );
+    const preActivationSorcerer = requireCharacterCombatant(state, sorcererId);
+
+    expect(preActivationSorcerer.origin.characterUnitRefs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ unitId: sorcererInnateSorceryUnitId }),
+      ]),
+    );
+    expect(characterResources(preActivationSorcerer)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: sorcererInnateSorceryUnitId }),
+          usesRemaining: 2,
+        }),
+      ]),
+    );
+    expect(spellSaveDcForCaster(state, sorcererId)).toBe(13);
+
+    const activated = requireResolved(
+      resolveBattleSubject({ state, subject: act.subject, fills: [] }),
+    ).state;
+    const sorcerer = requireCharacterCombatant(activated, sorcererId);
+
+    expect(snapshotBattle(activated).turn.bonusActionAvailable).toBe(false);
+    expect(characterResources(sorcerer)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: sorcererInnateSorceryUnitId }),
+          usesRemaining: 1,
+        }),
+      ]),
+    );
+    expect([...sorcerer.activeOngoingFeatureOccurrences]).toEqual([
+      [
+        sorcererInnateSorceryUnitId,
+        {
+          kind: "fixedDuration",
+          expiresAt: {
+            kind: "endOfTurn",
+            combatantId: sorcererId,
+            round: 11,
+          },
+        },
+      ],
+    ]);
+    expect(spellSaveDcForCaster(activated, sorcererId)).toBe(14);
+
+    const spellAct = cantripCastActionSpellAct(
+      activated,
+      sorcererId,
+      sorcerousBurstSpellId,
+    );
+    const damageType = requireHoleFromList(
+      spellAct.initialHoles,
+      "damageTypeChoice",
+    );
+    const target = requireHoleFromList(spellAct.initialHoles, "targetChoice");
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state: activated,
+        subject: spellAct.subject,
+        fills: [
+          damageTypeChoiceFill(damageType, "fire"),
+          spellTargetFill(target, sorcerousBurstSpellId, sorcererId, monsterId),
+        ],
+      }),
+      "attackRoll",
+    );
+
+    expect(attackRoll).toMatchObject({ rollMode: "advantage" });
+  });
+
   test("Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity", () => {
     const state = battleFromSheets({
       battleIdText: "battle:l1-sdk-martial-arts",
       characters: [
         characterSheet({
           characterIdText: "character:l1-sdk-martial-arts",
-          build: levelOneMartialBuild({
+          build: levelOneSingleClassBuild({
             classUnitId: "class_monk",
             abilityScores: {
               str: 10,
@@ -440,6 +570,16 @@ type UnitFeatureSubject = Extract<
 type UnitFeatureAct = AvailableBattleAct & {
   readonly subject: UnitFeatureSubject;
 };
+type ActionSpellSubject = Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+>;
+type CastActionSpellSubject = ActionSpellSubject & {
+  readonly mode: { readonly tag: "cast" };
+};
+type CastActionSpellAct = AvailableBattleAct & {
+  readonly subject: CastActionSpellSubject;
+};
 type MartialArtsBonusUnarmedStrikeSubject = Extract<
   BattleSubject,
   {
@@ -457,10 +597,11 @@ type OrdinaryAttackDamageSubject =
     >
   | MartialArtsBonusUnarmedStrikeSubject;
 
-function levelOneMartialBuild(input: {
+function levelOneSingleClassBuild(input: {
   readonly classUnitId: UnitRecord["id"];
   readonly weaponUnitId?: UnitRecord["id"];
   readonly abilityScores?: Parameters<typeof abilityScoreAssignment>[0];
+  readonly spellcasting?: CharacterBuild["spellcasting"];
 }): CharacterBuild {
   const equipment = levelOneEquipment(input.weaponUnitId);
   return {
@@ -487,6 +628,9 @@ function levelOneMartialBuild(input: {
     ),
     proficiencyChoices: [],
     features: [],
+    ...(input.spellcasting === undefined
+      ? {}
+      : { spellcasting: input.spellcasting }),
     equipment,
   };
 }
@@ -522,6 +666,33 @@ function unitFeatureActForUnitId(
   return act;
 }
 
+function cantripCastActionSpellAct(
+  state: BattleState,
+  actorId: CombatantId,
+  spellId: UnitRecord["id"],
+): CastActionSpellAct {
+  const expectedInvocation = cantripSpellInvocationRef(
+    spellId,
+    "spellAttackDamage",
+  );
+  if (expectedInvocation.tag !== "cantrip") {
+    throw new Error(`Expected ${spellId} cantrip invocation.`);
+  }
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is CastActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.mode.tag === "cast" &&
+      candidate.subject.invocation.tag === "cantrip" &&
+      candidate.subject.invocation.spellId === expectedInvocation.spellId &&
+      candidate.subject.invocation.procedure === expectedInvocation.procedure,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected ${spellId} cantrip spell act.`);
+  }
+  return act;
+}
+
 function martialArtsBonusUnarmedStrikeAct(
   state: BattleState,
   actorId: CombatantId,
@@ -536,6 +707,27 @@ function martialArtsBonusUnarmedStrikeAct(
     throw new Error("Expected Martial Arts Bonus Action Unarmed Strike act.");
   }
   return act;
+}
+
+function damageTypeChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
+  value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
+): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
+  return { kind: "damageTypeChoice", holeId: hole.holeId, value };
+}
+
+function spellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: UnitRecord["id"],
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [{ kind: "spellTarget", casterId, targetId, spellId }],
+  };
 }
 
 function bardicInspirationTargetFill(

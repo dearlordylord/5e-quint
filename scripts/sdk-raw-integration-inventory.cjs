@@ -168,6 +168,17 @@ const seededSdkScenarioRows = [
     tracerNeedles: ["rogueSneakAttackUnitId"],
   },
   {
+    candidateUnitId: "sorcerer_innate_sorcery",
+    className: "Sorcerer",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+    tracerNeedles: ["sorcererInnateSorceryUnitId", "sorcerousBurstSpellId"],
+  },
+  {
     candidateUnitId: "monk_extra_attack",
     className: "Monk",
     levelBand: "level-5",

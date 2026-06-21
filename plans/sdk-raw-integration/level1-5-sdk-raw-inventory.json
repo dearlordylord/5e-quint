@@ -35825,6 +35825,10 @@
       "category": "class feature",
       "className": "Sorcerer",
       "concept": "Sorcerer Innate Sorcery",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -35858,7 +35862,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 86,
         "lineStart": 78,
@@ -56149,15 +56153,15 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 493,
+      "sdk-scenario-needed": 492,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 11,
+      "seed-scenario-present": 12,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 384,
     "scenarioGroupsByLane": {
-      "battle-feature-sdk": 22,
+      "battle-feature-sdk": 21,
       "battle-spell-sdk": 113,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
@@ -56168,7 +56172,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 11,
+      "seed-present": 12,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -56182,61 +56186,6 @@
     }
   },
   "scenarioGroups": [
-    {
-      "candidateUnitIds": [
-        "sorcerer_innate_sorcery"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Sorcerer"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-feature-sdk:sorcerer-innate-sorcery",
-      "lane": "battle-feature-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-feature-sdk\",\"sorcerer_innate_sorcery\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md:78"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "sorcerer_innate_sorcery",
-          "className": "Sorcerer",
-          "concept": "Sorcerer Innate Sorcery",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 86,
-            "lineStart": 78,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Sorcerer Innate Sorcery"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Build or sheet the class at the required level, project to battle, discover/resolve the feature act or trigger, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
     {
       "candidateUnitIds": [
         "acid_splash"
@@ -65697,6 +65646,61 @@
       ],
       "sampleConcepts": [
         "Rogue Sneak Attack"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "sorcerer_innate_sorcery"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-sorcerer-sorcerer-innate-sorcery",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Sorcerer:sorcerer_innate_sorcery\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:78"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "sorcerer_innate_sorcery",
+          "className": "Sorcerer",
+          "concept": "Sorcerer Innate Sorcery",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 86,
+            "lineStart": 78,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer Innate Sorcery"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -84291,6 +84295,21 @@
       "rowKey": "level-1:Rogue:rogue_sneak_attack",
       "tracerNeedles": [
         "rogueSneakAttackUnitId"
+      ]
+    },
+    {
+      "candidateUnitId": "sorcerer_innate_sorcery",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+      "rowKey": "level-1:Sorcerer:sorcerer_innate_sorcery",
+      "tracerNeedles": [
+        "sorcererInnateSorceryUnitId",
+        "sorcerousBurstSpellId"
       ]
     },
     {
