@@ -68,7 +68,7 @@ let wizard =
           , cantripAccess =
               { kind = "known_cantrips"
               , choose = 3
-              , spellIds = [ "light", "fire_bolt", "ray_of_frost", "minor_illusion", "acid_splash", "shocking_grasp" ]
+              , spellIds = [ "light", "fire_bolt", "ray_of_frost", "minor_illusion", "acid_splash", "poison_spray", "shocking_grasp" ]
               , changeOn = { kind = "long_rest", count = 1 }
               }
           , spellbookAccess =

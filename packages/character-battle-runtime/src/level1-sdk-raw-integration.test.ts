@@ -98,6 +98,12 @@ const acidSplashSorcererId = combatantId(
   "combatant:l1-sdk-acid-splash-sorcerer",
 );
 const acidSplashWizardId = combatantId("combatant:l1-sdk-acid-splash-wizard");
+const poisonSpraySorcererId = combatantId(
+  "combatant:l1-sdk-poison-spray-sorcerer",
+);
+const poisonSprayWizardId = combatantId(
+  "combatant:l1-sdk-poison-spray-wizard",
+);
 const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
 const fireBoltWizardId = combatantId("combatant:l1-sdk-fire-bolt-wizard");
 const rayOfFrostSorcererId = combatantId(
@@ -157,6 +163,7 @@ const rogueSneakAttackName = "Dagger";
 const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
+const poisonSpraySpellId = "poison_spray";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
 const rayOfFrostSpellId = "ray_of_frost";
@@ -719,6 +726,43 @@ describe("level 1 SDK RAW integration", () => {
       build: wizardBuild,
       casterId: acidSplashWizardId,
       expectedSpellSaveDc: 13,
+    });
+  });
+
+  test("Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage", () => {
+    const sorcererBuild = finalizedLevelOneSorcererPoisonSprayBuild();
+    const wizardBuild = finalizedLevelOneWizardPoisonSprayBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          cantrips: expect.arrayContaining([poisonSpraySpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          cantrips: expect.arrayContaining([poisonSpraySpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOnePoisonSpray({
+      battleIdText: "battle:l1-sdk-poison-spray-sorcerer",
+      characterIdText: "character:l1-sdk-poison-spray-sorcerer",
+      build: sorcererBuild,
+      casterId: poisonSpraySorcererId,
+      expectedSpellAttackBonus: 4,
+    });
+    assertLevelOnePoisonSpray({
+      battleIdText: "battle:l1-sdk-poison-spray-wizard",
+      characterIdText: "character:l1-sdk-poison-spray-wizard",
+      build: wizardBuild,
+      casterId: poisonSprayWizardId,
+      expectedSpellAttackBonus: 5,
     });
   });
 
@@ -1392,6 +1436,121 @@ function assertLevelOneAcidSplash(input: {
 
   expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(9));
   expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+}
+
+function assertLevelOnePoisonSpray(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellAttackBonus: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock("stat_block_goblin_warrior"),
+      ),
+    ],
+  });
+  const act = cantripCastActionSpellAct(
+    state,
+    input.casterId,
+    poisonSpraySpellId,
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(
+    target,
+    poisonSpraySpellId,
+    input.casterId,
+    monsterId,
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "attackRoll",
+  );
+
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([monsterId]),
+  });
+  expect(attackRoll).toMatchObject({
+    attackBonus: input.expectedSpellAttackBonus,
+    spell: {
+      resource: { tag: "none" },
+      attackKind: "ranged_spell_attack",
+      targeting: { kind: "singleCombatant" },
+      rangeFeet: 30,
+      damage: {
+        kind: "fixedSpellAttackDamage",
+        expr: { dice: 1, dieSize: 12 },
+        damageType: "poison",
+      },
+      postDamageRiders: [],
+    },
+  });
+
+  const attackFill = attackRollFill(attackRoll, {
+    total: 13 + input.expectedSpellAttackBonus,
+    naturalD20: 13,
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, attackFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Poison Spray damage (1d12-poison)",
+    spell: {
+      resource: { tag: "none" },
+      damage: {
+        kind: "fixedSpellAttackDamage",
+        expr: { dice: 1, dieSize: 12 },
+        damageType: "poison",
+      },
+      postDamageRiders: [],
+    },
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: ordinaryAttackDamageFills({
+        state,
+        subject: act.subject,
+        prefixFills: [targetFill, attackFill],
+        damage,
+        damageDice: [[7]],
+      }),
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
   expect(caster.origin.spellcasting?.spellSlots).toEqual([
     { spellLevel: 1, count: 2, expended: 0 },
@@ -2560,6 +2719,20 @@ function finalizedLevelOneSorcererAcidSplashBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererPoisonSprayBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-poison-spray",
+    expectedBuildLabel: "Sorcerer Poison Spray",
+    cantrips: [
+      poisonSpraySpellId,
+      fireBoltSpellId,
+      shockingGraspSpellId,
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [burningHandsSpellId, "detect_magic"],
+  });
+}
+
 function finalizedLevelOneSorcererRayOfFrostBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-ray-of-frost",
@@ -2830,6 +3003,23 @@ function finalizedLevelOneWizardAcidSplashBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-wizard-acid-splash",
     expectedBuildLabel: "Wizard Acid Splash",
     cantrips: [acidSplashSpellId, fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      "detect_magic",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+      "thunderwave",
+    ],
+    preparedSpells: ["detect_magic", "mage_armor", "magic_missile", "shield"],
+  });
+}
+
+function finalizedLevelOneWizardPoisonSprayBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-poison-spray",
+    expectedBuildLabel: "Wizard Poison Spray",
+    cantrips: [poisonSpraySpellId, fireBoltSpellId, "ray_of_frost"],
     spellbook: [
       "detect_magic",
       "mage_armor",

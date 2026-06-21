@@ -297,6 +297,130 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "poison_spray",
+    className: "Sorcerer",
+    levelBand: "spell-level-0",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+    tracerNeedles: [
+      "const sorcererBuild = finalizedLevelOneSorcererPoisonSprayBuild();",
+      'sourceUnitId: "class_sorcerer"',
+      "cantrips: expect.arrayContaining([poisonSpraySpellId])",
+      "build: sorcererBuild,",
+      "casterId: poisonSpraySorcererId,",
+      "expectedSpellAttackBonus: 4,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneSorcererPoisonSprayBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneSorcererBuild({",
+          'draftIdText: "draft:l1-sdk-sorcerer-poison-spray"',
+          'expectedBuildLabel: "Sorcerer Poison Spray"',
+          "poisonSpraySpellId,",
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneSorcererBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOnePoisonSpray",
+        needles: [
+          "cantripCastActionSpellAct(",
+          "poisonSpraySpellId",
+          'srdStatBlock("stat_block_goblin_warrior")',
+          "spellTargetFill(",
+          "attackBonus: input.expectedSpellAttackBonus",
+          'resource: { tag: "none" }',
+          'attackKind: "ranged_spell_attack"',
+          'targeting: { kind: "singleCombatant" }',
+          "rangeFeet: 30",
+          'kind: "fixedSpellAttackDamage"',
+          "expr: { dice: 1, dieSize: 12 }",
+          'damageType: "poison"',
+          "postDamageRiders: []",
+          'label: "Poison Spray damage (1d12-poison)"',
+          "ordinaryAttackDamageFills({",
+          "damageDice: [[7]]",
+          "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
+          "{ spellLevel: 1, count: 2, expended: 0 }",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "poison_spray",
+    className: "Wizard",
+    levelBand: "spell-level-0",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+    tracerNeedles: [
+      "const wizardBuild = finalizedLevelOneWizardPoisonSprayBuild();",
+      'sourceUnitId: "class_wizard"',
+      "cantrips: expect.arrayContaining([poisonSpraySpellId])",
+      "build: wizardBuild,",
+      "casterId: poisonSprayWizardId,",
+      "expectedSpellAttackBonus: 5,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneWizardPoisonSprayBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneWizardBuild({",
+          'draftIdText: "draft:l1-sdk-wizard-poison-spray"',
+          'expectedBuildLabel: "Wizard Poison Spray"',
+          'cantrips: [poisonSpraySpellId, fireBoltSpellId, "ray_of_frost"]',
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneWizardBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOnePoisonSpray",
+        needles: [
+          "cantripCastActionSpellAct(",
+          "poisonSpraySpellId",
+          'srdStatBlock("stat_block_goblin_warrior")',
+          "spellTargetFill(",
+          "attackBonus: input.expectedSpellAttackBonus",
+          'resource: { tag: "none" }',
+          'attackKind: "ranged_spell_attack"',
+          'targeting: { kind: "singleCombatant" }',
+          "rangeFeet: 30",
+          'kind: "fixedSpellAttackDamage"',
+          "expr: { dice: 1, dieSize: 12 }",
+          'damageType: "poison"',
+          "postDamageRiders: []",
+          'label: "Poison Spray damage (1d12-poison)"',
+          "ordinaryAttackDamageFills({",
+          "damageDice: [[7]]",
+          "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
+          "{ spellLevel: 1, count: 2, expended: 0 }",
+        ],
+      },
+    ],
+  },
+  {
     candidateUnitId: "ray_of_frost",
     className: "Sorcerer",
     levelBand: "spell-level-0",

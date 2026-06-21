@@ -37438,6 +37438,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Poison Spray",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -37445,7 +37449,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 233,
         "lineStart": 233,
@@ -45447,6 +45451,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Poison Spray",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -45454,7 +45462,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 152,
         "lineStart": 152,
@@ -56241,13 +56249,13 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 470,
+      "sdk-scenario-needed": 468,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 34,
+      "seed-scenario-present": 36,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 396,
+    "scenarioGroups": 398,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
       "battle-spell-sdk": 103,
@@ -56260,13 +56268,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 34,
+      "seed-present": 36,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 159,
+      "L15-SDK-RAW-03": 161,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -59017,9 +59025,7 @@
       ],
       "classNames": [
         "Druid",
-        "Sorcerer",
-        "Warlock",
-        "Wizard"
+        "Warlock"
       ],
       "groupId": "l15-sdk-raw-03:battle-spell-sdk:poison-spray",
       "lane": "battle-spell-sdk",
@@ -59035,11 +59041,9 @@
       "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"poison_spray\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Druid.md:193",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:233",
-        ".references/srd-5.2.1/Classes/Warlock.md:340",
-        ".references/srd-5.2.1/Classes/Wizard.md:152"
+        ".references/srd-5.2.1/Classes/Warlock.md:340"
       ],
-      "rowCount": 4,
+      "rowCount": 2,
       "rowKinds": [
         "spell-unit-pressure"
       ],
@@ -59061,21 +59065,6 @@
         },
         {
           "candidateUnitId": "poison_spray",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Poison Spray",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 233,
-            "lineStart": 233,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "poison_spray",
           "className": "Warlock",
           "concept": "Warlock spell list Poison Spray",
           "levelBand": "spell-level-0",
@@ -59088,28 +59077,11 @@
             "lineStart": 340,
             "path": ".references/srd-5.2.1/Classes/Warlock.md"
           }
-        },
-        {
-          "candidateUnitId": "poison_spray",
-          "className": "Wizard",
-          "concept": "Wizard spell list Poison Spray",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 152,
-            "lineStart": 152,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
         }
       ],
       "sampleConcepts": [
         "Druid spell list Poison Spray",
-        "Sorcerer spell list Poison Spray",
-        "Warlock spell list Poison Spray",
-        "Wizard spell list Poison Spray"
+        "Warlock spell list Poison Spray"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65142,6 +65114,61 @@
     },
     {
       "candidateUnitIds": [
+        "poison_spray"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-sorcerer-poison-spray",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Sorcerer:poison_spray\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:233"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "poison_spray",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Poison Spray",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 233,
+            "lineStart": 233,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Poison Spray"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "ray_of_frost"
       ],
       "categories": [
@@ -65353,6 +65380,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Fire Bolt"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "poison_spray"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-wizard-poison-spray",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Wizard:poison_spray\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:152"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "poison_spray",
+          "className": "Wizard",
+          "concept": "Wizard spell list Poison Spray",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 152,
+            "lineStart": 152,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Poison Spray"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -84966,6 +85048,130 @@
         "build: wizardBuild,",
         "casterId: acidSplashWizardId,",
         "expectedSpellSaveDc: 13,"
+      ]
+    },
+    {
+      "candidateUnitId": "poison_spray",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneSorcererPoisonSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneSorcererBuild({",
+            "draftIdText: \"draft:l1-sdk-sorcerer-poison-spray\"",
+            "expectedBuildLabel: \"Sorcerer Poison Spray\"",
+            "poisonSpraySpellId,"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneSorcererBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOnePoisonSpray",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "poisonSpraySpellId",
+            "srdStatBlock(\"stat_block_goblin_warrior\")",
+            "spellTargetFill(",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "resource: { tag: \"none\" }",
+            "attackKind: \"ranged_spell_attack\"",
+            "targeting: { kind: \"singleCombatant\" }",
+            "rangeFeet: 30",
+            "kind: \"fixedSpellAttackDamage\"",
+            "expr: { dice: 1, dieSize: 12 }",
+            "damageType: \"poison\"",
+            "postDamageRiders: []",
+            "label: \"Poison Spray damage (1d12-poison)\"",
+            "ordinaryAttackDamageFills({",
+            "damageDice: [[7]]",
+            "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
+            "{ spellLevel: 1, count: 2, expended: 0 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+      "rowKey": "spell-level-0:Sorcerer:poison_spray",
+      "tracerNeedles": [
+        "const sorcererBuild = finalizedLevelOneSorcererPoisonSprayBuild();",
+        "sourceUnitId: \"class_sorcerer\"",
+        "cantrips: expect.arrayContaining([poisonSpraySpellId])",
+        "build: sorcererBuild,",
+        "casterId: poisonSpraySorcererId,",
+        "expectedSpellAttackBonus: 4,"
+      ]
+    },
+    {
+      "candidateUnitId": "poison_spray",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWizardPoisonSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWizardBuild({",
+            "draftIdText: \"draft:l1-sdk-wizard-poison-spray\"",
+            "expectedBuildLabel: \"Wizard Poison Spray\"",
+            "cantrips: [poisonSpraySpellId, fireBoltSpellId, \"ray_of_frost\"]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWizardBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOnePoisonSpray",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "poisonSpraySpellId",
+            "srdStatBlock(\"stat_block_goblin_warrior\")",
+            "spellTargetFill(",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "resource: { tag: \"none\" }",
+            "attackKind: \"ranged_spell_attack\"",
+            "targeting: { kind: \"singleCombatant\" }",
+            "rangeFeet: 30",
+            "kind: \"fixedSpellAttackDamage\"",
+            "expr: { dice: 1, dieSize: 12 }",
+            "damageType: \"poison\"",
+            "postDamageRiders: []",
+            "label: \"Poison Spray damage (1d12-poison)\"",
+            "ordinaryAttackDamageFills({",
+            "damageDice: [[7]]",
+            "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
+            "{ spellLevel: 1, count: 2, expended: 0 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+      "rowKey": "spell-level-0:Wizard:poison_spray",
+      "tracerNeedles": [
+        "const wizardBuild = finalizedLevelOneWizardPoisonSprayBuild();",
+        "sourceUnitId: \"class_wizard\"",
+        "cantrips: expect.arrayContaining([poisonSpraySpellId])",
+        "build: wizardBuild,",
+        "casterId: poisonSprayWizardId,",
+        "expectedSpellAttackBonus: 5,"
       ]
     },
     {

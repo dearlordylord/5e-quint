@@ -8,23 +8,23 @@ A provenance part is considered scanner-visible when this script can resolve it 
 
 ## Metrics
 
-- Authored SRD records: 528
-- Provenance parts checked: 534
+- Authored SRD records: 575
+- Provenance parts checked: 584
 - Failures: 0
-- Warnings: 98
-- Unit reference checks: 165
+- Warnings: 107
+- Unit reference checks: 194
 - Unit reference failures: 0
-- Unit reference warnings: 7
+- Unit reference warnings: 5
 
 ### Status Counts
 
 | Status | Count |
 |---|---:|
-| ok-heading | 336 |
-| ok-heading-alias | 90 |
-| ok-line-range | 98 |
+| ok-heading | 364 |
+| ok-heading-alias | 89 |
+| ok-line-range | 111 |
 | ok-prose-anchor | 2 |
-| ok-prose-anchor-alias | 8 |
+| ok-prose-anchor-alias | 18 |
 
 ### Authored Record Kinds
 
@@ -34,15 +34,15 @@ A provenance part is considered scanner-visible when this script can resolve it 
 | armor_template | 3 |
 | background | 4 |
 | class | 12 |
-| class_feature | 101 |
-| feat | 8 |
+| class_feature | 110 |
+| feat | 13 |
 | magic_item | 71 |
 | mastery | 3 |
 | shield | 1 |
 | shield_template | 2 |
-| species | 12 |
-| species_trait | 11 |
-| spell | 220 |
+| species | 18 |
+| species_trait | 21 |
+| spell | 240 |
 | statBlock | 21 |
 | subclass | 12 |
 | weapon | 38 |
@@ -52,9 +52,9 @@ A provenance part is considered scanner-visible when this script can resolve it 
 
 | Boundary | Provenance parts |
 |---|---:|
-| authored-not-installed | 232 |
+| authored-not-installed | 223 |
 | srd-stat-block-collection | 21 |
-| srd-unit-collection | 281 |
+| srd-unit-collection | 340 |
 
 ### Unit Reference Closure
 
@@ -62,8 +62,8 @@ This checks scanner-visible Unit references inside authored records: class/subcl
 
 | Status | Count |
 |---|---:|
-| ok-authored-unit | 158 |
-| srd-spell-reference-without-authored-unit | 7 |
+| ok-authored-unit | 189 |
+| srd-spell-reference-without-authored-unit | 5 |
 
 #### Unit Reference Failures
 
@@ -77,9 +77,7 @@ These references point to scanner-visible SRD spell sections, but the target spe
 
 | Owner | Relation | Field | Target Unit |
 |---|---|---|---|
-| `cleric_life_domain_spells` | spell-list | `mechanics.grants[0].tiers[1].spellIds[1]` | `revivify` |
 | `cleric_life_domain_spells` | spell-list | `mechanics.grants[0].tiers[3].spellIds[0]` | `greater_restoration` |
-| `druid_circle_of_the_land_spells` | spell-list | `mechanics.grants[0].spellsByLand.polar[1].spellIds[0]` | `sleet_storm` |
 | `druid_circle_of_the_land_spells` | spell-list | `mechanics.grants[0].spellsByLand.temperate[3].spellIds[0]` | `tree_stride` |
 | `paladin_oath_of_devotion_spells` | spell-list | `mechanics.grants[0].tiers[3].spellIds[1]` | `guardian_of_faith` |
 | `paladin_oath_of_devotion_spells` | spell-list | `mechanics.grants[0].tiers[4].spellIds[0]` | `commune` |
@@ -183,7 +181,6 @@ Warnings are scanner-visible through a known legacy alias, but the provenance st
 | `magic_item_weapon_1_2_or_3` | weapon_template | Weapon, +1, +2, or +3 | `packages/surface/content/magic_item_weapon_1_2_or_3.json` | ok-heading-alias | `MagicItems#Weapon+1+2or+3` -> `Magic-Items/Items-Q-Z.md#Weapon, +1, +2, or +3` |
 | `major_image` | spell | Major Image | `packages/surface/content/major_image.json` | ok-heading-alias | `Spells/Descriptions-M#Major Image` -> `Spells/Descriptions-M-P.md#Major Image` |
 | `minor_illusion` | spell | Minor Illusion | `packages/surface/content/minor_illusion.json` | ok-heading-alias | `Spells/Descriptions-M-R#Minor Illusion` -> `Spells/Descriptions-M-P.md#Minor Illusion` |
-| `poison_spray` | spell | Poison Spray | `packages/surface/content/poison_spray.json` | ok-heading-alias | `Spells/Descriptions-N-R#Poison Spray` -> `Spells/Descriptions-M-P.md#Poison Spray` |
 | `shield` | spell | Shield | `packages/surface/content/shield.json` | ok-heading-alias | `Spells/Descriptions-Q-Z#Shield` -> `Spells/Descriptions-S-Z.md#Shield` |
 | `silent_image` | spell | Silent Image | `packages/surface/content/silent_image.json` | ok-heading-alias | `Spells/Descriptions-M-R#Silent Image` -> `Spells/Descriptions-S-Z.md#Silent Image` |
 | `species_dragonborn_breath_weapon` | species_trait | Breath Weapon | `packages/surface/content/species_dragonborn_breath_weapon.json` | ok-prose-anchor-alias | `Character-Origins/Dragonborn#Breath Weapon` -> `Character-Origins.md:118 (Breath Weapon)` |
@@ -191,7 +188,17 @@ Warnings are scanner-visible through a known legacy alias, but the provenance st
 | `species_dragonborn_darkvision` | species_trait | Darkvision (Dragonborn) | `packages/surface/content/species_dragonborn_darkvision.json` | ok-prose-anchor-alias | `Character-Origins/Dragonborn#Darkvision` -> `Character-Origins.md:124 (Darkvision)` |
 | `dwarf_darkvision` | species_trait | Darkvision | `packages/surface/content/species_dwarf_darkvision.json` | ok-prose-anchor-alias | `Character-Origins/Dwarf#Darkvision` -> `Character-Origins.md:124 (Darkvision)` |
 | `dwarf_dwarven_resilience` | species_trait | Dwarven Resilience | `packages/surface/content/species_dwarf_dwarven_resilience.json` | ok-prose-anchor-alias | `Character-Origins/Dwarf#Dwarven Resilience` -> `Character-Origins.md:138 (Dwarven Resilience)` |
+| `species_gnome_darkvision` | species_trait | Darkvision (Gnome) | `packages/surface/content/species_gnome_darkvision.json` | ok-prose-anchor-alias | `Character-Origins/Gnome#Darkvision` -> `Character-Origins.md:124 (Darkvision)` |
+| `species_gnome_gnomish_cunning` | species_trait | Gnomish Cunning | `packages/surface/content/species_gnome_gnomish_cunning.json` | ok-prose-anchor-alias | `Character-Origins/Gnome#Gnomish Cunning` -> `Character-Origins.md:186 (Gnomish Cunning)` |
+| `species_gnome_gnomish_lineage` | species_trait | Gnomish Lineage | `packages/surface/content/species_gnome_gnomish_lineage.json` | ok-prose-anchor-alias | `Character-Origins/Gnome#Gnomish Lineage` -> `Character-Origins.md:188 (Gnomish Lineage)` |
 | `species_goliath_powerful_build` | species_trait | Powerful Build | `packages/surface/content/species_goliath_powerful_build.json` | ok-prose-anchor-alias | `Character-Origins/Goliath#Powerful Build` -> `Character-Origins.md:212 (Powerful Build)` |
+| `species_halfling_brave` | species_trait | Brave | `packages/surface/content/species_halfling_brave.json` | ok-prose-anchor-alias | `Character-Origins/Halfling#Brave` -> `Character-Origins.md:222 (Brave)` |
+| `species_halfling_luck` | species_trait | Luck | `packages/surface/content/species_halfling_luck.json` | ok-prose-anchor-alias | `Character-Origins/Halfling#Luck` -> `Character-Origins.md:226 (Luck)` |
+| `species_halfling_naturally_stealthy` | species_trait | Naturally Stealthy | `packages/surface/content/species_halfling_naturally_stealthy.json` | ok-prose-anchor-alias | `Character-Origins/Halfling#Naturally Stealthy` -> `Character-Origins.md:228 (Naturally Stealthy)` |
+| `species_halfling_nimbleness` | species_trait | Halfling Nimbleness | `packages/surface/content/species_halfling_nimbleness.json` | ok-prose-anchor-alias | `Character-Origins/Halfling#Halfling Nimbleness` -> `Character-Origins.md:224 (Halfling Nimbleness)` |
+| `species_human_resourceful` | species_trait | Resourceful | `packages/surface/content/species_human_resourceful.json` | ok-prose-anchor-alias | `Character-Origins/Human#Resourceful` -> `Character-Origins.md:238 (Resourceful)` |
+| `species_human_skillful` | species_trait | Skillful | `packages/surface/content/species_human_skillful.json` | ok-prose-anchor-alias | `Character-Origins/Human#Skillful` -> `Character-Origins.md:240 (Skillful)` |
+| `species_human_versatile` | species_trait | Versatile | `packages/surface/content/species_human_versatile.json` | ok-prose-anchor-alias | `Character-Origins/Human#Versatile` -> `Character-Origins.md:242 (Versatile)` |
 | `orc_darkvision` | species_trait | Darkvision | `packages/surface/content/species_orc_darkvision.json` | ok-prose-anchor-alias | `Species/Orc#Darkvision` -> `Character-Origins.md:124 (Darkvision)` |
 | `wall_of_fire` | spell | Wall of Fire | `packages/surface/content/wall_of_fire.json` | ok-heading-alias | `Spells/Descriptions-W#Wall of Fire` -> `Spells/Descriptions-S-Z.md#Wall of Fire` |
 | `wall_of_stone` | spell | Wall of Stone | `packages/surface/content/wall_of_stone.json` | ok-heading-alias | `Spells/Descriptions-W#Wall of Stone` -> `Spells/Descriptions-S-Z.md#Wall of Stone` |

@@ -42,6 +42,7 @@ let sorcerer =
                 , "sorcerous_burst"
                 , "fire_bolt"
                 , "acid_splash"
+                , "poison_spray"
                 , "ray_of_frost"
                 ]
               , changeOn = { kind = "class_level", count = 1 }
