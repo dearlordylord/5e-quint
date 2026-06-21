@@ -33298,6 +33298,21 @@
       "category": "spell Unit pressure",
       "className": "Ranger",
       "concept": "Ranger spell list Cure Wounds",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Ranger Cure Wounds resolves from a level-1 prepared spell-list choice as Magic Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Ranger.md:33-56",
+          ".references/srd-5.2.1/Classes/Ranger.md:58-74",
+          ".references/srd-5.2.1/Classes/Ranger.md:160-176",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
+          ".references/srd-5.2.1/Rules-Glossary.md:138-140",
+          ".references/srd-5.2.1/Rules-Glossary.md:562",
+          ".references/srd-5.2.1/Rules-Glossary.md:698-700"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -33305,7 +33320,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 166,
         "lineStart": 166,
@@ -56435,13 +56450,13 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 443,
+      "sdk-scenario-needed": 442,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 61,
+      "seed-scenario-present": 62,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 405,
+    "scenarioGroups": 406,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
       "battle-spell-sdk": 86,
@@ -56454,13 +56469,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 61,
+      "seed-present": 62,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 168,
+      "L15-SDK-RAW-03": 169,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -56952,8 +56967,7 @@
         "Bard",
         "Cleric",
         "Druid",
-        "Paladin",
-        "Ranger"
+        "Paladin"
       ],
       "groupId": "l15-sdk-raw-03:battle-spell-sdk:cure-wounds",
       "lane": "battle-spell-sdk",
@@ -56971,10 +56985,9 @@
         ".references/srd-5.2.1/Classes/Bard.md:168",
         ".references/srd-5.2.1/Classes/Cleric.md:166",
         ".references/srd-5.2.1/Classes/Druid.md:207",
-        ".references/srd-5.2.1/Classes/Paladin.md:178",
-        ".references/srd-5.2.1/Classes/Ranger.md:166"
+        ".references/srd-5.2.1/Classes/Paladin.md:178"
       ],
-      "rowCount": 5,
+      "rowCount": 4,
       "rowKinds": [
         "spell-unit-pressure"
       ],
@@ -57038,29 +57051,13 @@
             "lineStart": 178,
             "path": ".references/srd-5.2.1/Classes/Paladin.md"
           }
-        },
-        {
-          "candidateUnitId": "cure_wounds",
-          "className": "Ranger",
-          "concept": "Ranger spell list Cure Wounds",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 166,
-            "lineStart": 166,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
         }
       ],
       "sampleConcepts": [
         "Bard spell list Cure Wounds",
         "Cleric spell list Cure Wounds",
         "Druid spell list Cure Wounds",
-        "Paladin spell list Cure Wounds",
-        "Ranger spell list Cure Wounds"
+        "Paladin spell list Cure Wounds"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65926,6 +65923,70 @@
       ],
       "sampleConcepts": [
         "Ranger spell list Animal Friendship"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "cure_wounds"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Ranger"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-ranger-cure-wounds",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Ranger:cure_wounds\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Ranger.md:160-176",
+        ".references/srd-5.2.1/Classes/Ranger.md:166",
+        ".references/srd-5.2.1/Classes/Ranger.md:33-56",
+        ".references/srd-5.2.1/Classes/Ranger.md:58-74",
+        ".references/srd-5.2.1/Rules-Glossary.md:138-140",
+        ".references/srd-5.2.1/Rules-Glossary.md:562",
+        ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "cure_wounds",
+          "className": "Ranger",
+          "concept": "Ranger spell list Cure Wounds",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 166,
+            "lineStart": 166,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Ranger spell list Cure Wounds"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -87514,6 +87575,87 @@
         "slots: [{ spellLevel: 1, count: 2 }]",
         "assertLevelOneHuntersMarkSpellSlot({",
         "casterId: huntersMarkSpellSlotRangerId"
+      ]
+    },
+    {
+      "candidateUnitId": "cure_wounds",
+      "className": "Ranger",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Ranger Cure Wounds resolves from a level-1 prepared spell-list choice as Magic Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Ranger.md:33-56",
+          ".references/srd-5.2.1/Classes/Ranger.md:58-74",
+          ".references/srd-5.2.1/Classes/Ranger.md:160-176",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
+          ".references/srd-5.2.1/Rules-Glossary.md:138-140",
+          ".references/srd-5.2.1/Rules-Glossary.md:562",
+          ".references/srd-5.2.1/Rules-Glossary.md:698-700"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneRangerCureWoundsBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneRangerBuild({",
+            "draftIdText: \"draft:l1-sdk-ranger-cure-wounds\"",
+            "expectedBuildLabel: \"Ranger Cure Wounds\"",
+            "preparedSpells: [cureWoundsSpellId,"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneRangerBuild(input:",
+          "needles": [
+            "createCharacterDraft({",
+            "draftId: characterDraftId(input.draftIdText)",
+            "\"class_ranger\"",
+            "\"class_prepared_spell_choices\"",
+            "...input.preparedSpells",
+            "\"ranger_weapon_mastery\"",
+            "\"weapon_longsword\"",
+            "\"weapon_spear\"",
+            "\"background_criminal\"",
+            "\"class_equipment_choice\"",
+            "\"equipment_purchase\"",
+            "\"wielded_one_handed\"",
+            "input.expectedBuildLabel",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneCureWounds",
+          "needles": [
+            "spellSlotActForProcedure(",
+            "cureWoundsSpellId",
+            "\"directHitPointRestoration\"",
+            "tag: \"actionSpell\"",
+            "requiresTableSpatialFact: true",
+            "label: \"Cure Wounds healing (2d8+1)\"",
+            "actionCost: \"magicAction\"",
+            "healing: { expr: { dice: 2, dieSize: 8, flat: 1 } }",
+            "rangeFeet: 5",
+            "currentHp: 8",
+            "damageRollFillWithGroups(healingRoll,",
+            "expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(12));",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
+      "rowKey": "spell-level-1:Ranger:cure_wounds",
+      "tracerNeedles": [
+        "const rangerBuild = finalizedLevelOneRangerCureWoundsBuild();",
+        "sourceUnitId: \"class_ranger\"",
+        "spellcastingAbility: \"wis\"",
+        "preparedSpells: expect.arrayContaining([cureWoundsSpellId])",
+        "build: rangerBuild,",
+        "casterId: cureWoundsRangerId,",
+        "targetId: cureWoundsTargetId,"
       ]
     },
     {

@@ -1896,6 +1896,37 @@ const seededSdkScenarioRows = [
     helperNeedles: rangerSpellListHuntersMarkSdkHelperNeedles(),
   },
   {
+    candidateUnitId: "cure_wounds",
+    className: "Ranger",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Ranger Cure Wounds resolves from a level-1 prepared spell-list choice as Magic Action Hit Point restoration",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Ranger.md:33-56",
+      ".references/srd-5.2.1/Classes/Ranger.md:58-74",
+      ".references/srd-5.2.1/Classes/Ranger.md:160-176",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1277-1288",
+      ".references/srd-5.2.1/Rules-Glossary.md:138-140",
+      ".references/srd-5.2.1/Rules-Glossary.md:562",
+      ".references/srd-5.2.1/Rules-Glossary.md:698-700",
+    ],
+    rowId:
+      "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
+    tracerNeedles: [
+      "const rangerBuild = finalizedLevelOneRangerCureWoundsBuild();",
+      'sourceUnitId: "class_ranger"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([cureWoundsSpellId])",
+      "build: rangerBuild,",
+      "casterId: cureWoundsRangerId,",
+      "targetId: cureWoundsTargetId,",
+    ],
+    helperNeedles: rangerCureWoundsSdkHelperNeedles(),
+  },
+  {
     candidateUnitId: "healing_word",
     className: "Bard",
     levelBand: "spell-level-1",
@@ -3533,6 +3564,42 @@ function evidenceRowsByRowId(filePath) {
   return new Map(Object.entries(readJson(filePath).rows ?? {}));
 }
 
+function rangerCureWoundsSdkHelperNeedles() {
+  return [
+    {
+      anchor:
+        "function finalizedLevelOneRangerCureWoundsBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneRangerBuild({",
+        'draftIdText: "draft:l1-sdk-ranger-cure-wounds"',
+        'expectedBuildLabel: "Ranger Cure Wounds"',
+        "preparedSpells: [cureWoundsSpellId,",
+      ],
+    },
+    levelOneRangerBuildHelperNeedle(),
+    {
+      anchor: "function assertLevelOneCureWounds",
+      needles: [
+        "spellSlotActForProcedure(",
+        "cureWoundsSpellId",
+        '"directHitPointRestoration"',
+        'tag: "actionSpell"',
+        "requiresTableSpatialFact: true",
+        'label: "Cure Wounds healing (2d8+1)"',
+        'actionCost: "magicAction"',
+        "healing: { expr: { dice: 2, dieSize: 8, flat: 1 } }",
+        "rangeFeet: 5",
+        "currentHp: 8",
+        "damageRollFillWithGroups(healingRoll,",
+        "expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(12));",
+        "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+        "expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);",
+        "{ spellLevel: 1, count: 2, expended: 1 }",
+      ],
+    },
+  ];
+}
+
 function rangerFavoredEnemyHuntersMarkSdkTracerNeedles() {
   return [
     "const rangerBuild = finalizedLevelOneRangerHuntersMarkBuild();",
@@ -3573,7 +3640,7 @@ function rangerFavoredEnemyHuntersMarkSdkHelperNeedles() {
         'preparedSpells: ["cure_wounds", "ensnaring_strike"]',
       ],
     },
-    rangerHuntersMarkBuildHelperNeedle(),
+    levelOneRangerBuildHelperNeedle(),
     {
       anchor: "function assertLevelOneHuntersMark",
       needles: [
@@ -3626,7 +3693,7 @@ function rangerSpellListHuntersMarkSdkHelperNeedles() {
         'preparedSpells: [huntersMarkSpellId, "cure_wounds"]',
       ],
     },
-    rangerHuntersMarkBuildHelperNeedle(),
+    levelOneRangerBuildHelperNeedle(),
     {
       anchor: "function assertLevelOneHuntersMarkSpellSlot",
       needles: [
@@ -3659,7 +3726,7 @@ function rangerSpellListHuntersMarkSdkHelperNeedles() {
   ];
 }
 
-function rangerHuntersMarkBuildHelperNeedle() {
+function levelOneRangerBuildHelperNeedle() {
   return {
     anchor: "function finalizedLevelOneRangerBuild(input:",
     needles: [

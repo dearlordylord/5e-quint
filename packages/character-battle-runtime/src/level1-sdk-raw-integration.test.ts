@@ -181,6 +181,8 @@ const huntersMarkRangerId = combatantId("combatant:l1-sdk-hunters-mark-ranger");
 const huntersMarkSpellSlotRangerId = combatantId(
   "combatant:l1-sdk-hunters-mark-spell-slot-ranger",
 );
+const cureWoundsRangerId = combatantId("combatant:l1-sdk-cure-wounds-ranger");
+const cureWoundsTargetId = combatantId("combatant:l1-sdk-cure-wounds-target");
 const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
 const fireBoltWizardId = combatantId("combatant:l1-sdk-fire-bolt-wizard");
 const rayOfFrostSorcererId = combatantId(
@@ -260,6 +262,7 @@ const chillTouchSpellId = "chill_touch";
 const eldritchBlastSpellId = "eldritch_blast";
 const hexSpellId = "hex";
 const huntersMarkSpellId = "hunters_mark";
+const cureWoundsSpellId = "cure_wounds";
 const rangerFavoredEnemyUnitId = "ranger_favored_enemy";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
@@ -1191,6 +1194,28 @@ describe("level 1 SDK RAW integration", () => {
       build: druidBuild,
       casterId: healingWordDruidId,
       targetId: healingWordTargetId,
+    });
+  });
+
+  test("Ranger Cure Wounds resolves from a level-1 prepared spell-list choice as Magic Action Hit Point restoration", () => {
+    const rangerBuild = finalizedLevelOneRangerCureWoundsBuild();
+
+    expect(rangerBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_ranger",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([cureWoundsSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneCureWounds({
+      battleIdText: "battle:l1-sdk-cure-wounds-ranger",
+      characterIdText: "character:l1-sdk-cure-wounds-ranger",
+      build: rangerBuild,
+      casterId: cureWoundsRangerId,
+      targetId: cureWoundsTargetId,
     });
   });
 
@@ -3716,6 +3741,110 @@ function assertLevelOneHealingWord(input: {
 
   expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(10));
   expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(caster.concentration).toBeNull();
+  expect(caster.activeEffects).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
+function assertLevelOneCureWounds(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly targetId: CombatantId;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 12,
+      }),
+      characterSheet({
+        characterIdText: `${input.characterIdText}-target`,
+        build: levelOneSingleClassBuild({
+          classUnitId: "class_fighter",
+          weaponUnitId: "weapon_longsword",
+        }),
+        combatantId: input.targetId,
+        initiative: 15,
+        maximumHp: 12,
+        currentHp: 8,
+      }),
+    ],
+    monsters: [],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    cureWoundsSpellId,
+    1,
+    "directHitPointRestoration",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+
+  expect(act.subject).toMatchObject({
+    tag: "actionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: cureWoundsSpellId,
+      slotLevel: 1,
+      procedure: "directHitPointRestoration",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(target).toMatchObject({
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([input.targetId]),
+  });
+
+  const targetFill = spellTargetFill(
+    target,
+    cureWoundsSpellId,
+    input.casterId,
+    input.targetId,
+  );
+  const healingRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(healingRoll).toMatchObject({
+    label: "Cure Wounds healing (2d8+1)",
+    spell: {
+      procedure: "directHitPointRestoration",
+      actionCost: "magicAction",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+      healing: { expr: { dice: 2, dieSize: 8, flat: 1 } },
+      rangeFeet: 5,
+    },
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, damageRollFillWithGroups(healingRoll, [[2, 3]])],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(12));
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);
   expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
     { kind: "committed", combatantId: input.casterId },
   ]);
@@ -6397,6 +6526,14 @@ function finalizedLevelOneRangerSpellListHuntersMarkBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-ranger-hunters-mark-spell-slot",
     expectedBuildLabel: "Ranger Hunter's Mark Spell Slot",
     preparedSpells: [huntersMarkSpellId, "cure_wounds"],
+  });
+}
+
+function finalizedLevelOneRangerCureWoundsBuild(): CharacterBuild {
+  return finalizedLevelOneRangerBuild({
+    draftIdText: "draft:l1-sdk-ranger-cure-wounds",
+    expectedBuildLabel: "Ranger Cure Wounds",
+    preparedSpells: [cureWoundsSpellId, "ensnaring_strike"],
   });
 }
 
