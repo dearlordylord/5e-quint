@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
@@ -70,6 +71,7 @@ import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
+  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import { spellProcedureInvocationSchema } from "./profile.ts";
@@ -358,7 +360,7 @@ function resolveCreatureSizeChange(
     ActionSpellBattleResolutionInput
   > & {
     readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-  },
+  } & SpellProcedureStoredGlyphReleaseOptions,
 ): BattleResolutionResult {
   if (
     input.fillSet.objectTarget !== undefined ||
@@ -422,24 +424,26 @@ function resolveCreatureSizeChange(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [target.combatantId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
+  if (input.opensSpellCastReactionWindow !== false) {
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
+      input.input.state,
+      spellCastInterruptFrame({
+        casterId: input.actorId,
+        invocation: input.invocation,
+        targetIds: [target.combatantId],
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource: { kind: "magicAction" },
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      }),
+      input.input.handledInterruptTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
   }
 
   const targetIsWilling = spellTargetIsKnownWilling(
@@ -479,6 +483,13 @@ function resolveCreatureSizeChange(
     }
     const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
     if (outcome?.succeeded === true) {
+      if (input.spendsCastResources === false) {
+        return {
+          tag: "resolved",
+          state: input.input.state,
+          snapshot: snapshotBattle(input.input.state),
+        };
+      }
       const resourced = spendSpellCastResources({
         state: input.input.state,
         actorId: input.actorId,
@@ -499,9 +510,12 @@ function resolveCreatureSizeChange(
     }
   }
 
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
+  const concentrationBase =
+    input.startsOrdinaryConcentration === false
+      ? input.input.state
+      : spellRequiresConcentration(input.invocation)
+        ? breakBattleConcentration(input.input.state, input.actorId)
+        : input.input.state;
   const effected = applyCreatureSizeChangeEffect(
     concentrationBase,
     input.actorId,
@@ -509,11 +523,21 @@ function resolveCreatureSizeChange(
     input.invocation,
     input.metamagicApplications,
   );
+  if (input.spendsCastResources === false) {
+    return {
+      tag: "resolved",
+      state: effected,
+      snapshot: snapshotBattle(effected),
+    };
+  }
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.startsOrdinaryConcentration === false
+      ? { startConcentration: false }
+      : {}),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),

@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-roll-modifier
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 //
 // The rollModifier Spell Procedure Profile: SRD spells (Bless, Bane, Guidance,
@@ -83,6 +84,7 @@ import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
+  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import { spellProcedureInvocationSchema } from "./profile.ts";
@@ -102,7 +104,7 @@ type RollModifierResolveInput = SpellProcedureProfileResolveInput<
 > & {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+} & SpellProcedureStoredGlyphReleaseOptions;
 
 function admitRollModifier(
   spell: SpellRecord,
@@ -349,28 +351,30 @@ function resolveRollModifier(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource:
-        input.actionCostOverride === "bonusAction" ||
-        input.input.subject.tag === "bonusActionSpell"
-          ? { kind: "bonusAction" }
-          : { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
+  if (input.opensSpellCastReactionWindow !== false) {
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
+      input.input.state,
+      spellCastInterruptFrame({
+        casterId: input.actorId,
+        invocation: input.invocation,
+        targetIds: targetSelection.targetIds,
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource:
+          input.actionCostOverride === "bonusAction" ||
+          input.input.subject.tag === "bonusActionSpell"
+            ? { kind: "bonusAction" }
+            : { kind: "magicAction" },
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      }),
+      input.input.handledInterruptTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
   }
 
   const affectedTargets = rollModifierSpellAffectedTargets(input);
@@ -387,9 +391,12 @@ function resolveRollModifier(
     );
   }
 
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
+  const concentrationBase =
+    input.startsOrdinaryConcentration === false
+      ? input.input.state
+      : spellRequiresConcentration(input.invocation)
+        ? breakBattleConcentration(input.input.state, input.actorId)
+        : input.input.state;
   const affectedTargetIds = new Set(affectedTargets.targetIds);
   const effected =
     effectSelection.selection.kind === "sameForTargets"
@@ -404,11 +411,21 @@ function resolveRollModifier(
             affectedTargetIds.has(targetEffect.targetId),
           ),
         );
+  if (input.spendsCastResources === false) {
+    return {
+      tag: "resolved",
+      state: effected,
+      snapshot: snapshotBattle(effected),
+    };
+  }
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.startsOrdinaryConcentration === false
+      ? { startConcentration: false }
+      : {}),
     ...(input.actionCostOverride === undefined
       ? {}
       : { actionCostOverride: input.actionCostOverride }),

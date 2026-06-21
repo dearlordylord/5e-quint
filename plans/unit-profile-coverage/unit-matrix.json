@@ -5718,13 +5718,27 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
-        "packages/battle-runtime/src/active-effect/types.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/hypnotic-pattern.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/roll-modifier.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-condition.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-type-protection.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-transformation-mode.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
       ],
-      "sourceBoundary": "Battle runtime consumes Glyph of Warding's typed spell_glyph Concentration projection and the stored invocation's typed save-gated-condition, single-creature save-gated-damage, or area ongoing procedure facts by shape rather than authored id, name, slug, provenance section, or spell-list identity. The owner represents the supported single-creature save-gated-condition, single-creature save-gated-damage, and area ongoing stored Concentration subsets: a triggered spell glyph resolves the stored spell against the triggering creature or an area/line centered on the triggering creature without trigger-time slot spending or ordinary caster/triggering-creature Concentration ownership, rewrites resulting spell condition effects, spellConcentrationDuration effects, or area active effects to a duration expiration equal to the stored spell's full duration, preserves unrelated readied-spell Concentration state, and removes the durable occurrence after successful release. Area control Concentration releases, non-damage single-creature active-effect Concentration releases, hostile creature summon lifecycle, non-Spiritual-Weapon harmful-object placement, component legality, map geometry derivation, and generic Dispel Magic targeting remain separate owners.",
+      "sourceBoundary": "Battle runtime consumes Glyph of Warding's typed spell_glyph Concentration projection and the stored invocation's typed save-gated-condition, single-creature save-gated-damage, area ongoing, area control, exact single-creature active-effect, or self-transformation procedure facts by shape rather than authored id, name, slug, provenance section, or spell-list identity. The owner represents the supported single-creature save-gated-condition, single-creature save-gated-damage, area ongoing, area control, harmful-object Spiritual Weapon, single-creature active-effect, and self-transformation stored Concentration subsets: a triggered spell glyph resolves the stored spell against the triggering creature or an area/line centered on the triggering creature without trigger-time slot spending or ordinary caster/triggering-creature Concentration ownership, rewrites resulting spell condition effects, spellConcentrationDuration effects, area active effects, hypnoticPatternControl effects, harmful-object proxy effects, procedure active effects, or selfTransformation effects to a duration expiration equal to the stored spell's full duration, preserves unrelated readied-spell Concentration state, and removes the durable occurrence after successful release. Exact single-creature active-effect support covers typed scalar buffs, roll modifiers, creature size changes, levitation, direct conditions, Haste positive effects, creature-type protection, and condition-immunity plus turn-start Temporary Hit Points. Self-transformation support covers initial mode release for the self-targeted procedure shape retargeted by Glyph to the triggering creature, consumes the existing mode and Natural Weapons damage-type fills, applies a source-owned full-duration selfTransformation effect to the triggering creature, and withholds later mode replacement from the target because replacement remains source-owned. Non-exact target counts such as Bless, Hostile creature summon lifecycle, non-Spiritual-Weapon harmful-object placement, component legality, map geometry derivation, and generic Dispel Magic targeting remain separate owners.",
       "taskRefs": [
         "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION",
         "L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION",
-        "L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION"
+        "L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION",
+        "L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION",
+        "L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION",
+        "L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION"
       ],
       "title": "Spell invocation releases supported Glyph stored Concentration to full duration",
       "verificationOwners": [
@@ -17523,6 +17537,22 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover the promoted stored area control Concentration subset from typed Surface spell_glyph and stored invocation procedure facts without authored-identity dispatch: represented Hypnotic Pattern release through the stored glyph path centered on the triggering creature, area Cube and sight witness validation, no trigger-time spell-slot spend or ordinary caster/triggering-creature/readied Concentration ownership, full-duration rewrite of the created hypnoticPatternControl effect, explicit duration-expiry cleanup of Charmed, Incapacitated, and Speed 0, preservation of unrelated caster readied-spell Concentration/readied spell state, centered-area rejection, and durable occurrence cleanup after successful release.",
+      "profileIds": [
+        "spell.invocation-glyph-stored-concentration-full-duration"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Leaf package-local Quint proof extends the stored Concentration full-duration subset so represented area control Concentration stored releases are accepted for the Hypnotic Pattern procedure family only when released as an area and requiring Concentration, accepted releases use the FullDurationStoredConcentrationOwner, wrong centered-area and single-creature witnesses are rejected, non-Concentration area-control records are rejected, and successful release still ends the durable occurrence.",
+      "profileIds": [
+        "spell.invocation-glyph-stored-concentration-full-duration"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover the represented Glyph stored harmful-object subset using a stored Spiritual Weapon attack-proxy invocation: no authored-identity dispatch, close-as-possible harmful-object force-position witness, triggering-creature target fixation, force-reach cross-check, no trigger-time spell-slot spend, immediate melee Spell Attack resolution, stored full-duration proxy expiration, preservation of unrelated caster Concentration, durable occurrence cleanup, and later-repeat target lock enforcement.",
       "profileIds": [
         "spell.invocation-glyph-stored-summon-object-placement"
@@ -17542,6 +17572,50 @@
       "note": "Task 32 researched the remaining Glyph stored summon/object placement scope and records no new runtime profile claim. The stored invocation candidate union admits no Hostile creature summon procedure, and the stored release witness has no summoned-Hostile-creature placement variant. Non-Spiritual-Weapon harmful-object procedures also lack stable object/proxy occurrence identity, close-placement facts, attack/routing target fixation, lifecycle, and cleanup state. Future work is split into L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE and L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING; Task 30 remains the only supported harmful-object subset through Spiritual Weapon.",
       "profileIds": [],
       "taskId": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-SUMMON-PLACEMENT"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task 36 researched stored Glyph release families whose invocation creates battle creatures and records no new runtime profile claim. The current stored invocation candidate union has no Hostile creature summon procedure, the release witness has no summoned-Hostile-creature placement variant, and the SRD creature-creation candidates are allied/controlled companions, reanimated creatures, object-to-creature lifecycles, spatial manifestations, planar transport, or service-binding procedures that need concrete owners before Glyph can consume close-as-possible placement, Encounter Side or hostility, command/turn protocol, attack-target fixation, and full-duration cleanup. Future promotion must start in those summon lifecycle/control owners instead of adding Glyph authored-identity dispatch, a generic placement registry, or duplicate summon occurrence state.",
+      "profileIds": [],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE"
+    },
+    {
+      "claimKind": "accepted-runtime-closure",
+      "note": "Task 37 researched concrete non-Spiritual-Weapon harmful-object stored Glyph releases and records no new runtime profile claim. The hostile-placement classifier still admits only Grease as the represented trap branch and Spiritual Weapon as the represented harmful-object branch. Flaming Sphere and the other represented area ongoing procedures release through centered area witnesses, not a procedure-owned close-placement object/proxy occurrence with attack-route fixation to the triggering creature. Future promotion should start in a concrete harmful-object owner that carries stable object/proxy identity, close-as-possible placement, attack/routing facts, lifecycle, and cleanup before Glyph consumes it.",
+      "profileIds": [],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover the promoted Glyph stored single-creature active-effect Concentration subset from typed Surface spell_glyph and stored invocation procedure facts without authored-identity dispatch: Shield of Faith, Enlarge, Levitate, Invisibility, Haste, Protection from Evil and Good, and Heroism release against the triggering creature through existing procedure fills, avoid trigger-time spell-slot spend and ordinary caster or triggering-creature Concentration ownership, rewrite created active effects to the stored spell full duration, preserve unrelated readied-spell Concentration/readied spell state, remove the durable occurrence after successful release, and reject non-exact single-creature roll modifiers such as Bless.",
+      "profileIds": [
+        "spell.invocation-glyph-stored-concentration-full-duration"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Leaf package-local Quint proof extends the stored Concentration full-duration subset so the represented single-creature active-effect procedure families are accepted only for Concentration stored releases with a single-creature release shape, accepted releases use the FullDurationStoredConcentrationOwner, area and non-Concentration variants remain outside this promoted subset, and successful release still ends the durable occurrence.",
+      "profileIds": [
+        "spell.invocation-glyph-stored-concentration-full-duration"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover the promoted Glyph stored self-transformation Concentration subset from typed Surface spell_glyph and stored selfTransformationMode procedure facts without authored-identity dispatch: stored release asks for the existing mode choice and Natural Weapons damage-type fills, targets the triggering creature despite the stored spell's self-target shape, avoids trigger-time spell-slot spend and ordinary caster or triggering-creature Concentration ownership, applies a source-owned selfTransformation effect to the triggering creature with the stored spell full duration, preserves unrelated readied-spell Concentration/readied-spell state, withholds later mode replacement from the target because replacement remains source-owned, and removes the durable occurrence after successful release.",
+      "profileIds": [
+        "spell.invocation-glyph-stored-concentration-full-duration"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Leaf package-local Quint proof extends the stored Concentration full-duration subset so selfTransformationMode is accepted only for Concentration stored releases with a single-creature release shape, accepted releases use the FullDurationStoredConcentrationOwner, area and non-Concentration variants remain outside this promoted subset, and successful release still ends the durable occurrence.",
+      "profileIds": [
+        "spell.invocation-glyph-stored-concentration-full-duration"
+      ],
+      "taskId": "L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -37128,24 +37202,6 @@
           {
             "battleReadinessClosure": {
               "kind": "outside-battle-runtime",
-              "owner": "future stored area control Concentration procedure owner",
-              "reason": "Tasks 29 and 31 promote the single-creature save-gated-condition and save-gated-damage stored Concentration subsets. Area control effects that apply creature condition or control state at release time need explicit area-membership and cleanup semantics that preserve full duration without assuming ordinary caster Concentration."
-            },
-            "followUpTaskId": "L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION",
-            "mechanic": "stored spell-glyph area control Concentration procedure families outside the supported single-creature save-gated-condition/save-gated-damage subsets and outside summon/object placement releases"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "future stored single-creature active-effect Concentration procedure owner",
-              "reason": "Tasks 29 and 31 promote the single-creature save-gated-condition and save-gated-damage stored Concentration subsets. Non-damage single-creature Concentration effects such as scalar buffs, roll modifiers, size or levitation effects, transformations, and direct-condition-like profiles have procedure-specific active-effect cleanup and target-state promotion rules, so each family needs an executable full-duration rewrite before Glyph storage can admit it."
-            },
-            "followUpTaskId": "L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION",
-            "mechanic": "stored spell-glyph non-damage single-creature active-effect Concentration procedure families outside the supported save-gated-condition/save-gated-damage subsets and outside summon/object placement releases"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
               "owner": "future broader ongoing Spell Effect occurrence ending owner",
               "reason": "Task 26 records the Glyph occurrence with an until-dispelled expiration and owns trigger plus movement-invalidation cleanup only. Extending Dispel Magic selected magical-effect/object targeting to Glyph is a separate generic ongoing Spell Effect widening and should update that owner and its QNT/MBT parity rather than adding a Glyph-specific remover registry here."
             },
@@ -37167,23 +37223,9 @@
             "owner": "future non-Spiritual-Weapon harmful object occurrence and attack-routing owner",
             "requiredOutput": "Supported or profile-subset-supported stored harmful-object release claim with focused runtime tests and QNT/runtime parity for each concrete object procedure; no Glyph-local object registry and no broader claim from the Spiritual Weapon subset.",
             "title": "Glyph Stored Harmful Object Occurrence Routing"
-          },
-          {
-            "id": "L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION",
-            "mechanic": "Promote stored spell-glyph releases for area control effects that apply creature condition or control state at release time, such as Hypnotic Pattern-style profiles.",
-            "owner": "future stored area control Concentration procedure owner",
-            "requiredOutput": "Supported or profile-subset-supported runtime owners with explicit area-membership and cleanup semantics, focused tests, and QNT/runtime parity; preserve full duration without ordinary caster or triggering-creature Concentration ownership.",
-            "title": "Glyph Stored Area Control Concentration"
-          },
-          {
-            "id": "L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION",
-            "mechanic": "Promote stored spell-glyph releases for non-damage single-creature Concentration effects that are not save-gated conditions, including scalar buffs, roll modifiers, size or levitation effects, transformations, and direct-condition-like profiles.",
-            "owner": "future stored single-creature active-effect Concentration procedure owner",
-            "requiredOutput": "Supported or profile-subset-supported runtime owners with procedure-specific full-duration active-effect rewrite and cleanup, focused tests, and QNT/runtime parity; no Glyph authored-identity dispatch or duplicate target state.",
-            "title": "Glyph Stored Single-Creature Active-Effect Concentration"
           }
         ],
-        "futureProfileOwner": "represented Grease trap and Spiritual Weapon harmful-object placement profiles plus future hostile creature summon lifecycle, non-Spiritual-Weapon harmful object occurrence/routing, area control Concentration, single-creature active-effect Concentration, broader ongoing Spell Effect dispel, and character inventory/equipment component legality owners",
+        "futureProfileOwner": "represented Grease trap and Spiritual Weapon harmful-object placement profiles plus future hostile creature summon lifecycle, non-Spiritual-Weapon harmful object occurrence/routing, broader ongoing Spell Effect dispel, and character inventory/equipment component legality owners",
         "profileIds": [
           "spell.invocation-glyph-durable-occurrence",
           "spell.invocation-glyph-explosive-rune-release",
@@ -37206,10 +37248,14 @@
           "A triggered explosive rune with no creatures in its witnessed Sphere still ends the durable glyph occurrence without requiring damage or Saving Throw inputs.",
           "Battle runtime admits the stored-spell release profile by typed Surface spell_glyph facts rather than Glyph of Warding id, name, slug, provenance section, or spell-list identity.",
           "Battle runtime stores an eligible prepared spell-slot invocation from a completedGlyphInscription witness with no immediate storage-time effect and rejects stored spell or selected slot levels above the Glyph source slot.",
-          "Battle runtime releases a triggered spell glyph through a tableWitnessedGlyphStoredSpellRelease witness, retargeting single-creature stored spells to the triggering creature, requiring area origins centered on the triggering creature, delegating executable stored-spell holes and resolution including save-gated area damage fills, allowing stored self-origin save-gated areas to use the triggering creature as the release origin, consuming a close-as-possible hostile trap-placement witness for the represented stored Grease hazard branch, avoiding trigger-time spell-slot spend or slot-availability requirements, and removing the durable occurrence after successful release. Stored Concentration full-duration behavior is admitted only by the separate full-duration profile for its supported save-gated-condition, single-creature save-gated-damage, harmful-object Spiritual Weapon, and area ongoing subsets.",
-          "Battle runtime admits the stored Concentration full-duration profile for supported save-gated-condition, single-creature save-gated-damage, harmful-object Spiritual Weapon, and area ongoing stored-spell subsets by typed Surface spell_glyph concentration facts and stored invocation procedure facts rather than Glyph of Warding id, name, slug, provenance section, or spell-list identity.",
-          "Battle runtime releases triggered stored Concentration save-gated-condition, single-creature save-gated-damage, harmful-object Spiritual Weapon, and area ongoing spells so their resulting condition, duration, harmful-object, or area active effects last until the stored spell's full duration, without ordinary caster Concentration, triggering-creature Concentration, readied-spell cleanup semantics, trigger-time spell-slot spend, or slot-availability requirements, and preserves unrelated caster Concentration while removing the durable glyph occurrence after successful release.",
+          "Battle runtime releases a triggered spell glyph through a tableWitnessedGlyphStoredSpellRelease witness, retargeting single-creature stored spells to the triggering creature, requiring area origins centered on the triggering creature, delegating executable stored-spell holes and resolution including save-gated area damage fills, allowing stored self-origin save-gated areas to use the triggering creature as the release origin, consuming a close-as-possible hostile trap-placement witness for the represented stored Grease hazard branch, avoiding trigger-time spell-slot spend or slot-availability requirements, and removing the durable occurrence after successful release. Stored Concentration full-duration behavior is admitted only by the separate full-duration profile for its supported save-gated-condition, single-creature save-gated-damage, harmful-object Spiritual Weapon, area ongoing, represented area control, exact single-creature active-effect, and self-transformation subsets.",
+          "Battle runtime admits the stored Concentration full-duration profile for supported save-gated-condition, single-creature save-gated-damage, harmful-object Spiritual Weapon, area ongoing, represented area control, exact single-creature active-effect, and self-transformation stored-spell subsets by typed Surface spell_glyph concentration facts and stored invocation procedure facts rather than Glyph of Warding id, name, slug, provenance section, or spell-list identity.",
+          "Battle runtime releases triggered stored Concentration save-gated-condition, single-creature save-gated-damage, harmful-object Spiritual Weapon, area ongoing, represented area control, exact single-creature active-effect, and self-transformation spells so their resulting condition, duration, harmful-object, area, area-control, procedure active-effect, or selfTransformation records last until the stored spell's full duration, without ordinary caster Concentration, triggering-creature Concentration, readied-spell cleanup semantics, trigger-time spell-slot spend, or slot-availability requirements, and preserves unrelated caster Concentration while removing the durable glyph occurrence after successful release.",
           "Battle runtime admits the stored area ongoing Concentration release subset for Fog Cloud obscurement, magical Darkness, Flaming Sphere, Spike Growth, Moonbeam, Web, and Gust of Wind by typed stored invocation procedure facts; the release consumes each procedure family's existing table area or line witnesses centered on the triggering creature, skips trigger-time resource spend and ordinary Concentration setup, rewrites the created area active effect to the stored spell's full duration, preserves unrelated caster Concentration, and removes the durable glyph occurrence after successful release.",
+          "Battle runtime admits the stored area control Concentration release subset for the represented Hypnotic Pattern procedure by typed stored invocation procedure facts; the release consumes the procedure family's existing table Cube area, affected-target, and sight witnesses centered on the triggering creature, skips trigger-time resource spend and ordinary Concentration setup, rewrites the created hypnoticPatternControl effects to the stored spell's full duration, preserves unrelated caster Concentration, and removes the durable glyph occurrence after successful release.",
+          "Battle runtime admits the stored single-creature active-effect Concentration release subset for typed scalar buffs, exact single-creature roll modifiers, creature size changes, levitation, direct conditions, Haste positive effects, creature-type protection, and condition-immunity plus turn-start Temporary Hit Points by stored invocation procedure, exact single-creature targeting, Concentration duration, and active-effect facts; non-exact target counts such as Bless are rejected instead of preserved by omission.",
+          "Battle runtime releases supported stored single-creature active-effect Concentration spells against the triggering creature through each procedure family's existing targetChoice, targetList, or levitation fills, avoids trigger-time spell-slot spend and ordinary caster or triggering-creature Concentration ownership, rewrites the created active effects to the stored spell's full duration, preserves unrelated caster Concentration/readied-spell state, and removes the durable glyph occurrence after successful release.",
+          "Battle runtime admits the stored self-transformation Concentration release subset by selfTransformationMode procedure, Concentration duration, and the single-creature Glyph witness rule; the release consumes the existing mode and Natural Weapons damage-type fills, applies source-owned full-duration selfTransformation to the triggering creature, preserves unrelated caster Concentration/readied-spell state, skips trigger-time slot spend and ordinary Concentration ownership, withholds later mode replacement from the target because replacement remains source-owned, and removes the durable glyph occurrence after successful release.",
           "Battle runtime admits the stored summon/object placement profile for the represented harmful-object subset: a triggered spell glyph can release a stored Spiritual Weapon attack-proxy invocation against the triggering creature, consume a close-as-possible harmful-object force-position witness cross-checked against force reach, avoid trigger-time spell-slot spend, create a spell-owned Spiritual Weapon effect whose later repeat attacks stay fixed to the triggering creature, rewrite the Concentration-owned proxy to the stored spell full duration, preserve unrelated caster Concentration, and remove the durable glyph occurrence after successful release."
         ],
         "tag": "profile-subset-supported"
@@ -37250,6 +37296,21 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION"
         }
       ],
       "executableMechanics": true,
@@ -37341,13 +37402,27 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
-            "packages/battle-runtime/src/active-effect/types.ts"
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/hypnotic-pattern.ts",
+            "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/roll-modifier.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-condition.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-type-protection.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-transformation-mode.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts"
           ],
-          "sourceBoundary": "Battle runtime consumes Glyph of Warding's typed spell_glyph Concentration projection and the stored invocation's typed save-gated-condition, single-creature save-gated-damage, or area ongoing procedure facts by shape rather than authored id, name, slug, provenance section, or spell-list identity. The owner represents the supported single-creature save-gated-condition, single-creature save-gated-damage, and area ongoing stored Concentration subsets: a triggered spell glyph resolves the stored spell against the triggering creature or an area/line centered on the triggering creature without trigger-time slot spending or ordinary caster/triggering-creature Concentration ownership, rewrites resulting spell condition effects, spellConcentrationDuration effects, or area active effects to a duration expiration equal to the stored spell's full duration, preserves unrelated readied-spell Concentration state, and removes the durable occurrence after successful release. Area control Concentration releases, non-damage single-creature active-effect Concentration releases, hostile creature summon lifecycle, non-Spiritual-Weapon harmful-object placement, component legality, map geometry derivation, and generic Dispel Magic targeting remain separate owners.",
+          "sourceBoundary": "Battle runtime consumes Glyph of Warding's typed spell_glyph Concentration projection and the stored invocation's typed save-gated-condition, single-creature save-gated-damage, area ongoing, area control, exact single-creature active-effect, or self-transformation procedure facts by shape rather than authored id, name, slug, provenance section, or spell-list identity. The owner represents the supported single-creature save-gated-condition, single-creature save-gated-damage, area ongoing, area control, harmful-object Spiritual Weapon, single-creature active-effect, and self-transformation stored Concentration subsets: a triggered spell glyph resolves the stored spell against the triggering creature or an area/line centered on the triggering creature without trigger-time slot spending or ordinary caster/triggering-creature Concentration ownership, rewrites resulting spell condition effects, spellConcentrationDuration effects, area active effects, hypnoticPatternControl effects, harmful-object proxy effects, procedure active effects, or selfTransformation effects to a duration expiration equal to the stored spell's full duration, preserves unrelated readied-spell Concentration state, and removes the durable occurrence after successful release. Exact single-creature active-effect support covers typed scalar buffs, roll modifiers, creature size changes, levitation, direct conditions, Haste positive effects, creature-type protection, and condition-immunity plus turn-start Temporary Hit Points. Self-transformation support covers initial mode release for the self-targeted procedure shape retargeted by Glyph to the triggering creature, consumes the existing mode and Natural Weapons damage-type fills, applies a source-owned full-duration selfTransformation effect to the triggering creature, and withholds later mode replacement from the target because replacement remains source-owned. Non-exact target counts such as Bless, Hostile creature summon lifecycle, non-Spiritual-Weapon harmful-object placement, component legality, map geometry derivation, and generic Dispel Magic targeting remain separate owners.",
           "taskRefs": [
             "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION",
             "L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION",
-            "L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION"
+            "L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION",
+            "L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION",
+            "L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION",
+            "L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION"
           ],
           "title": "Spell invocation releases supported Glyph stored Concentration to full duration",
           "verificationOwners": [

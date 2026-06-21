@@ -144,6 +144,14 @@ export type SpellProcedureProfileResolveInput<
   readonly fillSet: FillSet;
 };
 
+// Stored spell glyph releases reuse profile reducers after storage-time casting
+// has already paid the normal spell costs. Omitted flags mean ordinary casting.
+export type SpellProcedureStoredGlyphReleaseOptions = {
+  readonly opensSpellCastReactionWindow?: false;
+  readonly spendsCastResources?: false;
+  readonly startsOrdinaryConcentration?: false;
+};
+
 export type SpellInvocationAdmittedByRegisteredProcedure<
   P extends SupportedSpellInvocation["procedure"],
 > = {

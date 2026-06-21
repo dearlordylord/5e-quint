@@ -223,6 +223,10 @@ import type {
   SpellTurnStartDamageSave,
   TurnAnchoredBattleActiveEffectExpiration,
 } from "./active-effect/types.ts";
+import type {
+  GlyphStoredSpellReleaseProfile,
+  GlyphStoredSpellReleaseWitness,
+} from "./battle-reducer/glyph-durable-occurrence.ts";
 export type {
   GlyphDurableOccurrenceActiveEffect,
   GlyphDurableOccurrenceAnchor,
@@ -935,11 +939,16 @@ export type BattleHelpAttack = {
   readonly targetEnemyId: CombatantId;
   readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
 };
+export type GlyphStoredSpellReleaseReplayContext = {
+  readonly profile: GlyphStoredSpellReleaseProfile;
+  readonly witness: Omit<GlyphStoredSpellReleaseWitness, "fills">;
+};
 export type BattleInterruptedProcedure =
   | {
       readonly kind: "replay";
       readonly subject: BattleSubject;
       readonly fills: readonly BattleFill[];
+      readonly glyphStoredSpellReleaseReplay?: GlyphStoredSpellReleaseReplayContext;
       readonly attackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
       readonly attackDamageAdditions?: readonly AttackSpellDamageAddition[];
     }
@@ -6736,6 +6745,9 @@ export type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
 > & {
   readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   readonly reactionContinuationSubject?: BattleSubject | undefined;
+  readonly glyphStoredSpellReleaseReplay?:
+    | GlyphStoredSpellReleaseReplayContext
+    | undefined;
   readonly replayingInterruptedProcedure?: boolean | undefined;
   readonly pendingAttackDamageReductions?:
     | readonly BattlePendingAttackDamageReduction[]

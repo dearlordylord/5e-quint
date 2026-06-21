@@ -14,13 +14,15 @@
 //   saves, and adds 1d8 per slot level above 3. The spell glyph branch stores
 //   a prepared spell of no higher level than the glyph slot, has no immediate
 //   effect at storage time, and releases the stored spell against or centered
-//   on the triggering creature. Represented area ongoing spell glyph releases
-//   reuse the same centered-area witness rule without ordinary Concentration
-//   ownership. The represented hostile trap and Spiritual Weapon harmful-object
-//   branches consume close-as-possible placement witnesses, with Spiritual
-//   Weapon repeat targeting fixed to the triggering creature. If the stored
-//   spell requires Concentration, the released spell lasts until the end of its
-//   full duration.
+//   on the triggering creature. Represented area ongoing and area control spell
+//   glyph releases reuse the same centered-area witness rule without ordinary
+//   Concentration ownership. The represented self-transformation release uses
+//   a single-creature triggering-creature witness without ordinary
+//   Concentration ownership. The represented hostile trap and Spiritual Weapon
+//   harmful-object branches consume close-as-possible placement witnesses, with
+//   Spiritual Weapon repeat targeting fixed to the triggering creature. If the
+//   stored spell requires Concentration, the released spell lasts until the end
+//   of its full duration.
 // - UBIQUITOUS_LANGUAGE.md: Spell Effect, Saving Throw, Area of Effect,
 //   Spell Invocation, Damage Type, and table-owned spatial facts.
 
@@ -157,6 +159,33 @@ module battleRuntimeGlyphDurableOccurrence {
 
   pure val glyphStoredSpellGustOfWindLineProcedure = "gustOfWindLine"
 
+  pure val glyphStoredSpellHypnoticPatternProcedure = "hypnoticPattern"
+
+  pure val glyphStoredSpellScalarBuffProcedure = "scalarBuff"
+
+  pure val glyphStoredSpellRollModifierProcedure = "rollModifier"
+
+  pure val glyphStoredSpellCreatureSizeIncreaseProcedure =
+    "creatureSizeIncrease"
+
+  pure val glyphStoredSpellCreatureSizeDecreaseProcedure =
+    "creatureSizeDecrease"
+
+  pure val glyphStoredSpellLevitatedCreatureProcedure = "levitatedCreature"
+
+  pure val glyphStoredSpellDirectConditionProcedure = "directCondition"
+
+  pure val glyphStoredSpellHastePositiveProcedure = "hastePositive"
+
+  pure val glyphStoredSpellCreatureTypeProtectionProcedure =
+    "creatureTypeProtection"
+
+  pure val glyphStoredSpellConditionImmunityTurnStartTemporaryHitPointsProcedure =
+    "conditionImmunityAndTurnStartTemporaryHitPoints"
+
+  pure val glyphStoredSpellSelfTransformationModeProcedure =
+    "selfTransformationMode"
+
   pure val glyphStoredSpellAreaOngoingProcedures: Set[str] =
     Set(
       glyphStoredSpellFogCloudObscurementProcedure,
@@ -168,6 +197,25 @@ module battleRuntimeGlyphDurableOccurrence {
       glyphStoredSpellGustOfWindLineProcedure,
     )
 
+  pure val glyphStoredSpellAreaControlProcedures: Set[str] =
+    Set(glyphStoredSpellHypnoticPatternProcedure)
+
+  pure val glyphStoredSpellSingleCreatureActiveEffectProcedures: Set[str] =
+    Set(
+      glyphStoredSpellScalarBuffProcedure,
+      glyphStoredSpellRollModifierProcedure,
+      glyphStoredSpellCreatureSizeIncreaseProcedure,
+      glyphStoredSpellCreatureSizeDecreaseProcedure,
+      glyphStoredSpellLevitatedCreatureProcedure,
+      glyphStoredSpellDirectConditionProcedure,
+      glyphStoredSpellHastePositiveProcedure,
+      glyphStoredSpellCreatureTypeProtectionProcedure,
+      glyphStoredSpellConditionImmunityTurnStartTemporaryHitPointsProcedure,
+    )
+
+  pure val glyphStoredSpellSelfTransformationProcedures: Set[str] =
+    Set(glyphStoredSpellSelfTransformationModeProcedure)
+
   pure val glyphStoredSpellBaseProcedures: Set[str] =
     Set(
       glyphStoredSpellReadiedReleaseProcedure,
@@ -178,7 +226,11 @@ module battleRuntimeGlyphDurableOccurrence {
     )
 
   pure val glyphStoredSpellProcedures: Set[str] =
-    glyphStoredSpellBaseProcedures.union(glyphStoredSpellAreaOngoingProcedures)
+    glyphStoredSpellBaseProcedures
+      .union(glyphStoredSpellAreaOngoingProcedures)
+      .union(glyphStoredSpellAreaControlProcedures)
+      .union(glyphStoredSpellSingleCreatureActiveEffectProcedures)
+      .union(glyphStoredSpellSelfTransformationProcedures)
 
   pure val glyphStoredSpellHostilePlacementSubjects: Set[str] =
     Set("summoned_hostile_creatures", "harmful_objects", "traps")
@@ -211,6 +263,15 @@ module battleRuntimeGlyphDurableOccurrence {
     else if (storedSpellProcedure.in(glyphStoredSpellAreaOngoingProcedures))
     storedSpellRequiresConcentration and
       storedReleaseKind == "area"
+    else if (storedSpellProcedure.in(glyphStoredSpellAreaControlProcedures))
+    storedSpellRequiresConcentration and
+      storedReleaseKind == "area"
+    else if (storedSpellProcedure.in(glyphStoredSpellSingleCreatureActiveEffectProcedures))
+    storedSpellRequiresConcentration and
+      storedReleaseKind == "singleCreature"
+    else if (storedSpellProcedure.in(glyphStoredSpellSelfTransformationProcedures))
+    storedSpellRequiresConcentration and
+      storedReleaseKind == "singleCreature"
     else not(storedSpellRequiresConcentration)
 
   pure def storedSpellReleaseFacts(
@@ -629,6 +690,14 @@ module battleRuntimeGlyphDurableOccurrence {
       )),
       assert(completedStoredSpellGlyphInscriptionAccepted(
         3,
+        3,
+        "area",
+        "none",
+        true,
+        glyphStoredSpellHypnoticPatternProcedure,
+      )),
+      assert(completedStoredSpellGlyphInscriptionAccepted(
+        3,
         2,
         "harmfulObject",
         "none",
@@ -642,6 +711,14 @@ module battleRuntimeGlyphDurableOccurrence {
         "none",
         true,
         glyphStoredSpellSaveGatedConditionProcedure,
+      )),
+      assert(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        2,
+        "singleCreature",
+        "none",
+        true,
+        glyphStoredSpellScalarBuffProcedure,
       )),
       assert(occurrence.active),
       assert(glyphOccurrenceHasStoredSpellRelease(
@@ -768,6 +845,38 @@ module battleRuntimeGlyphDurableOccurrence {
         false,
         glyphStoredSpellMoonbeamProcedure,
       ))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        3,
+        "singleCreature",
+        "none",
+        true,
+        glyphStoredSpellHypnoticPatternProcedure,
+      ))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        3,
+        "area",
+        "none",
+        false,
+        glyphStoredSpellHypnoticPatternProcedure,
+      ))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        2,
+        "area",
+        "none",
+        true,
+        glyphStoredSpellScalarBuffProcedure,
+      ))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        2,
+        "singleCreature",
+        "none",
+        false,
+        glyphStoredSpellScalarBuffProcedure,
+      ))),
     }
   }
 
@@ -845,6 +954,120 @@ module battleRuntimeGlyphDurableOccurrence {
     }
   }
 
+  run test_stored_single_creature_active_effect_release_uses_full_duration_owner = {
+    val occurrence =
+      completedStoredSpellGlyphOccurrence(
+        1,
+        3,
+        2,
+        "singleCreature",
+        "none",
+        true,
+        glyphStoredSpellScalarBuffProcedure,
+        200,
+        100,
+      )
+    val acceptedWitness = StoredSingleCreatureReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 10,
+    })
+    val areaWitness = StoredAreaReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 10,
+    })
+    val ended = glyphAfterStoredSpellRelease(occurrence, acceptedWitness)
+    all {
+      assert(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        2,
+        "singleCreature",
+        "none",
+        true,
+        glyphStoredSpellScalarBuffProcedure,
+      )),
+      assert(glyphStoredSpellScalarBuffProcedure.in(glyphStoredSpellSingleCreatureActiveEffectProcedures)),
+      assert(glyphOccurrenceHasStoredSpellRelease(
+        occurrence,
+        2,
+        "singleCreature",
+        "none",
+        true,
+        glyphStoredSpellScalarBuffProcedure,
+      )),
+      assert(glyphStoredSpellReleaseWitnessAccepted(occurrence, acceptedWitness)),
+      assert(glyphStoredSpellReleaseOwner(occurrence) == FullDurationStoredConcentrationOwner),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, areaWitness))),
+      assert(not(ended.active)),
+    }
+  }
+
+  run test_stored_self_transformation_release_uses_full_duration_owner = {
+    val occurrence =
+      completedStoredSpellGlyphOccurrence(
+        1,
+        3,
+        2,
+        "singleCreature",
+        "none",
+        true,
+        glyphStoredSpellSelfTransformationModeProcedure,
+        200,
+        100,
+      )
+    val acceptedWitness = StoredSingleCreatureReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 10,
+    })
+    val areaWitness = StoredAreaReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 10,
+    })
+    val ended = glyphAfterStoredSpellRelease(occurrence, acceptedWitness)
+    all {
+      assert(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        2,
+        "singleCreature",
+        "none",
+        true,
+        glyphStoredSpellSelfTransformationModeProcedure,
+      )),
+      assert(glyphStoredSpellSelfTransformationModeProcedure.in(glyphStoredSpellSelfTransformationProcedures)),
+      assert(glyphOccurrenceHasStoredSpellRelease(
+        occurrence,
+        2,
+        "singleCreature",
+        "none",
+        true,
+        glyphStoredSpellSelfTransformationModeProcedure,
+      )),
+      assert(glyphStoredSpellReleaseWitnessAccepted(occurrence, acceptedWitness)),
+      assert(glyphStoredSpellReleaseOwner(occurrence) == FullDurationStoredConcentrationOwner),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, areaWitness))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        2,
+        "area",
+        "none",
+        true,
+        glyphStoredSpellSelfTransformationModeProcedure,
+      ))),
+      assert(not(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        2,
+        "singleCreature",
+        "none",
+        false,
+        glyphStoredSpellSelfTransformationModeProcedure,
+      ))),
+      assert(not(ended.active)),
+    }
+  }
+
   run test_stored_area_ongoing_concentration_release_uses_full_duration_owner = {
     val occurrence =
       completedStoredSpellGlyphOccurrence(
@@ -890,6 +1113,61 @@ module battleRuntimeGlyphDurableOccurrence {
       assert(glyphStoredSpellReleaseWitnessAccepted(occurrence, acceptedWitness)),
       assert(glyphStoredSpellReleaseOwner(occurrence) == FullDurationStoredConcentrationOwner),
       assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongAreaCenterWitness))),
+      assert(not(ended.active)),
+    }
+  }
+
+  run test_stored_area_control_concentration_release_uses_full_duration_owner = {
+    val occurrence =
+      completedStoredSpellGlyphOccurrence(
+        1,
+        3,
+        3,
+        "area",
+        "none",
+        true,
+        glyphStoredSpellHypnoticPatternProcedure,
+        200,
+        100,
+      )
+    val acceptedWitness = StoredAreaReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 10,
+    })
+    val wrongAreaCenterWitness = StoredAreaReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      areaOriginAnchorId: 11,
+    })
+    val wrongSingleCreatureWitness = StoredSingleCreatureReleaseWitness({
+      triggerOccurrence: { effectId: 1 },
+      triggeringCreatureId: 10,
+      targetId: 10,
+    })
+    val ended = glyphAfterStoredSpellRelease(occurrence, acceptedWitness)
+    all {
+      assert(completedStoredSpellGlyphInscriptionAccepted(
+        3,
+        3,
+        "area",
+        "none",
+        true,
+        glyphStoredSpellHypnoticPatternProcedure,
+      )),
+      assert(glyphStoredSpellHypnoticPatternProcedure.in(glyphStoredSpellAreaControlProcedures)),
+      assert(glyphOccurrenceHasStoredSpellRelease(
+        occurrence,
+        3,
+        "area",
+        "none",
+        true,
+        glyphStoredSpellHypnoticPatternProcedure,
+      )),
+      assert(glyphStoredSpellReleaseWitnessAccepted(occurrence, acceptedWitness)),
+      assert(glyphStoredSpellReleaseOwner(occurrence) == FullDurationStoredConcentrationOwner),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongAreaCenterWitness))),
+      assert(not(glyphStoredSpellReleaseWitnessAccepted(occurrence, wrongSingleCreatureWitness))),
       assert(not(ended.active)),
     }
   }

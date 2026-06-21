@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 //
 // The directCondition Spell Procedure Profile: a prepared Magic Action spell
@@ -40,6 +41,7 @@ import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
+  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import { spellProcedureInvocationSchema } from "./profile.ts";
@@ -57,7 +59,7 @@ type DirectConditionResolveInput = SpellProcedureProfileResolveInput<
 > & {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+} & SpellProcedureStoredGlyphReleaseOptions;
 
 const DIRECT_CONDITION_EARLY_END_KINDS = [
   "target_makes_attack_roll",
@@ -258,35 +260,53 @@ function resolveDirectCondition(
     return invalidResult(input.input.state, "invalidFill", validation);
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: input.fillSet.targetList.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource:
-        input.actionCostOverride === "bonusAction" ||
-        input.input.subject.tag === "bonusActionSpell"
-          ? { kind: "bonusAction" }
-          : { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
+  if (input.opensSpellCastReactionWindow !== false) {
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
+      input.input.state,
+      spellCastInterruptFrame({
+        casterId: input.actorId,
+        invocation: input.invocation,
+        targetIds: input.fillSet.targetList.targetIds,
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource:
+          input.actionCostOverride === "bonusAction" ||
+          input.input.subject.tag === "bonusActionSpell"
+            ? { kind: "bonusAction" }
+            : { kind: "magicAction" },
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      }),
+      input.input.handledInterruptTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
   }
 
+  if (input.spendsCastResources === false) {
+    const effected = applyDirectConditionSpellEffects(
+      input.input.state,
+      input.actorId,
+      input.fillSet.targetList.targetIds,
+      input.invocation,
+    );
+    return {
+      tag: "resolved",
+      state: effected,
+      snapshot: snapshotBattle(effected),
+    };
+  }
   const resourced = spendSpellCastResources({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.startsOrdinaryConcentration === false
+      ? { startConcentration: false }
+      : {}),
     ...(input.actionCostOverride === undefined
       ? {}
       : { actionCostOverride: input.actionCostOverride }),

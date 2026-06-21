@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 //
 // The creatureTypeProtection Spell Procedure Profile: a prepared action spell
@@ -43,6 +44,7 @@ import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
+  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import { spellProcedureInvocationSchema } from "./profile.ts";
@@ -199,7 +201,8 @@ function resolveCreatureTypeProtection(
   input: SpellProcedureProfileResolveInput<
     CreatureTypeProtectionSpellInvocation,
     ActionSpellBattleResolutionInput
-  >,
+  > &
+    SpellProcedureStoredGlyphReleaseOptions,
 ): BattleResolutionResult {
   if (
     input.fillSet.attackRoll !== undefined ||
@@ -234,40 +237,55 @@ function resolveCreatureTypeProtection(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
+  if (input.opensSpellCastReactionWindow !== false) {
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
+      input.input.state,
+      spellCastInterruptFrame({
+        casterId: input.actorId,
+        invocation: input.invocation,
+        targetIds: targetSelection.targetIds,
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource: { kind: "magicAction" },
+        continuation: {
+          kind: "replay",
+          subject: input.input.subject,
+          fills: input.input.fills,
+        },
+      }),
+      input.input.handledInterruptTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
   }
 
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
+  const concentrationBase =
+    input.startsOrdinaryConcentration === false
+      ? input.input.state
+      : spellRequiresConcentration(input.invocation)
+        ? breakBattleConcentration(input.input.state, input.actorId)
+        : input.input.state;
   const effected = applyCreatureTypeProtectionEffect(
     concentrationBase,
     input.actorId,
     targetSelection.targetIds,
     input.invocation,
   );
+  if (input.spendsCastResources === false) {
+    return {
+      tag: "resolved",
+      state: effected,
+      snapshot: snapshotBattle(effected),
+    };
+  }
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
+    ...(input.startsOrdinaryConcentration === false
+      ? { startConcentration: false }
+      : {}),
   });
   return resourced.tag === "invalid"
     ? resourced
