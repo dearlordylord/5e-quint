@@ -42647,6 +42647,14 @@
       "category": "spell Unit pressure",
       "className": "Warlock",
       "concept": "Warlock spell list Hex",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Warlock Hex resolves from a level-1 sheet through Pact Magic as a marked Necrotic rider and chosen Ability Check Disadvantage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Warlock.md:68-89",
+          ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1198-1212"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -42654,7 +42662,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 354,
         "lineStart": 354,
@@ -56356,16 +56364,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 452,
+      "sdk-scenario-needed": 451,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 52,
+      "seed-scenario-present": 53,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 401,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 90,
+      "battle-spell-sdk": 89,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56375,7 +56383,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 52,
+      "seed-present": 53,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -58186,61 +58194,6 @@
       "sampleConcepts": [
         "Bard spell list Heroism",
         "Paladin spell list Heroism"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "hex"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Warlock"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:hex",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"hex\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Warlock.md:354"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "hex",
-          "className": "Warlock",
-          "concept": "Warlock spell list Hex",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 354,
-            "lineStart": 354,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Warlock spell list Hex"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -66177,6 +66130,63 @@
       ],
       "sampleConcepts": [
         "Sorcerer spell list Thunderwave"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "hex"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Warlock"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-warlock-hex",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Warlock:hex\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Warlock.md:354",
+        ".references/srd-5.2.1/Classes/Warlock.md:68-89",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1198-1212"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "hex",
+          "className": "Warlock",
+          "concept": "Warlock spell list Hex",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 354,
+            "lineStart": 354,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Warlock spell list Hex"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -86363,7 +86373,7 @@
         "build: warlockBuild,",
         "casterId: poisonSprayWarlockId,",
         "expectedSpellAttackBonus: 4,",
-        "expectedSpellSlots: [],"
+        "expectedSpellSlots: [{ spellLevel: 1, count: 1, expended: 0 }],"
       ]
     },
     {
@@ -86574,7 +86584,7 @@
         "build: warlockBuild,",
         "casterId: chillTouchWarlockId,",
         "expectedSpellAttackBonus: 4,",
-        "expectedSpellSlots: [],"
+        "expectedSpellSlots: [{ spellLevel: 1, count: 1, expended: 0 }],"
       ]
     },
     {
@@ -86703,7 +86713,7 @@
             "damageRollFillWithGroups(damage, [[6]])",
             "Hp(4)",
             "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
-            "expect(caster.origin.spellcasting?.spellSlots).toEqual([]);"
+            "{ spellLevel: 1, count: 1, expended: 0 }"
           ]
         }
       ],
@@ -86718,6 +86728,82 @@
         "build: warlockBuild,",
         "casterId: eldritchBlastWarlockId,",
         "expectedSpellAttackBonus: 4,"
+      ]
+    },
+    {
+      "candidateUnitId": "hex",
+      "className": "Warlock",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Warlock Hex resolves from a level-1 sheet through Pact Magic as a marked Necrotic rider and chosen Ability Check Disadvantage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Warlock.md:68-89",
+          ".references/srd-5.2.1/Spells/Descriptions-E-L.md:1198-1212"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWarlockHexBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWarlockBuild({",
+            "draftIdText: \"draft:l1-sdk-warlock-hex\"",
+            "expectedBuildLabel: \"Warlock Hex\"",
+            "cantrips: [eldritchBlastSpellId, poisonSpraySpellId]",
+            "preparedSpells: [hexSpellId, \"hellish_rebuke\"]",
+            "eldritchInvocation: \"eldritch_mind\""
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWarlockBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_warlock\"",
+            "\"class_prepared_spell_choices\"",
+            "\"warlock_eldritch_invocations\"",
+            "\"eldritch_invocations\"",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function hexBonusActionSpellSlotAct",
+          "needles": [
+            "candidate.subject.tag === \"bonusActionSpell\"",
+            "candidate.subject.actorId === actorId",
+            "candidate.subject.invocation.tag === \"spellSlot\"",
+            "candidate.subject.invocation.spellId === hexSpellId",
+            "candidate.subject.invocation.slotLevel === 1",
+            "candidate.subject.invocation.procedure === \"markedDamageRider\""
+          ]
+        },
+        {
+          "anchor": "function abilityChoiceFill",
+          "needles": [
+            "kind: \"abilityChoice\"",
+            "holeId: hole.holeId"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
+      "rowKey": "spell-level-1:Warlock:hex",
+      "tracerNeedles": [
+        "const warlockBuild = finalizedLevelOneWarlockHexBuild();",
+        "sourceUnitId: \"class_warlock\"",
+        "spellcastingAbility: \"cha\"",
+        "preparedSpells: expect.arrayContaining([hexSpellId])",
+        "pactMagic: { kind: \"pactMagic\", slotLevel: 1, count: 1 }",
+        "const hexSheet = characterSheet({",
+        "hexBonusActionSpellSlotAct(state, hexWarlockId)",
+        "abilityChoiceFill(ability, \"wis\")",
+        "kind: \"spellMarkedDamageRider\"",
+        "damageType: \"necrotic\"",
+        "retargetTiming: \"laterTurn\"",
+        "Battle handoff while active battle effects or Concentration are present is blocked",
+        "breakBattleConcentration(",
+        "settleCharacterSheetFromBattle({",
+        "characterSheetPactSlots(settled)"
       ]
     },
     {

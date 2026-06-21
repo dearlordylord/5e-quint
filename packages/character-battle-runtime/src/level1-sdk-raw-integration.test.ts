@@ -1,6 +1,7 @@
 import {
   battleObjectId,
   battleTablePositionId,
+  breakBattleConcentration,
   cantripSpellInvocationRef,
   combatantId,
   discoverBattleActs,
@@ -44,6 +45,10 @@ import {
   type LoadoutSlot,
   type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
+import {
+  characterSheetPactSlots,
+  characterSheetSpellSlots,
+} from "@dnd/character-sheet-runtime";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   elapsedTimeTicksFromHours,
@@ -59,6 +64,8 @@ import {
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
+
+import { settleCharacterSheetFromBattle } from "./index.ts";
 
 import {
   attackRollFill,
@@ -125,17 +132,13 @@ const acidSplashWizardId = combatantId("combatant:l1-sdk-acid-splash-wizard");
 const poisonSprayDruidId = combatantId("combatant:l1-sdk-poison-spray-druid");
 const produceFlameDruidId = combatantId("combatant:l1-sdk-produce-flame-druid");
 const shillelaghDruidId = combatantId("combatant:l1-sdk-shillelagh-druid");
-const sacredFlameClericId = combatantId(
-  "combatant:l1-sdk-sacred-flame-cleric",
-);
+const sacredFlameClericId = combatantId("combatant:l1-sdk-sacred-flame-cleric");
 const thaumaturgyClericId = combatantId("combatant:l1-sdk-thaumaturgy-cleric");
 const sanctuaryClericId = combatantId("combatant:l1-sdk-sanctuary-cleric");
 const sanctuaryWardedAllyId = combatantId(
   "combatant:l1-sdk-sanctuary-warded-ally",
 );
-const guidingBoltClericId = combatantId(
-  "combatant:l1-sdk-guiding-bolt-cleric",
-);
+const guidingBoltClericId = combatantId("combatant:l1-sdk-guiding-bolt-cleric");
 const guidingBoltAllyId = combatantId("combatant:l1-sdk-guiding-bolt-ally");
 const inflictWoundsClericId = combatantId(
   "combatant:l1-sdk-inflict-wounds-cleric",
@@ -146,19 +149,16 @@ const poisonSpraySorcererId = combatantId(
 const poisonSprayWarlockId = combatantId(
   "combatant:l1-sdk-poison-spray-warlock",
 );
-const poisonSprayWizardId = combatantId(
-  "combatant:l1-sdk-poison-spray-wizard",
-);
+const poisonSprayWizardId = combatantId("combatant:l1-sdk-poison-spray-wizard");
 const chillTouchSorcererId = combatantId(
   "combatant:l1-sdk-chill-touch-sorcerer",
 );
-const chillTouchWarlockId = combatantId(
-  "combatant:l1-sdk-chill-touch-warlock",
-);
+const chillTouchWarlockId = combatantId("combatant:l1-sdk-chill-touch-warlock");
 const chillTouchWizardId = combatantId("combatant:l1-sdk-chill-touch-wizard");
 const eldritchBlastWarlockId = combatantId(
   "combatant:l1-sdk-eldritch-blast-warlock",
 );
+const hexWarlockId = combatantId("combatant:l1-sdk-hex-warlock");
 const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
 const fireBoltWizardId = combatantId("combatant:l1-sdk-fire-bolt-wizard");
 const rayOfFrostSorcererId = combatantId(
@@ -196,9 +196,7 @@ const magicMissileWizardId = combatantId(
 const thunderwaveSorcererId = combatantId(
   "combatant:l1-sdk-thunderwave-sorcerer",
 );
-const thunderwaveWizardId = combatantId(
-  "combatant:l1-sdk-thunderwave-wizard",
-);
+const thunderwaveWizardId = combatantId("combatant:l1-sdk-thunderwave-wizard");
 const wizardBurningHandsCasterId = combatantId(
   "combatant:l1-sdk-wizard-burning-hands",
 );
@@ -230,6 +228,7 @@ const guidingBoltSpellId = "guiding_bolt";
 const inflictWoundsSpellId = "inflict_wounds";
 const chillTouchSpellId = "chill_touch";
 const eldritchBlastSpellId = "eldritch_blast";
+const hexSpellId = "hex";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
 const rayOfFrostSpellId = "ray_of_frost";
@@ -945,7 +944,7 @@ describe("level 1 SDK RAW integration", () => {
       build: warlockBuild,
       casterId: poisonSprayWarlockId,
       expectedSpellAttackBonus: 4,
-      expectedSpellSlots: [],
+      expectedSpellSlots: [{ spellLevel: 1, count: 1, expended: 0 }],
     });
   });
 
@@ -1150,7 +1149,7 @@ describe("level 1 SDK RAW integration", () => {
       build: warlockBuild,
       casterId: chillTouchWarlockId,
       expectedSpellAttackBonus: 4,
-      expectedSpellSlots: [],
+      expectedSpellSlots: [{ spellLevel: 1, count: 1, expended: 0 }],
     });
     assertLevelOneChillTouch({
       battleIdText: "battle:l1-sdk-chill-touch-wizard",
@@ -1183,6 +1182,133 @@ describe("level 1 SDK RAW integration", () => {
       build: warlockBuild,
       casterId: eldritchBlastWarlockId,
       expectedSpellAttackBonus: 4,
+    });
+  });
+
+  test("Warlock Hex resolves from a level-1 sheet through Pact Magic as a marked Necrotic rider and chosen Ability Check Disadvantage", () => {
+    const warlockBuild = finalizedLevelOneWarlockHexBuild();
+
+    expect(warlockBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_warlock",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([hexSpellId]),
+        }),
+      ]),
+    );
+    expect(warlockBuild.spellcasting?.slotPools).toMatchObject({
+      pactMagic: { kind: "pactMagic", slotLevel: 1, count: 1 },
+    });
+
+    const hexSheet = characterSheet({
+      characterIdText: "character:l1-sdk-hex-warlock",
+      build: warlockBuild,
+      combatantId: hexWarlockId,
+      initiative: 20,
+      maximumHp: 8,
+    });
+    const state = battleFromSheets({
+      battleIdText: "battle:l1-sdk-hex-warlock",
+      characters: [hexSheet],
+      monsters: [
+        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      ],
+    });
+    const act = hexBonusActionSpellSlotAct(state, hexWarlockId);
+    const target = requireHoleFromList(act.initialHoles, "targetChoice");
+    const ability = requireHoleFromList(act.initialHoles, "abilityChoice");
+
+    expect(
+      requireCharacterCombatant(state, hexWarlockId).origin.spellcasting,
+    ).toMatchObject({
+      spellSlots: [{ spellLevel: 1, count: 1, expended: 0 }],
+    });
+    expect(target).toMatchObject({
+      choices: expect.arrayContaining([monsterId]),
+    });
+    expect(ability).toMatchObject({
+      choices: ["str", "dex", "con", "int", "wis", "cha"],
+    });
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetFill(target, hexSpellId, hexWarlockId, monsterId),
+          abilityChoiceFill(ability, "wis"),
+        ],
+      }),
+    );
+    const caster = requireCharacterCombatant(resolved.state, hexWarlockId);
+
+    expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
+      false,
+    );
+    expect(caster.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 1, count: 1, expended: 1 },
+    ]);
+    expect(caster.concentration).toEqual({
+      sourceSpellId: hexSpellId,
+      effectKind: "spellEffect",
+    });
+    expect(caster.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "spellMarkedDamageRider",
+        targetCombatantId: monsterId,
+        abilityCheckBehavior: {
+          kind: "abilityDisadvantage",
+          ability: "wis",
+        },
+        damage: expect.objectContaining({
+          expr: { dice: 1, dieSize: 6 },
+          damageType: "necrotic",
+        }),
+        transfer: {
+          kind: "awaitingTargetDrop",
+          retargetTiming: "laterTurn",
+        },
+      }),
+    ]);
+    expect(
+      settleCharacterSheetFromBattle({
+        sheet: hexSheet.sheet,
+        state: resolved.state,
+        combatant: caster,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff while active battle effects or Concentration are present is blocked; end or resolve battle-local effects before Character Sheet handoff.",
+      },
+    });
+    const concentrationEnded = breakBattleConcentration(
+      resolved.state,
+      hexWarlockId,
+    );
+    const cleanedCaster = requireCharacterCombatant(
+      concentrationEnded,
+      hexWarlockId,
+    );
+    expect(cleanedCaster.concentration).toBeNull();
+    expect(cleanedCaster.activeEffects).toEqual([]);
+
+    const settled = requireRight(
+      settleCharacterSheetFromBattle({
+        sheet: hexSheet.sheet,
+        state: concentrationEnded,
+        combatant: cleanedCaster,
+        unitLibrary,
+      }),
+    );
+    expect(characterSheetSpellSlots(settled)).toEqual([]);
+    expect(characterSheetPactSlots(settled)).toEqual({
+      slotLevel: 1,
+      count: 1,
+      expended: 1,
     });
   });
 
@@ -2140,7 +2266,9 @@ function assertLevelOneViciousMockery(input: {
       subject: act.subject,
       fills: [
         targetFill,
-        savingThrowOutcomeFill(save, [{ targetId: monsterId, succeeded: true }]),
+        savingThrowOutcomeFill(save, [
+          { targetId: monsterId, succeeded: true },
+        ]),
       ],
     }),
   );
@@ -2276,10 +2404,7 @@ function assertLevelOneSorcerousBurst(input: {
     input.casterId,
     sorcerousBurstSpellId,
   );
-  const damageType = requireHoleFromList(
-    act.initialHoles,
-    "damageTypeChoice",
-  );
+  const damageType = requireHoleFromList(act.initialHoles, "damageTypeChoice");
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const objectTarget = requireHoleFromList(
     act.initialHoles,
@@ -2665,11 +2790,7 @@ function assertLevelOneProduceFlame(input: {
     resolveBattleSubject({
       state: lit.state,
       subject: hurlAct.subject,
-      fills: [
-        targetFill,
-        attackFill,
-        damageRollFillWithGroups(damage, [[5]]),
-      ],
+      fills: [targetFill, attackFill, damageRollFillWithGroups(damage, [[5]])],
     }),
   );
   const caster = requireCharacterCombatant(resolved.state, input.casterId);
@@ -3272,7 +3393,9 @@ function assertLevelOneSanctuary(input: {
   );
   const caster = requireCharacterCombatant(resolved.state, input.casterId);
 
-  expect(requireCombatant(resolved.state, input.wardedId).activeEffects).toEqual(
+  expect(
+    requireCombatant(resolved.state, input.wardedId).activeEffects,
+  ).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
         kind: "sanctuaryWard",
@@ -3750,18 +3873,16 @@ function assertLevelOneEldritchBlast(input: {
     resolveBattleSubject({
       state,
       subject: act.subject,
-      fills: [
-        targetFill,
-        attackFill,
-        damageRollFillWithGroups(damage, [[6]]),
-      ],
+      fills: [targetFill, attackFill, damageRollFillWithGroups(damage, [[6]])],
     }),
   );
   const caster = requireCharacterCombatant(resolved.state, input.casterId);
 
   expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(4));
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
-  expect(caster.origin.spellcasting?.spellSlots).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 1, expended: 0 },
+  ]);
 }
 
 function assertLevelOneFireBolt(input: {
@@ -5160,7 +5281,10 @@ function finalizedLevelOneClericBuild(input: {
       expectedRevision: afterInitial.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_cleric", "class_skill_proficiency_choice"),
+          testUnitChoiceHoleId(
+            "class_cleric",
+            "class_skill_proficiency_choice",
+          ),
           "insight",
           "religion",
         ),
@@ -5710,7 +5834,7 @@ function finalizedLevelOneWarlockPoisonSprayBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-warlock-poison-spray",
     expectedBuildLabel: "Warlock Poison Spray",
     cantrips: [poisonSpraySpellId, "eldritch_blast"],
-    preparedSpells: ["hex", "hellish_rebuke"],
+    preparedSpells: [hexSpellId, "hellish_rebuke"],
     eldritchInvocation: "eldritch_mind",
   });
 }
@@ -5720,7 +5844,7 @@ function finalizedLevelOneWarlockChillTouchBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-warlock-chill-touch",
     expectedBuildLabel: "Warlock Chill Touch",
     cantrips: [chillTouchSpellId, "eldritch_blast"],
-    preparedSpells: ["hex", "hellish_rebuke"],
+    preparedSpells: [hexSpellId, "hellish_rebuke"],
     eldritchInvocation: "eldritch_mind",
   });
 }
@@ -5730,7 +5854,17 @@ function finalizedLevelOneWarlockEldritchBlastBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-warlock-eldritch-blast",
     expectedBuildLabel: "Warlock Eldritch Blast",
     cantrips: [eldritchBlastSpellId, poisonSpraySpellId],
-    preparedSpells: ["hex", "hellish_rebuke"],
+    preparedSpells: [hexSpellId, "hellish_rebuke"],
+    eldritchInvocation: "eldritch_mind",
+  });
+}
+
+function finalizedLevelOneWarlockHexBuild(): CharacterBuild {
+  return finalizedLevelOneWarlockBuild({
+    draftIdText: "draft:l1-sdk-warlock-hex",
+    expectedBuildLabel: "Warlock Hex",
+    cantrips: [eldritchBlastSpellId, poisonSpraySpellId],
+    preparedSpells: [hexSpellId, "hellish_rebuke"],
     eldritchInvocation: "eldritch_mind",
   });
 }
@@ -6399,8 +6533,7 @@ function shillelaghBonusActionSpellAct(
       candidate.subject.mode.tag === "cast" &&
       candidate.subject.invocation.tag === "cantrip" &&
       candidate.subject.invocation.spellId === expectedInvocation.spellId &&
-      candidate.subject.invocation.procedure ===
-        expectedInvocation.procedure &&
+      candidate.subject.invocation.procedure === expectedInvocation.procedure &&
       candidate.subject.componentWeaponItemId === shillelaghQuarterstaffItemId,
   );
   if (act === undefined) {
@@ -6428,6 +6561,26 @@ function sanctuaryBonusActionSpellSlotAct(
   );
   if (act === undefined) {
     throw new Error("Expected Sanctuary Bonus Action spell-slot act.");
+  }
+  return act;
+}
+
+function hexBonusActionSpellSlotAct(
+  state: BattleState,
+  actorId: CombatantId,
+): CastBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is CastBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.mode.tag === "cast" &&
+      candidate.subject.invocation.tag === "spellSlot" &&
+      candidate.subject.invocation.spellId === hexSpellId &&
+      candidate.subject.invocation.slotLevel === 1 &&
+      candidate.subject.invocation.procedure === "markedDamageRider",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Hex Bonus Action spell-slot act.");
   }
   return act;
 }
@@ -6577,6 +6730,13 @@ function damageTypeChoiceFill(
   return { kind: "damageTypeChoice", holeId: hole.holeId, value };
 }
 
+function abilityChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "abilityChoice" }>,
+  value: Extract<BattleFill, { readonly kind: "abilityChoice" }>["value"],
+): Extract<BattleFill, { readonly kind: "abilityChoice" }> {
+  return { kind: "abilityChoice", holeId: hole.holeId, value };
+}
+
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   spellId: UnitRecord["id"],
@@ -6616,7 +6776,9 @@ function requireMovementSpeedBudget(
   BattleHole,
   { readonly kind: "movement" }
 >["speedKinds"][number]["movementBudgetFeet"] {
-  const speedKind = hole.speedKinds.find((candidate) => candidate.kind === kind);
+  const speedKind = hole.speedKinds.find(
+    (candidate) => candidate.kind === kind,
+  );
   if (speedKind === undefined) {
     throw new Error(`Expected ${kind} movement budget.`);
   }

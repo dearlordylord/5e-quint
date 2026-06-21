@@ -125,30 +125,59 @@ module characterBattleInitProjectionMbt {
   }
 
   action doRejectBuildMaximumAboveBuildMaximum = all {
-    qReplayIndex == 2,
+    qReplayIndex == 4,
     recordProjection(
       "build-maximum-above-build-maximum-rejected",
       false,
       "Character battle initialization max HP exceeds build-derived max HP.",
       emptyProjectionFacts,
+      5,
+    ),
+  }
+
+  action doProjectPurePactMagicSlot = all {
+    qReplayIndex == 2,
+    recordProjection(
+      "pure-pact-magic-slot-projection",
+      true,
+      "none",
+      emptyProjectionFacts
+        .with("characterIdentity", "character:battle-init-warlock")
+        .with("currentHp", 8)
+        .with("maxHp", 8)
+        .with("armorClass", 12)
+        .with("spellLevel1Count", 1),
       3,
     ),
   }
 
-  action doRejectStableRecoveryProgressDuringInit = all {
+  action doRejectMixedSpellAndPactSlotInit = all {
     qReplayIndex == 3,
+    recordProjection(
+      "mixed-spell-and-pact-slot-init-rejected",
+      false,
+      "Battle handoff cannot project mixed Spell Slot and Pact Slot state without source-distinct battle slots.",
+      emptyProjectionFacts,
+      4,
+    ),
+  }
+
+  action doRejectStableRecoveryProgressDuringInit = all {
+    qReplayIndex == 5,
     recordProjection(
       "stable-recovery-progress-during-init-rejected",
       false,
       "Battle handoff cannot preserve in-progress Stable recovery timers.",
       emptyProjectionFacts,
-      4,
+      6,
     ),
   }
 
   action step = any {
     doProjectSheetHitPointsArmorClassConditionsAndProfiles,
     doProjectSheetSpellcastingAndMetamagic,
+    doProjectPurePactMagicSlot,
+    doRejectMixedSpellAndPactSlotInit,
     doRejectBuildMaximumAboveBuildMaximum,
     doRejectStableRecoveryProgressDuringInit,
   }

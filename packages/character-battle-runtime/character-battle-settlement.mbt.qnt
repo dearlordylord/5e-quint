@@ -106,15 +106,38 @@ module characterBattleSettlementMbt {
         .with("poisoned", true)
         .with("prone", true)
         .with("spellLevel1Expended", 2)
-        .with("pactSlotsExpended", 1)
         .with("spentHitDice", 1)
         .with("restFeatureUsed", true),
       1,
     ),
   }
 
-  action doSettleFeatureResourceExpenditure = all {
+  action doSettlePurePactMagicSlotExpenditure = all {
     qReplayIndex == 1,
+    recordProjection(
+      "settle-pure-pact-magic-slot-expenditure",
+      true,
+      "none",
+      emptySettlementFacts
+        .with("currentHp", 8)
+        .with("pactSlotsExpended", 1),
+      2,
+    ),
+  }
+
+  action doRejectMixedSpellAndPactSlotSettlement = all {
+    qReplayIndex == 2,
+    recordProjection(
+      "mixed-spell-and-pact-slot-settlement-rejected",
+      false,
+      "Battle handoff cannot project mixed Spell Slot and Pact Slot state without source-distinct battle slots.",
+      emptySettlementFacts,
+      3,
+    ),
+  }
+
+  action doSettleFeatureResourceExpenditure = all {
+    qReplayIndex == 3,
     recordProjection(
       "settle-feature-resource-expenditure",
       true,
@@ -122,12 +145,12 @@ module characterBattleSettlementMbt {
       emptySettlementFacts
         .with("currentHp", 24)
         .with("featureResourceExpended", 3),
-      2,
+      4,
     ),
   }
 
   action doRejectAmbiguousCreatedSpellSlotSource = all {
-    qReplayIndex == 2,
+    qReplayIndex == 4,
     recordProjection(
       "ambiguous-created-spell-slot-source-rejected",
       false,
@@ -135,45 +158,45 @@ module characterBattleSettlementMbt {
       emptySettlementFacts
         .with("createdLevel3Capacity", 1)
         .with("createdLevel3Expended", 0),
-      3,
+      5,
     ),
   }
 
   action doRejectMismatchedCharacterIdentity = all {
-    qReplayIndex == 3,
+    qReplayIndex == 5,
     recordProjection(
       "mismatched-character-identity-rejected",
       false,
       "Battle handoff character identity does not match Character Sheet.",
       emptySettlementFacts,
-      4,
+      6,
     ),
   }
 
   action doRejectMaximumHpDrift = all {
-    qReplayIndex == 4,
+    qReplayIndex == 6,
     recordProjection(
       "maximum-hp-drift-rejected",
       false,
       "Battle handoff maximum HP does not match Character Sheet.",
       emptySettlementFacts,
-      5,
+      7,
     ),
   }
 
   action doRejectActiveWildShapeHandoff = all {
-    qReplayIndex == 5,
+    qReplayIndex == 7,
     recordProjection(
       "active-wild-shape-handoff-rejected",
       false,
       "Battle handoff while Wild Shape is active is blocked; dismiss or resolve reversion before Character Sheet handoff.",
       emptySettlementFacts,
-      6,
+      8,
     ),
   }
 
   action doRejectStableRecoveryProgressHandoff = all {
-    qReplayIndex == 6,
+    qReplayIndex == 9,
     recordProjection(
       "stable-recovery-progress-rejected",
       false,
@@ -181,12 +204,23 @@ module characterBattleSettlementMbt {
       emptySettlementFacts
         .with("zeroHpState", "stable")
         .with("stableRecoveryElapsed", 1),
-      7,
+      10,
+    ),
+  }
+
+  action doRejectActiveBattleStateHandoff = all {
+    qReplayIndex == 8,
+    recordProjection(
+      "active-battle-state-handoff-rejected",
+      false,
+      "Battle handoff while active battle effects or Concentration are present is blocked; end or resolve battle-local effects before Character Sheet handoff.",
+      emptySettlementFacts,
+      9,
     ),
   }
 
   action doSettleZeroHpStableLifecycle = all {
-    qReplayIndex == 7,
+    qReplayIndex == 10,
     recordProjection(
       "settle-zero-hp-stable-lifecycle",
       true,
@@ -194,17 +228,20 @@ module characterBattleSettlementMbt {
       emptySettlementFacts
         .with("zeroHpState", "stable")
         .with("stableRecoveryElapsed", 0),
-      8,
+      11,
     ),
   }
 
   action step = any {
     doSettleHitPointsConditionsSlotsAndPreservedSheetState,
+    doSettlePurePactMagicSlotExpenditure,
+    doRejectMixedSpellAndPactSlotSettlement,
     doSettleFeatureResourceExpenditure,
     doRejectAmbiguousCreatedSpellSlotSource,
     doRejectMismatchedCharacterIdentity,
     doRejectMaximumHpDrift,
     doRejectActiveWildShapeHandoff,
+    doRejectActiveBattleStateHandoff,
     doRejectStableRecoveryProgressHandoff,
     doSettleZeroHpStableLifecycle,
   }

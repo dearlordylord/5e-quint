@@ -52,6 +52,8 @@ const battleInitProjectionScenarios = [
   "init",
   "sheet-hit-points-armor-class-conditions-and-profiles",
   "sheet-spellcasting-and-metamagic",
+  "pure-pact-magic-slot-projection",
+  "mixed-spell-and-pact-slot-init-rejected",
   "build-maximum-above-build-maximum-rejected",
   "stable-recovery-progress-during-init-rejected",
 ] as const;
@@ -91,6 +93,8 @@ const driverSchema = {
   init: {},
   doProjectSheetHitPointsArmorClassConditionsAndProfiles: {},
   doProjectSheetSpellcastingAndMetamagic: {},
+  doProjectPurePactMagicSlot: {},
+  doRejectMixedSpellAndPactSlotInit: {},
   doRejectBuildMaximumAboveBuildMaximum: {},
   doRejectStableRecoveryProgressDuringInit: {},
   step: {},
@@ -145,6 +149,12 @@ function createBattleInitProjectionDriver() {
       },
       doProjectSheetSpellcastingAndMetamagic: () => {
         projection = sheetSpellcastingAndMetamagicProjection();
+      },
+      doProjectPurePactMagicSlot: () => {
+        projection = purePactMagicSlotProjection();
+      },
+      doRejectMixedSpellAndPactSlotInit: () => {
+        projection = rejectMixedSpellAndPactSlotInitProjection();
       },
       doRejectBuildMaximumAboveBuildMaximum: () => {
         projection = rejectBuildMaximumAboveBuildMaximumProjection();
@@ -231,6 +241,65 @@ function sheetSpellcastingAndMetamagicProjection(): BattleInitProjection {
   });
 }
 
+function purePactMagicSlotProjection(): BattleInitProjection {
+  const sheet = expectRight(
+    createFreshCharacterSheet({
+      characterId: characterSheetId("character:battle-init-warlock"),
+      build: warlockPactMagicBuild(),
+      maximumHp: Hp(8),
+      currentHp: Hp(8),
+      tempHp: Hp(0),
+      unitLibrary,
+    }),
+  );
+  const combatant = startCharacterBattle({
+    battleIdText: "battle:init-warlock",
+    combatantId: combatantId("combatant:battle-init-warlock"),
+    sheet,
+  });
+  return projectionFromCombatant({
+    lastResult: "pure-pact-magic-slot-projection",
+    replayIndex: 3,
+    combatant,
+  });
+}
+
+function rejectMixedSpellAndPactSlotInitProjection(): BattleInitProjection {
+  const result = characterSheetBattleInit({
+    sheet: expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:battle-init-mixed-slots"),
+        build: mixedSpellAndPactSlotBuild(),
+        maximumHp: Hp(8),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(2),
+            expended: resourceCount(0),
+          },
+        ],
+        pactSlots: { expended: resourceCount(0) },
+      }),
+    ),
+    unitLibrary,
+    statBlockCatalog,
+    combatantId: combatantId("combatant:battle-init-mixed-slots"),
+    displayName: "Character",
+    initiative: initiativeScore(20),
+    side: battleCombatantSide("party"),
+  });
+
+  return projectFromParts({
+    lastResult: "mixed-spell-and-pact-slot-init-rejected",
+    accepted: Either.isRight(result),
+    message: Either.isLeft(result) ? result.left.message : "none",
+    replayIndex: 4,
+  });
+}
+
 function rejectBuildMaximumAboveBuildMaximumProjection(): BattleInitProjection {
   const result = battleCreatureInitFromCharacterBuild({
     combatantId: combatantId("combatant:contradictory-maximum-init"),
@@ -247,7 +316,7 @@ function rejectBuildMaximumAboveBuildMaximumProjection(): BattleInitProjection {
     lastResult: "build-maximum-above-build-maximum-rejected",
     accepted: Either.isRight(result),
     message: Either.isLeft(result) ? result.left.message : "none",
-    replayIndex: 3,
+    replayIndex: 5,
   });
 }
 
@@ -282,7 +351,7 @@ function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjectio
     lastResult: "stable-recovery-progress-during-init-rejected",
     accepted: Either.isRight(result),
     message: Either.isLeft(result) ? result.left.message : "none",
-    replayIndex: 4,
+    replayIndex: 6,
   });
 }
 
@@ -513,6 +582,80 @@ function sorcererMetamagicBuild(): CharacterBuild {
             { spellLevel: 3, count: 2 },
           ],
         },
+      },
+    },
+  };
+}
+
+function warlockPactMagicBuild(): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId("class_warlock"),
+      advancements: [],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 8,
+        dex: 14,
+        con: 13,
+        int: 10,
+        wis: 10,
+        cha: 16,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_warlock",
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        pactMagic: {
+          kind: "pactMagic",
+          slotLevel: 1,
+          count: 1,
+        },
+      },
+    },
+  };
+}
+
+function mixedSpellAndPactSlotBuild(): CharacterBuild {
+  const build = warlockPactMagicBuild();
+  const spellcasting = build.spellcasting;
+  if (spellcasting === undefined) {
+    throw new Error("Expected Warlock fixture spellcasting.");
+  }
+  const pactMagic = spellcasting.slotPools.pactMagic;
+  if (pactMagic === undefined) {
+    throw new Error("Expected Warlock fixture Pact Magic.");
+  }
+  return {
+    ...build,
+    spellcasting: {
+      ...spellcasting,
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 2 }],
+        },
+        pactMagic,
       },
     },
   };

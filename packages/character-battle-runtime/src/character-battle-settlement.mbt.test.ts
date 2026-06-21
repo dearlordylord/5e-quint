@@ -14,6 +14,7 @@ import {
   type BattleCreatureState,
   type BattleState,
   type CharacterBattleSpellcastingState,
+  type OngoingFeatureSourceKey,
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
@@ -61,11 +62,14 @@ import {
 const settlementScenarios = [
   "init",
   "settle-hit-points-conditions-slots-and-preserved-sheet-state",
+  "settle-pure-pact-magic-slot-expenditure",
+  "mixed-spell-and-pact-slot-settlement-rejected",
   "settle-feature-resource-expenditure",
   "ambiguous-created-spell-slot-source-rejected",
   "mismatched-character-identity-rejected",
   "maximum-hp-drift-rejected",
   "active-wild-shape-handoff-rejected",
+  "active-battle-state-handoff-rejected",
   "stable-recovery-progress-rejected",
   "settle-zero-hp-stable-lifecycle",
 ] as const;
@@ -110,11 +114,14 @@ type CharacterBattleSession = {
 const driverSchema = {
   init: {},
   doSettleHitPointsConditionsSlotsAndPreservedSheetState: {},
+  doSettlePurePactMagicSlotExpenditure: {},
+  doRejectMixedSpellAndPactSlotSettlement: {},
   doSettleFeatureResourceExpenditure: {},
   doRejectAmbiguousCreatedSpellSlotSource: {},
   doRejectMismatchedCharacterIdentity: {},
   doRejectMaximumHpDrift: {},
   doRejectActiveWildShapeHandoff: {},
+  doRejectActiveBattleStateHandoff: {},
   doRejectStableRecoveryProgressHandoff: {},
   doSettleZeroHpStableLifecycle: {},
   step: {},
@@ -131,8 +138,9 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
-const wizardBattleFixtureMaximumHp =
-  characterBuildMaximumHp(wizardWarlockBuild());
+const wizardBattleFixtureMaximumHp = characterBuildMaximumHp(
+  wizardSpellcastingBuild(),
+);
 const settlementStateCheck = stateCheck(
   normalizeSettlementQuintState,
   compareSettlementState,
@@ -169,6 +177,12 @@ function createSettlementDriver() {
       doSettleHitPointsConditionsSlotsAndPreservedSheetState: () => {
         projection = settleHitPointsConditionsSlotsAndPreservedSheetState();
       },
+      doSettlePurePactMagicSlotExpenditure: () => {
+        projection = settlePurePactMagicSlotExpenditure();
+      },
+      doRejectMixedSpellAndPactSlotSettlement: () => {
+        projection = rejectMixedSpellAndPactSlotSettlement();
+      },
       doSettleFeatureResourceExpenditure: () => {
         projection = settleFeatureResourceExpenditure();
       },
@@ -183,6 +197,9 @@ function createSettlementDriver() {
       },
       doRejectActiveWildShapeHandoff: () => {
         projection = rejectActiveWildShapeHandoff();
+      },
+      doRejectActiveBattleStateHandoff: () => {
+        projection = rejectActiveBattleStateHandoff();
       },
       doRejectStableRecoveryProgressHandoff: () => {
         projection = rejectStableRecoveryProgressHandoff();
@@ -199,7 +216,7 @@ function createSettlementDriver() {
 function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-sheet-state",
-    build: wizardWarlockBuild(),
+    build: wizardSpellcastingBuild(),
     maximumHp: 7,
     currentHp: 7,
     spellSlots: [
@@ -209,7 +226,6 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
         expended: resourceCount(1),
       },
     ],
-    pactSlots: { expended: resourceCount(1) },
     spentHitDice: [{ classUnitId: "class_wizard", spent: resourceCount(1) }],
     restFeatureUses: [{ tag: "arcaneRecovery", usedSinceLongRest: true }],
   });
@@ -256,6 +272,105 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
     sheet: settled,
     originalBuild: sheet.build,
     replayIndex: 1,
+  });
+}
+
+function settlePurePactMagicSlotExpenditure(): BattleSettlementProjection {
+  const sheet = sheetFixture({
+    characterIdText: "character:battle-settlement-pact-magic",
+    build: warlockPactMagicBuild(),
+    maximumHp: 8,
+    currentHp: 8,
+  });
+  const battle = startCharacterBattle({
+    battleIdText: "battle:settlement-pact-magic",
+    combatantId: combatantId("combatant:battle-settlement-pact-magic"),
+    sheet,
+  });
+  const combatant = battle.combatant;
+  const spellcasting = requireCharacterSpellcasting(combatant);
+  const settledCombatant: CharacterBattleCombatant = {
+    ...combatant,
+    positiveHpUnconscious: null,
+    origin: {
+      ...combatant.origin,
+      spellcasting: {
+        ...spellcasting,
+        spellSlots: spellcasting.spellSlots.map((slot) =>
+          slot.spellLevel === 1
+            ? { ...slot, expended: resourceCount(1) }
+            : slot,
+        ),
+      },
+    },
+  };
+  const settled = requireRight(
+    settleCharacterSheetFromBattle({
+      state: battleStateWithCombatant(battle.state, settledCombatant),
+      sheet,
+      unitLibrary,
+      combatant: settledCombatant,
+    }),
+  );
+  return projectFromSheet({
+    lastResult: "settle-pure-pact-magic-slot-expenditure",
+    accepted: true,
+    message: "none",
+    sheet: settled,
+    originalBuild: sheet.build,
+    replayIndex: 2,
+  });
+}
+
+function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
+  const characterIdText = "character:battle-settlement-mixed-slots";
+  const mixedSheet = sheetFixture({
+    characterIdText,
+    build: mixedSpellAndPactSlotBuild(),
+    maximumHp: wizardBattleFixtureMaximumHp,
+    currentHp: wizardBattleFixtureMaximumHp,
+    spellSlots: [
+      {
+        spellLevel: spellSlotLevel(1),
+        count: resourceCount(2),
+        expended: resourceCount(0),
+      },
+    ],
+    pactSlots: { expended: resourceCount(0) },
+  });
+  const battle = startCharacterBattle({
+    battleIdText: "battle:settlement-mixed-slots-source",
+    combatantId: combatantId("combatant:battle-settlement-mixed-slots"),
+    sheet: sheetFixture({
+      characterIdText,
+      build: wizardSpellcastingBuild(),
+      maximumHp: wizardBattleFixtureMaximumHp,
+      currentHp: wizardBattleFixtureMaximumHp,
+      spellSlots: [
+        {
+          spellLevel: spellSlotLevel(1),
+          count: resourceCount(2),
+          expended: resourceCount(0),
+        },
+      ],
+    }),
+  });
+  const result = settleCharacterSheetFromBattle({
+    state: battle.state,
+    sheet: mixedSheet,
+    unitLibrary,
+    combatant: battle.combatant,
+  });
+  if (Either.isRight(result)) {
+    throw new Error(
+      "Expected mixed Spell Slot and Pact Slot handoff rejection.",
+    );
+  }
+  return projectFromParts({
+    lastResult: "mixed-spell-and-pact-slot-settlement-rejected",
+    accepted: false,
+    message: result.left.message,
+    replayIndex: 3,
   });
 }
 
@@ -317,7 +432,7 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
     message: "none",
     sheet: settled,
     originalBuild: sheet.build,
-    replayIndex: 2,
+    replayIndex: 4,
   });
 }
 
@@ -389,14 +504,14 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
     message: result.left.message,
     createdLevel3Capacity: createdSpellSlotCapacity(withCreatedSlot, 3),
     createdLevel3Expended: createdSpellSlotExpended(withCreatedSlot, 3),
-    replayIndex: 3,
+    replayIndex: 5,
   });
 }
 
 function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-sheet",
-    build: wizardWarlockBuild(),
+    build: wizardSpellcastingBuild(),
     maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
   });
@@ -426,14 +541,14 @@ function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
     lastResult: "mismatched-character-identity-rejected",
     accepted: false,
     message: result.left.message,
-    replayIndex: 4,
+    replayIndex: 6,
   });
 }
 
 function rejectMaximumHpDrift(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-maximum",
-    build: wizardWarlockBuild(),
+    build: wizardSpellcastingBuild(),
     maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
   });
@@ -460,7 +575,7 @@ function rejectMaximumHpDrift(): BattleSettlementProjection {
     lastResult: "maximum-hp-drift-rejected",
     accepted: false,
     message: result.left.message,
-    replayIndex: 5,
+    replayIndex: 7,
   });
 }
 
@@ -516,20 +631,69 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
     lastResult: "active-wild-shape-handoff-rejected",
     accepted: false,
     message: result.left.message,
-    replayIndex: 6,
+    replayIndex: 8,
+  });
+}
+
+function rejectActiveBattleStateHandoff(): BattleSettlementProjection {
+  const sheet = sheetFixture({
+    characterIdText: "character:battle-settlement-active-state",
+    build: wizardSpellcastingBuild(),
+    maximumHp: wizardBattleFixtureMaximumHp,
+    currentHp: wizardBattleFixtureMaximumHp,
+  });
+  const battle = startCharacterBattle({
+    battleIdText: "battle:settlement-active-state",
+    combatantId: combatantId("combatant:settlement-active-state"),
+    sheet,
+  });
+  const combatant = battle.combatant;
+  const activeStateCombatant: CharacterBattleCombatant = {
+    ...combatant,
+    concentration: {
+      sourceSpellId: "synthetic_active_state_handoff",
+      effectKind: "spellEffect",
+    },
+    activeOngoingFeatureOccurrences: new Map([
+      [
+        syntheticOngoingFeatureSourceKey("synthetic_active_state_handoff"),
+        {
+          kind: "turnBoundary",
+          expiresAt: {
+            kind: "startOfTurn",
+            combatantId: combatant.combatantId,
+          },
+        },
+      ],
+    ]),
+  };
+  const result = settleCharacterSheetFromBattle({
+    state: battleStateWithCombatant(battle.state, activeStateCombatant),
+    sheet,
+    unitLibrary,
+    combatant: activeStateCombatant,
+  });
+  if (Either.isRight(result)) {
+    throw new Error("Expected active battle-state handoff rejection.");
+  }
+  return projectFromParts({
+    lastResult: "active-battle-state-handoff-rejected",
+    accepted: false,
+    message: result.left.message,
+    replayIndex: 9,
   });
 }
 
 function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
   const startedSheet = sheetFixture({
     characterIdText: "character:stable-recovery-started",
-    build: wizardWarlockBuild(),
+    build: wizardSpellcastingBuild(),
     maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
   });
   const stableSheet = sheetFixture({
     characterIdText: "character:stable-recovery-sheet",
-    build: wizardWarlockBuild(),
+    build: wizardSpellcastingBuild(),
     maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: 0,
     zeroHpLifecycle: {
@@ -579,20 +743,20 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
     message: result.left.message,
     zeroHpState: "stable",
     stableRecoveryElapsed: 1,
-    replayIndex: 7,
+    replayIndex: 10,
   });
 }
 
 function settleZeroHpStableLifecycle(): BattleSettlementProjection {
   const startedSheet = sheetFixture({
     characterIdText: "character:stable-recovery-started-accepted",
-    build: wizardWarlockBuild(),
+    build: wizardSpellcastingBuild(),
     maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
   });
   const stableSheet = sheetFixture({
     characterIdText: "character:stable-recovery-sheet-accepted",
-    build: wizardWarlockBuild(),
+    build: wizardSpellcastingBuild(),
     maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: 0,
     zeroHpLifecycle: {
@@ -641,7 +805,7 @@ function settleZeroHpStableLifecycle(): BattleSettlementProjection {
     message: "none",
     sheet: settled,
     originalBuild: stableSheet.build,
-    replayIndex: 8,
+    replayIndex: 11,
   });
 }
 
@@ -893,7 +1057,11 @@ function characterBuildMaximumHp(build: CharacterBuild): number {
   return requireRight(characterBuildHitPoints(build, unitLibrary)).maximum;
 }
 
-function wizardWarlockBuild(): CharacterBuild {
+function syntheticOngoingFeatureSourceKey(id: string): OngoingFeatureSourceKey {
+  return id as OngoingFeatureSourceKey;
+}
+
+function wizardSpellcastingBuild(): CharacterBuild {
   return {
     ...baseBuild({ startingClass: "class_wizard" }),
     spellcasting: {
@@ -912,11 +1080,56 @@ function wizardWarlockBuild(): CharacterBuild {
           kind: "spellcasting",
           slots: [{ spellLevel: 1, count: 2 }],
         },
+      },
+    },
+  };
+}
+
+function warlockPactMagicBuild(): CharacterBuild {
+  return {
+    ...baseBuild({ startingClass: "class_warlock" }),
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_warlock",
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
         pactMagic: {
           kind: "pactMagic",
           slotLevel: 1,
           count: 1,
         },
+      },
+    },
+  };
+}
+
+function mixedSpellAndPactSlotBuild(): CharacterBuild {
+  const build = warlockPactMagicBuild();
+  const spellcasting = build.spellcasting;
+  if (spellcasting === undefined) {
+    throw new Error("Expected Warlock fixture spellcasting.");
+  }
+  const pactMagic = spellcasting.slotPools.pactMagic;
+  if (pactMagic === undefined) {
+    throw new Error("Expected Warlock fixture Pact Magic.");
+  }
+  return {
+    ...build,
+    spellcasting: {
+      ...spellcasting,
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 2 }],
+        },
+        pactMagic,
       },
     },
   };
