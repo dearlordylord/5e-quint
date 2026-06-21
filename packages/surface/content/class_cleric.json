@@ -113,6 +113,10 @@
           "spellLevel": 1
         },
         {
+          "spellId": "inflict_wounds",
+          "spellLevel": 1
+        },
+        {
           "spellId": "aid",
           "spellLevel": 2
         }

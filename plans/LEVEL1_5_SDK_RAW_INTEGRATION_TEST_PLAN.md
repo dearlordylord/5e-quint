@@ -230,6 +230,15 @@ Current generated findings:
   spend. It does not claim pathfinding, Opportunity Attack derivation, the RAW
   can-see/actual-within-range target-legality predicate, no-Reaction/no-movement
   fallbacks, or higher-level Spell Slot scaling.
+- The level-1 Inflict Wounds seed covers the Cleric spell-list row through
+  level-1 Cleric character creation, prepared-spell sheet projection, battle act
+  discovery, creature target selection, Constitution Saving Throw shape,
+  failed-save 2d10 Necrotic damage, successful-save half damage, Magic Action
+  spend, level-1 Spell Slot spend, and the runtime's Touch-as-5-foot spell range
+  projection. The seed exposed and fixed a narrow `class_cleric` prepared spell
+  access omission for the already-authored SRD `inflict_wounds` spell. It does
+  not claim actual touch-distance enforcement or higher-level Spell Slot
+  scaling.
 - The level-1 Chill Touch seed covers the Sorcerer, Warlock, and Wizard
   cantrip spell-list rows through level-1 sheet projection, battle act
   discovery, Touch-range melee Spell Attack resolution, creature-or-object
@@ -285,8 +294,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 48 seed scenarios
-  present, 456 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 49 seed scenarios
+  present, 455 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -499,8 +508,9 @@ First implementation slice:
   Chromatic Orb, Ray of Sickness, Thunderwave, and Magic Missile from Sorcerer
   and Wizard sheets, plus class-specific rows when SRD access differs such as
   Bard Dissonant Whispers, Bard Vicious Mockery, Druid/Warlock Poison Spray,
-  Druid Produce Flame, Cleric Sacred Flame, Cleric Guiding Bolt, Sorcerer
-  Sorcerous Burst, Warlock Chill Touch, and Warlock Eldritch Blast.
+  Druid Produce Flame, Cleric Sacred Flame, Cleric Guiding Bolt, Cleric Inflict
+  Wounds, Sorcerer Sorcerous Burst, Warlock Chill Touch, and Warlock Eldritch
+  Blast.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

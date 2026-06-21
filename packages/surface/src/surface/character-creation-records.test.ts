@@ -603,6 +603,7 @@ describe("character-creation Surface records", () => {
               "guiding_bolt",
               "shield_of_faith",
               "healing_word",
+              "inflict_wounds",
               { spellId: "aid", spellLevel: 2 },
             ],
             cantrips: ["guidance", "sacred_flame", "thaumaturgy"],

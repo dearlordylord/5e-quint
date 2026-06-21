@@ -117,6 +117,9 @@ const guidingBoltClericId = combatantId(
   "combatant:l1-sdk-guiding-bolt-cleric",
 );
 const guidingBoltAllyId = combatantId("combatant:l1-sdk-guiding-bolt-ally");
+const inflictWoundsClericId = combatantId(
+  "combatant:l1-sdk-inflict-wounds-cleric",
+);
 const poisonSpraySorcererId = combatantId(
   "combatant:l1-sdk-poison-spray-sorcerer",
 );
@@ -201,6 +204,7 @@ const poisonSpraySpellId = "poison_spray";
 const produceFlameSpellId = "produce_flame";
 const sacredFlameSpellId = "sacred_flame";
 const guidingBoltSpellId = "guiding_bolt";
+const inflictWoundsSpellId = "inflict_wounds";
 const chillTouchSpellId = "chill_touch";
 const eldritchBlastSpellId = "eldritch_blast";
 const burningHandsSpellId = "burning_hands";
@@ -979,6 +983,28 @@ describe("level 1 SDK RAW integration", () => {
       casterId: guidingBoltClericId,
       allyId: guidingBoltAllyId,
       expectedSpellAttackBonus: 4,
+    });
+  });
+
+  test("Cleric Inflict Wounds resolves from a level-1 sheet as a Constitution save with Necrotic damage", () => {
+    const clericBuild = finalizedLevelOneClericInflictWoundsBuild();
+
+    expect(clericBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([inflictWoundsSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneInflictWounds({
+      battleIdText: "battle:l1-sdk-inflict-wounds-cleric",
+      characterIdText: "character:l1-sdk-inflict-wounds-cleric",
+      build: clericBuild,
+      casterId: inflictWoundsClericId,
+      expectedSpellSaveDc: 12,
     });
   });
 
@@ -2701,6 +2727,149 @@ function assertLevelOneSacredFlame(input: {
   expect(snapshotBattle(successfulSave.state).turn.actionResources).toEqual([]);
   expect(successfulSaveCaster.origin.spellcasting?.spellSlots).toEqual([
     { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+}
+
+function assertLevelOneInflictWounds(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    inflictWoundsSpellId,
+    1,
+    "saveGatedDamage",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(
+    target,
+    inflictWoundsSpellId,
+    input.casterId,
+    monsterId,
+  );
+  const save = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "savingThrowOutcome",
+  );
+
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([monsterId]),
+  });
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(save).toMatchObject({
+    label: "Inflict Wounds Saving Throw outcome",
+    ability: "con",
+    dc: { kind: "caster_spell_save_dc" },
+    spell: {
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      targeting: { kind: "singleCombatant" },
+      damage: { expr: { dice: 2, dieSize: 10 }, damageType: "necrotic" },
+      successDamage: "half",
+      rangeFeet: 5,
+      failedSavePostDamageRiders: [],
+    },
+  });
+
+  const failedSaveFill = savingThrowOutcomeFill(save, [
+    { targetId: monsterId, succeeded: false },
+  ]);
+  const failedDamage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, failedSaveFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(failedDamage).toMatchObject({
+    label: "Inflict Wounds damage (2d10-necrotic)",
+    spell: {
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      damage: { expr: { dice: 2, dieSize: 10 }, damageType: "necrotic" },
+      successDamage: "half",
+      failedSavePostDamageRiders: [],
+    },
+    critical: false,
+  });
+
+  const failedSave = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        failedSaveFill,
+        damageRollFillWithGroups(failedDamage, [[5, 5]]),
+      ],
+    }),
+  );
+  const failedSaveCaster = requireCharacterCombatant(
+    failedSave.state,
+    input.casterId,
+  );
+
+  expect(requireCombatant(failedSave.state, monsterId).hp).toBe(Hp(3));
+  expect(snapshotBattle(failedSave.state).turn.actionResources).toEqual([]);
+  expect(failedSaveCaster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+
+  const successfulSaveFill = savingThrowOutcomeFill(save, [
+    { targetId: monsterId, succeeded: true },
+  ]);
+  const successDamage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, successfulSaveFill],
+    }),
+    "rolledDice",
+  );
+  const successfulSave = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        successfulSaveFill,
+        damageRollFillWithGroups(successDamage, [[5, 5]]),
+      ],
+    }),
+  );
+  const successfulSaveCaster = requireCharacterCombatant(
+    successfulSave.state,
+    input.casterId,
+  );
+
+  expect(requireCombatant(successfulSave.state, monsterId).hp).toBe(Hp(8));
+  expect(snapshotBattle(successfulSave.state).turn.actionResources).toEqual([]);
+  expect(successfulSaveCaster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
   ]);
 }
 
@@ -4478,6 +4647,20 @@ function finalizedLevelOneClericGuidingBoltBuild(): CharacterBuild {
       "cure_wounds",
       guidingBoltSpellId,
       "shield_of_faith",
+    ],
+  });
+}
+
+function finalizedLevelOneClericInflictWoundsBuild(): CharacterBuild {
+  return finalizedLevelOneClericBuild({
+    draftIdText: "draft:l1-sdk-cleric-inflict-wounds",
+    expectedBuildLabel: "Cleric Inflict Wounds",
+    cantrips: ["guidance", sacredFlameSpellId, "thaumaturgy"],
+    preparedSpells: [
+      "bless",
+      "cure_wounds",
+      "guiding_bolt",
+      inflictWoundsSpellId,
     ],
   });
 }
