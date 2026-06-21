@@ -316,15 +316,15 @@ Current generated findings:
   Favored Enemy scaling, line-of-sight derivation, attack rider damage
   execution, transfer resolution, or higher-level Hunter's Mark duration
   scaling.
-- The level-1 Cure Wounds seed covers the Bard, Cleric, Druid, and Ranger
-  `cure_wounds` spell-list rows through level-1 character creation,
+- The level-1 Cure Wounds seed covers the Bard, Cleric, Druid, Paladin, and
+  Ranger `cure_wounds` spell-list rows through level-1 character creation,
   prepared-spell sheet projection, Magic Action spell-slot act discovery, touch
   target selection, 2d8 plus spellcasting ability modifier Hit Point
   restoration, Hit Point maximum capping, action spend, Bonus Action
   preservation, and spell-slot spend. The seed exposed and fixed a narrow
-  `class_bard` prepared-spell access gap so the Bard row is claimed through
-  character creation rather than a hand-authored spell list. It leaves the
-  Paladin Cure Wounds spell-list row in the remaining battle-spell SDK group.
+  `class_bard` prepared-spell access gap and a narrow `class_paladin`
+  prepared-spell access gap so those rows are claimed through character creation
+  rather than hand-authored spell lists.
 - The level-1 Healing Word seed covers the Bard, Cleric, and Druid spell-list
   rows through level-1 character creation, prepared-spell sheet projection,
   Bonus Action spell-slot act discovery, creature target selection, 2d4 plus
@@ -380,8 +380,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 65 seed scenarios
-  present, 439 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 66 seed scenarios
+  present, 438 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -598,8 +598,8 @@ First implementation slice:
   Thaumaturgy, Cleric Guiding Bolt, Cleric Inflict Wounds, Cleric Sanctuary,
   Sorcerer Sorcerous Burst, Warlock Chill Touch, Warlock Eldritch Blast,
   Warlock Hex, Ranger Favored Enemy, Ranger Hunter's Mark, plus
-  Bard/Cleric/Druid/Ranger Cure Wounds, Bard/Cleric/Druid Healing Word, and
-  Bard/Druid/Ranger Animal Friendship.
+  Bard/Cleric/Druid/Paladin/Ranger Cure Wounds, Bard/Cleric/Druid Healing
+  Word, and Bard/Druid/Ranger Animal Friendship.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

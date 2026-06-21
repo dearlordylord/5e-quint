@@ -184,6 +184,7 @@ const huntersMarkSpellSlotRangerId = combatantId(
 const cureWoundsBardId = combatantId("combatant:l1-sdk-cure-wounds-bard");
 const cureWoundsClericId = combatantId("combatant:l1-sdk-cure-wounds-cleric");
 const cureWoundsDruidId = combatantId("combatant:l1-sdk-cure-wounds-druid");
+const cureWoundsPaladinId = combatantId("combatant:l1-sdk-cure-wounds-paladin");
 const cureWoundsRangerId = combatantId("combatant:l1-sdk-cure-wounds-ranger");
 const cureWoundsTargetId = combatantId("combatant:l1-sdk-cure-wounds-target");
 const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
@@ -1200,10 +1201,11 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
-  test("Bard, Cleric, Druid, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration", () => {
+  test("Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration", () => {
     const bardBuild = finalizedLevelOneBardCureWoundsBuild();
     const clericBuild = finalizedLevelOneClericCureWoundsBuild();
     const druidBuild = finalizedLevelOneDruidCureWoundsBuild();
+    const paladinBuild = finalizedLevelOnePaladinCureWoundsBuild();
     const rangerBuild = finalizedLevelOneRangerCureWoundsBuild();
 
     expect(bardBuild.spellcasting?.sources).toEqual(
@@ -1229,6 +1231,15 @@ describe("level 1 SDK RAW integration", () => {
         expect.objectContaining({
           sourceUnitId: "class_druid",
           spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([cureWoundsSpellId]),
+        }),
+      ]),
+    );
+    expect(paladinBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_paladin",
+          spellcastingAbility: "cha",
           preparedSpells: expect.arrayContaining([cureWoundsSpellId]),
         }),
       ]),
@@ -1272,6 +1283,16 @@ describe("level 1 SDK RAW integration", () => {
       expectedSpellcastingAbilityModifier: 2,
       targetCurrentHp: 8,
       expectedResolvedHp: 12,
+    });
+    assertLevelOneCureWounds({
+      battleIdText: "battle:l1-sdk-cure-wounds-paladin",
+      characterIdText: "character:l1-sdk-cure-wounds-paladin",
+      build: paladinBuild,
+      casterId: cureWoundsPaladinId,
+      targetId: cureWoundsTargetId,
+      expectedSpellcastingAbilityModifier: 2,
+      targetCurrentHp: 4,
+      expectedResolvedHp: 11,
     });
     assertLevelOneCureWounds({
       battleIdText: "battle:l1-sdk-cure-wounds-ranger",
@@ -6631,6 +6652,141 @@ const defaultDruidWeaponPurchase = {
   unitId: "weapon_dagger",
   loadout: "not_wielded",
 } as const satisfies LevelOneDruidWeaponPurchase;
+
+function finalizedLevelOnePaladinCureWoundsBuild(): CharacterBuild {
+  return finalizedLevelOnePaladinBuild({
+    draftIdText: "draft:l1-sdk-paladin-cure-wounds",
+    expectedBuildLabel: "Paladin Cure Wounds",
+    preparedSpells: [cureWoundsSpellId, "bless"],
+  });
+}
+
+function finalizedLevelOnePaladinBuild(input: {
+  readonly draftIdText: string;
+  readonly expectedBuildLabel: string;
+  readonly preparedSpells: readonly [UnitRecord["id"], UnitRecord["id"]];
+}): CharacterBuild {
+  const draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId(input.draftIdText),
+  });
+  const afterInitial = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        creationChoiceFill(
+          "cc:draft:draft.progression.initial",
+          "13:class_paladin:level_1:maximum_hit_die",
+        ),
+        creationChoiceFill("cc:draft:draft.background", "background_criminal"),
+        creationChoiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: requireRight(
+            abilityScoreAssignment({
+              str: 15,
+              dex: 10,
+              con: 13,
+              int: 8,
+              wis: 12,
+              cha: 14,
+            }),
+          ),
+        },
+        creationChoiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        creationChoiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "class_paladin",
+            "class_skill_proficiency_choice",
+          ),
+          "athletics",
+          "persuasion",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_paladin", "class_prepared_spell_choices"),
+          ...input.preparedSpells,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "paladin_weapon_mastery",
+            "weapon_mastery_options",
+          ),
+          "weapon_longsword",
+          "weapon_spear",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:dex:con",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          "thieves_tools",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_paladin", "class_equipment_choice"),
+          "option_b",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_equipment_choice",
+          ),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_paladin", "equipment_purchase"),
+          "weapon_longsword",
+        ),
+      ],
+    }),
+  );
+  const afterLoadout = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        creationChoiceFill(
+          testLoadoutHoleId("weapon_longsword", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
+    );
+  }
+  return result.build;
+}
 
 function finalizedLevelOneRangerHuntersMarkBuild(): CharacterBuild {
   return finalizedLevelOneRangerBuild({

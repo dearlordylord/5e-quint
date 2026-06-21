@@ -705,7 +705,13 @@ describe("character-creation Surface records", () => {
             preparedChangeOn: "long_rest",
             preparedReplacementCount: 1,
             preparedCount: 2,
-            preparedSpells: ["heroism", "searing_smite", "bless", "command"],
+            preparedSpells: [
+              "heroism",
+              "searing_smite",
+              "bless",
+              "command",
+              "cure_wounds",
+            ],
           }),
           kind: "list_prepared_spellcasting_progression_creation",
           spellcastingProgression: [

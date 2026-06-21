@@ -70,7 +70,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Paladin.md:3-24,33-38,66-124"
+    "section": "Classes/Paladin.md:3-24,33-38,66-124,168-184"
   },
   "savingThrowProficiencies": [
     "wis",
@@ -112,6 +112,10 @@
         },
         {
           "spellId": "command",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "cure_wounds",
           "spellLevel": 1
         }
       ]
