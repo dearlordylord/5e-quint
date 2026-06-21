@@ -179,6 +179,124 @@ const seededSdkScenarioRows = [
     tracerNeedles: ["sorcererInnateSorceryUnitId", "sorcerousBurstSpellId"],
   },
   {
+    candidateUnitId: "acid_splash",
+    className: "Sorcerer",
+    levelBand: "spell-level-0",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
+    tracerNeedles: [
+      "const sorcererBuild = finalizedLevelOneSorcererAcidSplashBuild();",
+      'sourceUnitId: "class_sorcerer"',
+      "cantrips: expect.arrayContaining([acidSplashSpellId])",
+      "build: sorcererBuild,",
+      "casterId: acidSplashSorcererId,",
+      "expectedSpellSaveDc: 12,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneSorcererAcidSplashBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneSorcererBuild({",
+          'draftIdText: "draft:l1-sdk-sorcerer-acid-splash"',
+          "acidSplashSpellId,",
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneSorcererBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneAcidSplash",
+        needles: [
+          "cantripCastActionSpellAct(",
+          '"saveGatedDamage"',
+          'label: "Acid Splash point-origin Sphere Saving Throw outcomes"',
+          'ability: "dex"',
+          'targeting: { kind: "pointOriginSphere", radiusFeet: 5 }',
+          'damage: { expr: { dice: 1, dieSize: 6 }, damageType: "acid" }',
+          'successDamage: "none"',
+          "rangeFeet: 60",
+          "areaSavingThrowOutcomeFill(save, input.casterId,",
+          "{ targetId: monsterId, succeeded: false }",
+          "{ targetId: secondMonsterId, succeeded: true }",
+          'label: "Acid Splash damage (1d6-acid)"',
+          "damageRollFillWithGroups(damage, [[4]])",
+          "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(9));",
+          "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));",
+          "{ spellLevel: 1, count: 2, expended: 0 }",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "acid_splash",
+    className: "Wizard",
+    levelBand: "spell-level-0",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
+    tracerNeedles: [
+      "const wizardBuild = finalizedLevelOneWizardAcidSplashBuild();",
+      'sourceUnitId: "class_wizard"',
+      "cantrips: expect.arrayContaining([acidSplashSpellId])",
+      "build: wizardBuild,",
+      "casterId: acidSplashWizardId,",
+      "expectedSpellSaveDc: 13,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneWizardAcidSplashBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneWizardBuild({",
+          'draftIdText: "draft:l1-sdk-wizard-acid-splash"',
+          'cantrips: [acidSplashSpellId, fireBoltSpellId, "ray_of_frost"]',
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneWizardBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneAcidSplash",
+        needles: [
+          "cantripCastActionSpellAct(",
+          '"saveGatedDamage"',
+          'label: "Acid Splash point-origin Sphere Saving Throw outcomes"',
+          'ability: "dex"',
+          'targeting: { kind: "pointOriginSphere", radiusFeet: 5 }',
+          'damage: { expr: { dice: 1, dieSize: 6 }, damageType: "acid" }',
+          'successDamage: "none"',
+          "rangeFeet: 60",
+          "areaSavingThrowOutcomeFill(save, input.casterId,",
+          "{ targetId: monsterId, succeeded: false }",
+          "{ targetId: secondMonsterId, succeeded: true }",
+          'label: "Acid Splash damage (1d6-acid)"',
+          "damageRollFillWithGroups(damage, [[4]])",
+          "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(9));",
+          "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));",
+          "{ spellLevel: 1, count: 2, expended: 0 }",
+        ],
+      },
+    ],
+  },
+  {
     candidateUnitId: "burning_hands",
     className: "Sorcerer",
     levelBand: "spell-level-1",

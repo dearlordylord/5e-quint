@@ -71,7 +71,8 @@
         "prestidigitation",
         "shocking_grasp",
         "sorcerous_burst",
-        "fire_bolt"
+        "fire_bolt",
+        "acid_splash"
       ]
     },
     "featureLevel": 1,

@@ -410,6 +410,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       creationChoiceOptionId("fire_bolt"),
       creationChoiceOptionId("ray_of_frost"),
       creationChoiceOptionId("minor_illusion"),
+      creationChoiceOptionId("acid_splash"),
     ],
     [WIZARD_SPELLBOOK_CHOICE_KEY]: [
       creationChoiceOptionId("detect_magic"),

@@ -36982,6 +36982,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Acid Splash",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -36989,7 +36993,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 223,
         "lineStart": 223,
@@ -44959,6 +44963,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Acid Splash",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -44966,7 +44974,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 142,
         "lineStart": 142,
@@ -56177,16 +56185,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 486,
+      "sdk-scenario-needed": 484,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 18,
+      "seed-scenario-present": 20,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 387,
+    "scenarioGroups": 388,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 110,
+      "battle-spell-sdk": 109,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56196,13 +56204,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 18,
+      "seed-present": 20,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 150,
+      "L15-SDK-RAW-03": 151,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -56210,79 +56218,6 @@
     }
   },
   "scenarioGroups": [
-    {
-      "candidateUnitIds": [
-        "acid_splash"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:acid-splash",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-0"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"acid_splash\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md:223",
-        ".references/srd-5.2.1/Classes/Wizard.md:142"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "acid_splash",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Acid Splash",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 223,
-            "lineStart": 223,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "acid_splash",
-          "className": "Wizard",
-          "concept": "Wizard spell list Acid Splash",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 142,
-            "lineStart": 142,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Sorcerer spell list Acid Splash",
-        "Wizard spell list Acid Splash"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
     {
       "candidateUnitIds": [
         "animal_friendship"
@@ -65515,6 +65450,61 @@
     },
     {
       "candidateUnitIds": [
+        "acid_splash"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-sorcerer-acid-splash",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Sorcerer:acid_splash\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:223"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "acid_splash",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Acid Splash",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 223,
+            "lineStart": 223,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Acid Splash"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "fire_bolt"
       ],
       "categories": [
@@ -65561,6 +65551,61 @@
       ],
       "sampleConcepts": [
         "Sorcerer spell list Fire Bolt"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "acid_splash"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-wizard-acid-splash",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Wizard:acid_splash\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:142"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "acid_splash",
+          "className": "Wizard",
+          "concept": "Wizard spell list Acid Splash",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 142,
+            "lineStart": 142,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Acid Splash"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -84451,6 +84496,124 @@
       "tracerNeedles": [
         "sorcererInnateSorceryUnitId",
         "sorcerousBurstSpellId"
+      ]
+    },
+    {
+      "candidateUnitId": "acid_splash",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneSorcererAcidSplashBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneSorcererBuild({",
+            "draftIdText: \"draft:l1-sdk-sorcerer-acid-splash\"",
+            "acidSplashSpellId,"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneSorcererBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneAcidSplash",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "\"saveGatedDamage\"",
+            "label: \"Acid Splash point-origin Sphere Saving Throw outcomes\"",
+            "ability: \"dex\"",
+            "targeting: { kind: \"pointOriginSphere\", radiusFeet: 5 }",
+            "damage: { expr: { dice: 1, dieSize: 6 }, damageType: \"acid\" }",
+            "successDamage: \"none\"",
+            "rangeFeet: 60",
+            "areaSavingThrowOutcomeFill(save, input.casterId,",
+            "{ targetId: monsterId, succeeded: false }",
+            "{ targetId: secondMonsterId, succeeded: true }",
+            "label: \"Acid Splash damage (1d6-acid)\"",
+            "damageRollFillWithGroups(damage, [[4]])",
+            "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(9));",
+            "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));",
+            "{ spellLevel: 1, count: 2, expended: 0 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
+      "rowKey": "spell-level-0:Sorcerer:acid_splash",
+      "tracerNeedles": [
+        "const sorcererBuild = finalizedLevelOneSorcererAcidSplashBuild();",
+        "sourceUnitId: \"class_sorcerer\"",
+        "cantrips: expect.arrayContaining([acidSplashSpellId])",
+        "build: sorcererBuild,",
+        "casterId: acidSplashSorcererId,",
+        "expectedSpellSaveDc: 12,"
+      ]
+    },
+    {
+      "candidateUnitId": "acid_splash",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWizardAcidSplashBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWizardBuild({",
+            "draftIdText: \"draft:l1-sdk-wizard-acid-splash\"",
+            "cantrips: [acidSplashSpellId, fireBoltSpellId, \"ray_of_frost\"]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWizardBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneAcidSplash",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "\"saveGatedDamage\"",
+            "label: \"Acid Splash point-origin Sphere Saving Throw outcomes\"",
+            "ability: \"dex\"",
+            "targeting: { kind: \"pointOriginSphere\", radiusFeet: 5 }",
+            "damage: { expr: { dice: 1, dieSize: 6 }, damageType: \"acid\" }",
+            "successDamage: \"none\"",
+            "rangeFeet: 60",
+            "areaSavingThrowOutcomeFill(save, input.casterId,",
+            "{ targetId: monsterId, succeeded: false }",
+            "{ targetId: secondMonsterId, succeeded: true }",
+            "label: \"Acid Splash damage (1d6-acid)\"",
+            "damageRollFillWithGroups(damage, [[4]])",
+            "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(9));",
+            "expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));",
+            "{ spellLevel: 1, count: 2, expended: 0 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
+      "rowKey": "spell-level-0:Wizard:acid_splash",
+      "tracerNeedles": [
+        "const wizardBuild = finalizedLevelOneWizardAcidSplashBuild();",
+        "sourceUnitId: \"class_wizard\"",
+        "cantrips: expect.arrayContaining([acidSplashSpellId])",
+        "build: wizardBuild,",
+        "casterId: acidSplashWizardId,",
+        "expectedSpellSaveDc: 13,"
       ]
     },
     {

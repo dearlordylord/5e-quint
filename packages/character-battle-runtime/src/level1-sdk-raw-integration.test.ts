@@ -12,6 +12,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
+  type CantripSpellProcedure,
   type CombatantId,
 } from "@dnd/battle-runtime";
 import {
@@ -69,6 +70,10 @@ const rogueId = combatantId("combatant:l1-sdk-rogue");
 const rogueAllyId = combatantId("combatant:l1-sdk-rogue-ally");
 const sorcererId = combatantId("combatant:l1-sdk-sorcerer");
 const burningHandsCasterId = combatantId("combatant:l1-sdk-burning-hands");
+const acidSplashSorcererId = combatantId(
+  "combatant:l1-sdk-acid-splash-sorcerer",
+);
+const acidSplashWizardId = combatantId("combatant:l1-sdk-acid-splash-wizard");
 const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
 const fireBoltWizardId = combatantId("combatant:l1-sdk-fire-bolt-wizard");
 const magicMissileSorcererId = combatantId(
@@ -92,6 +97,7 @@ const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const rogueSneakAttackName = "Dagger";
 const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const sorcerousBurstSpellId = "sorcerous_burst";
+const acidSplashSpellId = "acid_splash";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
 const magicMissileSpellId = "magic_missile";
@@ -574,6 +580,43 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
+  test("Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots", () => {
+    const sorcererBuild = finalizedLevelOneSorcererAcidSplashBuild();
+    const wizardBuild = finalizedLevelOneWizardAcidSplashBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          cantrips: expect.arrayContaining([acidSplashSpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          cantrips: expect.arrayContaining([acidSplashSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneAcidSplash({
+      battleIdText: "battle:l1-sdk-acid-splash-sorcerer",
+      characterIdText: "character:l1-sdk-acid-splash-sorcerer",
+      build: sorcererBuild,
+      casterId: acidSplashSorcererId,
+      expectedSpellSaveDc: 12,
+    });
+    assertLevelOneAcidSplash({
+      battleIdText: "battle:l1-sdk-acid-splash-wizard",
+      characterIdText: "character:l1-sdk-acid-splash-wizard",
+      build: wizardBuild,
+      casterId: acidSplashWizardId,
+      expectedSpellSaveDc: 13,
+    });
+  });
+
   test("Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots", () => {
     const sorcererBuild = finalizedLevelOneSorcererFireBoltBuild();
     const wizardBuild = finalizedLevelOneWizardFireBoltBuild();
@@ -784,6 +827,96 @@ function assertLevelOneBurningHands(input: {
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
   expect(caster.origin.spellcasting?.spellSlots).toEqual([
     { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
+function assertLevelOneAcidSplash(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        secondMonsterId,
+        8,
+        srdStatBlock("stat_block_skeleton"),
+      ),
+    ],
+  });
+  const act = cantripCastActionSpellAct(
+    state,
+    input.casterId,
+    acidSplashSpellId,
+    "saveGatedDamage",
+  );
+  const save = requireHoleFromList(act.initialHoles, "savingThrowOutcome");
+
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(save).toMatchObject({
+    label: "Acid Splash point-origin Sphere Saving Throw outcomes",
+    ability: "dex",
+    dc: { kind: "caster_spell_save_dc" },
+    areaChoices: [],
+    spell: {
+      targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
+      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "acid" },
+      successDamage: "none",
+      rangeFeet: 60,
+    },
+  });
+
+  const saveFill = areaSavingThrowOutcomeFill(save, input.casterId, [
+    { targetId: monsterId, succeeded: false },
+    { targetId: secondMonsterId, succeeded: true },
+  ]);
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [saveFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Acid Splash damage (1d6-acid)",
+    spell: {
+      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "acid" },
+      successDamage: "none",
+    },
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [saveFill, damageRollFillWithGroups(damage, [[4]])],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(9));
+  expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
   ]);
 }
 
@@ -1142,6 +1275,20 @@ function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererAcidSplashBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-acid-splash",
+    expectedBuildLabel: "Sorcerer Acid Splash",
+    cantrips: [
+      acidSplashSpellId,
+      fireBoltSpellId,
+      "light",
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [burningHandsSpellId, "detect_magic"],
+  });
+}
+
 function finalizedLevelOneSorcererMagicMissileBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-magic-missile",
@@ -1297,6 +1444,23 @@ function finalizedLevelOneWizardFireBoltBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-wizard-fire-bolt",
     expectedBuildLabel: "Wizard Fire Bolt",
     cantrips: ["light", fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      "detect_magic",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+      "thunderwave",
+    ],
+    preparedSpells: ["detect_magic", "mage_armor", "magic_missile", "shield"],
+  });
+}
+
+function finalizedLevelOneWizardAcidSplashBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-acid-splash",
+    expectedBuildLabel: "Wizard Acid Splash",
+    cantrips: [acidSplashSpellId, fireBoltSpellId, "ray_of_frost"],
     spellbook: [
       "detect_magic",
       "mage_armor",
@@ -1542,11 +1706,9 @@ function cantripCastActionSpellAct(
   state: BattleState,
   actorId: CombatantId,
   spellId: UnitRecord["id"],
+  procedure: CantripSpellProcedure = "spellAttackDamage",
 ): CastActionSpellAct {
-  const expectedInvocation = cantripSpellInvocationRef(
-    spellId,
-    "spellAttackDamage",
-  );
+  const expectedInvocation = cantripSpellInvocationRef(spellId, procedure);
   if (expectedInvocation.tag !== "cantrip") {
     throw new Error(`Expected ${spellId} cantrip invocation.`);
   }

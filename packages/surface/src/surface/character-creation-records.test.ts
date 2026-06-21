@@ -339,7 +339,13 @@ describe("character-creation Surface records", () => {
           cantripAccess: {
             choose: 3,
             kind: "known_cantrips",
-            spellIds: ["light", "fire_bolt", "ray_of_frost", "minor_illusion"],
+            spellIds: [
+              "light",
+              "fire_bolt",
+              "ray_of_frost",
+              "minor_illusion",
+              "acid_splash",
+            ],
           },
           spellbookAccess: {
             choose: 6,
@@ -775,6 +781,7 @@ describe("character-creation Surface records", () => {
               "shocking_grasp",
               "sorcerous_burst",
               "fire_bolt",
+              "acid_splash",
             ],
             cantripChoose: 4,
           }),
