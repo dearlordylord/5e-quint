@@ -651,7 +651,8 @@ describe("character-creation Surface records", () => {
               "thunderwave",
               { spellId: "aid", spellLevel: 2 },
             ],
-            cantrips: ["druidcraft", "produce_flame"],
+            cantrips: ["druidcraft", "poison_spray", "produce_flame"],
+            cantripChoose: 2,
           }),
           kind: "list_prepared_spellcasting_progression_creation",
           spellcastingProgression: [

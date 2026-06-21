@@ -35,7 +35,7 @@ let druid =
           }
       , name = "Druid"
       , primaryAbilities = { abilities = [ "wis" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Druid.md:3-35,57-79,134-136" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Druid.md:3-35,57-79,134-136,184-227" }
       , savingThrowProficiencies = [ "int", "wis" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "animal_handling", "arcana", "insight", "medicine", "nature", "perception", "religion", "survival" ] }
@@ -46,7 +46,7 @@ let druid =
           , cantripAccess =
               { kind = "known_cantrips_from_class_spell_list"
               , choose = 2
-              , spellIds = [ "druidcraft", "produce_flame" ]
+              , spellIds = [ "druidcraft", "poison_spray", "produce_flame" ]
               , changeOn = { kind = "class_level", count = 1 }
               }
           , preparedAccess =

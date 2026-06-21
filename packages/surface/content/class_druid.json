@@ -55,7 +55,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Druid.md:3-35,57-79,134-136"
+    "section": "Classes/Druid.md:3-35,57-79,134-136,184-227"
   },
   "savingThrowProficiencies": [
     "int",
@@ -84,6 +84,7 @@
       "kind": "known_cantrips_from_class_spell_list",
       "spellIds": [
         "druidcraft",
+        "poison_spray",
         "produce_flame"
       ]
     },

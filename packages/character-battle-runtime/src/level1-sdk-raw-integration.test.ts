@@ -98,8 +98,12 @@ const acidSplashSorcererId = combatantId(
   "combatant:l1-sdk-acid-splash-sorcerer",
 );
 const acidSplashWizardId = combatantId("combatant:l1-sdk-acid-splash-wizard");
+const poisonSprayDruidId = combatantId("combatant:l1-sdk-poison-spray-druid");
 const poisonSpraySorcererId = combatantId(
   "combatant:l1-sdk-poison-spray-sorcerer",
+);
+const poisonSprayWarlockId = combatantId(
+  "combatant:l1-sdk-poison-spray-warlock",
 );
 const poisonSprayWizardId = combatantId(
   "combatant:l1-sdk-poison-spray-wizard",
@@ -756,6 +760,7 @@ describe("level 1 SDK RAW integration", () => {
       build: sorcererBuild,
       casterId: poisonSpraySorcererId,
       expectedSpellAttackBonus: 4,
+      expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
     });
     assertLevelOnePoisonSpray({
       battleIdText: "battle:l1-sdk-poison-spray-wizard",
@@ -763,6 +768,49 @@ describe("level 1 SDK RAW integration", () => {
       build: wizardBuild,
       casterId: poisonSprayWizardId,
       expectedSpellAttackBonus: 5,
+      expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
+    });
+  });
+
+  test("Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage", () => {
+    const druidBuild = finalizedLevelOneDruidPoisonSprayBuild();
+    const warlockBuild = finalizedLevelOneWarlockPoisonSprayBuild();
+
+    expect(druidBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_druid",
+          cantrips: expect.arrayContaining([poisonSpraySpellId]),
+        }),
+      ]),
+    );
+    expect(warlockBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_warlock",
+          cantrips: expect.arrayContaining([poisonSpraySpellId]),
+        }),
+      ]),
+    );
+    expect(warlockBuild.spellcasting?.slotPools).toMatchObject({
+      pactMagic: { kind: "pactMagic", slotLevel: 1, count: 1 },
+    });
+
+    assertLevelOnePoisonSpray({
+      battleIdText: "battle:l1-sdk-poison-spray-druid",
+      characterIdText: "character:l1-sdk-poison-spray-druid",
+      build: druidBuild,
+      casterId: poisonSprayDruidId,
+      expectedSpellAttackBonus: 4,
+      expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
+    });
+    assertLevelOnePoisonSpray({
+      battleIdText: "battle:l1-sdk-poison-spray-warlock",
+      characterIdText: "character:l1-sdk-poison-spray-warlock",
+      build: warlockBuild,
+      casterId: poisonSprayWarlockId,
+      expectedSpellAttackBonus: 4,
+      expectedSpellSlots: [],
     });
   });
 
@@ -1448,6 +1496,11 @@ function assertLevelOnePoisonSpray(input: {
   readonly build: CharacterBuild;
   readonly casterId: CombatantId;
   readonly expectedSpellAttackBonus: number;
+  readonly expectedSpellSlots: readonly {
+    readonly spellLevel: number;
+    readonly count: number;
+    readonly expended: number;
+  }[];
 }): void {
   const state = battleFromSheets({
     battleIdText: input.battleIdText,
@@ -1552,9 +1605,9 @@ function assertLevelOnePoisonSpray(input: {
 
   expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
-  expect(caster.origin.spellcasting?.spellSlots).toEqual([
-    { spellLevel: 1, count: 2, expended: 0 },
-  ]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual(
+    input.expectedSpellSlots,
+  );
 }
 
 function assertLevelOneFireBolt(input: {
@@ -2691,6 +2744,132 @@ function levelOneSorcererBurningHandsBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneDruidPoisonSprayBuild(): CharacterBuild {
+  return finalizedLevelOneDruidBuild({
+    draftIdText: "draft:l1-sdk-druid-poison-spray",
+    expectedBuildLabel: "Druid Poison Spray",
+    cantrips: [poisonSpraySpellId, "produce_flame"],
+    preparedSpells: [
+      "animal_friendship",
+      "cure_wounds",
+      "entangle",
+      "faerie_fire",
+    ],
+  });
+}
+
+function finalizedLevelOneDruidBuild(input: {
+  readonly draftIdText: string;
+  readonly expectedBuildLabel: string;
+  readonly cantrips: readonly string[];
+  readonly preparedSpells: readonly string[];
+}): CharacterBuild {
+  const draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId(input.draftIdText),
+  });
+  const afterInitial = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        creationChoiceFill(
+          "cc:draft:draft.progression.initial",
+          "11:class_druid:level_1:maximum_hit_die",
+        ),
+        creationChoiceFill("cc:draft:draft.background", "background_criminal"),
+        creationChoiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: requireRight(
+            abilityScoreAssignment({
+              str: 8,
+              dex: 13,
+              con: 14,
+              int: 10,
+              wis: 15,
+              cha: 12,
+            }),
+          ),
+        },
+        creationChoiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        creationChoiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_druid", "class_skill_proficiency_choice"),
+          "nature",
+          "perception",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_druid", "class_cantrip_choices"),
+          ...input.cantrips,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_druid", "class_prepared_spell_choices"),
+          ...input.preparedSpells,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("druid_primal_order", "primal_order"),
+          "warden",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:dex:con",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          "thieves_tools",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_druid", "class_equipment_choice"),
+          "option_b",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_equipment_choice",
+          ),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_druid", "equipment_purchase"),
+          "weapon_dagger",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
+    );
+  }
+  return result.build;
+}
+
 function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-fire-bolt",
@@ -2945,6 +3124,135 @@ function finalizedLevelOneSorcererBuild(input: {
       fills: [
         creationChoiceFill(
           testUnitChoiceHoleId("class_sorcerer", "equipment_purchase"),
+          "weapon_dagger",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
+    );
+  }
+  return result.build;
+}
+
+function finalizedLevelOneWarlockPoisonSprayBuild(): CharacterBuild {
+  return finalizedLevelOneWarlockBuild({
+    draftIdText: "draft:l1-sdk-warlock-poison-spray",
+    expectedBuildLabel: "Warlock Poison Spray",
+    cantrips: [poisonSpraySpellId, "eldritch_blast"],
+    preparedSpells: ["hex", "hellish_rebuke"],
+    eldritchInvocation: "eldritch_mind",
+  });
+}
+
+function finalizedLevelOneWarlockBuild(input: {
+  readonly draftIdText: string;
+  readonly expectedBuildLabel: string;
+  readonly cantrips: readonly string[];
+  readonly preparedSpells: readonly string[];
+  readonly eldritchInvocation: string;
+}): CharacterBuild {
+  const draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId(input.draftIdText),
+  });
+  const afterInitial = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        creationChoiceFill(
+          "cc:draft:draft.progression.initial",
+          "13:class_warlock:level_1:maximum_hit_die",
+        ),
+        creationChoiceFill("cc:draft:draft.background", "background_criminal"),
+        creationChoiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: requireRight(
+            abilityScoreAssignment({
+              str: 8,
+              dex: 14,
+              con: 13,
+              int: 10,
+              wis: 12,
+              cha: 15,
+            }),
+          ),
+        },
+        creationChoiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        creationChoiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "class_warlock",
+            "class_skill_proficiency_choice",
+          ),
+          "arcana",
+          "history",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_warlock", "class_cantrip_choices"),
+          ...input.cantrips,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_warlock", "class_prepared_spell_choices"),
+          ...input.preparedSpells,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "warlock_eldritch_invocations",
+            "eldritch_invocations",
+          ),
+          input.eldritchInvocation,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:dex:con",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          "thieves_tools",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_warlock", "class_equipment_choice"),
+          "option_b",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_equipment_choice",
+          ),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_warlock", "equipment_purchase"),
           "weapon_dagger",
         ),
       ],

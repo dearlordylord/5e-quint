@@ -25,7 +25,7 @@ let warlock =
       , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Warlock.md:3-24,31-54,68-102"
+        , section = "Classes/Warlock.md:3-24,31-54,68-102,334-374"
         }
       , savingThrowProficiencies = [ "wis", "cha" ]
       , skillProficiencyChoice =

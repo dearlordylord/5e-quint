@@ -23954,6 +23954,10 @@
       "category": "spell Unit pressure",
       "className": "Druid",
       "concept": "Druid spell list Poison Spray",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -23961,7 +23965,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 193,
         "lineStart": 193,
@@ -42124,6 +42128,10 @@
       "category": "spell Unit pressure",
       "className": "Warlock",
       "concept": "Warlock spell list Poison Spray",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -42131,7 +42139,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 340,
         "lineStart": 340,
@@ -56249,16 +56257,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 468,
+      "sdk-scenario-needed": 466,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 36,
+      "seed-scenario-present": 38,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 398,
+    "scenarioGroups": 399,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 103,
+      "battle-spell-sdk": 102,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56268,13 +56276,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 36,
+      "seed-present": 38,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 161,
+      "L15-SDK-RAW-03": 162,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -59009,79 +59017,6 @@
         "Druid spell list Longstrider",
         "Ranger spell list Longstrider",
         "Wizard spell list Longstrider"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "poison_spray"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Druid",
-        "Warlock"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:poison-spray",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-0"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"poison_spray\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Druid.md:193",
-        ".references/srd-5.2.1/Classes/Warlock.md:340"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "poison_spray",
-          "className": "Druid",
-          "concept": "Druid spell list Poison Spray",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 193,
-            "lineStart": 193,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "candidateUnitId": "poison_spray",
-          "className": "Warlock",
-          "concept": "Warlock spell list Poison Spray",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 340,
-            "lineStart": 340,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Druid spell list Poison Spray",
-        "Warlock spell list Poison Spray"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65004,6 +64939,61 @@
     },
     {
       "candidateUnitIds": [
+        "poison_spray"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-druid-poison-spray",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Druid:poison_spray\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:193"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "poison_spray",
+          "className": "Druid",
+          "concept": "Druid spell list Poison Spray",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 193,
+            "lineStart": 193,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid spell list Poison Spray"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "acid_splash"
       ],
       "categories": [
@@ -65270,6 +65260,61 @@
       ],
       "sampleConcepts": [
         "Sorcerer spell list Shocking Grasp"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "poison_spray"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Warlock"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-warlock-poison-spray",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Warlock:poison_spray\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Warlock.md:340"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "poison_spray",
+          "className": "Warlock",
+          "concept": "Warlock spell list Poison Spray",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 340,
+            "lineStart": 340,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Warlock spell list Poison Spray"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85052,6 +85097,74 @@
     },
     {
       "candidateUnitId": "poison_spray",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneDruidPoisonSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneDruidBuild({",
+            "draftIdText: \"draft:l1-sdk-druid-poison-spray\"",
+            "expectedBuildLabel: \"Druid Poison Spray\"",
+            "cantrips: [poisonSpraySpellId, \"produce_flame\"]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneDruidBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_druid\"",
+            "\"class_cantrip_choices\"",
+            "\"druid_primal_order\"",
+            "\"primal_order\"",
+            "\"warden\"",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOnePoisonSpray",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "poisonSpraySpellId",
+            "srdStatBlock(\"stat_block_goblin_warrior\")",
+            "spellTargetFill(",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "resource: { tag: \"none\" }",
+            "attackKind: \"ranged_spell_attack\"",
+            "targeting: { kind: \"singleCombatant\" }",
+            "rangeFeet: 30",
+            "kind: \"fixedSpellAttackDamage\"",
+            "expr: { dice: 1, dieSize: 12 }",
+            "damageType: \"poison\"",
+            "postDamageRiders: []",
+            "label: \"Poison Spray damage (1d12-poison)\"",
+            "ordinaryAttackDamageFills({",
+            "damageDice: [[7]]",
+            "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
+            "input.expectedSpellSlots"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
+      "rowKey": "spell-level-0:Druid:poison_spray",
+      "tracerNeedles": [
+        "const druidBuild = finalizedLevelOneDruidPoisonSprayBuild();",
+        "sourceUnitId: \"class_druid\"",
+        "cantrips: expect.arrayContaining([poisonSpraySpellId])",
+        "build: druidBuild,",
+        "casterId: poisonSprayDruidId,",
+        "expectedSpellAttackBonus: 4,",
+        "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
+      ]
+    },
+    {
+      "candidateUnitId": "poison_spray",
       "className": "Sorcerer",
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
@@ -85096,7 +85209,7 @@
             "ordinaryAttackDamageFills({",
             "damageDice: [[7]]",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
-            "{ spellLevel: 1, count: 2, expended: 0 }"
+            "input.expectedSpellSlots"
           ]
         }
       ],
@@ -85109,7 +85222,77 @@
         "cantrips: expect.arrayContaining([poisonSpraySpellId])",
         "build: sorcererBuild,",
         "casterId: poisonSpraySorcererId,",
-        "expectedSpellAttackBonus: 4,"
+        "expectedSpellAttackBonus: 4,",
+        "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
+      ]
+    },
+    {
+      "candidateUnitId": "poison_spray",
+      "className": "Warlock",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWarlockPoisonSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWarlockBuild({",
+            "draftIdText: \"draft:l1-sdk-warlock-poison-spray\"",
+            "expectedBuildLabel: \"Warlock Poison Spray\"",
+            "cantrips: [poisonSpraySpellId, \"eldritch_blast\"]",
+            "eldritchInvocation: \"eldritch_mind\""
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWarlockBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_warlock\"",
+            "\"class_cantrip_choices\"",
+            "\"warlock_eldritch_invocations\"",
+            "\"eldritch_invocations\"",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOnePoisonSpray",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "poisonSpraySpellId",
+            "srdStatBlock(\"stat_block_goblin_warrior\")",
+            "spellTargetFill(",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "resource: { tag: \"none\" }",
+            "attackKind: \"ranged_spell_attack\"",
+            "targeting: { kind: \"singleCombatant\" }",
+            "rangeFeet: 30",
+            "kind: \"fixedSpellAttackDamage\"",
+            "expr: { dice: 1, dieSize: 12 }",
+            "damageType: \"poison\"",
+            "postDamageRiders: []",
+            "label: \"Poison Spray damage (1d12-poison)\"",
+            "ordinaryAttackDamageFills({",
+            "damageDice: [[7]]",
+            "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
+            "input.expectedSpellSlots"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+      "rowKey": "spell-level-0:Warlock:poison_spray",
+      "tracerNeedles": [
+        "const warlockBuild = finalizedLevelOneWarlockPoisonSprayBuild();",
+        "sourceUnitId: \"class_warlock\"",
+        "cantrips: expect.arrayContaining([poisonSpraySpellId])",
+        "pactMagic: { kind: \"pactMagic\", slotLevel: 1, count: 1 }",
+        "build: warlockBuild,",
+        "casterId: poisonSprayWarlockId,",
+        "expectedSpellAttackBonus: 4,",
+        "expectedSpellSlots: [],"
       ]
     },
     {
@@ -85158,7 +85341,7 @@
             "ordinaryAttackDamageFills({",
             "damageDice: [[7]]",
             "expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));",
-            "{ spellLevel: 1, count: 2, expended: 0 }"
+            "input.expectedSpellSlots"
           ]
         }
       ],
@@ -85171,7 +85354,8 @@
         "cantrips: expect.arrayContaining([poisonSpraySpellId])",
         "build: wizardBuild,",
         "casterId: poisonSprayWizardId,",
-        "expectedSpellAttackBonus: 5,"
+        "expectedSpellAttackBonus: 5,",
+        "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
       ]
     },
     {
