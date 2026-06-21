@@ -103,9 +103,9 @@ const supportedFightingStyleUnitIdSchema = z.enum(
   SUPPORTED_FIGHTING_STYLE_UNIT_IDS,
 );
 const fighterFightingStyleSelectedIdentityProjectionSchema =
-  z.discriminatedUnion("lastResult", [
+  z.discriminatedUnion("outcome", [
     z.object({
-      lastResult: z.literal("init"),
+      outcome: z.literal("init"),
       selectedFromUnitId: z.literal("none"),
       selectedFeatUnitId: z.literal("none"),
       selectedFightingStyleFeatureRefCount: z.literal(0),
@@ -115,7 +115,7 @@ const fighterFightingStyleSelectedIdentityProjectionSchema =
       totalLevel: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("finalized"),
+      outcome: z.literal("finalized"),
       selectedFromUnitId: z.literal(FIGHTER_FIGHTING_STYLE_UNIT_ID),
       selectedFeatUnitId: supportedFightingStyleUnitIdSchema,
       selectedFightingStyleFeatureRefCount: z.literal(1),
@@ -125,7 +125,7 @@ const fighterFightingStyleSelectedIdentityProjectionSchema =
       totalLevel: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("replaced"),
+      outcome: z.literal("replaced"),
       selectedFromUnitId: z.literal(FIGHTER_FIGHTING_STYLE_UNIT_ID),
       selectedFeatUnitId: supportedFightingStyleUnitIdSchema,
       selectedFightingStyleFeatureRefCount: z.literal(1),
@@ -241,25 +241,48 @@ const selectedUnitIdentityReplays = [
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 const quintStateSchema = z.object({
-  qLastResult: z.union([
-    z.literal("init"),
-    z.literal("finalized"),
-    z.literal("replaced"),
-  ]),
-  qSelectedFromUnitId: z.union([
+  outcome: z.unknown().transform(outcomeField),
+  selectedFromUnitId: z.union([
     z.literal("none"),
     z.literal(FIGHTER_FIGHTING_STYLE_UNIT_ID),
   ]),
-  qSelectedFeatUnitId: z.union([
+  selectedFeatUnitId: z.union([
     z.literal("none"),
     supportedFightingStyleUnitIdSchema,
   ]),
-  qSelectedFightingStyleFeatureRefCount: z.bigint(),
-  qFighterFightingStyleUnitRefPresent: z.boolean(),
-  qSelectedFeatUnitRefCount: z.bigint(),
-  qNonSelectedFightingStyleUnitRefCount: z.bigint(),
-  qTotalLevel: z.bigint(),
+  selectedFightingStyleFeatureRefCount: z.bigint(),
+  fighterFightingStyleUnitRefPresent: z.boolean(),
+  selectedFeatUnitRefCount: z.bigint(),
+  nonSelectedFightingStyleUnitRefCount: z.bigint(),
+  totalLevel: z.bigint(),
 });
+
+const qntOutcomeByVariant = {
+  CharacterCreationFighterFightingStyleSelectedIdentityInit: "init",
+  CharacterCreationFighterFightingStyleSelectedIdentityFinalized: "finalized",
+  CharacterCreationFighterFightingStyleSelectedIdentityReplaced: "replaced",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
 
 describe("Character Creation Fighter Fighting Style selected identity MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
@@ -377,10 +400,10 @@ function createFighterFightingStyleSelectedIdentityDriver() {
 
 function initialProjection(): Extract<
   FighterFightingStyleSelectedIdentityProjection,
-  { readonly lastResult: "init" }
+  { readonly outcome: "init" }
 > {
   return {
-    lastResult: "init",
+    outcome: "init",
     selectedFromUnitId: "none",
     selectedFeatUnitId: "none",
     selectedFightingStyleFeatureRefCount: 0,
@@ -395,7 +418,7 @@ function finalizedFightingStyleProjection(
   selectedFeatUnitId: SupportedFightingStyleUnitId,
 ): Extract<
   FighterFightingStyleSelectedIdentityProjection,
-  { readonly lastResult: "finalized" }
+  { readonly outcome: "finalized" }
 > {
   const facts = requiredFightingStyleBuildFacts(
     finalizedFighterOneBuild(selectedFeatUnitId),
@@ -421,7 +444,7 @@ function finalizedFightingStyleProjection(
   }
 
   return {
-    lastResult: "finalized",
+    outcome: "finalized",
     selectedFromUnitId: FIGHTER_FIGHTING_STYLE_UNIT_ID,
     selectedFeatUnitId: facts.selectedFeatUnitId,
     selectedFightingStyleFeatureRefCount: 1,
@@ -437,7 +460,7 @@ function replacedFightingStyleProjection(input: {
   readonly selectedFeatUnitId: SupportedFightingStyleUnitId;
 }): Extract<
   FighterFightingStyleSelectedIdentityProjection,
-  { readonly lastResult: "replaced" }
+  { readonly outcome: "replaced" }
 > {
   if (input.initialFeatUnitId === input.selectedFeatUnitId) {
     throw new Error(
@@ -488,7 +511,7 @@ function replacedFightingStyleProjection(input: {
   }
 
   return {
-    lastResult: "replaced",
+    outcome: "replaced",
     selectedFromUnitId: FIGHTER_FIGHTING_STYLE_UNIT_ID,
     selectedFeatUnitId: facts.selectedFeatUnitId,
     selectedFightingStyleFeatureRefCount: 1,
@@ -878,24 +901,36 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   return result.right;
 }
 
+function qStateValue(raw: unknown): unknown {
+  if (
+    raw !== null &&
+    typeof raw === "object" &&
+    !Array.isArray(raw) &&
+    "qState" in raw
+  ) {
+    return Object.fromEntries(Object.entries(raw))["qState"];
+  }
+  throw new Error("Expected Quint qState record.");
+}
+
 function normalizeQuintState(
   raw: unknown,
 ): FighterFightingStyleSelectedIdentityProjection {
-  const parsed = quintStateSchema.parse(raw);
+  const parsed = quintStateSchema.parse(qStateValue(raw));
   return fighterFightingStyleSelectedIdentityProjectionSchema.parse({
-    lastResult: parsed.qLastResult,
-    selectedFromUnitId: parsed.qSelectedFromUnitId,
-    selectedFeatUnitId: parsed.qSelectedFeatUnitId,
+    outcome: parsed.outcome,
+    selectedFromUnitId: parsed.selectedFromUnitId,
+    selectedFeatUnitId: parsed.selectedFeatUnitId,
     selectedFightingStyleFeatureRefCount: Number(
-      parsed.qSelectedFightingStyleFeatureRefCount,
+      parsed.selectedFightingStyleFeatureRefCount,
     ),
     fighterFightingStyleUnitRefPresent:
-      parsed.qFighterFightingStyleUnitRefPresent,
-    selectedFeatUnitRefCount: Number(parsed.qSelectedFeatUnitRefCount),
+      parsed.fighterFightingStyleUnitRefPresent,
+    selectedFeatUnitRefCount: Number(parsed.selectedFeatUnitRefCount),
     nonSelectedFightingStyleUnitRefCount: Number(
-      parsed.qNonSelectedFightingStyleUnitRefCount,
+      parsed.nonSelectedFightingStyleUnitRefCount,
     ),
-    totalLevel: Number(parsed.qTotalLevel),
+    totalLevel: Number(parsed.totalLevel),
   });
 }
 

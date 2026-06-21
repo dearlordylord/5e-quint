@@ -667,7 +667,7 @@ function normalizeGustQuintState(raw: unknown): GustOfWindLineState {
   const scenarioResult = gustLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Gust of Wind Line lifecycle",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

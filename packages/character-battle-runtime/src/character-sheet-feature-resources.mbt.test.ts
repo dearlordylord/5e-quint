@@ -87,7 +87,7 @@ type FeatureResourceScenario = (typeof featureResourceScenarios)[number];
 const featureResourceReplayStepCount = featureResourceScenarios.length - 1;
 
 type FeatureResourceProjection = {
-  readonly lastResult: FeatureResourceScenario;
+  readonly outcome: FeatureResourceScenario;
   readonly accepted: boolean;
   readonly message: string;
   readonly sourceCurrentHp: number;
@@ -247,7 +247,7 @@ function layOnHandsRestoresHpAndRemovesPoisonedProjection(): FeatureResourceProj
     }),
   );
   return projectFromParts({
-    lastResult: "lay-on-hands-restores-hp-and-removes-poisoned",
+    outcome: "lay-on-hands-restores-hp-and-removes-poisoned",
     accepted: true,
     message: "none",
     sourceCurrentHp: characterSheetCurrentHp(result.source),
@@ -286,7 +286,7 @@ function rejectLayOnHandsOverspendProjection(): FeatureResourceProjection {
     throw new Error("Expected Lay On Hands over-spend rejection.");
   }
   return projectFromParts({
-    lastResult: "lay-on-hands-overspend-rejected",
+    outcome: "lay-on-hands-overspend-rejected",
     accepted: false,
     message: result.left.message,
     sourceCurrentHp: characterSheetCurrentHp(sheet),
@@ -318,7 +318,7 @@ function longRestClearsLayOnHandsPoolProjection(): FeatureResourceProjection {
   ).source;
   const rested = requireRight(completeLongRestForSheet(spent));
   return projectFromParts({
-    lastResult: "long-rest-clears-lay-on-hands-pool",
+    outcome: "long-rest-clears-lay-on-hands-pool",
     accepted: true,
     message: "none",
     sourceCurrentHp: characterSheetCurrentHp(rested),
@@ -368,7 +368,7 @@ function shortRestRecoversUseCountPoolsProjection(): FeatureResourceProjection {
   const restedDruid = requireRight(completeShortRestForSheet(druid));
   const restedMonk = requireRight(completeShortRestForSheet(monk));
   return projectFromParts({
-    lastResult: "short-rest-recovers-use-count-pools",
+    outcome: "short-rest-recovers-use-count-pools",
     accepted: true,
     message: "none",
     druidWildShapeExpended: resourceExpended(
@@ -401,7 +401,7 @@ function longRestClearsPointPoolAndUseStateProjection(): FeatureResourceProjecti
   });
   const rested = requireRight(completeLongRestForSheet(sheet));
   return projectFromParts({
-    lastResult: "long-rest-clears-point-pool-and-use-state",
+    outcome: "long-rest-clears-point-pool-and-use-state",
     accepted: true,
     message: "none",
     sorceryPointCapacity: resourceCapacity(
@@ -459,7 +459,7 @@ function fontOfMagicSlotToPointsProjection(): FeatureResourceProjection {
     }),
   );
   return projectFromParts({
-    lastResult: "font-of-magic-slot-to-points",
+    outcome: "font-of-magic-slot-to-points",
     accepted: true,
     message: "none",
     sorceryPointCapacity: resourceCapacity(
@@ -488,7 +488,7 @@ function rejectFontOfMagicAmbiguousSlotSourceProjection(): FeatureResourceProjec
     throw new Error("Expected Font of Magic ambiguous slot-source rejection.");
   }
   return projectFromParts({
-    lastResult: "font-of-magic-ambiguous-slot-source-rejected",
+    outcome: "font-of-magic-ambiguous-slot-source-rejected",
     accepted: false,
     message: result.left.message,
     sorceryPointCapacity: resourceCapacity(
@@ -510,7 +510,7 @@ function rejectFontOfMagicAmbiguousSlotSourceProjection(): FeatureResourceProjec
 function fontOfMagicPointsToSlotProjection(): FeatureResourceProjection {
   const created = fontOfMagicCreatedLevel3Sheet();
   return projectFromParts({
-    lastResult: "font-of-magic-points-to-slot",
+    outcome: "font-of-magic-points-to-slot",
     accepted: true,
     message: "none",
     sorceryPointCapacity: resourceCapacity(
@@ -570,7 +570,7 @@ function rejectFontOfMagicInsufficientPointsProjection(): FeatureResourceProject
     throw new Error("Expected Font of Magic insufficient-points rejection.");
   }
   return projectFromParts({
-    lastResult: "font-of-magic-insufficient-points-rejected",
+    outcome: "font-of-magic-insufficient-points-rejected",
     accepted: false,
     message: result.left.message,
     sorceryPointCapacity: resourceCapacity(
@@ -604,7 +604,7 @@ function shortRestPreservesUncannyUseStateProjection(): FeatureResourceProjectio
   });
   const rested = requireRight(completeShortRestForSheet(sheet));
   return projectFromParts({
-    lastResult: "short-rest-preserves-uncanny-use-state",
+    outcome: "short-rest-preserves-uncanny-use-state",
     accepted: true,
     message: "none",
     monkFocusExpended: resourceExpended(
@@ -634,7 +634,7 @@ function longRestClearsUncannyUseStateProjection(): FeatureResourceProjection {
   });
   const rested = requireRight(completeLongRestForSheet(sheet));
   return projectFromParts({
-    lastResult: "long-rest-clears-uncanny-use-state",
+    outcome: "long-rest-clears-uncanny-use-state",
     accepted: true,
     message: "none",
     monkFocusExpended: resourceExpended(
@@ -670,7 +670,7 @@ function uncannyMetabolismRecoversFocusAndHealsProjection(): FeatureResourceProj
     }),
   );
   return projectFromParts({
-    lastResult: "uncanny-metabolism-recovers-focus-and-heals",
+    outcome: "uncanny-metabolism-recovers-focus-and-heals",
     accepted: true,
     message: "none",
     sourceCurrentHp: characterSheetCurrentHp(recovered),
@@ -715,7 +715,7 @@ function rejectUncannyMetabolismRepeatUseProjection(): FeatureResourceProjection
     throw new Error("Expected repeated Uncanny Metabolism use rejection.");
   }
   return projectFromParts({
-    lastResult: "uncanny-metabolism-repeat-use-rejected",
+    outcome: "uncanny-metabolism-repeat-use-rejected",
     accepted: false,
     message: result.left.message,
     sourceCurrentHp: characterSheetCurrentHp(used),
@@ -831,7 +831,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
     SORCERER_FONT_OF_MAGIC_UNIT_ID,
   );
   return projectFromParts({
-    lastResult: "metamagic-bridge-uses-shared-point-pool",
+    outcome: "metamagic-bridge-uses-shared-point-pool",
     accepted: true,
     message: "none",
     sorceryPointCapacity: resourceCapacity(
@@ -1170,7 +1170,7 @@ function hasUncannyUse(sheet: CharacterSheet): boolean {
 
 function initialProjection(): FeatureResourceProjection {
   return projectFromParts({
-    lastResult: "init",
+    outcome: "init",
     accepted: false,
     message: "none",
     replayIndex: 0,
@@ -1180,17 +1180,17 @@ function initialProjection(): FeatureResourceProjection {
 function projectFromParts(
   input: Pick<
     FeatureResourceProjection,
-    "lastResult" | "accepted" | "message" | "replayIndex"
+    "outcome" | "accepted" | "message" | "replayIndex"
   > &
     Partial<
       Omit<
         FeatureResourceProjection,
-        "lastResult" | "accepted" | "message" | "replayIndex"
+        "outcome" | "accepted" | "message" | "replayIndex"
       >
     >,
 ): FeatureResourceProjection {
   return {
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     accepted: input.accepted,
     message: input.message,
     sourceCurrentHp: input.sourceCurrentHp ?? 0,
@@ -1219,75 +1219,80 @@ function normalizeFeatureResourceQuintState(
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("Expected Quint feature-resource state object.");
   }
-  const state: Readonly<Record<string, unknown>> = Object.fromEntries(
+  const root: Readonly<Record<string, unknown>> = Object.fromEntries(
     Object.entries(raw),
   );
+  const state = recordField(root, "qState");
+  const facts = recordField(state, "facts");
   return {
-    lastResult: scenarioField(state["qLastResult"]),
-    accepted: booleanField(state["qAccepted"], "qAccepted"),
-    message: stringField(state["qMessage"], "qMessage"),
+    outcome: outcomeField(state["outcome"]),
+    accepted: booleanField(state["accepted"], "qState.accepted"),
+    message: stringField(state["message"], "qState.message"),
     sourceCurrentHp: numberFromQuintInt(
-      state["qSourceCurrentHp"],
-      "qSourceCurrentHp",
+      facts["sourceCurrentHp"],
+      "facts.sourceCurrentHp",
     ),
     targetCurrentHp: numberFromQuintInt(
-      state["qTargetCurrentHp"],
-      "qTargetCurrentHp",
+      facts["targetCurrentHp"],
+      "facts.targetCurrentHp",
     ),
     temporaryHitPoints: numberFromQuintInt(
-      state["qTemporaryHitPoints"],
-      "qTemporaryHitPoints",
+      facts["temporaryHitPoints"],
+      "facts.temporaryHitPoints",
     ),
-    targetPoisoned: booleanField(state["qTargetPoisoned"], "qTargetPoisoned"),
+    targetPoisoned: booleanField(
+      facts["targetPoisoned"],
+      "facts.targetPoisoned",
+    ),
     layOnHandsCapacity: numberFromQuintInt(
-      state["qLayOnHandsCapacity"],
-      "qLayOnHandsCapacity",
+      facts["layOnHandsCapacity"],
+      "facts.layOnHandsCapacity",
     ),
     layOnHandsExpended: numberFromQuintInt(
-      state["qLayOnHandsExpended"],
-      "qLayOnHandsExpended",
+      facts["layOnHandsExpended"],
+      "facts.layOnHandsExpended",
     ),
     druidWildShapeExpended: numberFromQuintInt(
-      state["qDruidWildShapeExpended"],
-      "qDruidWildShapeExpended",
+      facts["druidWildShapeExpended"],
+      "facts.druidWildShapeExpended",
     ),
     monkFocusExpended: numberFromQuintInt(
-      state["qMonkFocusExpended"],
-      "qMonkFocusExpended",
+      facts["monkFocusExpended"],
+      "facts.monkFocusExpended",
     ),
     sorceryPointCapacity: numberFromQuintInt(
-      state["qSorceryPointCapacity"],
-      "qSorceryPointCapacity",
+      facts["sorceryPointCapacity"],
+      "facts.sorceryPointCapacity",
     ),
     sorceryPointExpended: numberFromQuintInt(
-      state["qSorceryPointExpended"],
-      "qSorceryPointExpended",
+      facts["sorceryPointExpended"],
+      "facts.sorceryPointExpended",
     ),
     ordinaryLevel2Expended: numberFromQuintInt(
-      state["qOrdinaryLevel2Expended"],
-      "qOrdinaryLevel2Expended",
+      facts["ordinaryLevel2Expended"],
+      "facts.ordinaryLevel2Expended",
     ),
     createdLevel3Capacity: numberFromQuintInt(
-      state["qCreatedLevel3Capacity"],
-      "qCreatedLevel3Capacity",
+      facts["createdLevel3Capacity"],
+      "facts.createdLevel3Capacity",
     ),
     createdLevel3Expended: numberFromQuintInt(
-      state["qCreatedLevel3Expended"],
-      "qCreatedLevel3Expended",
+      facts["createdLevel3Expended"],
+      "facts.createdLevel3Expended",
     ),
     uncannyUsedSinceLongRest: booleanField(
-      state["qUncannyUsedSinceLongRest"],
-      "qUncannyUsedSinceLongRest",
+      facts["uncannyUsedSinceLongRest"],
+      "facts.uncannyUsedSinceLongRest",
     ),
     metamagicKnownOptions: numberFromQuintInt(
-      state["qMetamagicKnownOptions"],
-      "qMetamagicKnownOptions",
+      facts["metamagicKnownOptions"],
+      "facts.metamagicKnownOptions",
     ),
     metamagicSharedResourceExpended: numberFromQuintInt(
-      state["qMetamagicSharedResourceExpended"],
-      "qMetamagicSharedResourceExpended",
+      facts["metamagicSharedResourceExpended"],
+      "facts.metamagicSharedResourceExpended",
     ),
-    replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
+    replayIndex: numberFromQuintInt(state["replayIndex"], "qState.replayIndex"),
   };
 }
 
@@ -1302,17 +1307,6 @@ function compareFeatureResourceState(
     throw error;
   }
   return true;
-}
-
-function scenarioField(raw: unknown): FeatureResourceScenario {
-  if (typeof raw === "string" && isFeatureResourceScenario(raw)) return raw;
-  throw new Error(`Unknown feature-resource scenario ${String(raw)}.`);
-}
-
-function isFeatureResourceScenario(
-  raw: string,
-): raw is FeatureResourceScenario {
-  return featureResourceScenarios.some((scenario) => scenario === raw);
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {
@@ -1331,7 +1325,71 @@ function stringField(raw: unknown, field: string): string {
   throw new Error(`Expected Quint string field ${field}.`);
 }
 
+const qntOutcomeByVariant = {
+  CharacterSheetFeatureResourcesInit: "init",
+  CharacterSheetFeatureResourcesLayOnHandsRestoresHpAndRemovesPoisoned:
+    "lay-on-hands-restores-hp-and-removes-poisoned",
+  CharacterSheetFeatureResourcesLayOnHandsOverspendRejected:
+    "lay-on-hands-overspend-rejected",
+  CharacterSheetFeatureResourcesLongRestClearsLayOnHandsPool:
+    "long-rest-clears-lay-on-hands-pool",
+  CharacterSheetFeatureResourcesShortRestRecoversUseCountPools:
+    "short-rest-recovers-use-count-pools",
+  CharacterSheetFeatureResourcesLongRestClearsPointPoolAndUseState:
+    "long-rest-clears-point-pool-and-use-state",
+  CharacterSheetFeatureResourcesFontOfMagicSlotToPoints:
+    "font-of-magic-slot-to-points",
+  CharacterSheetFeatureResourcesFontOfMagicAmbiguousSlotSourceRejected:
+    "font-of-magic-ambiguous-slot-source-rejected",
+  CharacterSheetFeatureResourcesFontOfMagicPointsToSlot:
+    "font-of-magic-points-to-slot",
+  CharacterSheetFeatureResourcesFontOfMagicInsufficientPointsRejected:
+    "font-of-magic-insufficient-points-rejected",
+  CharacterSheetFeatureResourcesShortRestPreservesUncannyUseState:
+    "short-rest-preserves-uncanny-use-state",
+  CharacterSheetFeatureResourcesLongRestClearsUncannyUseState:
+    "long-rest-clears-uncanny-use-state",
+  CharacterSheetFeatureResourcesUncannyMetabolismRecoversFocusAndHeals:
+    "uncanny-metabolism-recovers-focus-and-heals",
+  CharacterSheetFeatureResourcesUncannyMetabolismRepeatUseRejected:
+    "uncanny-metabolism-repeat-use-rejected",
+  CharacterSheetFeatureResourcesMetamagicBridgeUsesSharedPointPool:
+    "metamagic-bridge-uses-shared-point-pool",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
+
 function requireRight<A, E>(either: Either.Either<A, E>): A {
   if (Either.isRight(either)) return either.right;
   throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }

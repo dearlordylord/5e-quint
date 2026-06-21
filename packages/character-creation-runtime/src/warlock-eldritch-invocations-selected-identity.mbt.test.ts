@@ -183,9 +183,9 @@ const noDependentBladeInvocationSchema = {
   thirstingBladeInvocationPresent: z.literal(false),
 } as const;
 const warlockEldritchInvocationsSelectedIdentityProjectionSchema =
-  z.discriminatedUnion("lastResult", [
+  z.discriminatedUnion("outcome", [
     z.object({
-      lastResult: z.literal("init"),
+      outcome: z.literal("init"),
       selectedFromUnitId: z.literal("none"),
       selectedInvocationCount: z.literal(0),
       selectedClassChoiceFeatureRefCount: z.literal(0),
@@ -205,7 +205,7 @@ const warlockEldritchInvocationsSelectedIdentityProjectionSchema =
       ...noRejectedInvocationLifecycleSchema,
     }),
     z.object({
-      lastResult: z.literal("levelOneSelected"),
+      outcome: z.literal("levelOneSelected"),
       ...selectedInvocationContainerSchema,
       selectedInvocationCount: z.literal(1),
       armorOfShadowsInvocationPresent: z.literal(true),
@@ -221,7 +221,7 @@ const warlockEldritchInvocationsSelectedIdentityProjectionSchema =
       ...noRejectedInvocationLifecycleSchema,
     }),
     z.object({
-      lastResult: z.literal("levelTwoGained"),
+      outcome: z.literal("levelTwoGained"),
       ...selectedInvocationContainerSchema,
       selectedInvocationCount: z.literal(3),
       armorOfShadowsInvocationPresent: z.literal(true),
@@ -238,7 +238,7 @@ const warlockEldritchInvocationsSelectedIdentityProjectionSchema =
       ...noRejectedInvocationLifecycleSchema,
     }),
     z.object({
-      lastResult: z.literal("nonRepeatableReplaced"),
+      outcome: z.literal("nonRepeatableReplaced"),
       ...selectedInvocationContainerSchema,
       selectedInvocationCount: z.literal(3),
       armorOfShadowsInvocationPresent: z.literal(false),
@@ -255,7 +255,7 @@ const warlockEldritchInvocationsSelectedIdentityProjectionSchema =
       ...noRejectedInvocationLifecycleSchema,
     }),
     z.object({
-      lastResult: z.literal("repeatableReplaced"),
+      outcome: z.literal("repeatableReplaced"),
       ...selectedInvocationContainerSchema,
       selectedInvocationCount: z.literal(3),
       armorOfShadowsInvocationPresent: z.literal(true),
@@ -272,7 +272,7 @@ const warlockEldritchInvocationsSelectedIdentityProjectionSchema =
       ...noRejectedInvocationLifecycleSchema,
     }),
     z.object({
-      lastResult: z.literal("lockedReplacementRejected"),
+      outcome: z.literal("lockedReplacementRejected"),
       ...selectedInvocationContainerSchema,
       selectedInvocationCount: z.literal(5),
       armorOfShadowsInvocationPresent: z.literal(true),
@@ -291,7 +291,7 @@ const warlockEldritchInvocationsSelectedIdentityProjectionSchema =
       duplicateRepeatableChoiceRejected: z.literal(false),
     }),
     z.object({
-      lastResult: z.literal("duplicateSelectionRejected"),
+      outcome: z.literal("duplicateSelectionRejected"),
       ...selectedInvocationContainerSchema,
       selectedInvocationCount: z.literal(1),
       armorOfShadowsInvocationPresent: z.literal(true),
@@ -371,31 +371,68 @@ const selectedUnitIdentityReplays = [
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 const quintStateSchema = z.object({
-  qLastResult: z.enum(WARLOCK_INVOCATION_SELECTED_IDENTITY_RESULTS),
-  qSelectedFromUnitId: z.union([
+  outcome: z.unknown().transform(outcomeField),
+  selectedFromUnitId: z.union([
     z.literal("none"),
     z.literal(WARLOCK_ELDRITCH_INVOCATIONS_UNIT_ID),
   ]),
-  qSelectedInvocationCount: z.bigint(),
-  qSelectedClassChoiceFeatureRefCount: z.bigint(),
-  qWarlockInvocationsUnitRefPresent: z.boolean(),
-  qArmorOfShadowsInvocationPresent: z.boolean(),
-  qPactBladeInvocationPresent: z.boolean(),
-  qDevilsSightInvocationPresent: z.boolean(),
-  qEldritchMindInvocationPresent: z.boolean(),
-  qThirstingBladeInvocationPresent: z.boolean(),
-  qRepellingBlastEldritchBlastPresent: z.boolean(),
-  qRepellingBlastPoisonSprayPresent: z.boolean(),
-  qArmorOfShadowsUnitRefPresent: z.boolean(),
-  qPactMagicCantripCount: z.bigint(),
-  qPactMagicPreparedSpellCount: z.bigint(),
-  qPactMagicSlotCount: z.bigint(),
-  qPactMagicSlotLevel: z.bigint(),
-  qTotalLevel: z.bigint(),
-  qLockedReplacementRejected: z.boolean(),
-  qDuplicateNonRepeatableRejected: z.boolean(),
-  qDuplicateRepeatableChoiceRejected: z.boolean(),
+  selectedInvocationCount: z.bigint(),
+  selectedClassChoiceFeatureRefCount: z.bigint(),
+  warlockInvocationsUnitRefPresent: z.boolean(),
+  armorOfShadowsInvocationPresent: z.boolean(),
+  pactBladeInvocationPresent: z.boolean(),
+  devilsSightInvocationPresent: z.boolean(),
+  eldritchMindInvocationPresent: z.boolean(),
+  thirstingBladeInvocationPresent: z.boolean(),
+  repellingBlastEldritchBlastPresent: z.boolean(),
+  repellingBlastPoisonSprayPresent: z.boolean(),
+  armorOfShadowsUnitRefPresent: z.boolean(),
+  pactMagicCantripCount: z.bigint(),
+  pactMagicPreparedSpellCount: z.bigint(),
+  pactMagicSlotCount: z.bigint(),
+  pactMagicSlotLevel: z.bigint(),
+  totalLevel: z.bigint(),
+  lockedReplacementRejected: z.boolean(),
+  duplicateNonRepeatableRejected: z.boolean(),
+  duplicateRepeatableChoiceRejected: z.boolean(),
 });
+
+const qntOutcomeByVariant = {
+  CharacterCreationWarlockEldritchInvocationsSelectedIdentityInit: "init",
+  CharacterCreationWarlockEldritchInvocationsSelectedIdentityLevelOneSelected:
+    "levelOneSelected",
+  CharacterCreationWarlockEldritchInvocationsSelectedIdentityLevelTwoGained:
+    "levelTwoGained",
+  CharacterCreationWarlockEldritchInvocationsSelectedIdentityNonRepeatableReplaced:
+    "nonRepeatableReplaced",
+  CharacterCreationWarlockEldritchInvocationsSelectedIdentityRepeatableReplaced:
+    "repeatableReplaced",
+  CharacterCreationWarlockEldritchInvocationsSelectedIdentityLockedReplacementRejected:
+    "lockedReplacementRejected",
+  CharacterCreationWarlockEldritchInvocationsSelectedIdentityDuplicateSelectionRejected:
+    "duplicateSelectionRejected",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
 
 describe("Character Creation Warlock Eldritch Invocations selected identity MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
@@ -490,7 +527,7 @@ function createWarlockEldritchInvocationsSelectedIdentityDriver() {
 
 function initialProjection(): WarlockEldritchInvocationsSelectedIdentityProjection {
   return warlockEldritchInvocationsSelectedIdentityProjectionSchema.parse({
-    lastResult: "init",
+    outcome: "init",
     selectedFromUnitId: "none",
     selectedInvocationCount: 0,
     selectedClassChoiceFeatureRefCount: 0,
@@ -516,7 +553,7 @@ function initialProjection(): WarlockEldritchInvocationsSelectedIdentityProjecti
 
 function levelOneArmorOfShadowsProjection(): WarlockEldritchInvocationsSelectedIdentityProjection {
   return projectionFromBuild({
-    lastResult: "levelOneSelected",
+    outcome: "levelOneSelected",
     build: finalizedWarlockBuild("warlock-eldritch-invocations-level-one"),
     issueFlags: NO_REJECTED_INVOCATION_LIFECYCLE,
   });
@@ -524,7 +561,7 @@ function levelOneArmorOfShadowsProjection(): WarlockEldritchInvocationsSelectedI
 
 function levelTwoInvocationGainProjection(): WarlockEldritchInvocationsSelectedIdentityProjection {
   return projectionFromBuild({
-    lastResult: "levelTwoGained",
+    outcome: "levelTwoGained",
     build: levelTwoNonRepeatableInvocationBuild(),
     issueFlags: NO_REJECTED_INVOCATION_LIFECYCLE,
   });
@@ -532,7 +569,7 @@ function levelTwoInvocationGainProjection(): WarlockEldritchInvocationsSelectedI
 
 function nonRepeatableReplacementProjection(): WarlockEldritchInvocationsSelectedIdentityProjection {
   return projectionFromBuild({
-    lastResult: "nonRepeatableReplaced",
+    outcome: "nonRepeatableReplaced",
     build: nonRepeatableReplacementBuild(),
     issueFlags: NO_REJECTED_INVOCATION_LIFECYCLE,
   });
@@ -540,7 +577,7 @@ function nonRepeatableReplacementProjection(): WarlockEldritchInvocationsSelecte
 
 function repeatableReplacementProjection(): WarlockEldritchInvocationsSelectedIdentityProjection {
   return projectionFromBuild({
-    lastResult: "repeatableReplaced",
+    outcome: "repeatableReplaced",
     build: repeatableReplacementBuild(),
     issueFlags: NO_REJECTED_INVOCATION_LIFECYCLE,
   });
@@ -574,7 +611,7 @@ function lockedReplacementRejectedProjection(): WarlockEldritchInvocationsSelect
   expectLeftCode(result, "lockedEldritchInvocationReplacement");
 
   return projectionFromBuild({
-    lastResult: "lockedReplacementRejected",
+    outcome: "lockedReplacementRejected",
     build,
     issueFlags: {
       lockedReplacementRejected: true,
@@ -639,7 +676,7 @@ function duplicateSelectionRejectedProjection(): WarlockEldritchInvocationsSelec
   expectLeftCode(duplicateRepeatable, "duplicateEldritchInvocationSelection");
 
   return projectionFromBuild({
-    lastResult: "duplicateSelectionRejected",
+    outcome: "duplicateSelectionRejected",
     build,
     issueFlags: {
       lockedReplacementRejected: false,
@@ -650,13 +687,13 @@ function duplicateSelectionRejectedProjection(): WarlockEldritchInvocationsSelec
 }
 
 function projectionFromBuild(input: {
-  readonly lastResult: WarlockInvocationSelectedIdentityResult;
+  readonly outcome: WarlockInvocationSelectedIdentityResult;
   readonly build: CharacterBuild;
   readonly issueFlags: WarlockInvocationIssueFlags;
 }): WarlockEldritchInvocationsSelectedIdentityProjection {
   const facts = warlockInvocationFacts(input.build);
   return warlockEldritchInvocationsSelectedIdentityProjectionSchema.parse({
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     selectedFromUnitId: WARLOCK_ELDRITCH_INVOCATIONS_UNIT_ID,
     selectedInvocationCount: facts.selectedInvocationCount,
     selectedClassChoiceFeatureRefCount:
@@ -1009,6 +1046,9 @@ function preferredOptionIdsForHole(input: {
   if (source.tag === "draft" && source.path === "draft.background") {
     return [creationChoiceOptionId("background_soldier")];
   }
+  if (source.tag === "draft" && source.path === "draft.species") {
+    return [creationChoiceOptionId("species_orc")];
+  }
   if (source.tag !== "unitChoice") {
     return undefined;
   }
@@ -1306,36 +1346,47 @@ function expectLeftCode<T, E extends { readonly code: string }>(
   }
 }
 
+function qStateValue(raw: unknown): unknown {
+  if (
+    raw !== null &&
+    typeof raw === "object" &&
+    !Array.isArray(raw) &&
+    "qState" in raw
+  ) {
+    return Object.fromEntries(Object.entries(raw))["qState"];
+  }
+  throw new Error("Expected Quint qState record.");
+}
+
 function normalizeQuintState(
   raw: unknown,
 ): WarlockEldritchInvocationsSelectedIdentityProjection {
-  const parsed = quintStateSchema.parse(raw);
+  const parsed = quintStateSchema.parse(qStateValue(raw));
   return warlockEldritchInvocationsSelectedIdentityProjectionSchema.parse({
-    lastResult: parsed.qLastResult,
-    selectedFromUnitId: parsed.qSelectedFromUnitId,
-    selectedInvocationCount: Number(parsed.qSelectedInvocationCount),
+    outcome: parsed.outcome,
+    selectedFromUnitId: parsed.selectedFromUnitId,
+    selectedInvocationCount: Number(parsed.selectedInvocationCount),
     selectedClassChoiceFeatureRefCount: Number(
-      parsed.qSelectedClassChoiceFeatureRefCount,
+      parsed.selectedClassChoiceFeatureRefCount,
     ),
-    warlockInvocationsUnitRefPresent: parsed.qWarlockInvocationsUnitRefPresent,
-    armorOfShadowsInvocationPresent: parsed.qArmorOfShadowsInvocationPresent,
-    pactBladeInvocationPresent: parsed.qPactBladeInvocationPresent,
-    devilsSightInvocationPresent: parsed.qDevilsSightInvocationPresent,
-    eldritchMindInvocationPresent: parsed.qEldritchMindInvocationPresent,
-    thirstingBladeInvocationPresent: parsed.qThirstingBladeInvocationPresent,
+    warlockInvocationsUnitRefPresent: parsed.warlockInvocationsUnitRefPresent,
+    armorOfShadowsInvocationPresent: parsed.armorOfShadowsInvocationPresent,
+    pactBladeInvocationPresent: parsed.pactBladeInvocationPresent,
+    devilsSightInvocationPresent: parsed.devilsSightInvocationPresent,
+    eldritchMindInvocationPresent: parsed.eldritchMindInvocationPresent,
+    thirstingBladeInvocationPresent: parsed.thirstingBladeInvocationPresent,
     repellingBlastEldritchBlastPresent:
-      parsed.qRepellingBlastEldritchBlastPresent,
-    repellingBlastPoisonSprayPresent: parsed.qRepellingBlastPoisonSprayPresent,
-    armorOfShadowsUnitRefPresent: parsed.qArmorOfShadowsUnitRefPresent,
-    pactMagicCantripCount: Number(parsed.qPactMagicCantripCount),
-    pactMagicPreparedSpellCount: Number(parsed.qPactMagicPreparedSpellCount),
-    pactMagicSlotCount: Number(parsed.qPactMagicSlotCount),
-    pactMagicSlotLevel: Number(parsed.qPactMagicSlotLevel),
-    totalLevel: Number(parsed.qTotalLevel),
-    lockedReplacementRejected: parsed.qLockedReplacementRejected,
-    duplicateNonRepeatableRejected: parsed.qDuplicateNonRepeatableRejected,
-    duplicateRepeatableChoiceRejected:
-      parsed.qDuplicateRepeatableChoiceRejected,
+      parsed.repellingBlastEldritchBlastPresent,
+    repellingBlastPoisonSprayPresent: parsed.repellingBlastPoisonSprayPresent,
+    armorOfShadowsUnitRefPresent: parsed.armorOfShadowsUnitRefPresent,
+    pactMagicCantripCount: Number(parsed.pactMagicCantripCount),
+    pactMagicPreparedSpellCount: Number(parsed.pactMagicPreparedSpellCount),
+    pactMagicSlotCount: Number(parsed.pactMagicSlotCount),
+    pactMagicSlotLevel: Number(parsed.pactMagicSlotLevel),
+    totalLevel: Number(parsed.totalLevel),
+    lockedReplacementRejected: parsed.lockedReplacementRejected,
+    duplicateNonRepeatableRejected: parsed.duplicateNonRepeatableRejected,
+    duplicateRepeatableChoiceRejected: parsed.duplicateRepeatableChoiceRejected,
   });
 }
 

@@ -9,7 +9,7 @@ The engine is QNT-verified via MBT parity and the long-term goal is generating i
 
 ## Consequences
 
-- "100% QNT coverage" is exhaustive for atomic + composite + per-Unit-identity tiers and *bounded-fixture* for cross-slice sequencing; the combinatorial whole-battle space is deliberately out of scope.
+- "100% QNT coverage" is exhaustive for atomic + composite + per-Unit-identity tiers and _bounded-fixture_ for cross-slice sequencing; the combinatorial whole-battle space is deliberately out of scope.
 - Implementation completeness per language target is enforced by three orthogonal CI gates: the obligation registry (no slice forgotten), per-slice MBT parity (each handler matches its QNT), and language-level exhaustive dispatch (every command variant has a handler at compile time).
 - Adding a new language target = adding its harness + per-slice drivers; no QNT changes, no changes to other languages' code.
 
@@ -27,7 +27,7 @@ This yields three enforceable rules, consistent with "state minimal, composition
 
 ## Addendum (2026-06-11): typed witness protocol and picks
 
-Battle-runtime MBT witnesses use `packages/battle-runtime/battle-runtime-witness-protocol.qnt` for their replay protocol state. The leaf defines `WitnessResult`, `WitnessInvalidReason`, and `WitnessProtocol[h]` plus pure helper constructors such as `witnessInit`, `witnessNeedsHoles`, `witnessResolved`, and `witnessInvalid`. Witnesses keep procedure-specific facts in their local state record, but protocol result and holes live in the typed protocol record instead of the pre-protocol mutable names `qLastResult: str`, `qLastInvalidReason: str`, or `qHoles`.
+Battle-runtime MBT witnesses use `packages/battle-runtime/battle-runtime-witness-protocol.qnt` for replay protocol state. The leaf defines `WitnessResult`, `WitnessInvalidReason`, and `WitnessProtocol[h]` plus pure helper constructors such as `witnessInit`, `witnessNeedsHoles`, `witnessResolved`, and `witnessInvalid`. Witnesses keep procedure-specific facts in their local state record, while protocol outcome, invalid reason, and open-hole state live in a typed protocol record.
 
 The decision rule for Quint picks is:
 
@@ -36,4 +36,4 @@ The decision rule for Quint picks is:
 
 Literal witnesses still state their expected outcomes in Quint. A conditional literal keyed by a picked value is acceptable because the value travels in the trace; importing a reducer or reimplementing one inside the witness is still reserved for genuine computed-oracle drivers.
 
-`scripts/check-mbt-driver-closure.cjs`, run by `pnpm quality`, enforces both the import-closure budget and the absence of those legacy mutable witness-protocol names in battle-runtime witnesses. It does not type all scenario outcome projection labels; remaining `qScenarioResult`-style domain strings are separate projection facts and need their own future migration if they should become variants.
+`scripts/check-mbt-driver-closure.cjs`, run by `pnpm quality`, enforces the import-closure budget and rejects untyped witness replay storage. Scenario branches should be typed local outcome variants or encoded directly in `WitnessProtocol`.

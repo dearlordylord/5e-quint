@@ -226,9 +226,8 @@ Source TS/MBT tie:
 - Many battle MBT drivers import `WitnessProtocol`.
 - `character-creation-runtime.mbt.qnt` projects accepted/rejected batch results
   into source runtime parity.
-- `docs/adr/0001-forest-of-qnt-slices.md` explicitly notes that legacy mutable
-  witness-protocol names are banned, but remaining `qScenarioResult`-style
-  projection strings are separate future migration work.
+- `docs/adr/0001-forest-of-qnt-slices.md` records typed replay state as the
+  battle MBT witness convention.
 
 Cleanroom state:
 
@@ -240,8 +239,7 @@ Gap:
 
 - There is no universal source QNT result taxonomy contract applied to all
   drivers.
-- Some witnesses still use string scenario labels for domain projection while
-  carrying `WitnessProtocol` for protocol result.
+- Some non-battle replay surfaces still use string labels for domain projection.
 - Target replay evidence checks pass/fail and projection hashes; they do not
   currently require production APIs to expose a typed result taxonomy.
 

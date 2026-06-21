@@ -5,13 +5,15 @@ module battleRuntimeSorcererMetamagicSeekingSelectedIdentityMbt {
 
   type Hole = | NoHole
 
+  type SorcererMetamagicSeekingSelectedIdentityScenarioOutcome = | Init | SeekingSpellAttackReroll
+
   type SorcererMetamagicSeekingSelectedIdentityWitnessState = {
     magicActionAvailable: bool,
     bonusActionAvailable: bool,
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicSeekingSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -23,7 +25,7 @@ module battleRuntimeSorcererMetamagicSeekingSelectedIdentityMbt {
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicSeekingSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -32,19 +34,18 @@ module battleRuntimeSorcererMetamagicSeekingSelectedIdentityMbt {
       sorceryPointsRemaining: sorceryPointsRemaining,
       targetHp: targetHp,
       targetActiveEffectCount: targetActiveEffectCount,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection(true, true, 4, 10, 0, "init", witnessInit(NoHole))
+  action init = recordProjection(true, true, 4, 10, 0, Init, witnessInit(NoHole))
 
   action doResolveSeekingSpellAttackReroll = all {
     qState.protocol.result == WInit,
     recordProjection(
-      false, true, 3, 3, 1, "seekingSpellAttackReroll",
-      witnessResolved(NoHole),
-    )
+      false, true, 3, 3, 1, SeekingSpellAttackReroll,
+      witnessResolved(NoHole))
   }
 
   action step = any {

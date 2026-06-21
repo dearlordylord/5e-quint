@@ -4,27 +4,42 @@
 module characterSheetAbilityCheckProficiencyBonusMbt {
   import abilityCheckProficiencyBonus.* from "../shared-algebras/proofs/rule-core/ability-check-proficiency-bonus"
 
-  var qLastResult: str
-  var qProjectionTag: str
-  var qSourceUnitId: str
-  var qSkill: str
-  var qBonus: int
-  var qReplayIndex: int
+  type AbilityCheckProjectionOutcome =
+    | AbilityCheckInit
+    | AbilityCheckJackOfAllTradesLevelTwo
+    | AbilityCheckJackOfAllTradesRoundedDown
+    | AbilityCheckSkillProficiency
+    | AbilityCheckExpertise
+    | AbilityCheckOtherProficiencyBonusApplies
+    | AbilityCheckMissingBardLevelTwo
+
+  type AbilityCheckProjectionState = {
+    outcome: AbilityCheckProjectionOutcome,
+    projectionTag: str,
+    sourceUnitId: str,
+    skill: str,
+    bonus: int,
+    replayIndex: int,
+  }
+
+  var qState: AbilityCheckProjectionState
 
   action recordProjection(
-    lastResult: str,
+    outcome: AbilityCheckProjectionOutcome,
     projectionTag: str,
     sourceUnitId: str,
     skill: str,
     bonus: int,
     replayIndex: int,
   ): bool = all {
-    qLastResult' = lastResult,
-    qProjectionTag' = projectionTag,
-    qSourceUnitId' = sourceUnitId,
-    qSkill' = skill,
-    qBonus' = bonus,
-    qReplayIndex' = replayIndex,
+    qState' = {
+      outcome: outcome,
+      projectionTag: projectionTag,
+      sourceUnitId: sourceUnitId,
+      skill: skill,
+      bonus: bonus,
+      replayIndex: replayIndex,
+    },
   }
 
   pure def projectionTag(projection: AbilityCheckProficiencyBonusProjection): str =
@@ -33,17 +48,17 @@ module characterSheetAbilityCheckProficiencyBonusMbt {
       | SkillProficiencyBonus => "skillProficiency"
       | ExpertiseProficiencyBonus => "expertise"
       | JackOfAllTradesProficiencyBonus => "jackOfAllTrades"
-    }
+  }
 
   action recordAbilityCheckProjection(
-    lastResult: str,
+    outcome: AbilityCheckProjectionOutcome,
     projection: AbilityCheckProficiencyBonusProjection,
     sourceUnitId: str,
     skill: str,
     replayIndex: int,
   ): bool =
     recordProjection(
-      lastResult,
+      outcome,
       projectionTag(projection),
       sourceUnitId,
       skill,
@@ -52,12 +67,12 @@ module characterSheetAbilityCheckProficiencyBonusMbt {
     )
 
   action init =
-    recordProjection("init", "none", "none", "none", 0, 0)
+    recordProjection(AbilityCheckInit, "none", "none", "none", 0, 0)
 
   action doProjectJackOfAllTradesLevelTwo = all {
-    qReplayIndex == 0,
+    qState.replayIndex == 0,
     recordAbilityCheckProjection(
-      "jack-of-all-trades-level-two",
+      AbilityCheckJackOfAllTradesLevelTwo,
       abilityCheckProficiencyBonus(
         2,
         SkillUnproficient,
@@ -71,9 +86,9 @@ module characterSheetAbilityCheckProficiencyBonusMbt {
   }
 
   action doProjectJackOfAllTradesRoundedDown = all {
-    qReplayIndex == 1,
+    qState.replayIndex == 1,
     recordAbilityCheckProjection(
-      "jack-of-all-trades-rounded-down",
+      AbilityCheckJackOfAllTradesRoundedDown,
       abilityCheckProficiencyBonus(
         3,
         SkillUnproficient,
@@ -87,9 +102,9 @@ module characterSheetAbilityCheckProficiencyBonusMbt {
   }
 
   action doProjectSkillProficiency = all {
-    qReplayIndex == 2,
+    qState.replayIndex == 2,
     recordAbilityCheckProjection(
-      "skill-proficiency",
+      AbilityCheckSkillProficiency,
       abilityCheckProficiencyBonus(
         3,
         SkillProficient,
@@ -103,9 +118,9 @@ module characterSheetAbilityCheckProficiencyBonusMbt {
   }
 
   action doProjectExpertise = all {
-    qReplayIndex == 3,
+    qState.replayIndex == 3,
     recordAbilityCheckProjection(
-      "expertise",
+      AbilityCheckExpertise,
       abilityCheckProficiencyBonus(
         3,
         SkillExpertise,
@@ -119,9 +134,9 @@ module characterSheetAbilityCheckProficiencyBonusMbt {
   }
 
   action doRejectOtherProficiencyBonus = all {
-    qReplayIndex == 4,
+    qState.replayIndex == 4,
     recordAbilityCheckProjection(
-      "other-proficiency-bonus-applies",
+      AbilityCheckOtherProficiencyBonusApplies,
       abilityCheckProficiencyBonus(
         3,
         SkillUnproficient,
@@ -135,9 +150,9 @@ module characterSheetAbilityCheckProficiencyBonusMbt {
   }
 
   action doRejectMissingBardLevelTwo = all {
-    qReplayIndex == 5,
+    qState.replayIndex == 5,
     recordAbilityCheckProjection(
-      "missing-bard-level-two",
+      AbilityCheckMissingBardLevelTwo,
       abilityCheckProficiencyBonus(
         2,
         SkillUnproficient,

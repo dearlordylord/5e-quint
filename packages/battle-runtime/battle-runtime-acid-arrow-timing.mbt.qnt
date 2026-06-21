@@ -26,7 +26,7 @@ module battleRuntimeAcidArrowTimingMbt {
   pure def qActionAvailable: bool = qState.qActionAvailable
   pure def qSpellAvailable: bool = qState.qSpellAvailable
   pure def qDelayedDamageActive: bool = qState.qDelayedDamageActive
-  pure def qHoles: Set[AcidArrowHole] = qState.protocol.holes
+  pure def openHoles: Set[AcidArrowHole] = qState.protocol.holes
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -96,7 +96,7 @@ module battleRuntimeAcidArrowTimingMbt {
     qCurrentTurnRole == casterTurnRole,
     qActionAvailable,
     qSpellAvailable,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordAcidArrowState(
       qScenario,
       casterTurnRole,
@@ -112,7 +112,7 @@ module battleRuntimeAcidArrowTimingMbt {
   action doFillTargetChoice = all {
     qScenario == HitScenario or qScenario == MissScenario,
     qCurrentTurnRole == casterTurnRole,
-    qHoles == Set(TargetChoice),
+    openHoles == Set(TargetChoice),
     recordAcidArrowState(
       qScenario,
       casterTurnRole,
@@ -128,7 +128,7 @@ module battleRuntimeAcidArrowTimingMbt {
   action doFillHitAttackRoll = all {
     qScenario == HitScenario,
     qCurrentTurnRole == casterTurnRole,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     recordAcidArrowState(
       HitScenario,
       casterTurnRole,
@@ -144,7 +144,7 @@ module battleRuntimeAcidArrowTimingMbt {
   action doFillMissAttackRoll = all {
     qScenario == MissScenario,
     qCurrentTurnRole == casterTurnRole,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     recordAcidArrowState(
       MissScenario,
       casterTurnRole,
@@ -162,7 +162,7 @@ module battleRuntimeAcidArrowTimingMbt {
     all {
       qScenario == HitScenario,
       qCurrentTurnRole == casterTurnRole,
-      qHoles == Set(InitialDamageRoll),
+      openHoles == Set(InitialDamageRoll),
       recordAcidArrowState(
         HitScenario,
         casterTurnRole,
@@ -181,7 +181,7 @@ module battleRuntimeAcidArrowTimingMbt {
     all {
       qScenario == MissScenario,
       qCurrentTurnRole == casterTurnRole,
-      qHoles == Set(InitialDamageRoll),
+      openHoles == Set(InitialDamageRoll),
       recordAcidArrowState(
         MissScenario,
         casterTurnRole,
@@ -198,7 +198,7 @@ module battleRuntimeAcidArrowTimingMbt {
   action doEndCasterTurn = all {
     qScenario == HitScenario or qScenario == MissScenario,
     qCurrentTurnRole == casterTurnRole,
-    qHoles == noHoles,
+    openHoles == noHoles,
     not(qActionAvailable),
     not(qSpellAvailable),
     recordAcidArrowState(
@@ -217,7 +217,7 @@ module battleRuntimeAcidArrowTimingMbt {
     qScenario == HitScenario,
     qCurrentTurnRole == targetTurnRole,
     qDelayedDamageActive,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordAcidArrowState(
       HitScenario,
       targetTurnRole,
@@ -236,7 +236,7 @@ module battleRuntimeAcidArrowTimingMbt {
       qScenario == HitScenario,
       qCurrentTurnRole == targetTurnRole,
       qDelayedDamageActive,
-      qHoles == Set(LaterDamageRoll),
+      openHoles == Set(LaterDamageRoll),
       recordAcidArrowState(
         HitComplete,
         casterTurnRole,
@@ -252,14 +252,14 @@ module battleRuntimeAcidArrowTimingMbt {
 
   action doStartMissScenario = all {
     qScenario == HitComplete,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordFreshScenario(MissScenario),
   }
 
   action doEndTargetTurnAfterMiss = all {
     qScenario == MissScenario,
     qCurrentTurnRole == targetTurnRole,
-    qHoles == noHoles,
+    openHoles == noHoles,
     not(qDelayedDamageActive),
     recordAcidArrowState(
       MissComplete,

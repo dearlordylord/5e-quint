@@ -28,6 +28,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -82,6 +83,17 @@ type SpellSequencingLastResult =
   | "targetTurnWithHeatMetal"
   | "casterTurnWithHeatMetalRepeat"
   | "repeatHeatMetal";
+const SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  CastDragonsBreath: "castDragonsBreath",
+  TargetTurnWithBreath: "targetTurnWithBreath",
+  ExhaledBreath: "exhaledBreath",
+  CasterTurnAfterBreath: "casterTurnAfterBreath",
+  CastHeatMetal: "castHeatMetal",
+  TargetTurnWithHeatMetal: "targetTurnWithHeatMetal",
+  CasterTurnWithHeatMetalRepeat: "casterTurnWithHeatMetalRepeat",
+  RepeatHeatMetal: "repeatHeatMetal",
+} as const satisfies Readonly<Record<string, SpellSequencingLastResult>>;
 
 type SpellSequencingProjection = {
   readonly turnRole: SpellSequencingTurnRole;
@@ -662,7 +674,7 @@ function normalizeSpellSequencingQuintState(
   raw: unknown,
 ): SpellSequencingProjection {
   const state = quintRecordField(quintStateRecord(raw), "qState");
-  const scenarioResult = lastResult(state["scenarioResult"]);
+  const scenarioResult = lastResult(state["scenarioOutcome"]);
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
@@ -671,7 +683,7 @@ function normalizeSpellSequencingQuintState(
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "spell sequencing",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {
@@ -720,20 +732,15 @@ function concentrationSpellName(
 }
 
 function lastResult(raw: unknown): SpellSequencingLastResult {
-  if (
-    raw === "init" ||
-    raw === "castDragonsBreath" ||
-    raw === "targetTurnWithBreath" ||
-    raw === "exhaledBreath" ||
-    raw === "casterTurnAfterBreath" ||
-    raw === "castHeatMetal" ||
-    raw === "targetTurnWithHeatMetal" ||
-    raw === "casterTurnWithHeatMetalRepeat" ||
-    raw === "repeatHeatMetal"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unknown spell sequencing result: ${String(raw)}.`);
+  const tag = quintVariantTag(raw, "qState.scenarioOutcome");
+  if (isScenarioOutcomeTag(tag)) return SCENARIO_OUTCOME_BY_TAG[tag];
+  throw new Error(`Unexpected scenario outcome variant ${tag}.`);
+}
+
+function isScenarioOutcomeTag(
+  tag: string,
+): tag is keyof typeof SCENARIO_OUTCOME_BY_TAG {
+  return Object.hasOwn(SCENARIO_OUTCOME_BY_TAG, tag);
 }
 
 function spellSequencingUnexpectedHole(raw: unknown): never {

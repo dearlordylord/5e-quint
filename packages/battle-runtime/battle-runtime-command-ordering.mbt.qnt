@@ -20,18 +20,15 @@ module battleRuntimeCommandOrderingMbt {
   var qCurrentActor: str
   var qReactionWindowOpen: bool
 
-  pure def qHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
+  pure def openHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
 
   pure val witnessHoleType: BattleHoleFamilyKind = TargetChoiceHoleKind
 
   pure def witnessProtocolForProjection(
     holes: Set[BattleHoleFamilyKind],
-    lastResult: str,
+    result: WitnessResult,
   ): WitnessProtocol[BattleHoleFamilyKind] =
-    if (lastResult == "init") witnessInit(witnessHoleType)
-    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved(witnessHoleType)
+    witnessProtocolFromResult(holes, witnessHoleType, result)
 
   pure def orderingErrorLabel(error: CommandFillOrderingError): str =
     match error {
@@ -53,13 +50,13 @@ module battleRuntimeCommandOrderingMbt {
       | CommandFillNotOrderingError(stage) => stage
     }
 
-  pure def acceptedRuntimeResult(result: CommandFillOrderResult): str =
+  pure def acceptedRuntimeResult(result: CommandFillOrderResult): WitnessResult =
     match result {
       | CommandFillAccepted(stage) =>
-          if (stage == CommandResolvedStage) "resolved" else "needsHoles"
-      | CommandFillRequestedEarlier(_) => "needsHoles"
-      | CommandFillRejected(_) => "invalid"
-      | CommandFillNotOrderingError(_) => "needsHoles"
+          if (stage == CommandResolvedStage) WResolved else WNeedsHoles
+      | CommandFillRequestedEarlier(_) => WNeedsHoles
+      | CommandFillRejected(_) => WInvalid(WInvalidFill)
+      | CommandFillNotOrderingError(_) => WNeedsHoles
     }
 
   pure def orderingLabel(result: CommandFillOrderResult): str =
@@ -73,7 +70,7 @@ module battleRuntimeCommandOrderingMbt {
   action recordProjectionWithHoles(
     holes: Set[BattleHoleFamilyKind],
     stage: CommandFrontierStage,
-    lastResult: str,
+    result: WitnessResult,
     lastOrderingError: str,
     pendingCommandOption: str,
     targetProne: bool,
@@ -84,7 +81,7 @@ module battleRuntimeCommandOrderingMbt {
     reactionWindowOpen: bool,
   ): bool = all {
     qStage' = stage,
-    qProtocol' = witnessProtocolForProjection(holes, lastResult),
+    qProtocol' = witnessProtocolForProjection(holes, result),
     qTableFactFrontierOpen' = commandHoleFrontierIncludesTableFacts(stage),
     qLastOrderingError' = lastOrderingError,
     qPendingCommandOption' = pendingCommandOption,
@@ -98,7 +95,7 @@ module battleRuntimeCommandOrderingMbt {
 
   action recordProjection(
     stage: CommandFrontierStage,
-    lastResult: str,
+    result: WitnessResult,
     lastOrderingError: str,
     pendingCommandOption: str,
     targetProne: bool,
@@ -110,7 +107,7 @@ module battleRuntimeCommandOrderingMbt {
   ): bool = recordProjectionWithHoles(
     commandHoleFrontier(stage),
     stage,
-    lastResult,
+    result,
     lastOrderingError,
     pendingCommandOption,
     targetProne,
@@ -123,7 +120,7 @@ module battleRuntimeCommandOrderingMbt {
 
   action init = recordProjection(
     CommandActSelectionStage,
-    "init",
+    WInit,
     "",
     "none",
     false,
@@ -138,7 +135,7 @@ module battleRuntimeCommandOrderingMbt {
     qStage == CommandActSelectionStage,
     recordProjection(
       CommandTargetListAndOptionChoiceStage,
-      "needsHoles",
+      WNeedsHoles,
       "",
       "none",
       false,
@@ -285,7 +282,7 @@ module battleRuntimeCommandOrderingMbt {
     qPendingCommandOption == "grovel",
     recordProjection(
       CommandResolvedStage,
-      "resolved",
+      WResolved,
       "",
       "none",
       true,
@@ -301,7 +298,7 @@ module battleRuntimeCommandOrderingMbt {
     qStage == CommandActSelectionStage,
     recordProjection(
       CommandDropHeldObjectFactsStage,
-      "needsHoles",
+      WNeedsHoles,
       "",
       "drop",
       false,
@@ -317,7 +314,7 @@ module battleRuntimeCommandOrderingMbt {
     qStage == CommandDropHeldObjectFactsStage,
     recordProjection(
       CommandResolvedStage,
-      "resolved",
+      WResolved,
       "",
       "none",
       false,
@@ -333,7 +330,7 @@ module battleRuntimeCommandOrderingMbt {
     qStage == CommandActSelectionStage,
     recordProjection(
       CommandResolvedStage,
-      "resolved",
+      WResolved,
       "",
       "halt",
       false,
@@ -349,7 +346,7 @@ module battleRuntimeCommandOrderingMbt {
     qStage == CommandActSelectionStage,
     recordProjection(
       CommandApproachMovementStage,
-      "needsHoles",
+      WNeedsHoles,
       "",
       "approach",
       false,
@@ -417,7 +414,7 @@ module battleRuntimeCommandOrderingMbt {
     qStage == CommandActSelectionStage,
     recordProjection(
       CommandResolvedStage,
-      "resolved",
+      WResolved,
       "",
       "none",
       false,
@@ -433,7 +430,7 @@ module battleRuntimeCommandOrderingMbt {
     qStage == CommandActSelectionStage,
     recordProjection(
       CommandFleeMovementStage,
-      "needsHoles",
+      WNeedsHoles,
       "",
       "flee",
       false,
@@ -492,7 +489,7 @@ module battleRuntimeCommandOrderingMbt {
     qStage == CommandActSelectionStage,
     recordProjection(
       CommandResolvedStage,
-      "resolved",
+      WResolved,
       "",
       "none",
       false,
@@ -519,7 +516,7 @@ module battleRuntimeCommandOrderingMbt {
     recordProjectionWithHoles(
       Set(InterruptDecisionHoleKind),
       acceptedStage(result, qStage),
-      "needsHoles",
+      WNeedsHoles,
       "",
       "flee",
       false,

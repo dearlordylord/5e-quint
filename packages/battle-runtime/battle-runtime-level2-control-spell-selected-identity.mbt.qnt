@@ -14,14 +14,13 @@ module battleRuntimeLevel2ControlSpellSelectedIdentityMbt {
 
   var qState: Level2ControlSpellSelectedIdentityWitnessState
 
-  pure def qLastResult: Level2ControlSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: Level2ControlSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def level2ControlSpellSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: Level2ControlSpellSelectedIdentityScenarioOutcome,
-    _scenarioInvalidReason: str,
+    scenarioOutcome: Level2ControlSpellSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -29,59 +28,59 @@ module battleRuntimeLevel2ControlSpellSelectedIdentityMbt {
   action recordProjection(lastResult: Level2ControlSpellSelectedIdentityScenarioOutcome): bool = all {
     qState' = {
       qScenarioOutcome: lastResult,
-      protocol: level2ControlSpellSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: level2ControlSpellSelectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
 
   action init = recordProjection(Init)
 
   action doDiscoverCalmEmotionsConditionImmunity = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(CalmEmotionsConditionImmunity),
   }
 
   action doDiscoverCharmPersonSaveGatedCondition = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(CharmPersonSaveGatedCondition),
   }
 
   action doDiscoverDarknessPointOrigin = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(DarknessPointOrigin),
   }
 
   action doDiscoverEnthrallPerceptionPenalty = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(EnthrallPerceptionPenalty),
   }
 
   action doDiscoverGustOfWindLine = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(GustOfWindLine),
   }
 
   action doDiscoverInvisibilityDirectCondition = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(InvisibilityDirectCondition),
   }
 
   action doDiscoverLevitateCreature = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(LevitateCreature),
   }
 
   action doDiscoverSeeInvisibilityObserverSight = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(SeeInvisibilityObserverSight),
   }
 
   action doDiscoverSpikeGrowthMovementHazard = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(SpikeGrowthMovementHazard),
   }
 
   action doDiscoverWebRestraintHazard = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(WebRestraintHazard),
   }
 

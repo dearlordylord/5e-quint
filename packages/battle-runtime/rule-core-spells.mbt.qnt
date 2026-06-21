@@ -35,24 +35,16 @@ module ruleCoreSpellsMbt {
   var qProtocol: WitnessProtocol[str]
   var qComponentRoute: List[RuleCoreComponentRouteEvent]
 
-  pure def qHoles: Set[str] = qProtocol.holes
+  pure def openHoles: Set[str] = qProtocol.holes
 
   pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
     ruleCoreComponentRoute(RuleCoreSpellProcedureProfileOwner)
 
-  pure def witnessInvalidReasonForProjection(reason: str): WitnessInvalidReason =
-    if (reason == "staleSubject") WStaleSubject else WInvalidFill
-
   pure def witnessProtocolForProjection(
     holes: Set[str],
-    result: str,
-    invalidReason: str,
+    result: WitnessResult,
   ): WitnessProtocol[str] =
-    if (result == "init") witnessInit("TargetChoice")
-    else if (result == "invalid")
-      witnessInvalidWithHoles(holes, witnessInvalidReasonForProjection(invalidReason))
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved("TargetChoice")
+    witnessProtocolFromResult(holes, "TargetChoice", result)
 
   pure def initialCasterHp: int = 12
   pure def initialTargetHp: int = 13
@@ -79,8 +71,7 @@ module ruleCoreSpellsMbt {
     readiedReleased: bool,
     concentrationActive: bool,
     holes: Set[str],
-    result: str,
-    invalidReason: str,
+    result: WitnessResult,
   ): bool = all {
     qActionAvailable' = actionAvailable,
     qBonusActionAvailable' = bonusActionAvailable,
@@ -97,20 +88,20 @@ module ruleCoreSpellsMbt {
     qReadiedHeld' = readiedHeld,
     qReadiedReleased' = readiedReleased,
     qConcentrationActive' = concentrationActive,
-    qProtocol' = witnessProtocolForProjection(holes, result, invalidReason),
+    qProtocol' = witnessProtocolForProjection(holes, result),
     qComponentRoute' = componentRouteEvidence,
   }
 
   action init = recordProjection(
     true, true, true, initialCasterHp, initialTargetHp, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set(), "init", "none"
+    Set(), WInit
   )
 
   action doMagicMissileNeedsAllocation = recordProjection(
     true, true, true, initialCasterHp, initialTargetHp, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set("SpellTargetAllocation"), "needsHoles", "none"
+    Set("SpellTargetAllocation"), WNeedsHoles
   )
 
   action doMagicMissileLow = {
@@ -132,7 +123,7 @@ module ruleCoreSpellsMbt {
         initialTargetHp - damage.damageAmount, initialTargetHp, false,
         0, 0, invocation.state.slotSpellCastThisTurn,
         invocation.state.slotLedger.slotsRemaining, noEffect, false, false,
-        false, Set(), "resolved", "none"
+        false, Set(), WResolved
       ),
     }
   }
@@ -140,19 +131,19 @@ module ruleCoreSpellsMbt {
   action doRayOfFrostNeedsTarget = recordProjection(
     true, true, true, initialCasterHp, initialTargetHp, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set("TargetChoice"), "needsHoles", "none"
+    Set("TargetChoice"), WNeedsHoles
   )
 
   action doRayOfFrostNeedsAttackRoll = recordProjection(
     true, true, true, initialCasterHp, initialTargetHp, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set("AttackRoll"), "needsHoles", "none"
+    Set("AttackRoll"), WNeedsHoles
   )
 
   action doRayOfFrostNeedsDamageRoll = recordProjection(
     true, true, true, initialCasterHp, initialTargetHp, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set("DamageRoll"), "needsHoles", "none"
+    Set("DamageRoll"), WNeedsHoles
   )
 
   action doRayOfFrostMiss = {
@@ -168,7 +159,7 @@ module ruleCoreSpellsMbt {
         false, true, true, initialCasterHp, initialTargetHp, initialTargetHp,
         false, 0, 0, invocation.state.slotSpellCastThisTurn,
         invocation.state.slotLedger.slotsRemaining, noEffect, false, false,
-        false, Set(), "resolved", "none"
+        false, Set(), WResolved
       ),
     }
   }
@@ -193,7 +184,7 @@ module ruleCoreSpellsMbt {
         initialTargetHp - effect.damageAmount, initialTargetHp, false,
         0, 0, invocation.state.slotSpellCastThisTurn,
         invocation.state.slotLedger.slotsRemaining, speedEffect, false, false,
-        false, Set(), "resolved", "none"
+        false, Set(), WResolved
       ),
     }
   }
@@ -218,7 +209,7 @@ module ruleCoreSpellsMbt {
         initialTargetHp - effect.damageAmount, initialTargetHp, false,
         0, 0, invocation.state.slotSpellCastThisTurn,
         invocation.state.slotLedger.slotsRemaining, speedEffect, false, false,
-        false, Set(), "resolved", "none"
+        false, Set(), WResolved
       ),
     }
   }
@@ -226,13 +217,13 @@ module ruleCoreSpellsMbt {
   action doAcidSplashNeedsSavingThrow = recordProjection(
     true, true, true, initialCasterHp, initialTargetHp, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set("SavingThrowOutcome"), "needsHoles", "none"
+    Set("SavingThrowOutcome"), WNeedsHoles
   )
 
   action doAcidSplashNeedsDamageRoll = recordProjection(
     true, true, true, initialCasterHp, initialTargetHp, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set("DamageRoll"), "needsHoles", "none"
+    Set("DamageRoll"), WNeedsHoles
   )
 
   action doAcidSplashAllSuccess = {
@@ -248,7 +239,7 @@ module ruleCoreSpellsMbt {
         false, true, true, initialCasterHp, initialTargetHp, initialTargetHp,
         false, 0, 0, invocation.state.slotSpellCastThisTurn,
         invocation.state.slotLedger.slotsRemaining, noEffect, false, false,
-        false, Set(), "resolved", "none"
+        false, Set(), WResolved
       ),
     }
   }
@@ -271,7 +262,7 @@ module ruleCoreSpellsMbt {
         initialTargetHp - effect.damageAmount, initialTargetHp, false,
         0, 0, invocation.state.slotSpellCastThisTurn,
         invocation.state.slotLedger.slotsRemaining, noEffect, false, false,
-        false, Set(), "resolved", "none"
+        false, Set(), WResolved
       ),
     }
   }
@@ -279,13 +270,13 @@ module ruleCoreSpellsMbt {
   action doHealingWordNeedsTarget = recordProjection(
     true, true, true, initialCasterHp, 4, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set("TargetChoice"), "needsHoles", "none"
+    Set("TargetChoice"), WNeedsHoles
   )
 
   action doHealingWordNeedsHealingRoll = recordProjection(
     true, true, true, initialCasterHp, 4, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set("DamageRoll"), "needsHoles", "none"
+    Set("DamageRoll"), WNeedsHoles
   )
 
   action doHealingWordWounded = {
@@ -301,7 +292,7 @@ module ruleCoreSpellsMbt {
         true, false, true, initialCasterHp, 12, initialTargetHp, false,
         0, 0, invocation.state.slotSpellCastThisTurn,
         invocation.state.slotLedger.slotsRemaining, noEffect, false, false,
-        false, Set(), "resolved", "none"
+        false, Set(), WResolved
       ),
     }
   }
@@ -319,7 +310,7 @@ module ruleCoreSpellsMbt {
         true, false, true, initialCasterHp, 5, initialTargetHp, false,
         0, 0, invocation.state.slotSpellCastThisTurn,
         invocation.state.slotLedger.slotsRemaining, noEffect, false, false,
-        false, Set(), "resolved", "none"
+        false, Set(), WResolved
       ),
     }
   }
@@ -327,13 +318,13 @@ module ruleCoreSpellsMbt {
   action doCureWoundsNeedsTarget = recordProjection(
     true, true, true, initialCasterHp, 4, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set("TargetChoice"), "needsHoles", "none"
+    Set("TargetChoice"), WNeedsHoles
   )
 
   action doCureWoundsNeedsHealingRoll = recordProjection(
     true, true, true, initialCasterHp, 4, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set("DamageRoll"), "needsHoles", "none"
+    Set("DamageRoll"), WNeedsHoles
   )
 
   action doCureWoundsWounded = {
@@ -349,7 +340,7 @@ module ruleCoreSpellsMbt {
         false, true, true, initialCasterHp, 12, initialTargetHp, false,
         0, 0, invocation.state.slotSpellCastThisTurn,
         invocation.state.slotLedger.slotsRemaining, noEffect, false, false,
-        false, Set(), "resolved", "none"
+        false, Set(), WResolved
       ),
     }
   }
@@ -357,13 +348,13 @@ module ruleCoreSpellsMbt {
   action doMassHealingWordNeedsTargetList = recordProjection(
     true, true, true, initialCasterHp, 4, 4, false,
     0, 0, false, 0, noEffect, false, false, false,
-    Set("SpellTargetList"), "needsHoles", "none"
+    Set("SpellTargetList"), WNeedsHoles
   )
 
   action doMassHealingWordNeedsHealingRoll = recordProjection(
     true, true, true, initialCasterHp, 4, 4, false,
     0, 0, false, 0, noEffect, false, false, false,
-    Set("DamageRoll"), "needsHoles", "none"
+    Set("DamageRoll"), WNeedsHoles
   )
 
   action doMassHealingWordWounded = {
@@ -382,7 +373,7 @@ module ruleCoreSpellsMbt {
       recordProjection(
         true, false, true, initialCasterHp, 12, 12, false,
         0, 0, invocation.state.slotSpellCastThisTurn,
-        0, noEffect, false, false, false, Set(), "resolved", "none"
+        0, noEffect, false, false, false, Set(), WResolved
       ),
     }
   }
@@ -390,13 +381,13 @@ module ruleCoreSpellsMbt {
   action doMassCureWoundsNeedsTargetList = recordProjection(
     true, true, true, initialCasterHp, 4, 4, false,
     0, 0, false, 0, noEffect, false, false, false,
-    Set("SpellTargetList"), "needsHoles", "none"
+    Set("SpellTargetList"), WNeedsHoles
   )
 
   action doMassCureWoundsNeedsHealingRoll = recordProjection(
     true, true, true, initialCasterHp, 4, 4, false,
     0, 0, false, 0, noEffect, false, false, false,
-    Set("DamageRoll"), "needsHoles", "none"
+    Set("DamageRoll"), WNeedsHoles
   )
 
   action doMassCureWoundsWounded = {
@@ -415,7 +406,7 @@ module ruleCoreSpellsMbt {
       recordProjection(
         false, true, true, initialCasterHp, 12, 12, false,
         0, 0, invocation.state.slotSpellCastThisTurn,
-        0, noEffect, false, false, false, Set(), "resolved", "none"
+        0, noEffect, false, false, false, Set(), WResolved
       ),
     }
   }
@@ -423,7 +414,7 @@ module ruleCoreSpellsMbt {
   action doMageArmorNeedsTarget = recordProjection(
     true, true, true, initialCasterHp, initialTargetHp, initialTargetHp, false,
     0, 0, false, initialLevel1SlotsRemaining, noEffect, false, false, false,
-    Set("TargetChoice"), "needsHoles", "none"
+    Set("TargetChoice"), WNeedsHoles
   )
 
   action doMageArmor = {
@@ -439,15 +430,14 @@ module ruleCoreSpellsMbt {
         false, true, true, initialCasterHp, initialTargetHp, initialTargetHp,
         false, 0, 0, invocation.state.slotSpellCastThisTurn,
         invocation.state.slotLedger.slotsRemaining, mageArmorEffect, false,
-        false, false, Set(), "resolved", "none"
+        false, false, Set(), WResolved
       ),
     }
   }
 
   action doRejectSecondSlotSpell = recordProjection(
     false, true, true, initialCasterHp, 4, initialTargetHp, false,
-    0, 0, true, 1, noEffect, false, false, false, Set(), "invalid",
-    "staleSubject"
+    0, 0, true, 1, noEffect, false, false, false, Set(), WInvalid(WStaleSubject)
   )
 
   action doReadySpellHold = {
@@ -469,7 +459,7 @@ module ruleCoreSpellsMbt {
         false, true, true, initialCasterHp, initialTargetHp, initialTargetHp,
         false, 0, 0, held.spellcasting.slotSpellCastThisTurn,
         held.spellcasting.slotLedger.slotsRemaining, noEffect, held.held,
-        false, true, Set(), "resolved", "none"
+        false, true, Set(), WResolved
       ),
     }
   }
@@ -484,8 +474,7 @@ module ruleCoreSpellsMbt {
       recordProjection(
         false, true, false, initialCasterHp - 1,
         initialTargetHp - damage.damageAmount, initialTargetHp, false,
-        0, 0, false, 1, noEffect, false, true, false, Set(), "resolved",
-        "none"
+        0, 0, false, 1, noEffect, false, true, false, Set(), WResolved
       ),
     }
   }

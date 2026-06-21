@@ -54,13 +54,19 @@ defineSelectedIdentityWitness({
   ),
   quintStateField: "qState",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "scenarioResult" },
+  quintFieldNames: { lastResult: "scenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      DistantObjectLight: "distantObjectLight",
+    },
+  },
   projectionSchema: {
     sorceryPointsRemaining: "int",
     lightEmitterCount: "int",
     brightRadiusFeet: "int",
     dimAdditionalFeet: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: {
     sorceryPointsRemaining: 2,

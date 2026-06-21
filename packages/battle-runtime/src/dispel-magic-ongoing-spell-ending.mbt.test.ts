@@ -713,7 +713,7 @@ function normalizeDispelMagicQuintState(
   }
   assertWitnessProtocolConsistentWithScenario({
     label: "Dispel Magic ongoing spell ending",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

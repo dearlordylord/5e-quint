@@ -21,7 +21,7 @@ module battleRuntimeInterruptStackResumeMbt {
   var qScenarioOutcome: InterruptStackResumeScenarioOutcome
   var qProtocol: WitnessProtocol[WitnessHole]
 
-  pure def qLastResult: InterruptStackResumeScenarioOutcome = qScenarioOutcome
+  pure def scenarioOutcome: InterruptStackResumeScenarioOutcome = qScenarioOutcome
 
   pure def witnessProtocolForProjection(
     result: InterruptStackResumeScenarioOutcome,
@@ -81,7 +81,7 @@ module battleRuntimeInterruptStackResumeMbt {
   )
 
   action doNestedDeclineResumesOuterInterrupt = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordInterruptStackResumeState(
       2,
       1,
@@ -96,7 +96,7 @@ module battleRuntimeInterruptStackResumeMbt {
   }
 
   action doShieldMutationResumesInterruptedAttack = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordInterruptStackResumeState(
       1,
       0,
@@ -111,7 +111,7 @@ module battleRuntimeInterruptStackResumeMbt {
   }
 
   action doReplayRecordedProcedureFromRoot = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordInterruptStackResumeState(
       0,
       0,

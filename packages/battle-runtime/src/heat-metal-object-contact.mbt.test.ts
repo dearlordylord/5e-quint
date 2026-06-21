@@ -432,7 +432,7 @@ function normalizeHeatMetalQuintState(
   const scenarioResult = heatMetalLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Heat Metal object-contact lifecycle",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

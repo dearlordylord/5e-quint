@@ -49,15 +49,13 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
   pure def qCommandPendingEffectCount: int = qState.qCommandPendingEffectCount
   pure def qClimbSpeedFeet: int = qState.qClimbSpeedFeet
   pure def qSwimSpeedFeet: int = qState.qSwimSpeedFeet
-  pure def qLastResult: MovementForcedMovementSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: MovementForcedMovementSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: MovementForcedMovementSelectedIdentityScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: MovementForcedMovementSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -100,7 +98,7 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
       qClimbSpeedFeet: climbSpeedFeet,
       qSwimSpeedFeet: swimSpeedFeet,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
   action init =
@@ -111,7 +109,7 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
     )
 
   action doDissonantWhispersForcedReactionMovement = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       30, 30, 0, true, false, true, 1, 0,
       18, false, true, 0, false, false, 0, 0, 0,
@@ -120,7 +118,7 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
   }
 
   action doCommandFleeTargetTurn = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       30, 30, 0, true, false, false, 1, 0,
       12, true, false, 30, true, true, 0, 0, 0,
@@ -129,7 +127,7 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
   }
 
   action doExpeditiousRetreatImmediateDash = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       30, 60, 30, false, true, true, 1, 1,
       12, true, false, 0, false, false, 0, 0, 0,
@@ -138,7 +136,7 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
   }
 
   action doRangerRovingClimbSwimMovement = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       40, 0, 0, true, false, false, 0, 0,
       12, true, false, 0, false, false, 0, 40, 40,
@@ -147,7 +145,7 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
   }
 
   action doBarbarianFastMovementDash = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       40, 80, 40, true, false, false, 0, 0,
       12, true, false, 0, false, false, 0, 0, 0,
@@ -156,7 +154,7 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
   }
 
   action doMonkUnarmoredMovementDash = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       40, 80, 40, true, false, false, 0, 0,
       12, true, false, 0, false, false, 0, 0, 0,

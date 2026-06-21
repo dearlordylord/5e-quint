@@ -28,15 +28,13 @@ module battleRuntimePotentCantripMbt {
   pure def qTargetActiveEffectCount: int = qState.qTargetActiveEffectCount
   pure def qLightEmitterCount: int = qState.qLightEmitterCount
   pure def qObjectDamageCount: int = qState.qObjectDamageCount
-  pure def qLastResult: PotentCantripScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: PotentCantripScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: PotentCantripScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: PotentCantripScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -55,38 +53,38 @@ module battleRuntimePotentCantripMbt {
       qLightEmitterCount: lightEmitterCount,
       qObjectDamageCount: objectDamageCount,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
   action init = recordProjection(13, 1, 0, 0, 0, Init)
 
   action doAttackMissHalfDamage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(11, 0, 0, 0, 0, AttackMissHalfDamage),
   }
 
   action doAttackMissNoAdditionalEffect = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(11, 0, 0, 0, 0, AttackMissNoAdditionalEffect),
   }
 
   action doAttackMissNoLightEmitter = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(11, 0, 0, 0, 0, AttackMissNoLightEmitter),
   }
 
   action doSaveSuccessHalfDamage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(11, 0, 0, 0, 0, SaveSuccessHalfDamage),
   }
 
   action doSaveSuccessNoAdditionalEffect = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(11, 0, 0, 0, 0, SaveSuccessNoAdditionalEffect),
   }
 
   action doRejectObjectMissHalfDamage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(13, 0, 0, 0, 0, RejectObjectMissHalfDamage),
   }
 

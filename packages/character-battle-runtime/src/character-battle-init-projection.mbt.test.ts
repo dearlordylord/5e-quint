@@ -58,9 +58,20 @@ const battleInitProjectionScenarios = [
 type BattleInitProjectionScenario =
   (typeof battleInitProjectionScenarios)[number];
 const battleInitReplayStepCount = battleInitProjectionScenarios.length - 1;
+const battleInitProjectionScenarioByVariant = {
+  BattleInitProjectionInit: "init",
+  BattleInitProjectionSheetHitPointsArmorClassConditionsAndProfiles:
+    "sheet-hit-points-armor-class-conditions-and-profiles",
+  BattleInitProjectionSheetSpellcastingAndMetamagic:
+    "sheet-spellcasting-and-metamagic",
+  BattleInitProjectionBuildMaximumAboveBuildMaximumRejected:
+    "build-maximum-above-build-maximum-rejected",
+  BattleInitProjectionStableRecoveryProgressDuringInitRejected:
+    "stable-recovery-progress-during-init-rejected",
+} as const satisfies Readonly<Record<string, BattleInitProjectionScenario>>;
 
 type BattleInitProjection = {
-  readonly lastResult: BattleInitProjectionScenario;
+  readonly outcome: BattleInitProjectionScenario;
   readonly accepted: boolean;
   readonly message: string;
   readonly characterIdentity: string;
@@ -178,7 +189,7 @@ function sheetHitPointsArmorClassConditionsAndProfilesProjection(): BattleInitPr
     sheet,
   });
   return projectionFromCombatant({
-    lastResult: "sheet-hit-points-armor-class-conditions-and-profiles",
+    outcome: "sheet-hit-points-armor-class-conditions-and-profiles",
     replayIndex: 1,
     combatant,
   });
@@ -225,7 +236,7 @@ function sheetSpellcastingAndMetamagicProjection(): BattleInitProjection {
     sheet: withCreatedSlot,
   });
   return projectionFromCombatant({
-    lastResult: "sheet-spellcasting-and-metamagic",
+    outcome: "sheet-spellcasting-and-metamagic",
     replayIndex: 2,
     combatant,
   });
@@ -244,7 +255,7 @@ function rejectBuildMaximumAboveBuildMaximumProjection(): BattleInitProjection {
   });
 
   return projectFromParts({
-    lastResult: "build-maximum-above-build-maximum-rejected",
+    outcome: "build-maximum-above-build-maximum-rejected",
     accepted: Either.isRight(result),
     message: Either.isLeft(result) ? result.left.message : "none",
     replayIndex: 3,
@@ -279,7 +290,7 @@ function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjectio
   });
 
   return projectFromParts({
-    lastResult: "stable-recovery-progress-during-init-rejected",
+    outcome: "stable-recovery-progress-during-init-rejected",
     accepted: Either.isRight(result),
     message: Either.isLeft(result) ? result.left.message : "none",
     replayIndex: 4,
@@ -330,7 +341,7 @@ function isCharacterBattleCombatant(
 }
 
 function projectionFromCombatant(input: {
-  readonly lastResult: BattleInitProjectionScenario;
+  readonly outcome: BattleInitProjectionScenario;
   readonly replayIndex: number;
   readonly combatant: CharacterBattleCombatant;
 }): BattleInitProjection {
@@ -338,7 +349,7 @@ function projectionFromCombatant(input: {
   const spellSlot2 = spellSlotProjection(input.combatant, 2);
   const spellSlot3 = spellSlotProjection(input.combatant, 3);
   return projectFromParts({
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     accepted: true,
     message: "none",
     characterIdentity: input.combatant.origin.characterId,
@@ -520,7 +531,7 @@ function sorcererMetamagicBuild(): CharacterBuild {
 
 function initialProjection(): BattleInitProjection {
   return projectFromParts({
-    lastResult: "init",
+    outcome: "init",
     accepted: false,
     message: "none",
     replayIndex: 0,
@@ -530,17 +541,17 @@ function initialProjection(): BattleInitProjection {
 function projectFromParts(
   input: Pick<
     BattleInitProjection,
-    "lastResult" | "accepted" | "message" | "replayIndex"
+    "outcome" | "accepted" | "message" | "replayIndex"
   > &
     Partial<
       Omit<
         BattleInitProjection,
-        "lastResult" | "accepted" | "message" | "replayIndex"
+        "outcome" | "accepted" | "message" | "replayIndex"
       >
     >,
 ): BattleInitProjection {
   return {
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     accepted: input.accepted,
     message: input.message,
     characterIdentity: input.characterIdentity ?? "none",
@@ -564,61 +575,57 @@ function projectFromParts(
 function normalizeBattleInitProjectionQuintState(
   raw: unknown,
 ): BattleInitProjection {
-  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("Expected Quint battle-init projection state object.");
-  }
-  const state: Readonly<Record<string, unknown>> = Object.fromEntries(
-    Object.entries(raw),
-  );
+  const state = recordField(quintStateRecord(raw), "qState");
+  const facts = recordField(state, "facts");
   return {
-    lastResult: scenarioField(state["qLastResult"]),
-    accepted: booleanField(state["qAccepted"], "qAccepted"),
-    message: stringField(state["qMessage"], "qMessage"),
+    outcome: scenarioVariantField(state["outcome"]),
+    accepted: booleanField(state["accepted"], "qState.accepted"),
+    message: stringField(state["message"], "qState.message"),
     characterIdentity: stringField(
-      state["qCharacterIdentity"],
-      "qCharacterIdentity",
+      facts["characterIdentity"],
+      "facts.characterIdentity",
     ),
-    currentHp: numberFromQuintInt(state["qCurrentHp"], "qCurrentHp"),
-    maxHp: numberFromQuintInt(state["qMaxHp"], "qMaxHp"),
+    currentHp: numberFromQuintInt(facts["currentHp"], "facts.currentHp"),
+    maxHp: numberFromQuintInt(facts["maxHp"], "facts.maxHp"),
     temporaryHitPoints: numberFromQuintInt(
-      state["qTemporaryHitPoints"],
-      "qTemporaryHitPoints",
+      facts["temporaryHitPoints"],
+      "facts.temporaryHitPoints",
     ),
-    armorClass: numberFromQuintInt(state["qArmorClass"], "qArmorClass"),
-    poisoned: booleanField(state["qPoisoned"], "qPoisoned"),
+    armorClass: numberFromQuintInt(facts["armorClass"], "facts.armorClass"),
+    poisoned: booleanField(facts["poisoned"], "facts.poisoned"),
     spellLevel1Count: numberFromQuintInt(
-      state["qSpellLevel1Count"],
-      "qSpellLevel1Count",
+      facts["spellLevel1Count"],
+      "facts.spellLevel1Count",
     ),
     spellLevel1Expended: numberFromQuintInt(
-      state["qSpellLevel1Expended"],
-      "qSpellLevel1Expended",
+      facts["spellLevel1Expended"],
+      "facts.spellLevel1Expended",
     ),
     spellLevel2Count: numberFromQuintInt(
-      state["qSpellLevel2Count"],
-      "qSpellLevel2Count",
+      facts["spellLevel2Count"],
+      "facts.spellLevel2Count",
     ),
     spellLevel2Expended: numberFromQuintInt(
-      state["qSpellLevel2Expended"],
-      "qSpellLevel2Expended",
+      facts["spellLevel2Expended"],
+      "facts.spellLevel2Expended",
     ),
     spellLevel3Count: numberFromQuintInt(
-      state["qSpellLevel3Count"],
-      "qSpellLevel3Count",
+      facts["spellLevel3Count"],
+      "facts.spellLevel3Count",
     ),
     spellLevel3Expended: numberFromQuintInt(
-      state["qSpellLevel3Expended"],
-      "qSpellLevel3Expended",
+      facts["spellLevel3Expended"],
+      "facts.spellLevel3Expended",
     ),
     passiveArmorClassProfileCount: numberFromQuintInt(
-      state["qPassiveArmorClassProfileCount"],
-      "qPassiveArmorClassProfileCount",
+      facts["passiveArmorClassProfileCount"],
+      "facts.passiveArmorClassProfileCount",
     ),
     metamagicKnownOptions: numberFromQuintInt(
-      state["qMetamagicKnownOptions"],
-      "qMetamagicKnownOptions",
+      facts["metamagicKnownOptions"],
+      "facts.metamagicKnownOptions",
     ),
-    replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
+    replayIndex: numberFromQuintInt(state["replayIndex"], "qState.replayIndex"),
   };
 }
 
@@ -635,17 +642,13 @@ function compareBattleInitProjectionState(
   return true;
 }
 
-function scenarioField(raw: unknown): BattleInitProjectionScenario {
-  if (typeof raw === "string" && isBattleInitProjectionScenario(raw)) {
-    return raw;
-  }
-  throw new Error(`Unknown battle-init projection scenario ${String(raw)}.`);
-}
-
-function isBattleInitProjectionScenario(
-  raw: string,
-): raw is BattleInitProjectionScenario {
-  return battleInitProjectionScenarios.some((scenario) => scenario === raw);
+function scenarioVariantField(raw: unknown): BattleInitProjectionScenario {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const scenario = Object.entries(battleInitProjectionScenarioByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (scenario !== undefined) return scenario;
+  throw new Error(`Unknown battle-init projection outcome variant ${tag}.`);
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {
@@ -662,6 +665,37 @@ function booleanField(raw: unknown, field: string): boolean {
 function stringField(raw: unknown, field: string): string {
   if (typeof raw === "string") return raw;
   throw new Error(`Expected Quint string field ${field}.`);
+}
+
+function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
+  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error("Expected Quint battle-init projection state object.");
+  }
+  return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value == null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag !== "string") {
+      throw new Error(`Expected string tag for Quint variant field ${field}.`);
+    }
+    return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function expectRight<A, E>(either: Either.Either<A, E>): A {

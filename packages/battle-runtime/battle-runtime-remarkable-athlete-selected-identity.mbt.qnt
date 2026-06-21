@@ -35,15 +35,13 @@ module battleRuntimeRemarkableAthleteSelectedIdentityMbt {
   pure def qCriticalMovementBudgetFeet: int = qState.qCriticalMovementBudgetFeet
   pure def qCriticalMovementProvokesOpportunityAttacks: bool = qState.qCriticalMovementProvokesOpportunityAttacks
   pure def qCriticalMovementAccepted: bool = qState.qCriticalMovementAccepted
-  pure def qLastResult: RemarkableAthleteSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: RemarkableAthleteSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: RemarkableAthleteSelectedIdentityScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: RemarkableAthleteSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -72,7 +70,7 @@ module battleRuntimeRemarkableAthleteSelectedIdentityMbt {
       qCriticalMovementProvokesOpportunityAttacks: criticalMovementProvokesOpportunityAttacks,
       qCriticalMovementAccepted: criticalMovementAccepted,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
   action init = recordProjection(
@@ -81,7 +79,7 @@ module battleRuntimeRemarkableAthleteSelectedIdentityMbt {
   )
 
   action doProjectRemarkableAthleteRollModes = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       "advantage", "advantage", "normal", "normal", "normal", "normal",
       false, 0, false, false,
@@ -90,7 +88,7 @@ module battleRuntimeRemarkableAthleteSelectedIdentityMbt {
   }
 
   action doProjectRemarkableAthleteCriticalMovement = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       "normal", "normal", "normal", "normal", "normal", "normal",
       true, 15, false, true,

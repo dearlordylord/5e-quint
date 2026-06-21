@@ -71,7 +71,7 @@ const wizardEvocationSavantGrantReplayScenarios = [
 type WizardEvocationSavantGrantReplayScenario =
   (typeof wizardEvocationSavantGrantReplayScenarios)[number];
 type WizardEvocationSavantGrantProjection = {
-  readonly lastResult: WizardEvocationSavantGrantReplayScenario;
+  readonly outcome: WizardEvocationSavantGrantReplayScenario;
   readonly featureUnitId: UnitRecord["id"] | "none";
   readonly acquisitionChoiceCount: number;
   readonly acquisitionMaximumSpellLevel: number;
@@ -444,7 +444,7 @@ function createWizardEvocationSavantGrantDriver() {
 
 function initialWizardEvocationSavantGrantProjection(): WizardEvocationSavantGrantProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
     featureUnitId: "none",
     acquisitionChoiceCount: 0,
     acquisitionMaximumSpellLevel: 0,
@@ -465,7 +465,9 @@ function projectWizardEvocationSavantLevel3Creation(): WizardEvocationSavantGran
     feature.kind !== "class_feature" ||
     feature.mechanics.family !== "wizard_spellbook_learning"
   ) {
-    throw new Error("Expected Evocation Savant wizard spellbook learning fact.");
+    throw new Error(
+      "Expected Evocation Savant wizard spellbook learning fact.",
+    );
   }
   const acquisitionGrant = feature.mechanics.grants.find(
     (grant) => grant.timing.kind === "class_feature_acquisition",
@@ -508,10 +510,11 @@ function projectWizardEvocationSavantLevel3Creation(): WizardEvocationSavantGran
   const laterSlotAccess = firstLaterWizardSlotAccessAfterLevel(3);
 
   return {
-    lastResult: "wizard-evocation-savant-level3-creation",
+    outcome: "wizard-evocation-savant-level3-creation",
     featureUnitId: feature.id,
     acquisitionChoiceCount: acquisitionGrant.choiceCount,
-    acquisitionMaximumSpellLevel: acquisitionGrant.eligibility.maximumSpellLevel,
+    acquisitionMaximumSpellLevel:
+      acquisitionGrant.eligibility.maximumSpellLevel,
     laterSlotAccessChoiceCount: laterSlotAccessGrant.choiceCount,
     laterSlotAccessTimingKind: laterSlotAccessGrant.timing.kind,
     laterSlotAccessCreatesCreationHole:
@@ -543,7 +546,11 @@ function firstLaterWizardSlotAccessAfterLevel(level: number): {
     current.spellSlotProjection.slots,
   );
 
-  for (let candidateLevel = level + 1; candidateLevel <= 20; candidateLevel += 1) {
+  for (
+    let candidateLevel = level + 1;
+    candidateLevel <= 20;
+    candidateLevel += 1
+  ) {
     const candidate = wizardSpellcastingCreationAtLevel(
       classFacts.spellcasting,
       candidateLevel,
@@ -567,9 +574,7 @@ function maximumSpellSlotLevel(
   slots: readonly { readonly count: number; readonly spellLevel: number }[],
 ): number {
   return Math.max(
-    ...slots
-      .filter((slot) => slot.count > 0)
-      .map((slot) => slot.spellLevel),
+    ...slots.filter((slot) => slot.count > 0).map((slot) => slot.spellLevel),
   );
 }
 
@@ -578,7 +583,9 @@ function evocationSavantCreationHoleChoiceCount(
 ): number {
   let draft = createCharacterDraft({
     unitLibrary,
-    draftId: characterDraftId("draft:srd-level-3-wizard-evocation-savant-hole-count"),
+    draftId: characterDraftId(
+      "draft:srd-level-3-wizard-evocation-savant-hole-count",
+    ),
   });
   const progression = testProgression("class_wizard", 3);
   const progressionOption = progressionOptionId(progression);
@@ -651,66 +658,64 @@ function evocationSavantPreferredOptions(): PreferredSupportedFillOptionIdsBySou
       creationChoiceOptionId("continual_flame"),
       creationChoiceOptionId("shatter"),
     ],
-    [testUnitChoiceSourceKey(
-      "class_wizard",
-      WIZARD_PREPARED_SPELL_CHOICE_KEY,
-    )]: [
-      creationChoiceOptionId("magic_missile"),
-      creationChoiceOptionId("shield"),
-      creationChoiceOptionId("thunderwave"),
-      creationChoiceOptionId("chromatic_orb"),
-      creationChoiceOptionId("continual_flame"),
-      creationChoiceOptionId("shatter"),
-    ],
+    [testUnitChoiceSourceKey("class_wizard", WIZARD_PREPARED_SPELL_CHOICE_KEY)]:
+      [
+        creationChoiceOptionId("magic_missile"),
+        creationChoiceOptionId("shield"),
+        creationChoiceOptionId("thunderwave"),
+        creationChoiceOptionId("chromatic_orb"),
+        creationChoiceOptionId("continual_flame"),
+        creationChoiceOptionId("shatter"),
+      ],
   };
 }
 
 function normalizeWizardEvocationSavantGrantQuintState(
   raw: unknown,
 ): WizardEvocationSavantGrantProjection {
-  const state = quintStateRecord(raw);
+  const state = recordField(quintStateRecord(raw), "qState");
   return {
-    lastResult: wizardEvocationSavantGrantScenarioField(state["qLastResult"]),
-    featureUnitId: stringField(state["qFeatureUnitId"], "qFeatureUnitId"),
+    outcome: outcomeField(state["outcome"]),
+    featureUnitId: stringField(state["featureUnitId"], "qState.featureUnitId"),
     acquisitionChoiceCount: numberFromQuintInt(
-      state["qAcquisitionChoiceCount"],
-      "qAcquisitionChoiceCount",
+      state["acquisitionChoiceCount"],
+      "qState.acquisitionChoiceCount",
     ),
     acquisitionMaximumSpellLevel: numberFromQuintInt(
-      state["qAcquisitionMaximumSpellLevel"],
-      "qAcquisitionMaximumSpellLevel",
+      state["acquisitionMaximumSpellLevel"],
+      "qState.acquisitionMaximumSpellLevel",
     ),
     laterSlotAccessChoiceCount: numberFromQuintInt(
-      state["qLaterSlotAccessChoiceCount"],
-      "qLaterSlotAccessChoiceCount",
+      state["laterSlotAccessChoiceCount"],
+      "qState.laterSlotAccessChoiceCount",
     ),
     laterSlotAccessTimingKind: stringField(
-      state["qLaterSlotAccessTimingKind"],
-      "qLaterSlotAccessTimingKind",
+      state["laterSlotAccessTimingKind"],
+      "qState.laterSlotAccessTimingKind",
     ),
     laterSlotAccessCreatesCreationHole: booleanField(
-      state["qLaterSlotAccessCreatesCreationHole"],
-      "qLaterSlotAccessCreatesCreationHole",
+      state["laterSlotAccessCreatesCreationHole"],
+      "qState.laterSlotAccessCreatesCreationHole",
     ),
     level3CreationChoiceCount: numberFromQuintInt(
-      state["qLevel3CreationChoiceCount"],
-      "qLevel3CreationChoiceCount",
+      state["level3CreationChoiceCount"],
+      "qState.level3CreationChoiceCount",
     ),
     finalSpellbookAddedCount: numberFromQuintInt(
-      state["qFinalSpellbookAddedCount"],
-      "qFinalSpellbookAddedCount",
+      state["finalSpellbookAddedCount"],
+      "qState.finalSpellbookAddedCount",
     ),
     finalSpellbookTotalCount: numberFromQuintInt(
-      state["qFinalSpellbookTotalCount"],
-      "qFinalSpellbookTotalCount",
+      state["finalSpellbookTotalCount"],
+      "qState.finalSpellbookTotalCount",
     ),
     firstLaterSlotAccessCharacterLevel: numberFromQuintInt(
-      state["qFirstLaterSlotAccessCharacterLevel"],
-      "qFirstLaterSlotAccessCharacterLevel",
+      state["firstLaterSlotAccessCharacterLevel"],
+      "qState.firstLaterSlotAccessCharacterLevel",
     ),
     firstLaterNewSlotLevel: numberFromQuintInt(
-      state["qFirstLaterNewSlotLevel"],
-      "qFirstLaterNewSlotLevel",
+      state["firstLaterNewSlotLevel"],
+      "qState.firstLaterNewSlotLevel",
     ),
   };
 }
@@ -728,21 +733,31 @@ function compareWizardEvocationSavantGrantState(
   return true;
 }
 
-function wizardEvocationSavantGrantScenarioField(
+const qntOutcomeByVariant = {
+  CharacterCreationWizardEvocationSavantInit: "init",
+  CharacterCreationWizardEvocationSavantWizardEvocationSavantLevel3Creation:
+    "wizard-evocation-savant-level3-creation",
+} as const;
+
+function outcomeField(
   raw: unknown,
-): WizardEvocationSavantGrantReplayScenario {
-  if (typeof raw === "string" && isWizardEvocationSavantGrantScenario(raw)) {
-    return raw;
-  }
-  throw new Error(`Unknown Evocation Savant replay scenario ${String(raw)}.`);
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
 }
 
-function isWizardEvocationSavantGrantScenario(
-  raw: string,
-): raw is WizardEvocationSavantGrantReplayScenario {
-  return wizardEvocationSavantGrantReplayScenarios.some(
-    (scenario) => scenario === raw,
-  );
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
@@ -750,6 +765,17 @@ function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
     throw new Error("Expected Quint Evocation Savant state.");
   }
   return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }
 
 function stringField(raw: unknown, field: string): string {
@@ -887,14 +913,14 @@ function supportedFillForHole(input: {
       : input.hole.source.tag === "draft" &&
           input.hole.source.path === "draft.species"
         ? [creationChoiceOptionId("species_orc")]
-      : input.hole.source.tag === "draft" &&
-          input.hole.source.path === "draft.background"
-        ? [creationChoiceOptionId("background_soldier")]
-        : input.hole.source.tag === "unitChoice"
-          ? (input.preferredOptionIdsBySource?.[
-              unitChoiceSourceKey(input.hole.source)
-            ] ?? soldierBackgroundFixtureOptionIds(input.hole.source))
-          : undefined;
+        : input.hole.source.tag === "draft" &&
+            input.hole.source.path === "draft.background"
+          ? [creationChoiceOptionId("background_soldier")]
+          : input.hole.source.tag === "unitChoice"
+            ? (input.preferredOptionIdsBySource?.[
+                unitChoiceSourceKey(input.hole.source)
+              ] ?? soldierBackgroundFixtureOptionIds(input.hole.source))
+            : undefined;
   const holeOptionIdSet = new Set(holeOptionIds);
   const selectedOptionIds = (preferredOptionIds ?? holeOptionIds)
     .filter((optionId) => holeOptionIdSet.has(optionId))

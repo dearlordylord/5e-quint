@@ -2,36 +2,45 @@
 // KERNEL-COVERAGE: qnt-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION
 
 module characterCreationClassFeatureProjectionsMbt {
-  var qLastResult: str
-  var qResourceUnitId: str
-  var qResourceKind: str
-  var qResourceMaximum: int
-  var qShortRestRefillsAll: bool
-  var qLongRestRefillsAll: bool
-  var qSourceFactKind: str
-  var qLinkedResourceUnitId: str
-  var qKnownOptionCount: int
-  var qSpellUseLimit: str
-  var qMartialArtsDieSourceUnitId: str
-  var qMartialArtsDieDice: int
-  var qMartialArtsDieSize: int
-  var qMonkLevelBonus: int
-  var qMetamagicOwnerClassLevel: int
-  var qMetamagicChoiceCount: int
-  var qMetamagicSelectionRepeatability: str
-  var qMetamagicSorceryPointPoolId: str
-  var qFirstMetamagicOptionId: str
-  var qFirstMetamagicSorceryPointCost: int
-  var qFirstMetamagicStackingMode: str
-  var qFirstMetamagicEffectKind: str
-  var qSecondMetamagicOptionId: str
-  var qSecondMetamagicSorceryPointCost: int
-  var qSecondMetamagicStackingMode: str
-  var qSecondMetamagicEffectKind: str
-  var qReplayIndex: int
+  type CharacterCreationClassFeatureProjectionsOutcome =
+    | CharacterCreationClassFeatureProjectionsInit
+    | CharacterCreationClassFeatureProjectionsMonkFocusUncannyMetabolism
+    | CharacterCreationClassFeatureProjectionsSorcererFontMetamagic
+
+  type CharacterCreationClassFeatureProjectionsState = {
+    outcome: CharacterCreationClassFeatureProjectionsOutcome,
+    resourceUnitId: str,
+    resourceKind: str,
+    resourceMaximum: int,
+    shortRestRefillsAll: bool,
+    longRestRefillsAll: bool,
+    sourceFactKind: str,
+    linkedResourceUnitId: str,
+    knownOptionCount: int,
+    spellUseLimit: str,
+    martialArtsDieSourceUnitId: str,
+    martialArtsDieDice: int,
+    martialArtsDieSize: int,
+    monkLevelBonus: int,
+    metamagicOwnerClassLevel: int,
+    metamagicChoiceCount: int,
+    metamagicSelectionRepeatability: str,
+    metamagicSorceryPointPoolId: str,
+    firstMetamagicOptionId: str,
+    firstMetamagicSorceryPointCost: int,
+    firstMetamagicStackingMode: str,
+    firstMetamagicEffectKind: str,
+    secondMetamagicOptionId: str,
+    secondMetamagicSorceryPointCost: int,
+    secondMetamagicStackingMode: str,
+    secondMetamagicEffectKind: str,
+    replayIndex: int,
+  }
+
+  var qState: CharacterCreationClassFeatureProjectionsState
 
   action recordProjection(
-    lastResult: str,
+    outcome: CharacterCreationClassFeatureProjectionsOutcome,
     resourceUnitId: str,
     resourceKind: str,
     resourceMaximum: int,
@@ -59,38 +68,40 @@ module characterCreationClassFeatureProjectionsMbt {
     secondMetamagicEffectKind: str,
     replayIndex: int,
   ): bool = all {
-    qLastResult' = lastResult,
-    qResourceUnitId' = resourceUnitId,
-    qResourceKind' = resourceKind,
-    qResourceMaximum' = resourceMaximum,
-    qShortRestRefillsAll' = shortRestRefillsAll,
-    qLongRestRefillsAll' = longRestRefillsAll,
-    qSourceFactKind' = sourceFactKind,
-    qLinkedResourceUnitId' = linkedResourceUnitId,
-    qKnownOptionCount' = knownOptionCount,
-    qSpellUseLimit' = spellUseLimit,
-    qMartialArtsDieSourceUnitId' = martialArtsDieSourceUnitId,
-    qMartialArtsDieDice' = martialArtsDieDice,
-    qMartialArtsDieSize' = martialArtsDieSize,
-    qMonkLevelBonus' = monkLevelBonus,
-    qMetamagicOwnerClassLevel' = metamagicOwnerClassLevel,
-    qMetamagicChoiceCount' = metamagicChoiceCount,
-    qMetamagicSelectionRepeatability' = metamagicSelectionRepeatability,
-    qMetamagicSorceryPointPoolId' = metamagicSorceryPointPoolId,
-    qFirstMetamagicOptionId' = firstMetamagicOptionId,
-    qFirstMetamagicSorceryPointCost' = firstMetamagicSorceryPointCost,
-    qFirstMetamagicStackingMode' = firstMetamagicStackingMode,
-    qFirstMetamagicEffectKind' = firstMetamagicEffectKind,
-    qSecondMetamagicOptionId' = secondMetamagicOptionId,
-    qSecondMetamagicSorceryPointCost' = secondMetamagicSorceryPointCost,
-    qSecondMetamagicStackingMode' = secondMetamagicStackingMode,
-    qSecondMetamagicEffectKind' = secondMetamagicEffectKind,
-    qReplayIndex' = replayIndex,
+    qState' = {
+      outcome: outcome,
+      resourceUnitId: resourceUnitId,
+      resourceKind: resourceKind,
+      resourceMaximum: resourceMaximum,
+      shortRestRefillsAll: shortRestRefillsAll,
+      longRestRefillsAll: longRestRefillsAll,
+      sourceFactKind: sourceFactKind,
+      linkedResourceUnitId: linkedResourceUnitId,
+      knownOptionCount: knownOptionCount,
+      spellUseLimit: spellUseLimit,
+      martialArtsDieSourceUnitId: martialArtsDieSourceUnitId,
+      martialArtsDieDice: martialArtsDieDice,
+      martialArtsDieSize: martialArtsDieSize,
+      monkLevelBonus: monkLevelBonus,
+      metamagicOwnerClassLevel: metamagicOwnerClassLevel,
+      metamagicChoiceCount: metamagicChoiceCount,
+      metamagicSelectionRepeatability: metamagicSelectionRepeatability,
+      metamagicSorceryPointPoolId: metamagicSorceryPointPoolId,
+      firstMetamagicOptionId: firstMetamagicOptionId,
+      firstMetamagicSorceryPointCost: firstMetamagicSorceryPointCost,
+      firstMetamagicStackingMode: firstMetamagicStackingMode,
+      firstMetamagicEffectKind: firstMetamagicEffectKind,
+      secondMetamagicOptionId: secondMetamagicOptionId,
+      secondMetamagicSorceryPointCost: secondMetamagicSorceryPointCost,
+      secondMetamagicStackingMode: secondMetamagicStackingMode,
+      secondMetamagicEffectKind: secondMetamagicEffectKind,
+      replayIndex: replayIndex,
+    },
   }
 
   action init =
     recordProjection(
-      "init",
+      CharacterCreationClassFeatureProjectionsInit,
       "none",
       "none",
       0,
@@ -120,9 +131,9 @@ module characterCreationClassFeatureProjectionsMbt {
     )
 
   action doProjectMonkFocusAndUncannyMetabolism = all {
-    qReplayIndex == 0,
+    qState.replayIndex == 0,
     recordProjection(
-      "monk-focus-uncanny-metabolism",
+      CharacterCreationClassFeatureProjectionsMonkFocusUncannyMetabolism,
       "monk_monks_focus",
       "use_count",
       2,
@@ -153,9 +164,9 @@ module characterCreationClassFeatureProjectionsMbt {
   }
 
   action doProjectSorcererFontAndMetamagic = all {
-    qReplayIndex == 1,
+    qState.replayIndex == 1,
     recordProjection(
-      "sorcerer-font-metamagic",
+      CharacterCreationClassFeatureProjectionsSorcererFontMetamagic,
       "sorcerer_font_of_magic",
       "point_pool",
       2,

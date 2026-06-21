@@ -4,15 +4,23 @@
 module characterSheetArmorClassBaseSelectedIdentityMbt {
   import armorClassBase.* from "../shared-algebras/proofs/rule-core/armor-class-base"
 
-  var qSourceUnitId: str
-  var qBaseSource: str
-  var qBaseArmorClass: int
-  var qUsesDex: bool
-  var qUsesCon: bool
-  var qUsesWis: bool
-  var qShieldBonus: int
-  var qArmorClass: int
-  var qLastResult: str
+  type CharacterSheetArmorClassBaseSelectedIdentityOutcome =
+    | CharacterSheetArmorClassBaseSelectedIdentityInit
+    | CharacterSheetArmorClassBaseSelectedIdentitySelected
+
+  type CharacterSheetArmorClassBaseSelectedIdentityState = {
+    sourceUnitId: str,
+    baseSource: str,
+    baseArmorClass: int,
+    usesDex: bool,
+    usesCon: bool,
+    usesWis: bool,
+    shieldBonus: int,
+    armorClass: int,
+    outcome: CharacterSheetArmorClassBaseSelectedIdentityOutcome,
+  }
+
+  var qState: CharacterSheetArmorClassBaseSelectedIdentityState
 
   action recordProjection(
     sourceUnitId: str,
@@ -23,17 +31,19 @@ module characterSheetArmorClassBaseSelectedIdentityMbt {
     usesWis: bool,
     shieldBonus: int,
     armorClass: int,
-    lastResult: str,
+    outcome: CharacterSheetArmorClassBaseSelectedIdentityOutcome,
   ): bool = all {
-    qSourceUnitId' = sourceUnitId,
-    qBaseSource' = baseSource,
-    qBaseArmorClass' = baseArmorClass,
-    qUsesDex' = usesDex,
-    qUsesCon' = usesCon,
-    qUsesWis' = usesWis,
-    qShieldBonus' = shieldBonus,
-    qArmorClass' = armorClass,
-    qLastResult' = lastResult,
+    qState' = {
+      sourceUnitId: sourceUnitId,
+      baseSource: baseSource,
+      baseArmorClass: baseArmorClass,
+      usesDex: usesDex,
+      usesCon: usesCon,
+      usesWis: usesWis,
+      shieldBonus: shieldBonus,
+      armorClass: armorClass,
+      outcome: outcome,
+    },
   }
 
   pure def armorClassFromFacts(
@@ -55,23 +65,23 @@ module characterSheetArmorClassBaseSelectedIdentityMbt {
     })
 
   action init = recordProjection(
-    "none",
-    "default_unarmored",
-    10,
-    true,
-    false,
-    false,
-    0,
-    armorClassFromFacts(
+      "none",
+      "default_unarmored",
+      10,
+      true,
+      false,
+      false,
+      0,
+      armorClassFromFacts(
       2,
       AbilitySumArmorClassBase({ base: 10, abilities: List(DexArmorClassAbility) }),
       0,
     ),
-    "init",
-  )
+      CharacterSheetArmorClassBaseSelectedIdentityInit,
+    )
 
   action doSelectBarbarianUnarmoredDefense = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetArmorClassBaseSelectedIdentityInit,
     recordProjection(
       "barbarian_unarmored_defense",
       "unarmored_defense",
@@ -88,12 +98,12 @@ module characterSheetArmorClassBaseSelectedIdentityMbt {
         }),
         0,
       ),
-      "selected",
+      CharacterSheetArmorClassBaseSelectedIdentitySelected,
     ),
   }
 
   action doSelectBarbarianUnarmoredDefenseWithShield = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetArmorClassBaseSelectedIdentityInit,
     recordProjection(
       "barbarian_unarmored_defense",
       "unarmored_defense",
@@ -110,12 +120,12 @@ module characterSheetArmorClassBaseSelectedIdentityMbt {
         }),
         2,
       ),
-      "selected",
+      CharacterSheetArmorClassBaseSelectedIdentitySelected,
     ),
   }
 
   action doSelectMonkUnarmoredDefense = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetArmorClassBaseSelectedIdentityInit,
     recordProjection(
       "monk_unarmored_defense",
       "unarmored_defense",
@@ -132,12 +142,12 @@ module characterSheetArmorClassBaseSelectedIdentityMbt {
         }),
         0,
       ),
-      "selected",
+      CharacterSheetArmorClassBaseSelectedIdentitySelected,
     ),
   }
 
   action doProjectLightArmor = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetArmorClassBaseSelectedIdentityInit,
     recordProjection(
       "armor_leather",
       "armor",
@@ -147,12 +157,12 @@ module characterSheetArmorClassBaseSelectedIdentityMbt {
       false,
       0,
       armorClassFromFacts(2, LightDexArmorClassBase({ base: 11 }), 0),
-      "selected",
+      CharacterSheetArmorClassBaseSelectedIdentitySelected,
     ),
   }
 
   action doProjectMediumArmorDexCap = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetArmorClassBaseSelectedIdentityInit,
     recordProjection(
       "armor_chain_shirt",
       "armor",
@@ -162,12 +172,12 @@ module characterSheetArmorClassBaseSelectedIdentityMbt {
       false,
       0,
       armorClassFromFacts(3, MediumDexMax2ArmorClassBase({ base: 13 }), 0),
-      "selected",
+      CharacterSheetArmorClassBaseSelectedIdentitySelected,
     ),
   }
 
   action doProjectHeavyArmorWithShield = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetArmorClassBaseSelectedIdentityInit,
     recordProjection(
       "armor_chain_mail",
       "armor",
@@ -177,7 +187,7 @@ module characterSheetArmorClassBaseSelectedIdentityMbt {
       false,
       2,
       armorClassFromFacts(2, HeavyFixedArmorClassBase({ armorClass: 16 }), 2),
-      "selected",
+      CharacterSheetArmorClassBaseSelectedIdentitySelected,
     ),
   }
 

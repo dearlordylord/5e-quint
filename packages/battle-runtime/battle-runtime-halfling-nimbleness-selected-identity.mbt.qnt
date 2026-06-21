@@ -13,13 +13,15 @@ module battleRuntimeHalflingNimblenessSelectedIdentityMbt {
   //   Nimbleness: move through a larger creature's space, but don't stop there.
   type Hole = | NoHole
 
+  type HalflingNimblenessSelectedIdentityScenarioOutcome = | Init | MoveThroughLargerCreatureSpace | RejectOccupiedStop | RejectMissingProfile | RejectSameSizeTraversal
+
   type HalflingNimblenessSelectedIdentityWitnessState = {
     traversalAccepted: bool,
     acceptedMovementSpentFeet: int,
     occupiedStopRejected: bool,
     missingProfileRejected: bool,
     sameSizeRejected: bool,
-    scenarioResult: str,
+    scenarioOutcome: HalflingNimblenessSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -31,7 +33,7 @@ module battleRuntimeHalflingNimblenessSelectedIdentityMbt {
     occupiedStopRejected: bool,
     missingProfileRejected: bool,
     sameSizeRejected: bool,
-    scenarioResult: str,
+    scenarioOutcome: HalflingNimblenessSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -40,45 +42,40 @@ module battleRuntimeHalflingNimblenessSelectedIdentityMbt {
       occupiedStopRejected: occupiedStopRejected,
       missingProfileRejected: missingProfileRejected,
       sameSizeRejected: sameSizeRejected,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
   action init = recordProjection(
-    false, 0, false, false, false, "init", witnessInit(NoHole),
-  )
+    false, 0, false, false, false, Init, witnessInit(NoHole))
 
   action doMoveThroughLargerCreatureSpace = all {
     qState.protocol.result == WInit,
     recordProjection(
-      true, 10, false, false, false, "moveThroughLargerCreatureSpace",
-      witnessResolved(NoHole),
-    ),
+      true, 10, false, false, false, MoveThroughLargerCreatureSpace,
+      witnessResolved(NoHole)),
   }
 
   action doRejectOccupiedStop = all {
     qState.protocol.result == WInit,
     recordProjection(
-      false, 0, true, false, false, "rejectOccupiedStop",
-      witnessResolved(NoHole),
-    ),
+      false, 0, true, false, false, RejectOccupiedStop,
+      witnessResolved(NoHole)),
   }
 
   action doRejectMissingProfile = all {
     qState.protocol.result == WInit,
     recordProjection(
-      false, 0, false, true, false, "rejectMissingProfile",
-      witnessResolved(NoHole),
-    ),
+      false, 0, false, true, false, RejectMissingProfile,
+      witnessResolved(NoHole)),
   }
 
   action doRejectSameSizeTraversal = all {
     qState.protocol.result == WInit,
     recordProjection(
-      false, 0, false, false, true, "rejectSameSizeTraversal",
-      witnessResolved(NoHole),
-    ),
+      false, 0, false, false, true, RejectSameSizeTraversal,
+      witnessResolved(NoHole)),
   }
 
   action step = any {

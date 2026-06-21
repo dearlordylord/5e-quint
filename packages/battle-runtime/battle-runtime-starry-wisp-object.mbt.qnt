@@ -14,31 +14,22 @@ module battleRuntimeStarryWispObjectMbt {
   var qObjectDamage: ObjectDamageOutcomeOption
   var qLightEmitters: Set[LightEmitter]
 
-  pure def qHoles: Set[Hole] = qProtocol.holes
+  pure def openHoles: Set[Hole] = qProtocol.holes
 
   pure val starryWispObjectArmorClass: int = 13
   pure val starryWispObjectHitPoints: int = 5
 
   pure def starryWispObjectProtocolForProjection(
     holes: Set[Hole],
-    lastResult: str,
-    invalidReason: str,
+    result: WitnessResult,
   ): WitnessProtocol[Hole] =
-    if (lastResult == "init") witnessInitWithHoles(holes)
-    else if (lastResult == "invalid")
-      witnessInvalidWithHoles(
-        holes,
-        if (invalidReason == "staleSubject") WStaleSubject else WInvalidFill,
-      )
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved(TargetChoice)
+    witnessProtocolFromResult(holes, TargetChoice, result)
 
   action init = all {
     qActionAvailable' = true,
     qProtocol' = starryWispObjectProtocolForProjection(
       Set(TargetChoice, ObjectTargetChoice),
-      "init",
-      "",
+      WInit,
     ),
     qObjectDamage' = NoObjectDamage,
     qLightEmitters' = Set(),
@@ -46,45 +37,45 @@ module battleRuntimeStarryWispObjectMbt {
 
   action doFillObjectTarget = all {
     qActionAvailable,
-    qHoles == Set(TargetChoice, ObjectTargetChoice),
+    openHoles == Set(TargetChoice, ObjectTargetChoice),
     qActionAvailable' = qActionAvailable,
-    qProtocol' = starryWispObjectProtocolForProjection(Set(AttackRoll), "needsHoles", ""),
+    qProtocol' = starryWispObjectProtocolForProjection(Set(AttackRoll), WNeedsHoles),
     qObjectDamage' = qObjectDamage,
     qLightEmitters' = qLightEmitters,
   }
 
   action doRejectObjectWithoutFact = all {
     qActionAvailable,
-    qHoles == Set(TargetChoice, ObjectTargetChoice),
+    openHoles == Set(TargetChoice, ObjectTargetChoice),
     qActionAvailable' = qActionAvailable,
-    qProtocol' = starryWispObjectProtocolForProjection(qHoles, "invalid", "invalidFill"),
+    qProtocol' = starryWispObjectProtocolForProjection(openHoles, WInvalid(WInvalidFill)),
     qObjectDamage' = qObjectDamage,
     qLightEmitters' = qLightEmitters,
   }
 
   action doFillObjectAttackRollMiss = all {
     qActionAvailable,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     qActionAvailable' = false,
-    qProtocol' = starryWispObjectProtocolForProjection(Set(), "resolved", ""),
+    qProtocol' = starryWispObjectProtocolForProjection(Set(), WResolved),
     qObjectDamage' = NoObjectDamage,
     qLightEmitters' = Set(),
   }
 
   action doFillObjectAttackRollHit = all {
     qActionAvailable,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     qActionAvailable' = qActionAvailable,
-    qProtocol' = starryWispObjectProtocolForProjection(Set(SpellDamageRoll), "needsHoles", ""),
+    qProtocol' = starryWispObjectProtocolForProjection(Set(SpellDamageRoll), WNeedsHoles),
     qObjectDamage' = qObjectDamage,
     qLightEmitters' = qLightEmitters,
   }
 
   action doFillObjectDamageLow = all {
     qActionAvailable,
-    qHoles == Set(SpellDamageRoll),
+    openHoles == Set(SpellDamageRoll),
     qActionAvailable' = false,
-    qProtocol' = starryWispObjectProtocolForProjection(Set(), "resolved", ""),
+    qProtocol' = starryWispObjectProtocolForProjection(Set(), WResolved),
     qObjectDamage' = SomeObjectDamage(spellObjectDamageOutcome(
       StarryWispSpellAttack,
       StarryWispObjectTarget,
@@ -100,9 +91,9 @@ module battleRuntimeStarryWispObjectMbt {
 
   action doFillObjectDamageHigh = all {
     qActionAvailable,
-    qHoles == Set(SpellDamageRoll),
+    openHoles == Set(SpellDamageRoll),
     qActionAvailable' = false,
-    qProtocol' = starryWispObjectProtocolForProjection(Set(), "resolved", ""),
+    qProtocol' = starryWispObjectProtocolForProjection(Set(), WResolved),
     qObjectDamage' = SomeObjectDamage(spellObjectDamageOutcome(
       StarryWispSpellAttack,
       StarryWispObjectTarget,
@@ -118,9 +109,9 @@ module battleRuntimeStarryWispObjectMbt {
 
   action doRejectStaleAfterResolved = all {
     not(qActionAvailable),
-    qHoles == Set(),
+    openHoles == Set(),
     qActionAvailable' = qActionAvailable,
-    qProtocol' = starryWispObjectProtocolForProjection(qHoles, "invalid", "staleSubject"),
+    qProtocol' = starryWispObjectProtocolForProjection(openHoles, WInvalid(WStaleSubject)),
     qObjectDamage' = qObjectDamage,
     qLightEmitters' = qLightEmitters,
   }

@@ -738,7 +738,7 @@ function normalizeInterruptStackResumeQuintState(
   );
   assertWitnessProtocolConsistentWithScenario({
     label: "interrupt stack resume",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

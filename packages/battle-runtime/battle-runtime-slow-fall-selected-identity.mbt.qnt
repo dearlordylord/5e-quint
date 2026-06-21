@@ -20,15 +20,13 @@ module battleRuntimeSlowFallSelectedIdentityMbt {
   pure def qReactionAvailable: bool = qState.qReactionAvailable
   pure def qEffectiveFallDamage: int = qState.qEffectiveFallDamage
   pure def qFallingProne: bool = qState.qFallingProne
-  pure def qLastResult: SlowFallSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: SlowFallSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: SlowFallSelectedIdentityScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: SlowFallSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -43,7 +41,7 @@ module battleRuntimeSlowFallSelectedIdentityMbt {
       qEffectiveFallDamage: effectiveFallDamage,
       qFallingProne: fallingProne,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
 
@@ -55,7 +53,7 @@ module battleRuntimeSlowFallSelectedIdentityMbt {
   )
 
   action doSlowFallReduceDamage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       3,
@@ -65,7 +63,7 @@ module battleRuntimeSlowFallSelectedIdentityMbt {
   }
 
   action doSlowFallPreventDamage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       0,

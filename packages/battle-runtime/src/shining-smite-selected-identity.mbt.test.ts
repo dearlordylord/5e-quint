@@ -40,8 +40,14 @@ defineSelectedIdentityWitness({
   ),
   quintStateField: "qState",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "scenarioResult" },
-  projectionSchema: { lastResult: "str" },
+  quintFieldNames: { lastResult: "scenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      ShiningSmiteAfterHitDamageIllumination: "shiningSmiteAfterHitDamageIllumination",
+    },
+  },
+  projectionSchema: { lastResult: "variant" },
   initialProjection: { lastResult: "init" },
   units: [
     {

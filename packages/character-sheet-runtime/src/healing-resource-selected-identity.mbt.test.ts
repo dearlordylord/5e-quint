@@ -41,7 +41,7 @@ type HealingResourceSelectedIdentityProjection = {
   readonly targetPoisoned: boolean;
   readonly poolExpended: number;
   readonly poolRemaining: number;
-  readonly lastResult: "init" | "resolved";
+  readonly outcome: "init" | "resolved";
 };
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
@@ -79,7 +79,7 @@ const selectedUnitIdentityReplays = [
           targetPoisoned: false,
           poolExpended: 7,
           poolRemaining: 3,
-          lastResult: "resolved",
+          outcome: "resolved",
         }),
       },
     ],
@@ -141,12 +141,11 @@ describe("Character Sheet healing resource selected identity MBT", () => {
 function createHealingResourceSelectedIdentityDriver() {
   return defineDriver(healingResourceSelectedIdentityDriverSchema, () => {
     let sheets = layOnHandsSheets();
-    let lastResult: HealingResourceSelectedIdentityProjection["lastResult"] =
-      "init";
+    let outcome: HealingResourceSelectedIdentityProjection["outcome"] = "init";
 
     function reset(): void {
       sheets = layOnHandsSheets();
-      lastResult = "init";
+      outcome = "init";
     }
 
     return {
@@ -164,11 +163,11 @@ function createHealingResourceSelectedIdentityDriver() {
           throw new Error(result.left.message);
         }
         sheets = result.right;
-        lastResult = "resolved";
+        outcome = "resolved";
       },
       step: () => {},
       getState: () =>
-        projectHealingResourceSelectedIdentityState(sheets, lastResult),
+        projectHealingResourceSelectedIdentityState(sheets, outcome),
     };
   });
 }
@@ -182,7 +181,7 @@ function expectedProjection(
     targetPoisoned: true,
     poolExpended: 0,
     poolRemaining: 10,
-    lastResult: "init",
+    outcome: "init",
     ...overrides,
   };
 }
@@ -263,7 +262,7 @@ function characterBuild(startingClass: string): CharacterBuild {
 
 function projectHealingResourceSelectedIdentityState(
   sheets: { readonly source: CharacterSheet; readonly target: CharacterSheet },
-  lastResult: HealingResourceSelectedIdentityProjection["lastResult"],
+  outcome: HealingResourceSelectedIdentityProjection["outcome"],
 ): HealingResourceSelectedIdentityProjection {
   const pool = layOnHandsPool(sheets.source);
   return {
@@ -272,7 +271,7 @@ function projectHealingResourceSelectedIdentityState(
     targetPoisoned: sheets.target.conditions.includes("poisoned"),
     poolExpended: pool.expended,
     poolRemaining: pool.count - pool.expended,
-    lastResult,
+    outcome,
   };
 }
 
@@ -304,6 +303,32 @@ function characterSheetCurrentHp(sheet: CharacterSheet): number {
   return sheet.hitPoints.tag === "positive" ? sheet.hitPoints.currentHp : 0;
 }
 
+const qntOutcomeByVariant = {
+  CharacterSheetHealingResourceSelectedIdentityInit: "init",
+  CharacterSheetHealingResourceSelectedIdentityResolved: "resolved",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
+
 function requireRight<T, E>(result: Either.Either<T, E>): T {
   if (Either.isRight(result)) return result.right;
   const left = result.left;
@@ -321,17 +346,20 @@ function requireRight<T, E>(result: Either.Either<T, E>): T {
 function normalizeHealingResourceSelectedIdentityQuintState(
   raw: unknown,
 ): HealingResourceSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
+  const state = recordField(quintStateRecord(raw), "qState");
   return {
-    sourceHp: numberFromQuintInt(state["qSourceHp"], "qSourceHp"),
-    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    targetPoisoned: booleanField(state, "qTargetPoisoned"),
-    poolExpended: numberFromQuintInt(state["qPoolExpended"], "qPoolExpended"),
-    poolRemaining: numberFromQuintInt(
-      state["qPoolRemaining"],
-      "qPoolRemaining",
+    sourceHp: numberFromQuintInt(state["sourceHp"], "qState.sourceHp"),
+    targetHp: numberFromQuintInt(state["targetHp"], "qState.targetHp"),
+    targetPoisoned: booleanField(state, "targetPoisoned"),
+    poolExpended: numberFromQuintInt(
+      state["poolExpended"],
+      "qState.poolExpended",
     ),
-    lastResult: mbtLastResult(state["qLastResult"]),
+    poolRemaining: numberFromQuintInt(
+      state["poolRemaining"],
+      "qState.poolRemaining",
+    ),
+    outcome: outcomeField(state["outcome"]),
   };
 }
 
@@ -340,6 +368,17 @@ function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
     throw new Error("Expected Quint state record.");
   }
   return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {
@@ -355,15 +394,6 @@ function booleanField(
   const value = state[field];
   if (typeof value === "boolean") return value;
   throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function mbtLastResult(
-  raw: unknown,
-): HealingResourceSelectedIdentityProjection["lastResult"] {
-  if (raw === "init" || raw === "resolved") {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
 }
 
 const healingResourceSelectedIdentityStateCheck = stateCheck(

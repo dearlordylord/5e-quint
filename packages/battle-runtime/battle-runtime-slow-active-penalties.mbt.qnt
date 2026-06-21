@@ -19,6 +19,8 @@ module battleRuntimeSlowActivePenaltiesMbt {
     | EndTurnSave
     | SomaticFailure
 
+  type SlowActivePenaltiesScenarioOutcome = | Init | FailedSave | TargetTurn | NeedsSave | Saved | FailedAgain | SpentAction | AttackedOnce | NeedsSomaticFailure | SomaticSpellFailed | SelfFailedSave | MultiattackFailedSave | MultiattackTargetTurn | MultiattackedOnce
+
   type SlowActivePenaltiesWitnessState = {
     currentTurnRole: str,
     turnActionOrBonusChoice: str,
@@ -33,7 +35,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
     dexteritySavingThrowDelta: int,
     targetCanReact: bool,
     casterConcentrating: bool,
-    scenarioResult: str,
+    scenarioOutcome: SlowActivePenaltiesScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -53,7 +55,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
     dexteritySavingThrowDelta: int,
     targetCanReact: bool,
     casterConcentrating: bool,
-    scenarioResult: str,
+    scenarioOutcome: SlowActivePenaltiesScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -70,7 +72,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
       dexteritySavingThrowDelta: dexteritySavingThrowDelta,
       targetCanReact: targetCanReact,
       casterConcentrating: casterConcentrating,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -89,12 +91,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
     0,
     true,
     false,
-    "init",
-    witnessInit(NoHole),
-  )
+    Init,
+    witnessInit(NoHole))
 
   action doCastSlowFailedSave = all {
-    qState.scenarioResult == "init",
+    qState.scenarioOutcome == Init,
     recordSlowState(
       "caster",
       "notRestricted",
@@ -109,13 +110,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       -2,
       false,
       true,
-      "failedSave",
-      witnessResolved(NoHole),
-    ),
+      FailedSave,
+      witnessResolved(NoHole)),
   }
 
   action doEndCasterTurn = all {
-    qState.scenarioResult == "failedSave",
+    qState.scenarioOutcome == FailedSave,
     recordSlowState(
       "target",
       "notChosen",
@@ -130,13 +130,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       -2,
       false,
       true,
-      "targetTurn",
-      witnessResolved(NoHole),
-    ),
+      TargetTurn,
+      witnessResolved(NoHole)),
   }
 
   action doRequestEndTurnSave = all {
-    qState.scenarioResult == "targetTurn",
+    qState.scenarioOutcome == TargetTurn,
     recordSlowState(
       "target",
       "notChosen",
@@ -151,13 +150,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       -2,
       false,
       true,
-      "needsSave",
-      witnessNeedsHoles(Set(EndTurnSave)),
-    ),
+      NeedsSave,
+      witnessNeedsHoles(Set(EndTurnSave))),
   }
 
   action doFillEndTurnSaveSuccess = all {
-    qState.scenarioResult == "needsSave",
+    qState.scenarioOutcome == NeedsSave,
     qState.protocol.holes == Set(EndTurnSave),
     recordSlowState(
       "caster",
@@ -173,13 +171,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       0,
       true,
       false,
-      "saved",
-      witnessResolved(NoHole),
-    ),
+      Saved,
+      witnessResolved(NoHole)),
   }
 
   action doFillEndTurnSaveFailure = all {
-    qState.scenarioResult == "needsSave",
+    qState.scenarioOutcome == NeedsSave,
     qState.protocol.holes == Set(EndTurnSave),
     recordSlowState(
       "caster",
@@ -195,13 +192,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       -2,
       false,
       true,
-      "failedAgain",
-      witnessResolved(NoHole),
-    ),
+      FailedAgain,
+      witnessResolved(NoHole)),
   }
 
   action doSpendTargetAction = all {
-    qState.scenarioResult == "targetTurn",
+    qState.scenarioOutcome == TargetTurn,
     recordSlowState(
       "target",
       "action",
@@ -216,13 +212,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       -2,
       false,
       true,
-      "spentAction",
-      witnessResolved(NoHole),
-    ),
+      SpentAction,
+      witnessResolved(NoHole)),
   }
 
   action doMakeTargetAttack = all {
-    qState.scenarioResult == "targetTurn",
+    qState.scenarioOutcome == TargetTurn,
     recordSlowState(
       "target",
       "action",
@@ -237,13 +232,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       -2,
       false,
       true,
-      "attackedOnce",
-      witnessResolved(NoHole),
-    ),
+      AttackedOnce,
+      witnessResolved(NoHole)),
   }
 
   action doRequestSomaticFailure = all {
-    qState.scenarioResult == "targetTurn",
+    qState.scenarioOutcome == TargetTurn,
     recordSlowState(
       "target",
       "notChosen",
@@ -258,13 +252,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       -2,
       false,
       true,
-      "needsSomaticFailure",
-      witnessNeedsHoles(Set(SomaticFailure)),
-    ),
+      NeedsSomaticFailure,
+      witnessNeedsHoles(Set(SomaticFailure))),
   }
 
   action doFillSomaticSpellFailure = all {
-    qState.scenarioResult == "needsSomaticFailure",
+    qState.scenarioOutcome == NeedsSomaticFailure,
     qState.protocol.holes == Set(SomaticFailure),
     recordSlowState(
       "target",
@@ -280,13 +273,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       -2,
       false,
       true,
-      "somaticSpellFailed",
-      witnessResolved(NoHole),
-    ),
+      SomaticSpellFailed,
+      witnessResolved(NoHole)),
   }
 
   action doCastSlowSelfFailedSave = all {
-    qState.scenarioResult == "init",
+    qState.scenarioOutcome == Init,
     recordSlowState(
       "caster",
       "action",
@@ -301,13 +293,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       0,
       true,
       true,
-      "selfFailedSave",
-      witnessResolved(NoHole),
-    ),
+      SelfFailedSave,
+      witnessResolved(NoHole)),
   }
 
   action doCastSlowMultiattackFailedSave = all {
-    qState.scenarioResult == "init",
+    qState.scenarioOutcome == Init,
     recordSlowState(
       "caster",
       "notRestricted",
@@ -322,13 +313,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       0,
       true,
       true,
-      "multiattackFailedSave",
-      witnessResolved(NoHole),
-    ),
+      MultiattackFailedSave,
+      witnessResolved(NoHole)),
   }
 
   action doEndCasterTurnForMultiattackTarget = all {
-    qState.scenarioResult == "multiattackFailedSave",
+    qState.scenarioOutcome == MultiattackFailedSave,
     recordSlowState(
       "multiattackTarget",
       "notChosen",
@@ -343,13 +333,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       0,
       true,
       true,
-      "multiattackTargetTurn",
-      witnessResolved(NoHole),
-    ),
+      MultiattackTargetTurn,
+      witnessResolved(NoHole)),
   }
 
   action doMakeSlowedStatBlockMultiattack = all {
-    qState.scenarioResult == "multiattackTargetTurn",
+    qState.scenarioOutcome == MultiattackTargetTurn,
     recordSlowState(
       "multiattackTarget",
       "action",
@@ -364,20 +353,19 @@ module battleRuntimeSlowActivePenaltiesMbt {
       0,
       true,
       true,
-      "multiattackedOnce",
-      witnessResolved(NoHole),
-    ),
+      MultiattackedOnce,
+      witnessResolved(NoHole)),
   }
 
   action doStutter = all {
-    qState.scenarioResult.in(Set(
-      "saved",
-      "failedAgain",
-      "spentAction",
-      "attackedOnce",
-      "somaticSpellFailed",
-      "selfFailedSave",
-      "multiattackedOnce",
+    qState.scenarioOutcome.in(Set(
+      Saved,
+      FailedAgain,
+      SpentAction,
+      AttackedOnce,
+      SomaticSpellFailed,
+      SelfFailedSave,
+      MultiattackedOnce,
     )),
     recordSlowState(
       qState.currentTurnRole,
@@ -393,7 +381,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
       qState.dexteritySavingThrowDelta,
       qState.targetCanReact,
       qState.casterConcentrating,
-      qState.scenarioResult,
+      qState.scenarioOutcome,
       qState.protocol,
     ),
   }

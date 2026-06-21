@@ -963,7 +963,7 @@ function normalizeRollModifierActiveEffectsQuintState(
   const lastResultValue = lastResultField(state, "qScenarioOutcome");
   assertWitnessProtocolConsistentWithScenario({
     label: "Roll modifier active effects",
-    scenarioResult: lastResultValue,
+    scenarioOutcome: lastResultValue,
     protocol,
   });
   return {

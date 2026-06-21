@@ -32,8 +32,8 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
   pure def qStrAbilityCheckDisadvantage: bool = qState.qStrAbilityCheckDisadvantage
   pure def qStrSavingThrowDisadvantage: bool = qState.qStrSavingThrowDisadvantage
   pure def qLastDamageAfterPenalty: int = qState.qLastDamageAfterPenalty
-  pure def qHoles: Set[str] = qState.protocol.holes
-  pure def qLastResult: RayOfEnfeeblementLifecycleScenarioOutcome = qState.qScenarioOutcome
+  pure def openHoles: Set[str] = qState.protocol.holes
+  pure def scenarioOutcome: RayOfEnfeeblementLifecycleScenarioOutcome = qState.qScenarioOutcome
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -51,12 +51,9 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
 
   pure def witnessProtocolForProjection(
     holes: Set[str],
-    scenarioResult: RayOfEnfeeblementLifecycleScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: RayOfEnfeeblementLifecycleScenarioOutcome,
   ): WitnessProtocol[str] =
-    if (scenarioResult == Init) witnessInit("")
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid("", WInvalidFill)
-    else if (scenarioInvalidReason == "staleSubject") witnessInvalid("", WStaleSubject)
+    if (scenarioOutcome == Init) witnessInit("")
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved("")
 
@@ -82,7 +79,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
       qStrSavingThrowDisadvantage: effectActive,
       qLastDamageAfterPenalty: lastDamageAfterPenalty,
       qScenarioOutcome: lastResult,
-      protocol: witnessProtocolForProjection(holes, lastResult, ""),
+      protocol: witnessProtocolForProjection(holes, lastResult),
     },
   }
 
@@ -103,7 +100,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
     qCurrentTurnRole == casterTurnRole,
     qActionAvailable,
     qSpellAvailable,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordRayState(
       casterTurnRole,
       false,
@@ -120,7 +117,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
     qCurrentTurnRole == casterTurnRole,
     qD20EffectActive,
     qCasterConcentrating,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordRayState(
       targetTurnRole,
       true,
@@ -140,7 +137,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
       qActionAvailable,
       qD20EffectActive,
       qDamagePenaltyActive,
-      qHoles == noHoles,
+      openHoles == noHoles,
       recordRayState(
         targetTurnRole,
         false,
@@ -158,7 +155,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
     qCurrentTurnRole == targetTurnRole,
     qD20EffectActive,
     qCasterConcentrating,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordRayState(
       targetTurnRole,
       qActionAvailable,
@@ -173,7 +170,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
 
   action doFillRepeatSaveFailure = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == savingThrowOutcomeHoles,
+    openHoles == savingThrowOutcomeHoles,
     recordRayState(
       casterTurnRole,
       true,
@@ -188,7 +185,7 @@ module battleRuntimeRayOfEnfeeblementLifecycleMbt {
 
   action doFillRepeatSaveSuccess = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == savingThrowOutcomeHoles,
+    openHoles == savingThrowOutcomeHoles,
     recordRayState(
       casterTurnRole,
       true,

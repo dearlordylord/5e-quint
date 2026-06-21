@@ -5,22 +5,37 @@
 module characterSheetWeaponMasteryContainersSelectedIdentityMbt {
   import weaponMasteryReselection.* from "../shared-algebras/proofs/rule-core/weapon-mastery-reselection"
 
-  var qLastResult: str
-  var qFeatureUnitId: str
-  var qClassUnitId: str
-  var qFirstWeaponUnitId: str
-  var qSecondWeaponUnitId: str
-  var qChoiceCount: int
-  var qLongRestChangeCount: int
-  var qSelectedWeaponCount: int
-  var qChangedChoiceCount: int
-  var qFirstWeaponEligible: bool
-  var qSecondWeaponEligible: bool
-  var qFeatureUnitRefPresent: bool
-  var qAccepted: bool
+  type CharacterSheetWeaponMasteryContainersSelectedIdentityOutcome =
+    | CharacterSheetWeaponMasteryContainersSelectedIdentityInit
+    | CharacterSheetWeaponMasteryContainersSelectedIdentityPaladinSelected
+    | CharacterSheetWeaponMasteryContainersSelectedIdentityPaladinReselected
+    | CharacterSheetWeaponMasteryContainersSelectedIdentityRangerSelected
+    | CharacterSheetWeaponMasteryContainersSelectedIdentityRangerReselected
+    | CharacterSheetWeaponMasteryContainersSelectedIdentityRogueSelected
+    | CharacterSheetWeaponMasteryContainersSelectedIdentityRogueReselected
+    | CharacterSheetWeaponMasteryContainersSelectedIdentityOneChangeAccepted
+    | CharacterSheetWeaponMasteryContainersSelectedIdentityTooManyChangesRejected
+
+  type CharacterSheetWeaponMasteryContainersSelectedIdentityState = {
+    outcome: CharacterSheetWeaponMasteryContainersSelectedIdentityOutcome,
+    featureUnitId: str,
+    classUnitId: str,
+    firstWeaponUnitId: str,
+    secondWeaponUnitId: str,
+    choiceCount: int,
+    longRestChangeCount: int,
+    selectedWeaponCount: int,
+    changedChoiceCount: int,
+    firstWeaponEligible: bool,
+    secondWeaponEligible: bool,
+    featureUnitRefPresent: bool,
+    accepted: bool,
+  }
+
+  var qState: CharacterSheetWeaponMasteryContainersSelectedIdentityState
 
   action recordProjection(
-    lastResult: str,
+    outcome: CharacterSheetWeaponMasteryContainersSelectedIdentityOutcome,
     featureUnitId: str,
     classUnitId: str,
     firstWeaponUnitId: str,
@@ -34,23 +49,39 @@ module characterSheetWeaponMasteryContainersSelectedIdentityMbt {
     featureUnitRefPresent: bool,
     accepted: bool,
   ): bool = all {
-    qLastResult' = lastResult,
-    qFeatureUnitId' = featureUnitId,
-    qClassUnitId' = classUnitId,
-    qFirstWeaponUnitId' = firstWeaponUnitId,
-    qSecondWeaponUnitId' = secondWeaponUnitId,
-    qChoiceCount' = choiceCount,
-    qLongRestChangeCount' = longRestChangeCount,
-    qSelectedWeaponCount' = selectedWeaponCount,
-    qChangedChoiceCount' = changedChoiceCount,
-    qFirstWeaponEligible' = firstWeaponEligible,
-    qSecondWeaponEligible' = secondWeaponEligible,
-    qFeatureUnitRefPresent' = featureUnitRefPresent,
-    qAccepted' = accepted,
+    qState' = {
+      outcome: outcome,
+      featureUnitId: featureUnitId,
+      classUnitId: classUnitId,
+      firstWeaponUnitId: firstWeaponUnitId,
+      secondWeaponUnitId: secondWeaponUnitId,
+      choiceCount: choiceCount,
+      longRestChangeCount: longRestChangeCount,
+      selectedWeaponCount: selectedWeaponCount,
+      changedChoiceCount: changedChoiceCount,
+      firstWeaponEligible: firstWeaponEligible,
+      secondWeaponEligible: secondWeaponEligible,
+      featureUnitRefPresent: featureUnitRefPresent,
+      accepted: accepted,
+    },
   }
 
   action init =
-    recordProjection("init", "none", "none", "none", "none", 0, 0, 0, 0, false, false, false, false)
+    recordProjection(
+      CharacterSheetWeaponMasteryContainersSelectedIdentityInit,
+      "none",
+      "none",
+      "none",
+      "none",
+      0,
+      0,
+      0,
+      0,
+      false,
+      false,
+      false,
+      false,
+    )
 
   pure def acceptedWeaponMasteryReselection(facts: WeaponMasteryReselectionFacts): bool =
     match applyWeaponMasteryLongRestReselection(facts) {
@@ -84,48 +115,160 @@ module characterSheetWeaponMasteryContainersSelectedIdentityMbt {
   }
 
   action doSelectPaladinWeaponMastery = all {
-    qLastResult == "init",
-    recordProjection("paladinSelected", "paladin_weapon_mastery", "class_paladin", "weapon_longsword", "weapon_dagger", 2, 2, 2, 0, true, true, true, true),
+    qState.outcome == CharacterSheetWeaponMasteryContainersSelectedIdentityInit,
+    recordProjection(
+      CharacterSheetWeaponMasteryContainersSelectedIdentityPaladinSelected,
+      "paladin_weapon_mastery",
+      "class_paladin",
+      "weapon_longsword",
+      "weapon_dagger",
+      2,
+      2,
+      2,
+      0,
+      true,
+      true,
+      true,
+      true,
+    ),
   }
 
   action doReselectPaladinWeaponMasteryOnLongRest = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetWeaponMasteryContainersSelectedIdentityInit,
     acceptedWeaponMasteryReselection(twoChoiceWeaponMasteryReselectionReplayFacts(2, 2, "weapon_longsword", "weapon_dagger", "weapon_spear", "weapon_flail", true, true)),
-    recordProjection("paladinReselected", "paladin_weapon_mastery", "class_paladin", "weapon_spear", "weapon_flail", 2, 2, 2, 2, true, true, true, true),
+    recordProjection(
+      CharacterSheetWeaponMasteryContainersSelectedIdentityPaladinReselected,
+      "paladin_weapon_mastery",
+      "class_paladin",
+      "weapon_spear",
+      "weapon_flail",
+      2,
+      2,
+      2,
+      2,
+      true,
+      true,
+      true,
+      true,
+    ),
   }
 
   action doSelectRangerWeaponMastery = all {
-    qLastResult == "init",
-    recordProjection("rangerSelected", "ranger_weapon_mastery", "class_ranger", "weapon_longsword", "weapon_dagger", 2, 2, 2, 0, true, true, true, true),
+    qState.outcome == CharacterSheetWeaponMasteryContainersSelectedIdentityInit,
+    recordProjection(
+      CharacterSheetWeaponMasteryContainersSelectedIdentityRangerSelected,
+      "ranger_weapon_mastery",
+      "class_ranger",
+      "weapon_longsword",
+      "weapon_dagger",
+      2,
+      2,
+      2,
+      0,
+      true,
+      true,
+      true,
+      true,
+    ),
   }
 
   action doReselectRangerWeaponMasteryOnLongRest = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetWeaponMasteryContainersSelectedIdentityInit,
     acceptedWeaponMasteryReselection(twoChoiceWeaponMasteryReselectionReplayFacts(2, 2, "weapon_longsword", "weapon_dagger", "weapon_spear", "weapon_flail", true, true)),
-    recordProjection("rangerReselected", "ranger_weapon_mastery", "class_ranger", "weapon_spear", "weapon_flail", 2, 2, 2, 2, true, true, true, true),
+    recordProjection(
+      CharacterSheetWeaponMasteryContainersSelectedIdentityRangerReselected,
+      "ranger_weapon_mastery",
+      "class_ranger",
+      "weapon_spear",
+      "weapon_flail",
+      2,
+      2,
+      2,
+      2,
+      true,
+      true,
+      true,
+      true,
+    ),
   }
 
   action doSelectRogueWeaponMastery = all {
-    qLastResult == "init",
-    recordProjection("rogueSelected", "rogue_weapon_mastery", "class_rogue", "weapon_dagger", "weapon_shortbow", 2, 2, 2, 0, true, true, true, true),
+    qState.outcome == CharacterSheetWeaponMasteryContainersSelectedIdentityInit,
+    recordProjection(
+      CharacterSheetWeaponMasteryContainersSelectedIdentityRogueSelected,
+      "rogue_weapon_mastery",
+      "class_rogue",
+      "weapon_dagger",
+      "weapon_shortbow",
+      2,
+      2,
+      2,
+      0,
+      true,
+      true,
+      true,
+      true,
+    ),
   }
 
   action doReselectRogueWeaponMasteryOnLongRest = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetWeaponMasteryContainersSelectedIdentityInit,
     acceptedWeaponMasteryReselection(twoChoiceWeaponMasteryReselectionReplayFacts(2, 2, "weapon_dagger", "weapon_shortbow", "weapon_spear", "weapon_shortsword", true, true)),
-    recordProjection("rogueReselected", "rogue_weapon_mastery", "class_rogue", "weapon_spear", "weapon_shortsword", 2, 2, 2, 2, true, true, true, true),
+    recordProjection(
+      CharacterSheetWeaponMasteryContainersSelectedIdentityRogueReselected,
+      "rogue_weapon_mastery",
+      "class_rogue",
+      "weapon_spear",
+      "weapon_shortsword",
+      2,
+      2,
+      2,
+      2,
+      true,
+      true,
+      true,
+      true,
+    ),
   }
 
   action doAcceptOneChangeWeaponMasteryReselection = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetWeaponMasteryContainersSelectedIdentityInit,
     acceptedWeaponMasteryReselection(twoChoiceWeaponMasteryReselectionReplayFacts(2, 1, "current_first", "current_second", "current_first", "requested_second", true, true)),
-    recordProjection("oneChangeAccepted", "semantic_core", "semantic_core", "current_first", "requested_second", 2, 1, 2, 1, true, true, true, true),
+    recordProjection(
+      CharacterSheetWeaponMasteryContainersSelectedIdentityOneChangeAccepted,
+      "semantic_core",
+      "semantic_core",
+      "current_first",
+      "requested_second",
+      2,
+      1,
+      2,
+      1,
+      true,
+      true,
+      true,
+      true,
+    ),
   }
 
   action doRejectTooManyChangesWeaponMasteryReselection = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetWeaponMasteryContainersSelectedIdentityInit,
     rejectedWeaponMasteryReselection(twoChoiceWeaponMasteryReselectionReplayFacts(2, 1, "current_first", "current_second", "requested_first", "requested_second", true, true)),
-    recordProjection("tooManyChangesRejected", "semantic_core", "semantic_core", "requested_first", "requested_second", 2, 1, 2, 2, true, true, true, false),
+    recordProjection(
+      CharacterSheetWeaponMasteryContainersSelectedIdentityTooManyChangesRejected,
+      "semantic_core",
+      "semantic_core",
+      "requested_first",
+      "requested_second",
+      2,
+      1,
+      2,
+      2,
+      true,
+      true,
+      true,
+      false,
+    ),
   }
 
   action stepSelectPaladinWeaponMastery = any {

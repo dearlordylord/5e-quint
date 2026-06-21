@@ -16,12 +16,12 @@ module battleRuntimeThaumaturgySelectedIdentityMbt {
   var qScenarioOutcome: ThaumaturgySelectedIdentityScenarioOutcome
   var qProtocol: WitnessProtocol[WitnessHole]
 
-  pure def qLastResult: ThaumaturgySelectedIdentityScenarioOutcome = qScenarioOutcome
+  pure def scenarioOutcome: ThaumaturgySelectedIdentityScenarioOutcome = qScenarioOutcome
 
   pure def witnessProtocolForProjection(
-    scenarioResult: ThaumaturgySelectedIdentityScenarioOutcome,
+    scenarioOutcome: ThaumaturgySelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
@@ -44,7 +44,7 @@ module battleRuntimeThaumaturgySelectedIdentityMbt {
   action init = recordProjection(0, true, "normal", "normal", "normal", Init)
 
   action doResolveThaumaturgyBoomingVoice = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(1, false, "advantage", "normal", "normal", Resolved),
   }
 

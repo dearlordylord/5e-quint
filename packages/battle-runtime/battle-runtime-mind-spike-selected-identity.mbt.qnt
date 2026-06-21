@@ -26,15 +26,13 @@ module battleRuntimeMindSpikeSelectedIdentityMbt {
   pure def qMindSpikeDurationActive: bool = qState.qMindSpikeDurationActive
   pure def qMindSpikeDurationCleanedUp: bool = qState.qMindSpikeDurationCleanedUp
   pure def qTargetActiveEffectCount: int = qState.qTargetActiveEffectCount
-  pure def qLastResult: MindSpikeSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: MindSpikeSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: MindSpikeSelectedIdentityScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: MindSpikeSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -55,13 +53,13 @@ module battleRuntimeMindSpikeSelectedIdentityMbt {
       qMindSpikeDurationCleanedUp: mindSpikeDurationCleanedUp,
       qTargetActiveEffectCount: targetActiveEffectCount,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
   action init = recordProjection(1, 30, false, false, false, 0, Init)
 
   action doResolveMindSpikeFailedSaveConcentrationDuration = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       0,
       18,
@@ -74,7 +72,7 @@ module battleRuntimeMindSpikeSelectedIdentityMbt {
   }
 
   action doResolveMindSpikeSuccessfulSaveHalfDamage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       0,
       24,

@@ -81,7 +81,7 @@ type WeaponMasteryContainerProfile = {
 };
 type WeaponMasteryContainerSelectedIdentityProjection =
   | {
-      readonly lastResult: "init";
+      readonly outcome: "init";
       readonly featureUnitId: "none";
       readonly classUnitId: "none";
       readonly firstWeaponUnitId: "none";
@@ -96,7 +96,7 @@ type WeaponMasteryContainerSelectedIdentityProjection =
       readonly accepted: false;
     }
   | {
-      readonly lastResult: Exclude<
+      readonly outcome: Exclude<
         WeaponMasteryContainerSelectedIdentityResult,
         "init" | "oneChangeAccepted" | "tooManyChangesRejected"
       >;
@@ -114,7 +114,7 @@ type WeaponMasteryContainerSelectedIdentityProjection =
       readonly accepted: true;
     }
   | {
-      readonly lastResult: "oneChangeAccepted";
+      readonly outcome: "oneChangeAccepted";
       readonly featureUnitId: "semantic_core";
       readonly classUnitId: "semantic_core";
       readonly firstWeaponUnitId: "current_first";
@@ -129,7 +129,7 @@ type WeaponMasteryContainerSelectedIdentityProjection =
       readonly accepted: true;
     }
   | {
-      readonly lastResult: "tooManyChangesRejected";
+      readonly outcome: "tooManyChangesRejected";
       readonly featureUnitId: "semantic_core";
       readonly classUnitId: "semantic_core";
       readonly firstWeaponUnitId: "requested_first";
@@ -528,7 +528,7 @@ function selectedWeaponMasteryProjection(
     selectedWeaponUnitIds: profile.selectedWeaponUnitIds,
   });
   return weaponMasteryProjection({
-    lastResult: profile.selectedResult,
+    outcome: profile.selectedResult,
     sheet,
     profile,
     selectedWeaponUnitIds: profile.selectedWeaponUnitIds,
@@ -556,7 +556,7 @@ function reselectedWeaponMasteryProjection(
     }),
   );
   return weaponMasteryProjection({
-    lastResult: profile.reselectedResult,
+    outcome: profile.reselectedResult,
     sheet: rested,
     profile,
     selectedWeaponUnitIds: profile.reselectedWeaponUnitIds,
@@ -565,7 +565,7 @@ function reselectedWeaponMasteryProjection(
 }
 
 function weaponMasteryProjection(input: {
-  readonly lastResult: Exclude<
+  readonly outcome: Exclude<
     WeaponMasteryContainerSelectedIdentityResult,
     "init" | "oneChangeAccepted" | "tooManyChangesRejected"
   >;
@@ -585,7 +585,7 @@ function weaponMasteryProjection(input: {
 
   const [firstWeaponUnitId, secondWeaponUnitId] = input.selectedWeaponUnitIds;
   return {
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     featureUnitId: input.profile.featureUnitId,
     classUnitId: input.profile.classUnitId,
     firstWeaponUnitId,
@@ -612,7 +612,7 @@ function weaponMasteryProjection(input: {
 
 function oneChangeAcceptedProjection(): WeaponMasteryContainerSelectedIdentityProjection {
   return {
-    lastResult: "oneChangeAccepted",
+    outcome: "oneChangeAccepted",
     featureUnitId: "semantic_core",
     classUnitId: "semantic_core",
     firstWeaponUnitId: "current_first",
@@ -630,7 +630,7 @@ function oneChangeAcceptedProjection(): WeaponMasteryContainerSelectedIdentityPr
 
 function tooManyChangesRejectedProjection(): WeaponMasteryContainerSelectedIdentityProjection {
   return {
-    lastResult: "tooManyChangesRejected",
+    outcome: "tooManyChangesRejected",
     featureUnitId: "semantic_core",
     classUnitId: "semantic_core",
     firstWeaponUnitId: "requested_first",
@@ -690,9 +690,7 @@ function expectProfileEligibleWeaponRefs(
 
 function expectNoSheetLocalWeaponMasteryState(sheet: CharacterSheet): void {
   expect(
-    Object.keys(sheet).filter((key) =>
-      key.toLowerCase().includes("mastery"),
-    ),
+    Object.keys(sheet).filter((key) => key.toLowerCase().includes("mastery")),
   ).toEqual([]);
 }
 
@@ -808,7 +806,7 @@ function expectFeatureUnitRefPresent(
 
 function initialProjection(): WeaponMasteryContainerSelectedIdentityProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
     featureUnitId: "none",
     classUnitId: "none",
     firstWeaponUnitId: "none",
@@ -822,6 +820,47 @@ function initialProjection(): WeaponMasteryContainerSelectedIdentityProjection {
     featureUnitRefPresent: false,
     accepted: false,
   };
+}
+
+const qntOutcomeByVariant = {
+  CharacterSheetWeaponMasteryContainersSelectedIdentityInit: "init",
+  CharacterSheetWeaponMasteryContainersSelectedIdentityPaladinSelected:
+    "paladinSelected",
+  CharacterSheetWeaponMasteryContainersSelectedIdentityPaladinReselected:
+    "paladinReselected",
+  CharacterSheetWeaponMasteryContainersSelectedIdentityRangerSelected:
+    "rangerSelected",
+  CharacterSheetWeaponMasteryContainersSelectedIdentityRangerReselected:
+    "rangerReselected",
+  CharacterSheetWeaponMasteryContainersSelectedIdentityRogueSelected:
+    "rogueSelected",
+  CharacterSheetWeaponMasteryContainersSelectedIdentityRogueReselected:
+    "rogueReselected",
+  CharacterSheetWeaponMasteryContainersSelectedIdentityOneChangeAccepted:
+    "oneChangeAccepted",
+  CharacterSheetWeaponMasteryContainersSelectedIdentityTooManyChangesRejected:
+    "tooManyChangesRejected",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function requireRight<T, E>(result: Either.Either<T, E>): T {
@@ -841,72 +880,64 @@ function requireRight<T, E>(result: Either.Either<T, E>): T {
 function normalizeWeaponMasteryContainerSelectedIdentityQuintState(
   raw: unknown,
 ): WeaponMasteryContainerSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  const lastResult = mbtLastResult(state["qLastResult"]);
-  const projection = projectionForLastResult(lastResult);
-  assertStringField(state, "qFeatureUnitId", projection.featureUnitId);
-  assertStringField(state, "qClassUnitId", projection.classUnitId);
-  assertStringField(state, "qFirstWeaponUnitId", projection.firstWeaponUnitId);
-  assertStringField(
-    state,
-    "qSecondWeaponUnitId",
-    projection.secondWeaponUnitId,
-  );
-  assertNumberField(state, "qChoiceCount", projection.choiceCount);
+  const state = recordField(quintStateRecord(raw), "qState");
+  const outcome = outcomeField(state["outcome"]);
+  const projection = projectionForOutcome(outcome);
+  assertStringField(state, "featureUnitId", projection.featureUnitId);
+  assertStringField(state, "classUnitId", projection.classUnitId);
+  assertStringField(state, "firstWeaponUnitId", projection.firstWeaponUnitId);
+  assertStringField(state, "secondWeaponUnitId", projection.secondWeaponUnitId);
+  assertNumberField(state, "choiceCount", projection.choiceCount);
   assertNumberField(
     state,
-    "qLongRestChangeCount",
+    "longRestChangeCount",
     projection.longRestChangeCount,
   );
   assertNumberField(
     state,
-    "qSelectedWeaponCount",
+    "selectedWeaponCount",
     projection.selectedWeaponCount,
   );
-  assertNumberField(
-    state,
-    "qChangedChoiceCount",
-    projection.changedChoiceCount,
-  );
+  assertNumberField(state, "changedChoiceCount", projection.changedChoiceCount);
   assertBooleanField(
     state,
-    "qFirstWeaponEligible",
+    "firstWeaponEligible",
     projection.firstWeaponEligible,
   );
   assertBooleanField(
     state,
-    "qSecondWeaponEligible",
+    "secondWeaponEligible",
     projection.secondWeaponEligible,
   );
   assertBooleanField(
     state,
-    "qFeatureUnitRefPresent",
+    "featureUnitRefPresent",
     projection.featureUnitRefPresent,
   );
-  assertBooleanField(state, "qAccepted", projection.accepted);
+  assertBooleanField(state, "accepted", projection.accepted);
   return projection;
 }
 
-function projectionForLastResult(
-  lastResult: WeaponMasteryContainerSelectedIdentityResult,
+function projectionForOutcome(
+  outcome: WeaponMasteryContainerSelectedIdentityResult,
 ): WeaponMasteryContainerSelectedIdentityProjection {
-  if (lastResult === "init") return initialProjection();
-  if (lastResult === "paladinSelected")
+  if (outcome === "init") return initialProjection();
+  if (outcome === "paladinSelected")
     return selectedWeaponMasteryProjection(PALADIN_WEAPON_MASTERY_PROFILE);
-  if (lastResult === "paladinReselected")
+  if (outcome === "paladinReselected")
     return reselectedWeaponMasteryProjection(PALADIN_WEAPON_MASTERY_PROFILE);
-  if (lastResult === "rangerSelected")
+  if (outcome === "rangerSelected")
     return selectedWeaponMasteryProjection(RANGER_WEAPON_MASTERY_PROFILE);
-  if (lastResult === "rangerReselected")
+  if (outcome === "rangerReselected")
     return reselectedWeaponMasteryProjection(RANGER_WEAPON_MASTERY_PROFILE);
-  if (lastResult === "rogueSelected")
+  if (outcome === "rogueSelected")
     return selectedWeaponMasteryProjection(ROGUE_WEAPON_MASTERY_PROFILE);
-  if (lastResult === "rogueReselected")
+  if (outcome === "rogueReselected")
     return reselectedWeaponMasteryProjection(ROGUE_WEAPON_MASTERY_PROFILE);
-  if (lastResult === "oneChangeAccepted") return oneChangeAcceptedProjection();
-  if (lastResult === "tooManyChangesRejected")
+  if (outcome === "oneChangeAccepted") return oneChangeAcceptedProjection();
+  if (outcome === "tooManyChangesRejected")
     return tooManyChangesRejectedProjection();
-  return assertNever(lastResult);
+  return assertNever(outcome);
 }
 
 function assertNever(value: never): never {
@@ -920,6 +951,17 @@ function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
     throw new Error("Expected Quint state record.");
   }
   return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {
@@ -983,23 +1025,6 @@ function assertNumberField(
       `Expected Quint integer field ${field} to equal ${expected}, got ${value}.`,
     );
   }
-}
-
-function mbtLastResult(
-  raw: unknown,
-): WeaponMasteryContainerSelectedIdentityResult {
-  if (typeof raw === "string" && isWeaponMasteryContainerResult(raw)) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-function isWeaponMasteryContainerResult(
-  raw: string,
-): raw is WeaponMasteryContainerSelectedIdentityResult {
-  return WEAPON_MASTERY_CONTAINER_SELECTED_IDENTITY_RESULTS.some(
-    (result) => result === raw,
-  );
 }
 
 function compareProjection(

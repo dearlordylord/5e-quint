@@ -25,12 +25,11 @@ module battleRuntimeFeatureSelectedIdentityMbt {
   pure def qInnateSorceryOccurrence: str = qState.qInnateSorceryOccurrence
   pure def qSpellSaveDc: int = qState.qSpellSaveDc
   pure def qSpellAttackRollMode: str = qState.qSpellAttackRollMode
-  pure def qLastResult: FeatureSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: FeatureSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def featureSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
     scenarioOutcome: FeatureSelectedIdentityScenarioOutcome,
-    _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
     if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
@@ -56,7 +55,7 @@ module battleRuntimeFeatureSelectedIdentityMbt {
       qSpellSaveDc: spellSaveDc,
       qSpellAttackRollMode: spellAttackRollMode,
       qScenarioOutcome: lastResult,
-      protocol: featureSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: featureSelectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
 
@@ -70,7 +69,7 @@ module battleRuntimeFeatureSelectedIdentityMbt {
   )
 
   action doActivateInnateSorcery = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       1,
@@ -82,7 +81,7 @@ module battleRuntimeFeatureSelectedIdentityMbt {
   }
 
   action doProjectInnateSorcerySpellBenefits = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       1,
@@ -94,7 +93,7 @@ module battleRuntimeFeatureSelectedIdentityMbt {
   }
 
   action doExcludeInnateSorceryNonSorcererSpellBenefits = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       1,

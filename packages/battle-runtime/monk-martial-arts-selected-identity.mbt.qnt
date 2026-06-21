@@ -18,7 +18,7 @@ module monkMartialArtsSelectedIdentityMbt {
   var qScenarioOutcome: MonkMartialArtsSelectedIdentityScenarioOutcome
   var qProtocol: WitnessProtocol[WitnessHole]
 
-  pure def qLastResult: MonkMartialArtsSelectedIdentityScenarioOutcome = qScenarioOutcome
+  pure def scenarioOutcome: MonkMartialArtsSelectedIdentityScenarioOutcome = qScenarioOutcome
 
   pure def witnessProtocolForProjection(
     result: MonkMartialArtsSelectedIdentityScenarioOutcome,

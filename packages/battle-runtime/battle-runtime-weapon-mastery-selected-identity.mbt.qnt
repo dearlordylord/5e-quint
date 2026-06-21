@@ -17,13 +17,13 @@ module battleRuntimeWeaponMasterySelectedIdentityMbt {
   var qScenarioOutcome: WeaponMasterySelectedIdentityScenarioOutcome
   var qProtocol: WitnessProtocol[WitnessHole]
 
-  pure def qLastResult: WeaponMasterySelectedIdentityScenarioOutcome = qScenarioOutcome
+  pure def scenarioOutcome: WeaponMasterySelectedIdentityScenarioOutcome = qScenarioOutcome
 
   pure def witnessProtocolForProjection(
-    scenarioResult: WeaponMasterySelectedIdentityScenarioOutcome,
+    scenarioOutcome: WeaponMasterySelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioResult == NeedsHoles) witnessNeedsHoles(Set(WitnessProtocolHole))
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
+    else if (scenarioOutcome == NeedsHoles) witnessNeedsHoles(Set(WitnessProtocolHole))
     else witnessResolved(WitnessProtocolHole)
 
   action recordProjection(
@@ -48,17 +48,17 @@ module battleRuntimeWeaponMasterySelectedIdentityMbt {
   action init = recordProjection(13, 13, true, false, false, false, Init)
 
   action doResolveSapMasteryPropertyHit = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(9, 13, false, true, false, false, Resolved),
   }
 
   action doResolveToppleMasteryPropertyFailedSavingThrow = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(13, 13, true, false, true, false, NeedsHoles),
   }
 
   action doResolveCleaveMasteryPropertySecondTargetHit = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(9, 9, false, false, false, true, Resolved),
   }
 

@@ -5,6 +5,8 @@ module battleRuntimeSorcererMetamagicSubtleSelectedIdentity {
 
   type Hole = | NoHole
 
+  type SorcererMetamagicSubtleSelectedIdentityScenarioOutcome = | Init | SubtleFalseLife | UnaffordableSubtleFalseLife
+
   type SorcererMetamagicSubtleSelectedIdentityWitnessState = {
     verbalSuppressed: bool,
     somaticSuppressed: bool,
@@ -12,7 +14,7 @@ module battleRuntimeSorcererMetamagicSubtleSelectedIdentity {
     materialPreserved: bool,
     sorceryPointsRemaining: int,
     tempHp: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicSubtleSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -25,7 +27,7 @@ module battleRuntimeSorcererMetamagicSubtleSelectedIdentity {
     materialPreserved: bool,
     sorceryPointsRemaining: int,
     tempHp: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicSubtleSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -35,13 +37,13 @@ module battleRuntimeSorcererMetamagicSubtleSelectedIdentity {
       materialPreserved: materialPreserved,
       sorceryPointsRemaining: sorceryPointsRemaining,
       tempHp: tempHp,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
   action init =
-    recordProjection(false, false, false, false, 2, 0, "init", witnessInit(NoHole))
+    recordProjection(false, false, false, false, 2, 0, Init, witnessInit(NoHole))
 
   action doResolveSubtleFalseLife = all {
     qState.protocol.result == WInit,
@@ -52,9 +54,8 @@ module battleRuntimeSorcererMetamagicSubtleSelectedIdentity {
       false,
       1,
       11,
-      "subtleFalseLife",
-      witnessResolved(NoHole),
-    )
+      SubtleFalseLife,
+      witnessResolved(NoHole))
   }
 
   action doRejectSubtleFalseLifeWithoutSorceryPoints = all {
@@ -66,9 +67,8 @@ module battleRuntimeSorcererMetamagicSubtleSelectedIdentity {
       false,
       0,
       0,
-      "unaffordableSubtleFalseLife",
-      witnessInvalid(NoHole, WUnsupportedActOption),
-    )
+      UnaffordableSubtleFalseLife,
+      witnessInvalid(NoHole, WUnsupportedActOption))
   }
 
   action step = any {

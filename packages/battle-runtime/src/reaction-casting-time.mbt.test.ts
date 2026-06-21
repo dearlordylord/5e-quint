@@ -985,7 +985,7 @@ function normalizeReactionCastingTimeQuintState(
   );
   assertWitnessProtocolConsistentWithScenario({
     label: "Reaction casting time",
-    scenarioResult: lastResultValue,
+    scenarioOutcome: lastResultValue,
     protocol,
   });
   return {

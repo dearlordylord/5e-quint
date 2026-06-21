@@ -53,6 +53,21 @@ module ruleCoreReactionsMbt {
     result: WInvalid(reason),
   }
 
+  pure def witnessProtocolFromResult(
+    holes: Set[h],
+    holeType: h,
+    result: WitnessResult,
+  ): WitnessProtocol[h] =
+    match result {
+      | WInit => if (holes == Set()) witnessInit(holeType) else {
+          holes: holes,
+          result: WInit,
+        }
+      | WNeedsHoles => witnessNeedsHoles(holes)
+      | WResolved => witnessResolved(holeType)
+      | WInvalid(reason) => witnessInvalidWithHoles(holes, reason)
+    }
+
   var qInterruptedMovementSpentFeet: int
   var qReactorReactionAvailable: bool
   var qReactorReadiedMovementHeld: bool
@@ -66,7 +81,7 @@ module ruleCoreReactionsMbt {
   var qLastConcentrationSaveDc: int
   var qComponentRoute: List[RuleCoreComponentRouteEvent]
 
-  pure def qHoles: Set[str] = qProtocol.holes
+  pure def openHoles: Set[str] = qProtocol.holes
 
   pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
     ruleCoreComponentRoute(RuleCoreReactionContinuationConcentrationOwner)
@@ -78,19 +93,11 @@ module ruleCoreReactionsMbt {
   pure def readiedMovementShortCostFeet: int = 5
   pure def readiedMovementFillCostFeet: int = 10
 
-  pure def witnessInvalidReasonForProjection(_reason: str): WitnessInvalidReason =
-    WInvalidFill
-
   pure def witnessProtocolForProjection(
     holes: Set[str],
-    result: str,
-    invalidReason: str,
+    result: WitnessResult,
   ): WitnessProtocol[str] =
-    if (result == "init") witnessInit("ReactionDecision")
-    else if (result == "invalid")
-      witnessInvalidWithHoles(holes, witnessInvalidReasonForProjection(invalidReason))
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved("ReactionDecision")
+    witnessProtocolFromResult(holes, "ReactionDecision", result)
 
   pure def qReactorTurn =
     initialMovementGrappleState.turn
@@ -119,8 +126,8 @@ module ruleCoreReactionsMbt {
     concentration: qConcentration,
   }
 
-  action clearSuccessfulHoles(result: str): bool = all {
-    qProtocol' = witnessProtocolForProjection(Set(), result, "none"),
+  action clearSuccessfulHoles(result: WitnessResult): bool = all {
+    qProtocol' = witnessProtocolForProjection(Set(), result),
     qComponentRoute' = componentRouteEvidence,
   }
 
@@ -128,7 +135,7 @@ module ruleCoreReactionsMbt {
     state: ReactionProtocolState,
     pendingTrigger: str,
     holes: Set[str],
-    result: str,
+    result: WitnessResult,
   ): bool = all {
     qInterruptedMovementSpentFeet' = state.interruptedActor.movementSpentFeet,
     qReactorReactionAvailable' = state.reactor.turn.reactionAvailable,
@@ -139,12 +146,12 @@ module ruleCoreReactionsMbt {
     qReactorConcentration' = state.concentration.reactor == Concentrating,
     qReactionWindow' = state.reactionWindow,
     qPendingTrigger' = pendingTrigger,
-    qProtocol' = witnessProtocolForProjection(holes, result, "none"),
+    qProtocol' = witnessProtocolForProjection(holes, result),
     qLastConcentrationSaveDc' = qLastConcentrationSaveDc,
     qComponentRoute' = componentRouteEvidence,
   }
 
-  action recordInvalid(reason: str): bool = all {
+  action recordInvalid(reason: WitnessInvalidReason): bool = all {
     qInterruptedMovementSpentFeet' = qInterruptedMovementSpentFeet,
     qReactorReactionAvailable' = qReactorReactionAvailable,
     qReactorReadiedMovementHeld' = qReactorReadiedMovementHeld,
@@ -154,7 +161,7 @@ module ruleCoreReactionsMbt {
     qReactorConcentration' = qReactorConcentration,
     qReactionWindow' = qReactionWindow,
     qPendingTrigger' = qPendingTrigger,
-    qProtocol' = witnessProtocolForProjection(qHoles, "invalid", reason),
+    qProtocol' = witnessProtocolForProjection(openHoles, WInvalid(reason)),
     qLastConcentrationSaveDc' = qLastConcentrationSaveDc,
     qComponentRoute' = componentRouteEvidence,
   }
@@ -169,7 +176,7 @@ module ruleCoreReactionsMbt {
     qReactorConcentration' = false,
     qReactionWindow' = NoReactionWindow,
     qPendingTrigger' = noPendingTrigger,
-    qProtocol' = witnessProtocolForProjection(Set(), "init", "none"),
+    qProtocol' = witnessProtocolForProjection(Set(), WInit),
     qLastConcentrationSaveDc' = 0,
     qComponentRoute' = componentRouteEvidence,
   }
@@ -183,12 +190,12 @@ module ruleCoreReactionsMbt {
     })
     all {
       qReactionWindow == NoReactionWindow,
-      qHoles == Set(),
+      openHoles == Set(),
       recordProtocolState(
         offered,
         opportunityAttackTrigger,
         Set("ReactionDecision"),
-        "needsHoles"
+        WNeedsHoles
       ),
     }
   }
@@ -207,8 +214,8 @@ module ruleCoreReactionsMbt {
       )
     all {
       qPendingTrigger == opportunityAttackTrigger,
-      qHoles == Set("ReactionDecision"),
-      recordProtocolState(resumed, noPendingTrigger, Set(), "resolved"),
+      openHoles == Set("ReactionDecision"),
+      recordProtocolState(resumed, noPendingTrigger, Set(), WResolved),
     }
   }
 
@@ -216,7 +223,7 @@ module ruleCoreReactionsMbt {
     val readiedTurn = initialMovementGrappleState.turn.with("readiedMovementHeld", true)
     all {
       qReactionWindow == NoReactionWindow,
-      qHoles == Set(),
+      openHoles == Set(),
       qInterruptedMovementSpentFeet' = 0,
       qReactorReactionAvailable' = readiedTurn.reactionAvailable,
       qReactorReadiedMovementHeld' = readiedTurn.readiedMovementHeld,
@@ -226,7 +233,7 @@ module ruleCoreReactionsMbt {
       qReactorConcentration' = false,
       qReactionWindow' = qReactionWindow,
       qPendingTrigger' = noPendingTrigger,
-      clearSuccessfulHoles("resolved"),
+      clearSuccessfulHoles(WResolved),
       qLastConcentrationSaveDc' = 0,
     }
   }
@@ -238,13 +245,13 @@ module ruleCoreReactionsMbt {
     )
     all {
       qReactionWindow == NoReactionWindow,
-      qHoles == Set(),
+      openHoles == Set(),
       qReactorReadiedMovementHeld,
       recordProtocolState(
         offered,
         attackHitTrigger,
         Set("ReactionDecision"),
-        "needsHoles"
+        WNeedsHoles
       ),
     }
   }
@@ -256,8 +263,8 @@ module ruleCoreReactionsMbt {
       .with("reactionWindow", choice.reactionWindow)
     all {
       qPendingTrigger == attackHitTrigger,
-      qHoles == Set("ReactionDecision"),
-      recordProtocolState(declined, noPendingTrigger, Set("DamageRoll"), "needsHoles"),
+      openHoles == Set("ReactionDecision"),
+      recordProtocolState(declined, noPendingTrigger, Set("DamageRoll"), WNeedsHoles),
     }
   }
 
@@ -268,8 +275,8 @@ module ruleCoreReactionsMbt {
     })
     all {
       qPendingTrigger == attackHitTrigger,
-      qHoles == Set("ReactionDecision"),
-      recordProtocolState(resolved, noPendingTrigger, Set("DamageRoll"), "needsHoles"),
+      openHoles == Set("ReactionDecision"),
+      recordProtocolState(resolved, noPendingTrigger, Set("DamageRoll"), WNeedsHoles),
     }
   }
 
@@ -280,20 +287,20 @@ module ruleCoreReactionsMbt {
     })
     all {
       qPendingTrigger == attackHitTrigger,
-      qHoles == Set("ReactionDecision"),
-      recordProtocolState(resolved, noPendingTrigger, Set("DamageRoll"), "needsHoles"),
+      openHoles == Set("ReactionDecision"),
+      recordProtocolState(resolved, noPendingTrigger, Set("DamageRoll"), WNeedsHoles),
     }
   }
 
   action doRejectReadiedMovementZero = all {
     qPendingTrigger == attackHitTrigger,
-    qHoles == Set("ReactionDecision"),
-    recordInvalid("invalidFill"),
+    openHoles == Set("ReactionDecision"),
+    recordInvalid(WInvalidFill),
   }
 
   action doStartReactorConcentrationFixture = all {
     qReactionWindow == NoReactionWindow,
-    qHoles == Set(),
+    openHoles == Set(),
     qInterruptedMovementSpentFeet' = qInterruptedMovementSpentFeet,
     qReactorReactionAvailable' = qReactorReactionAvailable,
     qReactorReadiedMovementHeld' = qReactorReadiedMovementHeld,
@@ -303,7 +310,7 @@ module ruleCoreReactionsMbt {
     qReactorConcentration' = startConcentration(qConcentration, Reactor, true).reactor == Concentrating,
     qReactionWindow' = qReactionWindow,
     qPendingTrigger' = qPendingTrigger,
-    clearSuccessfulHoles("resolved"),
+    clearSuccessfulHoles(WResolved),
     qLastConcentrationSaveDc' = qLastConcentrationSaveDc,
   }
 
@@ -315,7 +322,7 @@ module ruleCoreReactionsMbt {
     )
     all {
       qReactionWindow == NoReactionWindow,
-      qHoles == Set(),
+      openHoles == Set(),
       qInterruptedMovementSpentFeet' = qInterruptedMovementSpentFeet,
       qReactorReactionAvailable' = qReactorReactionAvailable,
       qReactorReadiedMovementHeld' = qReactorReadiedMovementHeld,
@@ -325,7 +332,7 @@ module ruleCoreReactionsMbt {
       qReactorConcentration' = resolved.concentration == Concentrating,
       qReactionWindow' = qReactionWindow,
       qPendingTrigger' = qPendingTrigger,
-      clearSuccessfulHoles("resolved"),
+      clearSuccessfulHoles(WResolved),
       qLastConcentrationSaveDc' = resolved.saveDc,
     }
   }
@@ -338,7 +345,7 @@ module ruleCoreReactionsMbt {
     )
     all {
       qReactionWindow == NoReactionWindow,
-      qHoles == Set(),
+      openHoles == Set(),
       qInterruptedMovementSpentFeet' = qInterruptedMovementSpentFeet,
       qReactorReactionAvailable' = qReactorReactionAvailable,
       qReactorReadiedMovementHeld' = qReactorReadiedMovementHeld,
@@ -348,7 +355,7 @@ module ruleCoreReactionsMbt {
       qReactorConcentration' = resolved.concentration == Concentrating,
       qReactionWindow' = qReactionWindow,
       qPendingTrigger' = qPendingTrigger,
-      clearSuccessfulHoles("resolved"),
+      clearSuccessfulHoles(WResolved),
       qLastConcentrationSaveDc' = resolved.saveDc,
     }
   }

@@ -28,15 +28,13 @@ module battleRuntimePreserveLifeMbt {
   pure def qSecondTargetHp: int = qState.qSecondTargetHp
   pure def qChannelDivinityUsesRemaining: int = qState.qChannelDivinityUsesRemaining
   pure def qActionResourcesRemaining: int = qState.qActionResourcesRemaining
-  pure def qLastResult: PreserveLifeScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: PreserveLifeScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: PreserveLifeScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: PreserveLifeScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -55,48 +53,48 @@ module battleRuntimePreserveLifeMbt {
       qChannelDivinityUsesRemaining: channelDivinityUsesRemaining,
       qActionResourcesRemaining: actionResourcesRemaining,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
   action init = recordProjection(20, 2, 3, 2, 1, Init)
 
   action doDistributeHealing = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 10, 10, 1, 0, Distributed),
   }
 
   action doSelfHealing = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(10, 12, 3, 1, 0, Self),
   }
 
   action doRejectNonBloodied = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 11, 3, 2, 1, RejectNonBloodied),
   }
 
   action doRejectOverPool = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 0, 0, 2, 1, RejectOverPool),
   }
 
   action doRejectOverCap = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 2, 3, 2, 1, RejectOverCap),
   }
 
   action doRejectMissingRange = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 2, 3, 2, 1, RejectMissingRange),
   }
 
   action doRejectMissingResource = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 2, 3, 0, 1, RejectMissingResource),
   }
 
   action doRejectMissingMagicAction = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 2, 3, 2, 0, RejectMissingMagicAction),
   }
 

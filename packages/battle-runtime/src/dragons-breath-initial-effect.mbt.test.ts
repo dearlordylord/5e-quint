@@ -453,7 +453,7 @@ function normalizeDragonsBreathQuintState(
   }
   assertWitnessProtocolConsistentWithScenario({
     label: "Dragon's Breath initial effect",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

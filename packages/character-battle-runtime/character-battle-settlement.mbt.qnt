@@ -3,26 +3,26 @@
 // KERNEL-COVERAGE: qnt-owner CHARACTER.BATTLE.HANDOFF.SETTLEMENT CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
 
 module characterBattleSettlementMbt {
-  var qLastResult: str
-  var qAccepted: bool
-  var qMessage: str
-  var qCurrentHp: int
-  var qTemporaryHitPoints: int
-  var qPoisoned: bool
-  var qProne: bool
-  var qSpellLevel1Expended: int
-  var qCreatedLevel3Capacity: int
-  var qCreatedLevel3Expended: int
-  var qPactSlotsExpended: int
-  var qFeatureResourceExpended: int
-  var qSpentHitDice: int
-  var qRestFeatureUsed: bool
-  var qBuildUnchanged: bool
-  var qZeroHpState: str
-  var qZeroHpSuccesses: int
-  var qZeroHpFailures: int
-  var qStableRecoveryElapsed: int
-  var qReplayIndex: int
+  type CharacterBattleSettlementOutcome =
+    | CharacterBattleSettlementInit
+    | CharacterBattleSettlementSettleHitPointsConditionsSlotsAndPreservedSheetState
+    | CharacterBattleSettlementSettleFeatureResourceExpenditure
+    | CharacterBattleSettlementAmbiguousCreatedSpellSlotSourceRejected
+    | CharacterBattleSettlementMismatchedCharacterIdentityRejected
+    | CharacterBattleSettlementMaximumHpDriftRejected
+    | CharacterBattleSettlementActiveWildShapeHandoffRejected
+    | CharacterBattleSettlementStableRecoveryProgressRejected
+    | CharacterBattleSettlementSettleZeroHpStableLifecycle
+
+  type CharacterBattleSettlementState = {
+    outcome: CharacterBattleSettlementOutcome,
+    accepted: bool,
+    message: str,
+    facts: BattleSettlementFacts,
+    replayIndex: int,
+  }
+
+  var qState: CharacterBattleSettlementState
 
   type BattleSettlementFacts = {
     currentHp: int,
@@ -63,41 +63,34 @@ module characterBattleSettlementMbt {
   }
 
   action recordProjection(
-    lastResult: str,
+    outcome: CharacterBattleSettlementOutcome,
     accepted: bool,
     message: str,
     facts: BattleSettlementFacts,
     replayIndex: int,
   ): bool = all {
-    qLastResult' = lastResult,
-    qAccepted' = accepted,
-    qMessage' = message,
-    qCurrentHp' = facts.currentHp,
-    qTemporaryHitPoints' = facts.temporaryHitPoints,
-    qPoisoned' = facts.poisoned,
-    qProne' = facts.prone,
-    qSpellLevel1Expended' = facts.spellLevel1Expended,
-    qCreatedLevel3Capacity' = facts.createdLevel3Capacity,
-    qCreatedLevel3Expended' = facts.createdLevel3Expended,
-    qPactSlotsExpended' = facts.pactSlotsExpended,
-    qFeatureResourceExpended' = facts.featureResourceExpended,
-    qSpentHitDice' = facts.spentHitDice,
-    qRestFeatureUsed' = facts.restFeatureUsed,
-    qBuildUnchanged' = facts.buildUnchanged,
-    qZeroHpState' = facts.zeroHpState,
-    qZeroHpSuccesses' = facts.zeroHpSuccesses,
-    qZeroHpFailures' = facts.zeroHpFailures,
-    qStableRecoveryElapsed' = facts.stableRecoveryElapsed,
-    qReplayIndex' = replayIndex,
+    qState' = {
+      outcome: outcome,
+      accepted: accepted,
+      message: message,
+      facts: facts,
+      replayIndex: replayIndex,
+    },
   }
 
   action init =
-    recordProjection("init", false, "none", emptySettlementFacts, 0)
+    recordProjection(
+      CharacterBattleSettlementInit,
+      false,
+      "none",
+      emptySettlementFacts,
+      0,
+    )
 
   action doSettleHitPointsConditionsSlotsAndPreservedSheetState = all {
-    qReplayIndex == 0,
+    qState.replayIndex == 0,
     recordProjection(
-      "settle-hit-points-conditions-slots-and-preserved-sheet-state",
+      CharacterBattleSettlementSettleHitPointsConditionsSlotsAndPreservedSheetState,
       true,
       "none",
       emptySettlementFacts
@@ -114,9 +107,9 @@ module characterBattleSettlementMbt {
   }
 
   action doSettleFeatureResourceExpenditure = all {
-    qReplayIndex == 1,
+    qState.replayIndex == 1,
     recordProjection(
-      "settle-feature-resource-expenditure",
+      CharacterBattleSettlementSettleFeatureResourceExpenditure,
       true,
       "none",
       emptySettlementFacts
@@ -127,9 +120,9 @@ module characterBattleSettlementMbt {
   }
 
   action doRejectAmbiguousCreatedSpellSlotSource = all {
-    qReplayIndex == 2,
+    qState.replayIndex == 2,
     recordProjection(
-      "ambiguous-created-spell-slot-source-rejected",
+      CharacterBattleSettlementAmbiguousCreatedSpellSlotSourceRejected,
       false,
       "Battle handoff Spell Slot expenditure is source-ambiguous for level 3.",
       emptySettlementFacts
@@ -140,9 +133,9 @@ module characterBattleSettlementMbt {
   }
 
   action doRejectMismatchedCharacterIdentity = all {
-    qReplayIndex == 3,
+    qState.replayIndex == 3,
     recordProjection(
-      "mismatched-character-identity-rejected",
+      CharacterBattleSettlementMismatchedCharacterIdentityRejected,
       false,
       "Battle handoff character identity does not match Character Sheet.",
       emptySettlementFacts,
@@ -151,9 +144,9 @@ module characterBattleSettlementMbt {
   }
 
   action doRejectMaximumHpDrift = all {
-    qReplayIndex == 4,
+    qState.replayIndex == 4,
     recordProjection(
-      "maximum-hp-drift-rejected",
+      CharacterBattleSettlementMaximumHpDriftRejected,
       false,
       "Battle handoff maximum HP does not match Character Sheet.",
       emptySettlementFacts,
@@ -162,9 +155,9 @@ module characterBattleSettlementMbt {
   }
 
   action doRejectActiveWildShapeHandoff = all {
-    qReplayIndex == 5,
+    qState.replayIndex == 5,
     recordProjection(
-      "active-wild-shape-handoff-rejected",
+      CharacterBattleSettlementActiveWildShapeHandoffRejected,
       false,
       "Battle handoff while Wild Shape is active is blocked; dismiss or resolve reversion before Character Sheet handoff.",
       emptySettlementFacts,
@@ -173,9 +166,9 @@ module characterBattleSettlementMbt {
   }
 
   action doRejectStableRecoveryProgressHandoff = all {
-    qReplayIndex == 6,
+    qState.replayIndex == 6,
     recordProjection(
-      "stable-recovery-progress-rejected",
+      CharacterBattleSettlementStableRecoveryProgressRejected,
       false,
       "Battle handoff cannot preserve in-progress Stable recovery timers.",
       emptySettlementFacts
@@ -186,9 +179,9 @@ module characterBattleSettlementMbt {
   }
 
   action doSettleZeroHpStableLifecycle = all {
-    qReplayIndex == 7,
+    qState.replayIndex == 7,
     recordProjection(
-      "settle-zero-hp-stable-lifecycle",
+      CharacterBattleSettlementSettleZeroHpStableLifecycle,
       true,
       "none",
       emptySettlementFacts

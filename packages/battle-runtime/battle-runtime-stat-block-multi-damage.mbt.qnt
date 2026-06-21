@@ -12,7 +12,7 @@ module battleRuntimeStatBlockMultiDamageMbt {
   var qDamageMode: DamageMode
   var qProtocol: WitnessProtocol[Hole]
 
-  pure def qHoles: Set[Hole] = qProtocol.holes
+  pure def openHoles: Set[Hole] = qProtocol.holes
 
   pure val targetInitialHp: int = 12
   pure val targetHpAfterRolledPiercingOnly: int = 10
@@ -44,7 +44,7 @@ module battleRuntimeStatBlockMultiDamageMbt {
   )
 
   action doFillTargetChoice = all {
-    qHoles == Set(TargetChoice),
+    openHoles == Set(TargetChoice),
     recordProjection(
       qTargetHp,
       qDamageMode,
@@ -54,7 +54,7 @@ module battleRuntimeStatBlockMultiDamageMbt {
   }
 
   action doFillHitAttackRoll = all {
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     if (qDamageMode == RolledDamageMode)
       recordProjection(
         qTargetHp,
@@ -73,7 +73,7 @@ module battleRuntimeStatBlockMultiDamageMbt {
 
   action doResolveRolledDamage = all {
     qDamageMode == RolledDamageMode,
-    qHoles == Set(DamageRoll),
+    openHoles == Set(DamageRoll),
     recordProjection(
       targetHpAfterRolledPiercingOnly,
       RolledDamageMode,

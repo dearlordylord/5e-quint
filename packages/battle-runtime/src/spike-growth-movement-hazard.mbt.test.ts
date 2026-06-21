@@ -479,7 +479,7 @@ function normalizeSpikeGrowthQuintState(
   const scenarioResult = spikeGrowthLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Spike Growth movement hazard",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

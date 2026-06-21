@@ -166,9 +166,9 @@ const threeWeaponRefPresenceSchema = {
   thirdWeaponUnitRefPresent: z.literal(true),
 } as const;
 const weaponMasteryContainerSelectedIdentityProjectionSchema =
-  z.discriminatedUnion("lastResult", [
+  z.discriminatedUnion("outcome", [
     z.object({
-      lastResult: z.literal("init"),
+      outcome: z.literal("init"),
       featureUnitId: z.literal("none"),
       classUnitId: z.literal("none"),
       firstWeaponUnitId: z.literal("none"),
@@ -184,7 +184,7 @@ const weaponMasteryContainerSelectedIdentityProjectionSchema =
       totalLevel: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("fighterFinalized"),
+      outcome: z.literal("fighterFinalized"),
       featureUnitId: z.literal("fighter_weapon_mastery"),
       classUnitId: z.literal("class_fighter"),
       firstWeaponUnitId: z.literal("weapon_longsword"),
@@ -197,7 +197,7 @@ const weaponMasteryContainerSelectedIdentityProjectionSchema =
       totalLevel: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("barbarianFinalized"),
+      outcome: z.literal("barbarianFinalized"),
       featureUnitId: z.literal("barbarian_weapon_mastery"),
       classUnitId: z.literal("class_barbarian"),
       firstWeaponUnitId: z.literal("weapon_longsword"),
@@ -210,7 +210,7 @@ const weaponMasteryContainerSelectedIdentityProjectionSchema =
       totalLevel: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("paladinFinalized"),
+      outcome: z.literal("paladinFinalized"),
       featureUnitId: z.literal("paladin_weapon_mastery"),
       classUnitId: z.literal("class_paladin"),
       firstWeaponUnitId: z.literal("weapon_longsword"),
@@ -223,7 +223,7 @@ const weaponMasteryContainerSelectedIdentityProjectionSchema =
       totalLevel: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("rangerFinalized"),
+      outcome: z.literal("rangerFinalized"),
       featureUnitId: z.literal("ranger_weapon_mastery"),
       classUnitId: z.literal("class_ranger"),
       firstWeaponUnitId: z.literal("weapon_longsword"),
@@ -236,7 +236,7 @@ const weaponMasteryContainerSelectedIdentityProjectionSchema =
       totalLevel: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("rogueFinalized"),
+      outcome: z.literal("rogueFinalized"),
       featureUnitId: z.literal("rogue_weapon_mastery"),
       classUnitId: z.literal("class_rogue"),
       firstWeaponUnitId: z.literal("weapon_dagger"),
@@ -373,15 +373,8 @@ const advertisedReplayActions = selectedUnitIdentityReplays.flatMap(
 );
 
 const quintStateSchema = z.object({
-  qLastResult: z.union([
-    z.literal("init"),
-    z.literal("fighterFinalized"),
-    z.literal("barbarianFinalized"),
-    z.literal("paladinFinalized"),
-    z.literal("rangerFinalized"),
-    z.literal("rogueFinalized"),
-  ]),
-  qFeatureUnitId: z.union([
+  outcome: z.unknown().transform(outcomeField),
+  featureUnitId: z.union([
     z.literal("none"),
     z.literal("fighter_weapon_mastery"),
     z.literal("barbarian_weapon_mastery"),
@@ -389,7 +382,7 @@ const quintStateSchema = z.object({
     z.literal("ranger_weapon_mastery"),
     z.literal("rogue_weapon_mastery"),
   ]),
-  qClassUnitId: z.union([
+  classUnitId: z.union([
     z.literal("none"),
     z.literal("class_fighter"),
     z.literal("class_barbarian"),
@@ -397,27 +390,62 @@ const quintStateSchema = z.object({
     z.literal("class_ranger"),
     z.literal("class_rogue"),
   ]),
-  qFirstWeaponUnitId: z.union([
+  firstWeaponUnitId: z.union([
     z.literal("none"),
     z.literal("weapon_longsword"),
     z.literal("weapon_dagger"),
   ]),
-  qSecondWeaponUnitId: z.union([
+  secondWeaponUnitId: z.union([
     z.literal("none"),
     z.literal("weapon_dagger"),
     z.literal("weapon_spear"),
     z.literal("weapon_shortsword"),
   ]),
-  qThirdWeaponUnitId: z.union([z.literal("none"), z.literal("weapon_flail")]),
-  qSelectedMasteryChoiceCount: z.bigint(),
-  qBuildMasteryFeatureCount: z.bigint(),
-  qOpenHoleCount: z.bigint(),
-  qFeatureUnitRefPresent: z.boolean(),
-  qFirstWeaponUnitRefPresent: z.boolean(),
-  qSecondWeaponUnitRefPresent: z.boolean(),
-  qThirdWeaponUnitRefPresent: z.boolean(),
-  qTotalLevel: z.bigint(),
+  thirdWeaponUnitId: z.union([z.literal("none"), z.literal("weapon_flail")]),
+  selectedMasteryChoiceCount: z.bigint(),
+  buildMasteryFeatureCount: z.bigint(),
+  openHoleCount: z.bigint(),
+  featureUnitRefPresent: z.boolean(),
+  firstWeaponUnitRefPresent: z.boolean(),
+  secondWeaponUnitRefPresent: z.boolean(),
+  thirdWeaponUnitRefPresent: z.boolean(),
+  totalLevel: z.bigint(),
 });
+
+const qntOutcomeByVariant = {
+  CharacterCreationWeaponMasteryContainersSelectedIdentityInit: "init",
+  CharacterCreationWeaponMasteryContainersSelectedIdentityFighterFinalized:
+    "fighterFinalized",
+  CharacterCreationWeaponMasteryContainersSelectedIdentityBarbarianFinalized:
+    "barbarianFinalized",
+  CharacterCreationWeaponMasteryContainersSelectedIdentityPaladinFinalized:
+    "paladinFinalized",
+  CharacterCreationWeaponMasteryContainersSelectedIdentityRangerFinalized:
+    "rangerFinalized",
+  CharacterCreationWeaponMasteryContainersSelectedIdentityRogueFinalized:
+    "rogueFinalized",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
 
 describe("Character Creation Weapon Mastery containers selected identity MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
@@ -544,10 +572,10 @@ function projectionForDriverAction(
 
 function initialProjection(): Extract<
   WeaponMasteryContainerSelectedIdentityProjection,
-  { readonly lastResult: "init" }
+  { readonly outcome: "init" }
 > {
   return {
-    lastResult: "init",
+    outcome: "init",
     featureUnitId: "none",
     classUnitId: "none",
     firstWeaponUnitId: "none",
@@ -581,7 +609,7 @@ function projectionForProfile(
     profile,
   });
   return weaponMasteryContainerSelectedIdentityProjectionSchema.parse({
-    lastResult: profile.result,
+    outcome: profile.result,
     featureUnitId: profile.featureUnitId,
     classUnitId: profile.classUnitId,
     firstWeaponUnitId: profile.selectedWeaponUnitIds[0],
@@ -905,25 +933,37 @@ function sameUnitList(
   );
 }
 
+function qStateValue(raw: unknown): unknown {
+  if (
+    raw !== null &&
+    typeof raw === "object" &&
+    !Array.isArray(raw) &&
+    "qState" in raw
+  ) {
+    return Object.fromEntries(Object.entries(raw))["qState"];
+  }
+  throw new Error("Expected Quint qState record.");
+}
+
 function normalizeQuintState(
   raw: unknown,
 ): WeaponMasteryContainerSelectedIdentityProjection {
-  const parsed = quintStateSchema.parse(raw);
+  const parsed = quintStateSchema.parse(qStateValue(raw));
   return weaponMasteryContainerSelectedIdentityProjectionSchema.parse({
-    lastResult: parsed.qLastResult,
-    featureUnitId: parsed.qFeatureUnitId,
-    classUnitId: parsed.qClassUnitId,
-    firstWeaponUnitId: parsed.qFirstWeaponUnitId,
-    secondWeaponUnitId: parsed.qSecondWeaponUnitId,
-    thirdWeaponUnitId: parsed.qThirdWeaponUnitId,
-    selectedMasteryChoiceCount: Number(parsed.qSelectedMasteryChoiceCount),
-    buildMasteryFeatureCount: Number(parsed.qBuildMasteryFeatureCount),
-    openHoleCount: Number(parsed.qOpenHoleCount),
-    featureUnitRefPresent: parsed.qFeatureUnitRefPresent,
-    firstWeaponUnitRefPresent: parsed.qFirstWeaponUnitRefPresent,
-    secondWeaponUnitRefPresent: parsed.qSecondWeaponUnitRefPresent,
-    thirdWeaponUnitRefPresent: parsed.qThirdWeaponUnitRefPresent,
-    totalLevel: Number(parsed.qTotalLevel),
+    outcome: parsed.outcome,
+    featureUnitId: parsed.featureUnitId,
+    classUnitId: parsed.classUnitId,
+    firstWeaponUnitId: parsed.firstWeaponUnitId,
+    secondWeaponUnitId: parsed.secondWeaponUnitId,
+    thirdWeaponUnitId: parsed.thirdWeaponUnitId,
+    selectedMasteryChoiceCount: Number(parsed.selectedMasteryChoiceCount),
+    buildMasteryFeatureCount: Number(parsed.buildMasteryFeatureCount),
+    openHoleCount: Number(parsed.openHoleCount),
+    featureUnitRefPresent: parsed.featureUnitRefPresent,
+    firstWeaponUnitRefPresent: parsed.firstWeaponUnitRefPresent,
+    secondWeaponUnitRefPresent: parsed.secondWeaponUnitRefPresent,
+    thirdWeaponUnitRefPresent: parsed.thirdWeaponUnitRefPresent,
+    totalLevel: Number(parsed.totalLevel),
   });
 }
 

@@ -16,18 +16,15 @@ module battleRuntimeHitPointRestorationOrderingMbt {
   var qFeatureTargetHp: int
   var qFeatureTargetZeroHpLifecycleCleared: bool
 
-  pure def qHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
+  pure def openHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
 
   pure val witnessHoleType: BattleHoleFamilyKind = TargetChoiceHoleKind
 
   pure def witnessProtocolForProjection(
     holes: Set[BattleHoleFamilyKind],
-    lastResult: str,
+    result: WitnessResult,
   ): WitnessProtocol[BattleHoleFamilyKind] =
-    if (lastResult == "init") witnessInit(witnessHoleType)
-    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved(witnessHoleType)
+    witnessProtocolFromResult(holes, witnessHoleType, result)
 
   pure def orderingErrorLabel(error: HitPointRestorationFillOrderingError): str =
     match error {
@@ -45,12 +42,12 @@ module battleRuntimeHitPointRestorationOrderingMbt {
       | HitPointRestorationFillNotOrderingError(stage) => stage
     }
 
-  pure def acceptedRuntimeResult(result: HitPointRestorationFillOrderResult): str =
+  pure def acceptedRuntimeResult(result: HitPointRestorationFillOrderResult): WitnessResult =
     match result {
       | HitPointRestorationFillAccepted(stage) =>
-          if (stage == HitPointRestorationResolvedStage) "resolved" else "needsHoles"
-      | HitPointRestorationFillRequestedEarlier(_) => "needsHoles"
-      | HitPointRestorationFillNotOrderingError(_) => "needsHoles"
+          if (stage == HitPointRestorationResolvedStage) WResolved else WNeedsHoles
+      | HitPointRestorationFillRequestedEarlier(_) => WNeedsHoles
+      | HitPointRestorationFillNotOrderingError(_) => WNeedsHoles
     }
 
   pure def requestedEarlierLabel(result: HitPointRestorationFillOrderResult): str =
@@ -62,7 +59,7 @@ module battleRuntimeHitPointRestorationOrderingMbt {
 
   action recordProjection(
     stage: HitPointRestorationFrontierStage,
-    lastResult: str,
+    result: WitnessResult,
     lastOrderingError: str,
     spellTargetHp: int,
     spellTargetZeroHpLifecycleCleared: bool,
@@ -72,7 +69,7 @@ module battleRuntimeHitPointRestorationOrderingMbt {
     qStage' = stage,
     qProtocol' = witnessProtocolForProjection(
       hitPointRestorationHoleFrontier(stage),
-      lastResult,
+      result,
     ),
     qLastOrderingError' = lastOrderingError,
     qSpellTargetHp' = spellTargetHp,
@@ -83,7 +80,7 @@ module battleRuntimeHitPointRestorationOrderingMbt {
 
   action init = recordProjection(
     HitPointRestorationActSelectionStage,
-    "init",
+    WInit,
     "",
     0,
     false,
@@ -93,7 +90,7 @@ module battleRuntimeHitPointRestorationOrderingMbt {
 
   action doDiscoverSingleTargetSpellHealing = all {
     qStage == HitPointRestorationActSelectionStage,
-    recordProjection(SpellHealingTargetChoiceStage, "needsHoles", "", 0, false, 0, false),
+    recordProjection(SpellHealingTargetChoiceStage, WNeedsHoles, "", 0, false, 0, false),
   }
 
   action doSubmitHealingRollBeforeTargetChoice = all {
@@ -126,7 +123,7 @@ module battleRuntimeHitPointRestorationOrderingMbt {
 
   action doDiscoverTargetListSpellHealing = all {
     qStage == HitPointRestorationActSelectionStage,
-    recordProjection(SpellHealingTargetListStage, "needsHoles", "", 0, false, 0, false),
+    recordProjection(SpellHealingTargetListStage, WNeedsHoles, "", 0, false, 0, false),
   }
 
   action doSubmitHealingRollBeforeTargetList = all {
@@ -175,7 +172,7 @@ module battleRuntimeHitPointRestorationOrderingMbt {
     qStage == HitPointRestorationActSelectionStage,
     recordProjection(
       FeatureHealingPoolDistributionStage,
-      "needsHoles",
+      WNeedsHoles,
       "",
       0,
       false,
