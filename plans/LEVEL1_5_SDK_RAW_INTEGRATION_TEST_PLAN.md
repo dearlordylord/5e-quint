@@ -187,7 +187,7 @@ Current generated findings:
 |   # | Task                                                                      | Status | Depends on    | Notes                                                                                                                              |
 | --: | ------------------------------------------------------------------------- | ------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 |   1 | L15-SDK-RAW-01 - Build the level 1-5 SDK RAW inventory                    | active | none          | Full row-grained artifact and scenario groups exist; next work is typed owner/closure evidence for the 144 unresolved-review rows. |
-|   2 | L15-SDK-RAW-02 - Harden the shared SDK scenario harness                   | todo   | 1             | Extract only the repeated builder/fill helpers needed across level suites.                                                         |
+|   2 | L15-SDK-RAW-02 - Harden the shared SDK scenario harness                   | done   | 1             | Package-local character-battle SDK harness exists; scenario-specific ordered fills remain file-local.                              |
 |   3 | L15-SDK-RAW-03 - Level 1 baseline integration suite                       | todo   | 1, 2          | Character creation, starting equipment, basic attacks, cantrips, level-1 spell access, and first resource projections.             |
 |   4 | L15-SDK-RAW-04 - Level 2 resource and rest integration suite              | todo   | 3             | Short-rest/long-rest resource owners, early class features, pact/slot recovery, and battle projection.                             |
 |   5 | L15-SDK-RAW-05 - Level 3 subclass and spell-level-2 integration suite     | todo   | 4             | Subclass choice/projection, expanded class features, metamagic/frontier rules, and level-2 spells available at character level 3.  |
@@ -248,7 +248,7 @@ Verification:
 
 ### Task 2 - L15-SDK-RAW-02 - Harden the shared SDK scenario harness
 
-Status: `todo`
+Status: `done`
 
 Depends on:
 
@@ -265,6 +265,15 @@ Output:
   - assertion helpers for typed `Either` and battle resolution results.
 - Keep helpers in the owning package test support only when multiple suites use
   them. Otherwise keep them file-local.
+- Current implementation:
+  - `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+    holds package-local SRD catalog setup, sheet-to-battle fixtures,
+    level-five build fixtures, primitive target/roll/save/damage fill builders,
+    spell/attack act lookup, and typed assertion helpers.
+  - The level-5 tracer imports those helpers and keeps Protection from Energy
+    synthetic stat-block setup, the Protection from Energy damage-type fill, the
+    Extra Attack miss helper, and ordered ordinary attack-damage fill choreography
+    file-local.
 
 Acceptance:
 
@@ -276,11 +285,14 @@ Acceptance:
 
 Verification:
 
-- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level5-sdk-tracer-bullets.test.ts`
-- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level5-sdk-tracer-bullets.test.ts` (passed)
+- `pnpm --filter @dnd/character-battle-runtime typecheck` (passed)
+- `pnpm exec prettier --check packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts packages/character-battle-runtime/src/sdk-integration-test-support.ts` (passed)
+- `git diff --check` (passed)
 - Focused typechecks/tests for any package where helper code lands.
 - Reviewer-loop convergence, including connascence review for shared literals,
-  fill order, and helper sequencing.
+  fill order, and helper sequencing. Findings resolved by narrowing shared
+  helper exports and keeping ordered attack-damage choreography local.
 
 ### Task 3 - L15-SDK-RAW-03 - Level 1 baseline integration suite
 
