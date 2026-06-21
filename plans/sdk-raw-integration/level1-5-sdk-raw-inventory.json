@@ -15454,6 +15454,15 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Animal Friendship",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:79-89",
+          ".references/srd-5.2.1/Classes/Bard.md:158-184",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -15461,7 +15470,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 162,
         "lineStart": 162,
@@ -24310,6 +24319,15 @@
       "category": "spell Unit pressure",
       "className": "Druid",
       "concept": "Druid spell list Animal Friendship",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:67-77",
+          ".references/srd-5.2.1/Classes/Druid.md:200-216",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -24317,7 +24335,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 204,
         "lineStart": 204,
@@ -33228,6 +33246,15 @@
       "category": "spell Unit pressure",
       "className": "Ranger",
       "concept": "Ranger spell list Animal Friendship",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Ranger.md:58-74",
+          ".references/srd-5.2.1/Classes/Ranger.md:160-176",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -33235,7 +33262,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 165,
         "lineStart": 165,
@@ -56408,16 +56435,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 446,
+      "sdk-scenario-needed": 443,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 58,
+      "seed-scenario-present": 61,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 403,
+    "scenarioGroups": 405,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 87,
+      "battle-spell-sdk": 86,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56427,13 +56454,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 58,
+      "seed-present": 61,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 166,
+      "L15-SDK-RAW-03": 168,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -56441,97 +56468,6 @@
     }
   },
   "scenarioGroups": [
-    {
-      "candidateUnitIds": [
-        "animal_friendship"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Druid",
-        "Ranger"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:animal-friendship",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"animal_friendship\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:162",
-        ".references/srd-5.2.1/Classes/Druid.md:204",
-        ".references/srd-5.2.1/Classes/Ranger.md:165"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "animal_friendship",
-          "className": "Bard",
-          "concept": "Bard spell list Animal Friendship",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 162,
-            "lineStart": 162,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "animal_friendship",
-          "className": "Druid",
-          "concept": "Druid spell list Animal Friendship",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 204,
-            "lineStart": 204,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "candidateUnitId": "animal_friendship",
-          "className": "Ranger",
-          "concept": "Ranger spell list Animal Friendship",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 165,
-            "lineStart": 165,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Animal Friendship",
-        "Druid spell list Animal Friendship",
-        "Ranger spell list Animal Friendship"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
     {
       "candidateUnitIds": [
         "bane"
@@ -65415,6 +65351,64 @@
     },
     {
       "candidateUnitIds": [
+        "animal_friendship"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-bard-animal-friendship",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Bard:animal_friendship\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:158-184",
+        ".references/srd-5.2.1/Classes/Bard.md:162",
+        ".references/srd-5.2.1/Classes/Bard.md:79-89",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "animal_friendship",
+          "className": "Bard",
+          "concept": "Bard spell list Animal Friendship",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 162,
+            "lineStart": 162,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Animal Friendship"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "dissonant_whispers"
       ],
       "categories": [
@@ -65768,6 +65762,64 @@
     },
     {
       "candidateUnitIds": [
+        "animal_friendship"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-druid-animal-friendship",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Druid:animal_friendship\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:200-216",
+        ".references/srd-5.2.1/Classes/Druid.md:204",
+        ".references/srd-5.2.1/Classes/Druid.md:67-77",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "animal_friendship",
+          "className": "Druid",
+          "concept": "Druid spell list Animal Friendship",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 204,
+            "lineStart": 204,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid spell list Animal Friendship"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "healing_word"
       ],
       "categories": [
@@ -65816,6 +65868,64 @@
       ],
       "sampleConcepts": [
         "Druid spell list Healing Word"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "animal_friendship"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Ranger"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-ranger-animal-friendship",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Ranger:animal_friendship\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Ranger.md:160-176",
+        ".references/srd-5.2.1/Classes/Ranger.md:165",
+        ".references/srd-5.2.1/Classes/Ranger.md:58-74",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "animal_friendship",
+          "className": "Ranger",
+          "concept": "Ranger spell list Animal Friendship",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 165,
+            "lineStart": 165,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Ranger spell list Animal Friendship"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -86935,6 +87045,273 @@
       ]
     },
     {
+      "candidateUnitId": "animal_friendship",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:79-89",
+          ".references/srd-5.2.1/Classes/Bard.md:158-184",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneBardAnimalFriendshipBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneBardBuild({",
+            "draftIdText: \"draft:l1-sdk-bard-animal-friendship\"",
+            "expectedBuildLabel: \"Bard Animal Friendship\"",
+            "animalFriendshipSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneDruidAnimalFriendshipBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneDruidBuild({",
+            "draftIdText: \"draft:l1-sdk-druid-animal-friendship\"",
+            "expectedBuildLabel: \"Druid Animal Friendship\"",
+            "animalFriendshipSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneRangerAnimalFriendshipBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneRangerBuild({",
+            "draftIdText: \"draft:l1-sdk-ranger-animal-friendship\"",
+            "expectedBuildLabel: \"Ranger Animal Friendship\"",
+            "animalFriendshipSpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneAnimalFriendship",
+          "needles": [
+            "srdStatBlock(\"stat_block_wolf\")",
+            "srdStatBlock(\"stat_block_skeleton\")",
+            "spellSlotActForProcedure(",
+            "animalFriendshipSpellId",
+            "\"saveGatedCondition\"",
+            "spellSaveDcForCaster(state, input.casterId)",
+            "choices: expect.arrayContaining([animalFriendshipBeastId])",
+            "expect(targetList.choices).not.toContain(animalFriendshipNonBeastId);",
+            "targetCreatureTypes: [\"beast\"]",
+            "condition: \"charmed\"",
+            "durationTicks: animalFriendshipDurationTicks",
+            "escape: { kind: \"targetDamagedByCasterOrAlly\" }",
+            "rangeFeet: movementFeet(30)",
+            "animalFriendshipTargetListFill(",
+            "label: \"Animal Friendship target-list Saving Throw outcomes\"",
+            "savingThrowOutcomeFill(save,",
+            "{ targetId: animalFriendshipBeastId, succeeded: false }",
+            "hasCondition(beast.conditions, \"charmed\")",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "spellSlotUsesThisTurn",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function animalFriendshipTargetListFill",
+          "needles": [
+            "kind: \"spellTargetList\"",
+            "value: { targetIds: [targetId] }",
+            "kind: \"spellTarget\"",
+            "spellId: animalFriendshipSpellId"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
+      "rowKey": "spell-level-1:Bard:animal_friendship",
+      "tracerNeedles": [
+        "const bardBuild = finalizedLevelOneBardAnimalFriendshipBuild();",
+        "sourceUnitId: \"class_bard\"",
+        "spellcastingAbility: \"cha\"",
+        "preparedSpells: expect.arrayContaining([animalFriendshipSpellId])",
+        "build: bardBuild,",
+        "casterId: animalFriendshipBardId,",
+        "expectedSpellSaveDc: 12,"
+      ]
+    },
+    {
+      "candidateUnitId": "animal_friendship",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:67-77",
+          ".references/srd-5.2.1/Classes/Druid.md:200-216",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneBardAnimalFriendshipBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneBardBuild({",
+            "draftIdText: \"draft:l1-sdk-bard-animal-friendship\"",
+            "expectedBuildLabel: \"Bard Animal Friendship\"",
+            "animalFriendshipSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneDruidAnimalFriendshipBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneDruidBuild({",
+            "draftIdText: \"draft:l1-sdk-druid-animal-friendship\"",
+            "expectedBuildLabel: \"Druid Animal Friendship\"",
+            "animalFriendshipSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneRangerAnimalFriendshipBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneRangerBuild({",
+            "draftIdText: \"draft:l1-sdk-ranger-animal-friendship\"",
+            "expectedBuildLabel: \"Ranger Animal Friendship\"",
+            "animalFriendshipSpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneAnimalFriendship",
+          "needles": [
+            "srdStatBlock(\"stat_block_wolf\")",
+            "srdStatBlock(\"stat_block_skeleton\")",
+            "spellSlotActForProcedure(",
+            "animalFriendshipSpellId",
+            "\"saveGatedCondition\"",
+            "spellSaveDcForCaster(state, input.casterId)",
+            "choices: expect.arrayContaining([animalFriendshipBeastId])",
+            "expect(targetList.choices).not.toContain(animalFriendshipNonBeastId);",
+            "targetCreatureTypes: [\"beast\"]",
+            "condition: \"charmed\"",
+            "durationTicks: animalFriendshipDurationTicks",
+            "escape: { kind: \"targetDamagedByCasterOrAlly\" }",
+            "rangeFeet: movementFeet(30)",
+            "animalFriendshipTargetListFill(",
+            "label: \"Animal Friendship target-list Saving Throw outcomes\"",
+            "savingThrowOutcomeFill(save,",
+            "{ targetId: animalFriendshipBeastId, succeeded: false }",
+            "hasCondition(beast.conditions, \"charmed\")",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "spellSlotUsesThisTurn",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function animalFriendshipTargetListFill",
+          "needles": [
+            "kind: \"spellTargetList\"",
+            "value: { targetIds: [targetId] }",
+            "kind: \"spellTarget\"",
+            "spellId: animalFriendshipSpellId"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
+      "rowKey": "spell-level-1:Druid:animal_friendship",
+      "tracerNeedles": [
+        "const druidBuild = finalizedLevelOneDruidAnimalFriendshipBuild();",
+        "sourceUnitId: \"class_druid\"",
+        "spellcastingAbility: \"wis\"",
+        "preparedSpells: expect.arrayContaining([animalFriendshipSpellId])",
+        "build: druidBuild,",
+        "casterId: animalFriendshipDruidId,",
+        "expectedSpellSaveDc: 12,"
+      ]
+    },
+    {
+      "candidateUnitId": "animal_friendship",
+      "className": "Ranger",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Ranger.md:58-74",
+          ".references/srd-5.2.1/Classes/Ranger.md:160-176",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneBardAnimalFriendshipBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneBardBuild({",
+            "draftIdText: \"draft:l1-sdk-bard-animal-friendship\"",
+            "expectedBuildLabel: \"Bard Animal Friendship\"",
+            "animalFriendshipSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneDruidAnimalFriendshipBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneDruidBuild({",
+            "draftIdText: \"draft:l1-sdk-druid-animal-friendship\"",
+            "expectedBuildLabel: \"Druid Animal Friendship\"",
+            "animalFriendshipSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneRangerAnimalFriendshipBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneRangerBuild({",
+            "draftIdText: \"draft:l1-sdk-ranger-animal-friendship\"",
+            "expectedBuildLabel: \"Ranger Animal Friendship\"",
+            "animalFriendshipSpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneAnimalFriendship",
+          "needles": [
+            "srdStatBlock(\"stat_block_wolf\")",
+            "srdStatBlock(\"stat_block_skeleton\")",
+            "spellSlotActForProcedure(",
+            "animalFriendshipSpellId",
+            "\"saveGatedCondition\"",
+            "spellSaveDcForCaster(state, input.casterId)",
+            "choices: expect.arrayContaining([animalFriendshipBeastId])",
+            "expect(targetList.choices).not.toContain(animalFriendshipNonBeastId);",
+            "targetCreatureTypes: [\"beast\"]",
+            "condition: \"charmed\"",
+            "durationTicks: animalFriendshipDurationTicks",
+            "escape: { kind: \"targetDamagedByCasterOrAlly\" }",
+            "rangeFeet: movementFeet(30)",
+            "animalFriendshipTargetListFill(",
+            "label: \"Animal Friendship target-list Saving Throw outcomes\"",
+            "savingThrowOutcomeFill(save,",
+            "{ targetId: animalFriendshipBeastId, succeeded: false }",
+            "hasCondition(beast.conditions, \"charmed\")",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "spellSlotUsesThisTurn",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function animalFriendshipTargetListFill",
+          "needles": [
+            "kind: \"spellTargetList\"",
+            "value: { targetIds: [targetId] }",
+            "kind: \"spellTarget\"",
+            "spellId: animalFriendshipSpellId"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
+      "rowKey": "spell-level-1:Ranger:animal_friendship",
+      "tracerNeedles": [
+        "const rangerBuild = finalizedLevelOneRangerAnimalFriendshipBuild();",
+        "sourceUnitId: \"class_ranger\"",
+        "spellcastingAbility: \"wis\"",
+        "preparedSpells: expect.arrayContaining([animalFriendshipSpellId])",
+        "build: rangerBuild,",
+        "casterId: animalFriendshipRangerId,",
+        "expectedSpellSaveDc: 11,"
+      ]
+    },
+    {
       "candidateUnitId": "ranger_favored_enemy",
       "className": "Ranger",
       "existingSdkScenario": {
@@ -87019,7 +87396,8 @@
             "candidate.subject.tag === \"bonusActionSpell\"",
             "candidate.subject.invocation.tag === \"classFeatureFreeCast\"",
             "candidate.subject.invocation.spellId === huntersMarkSpellId",
-            "candidate.subject.invocation.resourceUnitId === rangerFavoredEnemyUnitId",
+            "candidate.subject.invocation.resourceUnitId ===",
+            "rangerFavoredEnemyUnitId",
             "candidate.subject.invocation.procedure === \"markedDamageRider\""
           ]
         }

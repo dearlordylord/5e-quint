@@ -1788,6 +1788,81 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "animal_friendship",
+    className: "Bard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Bard.md:79-89",
+      ".references/srd-5.2.1/Classes/Bard.md:158-184",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94",
+    ],
+    rowId:
+      "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
+    tracerNeedles: [
+      "const bardBuild = finalizedLevelOneBardAnimalFriendshipBuild();",
+      'sourceUnitId: "class_bard"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([animalFriendshipSpellId])",
+      "build: bardBuild,",
+      "casterId: animalFriendshipBardId,",
+      "expectedSpellSaveDc: 12,",
+    ],
+    helperNeedles: animalFriendshipSdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "animal_friendship",
+    className: "Druid",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Druid.md:67-77",
+      ".references/srd-5.2.1/Classes/Druid.md:200-216",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94",
+    ],
+    rowId:
+      "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
+    tracerNeedles: [
+      "const druidBuild = finalizedLevelOneDruidAnimalFriendshipBuild();",
+      'sourceUnitId: "class_druid"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([animalFriendshipSpellId])",
+      "build: druidBuild,",
+      "casterId: animalFriendshipDruidId,",
+      "expectedSpellSaveDc: 12,",
+    ],
+    helperNeedles: animalFriendshipSdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "animal_friendship",
+    className: "Ranger",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Ranger.md:58-74",
+      ".references/srd-5.2.1/Classes/Ranger.md:160-176",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:85-94",
+    ],
+    rowId:
+      "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
+    tracerNeedles: [
+      "const rangerBuild = finalizedLevelOneRangerAnimalFriendshipBuild();",
+      'sourceUnitId: "class_ranger"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([animalFriendshipSpellId])",
+      "build: rangerBuild,",
+      "casterId: animalFriendshipRangerId,",
+      "expectedSpellSaveDc: 11,",
+    ],
+    helperNeedles: animalFriendshipSdkHelperNeedles(),
+  },
+  {
     candidateUnitId: "ranger_favored_enemy",
     className: "Ranger",
     levelBand: "level-1",
@@ -3261,10 +3336,81 @@ const seededSdkScenarioRows = [
   },
 ];
 
+function animalFriendshipSdkHelperNeedles() {
+  return [
+    {
+      anchor:
+        "function finalizedLevelOneBardAnimalFriendshipBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneBardBuild({",
+        'draftIdText: "draft:l1-sdk-bard-animal-friendship"',
+        'expectedBuildLabel: "Bard Animal Friendship"',
+        "animalFriendshipSpellId",
+      ],
+    },
+    {
+      anchor:
+        "function finalizedLevelOneDruidAnimalFriendshipBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneDruidBuild({",
+        'draftIdText: "draft:l1-sdk-druid-animal-friendship"',
+        'expectedBuildLabel: "Druid Animal Friendship"',
+        "animalFriendshipSpellId",
+      ],
+    },
+    {
+      anchor:
+        "function finalizedLevelOneRangerAnimalFriendshipBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneRangerBuild({",
+        'draftIdText: "draft:l1-sdk-ranger-animal-friendship"',
+        'expectedBuildLabel: "Ranger Animal Friendship"',
+        "animalFriendshipSpellId",
+      ],
+    },
+    {
+      anchor: "function assertLevelOneAnimalFriendship",
+      needles: [
+        'srdStatBlock("stat_block_wolf")',
+        'srdStatBlock("stat_block_skeleton")',
+        "spellSlotActForProcedure(",
+        "animalFriendshipSpellId",
+        '"saveGatedCondition"',
+        "spellSaveDcForCaster(state, input.casterId)",
+        "choices: expect.arrayContaining([animalFriendshipBeastId])",
+        "expect(targetList.choices).not.toContain(animalFriendshipNonBeastId);",
+        'targetCreatureTypes: ["beast"]',
+        'condition: "charmed"',
+        "durationTicks: animalFriendshipDurationTicks",
+        'escape: { kind: "targetDamagedByCasterOrAlly" }',
+        "rangeFeet: movementFeet(30)",
+        "animalFriendshipTargetListFill(",
+        'label: "Animal Friendship target-list Saving Throw outcomes"',
+        "savingThrowOutcomeFill(save,",
+        "{ targetId: animalFriendshipBeastId, succeeded: false }",
+        'hasCondition(beast.conditions, "charmed")',
+        "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+        "spellSlotUsesThisTurn",
+        "{ spellLevel: 1, count: 2, expended: 1 }",
+      ],
+    },
+    {
+      anchor: "function animalFriendshipTargetListFill",
+      needles: [
+        'kind: "spellTargetList"',
+        "value: { targetIds: [targetId] }",
+        'kind: "spellTarget"',
+        "spellId: animalFriendshipSpellId",
+      ],
+    },
+  ];
+}
+
 function healingWordSdkHelperNeedles() {
   return [
     {
-      anchor: "function finalizedLevelOneBardHealingWordBuild(): CharacterBuild",
+      anchor:
+        "function finalizedLevelOneBardHealingWordBuild(): CharacterBuild",
       needles: [
         "finalizedLevelOneBardBuild({",
         'draftIdText: "draft:l1-sdk-bard-healing-word"',
@@ -3283,7 +3429,8 @@ function healingWordSdkHelperNeedles() {
       ],
     },
     {
-      anchor: "function finalizedLevelOneDruidHealingWordBuild(): CharacterBuild",
+      anchor:
+        "function finalizedLevelOneDruidHealingWordBuild(): CharacterBuild",
       needles: [
         "finalizedLevelOneDruidBuild({",
         'draftIdText: "draft:l1-sdk-druid-healing-word"',
@@ -3417,7 +3564,8 @@ function rangerSpellListHuntersMarkSdkTracerNeedles() {
 function rangerFavoredEnemyHuntersMarkSdkHelperNeedles() {
   return [
     {
-      anchor: "function finalizedLevelOneRangerHuntersMarkBuild(): CharacterBuild",
+      anchor:
+        "function finalizedLevelOneRangerHuntersMarkBuild(): CharacterBuild",
       needles: [
         "finalizedLevelOneRangerBuild({",
         'draftIdText: "draft:l1-sdk-ranger-hunters-mark"',
@@ -3458,7 +3606,8 @@ function rangerFavoredEnemyHuntersMarkSdkHelperNeedles() {
         'candidate.subject.tag === "bonusActionSpell"',
         'candidate.subject.invocation.tag === "classFeatureFreeCast"',
         "candidate.subject.invocation.spellId === huntersMarkSpellId",
-        "candidate.subject.invocation.resourceUnitId === rangerFavoredEnemyUnitId",
+        "candidate.subject.invocation.resourceUnitId ===",
+        "rangerFavoredEnemyUnitId",
         'candidate.subject.invocation.procedure === "markedDamageRider"',
       ],
     },

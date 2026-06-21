@@ -65,7 +65,8 @@ let ranger =
               { kind = "prepared_from_class_spell_list"
               , choose = 2
               , spells =
-                [ { spellId = "cure_wounds", spellLevel = 1 }
+                [ { spellId = "animal_friendship", spellLevel = 1 }
+                , { spellId = "cure_wounds", spellLevel = 1 }
                 , { spellId = "ensnaring_strike", spellLevel = 1 }
                 , { spellId = "longstrider", spellLevel = 1 }
                 , { spellId = "hunters_mark", spellLevel = 1 }

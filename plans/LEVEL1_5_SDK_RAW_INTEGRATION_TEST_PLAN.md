@@ -107,7 +107,7 @@ coverage.
 Current generated findings:
 
 - The JSON inventory is schema version 4. It persists all 770 mined level 1-5
-  rows with SDK dispositions, owner-boundary evidence where used, and 403
+  rows with SDK dispositions, owner-boundary evidence where used, and 405
   scenario groups. The Markdown report stays summarized, with the level-5
   completion rows and scenario groups expanded for the next implementation
   slice. Schema version 4 preserves each row's full source `supportSnapshot`,
@@ -325,6 +325,15 @@ Current generated findings:
   creation rather than a hand-authored spell list. It does not claim
   line-of-sight derivation or higher-level slot scaling; those remain lower
   battle-runtime or future SDK slices.
+- The level-1 Animal Friendship seed covers the Bard, Druid, and Ranger
+  spell-list rows through level-1 character creation, prepared-spell sheet
+  projection, action spell-slot act discovery, Beast-only target admission,
+  Wisdom Saving Throw shape, 24-hour Charmed effect, damage-break effect shape,
+  action spend, and spell-slot spend. The seed exposed and fixed narrow
+  `class_bard` and `class_ranger` prepared-spell access gaps so those rows are
+  claimed through character creation rather than hand-authored spell lists. It
+  does not execute the later damage-break event or higher-level slot target
+  scaling; those remain focused battle-runtime coverage or future SDK slices.
 - The level-1 Ray of Frost seed covers the Sorcerer and Wizard cantrip
   spell-list rows through level-1 sheet projection, battle act discovery,
   60-foot ranged Spell Attack resolution, 1d8 Cold damage, Speed reduction by
@@ -355,15 +364,15 @@ Current generated findings:
   count, visible-target/table-spatial witness requirement, 120-foot range,
   1d4+1 Force damage per dart, split simultaneous dart damage, and spell-slot
   spend.
-- The generated scenario groups are split by task: 166 groups for level 1,
+- The generated scenario groups are split by task: 168 groups for level 1,
   33 for level 2, 107 for level 3/spell level 2, 25 for level 4, and 72 for
   level 5/spell level 3.
 - The current level-5 SDK dispositions are: 6 seed scenarios present, 35 SDK
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 58 seed scenarios
-  present, 446 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 61 seed scenarios
+  present, 443 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -580,7 +589,7 @@ First implementation slice:
   Thaumaturgy, Cleric Guiding Bolt, Cleric Inflict Wounds, Cleric Sanctuary,
   Sorcerer Sorcerous Burst, Warlock Chill Touch, Warlock Eldritch Blast,
   Warlock Hex, Ranger Favored Enemy, Ranger Hunter's Mark, plus
-  Bard/Cleric/Druid Healing Word.
+  Bard/Cleric/Druid Healing Word and Bard/Druid/Ranger Animal Friendship.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

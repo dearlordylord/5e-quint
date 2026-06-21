@@ -134,6 +134,10 @@
       "kind": "prepared_from_class_spell_list",
       "spells": [
         {
+          "spellId": "animal_friendship",
+          "spellLevel": 1
+        },
+        {
           "spellId": "cure_wounds",
           "spellLevel": 1
         },

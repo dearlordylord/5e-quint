@@ -136,7 +136,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Bard.md:3-26,34-37,69-103,109-111"
+    "section": "Classes/Bard.md:3-26,34-37,69-103,109-111,158-184"
   },
   "savingThrowProficiencies": [
     "dex",
@@ -188,6 +188,10 @@
       "choose": 4,
       "kind": "prepared_from_class_spell_list",
       "spells": [
+        {
+          "spellId": "animal_friendship",
+          "spellLevel": 1
+        },
         {
           "spellId": "charm_person",
           "spellLevel": 1

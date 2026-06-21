@@ -550,6 +550,7 @@ describe("character-creation Surface records", () => {
             preparedReplacementCount: 1,
             preparedCount: 4,
             preparedSpells: [
+              "animal_friendship",
               "charm_person",
               "color_spray",
               "dissonant_whispers",
@@ -741,6 +742,7 @@ describe("character-creation Surface records", () => {
             preparedReplacementCount: 1,
             preparedCount: 2,
             preparedSpells: [
+              "animal_friendship",
               "cure_wounds",
               "ensnaring_strike",
               "longstrider",

@@ -71,7 +71,7 @@ let bard =
           }
       , name = "Bard"
       , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Bard.md:3-26,34-37,69-103,109-111" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Bard.md:3-26,34-37,69-103,109-111,158-184" }
       , savingThrowProficiencies = [ "dex", "cha" ]
       , skillProficiencyChoice = { choose = 3, options = allSkills }
       , spellcasting =
@@ -88,7 +88,8 @@ let bard =
               { kind = "prepared_from_class_spell_list"
               , choose = 4
               , spells =
-                [ { spellId = "charm_person", spellLevel = 1 }
+                [ { spellId = "animal_friendship", spellLevel = 1 }
+                , { spellId = "charm_person", spellLevel = 1 }
                 , { spellId = "color_spray", spellLevel = 1 }
                 , { spellId = "dissonant_whispers", spellLevel = 1 }
                 , { spellId = "healing_word", spellLevel = 1 }

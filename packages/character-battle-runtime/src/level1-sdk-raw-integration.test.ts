@@ -123,6 +123,15 @@ const viciousMockeryBardId = combatantId(
   "combatant:l1-sdk-vicious-mockery-bard",
 );
 const healingWordBardId = combatantId("combatant:l1-sdk-healing-word-bard");
+const animalFriendshipBardId = combatantId(
+  "combatant:l1-sdk-animal-friendship-bard",
+);
+const animalFriendshipDruidId = combatantId(
+  "combatant:l1-sdk-animal-friendship-druid",
+);
+const animalFriendshipRangerId = combatantId(
+  "combatant:l1-sdk-animal-friendship-ranger",
+);
 const inspiredAllyId = combatantId("combatant:l1-sdk-inspired-ally");
 const rogueId = combatantId("combatant:l1-sdk-rogue");
 const rogueAllyId = combatantId("combatant:l1-sdk-rogue-ally");
@@ -141,9 +150,7 @@ const shillelaghDruidId = combatantId("combatant:l1-sdk-shillelagh-druid");
 const sacredFlameClericId = combatantId("combatant:l1-sdk-sacred-flame-cleric");
 const thaumaturgyClericId = combatantId("combatant:l1-sdk-thaumaturgy-cleric");
 const sanctuaryClericId = combatantId("combatant:l1-sdk-sanctuary-cleric");
-const healingWordClericId = combatantId(
-  "combatant:l1-sdk-healing-word-cleric",
-);
+const healingWordClericId = combatantId("combatant:l1-sdk-healing-word-cleric");
 const healingWordDruidId = combatantId("combatant:l1-sdk-healing-word-druid");
 const healingWordTargetId = combatantId("combatant:l1-sdk-healing-word-target");
 const sanctuaryWardedAllyId = combatantId(
@@ -170,9 +177,7 @@ const eldritchBlastWarlockId = combatantId(
   "combatant:l1-sdk-eldritch-blast-warlock",
 );
 const hexWarlockId = combatantId("combatant:l1-sdk-hex-warlock");
-const huntersMarkRangerId = combatantId(
-  "combatant:l1-sdk-hunters-mark-ranger",
-);
+const huntersMarkRangerId = combatantId("combatant:l1-sdk-hunters-mark-ranger");
 const huntersMarkSpellSlotRangerId = combatantId(
   "combatant:l1-sdk-hunters-mark-spell-slot-ranger",
 );
@@ -220,6 +225,12 @@ const wizardBurningHandsCasterId = combatantId(
 const monkId = combatantId("combatant:l1-sdk-monk");
 const monsterId = combatantId("combatant:l1-sdk-monster");
 const secondMonsterId = combatantId("combatant:l1-sdk-second-monster");
+const animalFriendshipBeastId = combatantId(
+  "combatant:l1-sdk-animal-friendship-beast",
+);
+const animalFriendshipNonBeastId = combatantId(
+  "combatant:l1-sdk-animal-friendship-non-beast",
+);
 const thunderwaveUnsecuredObjectId = battleObjectId(
   "object:l1-sdk-thunderwave-unsecured",
 );
@@ -234,6 +245,7 @@ const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const dissonantWhispersSpellId = "dissonant_whispers";
 const viciousMockerySpellId = "vicious_mockery";
 const healingWordSpellId = "healing_word";
+const animalFriendshipSpellId = "animal_friendship";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
@@ -267,6 +279,9 @@ const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
 const shillelaghDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 const thaumaturgyDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 const sanctuaryDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
+const animalFriendshipDurationTicks = requireRight(
+  elapsedTimeTicksFromHours(24),
+);
 const huntersMarkDurationTicks = requireRight(elapsedTimeTicksFromHours(1));
 
 describe("level 1 SDK RAW integration", () => {
@@ -1176,6 +1191,62 @@ describe("level 1 SDK RAW integration", () => {
       build: druidBuild,
       casterId: healingWordDruidId,
       targetId: healingWordTargetId,
+    });
+  });
+
+  test("Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects", () => {
+    const bardBuild = finalizedLevelOneBardAnimalFriendshipBuild();
+    const druidBuild = finalizedLevelOneDruidAnimalFriendshipBuild();
+    const rangerBuild = finalizedLevelOneRangerAnimalFriendshipBuild();
+
+    expect(bardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_bard",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([animalFriendshipSpellId]),
+        }),
+      ]),
+    );
+    expect(druidBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_druid",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([animalFriendshipSpellId]),
+        }),
+      ]),
+    );
+    expect(rangerBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_ranger",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([animalFriendshipSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneAnimalFriendship({
+      battleIdText: "battle:l1-sdk-animal-friendship-bard",
+      characterIdText: "character:l1-sdk-animal-friendship-bard",
+      build: bardBuild,
+      casterId: animalFriendshipBardId,
+      expectedSpellSaveDc: 12,
+    });
+    assertLevelOneAnimalFriendship({
+      battleIdText: "battle:l1-sdk-animal-friendship-druid",
+      characterIdText: "character:l1-sdk-animal-friendship-druid",
+      build: druidBuild,
+      casterId: animalFriendshipDruidId,
+      expectedSpellSaveDc: 12,
+    });
+    assertLevelOneAnimalFriendship({
+      battleIdText: "battle:l1-sdk-animal-friendship-ranger",
+      characterIdText: "character:l1-sdk-animal-friendship-ranger",
+      build: rangerBuild,
+      casterId: animalFriendshipRangerId,
+      expectedSpellSaveDc: 11,
     });
   });
 
@@ -3655,6 +3726,164 @@ function assertLevelOneHealingWord(input: {
   ]);
 }
 
+function assertLevelOneAnimalFriendship(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(
+        animalFriendshipBeastId,
+        10,
+        srdStatBlock("stat_block_wolf"),
+      ),
+      monsterBattleInput(
+        animalFriendshipNonBeastId,
+        8,
+        srdStatBlock("stat_block_skeleton"),
+      ),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    animalFriendshipSpellId,
+    1,
+    "saveGatedCondition",
+  );
+  const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
+
+  expect(act.subject).toMatchObject({
+    tag: "actionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: animalFriendshipSpellId,
+      slotLevel: 1,
+      procedure: "saveGatedCondition",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(targetList).toMatchObject({
+    label: "Animal Friendship targets",
+    minTargets: 1,
+    maxTargets: 1,
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([animalFriendshipBeastId]),
+    spell: {
+      access: { tag: "prepared" },
+      procedure: "saveGatedCondition",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+      targetCreatureTypes: ["beast"],
+      effect: {
+        kind: "fixed",
+        condition: "charmed",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: animalFriendshipDurationTicks,
+        },
+        escape: { kind: "targetDamagedByCasterOrAlly" },
+        turnStartDamage: null,
+        repeatSave: null,
+      },
+      rangeFeet: movementFeet(30),
+    },
+  });
+  expect(targetList.choices).not.toContain(animalFriendshipNonBeastId);
+
+  const targetFill = animalFriendshipTargetListFill(
+    targetList,
+    input.casterId,
+    animalFriendshipBeastId,
+  );
+  const save = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "savingThrowOutcome",
+  );
+
+  expect(save).toMatchObject({
+    label: "Animal Friendship target-list Saving Throw outcomes",
+    ability: "wis",
+    dc: { kind: "caster_spell_save_dc" },
+    spell: {
+      procedure: "saveGatedCondition",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+      targetCreatureTypes: ["beast"],
+      rangeFeet: movementFeet(30),
+    },
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(save, [
+          { targetId: animalFriendshipBeastId, succeeded: false },
+        ]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+  const beast = requireCombatant(resolved.state, animalFriendshipBeastId);
+
+  expect(hasCondition(beast.conditions, "charmed")).toBe(true);
+  expect(beast.activeEffects).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "spellCondition",
+        sourceSpellId: animalFriendshipSpellId,
+        sourceCombatantId: input.casterId,
+        condition: "charmed",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: animalFriendshipDurationTicks,
+        },
+        escape: { kind: "targetDamagedByCasterOrAlly" },
+      }),
+    ]),
+  );
+  expect(
+    hasCondition(
+      requireCombatant(resolved.state, animalFriendshipNonBeastId).conditions,
+      "charmed",
+    ),
+  ).toBe(false);
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(caster.concentration).toBeNull();
+  expect(caster.activeEffects).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
 function assertLevelOneHuntersMark(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -5623,6 +5852,20 @@ function finalizedLevelOneBardHealingWordBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneBardAnimalFriendshipBuild(): CharacterBuild {
+  return finalizedLevelOneBardBuild({
+    draftIdText: "draft:l1-sdk-bard-animal-friendship",
+    expectedBuildLabel: "Bard Animal Friendship",
+    cantrips: ["dancing_lights", viciousMockerySpellId],
+    preparedSpells: [
+      animalFriendshipSpellId,
+      "charm_person",
+      "color_spray",
+      healingWordSpellId,
+    ],
+  });
+}
+
 function finalizedLevelOneBardBuild(input: {
   readonly draftIdText: string;
   readonly expectedBuildLabel: string;
@@ -5987,6 +6230,20 @@ function finalizedLevelOneDruidHealingWordBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneDruidAnimalFriendshipBuild(): CharacterBuild {
+  return finalizedLevelOneDruidBuild({
+    draftIdText: "draft:l1-sdk-druid-animal-friendship",
+    expectedBuildLabel: "Druid Animal Friendship",
+    cantrips: [produceFlameSpellId, poisonSpraySpellId],
+    preparedSpells: [
+      animalFriendshipSpellId,
+      "cure_wounds",
+      "entangle",
+      healingWordSpellId,
+    ],
+  });
+}
+
 type LevelOneDruidWeaponPurchase = {
   readonly unitId: UnitRecord["id"];
   readonly loadout: "not_wielded" | "wielded_one_handed";
@@ -6143,6 +6400,14 @@ function finalizedLevelOneRangerSpellListHuntersMarkBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneRangerAnimalFriendshipBuild(): CharacterBuild {
+  return finalizedLevelOneRangerBuild({
+    draftIdText: "draft:l1-sdk-ranger-animal-friendship",
+    expectedBuildLabel: "Ranger Animal Friendship",
+    preparedSpells: [animalFriendshipSpellId, "cure_wounds"],
+  });
+}
+
 function finalizedLevelOneRangerBuild(input: {
   readonly draftIdText: string;
   readonly expectedBuildLabel: string;
@@ -6204,7 +6469,10 @@ function finalizedLevelOneRangerBuild(input: {
           ...input.preparedSpells,
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("ranger_weapon_mastery", "weapon_mastery_options"),
+          testUnitChoiceHoleId(
+            "ranger_weapon_mastery",
+            "weapon_mastery_options",
+          ),
           "weapon_longsword",
           "weapon_spear",
         ),
@@ -7351,7 +7619,8 @@ function huntersMarkFavoredEnemyBonusActionSpellAct(
       candidate.subject.mode.tag === "cast" &&
       candidate.subject.invocation.tag === "classFeatureFreeCast" &&
       candidate.subject.invocation.spellId === huntersMarkSpellId &&
-      candidate.subject.invocation.resourceUnitId === rangerFavoredEnemyUnitId &&
+      candidate.subject.invocation.resourceUnitId ===
+        rangerFavoredEnemyUnitId &&
       candidate.subject.invocation.procedure === "markedDamageRider",
   );
   if (act === undefined) {
@@ -7557,6 +7826,26 @@ function sanctuaryTargetListFill(
     value: { targetIds: [targetId] },
     spatialFacts: [
       { kind: "spellTarget", casterId, targetId, spellId: sanctuarySpellId },
+    ],
+  };
+}
+
+function animalFriendshipTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds: [targetId] },
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        spellId: animalFriendshipSpellId,
+      },
     ],
   };
 }
