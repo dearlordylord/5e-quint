@@ -173,6 +173,14 @@ Current generated findings:
   point-origin 5-foot Sphere Saving Throw shape, Dexterity save, failed-save
   1d6 Acid damage, successful-save no-damage behavior, action spend, and no
   spell-slot spend.
+- The level-1 Sorcerous Burst seed covers the Sorcerer cantrip spell-list row
+  through level-1 Sorcerer character creation, cantrip sheet projection, battle
+  act discovery, Damage Type choice among Acid, Cold, Fire, Lightning, Poison,
+  Psychic, and Thunder, creature-or-object target shape with a combatant target
+  witness and object-target witness availability, 120-foot ranged Spell Attack,
+  1d8 chosen Thunder damage with one exploding d8 witness capped by Charisma
+  modifier, action spend, and no spell-slot spend. It does not claim object
+  hit-point disposition or higher character-level cantrip scaling.
 - The level-1 Poison Spray seed covers the Druid, Sorcerer, Warlock, and
   Wizard cantrip spell-list rows through level-1 sheet projection, battle act
   discovery, 30-foot ranged Spell Attack resolution, creature-only target shape, 1d12
@@ -262,8 +270,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 45 seed scenarios
-  present, 459 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 46 seed scenarios
+  present, 458 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -476,7 +484,8 @@ First implementation slice:
   Chromatic Orb, Ray of Sickness, Thunderwave, and Magic Missile from Sorcerer
   and Wizard sheets, plus class-specific rows when SRD access differs such as
   Druid/Warlock Poison Spray, Druid Produce Flame, Cleric Sacred Flame, Cleric
-  Guiding Bolt, Warlock Chill Touch, and Warlock Eldritch Blast.
+  Guiding Bolt, Sorcerer Sorcerous Burst, Warlock Chill Touch, and Warlock
+  Eldritch Blast.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

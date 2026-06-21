@@ -94,6 +94,9 @@ const inspiredAllyId = combatantId("combatant:l1-sdk-inspired-ally");
 const rogueId = combatantId("combatant:l1-sdk-rogue");
 const rogueAllyId = combatantId("combatant:l1-sdk-rogue-ally");
 const sorcererId = combatantId("combatant:l1-sdk-sorcerer");
+const sorcerousBurstSorcererId = combatantId(
+  "combatant:l1-sdk-sorcerous-burst-sorcerer",
+);
 const burningHandsCasterId = combatantId("combatant:l1-sdk-burning-hands");
 const acidSplashSorcererId = combatantId(
   "combatant:l1-sdk-acid-splash-sorcerer",
@@ -754,6 +757,28 @@ describe("level 1 SDK RAW integration", () => {
       build: wizardBuild,
       casterId: acidSplashWizardId,
       expectedSpellSaveDc: 13,
+    });
+  });
+
+  test("Sorcerer Sorcerous Burst cantrip resolves from a level-1 sheet with selected exploding Damage Type damage", () => {
+    const sorcererBuild = finalizedLevelOneSorcererSorcerousBurstBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          spellcastingAbility: "cha",
+          cantrips: expect.arrayContaining([sorcerousBurstSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneSorcerousBurst({
+      battleIdText: "battle:l1-sdk-sorcerous-burst-sorcerer",
+      characterIdText: "character:l1-sdk-sorcerous-burst-sorcerer",
+      build: sorcererBuild,
+      casterId: sorcerousBurstSorcererId,
+      expectedSpellAttackBonus: 4,
     });
   });
 
@@ -1658,6 +1683,140 @@ function assertLevelOneAcidSplash(input: {
 
   expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(9));
   expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(13));
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+}
+
+function assertLevelOneSorcerousBurst(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellAttackBonus: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = cantripCastActionSpellAct(
+    state,
+    input.casterId,
+    sorcerousBurstSpellId,
+  );
+  const damageType = requireHoleFromList(
+    act.initialHoles,
+    "damageTypeChoice",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const objectTarget = requireHoleFromList(
+    act.initialHoles,
+    "objectTargetChoice",
+  );
+  const damageTypeFill = damageTypeChoiceFill(damageType, "thunder");
+  const targetFill = spellTargetFill(
+    target,
+    sorcerousBurstSpellId,
+    input.casterId,
+    monsterId,
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageTypeFill, targetFill],
+    }),
+    "attackRoll",
+  );
+
+  expect(damageType.choices).toEqual([
+    "acid",
+    "cold",
+    "fire",
+    "lightning",
+    "poison",
+    "psychic",
+    "thunder",
+  ]);
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([monsterId]),
+  });
+  expect(objectTarget).toMatchObject({
+    requiresTableSpatialFact: true,
+  });
+  expect(attackRoll).toMatchObject({
+    attackBonus: input.expectedSpellAttackBonus,
+    spell: {
+      resource: { tag: "none" },
+      attackKind: "ranged_spell_attack",
+      targeting: { kind: "singleCreatureOrObject" },
+      rangeFeet: 120,
+      damage: {
+        kind: "selectedSorcerousBurstDamage",
+        expr: { dice: 1, dieSize: 8 },
+        damageType: "thunder",
+        maxDieAdditionalDiceLimit: 2,
+      },
+      postDamageRiders: [],
+    },
+  });
+
+  const attackFill = attackRollFill(attackRoll, {
+    total: 13 + input.expectedSpellAttackBonus,
+    naturalD20: 13,
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageTypeFill, targetFill, attackFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Sorcerous Burst damage (1d8-thunder)",
+    spell: {
+      resource: { tag: "none" },
+      damage: {
+        kind: "selectedSorcerousBurstDamage",
+        expr: { dice: 1, dieSize: 8 },
+        damageType: "thunder",
+        maxDieAdditionalDiceLimit: 2,
+      },
+      postDamageRiders: [],
+    },
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: ordinaryAttackDamageFills({
+        state,
+        subject: act.subject,
+        prefixFills: [damageTypeFill, targetFill, attackFill],
+        damage,
+        damageDice: [[8, 3]],
+      }),
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(2));
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
   expect(caster.origin.spellcasting?.spellSlots).toEqual([
     { spellLevel: 1, count: 2, expended: 0 },
@@ -4002,6 +4161,20 @@ function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild {
       "light",
       shockingGraspSpellId,
       sorcerousBurstSpellId,
+    ],
+    preparedSpells: [burningHandsSpellId, "detect_magic"],
+  });
+}
+
+function finalizedLevelOneSorcererSorcerousBurstBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-sorcerous-burst",
+    expectedBuildLabel: "Sorcerer Sorcerous Burst",
+    cantrips: [
+      sorcerousBurstSpellId,
+      fireBoltSpellId,
+      "light",
+      shockingGraspSpellId,
     ],
     preparedSpells: [burningHandsSpellId, "detect_magic"],
   });
