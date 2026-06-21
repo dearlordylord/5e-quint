@@ -13,6 +13,7 @@ import magicWeaponInput from "../../content/magic_weapon.json";
 import meldIntoStoneInput from "../../content/meld_into_stone.json";
 import moonbeamInput from "../../content/moonbeam.json";
 import phantomSteedInput from "../../content/phantom_steed.json";
+import shieldOfFaithInput from "../../content/shield_of_faith.json";
 import conjureAnimalsInput from "../../content/conjure_animals.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
@@ -364,6 +365,55 @@ describe("SRD Unit catalog boundary", () => {
       provenance: {
         kind: "srd-5.2.1",
         section: "Spells/Descriptions-E-L#Haste",
+      },
+    });
+  });
+
+  test("keeps Shield of Faith's creature target and Armor Class bonus explicit", () => {
+    const decoded = decodeUnitRecordSync(shieldOfFaithInput);
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    expect(result.catalog.requireUnit("shield_of_faith")).toEqual(decoded);
+
+    expect(decoded).toMatchObject({
+      id: "shield_of_faith",
+      kind: "spell",
+      mechanics: {
+        castingTime: { kind: "bonus_action" },
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 10, unit: "minute" },
+        },
+        family: "activation",
+        level: 1,
+        phases: [
+          {
+            attachment: {
+              value: {
+                kind: "target",
+                selection: {
+                  mode: "one",
+                  targetKinds: ["creature"],
+                },
+              },
+            },
+            effects: [
+              {
+                delta: { dice: 2, dieSize: 1, kind: "fixed_dice", sign: "+" },
+                kind: "modify_ac",
+              },
+            ],
+            kind: "direct",
+          },
+        ],
+        range: { feet: 60, kind: "point" },
+        school: "abjuration",
+      },
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Spells/Descriptions-S-Z#Shield of Faith",
       },
     });
   });

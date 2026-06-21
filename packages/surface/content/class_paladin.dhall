@@ -33,7 +33,7 @@ let paladin =
           }
       , name = "Paladin"
       , primaryAbilities = { abilities = [ "str", "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Paladin.md:3-24,33-38,66-124,168-184" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Paladin.md:3-24,33-38,66-124,168-188" }
       , savingThrowProficiencies = [ "wis", "cha" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "athletics", "insight", "intimidation", "medicine", "persuasion", "religion" ] }
@@ -50,6 +50,7 @@ let paladin =
                 , { spellId = "bless", spellLevel = 1 }
                 , { spellId = "command", spellLevel = 1 }
                 , { spellId = "cure_wounds", spellLevel = 1 }
+                , { spellId = "shield_of_faith", spellLevel = 1 }
                 ] : List ClassSpellAccess
               , changeOn = { kind = "long_rest", replacementCount = 1 }
               }

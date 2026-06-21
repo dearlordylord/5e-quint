@@ -157,6 +157,15 @@ const healingWordTargetId = combatantId("combatant:l1-sdk-healing-word-target");
 const blessClericId = combatantId("combatant:l1-sdk-bless-cleric");
 const blessPaladinId = combatantId("combatant:l1-sdk-bless-paladin");
 const blessTargetId = combatantId("combatant:l1-sdk-bless-target");
+const shieldOfFaithClericId = combatantId(
+  "combatant:l1-sdk-shield-of-faith-cleric",
+);
+const shieldOfFaithPaladinId = combatantId(
+  "combatant:l1-sdk-shield-of-faith-paladin",
+);
+const shieldOfFaithTargetId = combatantId(
+  "combatant:l1-sdk-shield-of-faith-target",
+);
 const sanctuaryWardedAllyId = combatantId(
   "combatant:l1-sdk-sanctuary-warded-ally",
 );
@@ -256,6 +265,7 @@ const dissonantWhispersSpellId = "dissonant_whispers";
 const viciousMockerySpellId = "vicious_mockery";
 const healingWordSpellId = "healing_word";
 const blessSpellId = "bless";
+const shieldOfFaithSpellId = "shield_of_faith";
 const animalFriendshipSpellId = "animal_friendship";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
@@ -1186,6 +1196,45 @@ describe("level 1 SDK RAW integration", () => {
       build: paladinBuild,
       casterId: blessPaladinId,
       targetId: blessTargetId,
+    });
+  });
+
+  test("Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects", () => {
+    const clericBuild = finalizedLevelOneClericShieldOfFaithBuild();
+    const paladinBuild = finalizedLevelOnePaladinShieldOfFaithBuild();
+
+    expect(clericBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([shieldOfFaithSpellId]),
+        }),
+      ]),
+    );
+    expect(paladinBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_paladin",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([shieldOfFaithSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneShieldOfFaith({
+      battleIdText: "battle:l1-sdk-shield-of-faith-cleric",
+      characterIdText: "character:l1-sdk-shield-of-faith-cleric",
+      build: clericBuild,
+      casterId: shieldOfFaithClericId,
+      targetId: shieldOfFaithTargetId,
+    });
+    assertLevelOneShieldOfFaith({
+      battleIdText: "battle:l1-sdk-shield-of-faith-paladin",
+      characterIdText: "character:l1-sdk-shield-of-faith-paladin",
+      build: paladinBuild,
+      casterId: shieldOfFaithPaladinId,
+      targetId: shieldOfFaithTargetId,
     });
   });
 
@@ -3891,6 +3940,116 @@ function expectedLevelOneBlessEffect(
   };
 }
 
+function assertLevelOneShieldOfFaith(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly targetId: CombatantId;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+      characterSheet({
+        characterIdText: "character:l1-sdk-shield-of-faith-target",
+        build: levelOneSingleClassBuild({
+          classUnitId: "class_fighter",
+          weaponUnitId: "weapon_longsword",
+        }),
+        combatantId: input.targetId,
+        initiative: 15,
+        maximumHp: 12,
+      }),
+    ],
+    monsters: [],
+  });
+  const act = shieldOfFaithBonusActionSpellSlotAct(state, input.casterId);
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const initialActionResources = snapshotBattle(state).turn.actionResources;
+  const expectedPreservedActionResources = [{ kind: "action", source: "turn" }];
+  const initialTargetArmorClass = snapshotCombatant(
+    state,
+    input.targetId,
+  ).armorClass;
+  const expectedEffect = expectedLevelOneShieldOfFaithEffect(input.casterId);
+
+  expect(initialActionResources).toEqual(expectedPreservedActionResources);
+  expect(act.subject).toMatchObject({
+    tag: "bonusActionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: shieldOfFaithSpellId,
+      slotLevel: 1,
+      procedure: "scalarBuff",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(target).toMatchObject({
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([input.casterId, input.targetId]),
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          target,
+          shieldOfFaithSpellId,
+          input.casterId,
+          input.targetId,
+        ),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+  const targetCombatant = requireCombatant(resolved.state, input.targetId);
+
+  expect(targetCombatant.activeEffects).toEqual([expectedEffect]);
+  expect(snapshotCombatant(resolved.state, input.targetId).armorClass).toBe(
+    initialTargetArmorClass + 2,
+  );
+  expect(caster.concentration).toEqual({
+    sourceSpellId: shieldOfFaithSpellId,
+    effectKind: "spellEffect",
+  });
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual(
+    expectedPreservedActionResources,
+  );
+  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
+function expectedLevelOneShieldOfFaithEffect(
+  casterId: CombatantId,
+): Extract<BattleActiveEffect, { readonly kind: "spellArmorClassBonus" }> {
+  return {
+    kind: "spellArmorClassBonus",
+    sourceSpellId: shieldOfFaithSpellId,
+    sourceCombatantId: casterId,
+    bonus: 2,
+    negatedSpellIds: [],
+    expiresAt: {
+      kind: "concentration",
+      combatantId: casterId,
+    },
+  };
+}
+
 function assertLevelOneHealingWord(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -6378,7 +6537,12 @@ function finalizedLevelOneClericSacredFlameBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-cleric-sacred-flame",
     expectedBuildLabel: "Cleric Sacred Flame",
     cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
-    preparedSpells: ["bless", "cure_wounds", "guiding_bolt", "shield_of_faith"],
+    preparedSpells: [
+      blessSpellId,
+      cureWoundsSpellId,
+      guidingBoltSpellId,
+      shieldOfFaithSpellId,
+    ],
   });
 }
 
@@ -6387,7 +6551,12 @@ function finalizedLevelOneClericThaumaturgyBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-cleric-thaumaturgy",
     expectedBuildLabel: "Cleric Thaumaturgy",
     cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
-    preparedSpells: ["bless", "cure_wounds", "guiding_bolt", "shield_of_faith"],
+    preparedSpells: [
+      blessSpellId,
+      cureWoundsSpellId,
+      guidingBoltSpellId,
+      shieldOfFaithSpellId,
+    ],
   });
 }
 
@@ -6397,10 +6566,10 @@ function finalizedLevelOneClericGuidingBoltBuild(): CharacterBuild {
     expectedBuildLabel: "Cleric Guiding Bolt",
     cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
     preparedSpells: [
-      "bless",
-      "cure_wounds",
+      blessSpellId,
+      cureWoundsSpellId,
       guidingBoltSpellId,
-      "shield_of_faith",
+      shieldOfFaithSpellId,
     ],
   });
 }
@@ -6412,9 +6581,23 @@ function finalizedLevelOneClericBlessBuild(): CharacterBuild {
     cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
     preparedSpells: [
       blessSpellId,
-      "cure_wounds",
+      cureWoundsSpellId,
       guidingBoltSpellId,
-      "shield_of_faith",
+      shieldOfFaithSpellId,
+    ],
+  });
+}
+
+function finalizedLevelOneClericShieldOfFaithBuild(): CharacterBuild {
+  return finalizedLevelOneClericBuild({
+    draftIdText: "draft:l1-sdk-cleric-shield-of-faith",
+    expectedBuildLabel: "Cleric Shield of Faith",
+    cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
+    preparedSpells: [
+      blessSpellId,
+      cureWoundsSpellId,
+      guidingBoltSpellId,
+      shieldOfFaithSpellId,
     ],
   });
 }
@@ -6453,10 +6636,10 @@ function finalizedLevelOneClericHealingWordBuild(): CharacterBuild {
     expectedBuildLabel: "Cleric Healing Word",
     cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
     preparedSpells: [
-      "bless",
-      "cure_wounds",
+      blessSpellId,
+      cureWoundsSpellId,
       healingWordSpellId,
-      "shield_of_faith",
+      shieldOfFaithSpellId,
     ],
   });
 }
@@ -6467,10 +6650,10 @@ function finalizedLevelOneClericCureWoundsBuild(): CharacterBuild {
     expectedBuildLabel: "Cleric Cure Wounds",
     cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
     preparedSpells: [
-      "bless",
+      blessSpellId,
       cureWoundsSpellId,
       guidingBoltSpellId,
-      "shield_of_faith",
+      shieldOfFaithSpellId,
     ],
   });
 }
@@ -6831,6 +7014,14 @@ function finalizedLevelOnePaladinBlessBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-paladin-bless",
     expectedBuildLabel: "Paladin Bless",
     preparedSpells: [blessSpellId, cureWoundsSpellId],
+  });
+}
+
+function finalizedLevelOnePaladinShieldOfFaithBuild(): CharacterBuild {
+  return finalizedLevelOnePaladinBuild({
+    draftIdText: "draft:l1-sdk-paladin-shield-of-faith",
+    expectedBuildLabel: "Paladin Shield of Faith",
+    preparedSpells: [shieldOfFaithSpellId, blessSpellId],
   });
 }
 
@@ -8149,6 +8340,26 @@ function sanctuaryBonusActionSpellSlotAct(
   );
   if (act === undefined) {
     throw new Error("Expected Sanctuary Bonus Action spell-slot act.");
+  }
+  return act;
+}
+
+function shieldOfFaithBonusActionSpellSlotAct(
+  state: BattleState,
+  actorId: CombatantId,
+): CastBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is CastBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.mode.tag === "cast" &&
+      candidate.subject.invocation.tag === "spellSlot" &&
+      candidate.subject.invocation.spellId === shieldOfFaithSpellId &&
+      candidate.subject.invocation.slotLevel === 1 &&
+      candidate.subject.invocation.procedure === "scalarBuff",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Shield of Faith Bonus Action spell-slot act.");
   }
   return act;
 }

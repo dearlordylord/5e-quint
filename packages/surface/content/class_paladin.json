@@ -70,7 +70,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Paladin.md:3-24,33-38,66-124,168-184"
+    "section": "Classes/Paladin.md:3-24,33-38,66-124,168-188"
   },
   "savingThrowProficiencies": [
     "wis",
@@ -116,6 +116,10 @@
         },
         {
           "spellId": "cure_wounds",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "shield_of_faith",
           "spellLevel": 1
         }
       ]

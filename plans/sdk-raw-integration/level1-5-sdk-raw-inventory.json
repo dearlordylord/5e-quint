@@ -20735,6 +20735,21 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Shield of Faith",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+          ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+          ".references/srd-5.2.1/Classes/Cleric.md:168-176",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:122-124",
+          ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:228-237",
+          ".references/srd-5.2.1/Rules-Glossary.md:239-247"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -20742,7 +20757,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 176,
         "lineStart": 176,
@@ -31531,6 +31546,21 @@
       "category": "spell Unit pressure",
       "className": "Paladin",
       "concept": "Paladin spell list Shield of Faith",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+          ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+          ".references/srd-5.2.1/Classes/Paladin.md:180-188",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:122-124",
+          ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:228-237",
+          ".references/srd-5.2.1/Rules-Glossary.md:239-247"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -31538,7 +31568,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 188,
         "lineStart": 188,
@@ -56550,16 +56580,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 436,
+      "sdk-scenario-needed": 434,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 68,
+      "seed-scenario-present": 70,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 410,
+    "scenarioGroups": 411,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 84,
+      "battle-spell-sdk": 83,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56569,13 +56599,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 68,
+      "seed-present": 70,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 173,
+      "L15-SDK-RAW-03": 174,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -58835,79 +58865,6 @@
       "sampleConcepts": [
         "Sorcerer spell list Shield",
         "Wizard spell list Shield"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "shield_of_faith"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric",
-        "Paladin"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:shield-of-faith",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"shield_of_faith\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:176",
-        ".references/srd-5.2.1/Classes/Paladin.md:188"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "shield_of_faith",
-          "className": "Cleric",
-          "concept": "Cleric spell list Shield of Faith",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 176,
-            "lineStart": 176,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "shield_of_faith",
-          "className": "Paladin",
-          "concept": "Paladin spell list Shield of Faith",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 188,
-            "lineStart": 188,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Shield of Faith",
-        "Paladin spell list Shield of Faith"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65873,6 +65830,70 @@
     },
     {
       "candidateUnitIds": [
+        "shield_of_faith"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-cleric-shield-of-faith",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Cleric:shield_of_faith\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:168-176",
+        ".references/srd-5.2.1/Classes/Cleric.md:176",
+        ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+        ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+        ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:228-237",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:122-124",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "shield_of_faith",
+          "className": "Cleric",
+          "concept": "Cleric spell list Shield of Faith",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 176,
+            "lineStart": 176,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Shield of Faith"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "animal_friendship"
       ],
       "categories": [
@@ -66175,6 +66196,70 @@
       ],
       "sampleConcepts": [
         "Paladin spell list Cure Wounds"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "shield_of_faith"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Paladin"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-paladin-shield-of-faith",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Paladin:shield_of_faith\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Paladin.md:180-188",
+        ".references/srd-5.2.1/Classes/Paladin.md:188",
+        ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+        ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+        ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:228-237",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:122-124",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "shield_of_faith",
+          "className": "Paladin",
+          "concept": "Paladin spell list Shield of Faith",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 188,
+            "lineStart": 188,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Paladin spell list Shield of Faith"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85712,6 +85797,7 @@
     {
       "candidateUnitId": "barbarian_rage",
       "className": "Barbarian",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -85727,6 +85813,7 @@
     {
       "candidateUnitId": "bard_bardic_inspiration",
       "className": "Bard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -85742,6 +85829,7 @@
     {
       "candidateUnitId": "fighter_second_wind",
       "className": "Fighter",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Fighter Second Wind heals through sheet projection and spends one Bonus Action use",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -85757,6 +85845,7 @@
     {
       "candidateUnitId": "monk_martial_arts",
       "className": "Monk",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -85772,6 +85861,7 @@
     {
       "candidateUnitId": "rogue_sneak_attack",
       "className": "Rogue",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -85787,6 +85877,7 @@
     {
       "candidateUnitId": "sorcerer_innate_sorcery",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -85803,6 +85894,7 @@
     {
       "candidateUnitId": "vicious_mockery",
       "className": "Bard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard Vicious Mockery cantrip resolves from a level-1 sheet as a Wisdom save with Psychic damage and next Attack Roll Disadvantage",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -85887,6 +85979,7 @@
     {
       "candidateUnitId": "dissonant_whispers",
       "className": "Bard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard Dissonant Whispers resolves from a level-1 sheet as a Wisdom save with Psychic damage and forced Reaction movement",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -85984,6 +86077,7 @@
     {
       "candidateUnitId": "acid_splash",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -86043,6 +86137,7 @@
     {
       "candidateUnitId": "acid_splash",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -86102,6 +86197,7 @@
     {
       "candidateUnitId": "sorcerous_burst",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer Sorcerous Burst cantrip resolves from a level-1 sheet with selected exploding Damage Type damage",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -86180,6 +86276,7 @@
     {
       "candidateUnitId": "poison_spray",
       "className": "Druid",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -86248,6 +86345,7 @@
     {
       "candidateUnitId": "poison_spray",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -86311,6 +86409,7 @@
     {
       "candidateUnitId": "produce_flame",
       "className": "Druid",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Druid Produce Flame cantrip resolves from a level-1 sheet as held light and a ranged hurl without spending slots",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -86412,6 +86511,7 @@
     {
       "candidateUnitId": "shillelagh",
       "className": "Druid",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Druid Shillelagh cantrip resolves from a level-1 sheet as a Bonus Action Quarterstaff weapon override",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -86501,6 +86601,7 @@
     {
       "candidateUnitId": "sacred_flame",
       "className": "Cleric",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Cleric Sacred Flame cantrip resolves from a level-1 sheet as a Dexterity save with Radiant damage",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -86513,8 +86614,8 @@
             "draftIdText: \"draft:l1-sdk-cleric-sacred-flame\"",
             "expectedBuildLabel: \"Cleric Sacred Flame\"",
             "cantrips: [\"guidance\", sacredFlameSpellId, thaumaturgySpellId]",
-            "\"bless\"",
-            "\"shield_of_faith\""
+            "blessSpellId",
+            "shieldOfFaithSpellId"
           ]
         },
         {
@@ -86570,6 +86671,7 @@
     {
       "candidateUnitId": "thaumaturgy",
       "className": "Cleric",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Cleric Thaumaturgy Booming Voice cantrip resolves from a level-1 sheet with Advantage on Charisma (Intimidation) Ability Checks",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -86655,6 +86757,7 @@
     {
       "candidateUnitId": "guiding_bolt",
       "className": "Cleric",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Cleric Guiding Bolt resolves from a level-1 sheet as a ranged Spell Attack with Advantage on the next Attack Roll against the target before the caster's next turn ends",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -86736,6 +86839,7 @@
     {
       "candidateUnitId": "inflict_wounds",
       "className": "Cleric",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Cleric Inflict Wounds resolves from a level-1 sheet as a Constitution save with Necrotic damage",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -86817,6 +86921,7 @@
     {
       "candidateUnitId": "sanctuary",
       "className": "Cleric",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Cleric Sanctuary resolves from a level-1 sheet as a one-minute Bonus Action ward with a Wisdom save interdiction",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -86921,6 +87026,7 @@
     {
       "candidateUnitId": "poison_spray",
       "className": "Warlock",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -86990,6 +87096,7 @@
     {
       "candidateUnitId": "poison_spray",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -87053,6 +87160,7 @@
     {
       "candidateUnitId": "chill_touch",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -87124,6 +87232,7 @@
     {
       "candidateUnitId": "chill_touch",
       "className": "Warlock",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -87201,6 +87310,7 @@
     {
       "candidateUnitId": "chill_touch",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -87272,6 +87382,7 @@
     {
       "candidateUnitId": "eldritch_blast",
       "className": "Warlock",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Warlock Eldritch Blast cantrip resolves from a level-1 sheet as a ranged one-beam Spell Attack sequence without spending slots",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -87344,6 +87455,7 @@
     {
       "candidateUnitId": "hex",
       "className": "Warlock",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Warlock Hex resolves from a level-1 sheet through Pact Magic as a marked Necrotic rider and chosen Ability Check Disadvantage",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -87420,6 +87532,7 @@
     {
       "candidateUnitId": "animal_friendship",
       "className": "Bard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -87509,6 +87622,7 @@
     {
       "candidateUnitId": "animal_friendship",
       "className": "Druid",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -87598,6 +87712,7 @@
     {
       "candidateUnitId": "animal_friendship",
       "className": "Ranger",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -87687,6 +87802,7 @@
     {
       "candidateUnitId": "ranger_favored_enemy",
       "className": "Ranger",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Ranger Favored Enemy casts Hunter's Mark from a level-1 sheet without spending a Spell Slot and restores its free-cast pool on Long Rest",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -87794,6 +87910,7 @@
     {
       "candidateUnitId": "hunters_mark",
       "className": "Ranger",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Ranger Hunter's Mark resolves from a level-1 prepared spell-list choice through a Spell Slot",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -87892,6 +88009,7 @@
     {
       "candidateUnitId": "bless",
       "className": "Cleric",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -87979,6 +88097,7 @@
     {
       "candidateUnitId": "bless",
       "className": "Paladin",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -88083,8 +88202,248 @@
       ]
     },
     {
+      "candidateUnitId": "shield_of_faith",
+      "className": "Cleric",
+      "evidenceNeedles": [
+        {
+          "needles": [
+            "shieldOfFaithInput",
+            "id: \"shield_of_faith\"",
+            "targetKinds: [\"creature\"]",
+            "kind: \"modify_ac\""
+          ],
+          "path": "packages/surface/src/surface/unit-catalog.test.ts",
+          "testTitle": "keeps Shield of Faith's creature target and Armor Class bonus explicit"
+        },
+        {
+          "needles": [
+            "shieldOfFaithWithObjectTarget()",
+            "maybeBonusSpellAct({ state, spellId: spell.id })",
+            "toBeUndefined()"
+          ],
+          "path": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "testTitle": "scalar buff admission rejects explicit non-creature target selections"
+        }
+      ],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+          ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+          ".references/srd-5.2.1/Classes/Cleric.md:168-176",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:122-124",
+          ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:228-237",
+          ".references/srd-5.2.1/Rules-Glossary.md:239-247"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneClericShieldOfFaithBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneClericBuild({",
+            "draftIdText: \"draft:l1-sdk-cleric-shield-of-faith\"",
+            "expectedBuildLabel: \"Cleric Shield of Faith\"",
+            "shieldOfFaithSpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneShieldOfFaith",
+          "needles": [
+            "shieldOfFaithBonusActionSpellSlotAct(state, input.casterId)",
+            "snapshotCombatant(",
+            "expectedLevelOneShieldOfFaithEffect(input.casterId)",
+            "tag: \"bonusActionSpell\"",
+            "spellId: shieldOfFaithSpellId",
+            "procedure: \"scalarBuff\"",
+            "requiresTableSpatialFact: true",
+            "choices: expect.arrayContaining([input.casterId, input.targetId])",
+            "spellTargetFill(",
+            "activeEffects",
+            "toEqual([expectedEffect])",
+            "initialTargetArmorClass + 2",
+            "caster.concentration",
+            "effectKind: \"spellEffect\"",
+            "expectedPreservedActionResources",
+            "expect(initialActionResources).toEqual(expectedPreservedActionResources)",
+            "turn.bonusActionAvailable).toBe(false)",
+            "spellSlotUsesThisTurn",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function expectedLevelOneShieldOfFaithEffect",
+          "needles": [
+            "kind: \"spellArmorClassBonus\"",
+            "sourceSpellId: shieldOfFaithSpellId",
+            "bonus: 2",
+            "negatedSpellIds: []",
+            "expiresAt: {",
+            "kind: \"concentration\"",
+            "combatantId: casterId"
+          ]
+        },
+        {
+          "anchor": "function shieldOfFaithBonusActionSpellSlotAct",
+          "needles": [
+            "discoverBattleActs(state).find(",
+            "CastBonusActionSpellAct",
+            "actorId",
+            "shieldOfFaithSpellId",
+            "\"scalarBuff\"",
+            "Expected Shield of Faith Bonus Action spell-slot act."
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
+      "rowKey": "spell-level-1:Cleric:shield_of_faith",
+      "tracerNeedles": [
+        "const clericBuild = finalizedLevelOneClericShieldOfFaithBuild();",
+        "sourceUnitId: \"class_cleric\"",
+        "spellcastingAbility: \"wis\"",
+        "preparedSpells: expect.arrayContaining([shieldOfFaithSpellId])",
+        "build: clericBuild,",
+        "casterId: shieldOfFaithClericId,",
+        "targetId: shieldOfFaithTargetId,"
+      ]
+    },
+    {
+      "candidateUnitId": "shield_of_faith",
+      "className": "Paladin",
+      "evidenceNeedles": [
+        {
+          "needles": [
+            "shieldOfFaithInput",
+            "id: \"shield_of_faith\"",
+            "targetKinds: [\"creature\"]",
+            "kind: \"modify_ac\""
+          ],
+          "path": "packages/surface/src/surface/unit-catalog.test.ts",
+          "testTitle": "keeps Shield of Faith's creature target and Armor Class bonus explicit"
+        },
+        {
+          "needles": [
+            "shieldOfFaithWithObjectTarget()",
+            "maybeBonusSpellAct({ state, spellId: spell.id })",
+            "toBeUndefined()"
+          ],
+          "path": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "testTitle": "scalar buff admission rejects explicit non-creature target selections"
+        }
+      ],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+          ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+          ".references/srd-5.2.1/Classes/Paladin.md:180-188",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:122-124",
+          ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:228-237",
+          ".references/srd-5.2.1/Rules-Glossary.md:239-247"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOnePaladinShieldOfFaithBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOnePaladinBuild({",
+            "draftIdText: \"draft:l1-sdk-paladin-shield-of-faith\"",
+            "expectedBuildLabel: \"Paladin Shield of Faith\"",
+            "shieldOfFaithSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOnePaladinBuild(input:",
+          "needles": [
+            "createCharacterDraft({",
+            "draftId: characterDraftId(input.draftIdText)",
+            "\"class_paladin\"",
+            "\"class_prepared_spell_choices\"",
+            "...input.preparedSpells",
+            "\"paladin_weapon_mastery\"",
+            "\"weapon_longsword\"",
+            "\"weapon_spear\"",
+            "\"background_criminal\"",
+            "\"class_equipment_choice\"",
+            "\"equipment_purchase\"",
+            "\"wielded_one_handed\"",
+            "input.expectedBuildLabel",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneShieldOfFaith",
+          "needles": [
+            "shieldOfFaithBonusActionSpellSlotAct(state, input.casterId)",
+            "snapshotCombatant(",
+            "expectedLevelOneShieldOfFaithEffect(input.casterId)",
+            "tag: \"bonusActionSpell\"",
+            "spellId: shieldOfFaithSpellId",
+            "procedure: \"scalarBuff\"",
+            "requiresTableSpatialFact: true",
+            "choices: expect.arrayContaining([input.casterId, input.targetId])",
+            "spellTargetFill(",
+            "activeEffects",
+            "toEqual([expectedEffect])",
+            "initialTargetArmorClass + 2",
+            "caster.concentration",
+            "effectKind: \"spellEffect\"",
+            "expectedPreservedActionResources",
+            "expect(initialActionResources).toEqual(expectedPreservedActionResources)",
+            "turn.bonusActionAvailable).toBe(false)",
+            "spellSlotUsesThisTurn",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function expectedLevelOneShieldOfFaithEffect",
+          "needles": [
+            "kind: \"spellArmorClassBonus\"",
+            "sourceSpellId: shieldOfFaithSpellId",
+            "bonus: 2",
+            "negatedSpellIds: []",
+            "expiresAt: {",
+            "kind: \"concentration\"",
+            "combatantId: casterId"
+          ]
+        },
+        {
+          "anchor": "function shieldOfFaithBonusActionSpellSlotAct",
+          "needles": [
+            "discoverBattleActs(state).find(",
+            "CastBonusActionSpellAct",
+            "actorId",
+            "shieldOfFaithSpellId",
+            "\"scalarBuff\"",
+            "Expected Shield of Faith Bonus Action spell-slot act."
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
+      "rowKey": "spell-level-1:Paladin:shield_of_faith",
+      "tracerNeedles": [
+        "const paladinBuild = finalizedLevelOnePaladinShieldOfFaithBuild();",
+        "sourceUnitId: \"class_paladin\"",
+        "spellcastingAbility: \"cha\"",
+        "preparedSpells: expect.arrayContaining([shieldOfFaithSpellId])",
+        "build: paladinBuild,",
+        "casterId: shieldOfFaithPaladinId,",
+        "targetId: shieldOfFaithTargetId,"
+      ]
+    },
+    {
       "candidateUnitId": "cure_wounds",
       "className": "Bard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -88154,6 +88513,7 @@
     {
       "candidateUnitId": "cure_wounds",
       "className": "Cleric",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -88223,6 +88583,7 @@
     {
       "candidateUnitId": "cure_wounds",
       "className": "Druid",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -88292,6 +88653,7 @@
     {
       "candidateUnitId": "cure_wounds",
       "className": "Paladin",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -88380,6 +88742,7 @@
     {
       "candidateUnitId": "cure_wounds",
       "className": "Ranger",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -88468,6 +88831,7 @@
     {
       "candidateUnitId": "healing_word",
       "className": "Bard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -88546,6 +88910,7 @@
     {
       "candidateUnitId": "healing_word",
       "className": "Cleric",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -88624,6 +88989,7 @@
     {
       "candidateUnitId": "healing_word",
       "className": "Druid",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
@@ -88702,6 +89068,7 @@
     {
       "candidateUnitId": "ray_of_frost",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -88772,6 +89139,7 @@
     {
       "candidateUnitId": "ray_of_frost",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -88842,6 +89210,7 @@
     {
       "candidateUnitId": "shocking_grasp",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Shocking Grasp cantrips resolve from level-1 sheets as melee spell attacks with Lightning damage and Opportunity Attack denial",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -88907,6 +89276,7 @@
     {
       "candidateUnitId": "shocking_grasp",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Shocking Grasp cantrips resolve from level-1 sheets as melee spell attacks with Lightning damage and Opportunity Attack denial",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -88972,6 +89342,7 @@
     {
       "candidateUnitId": "burning_hands",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer Burning Hands resolves from a level-1 sheet, applies Fire damage, and spends a spell slot",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -88988,6 +89359,7 @@
     {
       "candidateUnitId": "burning_hands",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Wizard Burning Hands resolves from a level-1 spellbook sheet, applies Fire damage, and spends a spell slot",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89018,6 +89390,7 @@
     {
       "candidateUnitId": "mage_armor",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89077,6 +89450,7 @@
     {
       "candidateUnitId": "mage_armor",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89137,6 +89511,7 @@
     {
       "candidateUnitId": "false_life",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89191,6 +89566,7 @@
     {
       "candidateUnitId": "false_life",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89246,6 +89622,7 @@
     {
       "candidateUnitId": "ray_of_sickness",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Sickness resolve from level-1 spell access as Poison damage plus a turn-scoped Poisoned rider",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89318,6 +89695,7 @@
     {
       "candidateUnitId": "ray_of_sickness",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Sickness resolve from level-1 spell access as Poison damage plus a turn-scoped Poisoned rider",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89394,6 +89772,7 @@
     {
       "candidateUnitId": "thunderwave",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89501,6 +89880,7 @@
     {
       "candidateUnitId": "thunderwave",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89612,6 +89992,7 @@
     {
       "candidateUnitId": "chromatic_orb",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Chromatic Orb resolve from level-1 spell access with chosen damage and one duplicate-dice leap",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89693,6 +90074,7 @@
     {
       "candidateUnitId": "chromatic_orb",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Chromatic Orb resolve from level-1 spell access with chosen damage and one duplicate-dice leap",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89775,6 +90157,7 @@
     {
       "candidateUnitId": "magic_missile",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89836,6 +90219,7 @@
     {
       "candidateUnitId": "magic_missile",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89898,6 +90282,7 @@
     {
       "candidateUnitId": "fire_bolt",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -89957,6 +90342,7 @@
     {
       "candidateUnitId": "fire_bolt",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
@@ -90016,6 +90402,7 @@
     {
       "candidateUnitId": "monk_extra_attack",
       "className": "Monk",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level5-sdk-tracer-bullets: Extra Attack",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
@@ -90031,6 +90418,7 @@
     {
       "candidateUnitId": "monk_stunning_strike",
       "className": "Monk",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level5-sdk-tracer-bullets: Stunning Strike",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
@@ -90046,6 +90434,7 @@
     {
       "candidateUnitId": "rogue_cunning_strike",
       "className": "Rogue",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level5-sdk-tracer-bullets: Cunning Strike",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
@@ -90061,6 +90450,7 @@
     {
       "candidateUnitId": "sorcerer_sorcerous_restoration",
       "className": "Sorcerer",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level5-sdk-tracer-bullets: Sorcerous Restoration",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
@@ -90076,6 +90466,7 @@
     {
       "candidateUnitId": "haste",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level5-sdk-tracer-bullets: Haste",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
@@ -90091,6 +90482,7 @@
     {
       "candidateUnitId": "protection_from_energy",
       "className": "Wizard",
+      "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level5-sdk-tracer-bullets: Protection from Energy",
         "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
@@ -90115,6 +90507,10 @@
     },
     "miningAudit": "plans/unit-profile-coverage/level1-7-mining-audit.json",
     "plan": "plans/LEVEL1_5_SDK_RAW_INTEGRATION_TEST_PLAN.md",
+    "seedEvidenceFiles": [
+      "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+      "packages/surface/src/surface/unit-catalog.test.ts"
+    ],
     "seedScenarioFiles": [
       "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
       "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"

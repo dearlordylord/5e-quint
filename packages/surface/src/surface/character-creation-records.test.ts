@@ -711,6 +711,7 @@ describe("character-creation Surface records", () => {
               "bless",
               "command",
               "cure_wounds",
+              "shield_of_faith",
             ],
           }),
           kind: "list_prepared_spellcasting_progression_creation",

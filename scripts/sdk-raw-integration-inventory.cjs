@@ -54,6 +54,16 @@ const paths = {
       "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts",
     ),
   },
+  seedEvidenceFiles: {
+    scalarBuffAdmission: path.join(
+      root,
+      "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+    ),
+    surfaceUnitCatalog: path.join(
+      root,
+      "packages/surface/src/surface/unit-catalog.test.ts",
+    ),
+  },
   plan: path.join(root, "plans/LEVEL1_5_SDK_RAW_INTEGRATION_TEST_PLAN.md"),
   json: path.join(outputDir, "level1-5-sdk-raw-inventory.json"),
   report: path.join(outputDir, "LEVEL1_5_SDK_RAW_INVENTORY.md"),
@@ -901,8 +911,8 @@ const seededSdkScenarioRows = [
           'draftIdText: "draft:l1-sdk-cleric-sacred-flame"',
           'expectedBuildLabel: "Cleric Sacred Flame"',
           'cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId]',
-          '"bless"',
-          '"shield_of_faith"',
+          "blessSpellId",
+          "shieldOfFaithSpellId",
         ],
       },
       {
@@ -1956,6 +1966,70 @@ const seededSdkScenarioRows = [
       "targetId: blessTargetId,",
     ],
     helperNeedles: blessSdkHelperNeedles("Paladin"),
+  },
+  {
+    candidateUnitId: "shield_of_faith",
+    className: "Cleric",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+      ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+      ".references/srd-5.2.1/Classes/Cleric.md:168-176",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:122-124",
+      ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:228-237",
+      ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+    ],
+    rowId:
+      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
+    tracerNeedles: [
+      "const clericBuild = finalizedLevelOneClericShieldOfFaithBuild();",
+      'sourceUnitId: "class_cleric"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([shieldOfFaithSpellId])",
+      "build: clericBuild,",
+      "casterId: shieldOfFaithClericId,",
+      "targetId: shieldOfFaithTargetId,",
+    ],
+    helperNeedles: shieldOfFaithSdkHelperNeedles("Cleric"),
+    evidenceNeedles: shieldOfFaithSdkEvidenceNeedles(),
+  },
+  {
+    candidateUnitId: "shield_of_faith",
+    className: "Paladin",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+      ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+      ".references/srd-5.2.1/Classes/Paladin.md:180-188",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:122-124",
+      ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:228-237",
+      ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+    ],
+    rowId:
+      "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
+    tracerNeedles: [
+      "const paladinBuild = finalizedLevelOnePaladinShieldOfFaithBuild();",
+      'sourceUnitId: "class_paladin"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([shieldOfFaithSpellId])",
+      "build: paladinBuild,",
+      "casterId: shieldOfFaithPaladinId,",
+      "targetId: shieldOfFaithTargetId,",
+    ],
+    helperNeedles: shieldOfFaithSdkHelperNeedles("Paladin"),
+    evidenceNeedles: shieldOfFaithSdkEvidenceNeedles(),
   },
   {
     candidateUnitId: "cure_wounds",
@@ -3804,6 +3878,132 @@ function blessTargetListFillHelperNeedle() {
   };
 }
 
+function shieldOfFaithSdkHelperNeedles(className) {
+  return [
+    shieldOfFaithBuildHelperNeedle(className),
+    ...(className === "Paladin" ? [levelOnePaladinBuildHelperNeedle()] : []),
+    shieldOfFaithResolutionHelperNeedle(),
+    shieldOfFaithActiveEffectHelperNeedle(),
+    shieldOfFaithBonusActionSpellSlotActHelperNeedle(),
+  ];
+}
+
+function shieldOfFaithBuildHelperNeedle(className) {
+  const specs = {
+    Cleric: {
+      anchor:
+        "function finalizedLevelOneClericShieldOfFaithBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOneClericBuild({",
+      draftIdText: "draft:l1-sdk-cleric-shield-of-faith",
+      expectedBuildLabel: "Cleric Shield of Faith",
+      preparedNeedle: "shieldOfFaithSpellId",
+    },
+    Paladin: {
+      anchor:
+        "function finalizedLevelOnePaladinShieldOfFaithBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOnePaladinBuild({",
+      draftIdText: "draft:l1-sdk-paladin-shield-of-faith",
+      expectedBuildLabel: "Paladin Shield of Faith",
+      preparedNeedle: "shieldOfFaithSpellId",
+    },
+  };
+  const spec = specs[className];
+  if (spec === undefined) {
+    throw new Error(`Unsupported Shield of Faith seed class ${className}.`);
+  }
+  return {
+    anchor: spec.anchor,
+    needles: [
+      spec.buildHelper,
+      `draftIdText: "${spec.draftIdText}"`,
+      `expectedBuildLabel: "${spec.expectedBuildLabel}"`,
+      spec.preparedNeedle,
+    ],
+  };
+}
+
+function shieldOfFaithResolutionHelperNeedle() {
+  return {
+    anchor: "function assertLevelOneShieldOfFaith",
+    needles: [
+      "shieldOfFaithBonusActionSpellSlotAct(state, input.casterId)",
+      "snapshotCombatant(",
+      "expectedLevelOneShieldOfFaithEffect(input.casterId)",
+      'tag: "bonusActionSpell"',
+      "spellId: shieldOfFaithSpellId",
+      'procedure: "scalarBuff"',
+      "requiresTableSpatialFact: true",
+      "choices: expect.arrayContaining([input.casterId, input.targetId])",
+      "spellTargetFill(",
+      "activeEffects",
+      "toEqual([expectedEffect])",
+      "initialTargetArmorClass + 2",
+      "caster.concentration",
+      'effectKind: "spellEffect"',
+      "expectedPreservedActionResources",
+      "expect(initialActionResources).toEqual(expectedPreservedActionResources)",
+      "turn.bonusActionAvailable).toBe(false)",
+      "spellSlotUsesThisTurn",
+      "{ spellLevel: 1, count: 2, expended: 1 }",
+    ],
+  };
+}
+
+function shieldOfFaithActiveEffectHelperNeedle() {
+  return {
+    anchor: "function expectedLevelOneShieldOfFaithEffect",
+    needles: [
+      'kind: "spellArmorClassBonus"',
+      "sourceSpellId: shieldOfFaithSpellId",
+      "bonus: 2",
+      "negatedSpellIds: []",
+      "expiresAt: {",
+      'kind: "concentration"',
+      "combatantId: casterId",
+    ],
+  };
+}
+
+function shieldOfFaithBonusActionSpellSlotActHelperNeedle() {
+  return {
+    anchor: "function shieldOfFaithBonusActionSpellSlotAct",
+    needles: [
+      "discoverBattleActs(state).find(",
+      "CastBonusActionSpellAct",
+      "actorId",
+      "shieldOfFaithSpellId",
+      '"scalarBuff"',
+      "Expected Shield of Faith Bonus Action spell-slot act.",
+    ],
+  };
+}
+
+function shieldOfFaithSdkEvidenceNeedles() {
+  return [
+    {
+      path: paths.seedEvidenceFiles.surfaceUnitCatalog,
+      testTitle:
+        "keeps Shield of Faith's creature target and Armor Class bonus explicit",
+      needles: [
+        "shieldOfFaithInput",
+        'id: "shield_of_faith"',
+        'targetKinds: ["creature"]',
+        'kind: "modify_ac"',
+      ],
+    },
+    {
+      path: paths.seedEvidenceFiles.scalarBuffAdmission,
+      testTitle:
+        "scalar buff admission rejects explicit non-creature target selections",
+      needles: [
+        "shieldOfFaithWithObjectTarget()",
+        "maybeBonusSpellAct({ state, spellId: spell.id })",
+        "toBeUndefined()",
+      ],
+    },
+  ];
+}
+
 const seededSdkScenarioRecords = seededSdkScenarioRows.map((row) => ({
   rowId: row.rowId,
   rowKey: seedScenarioRowKey(row),
@@ -3812,6 +4012,11 @@ const seededSdkScenarioRecords = seededSdkScenarioRows.map((row) => ({
   candidateUnitId: row.candidateUnitId,
   tracerNeedles: row.tracerNeedles,
   helperNeedles: row.helperNeedles ?? [],
+  evidenceNeedles: (row.evidenceNeedles ?? []).map((evidence) => ({
+    path: toRepoPath(root, evidence.path),
+    testTitle: evidence.testTitle,
+    needles: evidence.needles,
+  })),
   existingSdkScenario: {
     label: row.label,
     path: toRepoPath(root, row.path),
@@ -4803,6 +5008,32 @@ function assertSeedScenarios(seedScenarioSources, rows) {
         }
       }
     }
+    for (const evidence of seed.evidenceNeedles ?? []) {
+      const evidenceSourceText = seedScenarioSources.get(evidence.path);
+      if (evidenceSourceText === undefined) {
+        seedErrors.push(
+          `${seed.rowId} evidence file ${toRepoPath(root, evidence.path)} was not read`,
+        );
+        continue;
+      }
+      const evidenceText = seedScenarioSourceText(
+        evidenceSourceText,
+        evidence.testTitle,
+      );
+      if (evidenceText === undefined) {
+        seedErrors.push(
+          `${seed.rowId} evidence test "${evidence.testTitle}" is absent from ${toRepoPath(root, evidence.path)}`,
+        );
+        continue;
+      }
+      for (const needle of evidence.needles) {
+        if (!evidenceText.includes(needle)) {
+          seedErrors.push(
+            `${seed.rowId} evidence needle "${needle}" is absent from test "${evidence.testTitle}"`,
+          );
+        }
+      }
+    }
     return seedErrors;
   });
   if (errors.length === 0) return;
@@ -4950,10 +5181,10 @@ function buildInventory() {
     ),
   };
   const seedScenarioSources = new Map(
-    Object.values(paths.seedScenarioFiles).map((seedPath) => [
-      seedPath,
-      fs.readFileSync(seedPath, "utf8"),
-    ]),
+    [
+      ...Object.values(paths.seedScenarioFiles),
+      ...Object.values(paths.seedEvidenceFiles),
+    ].map((seedPath) => [seedPath, fs.readFileSync(seedPath, "utf8")]),
   );
   const miningRows = miningAudit.rows
     .filter((row) => levelOneFiveBands.has(row.levelBand))
@@ -5007,6 +5238,9 @@ function buildInventory() {
       ),
       seedScenarioFiles: Object.values(paths.seedScenarioFiles).map(
         (seedPath) => toRepoPath(root, seedPath),
+      ),
+      seedEvidenceFiles: Object.values(paths.seedEvidenceFiles).map(
+        (evidencePath) => toRepoPath(root, evidencePath),
       ),
     },
     scope: {
