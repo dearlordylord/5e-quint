@@ -90,6 +90,9 @@ type ThunderwaveSavingThrowOutcomeHole = BattleSpellSavingThrowOutcomeHole & {
 const fighterId = combatantId("combatant:l1-sdk-fighter");
 const barbarianId = combatantId("combatant:l1-sdk-barbarian");
 const bardId = combatantId("combatant:l1-sdk-bard");
+const dissonantWhispersBardId = combatantId(
+  "combatant:l1-sdk-dissonant-whispers-bard",
+);
 const viciousMockeryBardId = combatantId(
   "combatant:l1-sdk-vicious-mockery-bard",
 );
@@ -190,6 +193,7 @@ const monkMartialArtsUnitId = "monk_martial_arts";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const rogueSneakAttackName = "Dagger";
 const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
+const dissonantWhispersSpellId = "dissonant_whispers";
 const viciousMockerySpellId = "vicious_mockery";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
@@ -551,6 +555,28 @@ describe("level 1 SDK RAW integration", () => {
       characterIdText: "character:l1-sdk-vicious-mockery-bard",
       build: bardBuild,
       casterId: viciousMockeryBardId,
+      expectedSpellSaveDc: 12,
+    });
+  });
+
+  test("Bard Dissonant Whispers resolves from a level-1 sheet as a Wisdom save with Psychic damage and forced Reaction movement", () => {
+    const bardBuild = finalizedLevelOneBardDissonantWhispersBuild();
+
+    expect(bardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_bard",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([dissonantWhispersSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneDissonantWhispers({
+      battleIdText: "battle:l1-sdk-dissonant-whispers-bard",
+      characterIdText: "character:l1-sdk-dissonant-whispers-bard",
+      build: bardBuild,
+      casterId: dissonantWhispersBardId,
       expectedSpellSaveDc: 12,
     });
   });
@@ -1621,6 +1647,199 @@ function assertLevelOneThunderwave(input: {
   expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(9));
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
   expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
+function assertLevelOneDissonantWhispers(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    dissonantWhispersSpellId,
+    1,
+    "saveGatedDamage",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(
+    target,
+    dissonantWhispersSpellId,
+    input.casterId,
+    monsterId,
+  );
+  const save = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "savingThrowOutcome",
+  );
+
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([monsterId]),
+  });
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(save).toMatchObject({
+    label: "Dissonant Whispers Saving Throw outcome",
+    ability: "wis",
+    dc: { kind: "caster_spell_save_dc" },
+    spell: {
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      targeting: { kind: "singleCombatant" },
+      damage: { expr: { dice: 3, dieSize: 6 }, damageType: "psychic" },
+      successDamage: "half",
+      rangeFeet: 60,
+      failedSavePostDamageRiders: [
+        {
+          kind: "forcedReactionMovement",
+          direction: "awayFromCaster",
+          route: "safest",
+          distance: "asFarAsPossible",
+          cost: "targetReactionIfAvailable",
+        },
+      ],
+    },
+  });
+
+  const failedSaveFill = savingThrowOutcomeFill(save, [
+    { targetId: monsterId, succeeded: false },
+  ]);
+  const failedDamage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, failedSaveFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(failedDamage).toMatchObject({
+    label: "Dissonant Whispers damage (3d6-psychic)",
+    spell: {
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      damage: { expr: { dice: 3, dieSize: 6 }, damageType: "psychic" },
+      successDamage: "half",
+      failedSavePostDamageRiders: [
+        {
+          kind: "forcedReactionMovement",
+          direction: "awayFromCaster",
+          route: "safest",
+          distance: "asFarAsPossible",
+          cost: "targetReactionIfAvailable",
+        },
+      ],
+    },
+    critical: false,
+  });
+
+  const movement = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        failedSaveFill,
+        damageRollFillWithGroups(failedDamage, [[3, 4, 5]]),
+      ],
+    }),
+    "movement",
+  );
+  const walkMovementBudget = requireMovementSpeedBudget(movement, "walk");
+  expect(movement).toMatchObject({
+    actorId: monsterId,
+    movementBudgetFeet: movementFeet(30),
+    speedKinds: expect.arrayContaining([
+      expect.objectContaining({
+        kind: "walk",
+        movementBudgetFeet: movementFeet(30),
+      }),
+    ]),
+  });
+
+  const failedSave = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        failedSaveFill,
+        damageRollFillWithGroups(failedDamage, [[3, 4, 5]]),
+        walkMovementFill(movement, {
+          movementCostFeet: walkMovementBudget,
+          provokedOpportunityAttacks: [],
+        }),
+      ],
+    }),
+  );
+  const failedSaveCaster = requireCharacterCombatant(
+    failedSave.state,
+    input.casterId,
+  );
+
+  expect(requireCombatant(failedSave.state, monsterId)).toMatchObject({
+    hp: Hp(1),
+    reactionAvailable: false,
+  });
+  expect(snapshotBattle(failedSave.state).turn.actionResources).toEqual([]);
+  expect(failedSaveCaster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+
+  const successfulSaveFill = savingThrowOutcomeFill(save, [
+    { targetId: monsterId, succeeded: true },
+  ]);
+  const successDamage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, successfulSaveFill],
+    }),
+    "rolledDice",
+  );
+  const successfulSave = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        successfulSaveFill,
+        damageRollFillWithGroups(successDamage, [[3, 4, 5]]),
+      ],
+    }),
+  );
+  const successfulSaveCaster = requireCharacterCombatant(
+    successfulSave.state,
+    input.casterId,
+  );
+
+  expect(requireCombatant(successfulSave.state, monsterId)).toMatchObject({
+    hp: Hp(7),
+    reactionAvailable: true,
+  });
+  expect(snapshotBattle(successfulSave.state).turn.actionResources).toEqual([]);
+  expect(successfulSaveCaster.origin.spellcasting?.spellSlots).toEqual([
     { spellLevel: 1, count: 2, expended: 1 },
   ]);
 }
@@ -4097,6 +4316,20 @@ function levelOneSorcererBurningHandsBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneBardDissonantWhispersBuild(): CharacterBuild {
+  return finalizedLevelOneBardBuild({
+    draftIdText: "draft:l1-sdk-bard-dissonant-whispers",
+    expectedBuildLabel: "Bard Dissonant Whispers",
+    cantrips: ["dancing_lights", viciousMockerySpellId],
+    preparedSpells: [
+      "charm_person",
+      "color_spray",
+      dissonantWhispersSpellId,
+      "healing_word",
+    ],
+  });
+}
+
 function finalizedLevelOneBardViciousMockeryBuild(): CharacterBuild {
   return finalizedLevelOneBardBuild({
     draftIdText: "draft:l1-sdk-bard-vicious-mockery",
@@ -5602,6 +5835,47 @@ function spellTargetFill(
     holeId: hole.holeId,
     value: targetId,
     spatialFacts: [{ kind: "spellTarget", casterId, targetId, spellId }],
+  };
+}
+
+function requireMovementSpeedBudget(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  kind: Extract<
+    BattleFill,
+    { readonly kind: "movement" }
+  >["value"]["speedKind"],
+): Extract<
+  BattleHole,
+  { readonly kind: "movement" }
+>["speedKinds"][number]["movementBudgetFeet"] {
+  const speedKind = hole.speedKinds.find((candidate) => candidate.kind === kind);
+  if (speedKind === undefined) {
+    throw new Error(`Expected ${kind} movement budget.`);
+  }
+  return speedKind.movementBudgetFeet;
+}
+
+function walkMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  value: {
+    readonly movementCostFeet: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["movementCostFeet"];
+    readonly provokedOpportunityAttacks: readonly {
+      readonly reactorId: CombatantId;
+      readonly attackName: string;
+    }[];
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: value.movementCostFeet,
+      provokedOpportunityAttacks: value.provokedOpportunityAttacks,
+    },
   };
 }
 

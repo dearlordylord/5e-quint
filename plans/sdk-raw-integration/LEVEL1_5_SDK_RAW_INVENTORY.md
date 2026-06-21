@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 457 |
+| sdk-scenario-needed | 456 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 47 |
+| seed-scenario-present | 48 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -85,7 +85,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 95 |
+| battle-spell-sdk | 94 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 10 |
 | owner-review | 6 |
-| seed-present | 47 |
+| seed-present | 48 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -159,6 +159,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack` / `level-1:Rogue:rogue_sneak_attack`: level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use
 - `srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery` / `level-1:Sorcerer:sorcerer_innate_sorcery`: level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses
 - `srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery` / `spell-level-0:Bard:vicious_mockery`: level1-sdk-raw-integration: Bard Vicious Mockery cantrip resolves from a level-1 sheet as a Wisdom save with Psychic damage and next Attack Roll Disadvantage
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers` / `spell-level-1:Bard:dissonant_whispers`: level1-sdk-raw-integration: Bard Dissonant Whispers resolves from a level-1 sheet as a Wisdom save with Psychic damage and forced Reaction movement
 - `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash` / `spell-level-0:Sorcerer:acid_splash`: level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots
 - `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash` / `spell-level-0:Wizard:acid_splash`: level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots
 - `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst` / `spell-level-0:Sorcerer:sorcerous_burst`: level1-sdk-raw-integration: Sorcerer Sorcerous Burst cantrip resolves from a level-1 sheet with selected exploding Damage Type damage

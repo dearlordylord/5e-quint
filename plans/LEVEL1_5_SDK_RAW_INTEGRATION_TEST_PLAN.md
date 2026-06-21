@@ -222,6 +222,14 @@ Current generated findings:
   Disadvantage rider storage and consumption by the target's next attack, action
   spend, and no spell-slot spend. It does not claim the RAW see-or-hear
   perception predicate or higher character-level cantrip scaling.
+- The level-1 Dissonant Whispers seed covers the Bard spell-list row through
+  level-1 Bard character creation, prepared-spell sheet projection, battle act
+  discovery, creature target selection, Wisdom Saving Throw shape, failed-save
+  3d6 Psychic damage, successful-save half damage, forced Reaction movement hole
+  and fill, target Reaction spend, Magic Action spend, and level-1 Spell Slot
+  spend. It does not claim pathfinding, Opportunity Attack derivation, the RAW
+  can-see/actual-within-range target-legality predicate, no-Reaction/no-movement
+  fallbacks, or higher-level Spell Slot scaling.
 - The level-1 Chill Touch seed covers the Sorcerer, Warlock, and Wizard
   cantrip spell-list rows through level-1 sheet projection, battle act
   discovery, Touch-range melee Spell Attack resolution, creature-or-object
@@ -277,8 +285,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 47 seed scenarios
-  present, 457 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 48 seed scenarios
+  present, 456 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -490,9 +498,9 @@ First implementation slice:
   Bolt, Ray of Frost, Shocking Grasp, Burning Hands, Mage Armor, False Life,
   Chromatic Orb, Ray of Sickness, Thunderwave, and Magic Missile from Sorcerer
   and Wizard sheets, plus class-specific rows when SRD access differs such as
-  Bard Vicious Mockery, Druid/Warlock Poison Spray, Druid Produce Flame, Cleric
-  Sacred Flame, Cleric Guiding Bolt, Sorcerer Sorcerous Burst, Warlock Chill
-  Touch, and Warlock Eldritch Blast.
+  Bard Dissonant Whispers, Bard Vicious Mockery, Druid/Warlock Poison Spray,
+  Druid Produce Flame, Cleric Sacred Flame, Cleric Guiding Bolt, Sorcerer
+  Sorcerous Burst, Warlock Chill Touch, and Warlock Eldritch Blast.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

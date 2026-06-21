@@ -15874,6 +15874,16 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Dissonant Whispers",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard Dissonant Whispers resolves from a level-1 sheet as a Wisdom save with Psychic damage and forced Reaction movement",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:79-89",
+          ".references/srd-5.2.1/Classes/Bard.md:158-171",
+          ".references/srd-5.2.1/Monsters/Monsters-P-S.md:1148-1159",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1558-1569"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -15881,7 +15891,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 171,
         "lineStart": 171,
@@ -56304,16 +56314,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 457,
+      "sdk-scenario-needed": 456,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 47,
+      "seed-scenario-present": 48,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 401,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 95,
+      "battle-spell-sdk": 94,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56323,7 +56333,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 47,
+      "seed-present": 48,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -57112,61 +57122,6 @@
         "Bard spell list Dancing Lights",
         "Sorcerer spell list Dancing Lights",
         "Wizard spell list Dancing Lights"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "dissonant_whispers"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:dissonant-whispers",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"dissonant_whispers\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:171"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "dissonant_whispers",
-          "className": "Bard",
-          "concept": "Bard spell list Dissonant Whispers",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 171,
-            "lineStart": 171,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Dissonant Whispers"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65660,6 +65615,65 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Shocking Grasp"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "dissonant_whispers"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-bard-dissonant-whispers",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Bard:dissonant_whispers\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:158-171",
+        ".references/srd-5.2.1/Classes/Bard.md:171",
+        ".references/srd-5.2.1/Classes/Bard.md:79-89",
+        ".references/srd-5.2.1/Monsters/Monsters-P-S.md:1148-1159",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1558-1569"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "dissonant_whispers",
+          "className": "Bard",
+          "concept": "Bard spell list Dissonant Whispers",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 171,
+            "lineStart": 171,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Dissonant Whispers"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85184,6 +85198,103 @@
         "cantrips: expect.arrayContaining([viciousMockerySpellId])",
         "build: bardBuild,",
         "casterId: viciousMockeryBardId,",
+        "expectedSpellSaveDc: 12,"
+      ]
+    },
+    {
+      "candidateUnitId": "dissonant_whispers",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard Dissonant Whispers resolves from a level-1 sheet as a Wisdom save with Psychic damage and forced Reaction movement",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:79-89",
+          ".references/srd-5.2.1/Classes/Bard.md:158-171",
+          ".references/srd-5.2.1/Monsters/Monsters-P-S.md:1148-1159",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:1558-1569"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneBardDissonantWhispersBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneBardBuild({",
+            "draftIdText: \"draft:l1-sdk-bard-dissonant-whispers\"",
+            "expectedBuildLabel: \"Bard Dissonant Whispers\"",
+            "dissonantWhispersSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneBardBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_bard\"",
+            "\"class_tool_proficiency_choice\"",
+            "\"class_cantrip_choices\"",
+            "\"class_prepared_spell_choices\"",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneDissonantWhispers",
+          "needles": [
+            "spellSlotActForProcedure(",
+            "dissonantWhispersSpellId",
+            "\"saveGatedDamage\"",
+            "spellTargetFill(",
+            "spellSaveDcForCaster(state, input.casterId)",
+            "label: \"Dissonant Whispers Saving Throw outcome\"",
+            "ability: \"wis\"",
+            "resource: { tag: \"spellSlot\", slotLevel: 1 }",
+            "targeting: { kind: \"singleCombatant\" }",
+            "damage: { expr: { dice: 3, dieSize: 6 }, damageType: \"psychic\" }",
+            "successDamage: \"half\"",
+            "rangeFeet: 60",
+            "kind: \"forcedReactionMovement\"",
+            "direction: \"awayFromCaster\"",
+            "route: \"safest\"",
+            "distance: \"asFarAsPossible\"",
+            "cost: \"targetReactionIfAvailable\"",
+            "label: \"Dissonant Whispers damage (3d6-psychic)\"",
+            "damageRollFillWithGroups(failedDamage, [[3, 4, 5]])",
+            "\"movement\"",
+            "const walkMovementBudget = requireMovementSpeedBudget(movement, \"walk\");",
+            "movementBudgetFeet: movementFeet(30)",
+            "walkMovementFill(movement,",
+            "movementCostFeet: walkMovementBudget",
+            "provokedOpportunityAttacks: []",
+            "hp: Hp(1)",
+            "reactionAvailable: false",
+            "expect(snapshotBattle(failedSave.state).turn.actionResources).toEqual([]);",
+            "{ spellLevel: 1, count: 2, expended: 1 }",
+            "succeeded: true",
+            "damageRollFillWithGroups(successDamage, [[3, 4, 5]])",
+            "hp: Hp(7)",
+            "reactionAvailable: true",
+            "expect(snapshotBattle(successfulSave.state).turn.actionResources).toEqual([]);"
+          ]
+        },
+        {
+          "anchor": "function walkMovementFill",
+          "needles": [
+            "kind: \"movement\"",
+            "movementCostFeet: value.movementCostFeet",
+            "provokedOpportunityAttacks: value.provokedOpportunityAttacks"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
+      "rowKey": "spell-level-1:Bard:dissonant_whispers",
+      "tracerNeedles": [
+        "const bardBuild = finalizedLevelOneBardDissonantWhispersBuild();",
+        "sourceUnitId: \"class_bard\"",
+        "spellcastingAbility: \"cha\"",
+        "preparedSpells: expect.arrayContaining([dissonantWhispersSpellId])",
+        "build: bardBuild,",
+        "casterId: dissonantWhispersBardId,",
         "expectedSpellSaveDc: 12,"
       ]
     },
