@@ -179,6 +179,17 @@ const seededSdkScenarioRows = [
     tracerNeedles: ["sorcererInnateSorceryUnitId", "sorcerousBurstSpellId"],
   },
   {
+    candidateUnitId: "burning_hands",
+    className: "Sorcerer",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Sorcerer Burning Hands resolves from a level-1 sheet, applies Fire damage, and spends a spell slot",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
+    tracerNeedles: ["levelOneSorcererBurningHandsBuild", "burningHandsSpellId"],
+  },
+  {
     candidateUnitId: "monk_extra_attack",
     className: "Monk",
     levelBand: "level-5",

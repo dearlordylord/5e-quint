@@ -7,6 +7,7 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
   startBattle,
+  type AvailableBattleAct,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -65,6 +66,15 @@ type CharacterCombatantState = BattleCreatureState & {
     BattleCreatureState["origin"],
     { readonly kind: "character" }
   >;
+};
+type CastActionSpellSubject = Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+> & {
+  readonly mode: { readonly tag: "cast" };
+};
+type CastActionSpellAct = AvailableBattleAct & {
+  readonly subject: CastActionSpellSubject;
 };
 
 type SheetFixture = {
@@ -325,7 +335,7 @@ export function spellSlotActForProcedure(
   spellId: string,
   slotLevel: number,
   procedure: SpellSlotProcedure,
-) {
+): CastActionSpellAct {
   const expectedInvocation = spellSlotInvocationRef(
     spellId,
     slotLevel,
@@ -335,14 +345,15 @@ export function spellSlotActForProcedure(
     throw new Error(`Expected ${spellId} spell-slot invocation.`);
   }
   const act = discoverBattleActs(state).find(
-    (candidate) =>
+    (candidate): candidate is CastActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
+      candidate.subject.mode.tag === "cast" &&
       candidate.subject.invocation.tag === "spellSlot" &&
       candidate.subject.invocation.spellId === expectedInvocation.spellId &&
       candidate.subject.invocation.slotLevel === expectedInvocation.slotLevel &&
       candidate.subject.invocation.procedure === expectedInvocation.procedure,
   );
-  if (act === undefined || act.subject.tag !== "actionSpell") {
+  if (act === undefined) {
     throw new Error(`Expected ${spellId} spell action.`);
   }
   return act;
@@ -519,6 +530,35 @@ export function savingThrowOutcomeFill(
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value: { outcomes },
+  };
+}
+
+export function areaSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  originAnchorId: CombatantId,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  if (
+    !("spell" in hole) ||
+    hole.spell.procedure === "rollModifier" ||
+    hole.spell.targeting.kind === "singleCombatant" ||
+    hole.spell.targeting.kind === "targetList"
+  ) {
+    throw new Error("Expected area Saving Throw outcome hole.");
+  }
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        originAnchorId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+      },
+      outcomes,
+    },
   };
 }
 

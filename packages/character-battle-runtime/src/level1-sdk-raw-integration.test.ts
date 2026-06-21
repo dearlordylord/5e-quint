@@ -29,6 +29,7 @@ import {
   attackRollFill,
   attackSubject,
   attackTargetFill,
+  areaSavingThrowOutcomeFill,
   battleFromSheets,
   characterResources,
   characterSheet,
@@ -42,6 +43,7 @@ import {
   requireResolved,
   requireRight,
   srdStatBlock,
+  spellSlotActForProcedure,
 } from "./sdk-integration-test-support.ts";
 
 const fighterId = combatantId("combatant:l1-sdk-fighter");
@@ -51,8 +53,10 @@ const inspiredAllyId = combatantId("combatant:l1-sdk-inspired-ally");
 const rogueId = combatantId("combatant:l1-sdk-rogue");
 const rogueAllyId = combatantId("combatant:l1-sdk-rogue-ally");
 const sorcererId = combatantId("combatant:l1-sdk-sorcerer");
+const burningHandsCasterId = combatantId("combatant:l1-sdk-burning-hands");
 const monkId = combatantId("combatant:l1-sdk-monk");
 const monsterId = combatantId("combatant:l1-sdk-monster");
+const secondMonsterId = combatantId("combatant:l1-sdk-second-monster");
 
 const fighterSecondWindUnitId = "fighter_second_wind";
 const barbarianRageUnitId = "barbarian_rage";
@@ -62,6 +66,7 @@ const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const rogueSneakAttackName = "Dagger";
 const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const sorcerousBurstSpellId = "sorcerous_burst";
+const burningHandsSpellId = "burning_hands";
 
 describe("level 1 SDK RAW integration", () => {
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
@@ -510,6 +515,90 @@ describe("level 1 SDK RAW integration", () => {
     expect(attackRoll).toMatchObject({ rollMode: "advantage" });
   });
 
+  test("Sorcerer Burning Hands resolves from a level-1 sheet, applies Fire damage, and spends a spell slot", () => {
+    const state = battleFromSheets({
+      battleIdText: "battle:l1-sdk-burning-hands-sorcerer",
+      characters: [
+        characterSheet({
+          characterIdText: "character:l1-sdk-burning-hands-sorcerer",
+          build: levelOneSorcererBurningHandsBuild(),
+          combatantId: burningHandsCasterId,
+          initiative: 20,
+          maximumHp: 8,
+        }),
+      ],
+      monsters: [
+        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+        monsterBattleInput(
+          secondMonsterId,
+          8,
+          srdStatBlock("stat_block_skeleton"),
+        ),
+      ],
+    });
+    const act = spellSlotActForProcedure(
+      state,
+      burningHandsSpellId,
+      1,
+      "saveGatedDamage",
+    );
+    const save = requireHoleFromList(act.initialHoles, "savingThrowOutcome");
+
+    expect(spellSaveDcForCaster(state, burningHandsCasterId)).toBe(13);
+    expect(save).toMatchObject({
+      label: "Burning Hands self-origin Cone Saving Throw outcomes",
+      ability: "dex",
+      dc: { kind: "caster_spell_save_dc" },
+      spell: {
+        targeting: { kind: "selfOriginCone", lengthFeet: 15 },
+        damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" },
+        successDamage: "half",
+        rangeFeet: 0,
+      },
+    });
+
+    const saveFill = areaSavingThrowOutcomeFill(save, burningHandsCasterId, [
+      { targetId: monsterId, succeeded: false },
+      { targetId: secondMonsterId, succeeded: true },
+    ]);
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [saveFill],
+      }),
+      "rolledDice",
+    );
+
+    expect(damage).toMatchObject({
+      label: "Burning Hands damage (3d6-fire)",
+      spell: {
+        damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" },
+        successDamage: "half",
+      },
+      critical: false,
+    });
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [saveFill, damageRollFillWithGroups(damage, [[4, 4, 4]])],
+      }),
+    );
+    const caster = requireCharacterCombatant(
+      resolved.state,
+      burningHandsCasterId,
+    );
+
+    expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(1));
+    expect(requireCombatant(resolved.state, secondMonsterId).hp).toBe(Hp(7));
+    expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+    expect(caster.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 1, count: 2, expended: 1 },
+    ]);
+  });
+
   test("Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity", () => {
     const state = battleFromSheets({
       battleIdText: "battle:l1-sdk-martial-arts",
@@ -647,6 +736,43 @@ function levelOneEquipment(
     owned: [{ itemId: weaponItemId, unitId: weaponUnitId }],
     loadout: { weapon: { itemId: weaponItemId, grip: "one_handed" } },
   };
+}
+
+function levelOneSorcererBurningHandsBuild(): CharacterBuild {
+  return levelOneSingleClassBuild({
+    classUnitId: "class_sorcerer",
+    abilityScores: {
+      str: 8,
+      dex: 14,
+      con: 14,
+      int: 10,
+      wis: 10,
+      cha: 16,
+    },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_sorcerer",
+          spellcastingAbility: "cha",
+          cantrips: [
+            "fire_bolt",
+            "light",
+            "shocking_grasp",
+            sorcerousBurstSpellId,
+          ],
+          spellbook: [],
+          preparedSpells: [burningHandsSpellId, "detect_magic"],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 2 }],
+        },
+      },
+    },
+  });
 }
 
 function unitFeatureActForUnitId(

@@ -130,15 +130,23 @@ Current generated findings:
   `prestidigitation`, but the current executable Unit catalog does not install
   that spell Unit; full level-1 Sorcerer spell access closure remains part of
   Task 3 rather than this battle-feature seed.
-- The generated scenario groups are split by task: 147 groups for level 1,
+- The level-1 Burning Hands seed covers the Sorcerer spell-list row through
+  level-1 sheet projection, battle act discovery, self-origin Cone Saving Throw
+  resolution, Fire damage, and spell-slot spend. It does not claim the Wizard
+  row yet because the current `class_wizard` spellbook access content does not
+  expose `burning_hands` through the character-creation owner. It also does not
+  assert the RAW flammable-object clause, which `burning_hands.dhall` explicitly
+  closes as non-deterministic table narrative outside executable combat
+  mechanics.
+- The generated scenario groups are split by task: 148 groups for level 1,
   33 for level 2, 107 for level 3/spell level 2, 25 for level 4, and 72 for
   level 5/spell level 3.
 - The current level-5 SDK dispositions are: 6 seed scenarios present, 35 SDK
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 12 seed scenarios
-  present, 492 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 13 seed scenarios
+  present, 491 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -344,12 +352,13 @@ First implementation slice:
 - Add a package-local level-1 battle-feature SDK suite for Fighter Second Wind,
   Barbarian Rage, Bardic Inspiration, Rogue Sneak Attack, Sorcerer Innate
   Sorcery, and Monk Martial Arts.
+- Add a level-1 spell SDK seed for Burning Hands from a Sorcerer sheet.
+- Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
+  is Warlock level 3, not character level 1.
 
 Current seed:
 
 - `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
-- Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
-  is Warlock level 3, not character level 1.
 
 ### Task 4 - L15-SDK-RAW-04 - Level 2 resource and rest integration suite
 
