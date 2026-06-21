@@ -41992,6 +41992,10 @@
       "category": "spell Unit pressure",
       "className": "Warlock",
       "concept": "Warlock spell list Eldritch Blast",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Warlock Eldritch Blast cantrip resolves from a level-1 sheet as a ranged one-beam Spell Attack sequence without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -41999,7 +42003,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 337,
         "lineStart": 337,
@@ -56269,16 +56273,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 463,
+      "sdk-scenario-needed": 462,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 41,
+      "seed-scenario-present": 42,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 401,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 101,
+      "battle-spell-sdk": 100,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56288,7 +56292,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 41,
+      "seed-present": 42,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -57242,61 +57246,6 @@
       ],
       "sampleConcepts": [
         "Paladin spell list Divine Smite"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "eldritch_blast"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Warlock"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:eldritch-blast",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-0"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"eldritch_blast\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Warlock.md:337"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "eldritch_blast",
-          "className": "Warlock",
-          "concept": "Warlock spell list Eldritch Blast",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 337,
-            "lineStart": 337,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Warlock spell list Eldritch Blast"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65291,6 +65240,61 @@
       ],
       "sampleConcepts": [
         "Warlock spell list Chill Touch"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "eldritch_blast"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Warlock"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-warlock-eldritch-blast",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Warlock:eldritch_blast\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Warlock.md:337"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "eldritch_blast",
+          "className": "Warlock",
+          "concept": "Warlock spell list Eldritch Blast",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 337,
+            "lineStart": 337,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Warlock spell list Eldritch Blast"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85661,6 +85665,78 @@
         "casterId: chillTouchWizardId,",
         "expectedSpellAttackBonus: 5,",
         "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
+      ]
+    },
+    {
+      "candidateUnitId": "eldritch_blast",
+      "className": "Warlock",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Warlock Eldritch Blast cantrip resolves from a level-1 sheet as a ranged one-beam Spell Attack sequence without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWarlockEldritchBlastBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWarlockBuild({",
+            "draftIdText: \"draft:l1-sdk-warlock-eldritch-blast\"",
+            "expectedBuildLabel: \"Warlock Eldritch Blast\"",
+            "cantrips: [eldritchBlastSpellId, poisonSpraySpellId]",
+            "eldritchInvocation: \"eldritch_mind\""
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWarlockBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_warlock\"",
+            "\"class_cantrip_choices\"",
+            "\"warlock_eldritch_invocations\"",
+            "\"eldritch_invocations\"",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneEldritchBlast",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "eldritchBlastSpellId",
+            "\"spellAttackSequence\"",
+            "srdStatBlock(\"stat_block_goblin_warrior\")",
+            "expect(act.initialHoles).toHaveLength(2)",
+            "\"Eldritch Blast attack 1 target\"",
+            "\"Eldritch Blast attack 1 object target\"",
+            "requiresTableSpatialFact: true",
+            "attackBonus: input.expectedSpellAttackBonus",
+            "resource: { tag: \"none\" }",
+            "attackKind: \"ranged_spell_attack\"",
+            "kind: \"spellAttackSequenceCreatureOrObject\"",
+            "countSource: \"characterLevel\"",
+            "attackCount: 1",
+            "rangeFeet: 120",
+            "expr: { dice: 1, dieSize: 10 }",
+            "damageType: \"force\"",
+            "label: \"Eldritch Blast attack 1 damage (1d10-force)\"",
+            "damageRollFillWithGroups(damage, [[6]])",
+            "Hp(4)",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "expect(caster.origin.spellcasting?.spellSlots).toEqual([]);"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
+      "rowKey": "spell-level-0:Warlock:eldritch_blast",
+      "tracerNeedles": [
+        "const warlockBuild = finalizedLevelOneWarlockEldritchBlastBuild();",
+        "sourceUnitId: \"class_warlock\"",
+        "cantrips: expect.arrayContaining([eldritchBlastSpellId])",
+        "pactMagic: { kind: \"pactMagic\", slotLevel: 1, count: 1 }",
+        "build: warlockBuild,",
+        "casterId: eldritchBlastWarlockId,",
+        "expectedSpellAttackBonus: 4,"
       ]
     },
     {

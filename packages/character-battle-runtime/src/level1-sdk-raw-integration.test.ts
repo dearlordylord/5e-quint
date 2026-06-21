@@ -115,6 +115,9 @@ const chillTouchWarlockId = combatantId(
   "combatant:l1-sdk-chill-touch-warlock",
 );
 const chillTouchWizardId = combatantId("combatant:l1-sdk-chill-touch-wizard");
+const eldritchBlastWarlockId = combatantId(
+  "combatant:l1-sdk-eldritch-blast-warlock",
+);
 const fireBoltSorcererId = combatantId("combatant:l1-sdk-fire-bolt-sorcerer");
 const fireBoltWizardId = combatantId("combatant:l1-sdk-fire-bolt-wizard");
 const rayOfFrostSorcererId = combatantId(
@@ -176,6 +179,7 @@ const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
 const chillTouchSpellId = "chill_touch";
+const eldritchBlastSpellId = "eldritch_blast";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
 const rayOfFrostSpellId = "ray_of_frost";
@@ -878,6 +882,30 @@ describe("level 1 SDK RAW integration", () => {
       casterId: chillTouchWizardId,
       expectedSpellAttackBonus: 5,
       expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
+    });
+  });
+
+  test("Warlock Eldritch Blast cantrip resolves from a level-1 sheet as a ranged one-beam Spell Attack sequence without spending slots", () => {
+    const warlockBuild = finalizedLevelOneWarlockEldritchBlastBuild();
+
+    expect(warlockBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_warlock",
+          cantrips: expect.arrayContaining([eldritchBlastSpellId]),
+        }),
+      ]),
+    );
+    expect(warlockBuild.spellcasting?.slotPools).toMatchObject({
+      pactMagic: { kind: "pactMagic", slotLevel: 1, count: 1 },
+    });
+
+    assertLevelOneEldritchBlast({
+      battleIdText: "battle:l1-sdk-eldritch-blast-warlock",
+      characterIdText: "character:l1-sdk-eldritch-blast-warlock",
+      build: warlockBuild,
+      casterId: eldritchBlastWarlockId,
+      expectedSpellAttackBonus: 4,
     });
   });
 
@@ -1826,6 +1854,129 @@ function assertLevelOneChillTouch(input: {
   expect(caster.origin.spellcasting?.spellSlots).toEqual(
     input.expectedSpellSlots,
   );
+}
+
+function assertLevelOneEldritchBlast(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellAttackBonus: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock("stat_block_goblin_warrior"),
+      ),
+    ],
+  });
+  const act = cantripCastActionSpellAct(
+    state,
+    input.casterId,
+    eldritchBlastSpellId,
+    "spellAttackSequence",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const objectTarget = requireHoleFromList(
+    act.initialHoles,
+    "objectTargetChoice",
+  );
+  const targetFill = spellTargetFill(
+    target,
+    eldritchBlastSpellId,
+    input.casterId,
+    monsterId,
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "attackRoll",
+  );
+
+  expect(act.initialHoles).toHaveLength(2);
+  expect(target).toMatchObject({
+    label: "Eldritch Blast attack 1 target",
+    choices: expect.arrayContaining([monsterId]),
+  });
+  expect(objectTarget).toMatchObject({
+    label: "Eldritch Blast attack 1 object target",
+    requiresTableSpatialFact: true,
+  });
+  expect(attackRoll).toMatchObject({
+    label: "Eldritch Blast attack 1 spell attack roll",
+    attackBonus: input.expectedSpellAttackBonus,
+    spell: {
+      resource: { tag: "none" },
+      attackKind: "ranged_spell_attack",
+      targeting: {
+        kind: "spellAttackSequenceCreatureOrObject",
+        countSource: "characterLevel",
+        attackCount: 1,
+      },
+      rangeFeet: 120,
+      damage: {
+        expr: { dice: 1, dieSize: 10 },
+        damageType: "force",
+      },
+    },
+  });
+
+  const attackFill = attackRollFill(attackRoll, {
+    total: 13 + input.expectedSpellAttackBonus,
+    naturalD20: 13,
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, attackFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Eldritch Blast attack 1 damage (1d10-force)",
+    spell: {
+      resource: { tag: "none" },
+      damage: {
+        expr: { dice: 1, dieSize: 10 },
+        damageType: "force",
+      },
+    },
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(damage, [[6]]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(4));
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([]);
 }
 
 function assertLevelOneFireBolt(input: {
@@ -3385,6 +3536,16 @@ function finalizedLevelOneWarlockChillTouchBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-warlock-chill-touch",
     expectedBuildLabel: "Warlock Chill Touch",
     cantrips: [chillTouchSpellId, "eldritch_blast"],
+    preparedSpells: ["hex", "hellish_rebuke"],
+    eldritchInvocation: "eldritch_mind",
+  });
+}
+
+function finalizedLevelOneWarlockEldritchBlastBuild(): CharacterBuild {
+  return finalizedLevelOneWarlockBuild({
+    draftIdText: "draft:l1-sdk-warlock-eldritch-blast",
+    expectedBuildLabel: "Warlock Eldritch Blast",
+    cantrips: [eldritchBlastSpellId, poisonSpraySpellId],
     preparedSpells: ["hex", "hellish_rebuke"],
     eldritchInvocation: "eldritch_mind",
   });
