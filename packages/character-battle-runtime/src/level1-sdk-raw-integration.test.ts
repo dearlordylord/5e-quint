@@ -90,6 +90,9 @@ type ThunderwaveSavingThrowOutcomeHole = BattleSpellSavingThrowOutcomeHole & {
 const fighterId = combatantId("combatant:l1-sdk-fighter");
 const barbarianId = combatantId("combatant:l1-sdk-barbarian");
 const bardId = combatantId("combatant:l1-sdk-bard");
+const viciousMockeryBardId = combatantId(
+  "combatant:l1-sdk-vicious-mockery-bard",
+);
 const inspiredAllyId = combatantId("combatant:l1-sdk-inspired-ally");
 const rogueId = combatantId("combatant:l1-sdk-rogue");
 const rogueAllyId = combatantId("combatant:l1-sdk-rogue-ally");
@@ -187,6 +190,7 @@ const monkMartialArtsUnitId = "monk_martial_arts";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const rogueSneakAttackName = "Dagger";
 const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
+const viciousMockerySpellId = "vicious_mockery";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
@@ -527,6 +531,28 @@ describe("level 1 SDK RAW integration", () => {
         }),
       ]),
     );
+  });
+
+  test("Bard Vicious Mockery cantrip resolves from a level-1 sheet as a Wisdom save with Psychic damage and next Attack Roll Disadvantage", () => {
+    const bardBuild = finalizedLevelOneBardViciousMockeryBuild();
+
+    expect(bardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_bard",
+          spellcastingAbility: "cha",
+          cantrips: expect.arrayContaining([viciousMockerySpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneViciousMockery({
+      battleIdText: "battle:l1-sdk-vicious-mockery-bard",
+      characterIdText: "character:l1-sdk-vicious-mockery-bard",
+      build: bardBuild,
+      casterId: viciousMockeryBardId,
+      expectedSpellSaveDc: 12,
+    });
   });
 
   test("Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses", () => {
@@ -1596,6 +1622,200 @@ function assertLevelOneThunderwave(input: {
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
   expect(caster.origin.spellcasting?.spellSlots).toEqual([
     { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
+function assertLevelOneViciousMockery(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = cantripCastActionSpellAct(
+    state,
+    input.casterId,
+    viciousMockerySpellId,
+    "saveGatedDamage",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(
+    target,
+    viciousMockerySpellId,
+    input.casterId,
+    monsterId,
+  );
+  const save = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "savingThrowOutcome",
+  );
+
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([monsterId]),
+  });
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(save).toMatchObject({
+    label: "Vicious Mockery Saving Throw outcome",
+    ability: "wis",
+    dc: { kind: "caster_spell_save_dc" },
+    spell: {
+      resource: { tag: "none" },
+      targeting: { kind: "singleCombatant" },
+      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "psychic" },
+      successDamage: "none",
+      rangeFeet: 60,
+      failedSavePostDamageRiders: [
+        {
+          kind: "nextAttackRollByTarget",
+          mode: "disadvantage",
+          expiresAt: "endOfTargetNextTurn",
+        },
+      ],
+    },
+  });
+
+  const failedSaveFill = savingThrowOutcomeFill(save, [
+    { targetId: monsterId, succeeded: false },
+  ]);
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, failedSaveFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Vicious Mockery damage (1d6-psychic)",
+    spell: {
+      resource: { tag: "none" },
+      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "psychic" },
+      successDamage: "none",
+      failedSavePostDamageRiders: [
+        {
+          kind: "nextAttackRollByTarget",
+          mode: "disadvantage",
+          expiresAt: "endOfTargetNextTurn",
+        },
+      ],
+    },
+    critical: false,
+  });
+
+  const failedSave = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        failedSaveFill,
+        damageRollFillWithGroups(damage, [[6]]),
+      ],
+    }),
+  );
+  const failedSaveCaster = requireCharacterCombatant(
+    failedSave.state,
+    input.casterId,
+  );
+
+  expect(requireCombatant(failedSave.state, monsterId)).toMatchObject({
+    hp: Hp(7),
+    activeEffects: expect.arrayContaining([
+      expect.objectContaining({
+        kind: "nextAttackRollBySelf",
+        sourceSpellId: viciousMockerySpellId,
+        sourceCombatantId: input.casterId,
+        mode: "disadvantage",
+        expiresAt: { kind: "endOfTurn", combatantId: monsterId, round: 1 },
+      }),
+    ]),
+  });
+  expect(snapshotBattle(failedSave.state).turn.actionResources).toEqual([]);
+  expect(failedSaveCaster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+
+  const monsterTurn = requireResolved(
+    endTurn({ state: failedSave.state, actorId: input.casterId }),
+  ).state;
+  const monsterAttack = attackSubject(monsterTurn, monsterId, "Shortsword");
+  const attackTarget = requireHole(
+    resolveBattleSubject({
+      state: monsterTurn,
+      subject: monsterAttack,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state: monsterTurn,
+      subject: monsterAttack,
+      fills: [
+        attackTargetFill(attackTarget, monsterId, input.casterId, "Shortsword"),
+      ],
+    }),
+    "attackRoll",
+  );
+
+  expect(attackRoll).toMatchObject({ rollMode: "disadvantage" });
+
+  const afterMockedAttack = resolveOrdinaryAttackDamage({
+    state: monsterTurn,
+    subject: monsterAttack,
+    targetId: input.casterId,
+    attackRoll: { total: 18, naturalD20: 14, rollMode: "disadvantage" },
+    damageDice: [[3]],
+  });
+
+  expect(
+    requireCombatant(afterMockedAttack.state, monsterId).activeEffects,
+  ).toEqual([]);
+
+  const successfulSave = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(save, [{ targetId: monsterId, succeeded: true }]),
+      ],
+    }),
+  );
+  const successfulSaveCaster = requireCharacterCombatant(
+    successfulSave.state,
+    input.casterId,
+  );
+
+  expect(requireCombatant(successfulSave.state, monsterId)).toMatchObject({
+    hp: Hp(13),
+    activeEffects: [],
+  });
+  expect(snapshotBattle(successfulSave.state).turn.actionResources).toEqual([]);
+  expect(successfulSaveCaster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
   ]);
 }
 
@@ -3875,6 +4095,135 @@ function levelOneSorcererBurningHandsBuild(): CharacterBuild {
       },
     },
   });
+}
+
+function finalizedLevelOneBardViciousMockeryBuild(): CharacterBuild {
+  return finalizedLevelOneBardBuild({
+    draftIdText: "draft:l1-sdk-bard-vicious-mockery",
+    expectedBuildLabel: "Bard Vicious Mockery",
+    cantrips: ["dancing_lights", viciousMockerySpellId],
+    preparedSpells: [
+      "charm_person",
+      "color_spray",
+      "healing_word",
+      thunderwaveSpellId,
+    ],
+  });
+}
+
+function finalizedLevelOneBardBuild(input: {
+  readonly draftIdText: string;
+  readonly expectedBuildLabel: string;
+  readonly cantrips: readonly string[];
+  readonly preparedSpells: readonly string[];
+}): CharacterBuild {
+  const draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId(input.draftIdText),
+  });
+  const afterInitial = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        creationChoiceFill(
+          "cc:draft:draft.progression.initial",
+          "10:class_bard:level_1:maximum_hit_die",
+        ),
+        creationChoiceFill("cc:draft:draft.background", "background_criminal"),
+        creationChoiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: requireRight(
+            abilityScoreAssignment({
+              str: 8,
+              dex: 14,
+              con: 13,
+              int: 10,
+              wis: 12,
+              cha: 15,
+            }),
+          ),
+        },
+        creationChoiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        creationChoiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_bard", "class_skill_proficiency_choice"),
+          "arcana",
+          "performance",
+          "persuasion",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_bard", "class_tool_proficiency_choice"),
+          "tool:tool_drum",
+          "tool:tool_flute",
+          "tool:tool_lute",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_bard", "class_cantrip_choices"),
+          ...input.cantrips,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_bard", "class_prepared_spell_choices"),
+          ...input.preparedSpells,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:dex:con",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          "thieves_tools",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_bard", "class_equipment_choice"),
+          "option_b",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_equipment_choice",
+          ),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_bard", "equipment_purchase"),
+          "weapon_dagger",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
+    );
+  }
+  return result.build;
 }
 
 function finalizedLevelOneClericSacredFlameBuild(): CharacterBuild {

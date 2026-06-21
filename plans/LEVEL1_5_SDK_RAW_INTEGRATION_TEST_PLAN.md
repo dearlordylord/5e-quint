@@ -215,6 +215,13 @@ Current generated findings:
   Roll against the hit target before the caster's next turn ends, and
   consumption of that rider by the next allied Attack Roll. The level-1 seed
   does not claim the RAW higher-level Spell Slot scaling row.
+- The level-1 Vicious Mockery seed covers the Bard cantrip spell-list row
+  through level-1 Bard character creation, cantrip sheet projection, battle act
+  discovery, creature target selection, Wisdom Saving Throw shape, failed-save
+  1d6 Psychic damage, successful-save no-damage behavior, next Attack Roll
+  Disadvantage rider storage and consumption by the target's next attack, action
+  spend, and no spell-slot spend. It does not claim the RAW see-or-hear
+  perception predicate or higher character-level cantrip scaling.
 - The level-1 Chill Touch seed covers the Sorcerer, Warlock, and Wizard
   cantrip spell-list rows through level-1 sheet projection, battle act
   discovery, Touch-range melee Spell Attack resolution, creature-or-object
@@ -270,8 +277,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 46 seed scenarios
-  present, 458 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 47 seed scenarios
+  present, 457 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -483,9 +490,9 @@ First implementation slice:
   Bolt, Ray of Frost, Shocking Grasp, Burning Hands, Mage Armor, False Life,
   Chromatic Orb, Ray of Sickness, Thunderwave, and Magic Missile from Sorcerer
   and Wizard sheets, plus class-specific rows when SRD access differs such as
-  Druid/Warlock Poison Spray, Druid Produce Flame, Cleric Sacred Flame, Cleric
-  Guiding Bolt, Sorcerer Sorcerous Burst, Warlock Chill Touch, and Warlock
-  Eldritch Blast.
+  Bard Vicious Mockery, Druid/Warlock Poison Spray, Druid Produce Flame, Cleric
+  Sacred Flame, Cleric Guiding Bolt, Sorcerer Sorcerous Burst, Warlock Chill
+  Touch, and Warlock Eldritch Blast.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 
