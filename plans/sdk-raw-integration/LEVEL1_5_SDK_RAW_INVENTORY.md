@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 494 |
+| sdk-scenario-needed | 493 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 10 |
+| seed-scenario-present | 11 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -84,7 +84,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Lane | Groups |
 | --- | ---: |
-| battle-feature-sdk | 23 |
+| battle-feature-sdk | 22 |
 | battle-spell-sdk | 113 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 10 |
 | owner-review | 6 |
-| seed-present | 10 |
+| seed-present | 11 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -153,6 +153,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 ## Existing SDK Seed Scenario Rows
 
 - `srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage` / `level-1:Barbarian:barbarian_rage`: level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders
+- `srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration` / `level-1:Bard:bard_bardic_inspiration`: level1-sdk-raw-integration: Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action
 - `srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind` / `level-1:Fighter:fighter_second_wind`: level1-sdk-raw-integration: Fighter Second Wind heals through sheet projection and spends one Bonus Action use
 - `srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts` / `level-1:Monk:monk_martial_arts`: level1-sdk-raw-integration: Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity
 - `srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack` / `level-1:Rogue:rogue_sneak_attack`: level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use

@@ -13866,6 +13866,10 @@
       "category": "class feature",
       "className": "Bard",
       "concept": "Bard Bardic Inspiration",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -13900,7 +13904,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 68,
         "lineStart": 57,
@@ -56145,15 +56149,15 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 494,
+      "sdk-scenario-needed": 493,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 10,
+      "seed-scenario-present": 11,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 384,
     "scenarioGroupsByLane": {
-      "battle-feature-sdk": 23,
+      "battle-feature-sdk": 22,
       "battle-spell-sdk": 113,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
@@ -56164,7 +56168,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 10,
+      "seed-present": 11,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -56178,61 +56182,6 @@
     }
   },
   "scenarioGroups": [
-    {
-      "candidateUnitIds": [
-        "bard_bardic_inspiration"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Bard"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-feature-sdk:bard-bardic-inspiration",
-      "lane": "battle-feature-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-feature-sdk\",\"bard_bardic_inspiration\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:57"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "bard_bardic_inspiration",
-          "className": "Bard",
-          "concept": "Bard Bardic Inspiration",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 68,
-            "lineStart": 57,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard Bardic Inspiration"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Build or sheet the class at the required level, project to battle, discover/resolve the feature act or trigger, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
     {
       "candidateUnitIds": [
         "sorcerer_innate_sorcery"
@@ -65528,6 +65477,61 @@
       ],
       "sampleConcepts": [
         "Barbarian Rage"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "bard_bardic_inspiration"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-bard-bard-bardic-inspiration",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Bard:bard_bardic_inspiration\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:57"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "bard_bardic_inspiration",
+          "className": "Bard",
+          "concept": "Bard Bardic Inspiration",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 68,
+            "lineStart": 57,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard Bardic Inspiration"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -84231,6 +84235,20 @@
       "rowKey": "level-1:Barbarian:barbarian_rage",
       "tracerNeedles": [
         "barbarianRageUnitId"
+      ]
+    },
+    {
+      "candidateUnitId": "bard_bardic_inspiration",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+      "rowKey": "level-1:Bard:bard_bardic_inspiration",
+      "tracerNeedles": [
+        "bardBardicInspirationUnitId"
       ]
     },
     {

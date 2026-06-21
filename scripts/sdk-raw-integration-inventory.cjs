@@ -125,6 +125,17 @@ const seededSdkScenarioRows = [
     tracerNeedles: ["barbarianRageUnitId"],
   },
   {
+    candidateUnitId: "bard_bardic_inspiration",
+    className: "Bard",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+    tracerNeedles: ["bardBardicInspirationUnitId"],
+  },
+  {
     candidateUnitId: "fighter_second_wind",
     className: "Fighter",
     levelBand: "level-1",

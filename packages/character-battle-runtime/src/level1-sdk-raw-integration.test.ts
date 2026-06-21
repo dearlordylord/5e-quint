@@ -5,6 +5,8 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   type AvailableBattleAct,
+  type BattleFill,
+  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -17,7 +19,7 @@ import {
   classUnitId,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
-import { Hp } from "@dnd/shared/types";
+import { Hp, movementFeet } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 
@@ -42,6 +44,8 @@ import {
 
 const fighterId = combatantId("combatant:l1-sdk-fighter");
 const barbarianId = combatantId("combatant:l1-sdk-barbarian");
+const bardId = combatantId("combatant:l1-sdk-bard");
+const inspiredAllyId = combatantId("combatant:l1-sdk-inspired-ally");
 const rogueId = combatantId("combatant:l1-sdk-rogue");
 const rogueAllyId = combatantId("combatant:l1-sdk-rogue-ally");
 const monkId = combatantId("combatant:l1-sdk-monk");
@@ -49,6 +53,7 @@ const monsterId = combatantId("combatant:l1-sdk-monster");
 
 const fighterSecondWindUnitId = "fighter_second_wind";
 const barbarianRageUnitId = "barbarian_rage";
+const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 const monkMartialArtsUnitId = "monk_martial_arts";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const rogueSneakAttackName = "Dagger";
@@ -300,6 +305,81 @@ describe("level 1 SDK RAW integration", () => {
     ).toEqual([{ attackerId: rogueId, unitId: rogueSneakAttackUnitId }]);
   });
 
+  test("Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action", () => {
+    const state = battleFromSheets({
+      battleIdText: "battle:l1-sdk-bardic-inspiration",
+      characters: [
+        characterSheet({
+          characterIdText: "character:l1-sdk-bardic-inspiration",
+          build: levelOneMartialBuild({
+            classUnitId: "class_bard",
+            abilityScores: {
+              str: 10,
+              dex: 14,
+              con: 14,
+              int: 10,
+              wis: 10,
+              cha: 16,
+            },
+          }),
+          combatantId: bardId,
+          initiative: 20,
+          maximumHp: 10,
+        }),
+        characterSheet({
+          characterIdText: "character:l1-sdk-bardic-inspiration-ally",
+          build: levelOneMartialBuild({
+            classUnitId: "class_fighter",
+            weaponUnitId: "weapon_longsword",
+          }),
+          combatantId: inspiredAllyId,
+          initiative: 15,
+          maximumHp: 12,
+        }),
+      ],
+      monsters: [
+        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      ],
+    });
+    const act = unitFeatureActForUnitId(
+      state,
+      bardId,
+      bardBardicInspirationUnitId,
+    );
+    const target = requireHoleFromList(act.initialHoles, "targetChoice");
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [bardicInspirationTargetFill(target, inspiredAllyId)],
+      }),
+    );
+    const bard = requireCharacterCombatant(resolved.state, bardId);
+    const inspiredAlly = requireCombatant(resolved.state, inspiredAllyId);
+
+    expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
+      false,
+    );
+    expect(characterResources(bard)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: bardBardicInspirationUnitId }),
+          usesRemaining: 2,
+        }),
+      ]),
+    );
+    expect(inspiredAlly.activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "bardicInspirationDie",
+          sourceUnitId: bardBardicInspirationUnitId,
+          sourceCombatantId: bardId,
+          dieSize: 6,
+        }),
+      ]),
+    );
+  });
+
   test("Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity", () => {
     const state = battleFromSheets({
       battleIdText: "battle:l1-sdk-martial-arts",
@@ -456,6 +536,26 @@ function martialArtsBonusUnarmedStrikeAct(
     throw new Error("Expected Martial Arts Bonus Action Unarmed Strike act.");
   }
   return act;
+}
+
+function bardicInspirationTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "bardicInspirationTargetWithinRange",
+        bardId,
+        targetId,
+        unitId: bardBardicInspirationUnitId,
+        rangeFeet: movementFeet(60),
+      },
+    ],
+  };
 }
 
 function resolveOrdinaryAttackDamage(input: {

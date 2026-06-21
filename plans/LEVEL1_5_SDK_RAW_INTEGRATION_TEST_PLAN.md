@@ -335,9 +335,8 @@ Verification:
 First implementation slice:
 
 - Add a package-local level-1 battle-feature SDK suite for Fighter Second Wind,
-  Barbarian Rage, Rogue Sneak Attack, and Monk Martial Arts.
-- Defer Bardic Inspiration to the next level-1 battle-feature slice because it
-  needs its own target perception/range spatial-fact helper.
+  Barbarian Rage, Bardic Inspiration, Rogue Sneak Attack, and Monk Martial
+  Arts.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 
