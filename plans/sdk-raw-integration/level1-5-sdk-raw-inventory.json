@@ -19812,6 +19812,10 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Sacred Flame",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Sacred Flame cantrip resolves from a level-1 sheet as a Dexterity save with Radiant damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-0",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -19819,7 +19823,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 154,
         "lineStart": 154,
@@ -56277,16 +56281,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 461,
+      "sdk-scenario-needed": 460,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 43,
+      "seed-scenario-present": 44,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 401,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 99,
+      "battle-spell-sdk": 98,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56296,7 +56300,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 43,
+      "seed-present": 44,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -59091,61 +59095,6 @@
       "sampleConcepts": [
         "Cleric spell list Resistance",
         "Druid spell list Resistance"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "sacred_flame"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:sacred-flame",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-0"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"sacred_flame\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:154"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "sacred_flame",
-          "className": "Cleric",
-          "concept": "Cleric spell list Sacred Flame",
-          "levelBand": "spell-level-0",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 154,
-            "lineStart": 154,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Sacred Flame"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -64749,6 +64698,61 @@
       ],
       "sampleConcepts": [
         "Sorcerer Innate Sorcery"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "sacred_flame"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-0-cleric-sacred-flame",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-0"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-0:Cleric:sacred_flame\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:154"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "sacred_flame",
+          "className": "Cleric",
+          "concept": "Cleric spell list Sacred Flame",
+          "levelBand": "spell-level-0",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 154,
+            "lineStart": 154,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Sacred Flame"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85419,6 +85423,75 @@
         "casterId: produceFlameDruidId,",
         "expectedSpellAttackBonus: 4,",
         "expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],"
+      ]
+    },
+    {
+      "candidateUnitId": "sacred_flame",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Sacred Flame cantrip resolves from a level-1 sheet as a Dexterity save with Radiant damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneClericSacredFlameBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneClericBuild({",
+            "draftIdText: \"draft:l1-sdk-cleric-sacred-flame\"",
+            "expectedBuildLabel: \"Cleric Sacred Flame\"",
+            "cantrips: [\"guidance\", sacredFlameSpellId, \"thaumaturgy\"]",
+            "\"bless\"",
+            "\"shield_of_faith\""
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneClericBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_cleric\"",
+            "\"class_cantrip_choices\"",
+            "\"class_prepared_spell_choices\"",
+            "\"cleric_divine_order\"",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneSacredFlame",
+          "needles": [
+            "cantripCastActionSpellAct(",
+            "\"saveGatedDamage\"",
+            "spellTargetFill(",
+            "label: \"Sacred Flame Saving Throw outcome\"",
+            "ability: \"dex\"",
+            "resource: { tag: \"none\" }",
+            "targeting: { kind: \"singleCombatant\" }",
+            "damage: { expr: { dice: 1, dieSize: 8 }, damageType: \"radiant\" }",
+            "successDamage: \"none\"",
+            "rangeFeet: 60",
+            "savingThrowOutcomeFill(save,",
+            "{ targetId: monsterId, succeeded: false }",
+            "{ targetId: monsterId, succeeded: true }",
+            "label: \"Sacred Flame damage (1d8-radiant)\"",
+            "damageRollFillWithGroups(damage, [[7]])",
+            "expect(requireCombatant(failedSave.state, monsterId).hp).toBe(Hp(6));",
+            "expect(requireCombatant(successfulSave.state, monsterId).hp).toBe(Hp(13));",
+            "{ spellLevel: 1, count: 2, expended: 0 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-0",
+      "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
+      "rowKey": "spell-level-0:Cleric:sacred_flame",
+      "tracerNeedles": [
+        "const clericBuild = finalizedLevelOneClericSacredFlameBuild();",
+        "sourceUnitId: \"class_cleric\"",
+        "spellcastingAbility: \"wis\"",
+        "cantrips: expect.arrayContaining([sacredFlameSpellId])",
+        "build: clericBuild,",
+        "casterId: sacredFlameClericId,",
+        "expectedSpellSaveDc: 12,"
       ]
     },
     {

@@ -107,7 +107,7 @@ coverage.
 Current generated findings:
 
 - The JSON inventory is schema version 4. It persists all 770 mined level 1-5
-  rows with SDK dispositions, owner-boundary evidence where used, and 399
+  rows with SDK dispositions, owner-boundary evidence where used, and 401
   scenario groups. The Markdown report stays summarized, with the level-5
   completion rows and scenario groups expanded for the next implementation
   slice. Schema version 4 preserves each row's full source `supportSnapshot`,
@@ -190,6 +190,16 @@ Current generated findings:
   light/emitter cleanup after hurl, action and Bonus Action spend, and no
   spell-slot spend. It does not claim the RAW no-heat/no-ignition narrative or
   object hit-point resolution, which remain lower battle-runtime concerns.
+- The level-1 Sacred Flame seed covers the Cleric cantrip spell-list row
+  through level-1 Cleric character creation, sheet projection, battle act
+  discovery, creature-target selection, Dexterity Saving Throw shape, failed-save
+  1d8 Radiant damage, successful-save no-damage behavior, action spend, and no
+  spell-slot spend. The seed uses the SRD Cleric recommended cantrip/prepared
+  spell set through real class access rather than a hand-authored cantrip list.
+  Protector Divine Order is selected only to complete level-1 Cleric creation
+  without adding the Thaumaturge extra-cantrip branch. The RAW Half Cover and
+  Three-Quarters Cover clause remains a table-spatial concern and is not claimed
+  by this SDK seed.
 - The level-1 Chill Touch seed covers the Sorcerer, Warlock, and Wizard
   cantrip spell-list rows through level-1 sheet projection, battle act
   discovery, Touch-range melee Spell Attack resolution, creature-or-object
@@ -245,8 +255,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 43 seed scenarios
-  present, 461 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 44 seed scenarios
+  present, 460 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -458,8 +468,8 @@ First implementation slice:
   Bolt, Ray of Frost, Shocking Grasp, Burning Hands, Mage Armor, False Life,
   Chromatic Orb, Ray of Sickness, Thunderwave, and Magic Missile from Sorcerer
   and Wizard sheets, plus class-specific rows when SRD access differs such as
-  Druid/Warlock Poison Spray, Druid Produce Flame, Warlock Chill Touch, and
-  Warlock Eldritch Blast.
+  Druid/Warlock Poison Spray, Druid Produce Flame, Cleric Sacred Flame, Warlock
+  Chill Touch, and Warlock Eldritch Blast.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

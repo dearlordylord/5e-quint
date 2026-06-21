@@ -63,6 +63,7 @@ import {
   requireHoleFromList,
   requireResolved,
   requireRight,
+  savingThrowOutcomeFill,
   srdStatBlock,
   spellSlotActForProcedure,
   unitLibrary,
@@ -100,6 +101,9 @@ const acidSplashSorcererId = combatantId(
 const acidSplashWizardId = combatantId("combatant:l1-sdk-acid-splash-wizard");
 const poisonSprayDruidId = combatantId("combatant:l1-sdk-poison-spray-druid");
 const produceFlameDruidId = combatantId("combatant:l1-sdk-produce-flame-druid");
+const sacredFlameClericId = combatantId(
+  "combatant:l1-sdk-sacred-flame-cleric",
+);
 const poisonSpraySorcererId = combatantId(
   "combatant:l1-sdk-poison-spray-sorcerer",
 );
@@ -180,6 +184,7 @@ const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
 const produceFlameSpellId = "produce_flame";
+const sacredFlameSpellId = "sacred_flame";
 const chillTouchSpellId = "chill_touch";
 const eldritchBlastSpellId = "eldritch_blast";
 const burningHandsSpellId = "burning_hands";
@@ -847,6 +852,28 @@ describe("level 1 SDK RAW integration", () => {
       casterId: produceFlameDruidId,
       expectedSpellAttackBonus: 4,
       expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
+    });
+  });
+
+  test("Cleric Sacred Flame cantrip resolves from a level-1 sheet as a Dexterity save with Radiant damage", () => {
+    const clericBuild = finalizedLevelOneClericSacredFlameBuild();
+
+    expect(clericBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          cantrips: expect.arrayContaining([sacredFlameSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneSacredFlame({
+      battleIdText: "battle:l1-sdk-sacred-flame-cleric",
+      characterIdText: "character:l1-sdk-sacred-flame-cleric",
+      build: clericBuild,
+      casterId: sacredFlameClericId,
+      expectedSpellSaveDc: 12,
     });
   });
 
@@ -1916,6 +1943,139 @@ function assertLevelOneProduceFlame(input: {
   expect(caster.origin.spellcasting?.spellSlots).toEqual(
     input.expectedSpellSlots,
   );
+}
+
+function assertLevelOneSacredFlame(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = cantripCastActionSpellAct(
+    state,
+    input.casterId,
+    sacredFlameSpellId,
+    "saveGatedDamage",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(
+    target,
+    sacredFlameSpellId,
+    input.casterId,
+    monsterId,
+  );
+  const save = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "savingThrowOutcome",
+  );
+
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([monsterId]),
+  });
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(save).toMatchObject({
+    label: "Sacred Flame Saving Throw outcome",
+    ability: "dex",
+    dc: { kind: "caster_spell_save_dc" },
+    spell: {
+      resource: { tag: "none" },
+      targeting: { kind: "singleCombatant" },
+      damage: { expr: { dice: 1, dieSize: 8 }, damageType: "radiant" },
+      successDamage: "none",
+      rangeFeet: 60,
+      failedSavePostDamageRiders: [],
+    },
+  });
+
+  const failedSaveFill = savingThrowOutcomeFill(save, [
+    { targetId: monsterId, succeeded: false },
+  ]);
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, failedSaveFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Sacred Flame damage (1d8-radiant)",
+    spell: {
+      resource: { tag: "none" },
+      damage: { expr: { dice: 1, dieSize: 8 }, damageType: "radiant" },
+      successDamage: "none",
+      failedSavePostDamageRiders: [],
+    },
+    critical: false,
+  });
+
+  const failedSave = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        failedSaveFill,
+        damageRollFillWithGroups(damage, [[7]]),
+      ],
+    }),
+  );
+  const failedSaveCaster = requireCharacterCombatant(
+    failedSave.state,
+    input.casterId,
+  );
+
+  expect(requireCombatant(failedSave.state, monsterId).hp).toBe(Hp(6));
+  expect(snapshotBattle(failedSave.state).turn.actionResources).toEqual([]);
+  expect(failedSaveCaster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+
+  const successfulSave = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(save, [
+          { targetId: monsterId, succeeded: true },
+        ]),
+      ],
+    }),
+  );
+  const successfulSaveCaster = requireCharacterCombatant(
+    successfulSave.state,
+    input.casterId,
+  );
+
+  expect(requireCombatant(successfulSave.state, monsterId).hp).toBe(Hp(13));
+  expect(snapshotBattle(successfulSave.state).turn.actionResources).toEqual([]);
+  expect(successfulSaveCaster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
 }
 
 function assertLevelOneChillTouch(input: {
@@ -3334,6 +3494,127 @@ function levelOneSorcererBurningHandsBuild(): CharacterBuild {
       },
     },
   });
+}
+
+function finalizedLevelOneClericSacredFlameBuild(): CharacterBuild {
+  return finalizedLevelOneClericBuild({
+    draftIdText: "draft:l1-sdk-cleric-sacred-flame",
+    expectedBuildLabel: "Cleric Sacred Flame",
+    cantrips: ["guidance", sacredFlameSpellId, "thaumaturgy"],
+    preparedSpells: ["bless", "cure_wounds", "guiding_bolt", "shield_of_faith"],
+  });
+}
+
+function finalizedLevelOneClericBuild(input: {
+  readonly draftIdText: string;
+  readonly expectedBuildLabel: string;
+  readonly cantrips: readonly string[];
+  readonly preparedSpells: readonly string[];
+}): CharacterBuild {
+  const draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId(input.draftIdText),
+  });
+  const afterInitial = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        creationChoiceFill(
+          "cc:draft:draft.progression.initial",
+          "12:class_cleric:level_1:maximum_hit_die",
+        ),
+        creationChoiceFill("cc:draft:draft.background", "background_criminal"),
+        creationChoiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: requireRight(
+            abilityScoreAssignment({
+              str: 8,
+              dex: 13,
+              con: 14,
+              int: 10,
+              wis: 15,
+              cha: 12,
+            }),
+          ),
+        },
+        creationChoiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        creationChoiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_cleric", "class_skill_proficiency_choice"),
+          "insight",
+          "religion",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_cleric", "class_cantrip_choices"),
+          ...input.cantrips,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_cleric", "class_prepared_spell_choices"),
+          ...input.preparedSpells,
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("cleric_divine_order", "divine_order"),
+          "protector",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:dex:con",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          "thieves_tools",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_cleric", "class_equipment_choice"),
+          "option_b",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_equipment_choice",
+          ),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_cleric", "equipment_purchase"),
+          "weapon_dagger",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
+    );
+  }
+  return result.build;
 }
 
 function finalizedLevelOneDruidPoisonSprayBuild(): CharacterBuild {
