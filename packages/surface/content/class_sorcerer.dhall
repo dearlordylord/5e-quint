@@ -55,8 +55,9 @@ let sorcerer =
                 , { spellId = "chromatic_orb", spellLevel = 1 }
                 , { spellId = "false_life", spellLevel = 1 }
                 , { spellId = "mage_armor", spellLevel = 1 }
-                , { spellId = "thunderwave", spellLevel = 1 }
                 , { spellId = "magic_missile", spellLevel = 1 }
+                , { spellId = "ray_of_sickness", spellLevel = 1 }
+                , { spellId = "thunderwave", spellLevel = 1 }
                 , { spellId = "alter_self", spellLevel = 2 }
                 , { spellId = "scorching_ray", spellLevel = 2 }
                 ] : List ClassSpellAccess

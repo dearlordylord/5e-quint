@@ -80,6 +80,7 @@ let wizard =
                 , { spellId = "false_life", spellLevel = 1 }
                 , { spellId = "mage_armor", spellLevel = 1 }
                 , { spellId = "magic_missile", spellLevel = 1 }
+                , { spellId = "ray_of_sickness", spellLevel = 1 }
                 , { spellId = "shield", spellLevel = 1 }
                 , { spellId = "sleep", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
@@ -104,6 +105,7 @@ let wizard =
                 , "false_life"
                 , "mage_armor"
                 , "magic_missile"
+                , "ray_of_sickness"
                 , "shield"
                 , "sleep"
                 , "thunderwave"

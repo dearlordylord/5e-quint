@@ -86,6 +86,7 @@
         "false_life",
         "mage_armor",
         "magic_missile",
+        "ray_of_sickness",
         "shield",
         "sleep",
         "thunderwave",
@@ -135,6 +136,10 @@
         },
         {
           "spellId": "magic_missile",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "ray_of_sickness",
           "spellLevel": 1
         },
         {

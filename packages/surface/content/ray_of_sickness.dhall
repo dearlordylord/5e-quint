@@ -14,16 +14,10 @@
 -- uses the Dhall Optional-fields-unified record type trick for the
 -- homogeneous-list constraint).
 --
--- Condition-expiry modeling note. RAW says Poisoned lasts "until the
--- end of your next turn" — a turn-scoped rider. `apply_condition`
--- has no per-atom expiry field. Per the CLAUDE.md encoding rule for
--- turn-scoped riders on attack-roll phases, the spell's Duration is
--- modeled as `timed, 1 round` so the spell (and thus the condition
--- it applied) ends approximately one round after cast, matching
--- "until the end of your next turn" in the SRD's 1-round /
--- end-of-caster-next-turn overlap. RAW header reads "Instantaneous";
--- the 1-round modeling is the minimal-widening faithful encoding
--- that bounds the condition to its SRD expiry.
+-- Condition-expiry modeling note. RAW says the spell Duration is
+-- Instantaneous, while Poisoned lasts "until the end of your next
+-- turn". The spell duration stays Instantaneous; the apply_condition
+-- atom carries the turn-scoped condition duration.
 
 let AmountRec
     : Type
@@ -40,6 +34,7 @@ let HitRider
       , damageType : Optional Text
       , amount : Optional AmountRec
       , condition : Optional Text
+      , duration : Optional Text
       }
 
 let damageRider
@@ -55,6 +50,7 @@ let damageRider
             , startingAtLevel = 1
             }
       , condition = None Text
+      , duration = None Text
       }
 
 let poisonedRider
@@ -63,6 +59,7 @@ let poisonedRider
       , damageType = None Text
       , amount = None AmountRec
       , condition = Some "poisoned"
+      , duration = Some "end_of_caster_next_turn"
       }
 
 let rayOfSickness =
@@ -82,10 +79,7 @@ let rayOfSickness =
           , castingTime = { kind = "action" }
           , range = { kind = "point", feet = 60 }
           , components = { v = True, s = True, m = False }
-          , duration =
-              { kind = "timed"
-              , value = { unit = "round", amount = 1 }
-              }
+          , duration = { kind = "instantaneous" }
           , phases =
               [ { kind = "attack_roll"
                 , attachment =

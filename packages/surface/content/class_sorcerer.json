@@ -107,11 +107,15 @@
           "spellLevel": 1
         },
         {
-          "spellId": "thunderwave",
+          "spellId": "magic_missile",
           "spellLevel": 1
         },
         {
-          "spellId": "magic_missile",
+          "spellId": "ray_of_sickness",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "thunderwave",
           "spellLevel": 1
         },
         {

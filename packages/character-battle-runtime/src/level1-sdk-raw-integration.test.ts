@@ -36,6 +36,7 @@ import {
   type CreationHoleIdText,
   type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Hp, movementDeltaFeet, movementFeet } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
@@ -95,6 +96,12 @@ const chromaticOrbWizardId = combatantId(
 );
 const falseLifeSorcererId = combatantId("combatant:l1-sdk-false-life-sorcerer");
 const falseLifeWizardId = combatantId("combatant:l1-sdk-false-life-wizard");
+const rayOfSicknessSorcererId = combatantId(
+  "combatant:l1-sdk-ray-of-sickness-sorcerer",
+);
+const rayOfSicknessWizardId = combatantId(
+  "combatant:l1-sdk-ray-of-sickness-wizard",
+);
 const mageArmorSorcererId = combatantId("combatant:l1-sdk-mage-armor-sorcerer");
 const mageArmorWizardId = combatantId("combatant:l1-sdk-mage-armor-wizard");
 const magicMissileSorcererId = combatantId(
@@ -125,6 +132,7 @@ const rayOfFrostSpellId = "ray_of_frost";
 const shockingGraspSpellId = "shocking_grasp";
 const chromaticOrbSpellId = "chromatic_orb";
 const falseLifeSpellId = "false_life";
+const rayOfSicknessSpellId = "ray_of_sickness";
 const mageArmorSpellId = "mage_armor";
 const magicMissileSpellId = "magic_missile";
 const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
@@ -864,6 +872,44 @@ describe("level 1 SDK RAW integration", () => {
       characterIdText: "character:l1-sdk-false-life-wizard",
       build: wizardBuild,
       casterId: falseLifeWizardId,
+    });
+  });
+
+  test("Sorcerer and Wizard Ray of Sickness resolve from level-1 spell access as Poison damage plus a turn-scoped Poisoned rider", () => {
+    const sorcererBuild = finalizedLevelOneSorcererRayOfSicknessBuild();
+    const wizardBuild = finalizedLevelOneWizardRayOfSicknessBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          preparedSpells: expect.arrayContaining([rayOfSicknessSpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          spellbook: expect.arrayContaining([rayOfSicknessSpellId]),
+          preparedSpells: expect.arrayContaining([rayOfSicknessSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneRayOfSickness({
+      battleIdText: "battle:l1-sdk-ray-of-sickness-sorcerer",
+      characterIdText: "character:l1-sdk-ray-of-sickness-sorcerer",
+      build: sorcererBuild,
+      casterId: rayOfSicknessSorcererId,
+      expectedSpellAttackBonus: 4,
+    });
+    assertLevelOneRayOfSickness({
+      battleIdText: "battle:l1-sdk-ray-of-sickness-wizard",
+      characterIdText: "character:l1-sdk-ray-of-sickness-wizard",
+      build: wizardBuild,
+      casterId: rayOfSicknessWizardId,
+      expectedSpellAttackBonus: 5,
     });
   });
 
@@ -1859,6 +1905,181 @@ function assertLevelOneFalseLife(input: {
   ]);
 }
 
+function assertLevelOneRayOfSickness(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellAttackBonus: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock("stat_block_goblin_warrior"),
+      ),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    rayOfSicknessSpellId,
+    1,
+    "spellAttackDamage",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([monsterId]),
+    requiresTableSpatialFact: true,
+  });
+
+  const targetFill = spellTargetFill(
+    target,
+    rayOfSicknessSpellId,
+    input.casterId,
+    monsterId,
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "attackRoll",
+  );
+
+  expect(attackRoll).toMatchObject({
+    attackBonus: input.expectedSpellAttackBonus,
+    spell: {
+      procedure: "spellAttackDamage",
+      spell: {
+        id: rayOfSicknessSpellId,
+        mechanics: { duration: { kind: "instantaneous" } },
+      },
+      attackKind: "ranged_spell_attack",
+      targeting: { kind: "singleCombatant" },
+      rangeFeet: 60,
+      damage: {
+        kind: "fixedSpellAttackDamage",
+        expr: { dice: 2, dieSize: 8 },
+        damageType: "poison",
+      },
+      postDamageRiders: [
+        {
+          kind: "condition",
+          condition: "poisoned",
+          expiresAt: "endOfCasterNextTurn",
+        },
+      ],
+    },
+  });
+
+  const attackFill = attackRollFill(attackRoll, {
+    total: 17,
+    naturalD20: 13,
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, attackFill],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Ray of Sickness damage (2d8-poison)",
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(damage, [[1, 1]]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+  const poisonedTarget = requireCombatant(resolved.state, monsterId);
+
+  expect(poisonedTarget.hp).toBe(Hp(8));
+  expect(hasCondition(poisonedTarget.conditions, "poisoned")).toBe(true);
+  expect(poisonedTarget.activeEffects).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "spellCondition",
+        sourceSpellId: rayOfSicknessSpellId,
+        sourceCombatantId: input.casterId,
+        condition: "poisoned",
+        escape: null,
+        turnStartDamage: null,
+        expiresAt: expect.objectContaining({
+          kind: "endOfTurn",
+          combatantId: input.casterId,
+        }),
+      }),
+    ]),
+  );
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+
+  const afterCasterTurn = requireResolved(
+    endTurn({ state: resolved.state, actorId: input.casterId }),
+  ).state;
+  expect(
+    hasCondition(
+      requireCombatant(afterCasterTurn, monsterId).conditions,
+      "poisoned",
+    ),
+  ).toBe(true);
+
+  const afterGoblinTurn = requireResolved(
+    endTurn({ state: afterCasterTurn, actorId: monsterId }),
+  ).state;
+  expect(
+    hasCondition(
+      requireCombatant(afterGoblinTurn, monsterId).conditions,
+      "poisoned",
+    ),
+  ).toBe(true);
+
+  const afterNextCasterTurn = requireResolved(
+    endTurn({ state: afterGoblinTurn, actorId: input.casterId }),
+  ).state;
+  expect(
+    hasCondition(
+      requireCombatant(afterNextCasterTurn, monsterId).conditions,
+      "poisoned",
+    ),
+  ).toBe(false);
+  expect(
+    requireCombatant(afterNextCasterTurn, monsterId).activeEffects,
+  ).not.toContainEqual(
+    expect.objectContaining({
+      kind: "spellCondition",
+      sourceSpellId: rayOfSicknessSpellId,
+      condition: "poisoned",
+    }),
+  );
+}
+
 function assertLevelOneMagicMissile(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -2190,6 +2411,20 @@ function finalizedLevelOneSorcererFalseLifeBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererRayOfSicknessBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-ray-of-sickness",
+    expectedBuildLabel: "Sorcerer Ray of Sickness",
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      shockingGraspSpellId,
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [rayOfSicknessSpellId, burningHandsSpellId],
+  });
+}
+
 function finalizedLevelOneSorcererMagicMissileBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-magic-missile",
@@ -2471,6 +2706,30 @@ function finalizedLevelOneWizardFalseLifeBuild(): CharacterBuild {
       mageArmorSpellId,
       magicMissileSpellId,
     ],
+  });
+}
+
+function finalizedLevelOneWizardRayOfSicknessBuild(): CharacterBuild {
+  const rayOfSicknessWizardSpellbook = [
+    "detect_magic",
+    "feather_fall",
+    "mage_armor",
+    magicMissileSpellId,
+    rayOfSicknessSpellId,
+    "sleep",
+  ] as const;
+  const rayOfSicknessWizardPreparedSpells = [
+    "detect_magic",
+    "mage_armor",
+    magicMissileSpellId,
+    rayOfSicknessSpellId,
+  ] as const;
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-ray-of-sickness",
+    expectedBuildLabel: "Wizard Ray of Sickness",
+    cantrips: ["light", fireBoltSpellId, "ray_of_frost"],
+    spellbook: rayOfSicknessWizardSpellbook,
+    preparedSpells: rayOfSicknessWizardPreparedSpells,
   });
 }
 

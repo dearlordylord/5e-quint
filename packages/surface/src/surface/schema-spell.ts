@@ -926,6 +926,7 @@ type EffectAtom =
       readonly duration?:
         | "current_turn"
         | "end_of_next_turn"
+        | "end_of_caster_next_turn"
         | "spell_duration";
     }
   | {
@@ -3186,7 +3187,12 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           }),
         ),
         duration: optionalExact(
-          Schema.Literal("current_turn", "end_of_next_turn", "spell_duration"),
+          Schema.Literal(
+            "current_turn",
+            "end_of_next_turn",
+            "end_of_caster_next_turn",
+            "spell_duration",
+          ),
         ),
       }),
       strictStruct({
