@@ -416,6 +416,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     [WIZARD_SPELLBOOK_CHOICE_KEY]: [
       creationChoiceOptionId("detect_magic"),
       creationChoiceOptionId("feather_fall"),
+      creationChoiceOptionId("false_life"),
       creationChoiceOptionId("mage_armor"),
       creationChoiceOptionId("magic_missile"),
       creationChoiceOptionId("shield"),
@@ -435,6 +436,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     [WIZARD_PREPARED_SPELL_CHOICE_KEY]: [
       creationChoiceOptionId("detect_magic"),
       creationChoiceOptionId("feather_fall"),
+      creationChoiceOptionId("false_life"),
       creationChoiceOptionId("mage_armor"),
       creationChoiceOptionId("magic_missile"),
       creationChoiceOptionId("shield"),

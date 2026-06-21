@@ -53,6 +53,7 @@ let sorcerer =
                 [ { spellId = "burning_hands", spellLevel = 1 }
                 , { spellId = "detect_magic", spellLevel = 1 }
                 , { spellId = "chromatic_orb", spellLevel = 1 }
+                , { spellId = "false_life", spellLevel = 1 }
                 , { spellId = "mage_armor", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
                 , { spellId = "magic_missile", spellLevel = 1 }

@@ -726,6 +726,115 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "false_life",
+    className: "Sorcerer",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
+    tracerNeedles: [
+      "const sorcererBuild = finalizedLevelOneSorcererFalseLifeBuild();",
+      'sourceUnitId: "class_sorcerer"',
+      "preparedSpells: expect.arrayContaining([falseLifeSpellId])",
+      "build: sorcererBuild,",
+      "casterId: falseLifeSorcererId,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneSorcererFalseLifeBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneSorcererBuild({",
+          'draftIdText: "draft:l1-sdk-sorcerer-false-life"',
+          "preparedSpells: [falseLifeSpellId, burningHandsSpellId]",
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneSorcererBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneFalseLife",
+        needles: [
+          "spellSlotActForProcedure(",
+          "falseLifeSpellId",
+          '"scalarBuff"',
+          '"rolledDice"',
+          'label: "False Life Temporary Hit Points (2d4+4)"',
+          'targeting: { kind: "self" }',
+          'kind: "temporaryHitPoints"',
+          "amount: { expr: { dice: 2, dieSize: 4, flat: 4 } }",
+          "damageRollFillWithGroups(temporaryHitPoints, [[4, 3]])",
+          "tempHp: 11",
+          "expect(caster.activeEffects).toEqual([]);",
+          "{ spellLevel: 1, count: 2, expended: 1 }",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "false_life",
+    className: "Wizard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
+    tracerNeedles: [
+      "const wizardBuild = finalizedLevelOneWizardFalseLifeBuild();",
+      'sourceUnitId: "class_wizard"',
+      "spellbook: expect.arrayContaining([falseLifeSpellId])",
+      "preparedSpells: expect.arrayContaining([falseLifeSpellId])",
+      "build: wizardBuild,",
+      "casterId: falseLifeWizardId,",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneWizardFalseLifeBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneWizardBuild({",
+          'draftIdText: "draft:l1-sdk-wizard-false-life"',
+          "falseLifeSpellId",
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneWizardBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneFalseLife",
+        needles: [
+          "spellSlotActForProcedure(",
+          "falseLifeSpellId",
+          '"scalarBuff"',
+          '"rolledDice"',
+          'label: "False Life Temporary Hit Points (2d4+4)"',
+          'targeting: { kind: "self" }',
+          'kind: "temporaryHitPoints"',
+          "amount: { expr: { dice: 2, dieSize: 4, flat: 4 } }",
+          "damageRollFillWithGroups(temporaryHitPoints, [[4, 3]])",
+          "tempHp: 11",
+          "expect(caster.activeEffects).toEqual([]);",
+          "{ spellLevel: 1, count: 2, expended: 1 }",
+        ],
+      },
+    ],
+  },
+  {
     candidateUnitId: "chromatic_orb",
     className: "Sorcerer",
     levelBand: "spell-level-1",

@@ -77,6 +77,7 @@ let wizard =
               , spells =
                 [ { spellId = "detect_magic", spellLevel = 1 }
                 , { spellId = "feather_fall", spellLevel = 1 }
+                , { spellId = "false_life", spellLevel = 1 }
                 , { spellId = "mage_armor", spellLevel = 1 }
                 , { spellId = "magic_missile", spellLevel = 1 }
                 , { spellId = "shield", spellLevel = 1 }
@@ -100,6 +101,7 @@ let wizard =
               , spellIds =
                 [ "detect_magic"
                 , "feather_fall"
+                , "false_life"
                 , "mage_armor"
                 , "magic_missile"
                 , "shield"

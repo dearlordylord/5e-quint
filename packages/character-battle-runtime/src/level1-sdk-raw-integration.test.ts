@@ -93,6 +93,8 @@ const chromaticOrbSorcererId = combatantId(
 const chromaticOrbWizardId = combatantId(
   "combatant:l1-sdk-chromatic-orb-wizard",
 );
+const falseLifeSorcererId = combatantId("combatant:l1-sdk-false-life-sorcerer");
+const falseLifeWizardId = combatantId("combatant:l1-sdk-false-life-wizard");
 const mageArmorSorcererId = combatantId("combatant:l1-sdk-mage-armor-sorcerer");
 const mageArmorWizardId = combatantId("combatant:l1-sdk-mage-armor-wizard");
 const magicMissileSorcererId = combatantId(
@@ -122,6 +124,7 @@ const fireBoltSpellId = "fire_bolt";
 const rayOfFrostSpellId = "ray_of_frost";
 const shockingGraspSpellId = "shocking_grasp";
 const chromaticOrbSpellId = "chromatic_orb";
+const falseLifeSpellId = "false_life";
 const mageArmorSpellId = "mage_armor";
 const magicMissileSpellId = "magic_missile";
 const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
@@ -825,6 +828,42 @@ describe("level 1 SDK RAW integration", () => {
       build: wizardBuild,
       casterId: mageArmorWizardId,
       expectedArmorClass: 15,
+    });
+  });
+
+  test("Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points", () => {
+    const sorcererBuild = finalizedLevelOneSorcererFalseLifeBuild();
+    const wizardBuild = finalizedLevelOneWizardFalseLifeBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          preparedSpells: expect.arrayContaining([falseLifeSpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          spellbook: expect.arrayContaining([falseLifeSpellId]),
+          preparedSpells: expect.arrayContaining([falseLifeSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneFalseLife({
+      battleIdText: "battle:l1-sdk-false-life-sorcerer",
+      characterIdText: "character:l1-sdk-false-life-sorcerer",
+      build: sorcererBuild,
+      casterId: falseLifeSorcererId,
+    });
+    assertLevelOneFalseLife({
+      battleIdText: "battle:l1-sdk-false-life-wizard",
+      characterIdText: "character:l1-sdk-false-life-wizard",
+      build: wizardBuild,
+      casterId: falseLifeWizardId,
     });
   });
 
@@ -1757,6 +1796,69 @@ function assertLevelOneMageArmor(input: {
   ]);
 }
 
+function assertLevelOneFalseLife(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    falseLifeSpellId,
+    1,
+    "scalarBuff",
+  );
+  const temporaryHitPoints = requireHoleFromList(
+    act.initialHoles,
+    "rolledDice",
+  );
+
+  expect(temporaryHitPoints).toMatchObject({
+    label: "False Life Temporary Hit Points (2d4+4)",
+    spell: {
+      procedure: "scalarBuff",
+      targeting: { kind: "self" },
+      effect: {
+        kind: "temporaryHitPoints",
+        amount: { expr: { dice: 2, dieSize: 4, flat: 4 } },
+      },
+    },
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageRollFillWithGroups(temporaryHitPoints, [[4, 3]])],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(snapshotCombatant(resolved.state, input.casterId)).toMatchObject({
+    tempHp: 11,
+  });
+  expect(caster.activeEffects).toEqual([]);
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
 function assertLevelOneMagicMissile(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -2074,6 +2176,20 @@ function finalizedLevelOneSorcererMageArmorBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererFalseLifeBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-false-life",
+    expectedBuildLabel: "Sorcerer False Life",
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      shockingGraspSpellId,
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [falseLifeSpellId, burningHandsSpellId],
+  });
+}
+
 function finalizedLevelOneSorcererMagicMissileBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-magic-missile",
@@ -2332,6 +2448,28 @@ function finalizedLevelOneWizardMageArmorBuild(): CharacterBuild {
       mageArmorSpellId,
       magicMissileSpellId,
       "sleep",
+    ],
+  });
+}
+
+function finalizedLevelOneWizardFalseLifeBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-false-life",
+    expectedBuildLabel: "Wizard False Life",
+    cantrips: ["light", fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      "detect_magic",
+      "feather_fall",
+      falseLifeSpellId,
+      mageArmorSpellId,
+      magicMissileSpellId,
+      "sleep",
+    ],
+    preparedSpells: [
+      "detect_magic",
+      falseLifeSpellId,
+      mageArmorSpellId,
+      magicMissileSpellId,
     ],
   });
 }

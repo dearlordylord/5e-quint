@@ -107,7 +107,7 @@ coverage.
 Current generated findings:
 
 - The JSON inventory is schema version 4. It persists all 770 mined level 1-5
-  rows with SDK dispositions, owner-boundary evidence where used, and 392
+  rows with SDK dispositions, owner-boundary evidence where used, and 393
   scenario groups. The Markdown report stays summarized, with the level-5
   completion rows and scenario groups expanded for the next implementation
   slice. Schema version 4 preserves each row's full source `supportSnapshot`,
@@ -145,6 +145,13 @@ Current generated findings:
   spend. The seed exposed and fixed a narrow `class_sorcerer` prepared-access
   gap so the Sorcerer row is claimed through character creation rather than a
   hand-authored spell list.
+- The level-1 False Life seed covers the Sorcerer and Wizard spell-list rows
+  through level-1 sheet projection, battle act discovery, a self-target
+  Temporary Hit Points Spell Effect, 2d4+4 Temporary Hit Points, instantaneous
+  no-active-effect state, action spend, and spell-slot spend. The seed exposed
+  and fixed narrow `class_sorcerer` and `class_wizard` spell-access gaps so both
+  rows are claimed through character creation rather than hand-authored spell
+  lists.
 - The level-1 Acid Splash seed covers the Sorcerer and Wizard cantrip
   spell-list rows through level-1 sheet projection, battle act discovery,
   point-origin 5-foot Sphere Saving Throw shape, Dexterity save, failed-save
@@ -180,15 +187,15 @@ Current generated findings:
   count, visible-target/table-spatial witness requirement, 120-foot range,
   1d4+1 Force damage per dart, split simultaneous dart damage, and spell-slot
   spend.
-- The generated scenario groups are split by task: 155 groups for level 1,
+- The generated scenario groups are split by task: 156 groups for level 1,
   33 for level 2, 107 for level 3/spell level 2, 25 for level 4, and 72 for
   level 5/spell level 3.
 - The current level-5 SDK dispositions are: 6 seed scenarios present, 35 SDK
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 26 seed scenarios
-  present, 478 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 30 seed scenarios
+  present, 474 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -395,8 +402,8 @@ First implementation slice:
   Barbarian Rage, Bardic Inspiration, Rogue Sneak Attack, Sorcerer Innate
   Sorcery, and Monk Martial Arts.
 - Add level-1 spell SDK seeds for Acid Splash, Fire Bolt, Ray of Frost,
-  Burning Hands, Mage Armor, Chromatic Orb, and Magic Missile from Sorcerer and
-  Wizard sheets.
+  Burning Hands, Mage Armor, False Life, Chromatic Orb, and Magic Missile from
+  Sorcerer and Wizard sheets.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

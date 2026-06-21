@@ -38090,6 +38090,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list False Life",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -38097,7 +38101,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 252,
         "lineStart": 252,
@@ -46101,6 +46105,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list False Life",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -46108,7 +46116,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 171,
         "lineStart": 171,
@@ -56217,16 +56225,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 476,
+      "sdk-scenario-needed": 474,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 28,
+      "seed-scenario-present": 30,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 392,
+    "scenarioGroups": 393,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 105,
+      "battle-spell-sdk": 104,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56236,13 +56244,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 28,
+      "seed-present": 30,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 155,
+      "L15-SDK-RAW-03": 156,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -57628,79 +57636,6 @@
       "sampleConcepts": [
         "Bard spell list Faerie Fire",
         "Druid spell list Faerie Fire"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "false_life"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:false-life",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"false_life\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md:252",
-        ".references/srd-5.2.1/Classes/Wizard.md:171"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "false_life",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list False Life",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 252,
-            "lineStart": 252,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "false_life",
-          "className": "Wizard",
-          "concept": "Wizard spell list False Life",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 171,
-            "lineStart": 171,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Sorcerer spell list False Life",
-        "Wizard spell list False Life"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65740,6 +65675,61 @@
     },
     {
       "candidateUnitIds": [
+        "false_life"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-sorcerer-false-life",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Sorcerer:false_life\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:252"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "false_life",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list False Life",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 252,
+            "lineStart": 252,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list False Life"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "mage_armor"
       ],
       "categories": [
@@ -65951,6 +65941,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Chromatic Orb"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "false_life"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-wizard-false-life",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Wizard:false_life\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:171"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "false_life",
+          "className": "Wizard",
+          "concept": "Wizard spell list False Life",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 171,
+            "lineStart": 171,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list False Life"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85229,6 +85274,115 @@
         "build: wizardBuild,",
         "casterId: mageArmorWizardId,",
         "expectedArmorClass: 15,"
+      ]
+    },
+    {
+      "candidateUnitId": "false_life",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneSorcererFalseLifeBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneSorcererBuild({",
+            "draftIdText: \"draft:l1-sdk-sorcerer-false-life\"",
+            "preparedSpells: [falseLifeSpellId, burningHandsSpellId]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneSorcererBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneFalseLife",
+          "needles": [
+            "spellSlotActForProcedure(",
+            "falseLifeSpellId",
+            "\"scalarBuff\"",
+            "\"rolledDice\"",
+            "label: \"False Life Temporary Hit Points (2d4+4)\"",
+            "targeting: { kind: \"self\" }",
+            "kind: \"temporaryHitPoints\"",
+            "amount: { expr: { dice: 2, dieSize: 4, flat: 4 } }",
+            "damageRollFillWithGroups(temporaryHitPoints, [[4, 3]])",
+            "tempHp: 11",
+            "expect(caster.activeEffects).toEqual([]);",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
+      "rowKey": "spell-level-1:Sorcerer:false_life",
+      "tracerNeedles": [
+        "const sorcererBuild = finalizedLevelOneSorcererFalseLifeBuild();",
+        "sourceUnitId: \"class_sorcerer\"",
+        "preparedSpells: expect.arrayContaining([falseLifeSpellId])",
+        "build: sorcererBuild,",
+        "casterId: falseLifeSorcererId,"
+      ]
+    },
+    {
+      "candidateUnitId": "false_life",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneWizardFalseLifeBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWizardBuild({",
+            "draftIdText: \"draft:l1-sdk-wizard-false-life\"",
+            "falseLifeSpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWizardBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneFalseLife",
+          "needles": [
+            "spellSlotActForProcedure(",
+            "falseLifeSpellId",
+            "\"scalarBuff\"",
+            "\"rolledDice\"",
+            "label: \"False Life Temporary Hit Points (2d4+4)\"",
+            "targeting: { kind: \"self\" }",
+            "kind: \"temporaryHitPoints\"",
+            "amount: { expr: { dice: 2, dieSize: 4, flat: 4 } }",
+            "damageRollFillWithGroups(temporaryHitPoints, [[4, 3]])",
+            "tempHp: 11",
+            "expect(caster.activeEffects).toEqual([]);",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
+      "rowKey": "spell-level-1:Wizard:false_life",
+      "tracerNeedles": [
+        "const wizardBuild = finalizedLevelOneWizardFalseLifeBuild();",
+        "sourceUnitId: \"class_wizard\"",
+        "spellbook: expect.arrayContaining([falseLifeSpellId])",
+        "preparedSpells: expect.arrayContaining([falseLifeSpellId])",
+        "build: wizardBuild,",
+        "casterId: falseLifeWizardId,"
       ]
     },
     {

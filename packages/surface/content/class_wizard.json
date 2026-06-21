@@ -83,6 +83,7 @@
       "spellIds": [
         "detect_magic",
         "feather_fall",
+        "false_life",
         "mage_armor",
         "magic_missile",
         "shield",
@@ -122,6 +123,10 @@
         },
         {
           "spellId": "feather_fall",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "false_life",
           "spellLevel": 1
         },
         {
