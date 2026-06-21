@@ -64,7 +64,14 @@ defineSelectedIdentityWitness({
   ),
   quintStateField: "qState",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "scenarioResult" },
+  quintFieldNames: { lastResult: "scenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      SubtleFalseLife: "subtleFalseLife",
+      UnaffordableSubtleFalseLife: "unaffordableSubtleFalseLife",
+    },
+  },
   witnessInvalidScenarioReasons: {
     unaffordableSubtleFalseLife: "unsupportedActOption",
   },
@@ -75,7 +82,7 @@ defineSelectedIdentityWitness({
     materialPreserved: "bool",
     sorceryPointsRemaining: "int",
     tempHp: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: {
     verbalSuppressed: false,

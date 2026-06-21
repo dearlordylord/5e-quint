@@ -32,7 +32,7 @@ module battleRuntimeMageArmorSelectedIdentityMbt {
   pure def qMageArmorDurationTicks: int = qState.qMageArmorDurationTicks
   pure def qLevel1SlotsExpended: int = qState.qLevel1SlotsExpended
   pure def qActionAvailable: bool = qState.qActionAvailable
-  pure def qLastResult: MageArmorSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: MageArmorSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def defaultUnarmoredBaseArmorClass: int = 10
   pure def mageArmorBaseArmorClass: int = 13
@@ -44,11 +44,9 @@ module battleRuntimeMageArmorSelectedIdentityMbt {
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: MageArmorSelectedIdentityScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: MageArmorSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -75,7 +73,7 @@ module battleRuntimeMageArmorSelectedIdentityMbt {
       qLevel1SlotsExpended: level1SlotsExpended,
       qActionAvailable: actionAvailable,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
   action init = recordProjection(
@@ -92,7 +90,7 @@ module battleRuntimeMageArmorSelectedIdentityMbt {
   )
 
   action doDiscoverMageArmorUnarmoredSelfTarget = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       true,
       false,
@@ -108,7 +106,7 @@ module battleRuntimeMageArmorSelectedIdentityMbt {
   }
 
   action doRejectMageArmorArmoredTarget = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       true,
       true,
@@ -124,7 +122,7 @@ module battleRuntimeMageArmorSelectedIdentityMbt {
   }
 
   action doResolveMageArmorBaseArmorClassProjection = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       true,
       false,
@@ -140,7 +138,7 @@ module battleRuntimeMageArmorSelectedIdentityMbt {
   }
 
   action doExpireMageArmorDuration = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       true,
       false,

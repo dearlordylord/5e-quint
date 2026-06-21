@@ -10,26 +10,32 @@ module characterSheetFeatureResourcesMbt {
   import layOnHandsResource.* from "../shared-algebras/proofs/rule-core/lay-on-hands-resource"
   import uncannyMetabolismResource.* from "../shared-algebras/proofs/rule-core/uncanny-metabolism-resource"
 
-  var qLastResult: str
-  var qAccepted: bool
-  var qMessage: str
-  var qSourceCurrentHp: int
-  var qTargetCurrentHp: int
-  var qTemporaryHitPoints: int
-  var qTargetPoisoned: bool
-  var qLayOnHandsCapacity: int
-  var qLayOnHandsExpended: int
-  var qDruidWildShapeExpended: int
-  var qMonkFocusExpended: int
-  var qSorceryPointCapacity: int
-  var qSorceryPointExpended: int
-  var qOrdinaryLevel2Expended: int
-  var qCreatedLevel3Capacity: int
-  var qCreatedLevel3Expended: int
-  var qUncannyUsedSinceLongRest: bool
-  var qMetamagicKnownOptions: int
-  var qMetamagicSharedResourceExpended: int
-  var qReplayIndex: int
+  type CharacterSheetFeatureResourcesOutcome =
+    | CharacterSheetFeatureResourcesInit
+    | CharacterSheetFeatureResourcesLayOnHandsRestoresHpAndRemovesPoisoned
+    | CharacterSheetFeatureResourcesLayOnHandsOverspendRejected
+    | CharacterSheetFeatureResourcesLongRestClearsLayOnHandsPool
+    | CharacterSheetFeatureResourcesShortRestRecoversUseCountPools
+    | CharacterSheetFeatureResourcesLongRestClearsPointPoolAndUseState
+    | CharacterSheetFeatureResourcesFontOfMagicSlotToPoints
+    | CharacterSheetFeatureResourcesFontOfMagicAmbiguousSlotSourceRejected
+    | CharacterSheetFeatureResourcesFontOfMagicPointsToSlot
+    | CharacterSheetFeatureResourcesFontOfMagicInsufficientPointsRejected
+    | CharacterSheetFeatureResourcesShortRestPreservesUncannyUseState
+    | CharacterSheetFeatureResourcesLongRestClearsUncannyUseState
+    | CharacterSheetFeatureResourcesUncannyMetabolismRecoversFocusAndHeals
+    | CharacterSheetFeatureResourcesUncannyMetabolismRepeatUseRejected
+    | CharacterSheetFeatureResourcesMetamagicBridgeUsesSharedPointPool
+
+  type CharacterSheetFeatureResourcesState = {
+    outcome: CharacterSheetFeatureResourcesOutcome,
+    accepted: bool,
+    message: str,
+    facts: SheetFeatureResourceFacts,
+    replayIndex: int,
+  }
+
+  var qState: CharacterSheetFeatureResourcesState
 
   type SheetFeatureResourceFacts = {
     sourceCurrentHp: int,
@@ -210,41 +216,34 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action recordProjection(
-    lastResult: str,
+    outcome: CharacterSheetFeatureResourcesOutcome,
     accepted: bool,
     message: str,
     sheet: SheetFeatureResourceFacts,
     replayIndex: int,
   ): bool = all {
-    qLastResult' = lastResult,
-    qAccepted' = accepted,
-    qMessage' = message,
-    qSourceCurrentHp' = sheet.sourceCurrentHp,
-    qTargetCurrentHp' = sheet.targetCurrentHp,
-    qTemporaryHitPoints' = sheet.temporaryHitPoints,
-    qTargetPoisoned' = sheet.targetPoisoned,
-    qLayOnHandsCapacity' = sheet.layOnHandsCapacity,
-    qLayOnHandsExpended' = sheet.layOnHandsExpended,
-    qDruidWildShapeExpended' = sheet.druidWildShapeExpended,
-    qMonkFocusExpended' = sheet.monkFocusExpended,
-    qSorceryPointCapacity' = sheet.sorceryPointCapacity,
-    qSorceryPointExpended' = sheet.sorceryPointExpended,
-    qOrdinaryLevel2Expended' = sheet.ordinaryLevel2Expended,
-    qCreatedLevel3Capacity' = sheet.createdLevel3Capacity,
-    qCreatedLevel3Expended' = sheet.createdLevel3Expended,
-    qUncannyUsedSinceLongRest' = sheet.uncannyUsedSinceLongRest,
-    qMetamagicKnownOptions' = sheet.metamagicKnownOptions,
-    qMetamagicSharedResourceExpended' = sheet.metamagicSharedResourceExpended,
-    qReplayIndex' = replayIndex,
+    qState' = {
+      outcome: outcome,
+      accepted: accepted,
+      message: message,
+      facts: sheet,
+      replayIndex: replayIndex,
+    },
   }
 
   action init =
-    recordProjection("init", false, "none", emptyFeatureResourceFacts, 0)
+    recordProjection(
+      CharacterSheetFeatureResourcesInit,
+      false,
+      "none",
+      emptyFeatureResourceFacts,
+      0,
+    )
 
   action doLayOnHandsRestoresHpAndRemovesPoisoned = all {
-    qReplayIndex == 0,
+    qState.replayIndex == 0,
     recordProjection(
-      "lay-on-hands-restores-hp-and-removes-poisoned",
+      CharacterSheetFeatureResourcesLayOnHandsRestoresHpAndRemovesPoisoned,
       true,
       "none",
       applyLayOnHandsToSheet(emptyFeatureResourceFacts
@@ -258,10 +257,10 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doRejectLayOnHandsOverspend = all {
-    qReplayIndex == 1,
+    qState.replayIndex == 1,
     not(canApplyLayOnHandsResource(featureResourcePool(5, 0), 1, 1)),
     recordProjection(
-      "lay-on-hands-overspend-rejected",
+      CharacterSheetFeatureResourcesLayOnHandsOverspendRejected,
       false,
       "Lay On Hands cannot spend more healing pool than remains.",
       emptyFeatureResourceFacts
@@ -275,14 +274,14 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doLongRestClearsLayOnHandsPool = all {
-    qReplayIndex == 2,
+    qState.replayIndex == 2,
     legalFeatureResourceRestState(featureResourceRestState(emptyFeatureResourceFacts
       .with("sourceCurrentHp", 12)
       .with("targetCurrentHp", 12)
       .with("layOnHandsCapacity", 5)
       .with("layOnHandsExpended", 4))),
     recordProjection(
-      "long-rest-clears-lay-on-hands-pool",
+      CharacterSheetFeatureResourcesLongRestClearsLayOnHandsPool,
       true,
       "none",
       completeLongRestFeatureResources(emptyFeatureResourceFacts
@@ -295,12 +294,12 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doShortRestRecoversUseCountPools = all {
-    qReplayIndex == 3,
+    qState.replayIndex == 3,
     legalFeatureResourceRestState(featureResourceRestState(emptyFeatureResourceFacts
       .with("druidWildShapeExpended", 2)
       .with("monkFocusExpended", 2))),
     recordProjection(
-      "short-rest-recovers-use-count-pools",
+      CharacterSheetFeatureResourcesShortRestRecoversUseCountPools,
       true,
       "none",
       shortRestFeatureResources(emptyFeatureResourceFacts
@@ -311,13 +310,13 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doLongRestClearsPointPoolAndUseState = all {
-    qReplayIndex == 4,
+    qState.replayIndex == 4,
     legalFeatureResourceRestState(featureResourceRestState(emptyFeatureResourceFacts
       .with("sorceryPointCapacity", 2)
       .with("sorceryPointExpended", 2)
       .with("uncannyUsedSinceLongRest", true))),
     recordProjection(
-      "long-rest-clears-point-pool-and-use-state",
+      CharacterSheetFeatureResourcesLongRestClearsPointPoolAndUseState,
       true,
       "none",
       completeLongRestFeatureResources(emptyFeatureResourceFacts
@@ -329,10 +328,10 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doFontOfMagicSlotToPoints = all {
-    qReplayIndex == 5,
+    qState.replayIndex == 5,
     canConvertFontOfMagicSlotToSorceryPoints(featureResourcePool(3, 3), 2, featureResourcePool(2, 1), featureResourcePool(0, 0)),
     recordProjection(
-      "font-of-magic-slot-to-points",
+      CharacterSheetFeatureResourcesFontOfMagicSlotToPoints,
       true,
       "none",
       convertFontOfMagicLevel2SlotToPointsOnSheet(emptyFeatureResourceFacts
@@ -344,10 +343,10 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doRejectFontOfMagicAmbiguousSlotSource = all {
-    qReplayIndex == 6,
+    qState.replayIndex == 6,
     fontOfMagicSpellSlotSourceRequiresChoice(featureResourcePool(2, 0), featureResourcePool(1, 0)),
     recordProjection(
-      "font-of-magic-ambiguous-slot-source-rejected",
+      CharacterSheetFeatureResourcesFontOfMagicAmbiguousSlotSourceRejected,
       false,
       "Font of Magic conversion requires a Spell Slot source when ordinary and created Spell Slots are both available.",
       emptyFeatureResourceFacts
@@ -360,10 +359,10 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doFontOfMagicPointsToSlot = all {
-    qReplayIndex == 7,
+    qState.replayIndex == 7,
     canCreateFontOfMagicSpellSlot(featureResourcePool(5, 0), featureResourcePool(0, 0), 5, 3),
     recordProjection(
-      "font-of-magic-points-to-slot",
+      CharacterSheetFeatureResourcesFontOfMagicPointsToSlot,
       true,
       "none",
       createFontOfMagicLevel3SlotOnSheet(emptyFeatureResourceFacts
@@ -376,10 +375,10 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doRejectFontOfMagicInsufficientPoints = all {
-    qReplayIndex == 8,
+    qState.replayIndex == 8,
     not(canCreateFontOfMagicSpellSlot(featureResourcePool(3, 1), featureResourcePool(0, 0), 3, 2)),
     recordProjection(
-      "font-of-magic-insufficient-points-rejected",
+      CharacterSheetFeatureResourcesFontOfMagicInsufficientPointsRejected,
       false,
       "Font of Magic Spell Slot creation requires enough unexpended Sorcery Points.",
       emptyFeatureResourceFacts
@@ -390,9 +389,9 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doShortRestPreservesUncannyUseState = all {
-    qReplayIndex == 9,
+    qState.replayIndex == 9,
     recordProjection(
-      "short-rest-preserves-uncanny-use-state",
+      CharacterSheetFeatureResourcesShortRestPreservesUncannyUseState,
       true,
       "none",
       shortRestFeatureResources(emptyFeatureResourceFacts
@@ -403,9 +402,9 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doLongRestClearsUncannyUseState = all {
-    qReplayIndex == 10,
+    qState.replayIndex == 10,
     recordProjection(
-      "long-rest-clears-uncanny-use-state",
+      CharacterSheetFeatureResourcesLongRestClearsUncannyUseState,
       true,
       "none",
       completeLongRestFeatureResources(emptyFeatureResourceFacts
@@ -416,9 +415,9 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doUncannyMetabolismRecoversFocusAndHeals = all {
-    qReplayIndex == 11,
+    qState.replayIndex == 11,
     recordProjection(
-      "uncanny-metabolism-recovers-focus-and-heals",
+      CharacterSheetFeatureResourcesUncannyMetabolismRecoversFocusAndHeals,
       true,
       "none",
       useUncannyMetabolism(emptyFeatureResourceFacts
@@ -430,10 +429,10 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doRejectUncannyMetabolismRepeatUse = all {
-    qReplayIndex == 12,
+    qState.replayIndex == 12,
     not(canUseUncannyMetabolism(true)),
     recordProjection(
-      "uncanny-metabolism-repeat-use-rejected",
+      CharacterSheetFeatureResourcesUncannyMetabolismRepeatUseRejected,
       false,
       "Uncanny Metabolism cannot be used again until a Long Rest.",
       emptyFeatureResourceFacts
@@ -446,9 +445,9 @@ module characterSheetFeatureResourcesMbt {
   }
 
   action doMetamagicBridgeUsesSharedPointPool = all {
-    qReplayIndex == 13,
+    qState.replayIndex == 13,
     recordProjection(
-      "metamagic-bridge-uses-shared-point-pool",
+      CharacterSheetFeatureResourcesMetamagicBridgeUsesSharedPointPool,
       true,
       "none",
       emptyFeatureResourceFacts

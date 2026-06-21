@@ -28,15 +28,14 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
   pure def qCasterConcentrating: bool = qState.qCasterConcentrating
   pure def qLineDirection: str = qState.qLineDirection
   pure def qLineMovementCostFeet: int = qState.qLineMovementCostFeet
-  pure def qLastResult: GustOfWindLineLifecycleScenarioOutcome = qState.qScenarioOutcome
-  pure def qHoles: Set[str] = qState.protocol.holes
+  pure def scenarioOutcome: GustOfWindLineLifecycleScenarioOutcome = qState.qScenarioOutcome
+  pure def openHoles: Set[str] = qState.protocol.holes
 
   pure def gustOfWindLineLifecycleProtocolForProjection(
     holes: Set[str],
-    scenarioResult: GustOfWindLineLifecycleScenarioOutcome,
-    _scenarioInvalidReason: str,
+    scenarioOutcome: GustOfWindLineLifecycleScenarioOutcome,
   ): WitnessProtocol[str] =
-    if (scenarioResult == Init) witnessInit("WitnessHole")
+    if (scenarioOutcome == Init) witnessInit("WitnessHole")
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved("WitnessHole")
 
@@ -76,7 +75,7 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
       qLineDirection: lineDirection,
       qLineMovementCostFeet: lineMovementCostFeet,
       qScenarioOutcome: lastResult,
-      protocol: gustOfWindLineLifecycleProtocolForProjection(holes, lastResult, ""),
+      protocol: gustOfWindLineLifecycleProtocolForProjection(holes, lastResult),
     },
   }
 
@@ -100,7 +99,7 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
     qActionAvailable,
     qSpellAvailable,
     not(qLineActive),
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordGustOfWindState(
       casterTurnRole,
       true,
@@ -117,7 +116,7 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
 
   action doCastInitialSaveSuccess = all {
     qCurrentTurnRole == casterTurnRole,
-    qHoles == initialLineSaveHoles,
+    openHoles == initialLineSaveHoles,
     recordGustOfWindState(
       casterTurnRole,
       false,
@@ -134,7 +133,7 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
 
   action doCastInitialSaveFailure = all {
     qCurrentTurnRole == casterTurnRole,
-    qHoles == initialLineSaveHoles,
+    openHoles == initialLineSaveHoles,
     recordGustOfWindState(
       casterTurnRole,
       false,
@@ -153,8 +152,8 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
     qCurrentTurnRole == casterTurnRole,
     qLineActive,
     qBonusActionAvailable,
-    qHoles == noHoles,
-    qLastResult.in(Set(InitialSaveSucceeded, InitialSaveFailed)),
+    openHoles == noHoles,
+    scenarioOutcome.in(Set(InitialSaveSucceeded, InitialSaveFailed)),
     recordGustOfWindState(
       casterTurnRole,
       qActionAvailable,
@@ -173,7 +172,7 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
     qCurrentTurnRole == casterTurnRole,
     qLineActive,
     qCasterConcentrating,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordGustOfWindState(
       targetTurnRole,
       true,
@@ -191,7 +190,7 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
   action doDiscoverEndTurnLineSave = all {
     qCurrentTurnRole == targetTurnRole,
     qLineActive,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordGustOfWindState(
       targetTurnRole,
       qActionAvailable,
@@ -208,7 +207,7 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
 
   action doFillEndTurnSaveSuccess = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == endTurnLineSaveHoles,
+    openHoles == endTurnLineSaveHoles,
     recordGustOfWindState(
       casterTurnRole,
       true,
@@ -225,7 +224,7 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
 
   action doFillEndTurnSaveFailure = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == endTurnLineSaveHoles,
+    openHoles == endTurnLineSaveHoles,
     recordGustOfWindState(
       casterTurnRole,
       true,
@@ -243,7 +242,7 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
   action doMoveCloserThroughLine = all {
     qCurrentTurnRole == targetTurnRole,
     qLineActive,
-    qHoles == noHoles,
+    openHoles == noHoles,
     qLineMovementCostFeet == 0,
     movementCostFeet == movementTotalFeet + movementCloserFeet,
     recordGustOfWindState(
@@ -265,8 +264,8 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
     qLineActive,
     qLineDirection == northDirection,
     qBonusActionAvailable,
-    qHoles == noHoles,
-    qLastResult.in(Set(EndTurnSaveSucceeded, EndTurnSaveFailed)),
+    openHoles == noHoles,
+    scenarioOutcome.in(Set(EndTurnSaveSucceeded, EndTurnSaveFailed)),
     recordGustOfWindState(
       casterTurnRole,
       qActionAvailable,
@@ -283,7 +282,7 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
 
   action doChangeDirectionEast = all {
     qCurrentTurnRole == casterTurnRole,
-    qHoles == directionChoiceHoles,
+    openHoles == directionChoiceHoles,
     recordGustOfWindState(
       casterTurnRole,
       qActionAvailable,
@@ -301,7 +300,7 @@ module battleRuntimeGustOfWindLineLifecycleMbt {
   action doBreakConcentration = all {
     qLineActive,
     qCasterConcentrating,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordGustOfWindState(
       qCurrentTurnRole,
       qActionAvailable,

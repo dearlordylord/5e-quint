@@ -83,10 +83,10 @@ type RejectedSpellbookRitualInvocationProjection = {
 };
 type SpellbookRitualSelectedIdentityProjection =
   | {
-      readonly lastResult: "init";
+      readonly outcome: "init";
     }
   | {
-      readonly lastResult: "invoked";
+      readonly outcome: "invoked";
       readonly access: Extract<
         SpellbookRitualAccessProjection,
         { readonly kind: "spellbook" }
@@ -94,7 +94,7 @@ type SpellbookRitualSelectedIdentityProjection =
       readonly invocation: AcceptedSpellbookRitualInvocationProjection;
     }
   | {
-      readonly lastResult: "prepared_only_rejected";
+      readonly outcome: "prepared_only_rejected";
       readonly access: Extract<
         SpellbookRitualAccessProjection,
         { readonly kind: "prepared_only" }
@@ -102,7 +102,7 @@ type SpellbookRitualSelectedIdentityProjection =
       readonly invocation: RejectedSpellbookRitualInvocationProjection;
     }
   | {
-      readonly lastResult:
+      readonly outcome:
         | "non_ritual_rejected"
         | "missing_feature_rejected"
         | "non_leveled_rejected";
@@ -116,15 +116,15 @@ type SpellbookRitualSelectedIdentityProjection =
     };
 type InitialSpellbookRitualSelectedIdentityProjection = Extract<
   SpellbookRitualSelectedIdentityProjection,
-  { readonly lastResult: "init" }
+  { readonly outcome: "init" }
 >;
 type InvokedSpellbookRitualSelectedIdentityProjection = Extract<
   SpellbookRitualSelectedIdentityProjection,
-  { readonly lastResult: "invoked" }
+  { readonly outcome: "invoked" }
 >;
 type PreparedOnlyRejectedSpellbookRitualSelectedIdentityProjection = Extract<
   SpellbookRitualSelectedIdentityProjection,
-  { readonly lastResult: "prepared_only_rejected" }
+  { readonly outcome: "prepared_only_rejected" }
 >;
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
@@ -499,13 +499,13 @@ function firstLevelSpellSlotsExpended(sheet: CharacterSheet): 0 {
 
 function initialProjection(): InitialSpellbookRitualSelectedIdentityProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
   };
 }
 
 function invokedProjection(): InvokedSpellbookRitualSelectedIdentityProjection {
   return {
-    lastResult: "invoked",
+    outcome: "invoked",
     access: {
       kind: "spellbook",
       feature: spellbookRitualFeatureProjection(),
@@ -524,7 +524,7 @@ function invokedProjection(): InvokedSpellbookRitualSelectedIdentityProjection {
 
 function preparedOnlyRejectedProjection(): PreparedOnlyRejectedSpellbookRitualSelectedIdentityProjection {
   return {
-    lastResult: "prepared_only_rejected",
+    outcome: "prepared_only_rejected",
     access: {
       kind: "prepared_only",
       feature: spellbookRitualFeatureProjection(),
@@ -537,21 +537,21 @@ function preparedOnlyRejectedProjection(): PreparedOnlyRejectedSpellbookRitualSe
 }
 
 function semanticRejectedProjection(
-  lastResult:
+  outcome:
     | "non_ritual_rejected"
     | "missing_feature_rejected"
     | "non_leveled_rejected",
 ): Extract<
   SpellbookRitualSelectedIdentityProjection,
   {
-    readonly lastResult:
+    readonly outcome:
       | "non_ritual_rejected"
       | "missing_feature_rejected"
       | "non_leveled_rejected";
   }
 > {
   return {
-    lastResult,
+    outcome,
     access: {
       kind: "semantic_rejected",
       feature: {
@@ -560,7 +560,7 @@ function semanticRejectedProjection(
         spellcastingSourceUnitId: "none",
       },
     },
-    spellbookContainsRitual: lastResult !== "non_ritual_rejected",
+    spellbookContainsRitual: outcome !== "non_ritual_rejected",
     preparedContainsRitual: false,
     invocation: {
       accepted: false,
@@ -575,6 +575,40 @@ function spellbookRitualFeatureProjection(): SpellbookRitualFeatureProjection {
     spellId: DETECT_MAGIC_SPELL_ID,
     spellcastingSourceUnitId: WIZARD_CLASS_UNIT_ID,
   };
+}
+
+const qntOutcomeByVariant = {
+  CharacterSheetSpellbookRitualSelectedIdentityInit: "init",
+  CharacterSheetSpellbookRitualSelectedIdentityInvoked: "invoked",
+  CharacterSheetSpellbookRitualSelectedIdentityPreparedOnlyRejected:
+    "prepared_only_rejected",
+  CharacterSheetSpellbookRitualSelectedIdentityNonRitualRejected:
+    "non_ritual_rejected",
+  CharacterSheetSpellbookRitualSelectedIdentityMissingFeatureRejected:
+    "missing_feature_rejected",
+  CharacterSheetSpellbookRitualSelectedIdentityNonLeveledRejected:
+    "non_leveled_rejected",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function requireRight<T, E>(result: Either.Either<T, E>): T {
@@ -594,119 +628,119 @@ function requireRight<T, E>(result: Either.Either<T, E>): T {
 function normalizeSpellbookRitualSelectedIdentityQuintState(
   raw: unknown,
 ): SpellbookRitualSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  const lastResult = mbtLastResult(state["qLastResult"]);
-  if (lastResult === "init") {
-    assertStringField(state, "qFeatureUnitId", "none");
-    assertStringField(state, "qSpellId", "none");
-    assertStringField(state, "qSpellcastingSourceUnitId", "none");
-    assertStringField(state, "qSpellSlotCostKind", "none");
-    assertStringField(state, "qPreparationRequirement", "none");
-    assertStringField(state, "qRequiredSpellAccess", "none");
-    assertNumberField(state, "qAdditionalCastingTimeMinutes", 0);
-    assertBooleanField(state, "qSpellbookContainsRitual", false);
-    assertBooleanField(state, "qPreparedContainsRitual", false);
-    assertBooleanField(state, "qInvocationAccepted", false);
-    assertBooleanField(state, "qRequiresReadingSpellbook", false);
-    assertNumberField(state, "qFirstLevelSpellSlotsExpended", 0);
+  const state = recordField(quintStateRecord(raw), "qState");
+  const outcome = outcomeField(state["outcome"]);
+  if (outcome === "init") {
+    assertStringField(state, "featureUnitId", "none");
+    assertStringField(state, "spellId", "none");
+    assertStringField(state, "spellcastingSourceUnitId", "none");
+    assertStringField(state, "spellSlotCostKind", "none");
+    assertStringField(state, "preparationRequirement", "none");
+    assertStringField(state, "requiredSpellAccess", "none");
+    assertNumberField(state, "additionalCastingTimeMinutes", 0);
+    assertBooleanField(state, "spellbookContainsRitual", false);
+    assertBooleanField(state, "preparedContainsRitual", false);
+    assertBooleanField(state, "invocationAccepted", false);
+    assertBooleanField(state, "requiresReadingSpellbook", false);
+    assertNumberField(state, "firstLevelSpellSlotsExpended", 0);
     return initialProjection();
   }
-  const projection = projectionForLastResult(lastResult);
+  const projection = projectionForOutcome(outcome);
   assertStringField(
     state,
-    "qFeatureUnitId",
+    "featureUnitId",
     projection.access.feature.featureUnitId,
   );
-  assertStringField(state, "qSpellId", projection.access.feature.spellId);
+  assertStringField(state, "spellId", projection.access.feature.spellId);
   assertStringField(
     state,
-    "qSpellcastingSourceUnitId",
+    "spellcastingSourceUnitId",
     projection.access.feature.spellcastingSourceUnitId,
   );
   assertBooleanField(
     state,
-    "qSpellbookContainsRitual",
-    projection.lastResult === "non_ritual_rejected" ||
-      projection.lastResult === "missing_feature_rejected" ||
-      projection.lastResult === "non_leveled_rejected"
+    "spellbookContainsRitual",
+    projection.outcome === "non_ritual_rejected" ||
+      projection.outcome === "missing_feature_rejected" ||
+      projection.outcome === "non_leveled_rejected"
       ? projection.spellbookContainsRitual
       : projection.access.kind === "spellbook",
   );
   assertBooleanField(
     state,
-    "qPreparedContainsRitual",
-    projection.lastResult === "non_ritual_rejected" ||
-      projection.lastResult === "missing_feature_rejected" ||
-      projection.lastResult === "non_leveled_rejected"
+    "preparedContainsRitual",
+    projection.outcome === "non_ritual_rejected" ||
+      projection.outcome === "missing_feature_rejected" ||
+      projection.outcome === "non_leveled_rejected"
       ? projection.preparedContainsRitual
       : projection.access.kind === "prepared_only",
   );
   assertBooleanField(
     state,
-    "qInvocationAccepted",
+    "invocationAccepted",
     projection.invocation.accepted,
   );
   assertNumberField(
     state,
-    "qFirstLevelSpellSlotsExpended",
+    "firstLevelSpellSlotsExpended",
     projection.invocation.firstLevelSpellSlotsExpended,
   );
-  if (projection.lastResult === "invoked") {
+  if (projection.outcome === "invoked") {
     assertStringField(
       state,
-      "qSpellSlotCostKind",
+      "spellSlotCostKind",
       projection.invocation.spellSlotCostKind,
     );
     assertStringField(
       state,
-      "qPreparationRequirement",
+      "preparationRequirement",
       projection.invocation.preparationRequirement,
     );
     assertStringField(
       state,
-      "qRequiredSpellAccess",
+      "requiredSpellAccess",
       projection.invocation.requiredSpellAccess,
     );
     assertNumberField(
       state,
-      "qAdditionalCastingTimeMinutes",
+      "additionalCastingTimeMinutes",
       projection.invocation.additionalCastingTimeMinutes,
     );
     assertBooleanField(
       state,
-      "qRequiresReadingSpellbook",
+      "requiresReadingSpellbook",
       projection.invocation.requiresReadingSpellbook,
     );
   } else {
-    assertStringField(state, "qSpellSlotCostKind", "none");
-    assertStringField(state, "qPreparationRequirement", "none");
-    assertStringField(state, "qRequiredSpellAccess", "none");
-    assertNumberField(state, "qAdditionalCastingTimeMinutes", 0);
-    assertBooleanField(state, "qRequiresReadingSpellbook", false);
+    assertStringField(state, "spellSlotCostKind", "none");
+    assertStringField(state, "preparationRequirement", "none");
+    assertStringField(state, "requiredSpellAccess", "none");
+    assertNumberField(state, "additionalCastingTimeMinutes", 0);
+    assertBooleanField(state, "requiresReadingSpellbook", false);
   }
   return projection;
 }
 
-function projectionForLastResult(
-  lastResult: Exclude<
-    SpellbookRitualSelectedIdentityProjection["lastResult"],
+function projectionForOutcome(
+  outcome: Exclude<
+    SpellbookRitualSelectedIdentityProjection["outcome"],
     "init"
   >,
 ): Exclude<
   SpellbookRitualSelectedIdentityProjection,
   InitialSpellbookRitualSelectedIdentityProjection
 > {
-  if (lastResult === "invoked") return invokedProjection();
-  if (lastResult === "prepared_only_rejected")
+  if (outcome === "invoked") return invokedProjection();
+  if (outcome === "prepared_only_rejected")
     return preparedOnlyRejectedProjection();
   if (
-    lastResult === "non_ritual_rejected" ||
-    lastResult === "missing_feature_rejected" ||
-    lastResult === "non_leveled_rejected"
+    outcome === "non_ritual_rejected" ||
+    outcome === "missing_feature_rejected" ||
+    outcome === "non_leveled_rejected"
   ) {
-    return semanticRejectedProjection(lastResult);
+    return semanticRejectedProjection(outcome);
   }
-  return assertNever(lastResult);
+  return assertNever(outcome);
 }
 
 function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
@@ -714,6 +748,17 @@ function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
     throw new Error("Expected Quint state record.");
   }
   return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }
 
 function assertStringField(
@@ -761,24 +806,10 @@ function assertNumberField(
   }
 }
 
-function mbtLastResult(
-  raw: unknown,
-): SpellbookRitualSelectedIdentityProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "invoked" ||
-    raw === "prepared_only_rejected" ||
-    raw === "non_ritual_rejected" ||
-    raw === "missing_feature_rejected" ||
-    raw === "non_leveled_rejected"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
 function assertNever(value: never): never {
-  throw new Error(`Unexpected spellbook Ritual selected identity result ${value}.`);
+  throw new Error(
+    `Unexpected spellbook Ritual selected identity result ${value}.`,
+  );
 }
 
 const spellbookRitualSelectedIdentityStateCheck = stateCheck(

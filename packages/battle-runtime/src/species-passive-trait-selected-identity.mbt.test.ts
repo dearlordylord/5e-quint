@@ -87,7 +87,16 @@ defineSelectedIdentityWitness({
   ),
   quintStateField: "qState",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "scenarioResult" },
+  quintFieldNames: { lastResult: "scenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      DragonbornDamageResistance: "dragonbornDamageResistance",
+      DwarvenResilience: "dwarvenResilience",
+      HalflingBrave: "halflingBrave",
+      GoliathPowerfulBuild: "goliathPowerfulBuild",
+    },
+  },
   projectionSchema: {
     dragonbornFireDamageAfter: "int",
     dragonbornColdDamageAfter: "int",
@@ -100,7 +109,7 @@ defineSelectedIdentityWitness({
     halflingPoisonedSaveAdvantage: "bool",
     goliathEscapeRollMode: "str",
     goliathPoisonedEscapeRollMode: "str",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

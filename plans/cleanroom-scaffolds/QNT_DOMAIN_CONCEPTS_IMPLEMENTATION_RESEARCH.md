@@ -45,17 +45,17 @@ owner.
 
 ## Summary Matrix
 
-| Concept | Source status | QNT route | MCP/app route | Cleanroom gap |
-| --- | --- | --- | --- | --- |
-| Hole, Fill, And Witness Ownership | Partly modeled | Keep semantic-frontier vocabulary in leaf QNT; keep table facts in inventory/classification | `fill_battle_hole`, battle result payloads, app demo fills | Add concept tags and table-fact owner checks |
-| Source Fact, Table Witness, Runtime Projection | Partly modeled | Source-fact lifecycles in focused QNT; witnesses in MBT projections | MCP fills; snapshots/visualizer show source/projection facts | Split state-owner categories |
-| Support-Profile Admission | Mostly modeled | Rule-core profile QNT plus selected-identity MBT | Catalog selection + discovery/admission tools | Require target support-gate evidence per task |
-| Result Taxonomy | Strong, but not universal | Use `WitnessProtocol`; migrate remaining protocol strings where useful | MCP returns resolved/needsHoles/invalid; creation returns accepted/rejected/ready/incomplete/invalid | Require replay evidence result classification |
-| Procedure Lifecycle And Replay Protocol | Strong in battle | Ordering/reaction/replay QNT plus lifecycle-stage metadata | MCP transient fills and pending sessions | Add lifecycle stage tags to source inventory |
-| Runtime Occurrence State | Partly modeled | Focus lifecycle/cleanup QNT on occurrence state, not names | Battle snapshots and MCP battle state | Add occurrence-state manifest expectations |
-| Draft/Build/Sheet/Battle/Handoff | Strong | Existing character creation/sheet/battle QNT and MBTs | Full MCP workflow across draft, sheet, battle, closeout | Make layer owner tags first-class in tasks |
-| Authored Identity/Provenance/Projection | Strong outside QNT | QNT models typed profile facts; static gate blocks identity dispatch | MCP stores selected ids but calls package owners | Keep static gate; add target equivalent |
-| Encounter Relationships And Side | Implemented, narrow | Keep side equality QNT unless source widens model | `start_battle` requires side; reducers project allies/enemies | Add setup relationship owner to manifests |
+| Concept                                        | Source status             | QNT route                                                                                   | MCP/app route                                                                                        | Cleanroom gap                                 |
+| ---------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Hole, Fill, And Witness Ownership              | Partly modeled            | Keep semantic-frontier vocabulary in leaf QNT; keep table facts in inventory/classification | `fill_battle_hole`, battle result payloads, app demo fills                                           | Add concept tags and table-fact owner checks  |
+| Source Fact, Table Witness, Runtime Projection | Partly modeled            | Source-fact lifecycles in focused QNT; witnesses in MBT projections                         | MCP fills; snapshots/visualizer show source/projection facts                                         | Split state-owner categories                  |
+| Support-Profile Admission                      | Mostly modeled            | Rule-core profile QNT plus selected-identity MBT                                            | Catalog selection + discovery/admission tools                                                        | Require target support-gate evidence per task |
+| Result Taxonomy                                | Strong, but not universal | Use typed replay protocol/result records where a witness needs outcome state                 | MCP returns resolved/needsHoles/invalid; creation returns accepted/rejected/ready/incomplete/invalid | Require replay evidence result classification |
+| Procedure Lifecycle And Replay Protocol        | Strong in battle          | Ordering/reaction/replay QNT plus lifecycle-stage metadata                                  | MCP transient fills and pending sessions                                                             | Add lifecycle stage tags to source inventory  |
+| Runtime Occurrence State                       | Partly modeled            | Focus lifecycle/cleanup QNT on occurrence state, not names                                  | Battle snapshots and MCP battle state                                                                | Add occurrence-state manifest expectations    |
+| Draft/Build/Sheet/Battle/Handoff               | Strong                    | Existing character creation/sheet/battle QNT and MBTs                                       | Full MCP workflow across draft, sheet, battle, closeout                                              | Make layer owner tags first-class in tasks    |
+| Authored Identity/Provenance/Projection        | Strong outside QNT        | QNT models typed profile facts; static gate blocks identity dispatch                        | MCP stores selected ids but calls package owners                                                     | Keep static gate; add target equivalent       |
+| Encounter Relationships And Side               | Implemented, narrow       | Keep side equality QNT unless source widens model                                           | `start_battle` requires side; reducers project allies/enemies                                        | Add setup relationship owner to manifests     |
 
 ## 1. Hole, Fill, And Witness Ownership
 
@@ -246,19 +246,17 @@ before adding any new template file.
   `CreationFinalizationResult` has `ready`, `incomplete`, and `invalid`.
 - `packages/mcp/src/battle-tools.ts` preserves battle results in structured tool
   payloads instead of throwing ordinary domain outcomes.
-- ADR-0001 notes that remaining `qScenarioResult`-style strings are separate
-  projection facts and not fully migrated to typed protocol variants.
+- ADR-0001 records that battle MBT witnesses use typed replay state; local
+  scenario branches use typed local variants or `WitnessProtocol`.
 
 ### QNT Implementation Or Discovery Route
 
-Use `WitnessProtocol` for protocol outcomes whenever a driver is asserting
-resolved, needs-holes, or invalid behavior. Do not introduce generic string
-results for new protocol outcomes.
+Use typed replay protocol/result records whenever a driver is asserting
+resolved, needs-holes, or invalid behavior.
 
 For existing drivers:
 
-- migrate `qLastResult: str` only when the string is actually a protocol result;
-- leave scenario names as local scenario variants when they describe the branch
+- keep scenario names as local scenario variants when they describe the branch
   that was witnessed;
 - keep display/projection labels separate from result taxonomy.
 

@@ -584,7 +584,7 @@ function normalizeSleetStormQuintState(
   const scenarioResult = sleetStormLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Sleet Storm area hazard",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

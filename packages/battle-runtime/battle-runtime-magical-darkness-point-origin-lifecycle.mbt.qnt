@@ -48,16 +48,13 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
   pure def qOverlappingLowLevelSpellLightActive: bool = qState.qOverlappingLowLevelSpellLightActive
   pure def qOverlappingHighLevelSpellLightActive: bool = qState.qOverlappingHighLevelSpellLightActive
   pure def qNonOverlappingLowLevelSpellLightActive: bool = qState.qNonOverlappingLowLevelSpellLightActive
-  pure def qLastResult: MagicalDarknessPointOriginLifecycleScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: MagicalDarknessPointOriginLifecycleScenarioOutcome = qState.qScenarioOutcome
 
   pure def witnessProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: MagicalDarknessPointOriginLifecycleScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: MagicalDarknessPointOriginLifecycleScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
-    else if (scenarioInvalidReason == "staleSubject") witnessInvalid(WitnessProtocolHole, WStaleSubject)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -88,7 +85,7 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
       qOverlappingHighLevelSpellLightActive: overlappingHighLevelSpellLightActive,
       qNonOverlappingLowLevelSpellLightActive: nonOverlappingLowLevelSpellLightActive,
       qScenarioOutcome: lastResult,
-      protocol: witnessProtocolForProjection(Set(), lastResult, ""),
+      protocol: witnessProtocolForProjection(Set(), lastResult),
     },
   }
 
@@ -183,7 +180,7 @@ module battleRuntimeMagicalDarknessPointOriginLifecycleMbt {
       qOverlappingLowLevelSpellLightActive,
       qOverlappingHighLevelSpellLightActive,
       qNonOverlappingLowLevelSpellLightActive,
-      qLastResult,
+      scenarioOutcome,
     ),
   }
 

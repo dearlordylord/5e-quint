@@ -488,7 +488,7 @@ function normalizeZeroHitPointMidResolutionQuintState(
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "zero-Hit-Point mid-resolution",
-    scenarioResult: scenario,
+    scenarioOutcome: scenario,
     protocol,
   });
   return {

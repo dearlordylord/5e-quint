@@ -12,18 +12,15 @@ module battleRuntimeWeaponAttackOrderingMbt {
   var qProtocol: WitnessProtocol[BattleHoleFamilyKind]
   var qLastOrderingError: str
 
-  pure def qHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
+  pure def openHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
 
   pure val witnessHoleType: BattleHoleFamilyKind = TargetChoiceHoleKind
 
   pure def witnessProtocolForProjection(
     holes: Set[BattleHoleFamilyKind],
-    lastResult: str,
+    result: WitnessResult,
   ): WitnessProtocol[BattleHoleFamilyKind] =
-    if (lastResult == "init") witnessInit(witnessHoleType)
-    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved(witnessHoleType)
+    witnessProtocolFromResult(holes, witnessHoleType, result)
 
   pure def orderingErrorLabel(error: WeaponAttackFillOrderingError): str =
     match error {
@@ -42,7 +39,7 @@ module battleRuntimeWeaponAttackOrderingMbt {
     qStage' = WeaponAttackActSelectionStage,
     qProtocol' = witnessProtocolForProjection(
       weaponAttackHoleFrontier(WeaponAttackActSelectionStage),
-      "init",
+      WInit,
     ),
     qLastOrderingError' = "",
   }
@@ -52,7 +49,7 @@ module battleRuntimeWeaponAttackOrderingMbt {
     qStage' = WeaponAttackTargetChoiceStage,
     qProtocol' = witnessProtocolForProjection(
       weaponAttackHoleFrontier(WeaponAttackTargetChoiceStage),
-      "needsHoles",
+      WNeedsHoles,
     ),
     qLastOrderingError' = "",
   }
@@ -60,7 +57,7 @@ module battleRuntimeWeaponAttackOrderingMbt {
   action doRejectAttackRollBeforeTargetChoice = all {
     qStage == WeaponAttackTargetChoiceStage,
     qStage' = qStage,
-    qProtocol' = witnessProtocolForProjection(qHoles, "invalid"),
+    qProtocol' = witnessProtocolForProjection(openHoles, WInvalid(WInvalidFill)),
     qLastOrderingError' =
       rejectedOrderingLabel(
         weaponAttackFillOrderResult(qStage, AttackRollFillKind, false)
@@ -72,7 +69,7 @@ module battleRuntimeWeaponAttackOrderingMbt {
     qStage' = WeaponAttackAttackRollStage,
     qProtocol' = witnessProtocolForProjection(
       weaponAttackHoleFrontier(WeaponAttackAttackRollStage),
-      "needsHoles",
+      WNeedsHoles,
     ),
     qLastOrderingError' = "",
   }
@@ -80,7 +77,7 @@ module battleRuntimeWeaponAttackOrderingMbt {
   action doRejectDamageBeforeAttackRoll = all {
     qStage == WeaponAttackAttackRollStage,
     qStage' = qStage,
-    qProtocol' = witnessProtocolForProjection(qHoles, "invalid"),
+    qProtocol' = witnessProtocolForProjection(openHoles, WInvalid(WInvalidFill)),
     qLastOrderingError' =
       rejectedOrderingLabel(
         weaponAttackFillOrderResult(qStage, RolledDiceFillKind, false)
@@ -92,7 +89,7 @@ module battleRuntimeWeaponAttackOrderingMbt {
     qStage' = WeaponAttackResolvedStage,
     qProtocol' = witnessProtocolForProjection(
       weaponAttackHoleFrontier(WeaponAttackResolvedStage),
-      "resolved",
+      WResolved,
     ),
     qLastOrderingError' = "",
   }
@@ -102,7 +99,7 @@ module battleRuntimeWeaponAttackOrderingMbt {
     qStage' = WeaponAttackDamageDiceStage,
     qProtocol' = witnessProtocolForProjection(
       weaponAttackHoleFrontier(WeaponAttackDamageDiceStage),
-      "needsHoles",
+      WNeedsHoles,
     ),
     qLastOrderingError' = "",
   }
@@ -112,7 +109,7 @@ module battleRuntimeWeaponAttackOrderingMbt {
     qStage' = WeaponAttackResolvedStage,
     qProtocol' = witnessProtocolForProjection(
       weaponAttackHoleFrontier(WeaponAttackResolvedStage),
-      "resolved",
+      WResolved,
     ),
     qLastOrderingError' = "",
   }

@@ -90,7 +90,22 @@ const LAST_RESULTS = [
   "multiattackedOnce",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
-const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
+const SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  FailedSave: "failedSave",
+  TargetTurn: "targetTurn",
+  NeedsSave: "needsSave",
+  Saved: "saved",
+  FailedAgain: "failedAgain",
+  SpentAction: "spentAction",
+  AttackedOnce: "attackedOnce",
+  NeedsSomaticFailure: "needsSomaticFailure",
+  SomaticSpellFailed: "somaticSpellFailed",
+  SelfFailedSave: "selfFailedSave",
+  MultiattackFailedSave: "multiattackFailedSave",
+  MultiattackTargetTurn: "multiattackTargetTurn",
+  MultiattackedOnce: "multiattackedOnce",
+} as const satisfies Readonly<Record<string, LastResult>>;
 const slowMultiattackTargetId = combatantId(
   "slow-active-penalties-mbt-multiattack-target",
 );
@@ -782,7 +797,7 @@ function normalizeSlowActivePenaltiesQuintState(
   raw: unknown,
 ): SlowActivePenaltiesProjection {
   const state = quintRecordField(quintStateRecord(raw), "qState");
-  const scenarioResult = lastResult(state["scenarioResult"]);
+  const scenarioResult = lastResult(state["scenarioOutcome"]);
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
@@ -791,7 +806,7 @@ function normalizeSlowActivePenaltiesQuintState(
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "Slow active penalties",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {
@@ -963,9 +978,13 @@ function actionOrBonusChoiceFromQuint(
 }
 
 function lastResult(raw: unknown): LastResult {
-  expect(raw).toBeTypeOf("string");
-  if (typeof raw === "string" && LAST_RESULT_SET.has(raw)) {
-    return raw as LastResult;
-  }
-  throw new Error(`Unexpected Slow result ${String(raw)}.`);
+  const tag = quintVariantTag(raw, "qState.scenarioOutcome");
+  if (isScenarioOutcomeTag(tag)) return SCENARIO_OUTCOME_BY_TAG[tag];
+  throw new Error(`Unexpected scenario outcome variant ${tag}.`);
+}
+
+function isScenarioOutcomeTag(
+  tag: string,
+): tag is keyof typeof SCENARIO_OUTCOME_BY_TAG {
+  return Object.hasOwn(SCENARIO_OUTCOME_BY_TAG, tag);
 }

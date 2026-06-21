@@ -950,7 +950,7 @@ function normalizeQuickenedSpellGovernorQuintState(
   const lastResultValue = lastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Quickened Spell Governor",
-    scenarioResult: lastResultValue,
+    scenarioOutcome: lastResultValue,
     protocol,
   });
   return {

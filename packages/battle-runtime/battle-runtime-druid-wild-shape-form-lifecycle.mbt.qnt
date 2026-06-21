@@ -39,12 +39,11 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
   pure def qActiveFormEffectCount: int = qState.qActiveFormEffectCount
   pure def qMergedEquipmentCount: int = qState.qMergedEquipmentCount
   pure def qDruidStatus: str = qState.qDruidStatus
-  pure def qLastResult: DruidWildShapeFormLifecycleScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: DruidWildShapeFormLifecycleScenarioOutcome = qState.qScenarioOutcome
 
   pure def druidWildShapeFormLifecycleProtocolForProjection(
     holes: Set[WitnessHole],
     scenarioOutcome: DruidWildShapeFormLifecycleScenarioOutcome,
-    _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
     if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
@@ -113,7 +112,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       qMergedEquipmentCount: mergedEquipmentCount,
       qDruidStatus: druidStatus,
       qScenarioOutcome: lastResult,
-      protocol: druidWildShapeFormLifecycleProtocolForProjection(Set(), lastResult, ""),
+      protocol: druidWildShapeFormLifecycleProtocolForProjection(Set(), lastResult),
     },
   }
 
@@ -272,7 +271,7 @@ module battleRuntimeDruidWildShapeFormLifecycleMbt {
       qActiveFormEffectCount,
       qMergedEquipmentCount,
       qDruidStatus,
-      qLastResult,
+      scenarioOutcome,
     ),
   }
 

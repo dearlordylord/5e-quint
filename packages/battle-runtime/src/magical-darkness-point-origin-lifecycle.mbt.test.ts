@@ -531,7 +531,7 @@ function normalizeDarknessQuintState(raw: unknown): DarknessProjection {
   const lastResultValue = lastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Darkness point-origin lifecycle",
-    scenarioResult: lastResultValue,
+    scenarioOutcome: lastResultValue,
     protocol,
   });
   return {

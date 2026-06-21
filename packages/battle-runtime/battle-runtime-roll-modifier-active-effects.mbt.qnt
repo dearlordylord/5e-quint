@@ -67,8 +67,8 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   pure def qThaumaturgyIntimidationRollMode: str = qState.qThaumaturgyIntimidationRollMode
   pure def qThaumaturgyEffectActive: bool = qState.qThaumaturgyEffectActive
   pure def qPassivePerceptionDelta: int = qState.qPassivePerceptionDelta
-  pure def qHoles: Set[str] = qState.protocol.holes
-  pure def qLastResult: RollModifierActiveEffectsScenarioOutcome = qState.qScenarioOutcome
+  pure def openHoles: Set[str] = qState.protocol.holes
+  pure def scenarioOutcome: RollModifierActiveEffectsScenarioOutcome = qState.qScenarioOutcome
 
   pure val noModifier: str = "none"
   pure val plusD4Modifier: str = "+1d4"
@@ -91,12 +91,9 @@ module battleRuntimeRollModifierActiveEffectsMbt {
 
   pure def witnessProtocolForProjection(
     holes: Set[str],
-    scenarioResult: RollModifierActiveEffectsScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: RollModifierActiveEffectsScenarioOutcome,
   ): WitnessProtocol[str] =
-    if (scenarioResult == Init) witnessInit("")
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid("", WInvalidFill)
-    else if (scenarioInvalidReason == "staleSubject") witnessInvalid("", WStaleSubject)
+    if (scenarioOutcome == Init) witnessInit("")
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved("")
 
@@ -138,7 +135,7 @@ module battleRuntimeRollModifierActiveEffectsMbt {
       qThaumaturgyEffectActive: thaumaturgyEffectActive,
       qPassivePerceptionDelta: passivePerceptionDelta,
       qScenarioOutcome: lastResult,
-      protocol: witnessProtocolForProjection(holes, lastResult, ""),
+      protocol: witnessProtocolForProjection(holes, lastResult),
     },
   }
 
@@ -176,14 +173,14 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   action doDiscoverBaneSave = all {
     qActionAvailable,
     qSpellAvailable,
-    qHoles == noHoles,
-    qLastResult == Init,
+    openHoles == noHoles,
+    scenarioOutcome == Init,
     recordNoEffectState(true, true, savingThrowOutcomeHoles, NeedsBaneSave),
   }
 
   action doCastBaneFailed = all {
-    qHoles == savingThrowOutcomeHoles,
-    qLastResult == NeedsBaneSave,
+    openHoles == savingThrowOutcomeHoles,
+    scenarioOutcome == NeedsBaneSave,
     recordRollModifierState(
       false,
       false,
@@ -209,8 +206,8 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   action doCastBless = all {
     qActionAvailable,
     qSpellAvailable,
-    qHoles == noHoles,
-    qLastResult == Init,
+    openHoles == noHoles,
+    scenarioOutcome == Init,
     recordRollModifierState(
       false,
       false,
@@ -236,14 +233,14 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   action doDiscoverGuidanceSkillChoice = all {
     qActionAvailable,
     qSpellAvailable,
-    qHoles == noHoles,
-    qLastResult == Init,
+    openHoles == noHoles,
+    scenarioOutcome == Init,
     recordNoEffectState(true, true, skillChoiceHoles, NeedsGuidanceSkill),
   }
 
   action doCastGuidanceStealth = all {
-    qLastResult.in(Set(Init, NeedsGuidanceSkill)),
-    qHoles.in(Set(noHoles, skillChoiceHoles)),
+    scenarioOutcome.in(Set(Init, NeedsGuidanceSkill)),
+    openHoles.in(Set(noHoles, skillChoiceHoles)),
     recordRollModifierState(
       false,
       false,
@@ -269,8 +266,8 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   action doCastPassWithoutTrace = all {
     qActionAvailable,
     qSpellAvailable,
-    qHoles == noHoles,
-    qLastResult == Init,
+    openHoles == noHoles,
+    scenarioOutcome == Init,
     recordRollModifierState(
       false,
       false,
@@ -296,14 +293,14 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   action doDiscoverEnhanceAbilityChoice = all {
     qActionAvailable,
     qSpellAvailable,
-    qHoles == noHoles,
-    qLastResult == Init,
+    openHoles == noHoles,
+    scenarioOutcome == Init,
     recordNoEffectState(true, true, abilityChoiceHoles, NeedsEnhanceAbility),
   }
 
   action doCastEnhanceDex = all {
-    qLastResult.in(Set(Init, NeedsEnhanceAbility)),
-    qHoles.in(Set(noHoles, abilityChoiceHoles)),
+    scenarioOutcome.in(Set(Init, NeedsEnhanceAbility)),
+    openHoles.in(Set(noHoles, abilityChoiceHoles)),
     recordRollModifierState(
       false,
       false,
@@ -329,14 +326,14 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   action doDiscoverEnhanceTargetAbilityChoices = all {
     qActionAvailable,
     qSpellAvailable,
-    qHoles == noHoles,
-    qLastResult == Init,
+    openHoles == noHoles,
+    scenarioOutcome == Init,
     recordNoEffectState(true, true, targetAbilityChoicesHoles, NeedsEnhanceTargetAbilities),
   }
 
   action doCastEnhancePerTarget = all {
-    qLastResult.in(Set(Init, NeedsEnhanceTargetAbilities)),
-    qHoles.in(Set(noHoles, targetAbilityChoicesHoles)),
+    scenarioOutcome.in(Set(Init, NeedsEnhanceTargetAbilities)),
+    openHoles.in(Set(noHoles, targetAbilityChoicesHoles)),
     recordRollModifierState(
       false,
       false,
@@ -362,8 +359,8 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   action doCastEnthrall = all {
     qActionAvailable,
     qSpellAvailable,
-    qHoles == noHoles,
-    qLastResult == Init,
+    openHoles == noHoles,
+    scenarioOutcome == Init,
     recordRollModifierState(
       false,
       false,
@@ -389,14 +386,14 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   action doDiscoverThaumaturgyCount = all {
     qActionAvailable,
     qSpellAvailable,
-    qHoles == noHoles,
-    qLastResult == Init,
+    openHoles == noHoles,
+    scenarioOutcome == Init,
     recordNoEffectState(true, true, thaumaturgyCountHoles, NeedsThaumaturgyCount),
   }
 
   action doCastThaumaturgyBoomingVoice = all {
-    qLastResult.in(Set(Init, NeedsThaumaturgyCount)),
-    qHoles.in(Set(noHoles, thaumaturgyCountHoles)),
+    scenarioOutcome.in(Set(Init, NeedsThaumaturgyCount)),
+    openHoles.in(Set(noHoles, thaumaturgyCountHoles)),
     recordRollModifierState(
       false,
       false,
@@ -420,8 +417,8 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   }
 
   action doCastThaumaturgyCancelled = all {
-    qLastResult.in(Set(Init, NeedsThaumaturgyCount)),
-    qHoles.in(Set(noHoles, thaumaturgyCountHoles)),
+    scenarioOutcome.in(Set(Init, NeedsThaumaturgyCount)),
+    openHoles.in(Set(noHoles, thaumaturgyCountHoles)),
     recordRollModifierState(
       false,
       false,
@@ -446,8 +443,8 @@ module battleRuntimeRollModifierActiveEffectsMbt {
 
   action doBreakConcentration = all {
     qCasterConcentrating,
-    qHoles == noHoles,
-    qLastResult.in(Set(
+    openHoles == noHoles,
+    scenarioOutcome.in(Set(
       BaneFailedTarget,
       BlessTarget,
       GuidanceStealth,
@@ -460,7 +457,7 @@ module battleRuntimeRollModifierActiveEffectsMbt {
   }
 
   action doStutter = all {
-    qLastResult.in(Set(
+    scenarioOutcome.in(Set(
       BaneFailedTarget,
       BlessTarget,
       GuidanceStealth,
@@ -488,9 +485,9 @@ module battleRuntimeRollModifierActiveEffectsMbt {
       qSecondTargetAbilityCheckRollMode,
       qThaumaturgyIntimidationRollMode,
       qThaumaturgyEffectActive,
-      qHoles,
+      openHoles,
       qPassivePerceptionDelta,
-      qLastResult,
+      scenarioOutcome,
     ),
   }
 

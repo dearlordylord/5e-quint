@@ -24,15 +24,13 @@ module battleRuntimeStunningStrikeMbt {
   pure def qTargetAttackAdvantage: bool = qState.qTargetAttackAdvantage
   pure def qFocusUsesRemaining: int = qState.qFocusUsesRemaining
   pure def qUsedThisTurn: bool = qState.qUsedThisTurn
-  pure def qLastResult: StunningStrikeScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: StunningStrikeScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: StunningStrikeScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: StunningStrikeScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -43,7 +41,6 @@ module battleRuntimeStunningStrikeMbt {
     focusUsesRemaining: int,
     usedThisTurn: bool,
     lastResult: StunningStrikeScenarioOutcome,
-    lastInvalidReason: str,
   ): bool = all {
     qState' = {
       qTargetStunned: targetStunned,
@@ -52,30 +49,30 @@ module battleRuntimeStunningStrikeMbt {
       qFocusUsesRemaining: focusUsesRemaining,
       qUsedThisTurn: usedThisTurn,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, lastInvalidReason),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
 
-  action init = recordProjection(false, false, false, 2, false, Init, "")
+  action init = recordProjection(false, false, false, 2, false, Init)
 
   action doFailedSave = all {
-    qLastResult == Init,
-    recordProjection(true, false, false, 1, true, FailedSave, ""),
+    scenarioOutcome == Init,
+    recordProjection(true, false, false, 1, true, FailedSave),
   }
 
   action doSuccessfulSave = all {
-    qLastResult == Init,
-    recordProjection(false, true, true, 1, true, SuccessfulSave, ""),
+    scenarioOutcome == Init,
+    recordProjection(false, true, true, 1, true, SuccessfulSave),
   }
 
   action doDecline = all {
-    qLastResult == Init,
-    recordProjection(false, false, false, 2, false, Decline, ""),
+    scenarioOutcome == Init,
+    recordProjection(false, false, false, 2, false, Decline),
   }
 
   action doSecondUseGate = all {
-    qLastResult == Init,
-    recordProjection(false, false, false, 1, true, SecondUseGate, ""),
+    scenarioOutcome == Init,
+    recordProjection(false, false, false, 1, true, SecondUseGate),
   }
 
   action step = any {

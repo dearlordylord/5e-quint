@@ -36,7 +36,7 @@ const classFeatureProjectionReplayStepCount =
   classFeatureProjectionScenarios.length - 1;
 
 type ClassFeatureProjection = {
-  readonly lastResult: ClassFeatureProjectionScenario;
+  readonly outcome: ClassFeatureProjectionScenario;
   readonly resourceUnitId: string;
   readonly resourceKind: string;
   readonly resourceMaximum: number;
@@ -204,7 +204,7 @@ describe("Character Creation class-feature resource and source fact deterministi
 
 function initialProjection(): ClassFeatureProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
     resourceUnitId: "none",
     resourceKind: "none",
     resourceMaximum: 0,
@@ -249,7 +249,7 @@ function projectMonkFocusAndUncannyMetabolism(): ClassFeatureProjection {
   );
 
   return {
-    lastResult: "monk-focus-uncanny-metabolism",
+    outcome: "monk-focus-uncanny-metabolism",
     resourceUnitId: resource.unitId,
     resourceKind: resource.resource.kind,
     resourceMaximum: focusFacts.focusPointUseCount.maximum,
@@ -321,7 +321,7 @@ function projectSorcererFontAndMetamagic(): ClassFeatureProjection {
   );
 
   return {
-    lastResult: "sorcerer-font-metamagic",
+    outcome: "sorcerer-font-metamagic",
     resourceUnitId: resource.unitId,
     resourceKind: resource.resource.kind,
     resourceMaximum: fontFacts.sorceryPointPool.maximum,
@@ -404,98 +404,104 @@ function requiredBuildResource(
 function normalizeClassFeatureProjectionQuintState(
   raw: unknown,
 ): ClassFeatureProjection {
-  const state = quintStateRecord(raw);
+  const state = recordField(quintStateRecord(raw), "qState");
   return {
-    lastResult: scenarioField(state["qLastResult"]),
-    resourceUnitId: stringField(state["qResourceUnitId"], "qResourceUnitId"),
-    resourceKind: stringField(state["qResourceKind"], "qResourceKind"),
+    outcome: outcomeField(state["outcome"]),
+    resourceUnitId: stringField(
+      state["resourceUnitId"],
+      "qState.resourceUnitId",
+    ),
+    resourceKind: stringField(state["resourceKind"], "qState.resourceKind"),
     resourceMaximum: numberFromQuintInt(
-      state["qResourceMaximum"],
-      "qResourceMaximum",
+      state["resourceMaximum"],
+      "qState.resourceMaximum",
     ),
     shortRestRefillsAll: booleanField(
-      state["qShortRestRefillsAll"],
-      "qShortRestRefillsAll",
+      state["shortRestRefillsAll"],
+      "qState.shortRestRefillsAll",
     ),
     longRestRefillsAll: booleanField(
-      state["qLongRestRefillsAll"],
-      "qLongRestRefillsAll",
+      state["longRestRefillsAll"],
+      "qState.longRestRefillsAll",
     ),
-    sourceFactKind: stringField(state["qSourceFactKind"], "qSourceFactKind"),
+    sourceFactKind: stringField(
+      state["sourceFactKind"],
+      "qState.sourceFactKind",
+    ),
     linkedResourceUnitId: stringField(
-      state["qLinkedResourceUnitId"],
-      "qLinkedResourceUnitId",
+      state["linkedResourceUnitId"],
+      "qState.linkedResourceUnitId",
     ),
     knownOptionCount: numberFromQuintInt(
-      state["qKnownOptionCount"],
-      "qKnownOptionCount",
+      state["knownOptionCount"],
+      "qState.knownOptionCount",
     ),
-    spellUseLimit: stringField(state["qSpellUseLimit"], "qSpellUseLimit"),
+    spellUseLimit: stringField(state["spellUseLimit"], "qState.spellUseLimit"),
     martialArtsDieSourceUnitId: stringField(
-      state["qMartialArtsDieSourceUnitId"],
-      "qMartialArtsDieSourceUnitId",
+      state["martialArtsDieSourceUnitId"],
+      "qState.martialArtsDieSourceUnitId",
     ),
     martialArtsDieDice: numberFromQuintInt(
-      state["qMartialArtsDieDice"],
-      "qMartialArtsDieDice",
+      state["martialArtsDieDice"],
+      "qState.martialArtsDieDice",
     ),
     martialArtsDieSize: numberFromQuintInt(
-      state["qMartialArtsDieSize"],
-      "qMartialArtsDieSize",
+      state["martialArtsDieSize"],
+      "qState.martialArtsDieSize",
     ),
     monkLevelBonus: numberFromQuintInt(
-      state["qMonkLevelBonus"],
-      "qMonkLevelBonus",
+      state["monkLevelBonus"],
+      "qState.monkLevelBonus",
     ),
     metamagicOwnerClassLevel: numberFromQuintInt(
-      state["qMetamagicOwnerClassLevel"],
-      "qMetamagicOwnerClassLevel",
+      state["metamagicOwnerClassLevel"],
+      "qState.metamagicOwnerClassLevel",
     ),
     metamagicChoiceCount: numberFromQuintInt(
-      state["qMetamagicChoiceCount"],
-      "qMetamagicChoiceCount",
+      state["metamagicChoiceCount"],
+      "qState.metamagicChoiceCount",
     ),
     metamagicSelectionRepeatability: stringField(
-      state["qMetamagicSelectionRepeatability"],
-      "qMetamagicSelectionRepeatability",
+      state["metamagicSelectionRepeatability"],
+      "qState.metamagicSelectionRepeatability",
     ),
     metamagicSorceryPointPoolId: stringField(
-      state["qMetamagicSorceryPointPoolId"],
-      "qMetamagicSorceryPointPoolId",
+      state["metamagicSorceryPointPoolId"],
+      "qState.metamagicSorceryPointPoolId",
     ),
     firstMetamagicOptionId: stringField(
-      state["qFirstMetamagicOptionId"],
-      "qFirstMetamagicOptionId",
+      state["firstMetamagicOptionId"],
+      "qState.firstMetamagicOptionId",
     ),
     firstMetamagicSorceryPointCost: numberFromQuintInt(
-      state["qFirstMetamagicSorceryPointCost"],
-      "qFirstMetamagicSorceryPointCost",
+      state["firstMetamagicSorceryPointCost"],
+      "qState.firstMetamagicSorceryPointCost",
     ),
     firstMetamagicStackingMode: stringField(
-      state["qFirstMetamagicStackingMode"],
-      "qFirstMetamagicStackingMode",
+      state["firstMetamagicStackingMode"],
+      "qState.firstMetamagicStackingMode",
     ),
     firstMetamagicEffectKind: stringField(
-      state["qFirstMetamagicEffectKind"],
-      "qFirstMetamagicEffectKind",
+      state["firstMetamagicEffectKind"],
+      "qState.firstMetamagicEffectKind",
     ),
     secondMetamagicOptionId: stringField(
-      state["qSecondMetamagicOptionId"],
-      "qSecondMetamagicOptionId",
+      state["secondMetamagicOptionId"],
+      "qState.secondMetamagicOptionId",
     ),
     secondMetamagicSorceryPointCost: numberFromQuintInt(
-      state["qSecondMetamagicSorceryPointCost"],
-      "qSecondMetamagicSorceryPointCost",
+      state["secondMetamagicSorceryPointCost"],
+      "qState.secondMetamagicSorceryPointCost",
     ),
     secondMetamagicStackingMode: stringField(
-      state["qSecondMetamagicStackingMode"],
-      "qSecondMetamagicStackingMode",
+      state["secondMetamagicStackingMode"],
+      "qState.secondMetamagicStackingMode",
     ),
     secondMetamagicEffectKind: stringField(
-      state["qSecondMetamagicEffectKind"],
-      "qSecondMetamagicEffectKind",
+      state["secondMetamagicEffectKind"],
+      "qState.secondMetamagicEffectKind",
     ),
-    replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
+    replayIndex: numberFromQuintInt(state["replayIndex"], "qState.replayIndex"),
   };
 }
 
@@ -512,24 +518,22 @@ function compareClassFeatureProjectionState(
   return true;
 }
 
-function scenarioField(raw: unknown): ClassFeatureProjectionScenario {
-  if (typeof raw === "string" && isClassFeatureProjectionScenario(raw)) {
-    return raw;
-  }
-  throw new Error(`Unknown class-feature projection scenario ${String(raw)}.`);
-}
-
-function isClassFeatureProjectionScenario(
-  raw: string,
-): raw is ClassFeatureProjectionScenario {
-  return classFeatureProjectionScenarios.some((scenario) => scenario === raw);
-}
-
 function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("Expected Quint class-feature projection state.");
   }
   return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }
 
 function stringField(raw: unknown, field: string): string {
@@ -546,6 +550,35 @@ function numberFromQuintInt(raw: unknown, field: string): number {
 function booleanField(raw: unknown, field: string): boolean {
   if (typeof raw === "boolean") return raw;
   throw new Error(`Expected boolean field ${field}.`);
+}
+
+const qntOutcomeByVariant = {
+  CharacterCreationClassFeatureProjectionsInit: "init",
+  CharacterCreationClassFeatureProjectionsMonkFocusUncannyMetabolism:
+    "monk-focus-uncanny-metabolism",
+  CharacterCreationClassFeatureProjectionsSorcererFontMetamagic:
+    "sorcerer-font-metamagic",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function requireRight<T, E>(result: Either.Either<T, E>): T {

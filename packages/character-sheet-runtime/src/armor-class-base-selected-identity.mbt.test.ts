@@ -73,7 +73,7 @@ type ArmorClassBaseSelectedIdentityDriverAction = Exclude<
 
 type ArmorClassBaseSelectedIdentityProjection =
   | {
-      readonly lastResult: "init";
+      readonly outcome: "init";
       readonly base: {
         readonly source: "default_unarmored";
         readonly baseArmorClass: number;
@@ -85,7 +85,7 @@ type ArmorClassBaseSelectedIdentityProjection =
       readonly armorClass: 12;
     }
   | {
-      readonly lastResult: "selected";
+      readonly outcome: "selected";
       readonly base:
         | SelectedArmorClassBaseProjection
         | ArmorFormulaBaseProjection;
@@ -142,7 +142,7 @@ type ArmorFormulaBaseProjection =
     };
 type SelectedBarbarianProjection = Extract<
   ArmorClassBaseSelectedIdentityProjection,
-  { readonly lastResult: "selected" }
+  { readonly outcome: "selected" }
 > & {
   readonly base: Extract<
     SelectedArmorClassBaseProjection,
@@ -151,7 +151,7 @@ type SelectedBarbarianProjection = Extract<
 };
 type SelectedMonkProjection = Extract<
   ArmorClassBaseSelectedIdentityProjection,
-  { readonly lastResult: "selected" }
+  { readonly outcome: "selected" }
 > & {
   readonly base: Extract<
     SelectedArmorClassBaseProjection,
@@ -160,13 +160,13 @@ type SelectedMonkProjection = Extract<
 };
 type SelectedUnarmoredDefenseProjection = Extract<
   ArmorClassBaseSelectedIdentityProjection,
-  { readonly lastResult: "selected" }
+  { readonly outcome: "selected" }
 > & {
   readonly base: SelectedArmorClassBaseProjection;
 };
 type ArmorFormulaProjection = Extract<
   ArmorClassBaseSelectedIdentityProjection,
-  { readonly lastResult: "selected" }
+  { readonly outcome: "selected" }
 > & {
   readonly base: ArmorFormulaBaseProjection;
 };
@@ -508,7 +508,7 @@ function armorFormulaProjectionForBuild(input: {
 
 function initialProjection(): ArmorClassBaseSelectedIdentityProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
     base: {
       source: "default_unarmored",
       baseArmorClass: 10,
@@ -552,7 +552,7 @@ function armorFormulaProjection(input: {
   readonly armorClass: number;
 }): ArmorFormulaProjection {
   return {
-    lastResult: "selected",
+    outcome: "selected",
     base: armorFormulaBaseProjection(input),
     shieldBonus: input.shieldBonus,
     armorClass: input.armorClass,
@@ -620,7 +620,7 @@ function selectedBarbarianProjection(input: {
   readonly armorClass: number;
 }): SelectedBarbarianProjection {
   return {
-    lastResult: "selected",
+    outcome: "selected",
     base: {
       source: "unarmored_defense",
       sourceUnitId: BARBARIAN_UNARMORED_DEFENSE_UNIT_ID,
@@ -636,7 +636,7 @@ function selectedMonkProjection(input: {
   readonly armorClass: number;
 }): SelectedMonkProjection {
   return {
-    lastResult: "selected",
+    outcome: "selected",
     base: {
       source: "unarmored_defense",
       sourceUnitId: MONK_UNARMORED_DEFENSE_UNIT_ID,
@@ -736,7 +736,7 @@ function projectArmorClassBaseSelectedIdentityState(
     );
   }
   return {
-    lastResult: "selected",
+    outcome: "selected",
     base,
     shieldBonus: projectedShieldBonus(state),
     armorClass: Number(currentArmorClass(state)),
@@ -892,6 +892,32 @@ function isSelectedUnarmoredDefenseUnitId(
   );
 }
 
+const qntOutcomeByVariant = {
+  CharacterSheetArmorClassBaseSelectedIdentityInit: "init",
+  CharacterSheetArmorClassBaseSelectedIdentitySelected: "selected",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
+
 function requireRight<T, E>(result: Either.Either<T, E>): T {
   if (Either.isRight(result)) return result.right;
   const left = result.left;
@@ -909,38 +935,38 @@ function requireRight<T, E>(result: Either.Either<T, E>): T {
 function normalizeArmorClassBaseSelectedIdentityQuintState(
   raw: unknown,
 ): ArmorClassBaseSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  const lastResult = mbtLastResult(state["qLastResult"]);
-  if (lastResult === "init") {
-    assertStringField(state, "qSourceUnitId", "none");
-    assertStringField(state, "qBaseSource", "default_unarmored");
-    assertBooleanField(state, "qUsesDex", true);
-    assertBooleanField(state, "qUsesCon", false);
-    assertBooleanField(state, "qUsesWis", false);
-    assertNumberField(state, "qBaseArmorClass", 10);
-    assertNumberField(state, "qShieldBonus", 0);
-    assertNumberField(state, "qArmorClass", 12);
+  const state = recordField(quintStateRecord(raw), "qState");
+  const outcome = outcomeField(state["outcome"]);
+  if (outcome === "init") {
+    assertStringField(state, "sourceUnitId", "none");
+    assertStringField(state, "baseSource", "default_unarmored");
+    assertBooleanField(state, "usesDex", true);
+    assertBooleanField(state, "usesCon", false);
+    assertBooleanField(state, "usesWis", false);
+    assertNumberField(state, "baseArmorClass", 10);
+    assertNumberField(state, "shieldBonus", 0);
+    assertNumberField(state, "armorClass", 12);
     return initialProjection();
   }
-  const baseSource = stringField(state, "qBaseSource");
+  const baseSource = stringField(state, "baseSource");
   if (baseSource === "armor") {
     const sourceUnitId = armorFormulaUnitIdField(state);
     const baseArmorClass = numberFromQuintInt(
-      state["qBaseArmorClass"],
-      "qBaseArmorClass",
+      state["baseArmorClass"],
+      "qState.baseArmorClass",
     );
     const shieldBonus = numberFromQuintInt(
-      state["qShieldBonus"],
-      "qShieldBonus",
+      state["shieldBonus"],
+      "qState.shieldBonus",
     );
-    const armorClass = numberFromQuintInt(state["qArmorClass"], "qArmorClass");
-    if (
-      sourceUnitId === "armor_leather" &&
-      baseArmorClass === 11
-    ) {
-      assertBooleanField(state, "qUsesDex", true);
-      assertBooleanField(state, "qUsesCon", false);
-      assertBooleanField(state, "qUsesWis", false);
+    const armorClass = numberFromQuintInt(
+      state["armorClass"],
+      "qState.armorClass",
+    );
+    if (sourceUnitId === "armor_leather" && baseArmorClass === 11) {
+      assertBooleanField(state, "usesDex", true);
+      assertBooleanField(state, "usesCon", false);
+      assertBooleanField(state, "usesWis", false);
       return armorFormulaProjection({
         sourceUnitId,
         category: "light",
@@ -950,13 +976,10 @@ function normalizeArmorClassBaseSelectedIdentityQuintState(
         armorClass,
       });
     }
-    if (
-      sourceUnitId === "armor_chain_shirt" &&
-      baseArmorClass === 13
-    ) {
-      assertBooleanField(state, "qUsesDex", true);
-      assertBooleanField(state, "qUsesCon", false);
-      assertBooleanField(state, "qUsesWis", false);
+    if (sourceUnitId === "armor_chain_shirt" && baseArmorClass === 13) {
+      assertBooleanField(state, "usesDex", true);
+      assertBooleanField(state, "usesCon", false);
+      assertBooleanField(state, "usesWis", false);
       return armorFormulaProjection({
         sourceUnitId,
         category: "medium",
@@ -966,13 +989,10 @@ function normalizeArmorClassBaseSelectedIdentityQuintState(
         armorClass,
       });
     }
-    if (
-      sourceUnitId === "armor_chain_mail" &&
-      baseArmorClass === 16
-    ) {
-      assertBooleanField(state, "qUsesDex", false);
-      assertBooleanField(state, "qUsesCon", false);
-      assertBooleanField(state, "qUsesWis", false);
+    if (sourceUnitId === "armor_chain_mail" && baseArmorClass === 16) {
+      assertBooleanField(state, "usesDex", false);
+      assertBooleanField(state, "usesCon", false);
+      assertBooleanField(state, "usesWis", false);
       return armorFormulaProjection({
         sourceUnitId,
         category: "heavy",
@@ -987,21 +1007,27 @@ function normalizeArmorClassBaseSelectedIdentityQuintState(
     );
   }
   const sourceUnitId = selectedUnarmoredDefenseUnitIdField(state);
-  assertStringField(state, "qBaseSource", "unarmored_defense");
-  assertBooleanField(state, "qUsesDex", true);
+  assertStringField(state, "baseSource", "unarmored_defense");
+  assertBooleanField(state, "usesDex", true);
   const usesBarbarianFormula =
     sourceUnitId === BARBARIAN_UNARMORED_DEFENSE_UNIT_ID;
-  assertBooleanField(state, "qUsesCon", usesBarbarianFormula);
-  assertBooleanField(state, "qUsesWis", !usesBarbarianFormula);
+  assertBooleanField(state, "usesCon", usesBarbarianFormula);
+  assertBooleanField(state, "usesWis", !usesBarbarianFormula);
   const baseArmorClass = numberFromQuintInt(
-    state["qBaseArmorClass"],
-    "qBaseArmorClass",
+    state["baseArmorClass"],
+    "qState.baseArmorClass",
   );
-  const shieldBonus = numberFromQuintInt(state["qShieldBonus"], "qShieldBonus");
-  const armorClass = numberFromQuintInt(state["qArmorClass"], "qArmorClass");
+  const shieldBonus = numberFromQuintInt(
+    state["shieldBonus"],
+    "qState.shieldBonus",
+  );
+  const armorClass = numberFromQuintInt(
+    state["armorClass"],
+    "qState.armorClass",
+  );
   if (usesBarbarianFormula) {
     return {
-      lastResult,
+      outcome,
       base: {
         source: "unarmored_defense",
         sourceUnitId,
@@ -1013,7 +1039,7 @@ function normalizeArmorClassBaseSelectedIdentityQuintState(
     };
   }
   return {
-    lastResult,
+    outcome,
     base: {
       source: "unarmored_defense",
       sourceUnitId,
@@ -1028,7 +1054,7 @@ function normalizeArmorClassBaseSelectedIdentityQuintState(
 function selectedUnarmoredDefenseUnitIdField(
   state: Readonly<Record<string, unknown>>,
 ): SelectedUnarmoredDefenseUnitId {
-  const sourceUnitId = stringField(state, "qSourceUnitId");
+  const sourceUnitId = stringField(state, "sourceUnitId");
   if (isSelectedUnarmoredDefenseUnitId(sourceUnitId)) return sourceUnitId;
   throw new Error(
     `Unexpected selected Unarmored Defense Unit ${sourceUnitId}.`,
@@ -1038,7 +1064,7 @@ function selectedUnarmoredDefenseUnitIdField(
 function armorFormulaUnitIdField(
   state: Readonly<Record<string, unknown>>,
 ): ArmorFormulaUnitId {
-  const sourceUnitId = stringField(state, "qSourceUnitId");
+  const sourceUnitId = stringField(state, "sourceUnitId");
   if (isArmorFormulaUnitId(sourceUnitId)) return sourceUnitId;
   throw new Error(`Unexpected Armor Class armor Unit ${sourceUnitId}.`);
 }
@@ -1054,6 +1080,17 @@ function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
     throw new Error("Expected Quint state record.");
   }
   return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {
@@ -1117,15 +1154,6 @@ function assertNumberField(
       `Expected Quint integer field ${field} to equal ${expected}.`,
     );
   }
-}
-
-function mbtLastResult(
-  raw: unknown,
-): ArmorClassBaseSelectedIdentityProjection["lastResult"] {
-  if (raw === "init" || raw === "selected") {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
 }
 
 const armorClassBaseSelectedIdentityStateCheck = stateCheck(

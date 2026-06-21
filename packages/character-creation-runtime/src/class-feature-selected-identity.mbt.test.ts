@@ -136,7 +136,7 @@ type ClassFeatureSelectedIdentityUnitId =
   | typeof WIZARD_SCHOLAR_UNIT_ID
   | typeof WIZARD_EVOCATION_SAVANT_UNIT_ID;
 type ClassFeatureSelectedIdentityProjection = {
-  readonly lastResult: ClassFeatureSelectedIdentityResult;
+  readonly outcome: ClassFeatureSelectedIdentityResult;
   readonly featureUnitId: ClassFeatureSelectedIdentityUnitId | "none";
   readonly linkedUnitId: UnitRecord["id"] | "none";
   readonly choiceCount: number;
@@ -485,7 +485,7 @@ function createClassFeatureSelectedIdentityDriver() {
 
 function initialProjection(): ClassFeatureSelectedIdentityProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
     featureUnitId: "none",
     linkedUnitId: "none",
     choiceCount: 0,
@@ -525,7 +525,7 @@ function bardExpertiseProjection(): ClassFeatureSelectedIdentityProjection {
   }
   requiredBuildFeatureUnitId(finalized.build, BARD_EXPERTISE_UNIT_ID);
   return {
-    lastResult: "bard-expertise",
+    outcome: "bard-expertise",
     featureUnitId: requiredSelectedChoiceFeatureUnitId(
       draft,
       BARD_EXPERTISE_UNIT_ID,
@@ -624,11 +624,13 @@ function completeRangerFightingStyleDraft(): CharacterDraft {
         RANGER_FIGHTING_STYLE_UNIT_ID,
         RANGER_FIGHTING_STYLE_CHOICE_KEY,
       )]: [creationChoiceOptionId("druidic_warrior")],
-      [choiceSourceKey(RANGER_FIGHTING_STYLE_UNIT_ID, CLASS_CANTRIP_CHOICE_KEY)]:
-        [
-          creationChoiceOptionId("guidance"),
-          creationChoiceOptionId("starry_wisp"),
-        ],
+      [choiceSourceKey(
+        RANGER_FIGHTING_STYLE_UNIT_ID,
+        CLASS_CANTRIP_CHOICE_KEY,
+      )]: [
+        creationChoiceOptionId("guidance"),
+        creationChoiceOptionId("starry_wisp"),
+      ],
     },
   });
 }
@@ -671,8 +673,10 @@ function completeWizardScholarDraft(): CharacterDraft {
     draftId: "wizard-scholar-selected-identity",
     progression: classProgression(WIZARD_CLASS_UNIT_ID, 2),
     preferredOptionIdsBySource: {
-      [choiceSourceKey(WIZARD_CLASS_UNIT_ID, CLASS_SKILL_PROFICIENCY_CHOICE_KEY)]:
-        [creationChoiceOptionId("insight"), creationChoiceOptionId("arcana")],
+      [choiceSourceKey(
+        WIZARD_CLASS_UNIT_ID,
+        CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+      )]: [creationChoiceOptionId("insight"), creationChoiceOptionId("arcana")],
       [choiceSourceKey(
         WIZARD_SCHOLAR_UNIT_ID,
         CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
@@ -686,10 +690,14 @@ function completeWizardEvocationSavantDraft(): CharacterDraft {
     draftId: "wizard-evocation-savant-selected-identity",
     progression: classProgression(WIZARD_CLASS_UNIT_ID, 3),
     preferredOptionIdsBySource: {
-      [choiceSourceKey(WIZARD_CLASS_UNIT_ID, CLASS_SKILL_PROFICIENCY_CHOICE_KEY)]:
-        [creationChoiceOptionId("insight"), creationChoiceOptionId("arcana")],
-      [choiceSourceKey(WIZARD_SCHOLAR_UNIT_ID, CLASS_FEATURE_PROFICIENCY_CHOICE_KEY)]:
-        [creationChoiceOptionId("arcana")],
+      [choiceSourceKey(
+        WIZARD_CLASS_UNIT_ID,
+        CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+      )]: [creationChoiceOptionId("insight"), creationChoiceOptionId("arcana")],
+      [choiceSourceKey(
+        WIZARD_SCHOLAR_UNIT_ID,
+        CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+      )]: [creationChoiceOptionId("arcana")],
       [choiceSourceKey(WIZARD_CLASS_UNIT_ID, CLASS_SUBCLASS_CHOICE_KEY)]: [
         creationChoiceOptionId("subclass_wizard_evoker"),
       ],
@@ -770,7 +778,10 @@ function completeClassFeatureDraft(input: {
 
 function clericChannelDivinityProjection(): ClassFeatureSelectedIdentityProjection {
   const build = classBuild({ startingClass: "class_cleric", totalLevel: 2 });
-  const resource = requiredBuildResource(build, CLERIC_CHANNEL_DIVINITY_UNIT_ID);
+  const resource = requiredBuildResource(
+    build,
+    CLERIC_CHANNEL_DIVINITY_UNIT_ID,
+  );
   if (resource.resource.kind !== "use_count") {
     throw new Error("Expected Cleric Channel Divinity use-count resource.");
   }
@@ -792,7 +803,7 @@ function clericChannelDivinityProjection(): ClassFeatureSelectedIdentityProjecti
     );
   }
   return {
-    lastResult: "cleric-channel-divinity",
+    outcome: "cleric-channel-divinity",
     featureUnitId: expectedClassFeatureUnitId(
       resource.unitId,
       CLERIC_CHANNEL_DIVINITY_UNIT_ID,
@@ -814,7 +825,7 @@ function druidWildShapeProjection(): ClassFeatureSelectedIdentityProjection {
     "Expected Druid Wild Shape facts.",
   );
   return {
-    lastResult: "druid-wild-shape",
+    outcome: "druid-wild-shape",
     featureUnitId: expectedClassFeatureUnitId(
       facts.unitId,
       DRUID_WILD_SHAPE_UNIT_ID,
@@ -849,7 +860,7 @@ function druidWildCompanionProjection(): ClassFeatureSelectedIdentityProjection 
     throw new Error("Expected Wild Companion to spend a class-feature use.");
   }
   return {
-    lastResult: "druid-wild-companion",
+    outcome: "druid-wild-companion",
     featureUnitId,
     linkedUnitId: linkedSpend.resourceUnitId,
     choiceCount: unit.mechanics.spendOptions.length,
@@ -872,7 +883,7 @@ function monksFocusProjection(): ClassFeatureSelectedIdentityProjection {
     "Expected Monk's Focus facts.",
   );
   return {
-    lastResult: "monk-monks-focus",
+    outcome: "monk-monks-focus",
     featureUnitId: expectedClassFeatureUnitId(
       facts.unitId,
       MONK_MONKS_FOCUS_UNIT_ID,
@@ -898,7 +909,7 @@ function monkUncannyMetabolismProjection(): ClassFeatureSelectedIdentityProjecti
     "Expected Monk Uncanny Metabolism facts.",
   );
   return {
-    lastResult: "monk-uncanny-metabolism",
+    outcome: "monk-uncanny-metabolism",
     featureUnitId: expectedClassFeatureUnitId(
       facts.unitId,
       MONK_UNCANNY_METABOLISM_UNIT_ID,
@@ -933,11 +944,13 @@ function paladinFightingStyleProjection(): ClassFeatureSelectedIdentityProjectio
     throw new Error("Expected Paladin Fighting Style Defense feat branch.");
   }
   const finalized = finalizeReadyBuild(draft, PALADIN_FIGHTING_STYLE_UNIT_ID);
-  if (!characterBuildFeatureUnitIds(finalized, unitLibrary).includes("defense")) {
+  if (
+    !characterBuildFeatureUnitIds(finalized, unitLibrary).includes("defense")
+  ) {
     throw new Error("Expected Paladin Fighting Style to grant Defense.");
   }
   return {
-    lastResult: "paladin-fighting-style",
+    outcome: "paladin-fighting-style",
     featureUnitId: requiredSelectedChoiceFeatureUnitId(
       draft,
       PALADIN_FIGHTING_STYLE_UNIT_ID,
@@ -976,7 +989,7 @@ function rangerDeftExplorerProjection(): ClassFeatureSelectedIdentityProjection 
     throw new Error("Expected Ranger Deft Explorer Expertise projection.");
   }
   return {
-    lastResult: "ranger-deft-explorer",
+    outcome: "ranger-deft-explorer",
     featureUnitId: requiredSelectedChoiceFeatureUnitId(
       draft,
       RANGER_DEFT_EXPLORER_UNIT_ID,
@@ -1013,7 +1026,7 @@ function rangerFightingStyleProjection(): ClassFeatureSelectedIdentityProjection
   const finalized = finalizeReadyBuild(draft, RANGER_FIGHTING_STYLE_UNIT_ID);
   requiredBuildFeatureUnitId(finalized, RANGER_FIGHTING_STYLE_UNIT_ID);
   return {
-    lastResult: "ranger-fighting-style",
+    outcome: "ranger-fighting-style",
     featureUnitId: requiredSelectedChoiceFeatureUnitId(
       draft,
       RANGER_FIGHTING_STYLE_UNIT_ID,
@@ -1047,7 +1060,7 @@ function wizardScholarProjection(): ClassFeatureSelectedIdentityProjection {
     throw new Error("Expected Wizard Scholar Expertise projection.");
   }
   return {
-    lastResult: "wizard-scholar",
+    outcome: "wizard-scholar",
     featureUnitId: requiredSelectedChoiceFeatureUnitId(
       draft,
       WIZARD_SCHOLAR_UNIT_ID,
@@ -1078,11 +1091,14 @@ function wizardEvocationSavantProjection(): ClassFeatureSelectedIdentityProjecti
     finalized.spellcasting?.sources.find(
       (source) => source.sourceUnitId === WIZARD_CLASS_UNIT_ID,
     )?.spellbook ?? [];
-  if (!spellbook.includes("continual_flame") || !spellbook.includes("shatter")) {
+  if (
+    !spellbook.includes("continual_flame") ||
+    !spellbook.includes("shatter")
+  ) {
     throw new Error("Expected Evocation Savant spells in Wizard spellbook.");
   }
   return {
-    lastResult: "wizard-evocation-savant",
+    outcome: "wizard-evocation-savant",
     featureUnitId: requiredSelectedChoiceFeatureUnitId(
       draft,
       WIZARD_EVOCATION_SAVANT_UNIT_ID,
@@ -1139,7 +1155,7 @@ function warlockPactMagicProjection(): ClassFeatureSelectedIdentityProjection {
   }
 
   return {
-    lastResult: "warlock-pact-magic",
+    outcome: "warlock-pact-magic",
     featureUnitId: requiredBuildFeatureUnitId(
       finalized,
       WARLOCK_PACT_MAGIC_UNIT_ID,
@@ -1291,6 +1307,9 @@ function preferredOptionIdsForHole(input: {
   if (source.tag === "draft" && source.path === "draft.background") {
     return [creationChoiceOptionId("background_soldier")];
   }
+  if (source.tag === "draft" && source.path === "draft.species") {
+    return [creationChoiceOptionId("species_orc")];
+  }
   if (source.tag !== "unitChoice") {
     return undefined;
   }
@@ -1396,35 +1415,37 @@ function expectedClassFeatureUnitId(
   expected: ClassFeatureSelectedIdentityUnitId,
 ): ClassFeatureSelectedIdentityUnitId {
   if (actual === expected) return expected;
-  throw new Error(`Expected class-feature Unit ${expected}, received ${actual}.`);
+  throw new Error(
+    `Expected class-feature Unit ${expected}, received ${actual}.`,
+  );
 }
 
 function normalizeClassFeatureSelectedIdentityQuintState(
   raw: unknown,
 ): ClassFeatureSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
+  const state = recordField(quintStateRecord(raw), "qState");
   return {
-    lastResult: resultField(state["qLastResult"]),
-    featureUnitId: featureUnitIdField(state["qFeatureUnitId"]),
-    linkedUnitId: stringField(state["qLinkedUnitId"], "qLinkedUnitId"),
-    choiceCount: numberFromQuintInt(state["qChoiceCount"], "qChoiceCount"),
+    outcome: outcomeField(state["outcome"]),
+    featureUnitId: featureUnitIdField(state["featureUnitId"]),
+    linkedUnitId: stringField(state["linkedUnitId"], "qState.linkedUnitId"),
+    choiceCount: numberFromQuintInt(state["choiceCount"], "qState.choiceCount"),
     resourceMaximum: numberFromQuintInt(
-      state["qResourceMaximum"],
-      "qResourceMaximum",
+      state["resourceMaximum"],
+      "qState.resourceMaximum",
     ),
     knownFormCount: numberFromQuintInt(
-      state["qKnownFormCount"],
-      "qKnownFormCount",
+      state["knownFormCount"],
+      "qState.knownFormCount",
     ),
     shortRestRefill: numberFromQuintInt(
-      state["qShortRestRefill"],
-      "qShortRestRefill",
+      state["shortRestRefill"],
+      "qState.shortRestRefill",
     ),
     longRestRefillsAll: booleanField(
-      state["qLongRestRefillsAll"],
-      "qLongRestRefillsAll",
+      state["longRestRefillsAll"],
+      "qState.longRestRefillsAll",
     ),
-    accepted: booleanField(state["qAccepted"], "qAccepted"),
+    accepted: booleanField(state["accepted"], "qState.accepted"),
   };
 }
 
@@ -1439,27 +1460,6 @@ function compareClassFeatureSelectedIdentityState(
     throw error;
   }
   return true;
-}
-
-function resultField(raw: unknown): ClassFeatureSelectedIdentityResult {
-  if (
-    raw === "init" ||
-    raw === "bard-expertise" ||
-    raw === "cleric-channel-divinity" ||
-    raw === "druid-wild-shape" ||
-    raw === "druid-wild-companion" ||
-    raw === "monk-monks-focus" ||
-    raw === "monk-uncanny-metabolism" ||
-    raw === "paladin-fighting-style" ||
-    raw === "ranger-deft-explorer" ||
-    raw === "ranger-fighting-style" ||
-    raw === "warlock-pact-magic" ||
-    raw === "wizard-scholar" ||
-    raw === "wizard-evocation-savant"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unknown class-feature selected identity result ${String(raw)}.`);
 }
 
 function featureUnitIdField(
@@ -1494,6 +1494,17 @@ function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
   return Object.fromEntries(Object.entries(raw));
 }
 
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
+}
+
 function stringField(raw: unknown, field: string): string {
   if (typeof raw === "string") return raw;
   throw new Error(`Expected string field ${field}.`);
@@ -1508,6 +1519,53 @@ function numberFromQuintInt(raw: unknown, field: string): number {
 function booleanField(raw: unknown, field: string): boolean {
   if (typeof raw === "boolean") return raw;
   throw new Error(`Expected boolean field ${field}.`);
+}
+
+const qntOutcomeByVariant = {
+  CharacterCreationClassFeatureSelectedIdentityInit: "init",
+  CharacterCreationClassFeatureSelectedIdentityBardExpertise: "bard-expertise",
+  CharacterCreationClassFeatureSelectedIdentityClericChannelDivinity:
+    "cleric-channel-divinity",
+  CharacterCreationClassFeatureSelectedIdentityDruidWildShape:
+    "druid-wild-shape",
+  CharacterCreationClassFeatureSelectedIdentityDruidWildCompanion:
+    "druid-wild-companion",
+  CharacterCreationClassFeatureSelectedIdentityMonkMonksFocus:
+    "monk-monks-focus",
+  CharacterCreationClassFeatureSelectedIdentityMonkUncannyMetabolism:
+    "monk-uncanny-metabolism",
+  CharacterCreationClassFeatureSelectedIdentityPaladinFightingStyle:
+    "paladin-fighting-style",
+  CharacterCreationClassFeatureSelectedIdentityRangerDeftExplorer:
+    "ranger-deft-explorer",
+  CharacterCreationClassFeatureSelectedIdentityRangerFightingStyle:
+    "ranger-fighting-style",
+  CharacterCreationClassFeatureSelectedIdentityWarlockPactMagic:
+    "warlock-pact-magic",
+  CharacterCreationClassFeatureSelectedIdentityWizardScholar: "wizard-scholar",
+  CharacterCreationClassFeatureSelectedIdentityWizardEvocationSavant:
+    "wizard-evocation-savant",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function requireRight<T, E>(result: Either.Either<T, E>): T {

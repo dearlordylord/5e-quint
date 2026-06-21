@@ -3,24 +3,14 @@
 // KERNEL-COVERAGE: qnt-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
 
 module characterBattleInitProjectionMbt {
-  var qLastResult: str
-  var qAccepted: bool
-  var qMessage: str
-  var qCharacterIdentity: str
-  var qCurrentHp: int
-  var qMaxHp: int
-  var qTemporaryHitPoints: int
-  var qArmorClass: int
-  var qPoisoned: bool
-  var qSpellLevel1Count: int
-  var qSpellLevel1Expended: int
-  var qSpellLevel2Count: int
-  var qSpellLevel2Expended: int
-  var qSpellLevel3Count: int
-  var qSpellLevel3Expended: int
-  var qPassiveArmorClassProfileCount: int
-  var qMetamagicKnownOptions: int
-  var qReplayIndex: int
+  type BattleInitProjectionOutcome =
+    | BattleInitProjectionInit
+    | BattleInitProjectionSheetHitPointsArmorClassConditionsAndProfiles
+    | BattleInitProjectionSheetSpellcastingAndMetamagic
+    | BattleInitProjectionPurePactMagicSlotProjection
+    | BattleInitProjectionMixedSpellAndPactSlotInitRejected
+    | BattleInitProjectionBuildMaximumAboveBuildMaximumRejected
+    | BattleInitProjectionStableRecoveryProgressDuringInitRejected
 
   type BattleInitProjectionFacts = {
     characterIdentity: str,
@@ -38,6 +28,16 @@ module characterBattleInitProjectionMbt {
     passiveArmorClassProfileCount: int,
     metamagicKnownOptions: int,
   }
+
+  type BattleInitProjectionState = {
+    outcome: BattleInitProjectionOutcome,
+    accepted: bool,
+    message: str,
+    facts: BattleInitProjectionFacts,
+    replayIndex: int,
+  }
+
+  var qState: BattleInitProjectionState
 
   pure def emptyProjectionFacts: BattleInitProjectionFacts = {
     characterIdentity: "none",
@@ -57,39 +57,34 @@ module characterBattleInitProjectionMbt {
   }
 
   action recordProjection(
-    lastResult: str,
+    outcome: BattleInitProjectionOutcome,
     accepted: bool,
     message: str,
     facts: BattleInitProjectionFacts,
     replayIndex: int,
   ): bool = all {
-    qLastResult' = lastResult,
-    qAccepted' = accepted,
-    qMessage' = message,
-    qCharacterIdentity' = facts.characterIdentity,
-    qCurrentHp' = facts.currentHp,
-    qMaxHp' = facts.maxHp,
-    qTemporaryHitPoints' = facts.temporaryHitPoints,
-    qArmorClass' = facts.armorClass,
-    qPoisoned' = facts.poisoned,
-    qSpellLevel1Count' = facts.spellLevel1Count,
-    qSpellLevel1Expended' = facts.spellLevel1Expended,
-    qSpellLevel2Count' = facts.spellLevel2Count,
-    qSpellLevel2Expended' = facts.spellLevel2Expended,
-    qSpellLevel3Count' = facts.spellLevel3Count,
-    qSpellLevel3Expended' = facts.spellLevel3Expended,
-    qPassiveArmorClassProfileCount' = facts.passiveArmorClassProfileCount,
-    qMetamagicKnownOptions' = facts.metamagicKnownOptions,
-    qReplayIndex' = replayIndex,
+    qState' = {
+      outcome: outcome,
+      accepted: accepted,
+      message: message,
+      facts: facts,
+      replayIndex: replayIndex,
+    },
   }
 
   action init =
-    recordProjection("init", false, "none", emptyProjectionFacts, 0)
+    recordProjection(
+      BattleInitProjectionInit,
+      false,
+      "none",
+      emptyProjectionFacts,
+      0,
+    )
 
   action doProjectSheetHitPointsArmorClassConditionsAndProfiles = all {
-    qReplayIndex == 0,
+    qState.replayIndex == 0,
     recordProjection(
-      "sheet-hit-points-armor-class-conditions-and-profiles",
+      BattleInitProjectionSheetHitPointsArmorClassConditionsAndProfiles,
       true,
       "none",
       emptyProjectionFacts
@@ -105,9 +100,9 @@ module characterBattleInitProjectionMbt {
   }
 
   action doProjectSheetSpellcastingAndMetamagic = all {
-    qReplayIndex == 1,
+    qState.replayIndex == 1,
     recordProjection(
-      "sheet-spellcasting-and-metamagic",
+      BattleInitProjectionSheetSpellcastingAndMetamagic,
       true,
       "none",
       emptyProjectionFacts
@@ -125,9 +120,9 @@ module characterBattleInitProjectionMbt {
   }
 
   action doRejectBuildMaximumAboveBuildMaximum = all {
-    qReplayIndex == 4,
+    qState.replayIndex == 4,
     recordProjection(
-      "build-maximum-above-build-maximum-rejected",
+      BattleInitProjectionBuildMaximumAboveBuildMaximumRejected,
       false,
       "Character battle initialization max HP exceeds build-derived max HP.",
       emptyProjectionFacts,
@@ -136,9 +131,9 @@ module characterBattleInitProjectionMbt {
   }
 
   action doProjectPurePactMagicSlot = all {
-    qReplayIndex == 2,
+    qState.replayIndex == 2,
     recordProjection(
-      "pure-pact-magic-slot-projection",
+      BattleInitProjectionPurePactMagicSlotProjection,
       true,
       "none",
       emptyProjectionFacts
@@ -152,9 +147,9 @@ module characterBattleInitProjectionMbt {
   }
 
   action doRejectMixedSpellAndPactSlotInit = all {
-    qReplayIndex == 3,
+    qState.replayIndex == 3,
     recordProjection(
-      "mixed-spell-and-pact-slot-init-rejected",
+      BattleInitProjectionMixedSpellAndPactSlotInitRejected,
       false,
       "Battle handoff cannot project mixed Spell Slot and Pact Slot state without source-distinct battle slots.",
       emptyProjectionFacts,
@@ -163,9 +158,9 @@ module characterBattleInitProjectionMbt {
   }
 
   action doRejectStableRecoveryProgressDuringInit = all {
-    qReplayIndex == 5,
+    qState.replayIndex == 5,
     recordProjection(
-      "stable-recovery-progress-during-init-rejected",
+      BattleInitProjectionStableRecoveryProgressDuringInitRejected,
       false,
       "Battle handoff cannot preserve in-progress Stable recovery timers.",
       emptyProjectionFacts,

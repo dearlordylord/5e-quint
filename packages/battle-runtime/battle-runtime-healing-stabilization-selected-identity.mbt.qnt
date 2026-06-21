@@ -26,14 +26,13 @@ module battleRuntimeHealingStabilizationSelectedIdentityMbt {
   pure def qTargetDeathSuccesses: int = qState.qTargetDeathSuccesses
   pure def qTargetDeathFailures: int = qState.qTargetDeathFailures
   pure def qActionAvailable: bool = qState.qActionAvailable
-  pure def qLastResult: HealingStabilizationSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: HealingStabilizationSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def healingStabilizationSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: HealingStabilizationSelectedIdentityScenarioOutcome,
-    _scenarioInvalidReason: str,
+    scenarioOutcome: HealingStabilizationSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -55,14 +54,14 @@ module battleRuntimeHealingStabilizationSelectedIdentityMbt {
       qTargetDeathFailures: targetDeathFailures,
       qActionAvailable: actionAvailable,
       qScenarioOutcome: lastResult,
-      protocol: healingStabilizationSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: healingStabilizationSelectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
 
   action init = recordProjection(0, false, true, 2, 1, true, Init)
 
   action doResolveSpareTheDyingStable = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(0, true, true, 0, 0, false, Resolved),
   }
 

@@ -647,7 +647,7 @@ function normalizeFindFamiliarCompanionQuintState(
   );
   assertWitnessProtocolConsistentWithScenario({
     label: "Find Familiar companion lifecycle",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

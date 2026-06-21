@@ -5,13 +5,15 @@ module battleRuntimeSorcererMetamagicTwinnedSelectedIdentityMbt {
 
   type Hole = | NoHole
 
+  type SorcererMetamagicTwinnedSelectedIdentityScenarioOutcome = | Init | TwinnedTargetCount
+
   type SorcererMetamagicTwinnedSelectedIdentityWitnessState = {
     magicActionAvailable: bool,
     bonusActionAvailable: bool,
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicTwinnedSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -23,7 +25,7 @@ module battleRuntimeSorcererMetamagicTwinnedSelectedIdentityMbt {
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicTwinnedSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -32,19 +34,18 @@ module battleRuntimeSorcererMetamagicTwinnedSelectedIdentityMbt {
       sorceryPointsRemaining: sorceryPointsRemaining,
       targetHp: targetHp,
       targetActiveEffectCount: targetActiveEffectCount,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection(true, true, 4, 10, 0, "init", witnessInit(NoHole))
+  action init = recordProjection(true, true, 4, 10, 0, Init, witnessInit(NoHole))
 
   action doResolveTwinnedTargetCount = all {
     qState.protocol.result == WInit,
     recordProjection(
-      false, true, 3, 10, 1, "twinnedTargetCount",
-      witnessResolved(NoHole),
-    )
+      false, true, 3, 10, 1, TwinnedTargetCount,
+      witnessResolved(NoHole))
   }
 
   action step = any {

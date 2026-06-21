@@ -38,36 +38,103 @@ const PURE_VOCABULARY_LEAF_MODULES = new Set([
   "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt",
 ]);
 
-// Legacy mutable protocol names from the pre-WitnessProtocol convention.
-const LEGACY_WITNESS_PROTOCOL_NAMES = [
+const forbiddenName = (...parts) => parts.join("");
+const forbiddenProtocolResultName = forbiddenName("q", "Last", "Result");
+const forbiddenProtocolInvalidReasonName = forbiddenName(
+  "q",
+  "Last",
+  "Invalid",
+  "Reason",
+);
+const forbiddenProtocolHolesName = forbiddenName("q", "Holes");
+const forbiddenProtocolPreviousHolesName = forbiddenName(
+  "q",
+  "Last",
+  "Holes",
+);
+const forbiddenScenarioResultName = forbiddenName("q", "Scenario", "Result");
+const forbiddenScenarioInvalidReasonName = forbiddenName(
+  "q",
+  "Scenario",
+  "Invalid",
+  "Reason",
+);
+const forbiddenScenarioResultFieldName = forbiddenName("scenario", "Result");
+const forbiddenScenarioInvalidReasonFieldName = forbiddenName(
+  "scenario",
+  "Invalid",
+  "Reason",
+);
+
+function forbiddenVarPattern(name, typePattern) {
+  return new RegExp(
+    `^\\s*var\\s+${escapeRegExp(name)}\\s*:\\s*${typePattern}`,
+    "m",
+  );
+}
+
+function escapeRegExp(raw) {
+  return raw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Witness replay protocol state must use WitnessProtocol.
+const FORBIDDEN_WITNESS_PROTOCOL_STORAGE = [
   {
-    label: "qLastResult string result var",
-    pattern: /^\s*var\s+qLastResult\s*:\s*str\b/m,
+    label: "string result var",
+    pattern: forbiddenVarPattern(forbiddenProtocolResultName, "str\\b"),
   },
   {
-    label: "qLastInvalidReason string reason var",
-    pattern: /^\s*var\s+qLastInvalidReason\s*:\s*str\b/m,
+    label: "string reason var",
+    pattern: forbiddenVarPattern(
+      forbiddenProtocolInvalidReasonName,
+      "str\\b",
+    ),
   },
   {
-    label: "qHoles parallel holes var",
-    pattern: /^\s*var\s+qHoles\s*:\s*Set\[/m,
+    label: "parallel holes var",
+    pattern: forbiddenVarPattern(forbiddenProtocolHolesName, "Set\\["),
   },
   {
-    label: "qLastHoles parallel holes var",
-    pattern: /^\s*var\s+qLastHoles\s*:\s*Set\[/m,
+    label: "previous-holes var",
+    pattern: forbiddenVarPattern(
+      forbiddenProtocolPreviousHolesName,
+      "Set\\[",
+    ),
   },
 ];
 
 // Scenario outcome projection labels must be closed local variants, not open
-// string fields. See plans/SCENARIO_OUTCOME_AUDIT.md.
-const LEGACY_SCENARIO_OUTCOME_NAMES = [
+// string fields.
+const FORBIDDEN_SCENARIO_OUTCOME_STORAGE = [
   {
-    label: "qScenarioResult string outcome",
-    pattern: /\bqScenarioResult\b/,
+    label: "q-prefixed scenario outcome storage",
+    pattern: new RegExp(`\\b${escapeRegExp(forbiddenScenarioResultName)}\\b`),
   },
   {
-    label: "qScenarioInvalidReason string reason",
-    pattern: /\bqScenarioInvalidReason\b/,
+    label: "q-prefixed scenario reason storage",
+    pattern: new RegExp(
+      `\\b${escapeRegExp(forbiddenScenarioInvalidReasonName)}\\b`,
+    ),
+  },
+  {
+    label: "string scenario outcome field",
+    pattern: new RegExp(
+      `^\\s*${escapeRegExp(forbiddenScenarioResultFieldName)}\\s*:\\s*str\\b`,
+      "m",
+    ),
+  },
+  {
+    label: "string scenario reason field",
+    pattern: new RegExp(
+      `^\\s*_?${escapeRegExp(forbiddenScenarioInvalidReasonFieldName)}\\s*:\\s*str\\b`,
+      "m",
+    ),
+  },
+  {
+    label: "string scenario outcome state read",
+    pattern: new RegExp(
+      `\\bqState\\.${escapeRegExp(forbiddenScenarioResultFieldName)}\\b`,
+    ),
   },
 ];
 
@@ -185,7 +252,9 @@ function validatePureVocabularyLeaf(root, rel) {
     ["run", /^\s*run\b/m],
   ]) {
     if (pattern.test(text)) {
-      issues.push(`${rel}: pure vocabulary leaf must not contain ${label} declarations.`);
+      issues.push(
+        `${rel}: pure vocabulary leaf must not contain ${label} declarations.`,
+      );
     }
   }
   return issues;
@@ -302,17 +371,17 @@ function checkMbtDriverClosure(root) {
   return { failures, graduated };
 }
 
-function checkLegacyWitnessProtocolNames(root) {
+function checkForbiddenWitnessProtocolStorage(root) {
   const runtimeDir = path.join(root, "packages/battle-runtime");
   const failures = [];
   for (const witness of listDrivers(runtimeDir)) {
     const text = fs.readFileSync(witness, "utf8");
-    for (const { label, pattern } of LEGACY_WITNESS_PROTOCOL_NAMES) {
+    for (const { label, pattern } of FORBIDDEN_WITNESS_PROTOCOL_STORAGE) {
       const match = pattern.exec(text);
       if (match) {
         const line = text.slice(0, match.index).split("\n").length;
         failures.push(
-          `${toRepoPath(root, witness)}:${line}: legacy ${label}. Use battle-runtime-witness-protocol.qnt's WitnessProtocol record and helper constructors instead of the pre-protocol mutable names.`,
+          `${toRepoPath(root, witness)}:${line}: forbidden witness protocol ${label}. Use battle-runtime-witness-protocol.qnt's WitnessProtocol record and helper constructors.`,
         );
       }
     }
@@ -320,17 +389,17 @@ function checkLegacyWitnessProtocolNames(root) {
   return failures;
 }
 
-function checkLegacyScenarioOutcomeNames(root) {
+function checkForbiddenScenarioOutcomeStorage(root) {
   const runtimeDir = path.join(root, "packages/battle-runtime");
   const failures = [];
   for (const witness of listDrivers(runtimeDir)) {
     const text = fs.readFileSync(witness, "utf8");
-    for (const { label, pattern } of LEGACY_SCENARIO_OUTCOME_NAMES) {
+    for (const { label, pattern } of FORBIDDEN_SCENARIO_OUTCOME_STORAGE) {
       const match = pattern.exec(text);
       if (match) {
         const line = text.slice(0, match.index).split("\n").length;
         failures.push(
-          `${toRepoPath(root, witness)}:${line}: legacy ${label}. Use a file-local scenario outcome variant field named qScenarioOutcome instead of open string projection labels.`,
+          `${toRepoPath(root, witness)}:${line}: forbidden ${label}. Use a file-local scenario outcome variant field instead of open string projection labels.`,
         );
       }
     }
@@ -389,46 +458,60 @@ function runSelfTest() {
       );
     }
     fs.writeFileSync(
-      path.join(runtimeDir, "fixture-legacy-protocol.mbt.qnt"),
+      path.join(runtimeDir, "fixture-forbidden-protocol-storage.mbt.qnt"),
       [
-        "module fixtureLegacyProtocolMbt {",
-        "  var qLastResult: str",
+        "module fixtureForbiddenProtocolStorageMbt {",
+        `  var ${forbiddenProtocolResultName}: str`,
         "}",
         "",
       ].join("\n"),
     );
-    const protocolFailures = checkLegacyWitnessProtocolNames(fixtureRoot);
+    const protocolFailures = checkForbiddenWitnessProtocolStorage(fixtureRoot);
     const expectedProtocolFailure =
-      "packages/battle-runtime/fixture-legacy-protocol.mbt.qnt:2: legacy qLastResult string result var.";
+      "packages/battle-runtime/fixture-forbidden-protocol-storage.mbt.qnt:2: forbidden witness protocol string result var.";
     if (
       !protocolFailures.some((failure) =>
         failure.startsWith(expectedProtocolFailure),
       )
     ) {
       throw new Error(
-        `Self-test failed: expected legacy protocol-var failure, got ${JSON.stringify(protocolFailures)}`,
+        `Self-test failed: expected forbidden protocol storage failure, got ${JSON.stringify(protocolFailures)}`,
       );
     }
     fs.writeFileSync(
-      path.join(runtimeDir, "fixture-legacy-scenario-outcome.mbt.qnt"),
+      path.join(runtimeDir, "fixture-forbidden-scenario-storage.mbt.qnt"),
       [
-        "module fixtureLegacyScenarioOutcomeMbt {",
-        "  var qScenarioResult: str",
+        "module fixtureForbiddenScenarioStorageMbt {",
+        "  type FixtureScenarioState = {",
+        `    ${forbiddenScenarioResultFieldName}: str,`,
+        "  }",
+        `  var ${forbiddenScenarioResultName}: str`,
         "}",
         "",
       ].join("\n"),
     );
     const scenarioOutcomeFailures =
-      checkLegacyScenarioOutcomeNames(fixtureRoot);
+      checkForbiddenScenarioOutcomeStorage(fixtureRoot);
     const expectedScenarioOutcomeFailure =
-      "packages/battle-runtime/fixture-legacy-scenario-outcome.mbt.qnt:2: legacy qScenarioResult string outcome.";
+      "packages/battle-runtime/fixture-forbidden-scenario-storage.mbt.qnt:5: forbidden q-prefixed scenario outcome storage.";
     if (
       !scenarioOutcomeFailures.some((failure) =>
         failure.startsWith(expectedScenarioOutcomeFailure),
       )
     ) {
       throw new Error(
-        `Self-test failed: expected legacy scenario outcome failure, got ${JSON.stringify(scenarioOutcomeFailures)}`,
+        `Self-test failed: expected forbidden scenario outcome storage failure, got ${JSON.stringify(scenarioOutcomeFailures)}`,
+      );
+    }
+    const expectedLowercaseScenarioOutcomeFailure =
+      "packages/battle-runtime/fixture-forbidden-scenario-storage.mbt.qnt:3: forbidden string scenario outcome field.";
+    if (
+      !scenarioOutcomeFailures.some((failure) =>
+        failure.startsWith(expectedLowercaseScenarioOutcomeFailure),
+      )
+    ) {
+      throw new Error(
+        `Self-test failed: expected string scenario outcome field failure, got ${JSON.stringify(scenarioOutcomeFailures)}`,
       );
     }
   });
@@ -465,12 +548,9 @@ function runSelfTest() {
     ];
     fs.writeFileSync(
       path.join(runtimeDir, "fixture-pure-vocabulary-budget.mbt.qnt"),
-      [
-        "module fixturePureVocabularyBudgetMbt {",
-        ...imports(8),
-        "}",
-        "",
-      ].join("\n"),
+      ["module fixturePureVocabularyBudgetMbt {", ...imports(8), "}", ""].join(
+        "\n",
+      ),
     );
     const passingResult = checkMbtDriverClosure(fixtureRoot);
     if (passingResult.failures.length > 0) {
@@ -480,17 +560,16 @@ function runSelfTest() {
     }
     fs.writeFileSync(
       path.join(runtimeDir, "fixture-pure-vocabulary-budget.mbt.qnt"),
-      [
-        "module fixturePureVocabularyBudgetMbt {",
-        ...imports(9),
-        "}",
-        "",
-      ].join("\n"),
+      ["module fixturePureVocabularyBudgetMbt {", ...imports(9), "}", ""].join(
+        "\n",
+      ),
     );
     const countedFailure = checkMbtDriverClosure(fixtureRoot);
     if (
       !countedFailure.failures.some((failure) =>
-        failure.includes("imports 9 counted files plus 1 pure vocabulary leaves (10 total)"),
+        failure.includes(
+          "imports 9 counted files plus 1 pure vocabulary leaves (10 total)",
+        ),
       )
     ) {
       throw new Error(
@@ -509,7 +588,9 @@ function runSelfTest() {
     const badVocabularyResult = checkMbtDriverClosure(fixtureRoot);
     if (
       !badVocabularyResult.failures.some((failure) =>
-        failure.includes("pure vocabulary leaf must not contain action declarations"),
+        failure.includes(
+          "pure vocabulary leaf must not contain action declarations",
+        ),
       )
     ) {
       throw new Error(
@@ -518,7 +599,7 @@ function runSelfTest() {
     }
   });
   console.log(
-    "MBT driver closure, pure vocabulary leaf, and legacy witness protocol name self-test OK.",
+    "MBT driver closure, pure vocabulary leaf, and forbidden witness storage self-test OK.",
   );
 }
 
@@ -526,8 +607,8 @@ if (process.argv.includes("--self-test")) {
   runSelfTest();
 } else {
   const { failures, graduated } = checkMbtDriverClosure(ROOT);
-  const protocolFailures = checkLegacyWitnessProtocolNames(ROOT);
-  const scenarioOutcomeFailures = checkLegacyScenarioOutcomeNames(ROOT);
+  const protocolFailures = checkForbiddenWitnessProtocolStorage(ROOT);
+  const scenarioOutcomeFailures = checkForbiddenScenarioOutcomeStorage(ROOT);
   if (graduated.length) {
     console.log("MBT driver closure gate -- tighten the allowlist:");
     for (const g of graduated) console.log("  - " + g);
@@ -539,12 +620,12 @@ if (process.argv.includes("--self-test")) {
     process.exit(1);
   }
   if (protocolFailures.length) {
-    console.error("MBT legacy witness protocol name gate FAILED:");
+    console.error("MBT witness protocol storage gate FAILED:");
     for (const f of protocolFailures) console.error("  - " + f);
     process.exit(1);
   }
   if (scenarioOutcomeFailures.length) {
-    console.error("MBT legacy scenario outcome name gate FAILED:");
+    console.error("MBT scenario outcome storage gate FAILED:");
     for (const f of scenarioOutcomeFailures) console.error("  - " + f);
     process.exit(1);
   }
@@ -552,9 +633,9 @@ if (process.argv.includes("--self-test")) {
     `MBT driver closure gate passed (counted budget ${BUDGET_FILES} files; pure vocabulary leaves are validated and counted separately; ${Object.keys(ALLOWLIST).length} grandfathered drivers tracked for migration).`,
   );
   console.log(
-    "MBT legacy witness protocol name gate passed (no pre-protocol mutable qLast*/qHoles vars).",
+    "MBT witness protocol storage gate passed.",
   );
   console.log(
-    "MBT legacy scenario outcome name gate passed (no qScenarioResult/qScenarioInvalidReason strings).",
+    "MBT scenario outcome storage gate passed.",
   );
 }

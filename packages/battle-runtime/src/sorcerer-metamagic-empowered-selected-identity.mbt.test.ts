@@ -31,14 +31,20 @@ defineSelectedIdentityWitness({
   ),
   quintStateField: "qState",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "scenarioResult" },
+  quintFieldNames: { lastResult: "scenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      EmpoweredSpellDamageReroll: "empoweredSpellDamageReroll",
+    },
+  },
   projectionSchema: {
     magicActionAvailable: "bool",
     bonusActionAvailable: "bool",
     sorceryPointsRemaining: "int",
     targetHp: "int",
     targetActiveEffectCount: "int",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: {
     magicActionAvailable: true,

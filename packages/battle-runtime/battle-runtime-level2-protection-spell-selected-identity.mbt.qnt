@@ -14,14 +14,13 @@ module battleRuntimeLevel2ProtectionSpellSelectedIdentityMbt {
 
   var qState: Level2ProtectionSpellSelectedIdentityWitnessState
 
-  pure def qLastResult: Level2ProtectionSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: Level2ProtectionSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def level2ProtectionSpellSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: Level2ProtectionSpellSelectedIdentityScenarioOutcome,
-    _scenarioInvalidReason: str,
+    scenarioOutcome: Level2ProtectionSpellSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -29,64 +28,64 @@ module battleRuntimeLevel2ProtectionSpellSelectedIdentityMbt {
   action recordProjection(lastResult: Level2ProtectionSpellSelectedIdentityScenarioOutcome): bool = all {
     qState' = {
       qScenarioOutcome: lastResult,
-      protocol: level2ProtectionSpellSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: level2ProtectionSpellSelectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
 
   action init = recordProjection(Init)
 
   action doDiscoverAidHitPointBuff = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(AidHitPointBuff),
   }
 
   action doDiscoverBarkskinArmorClassFloor = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(BarkskinArmorClassFloor),
   }
 
   action doDiscoverBlurAttackRollDefense = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(BlurAttackRollDefense),
   }
 
   action doDiscoverContinualFlameObjectLight = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(ContinualFlameObjectLight),
   }
 
   action doDiscoverEnhanceAbilityRollModifier = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(EnhanceAbilityRollModifier),
   }
 
   action doResolveEnhanceAbilityHigherSlotPerTarget = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(EnhanceAbilityHigherSlotPerTarget),
   }
 
   action doDiscoverEnlargeReduceSizeIncrease = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(EnlargeReduceSizeIncrease),
   }
 
   action doDiscoverMagicWeaponEnhancement = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(MagicWeaponEnhancement),
   }
 
   action doDiscoverMirrorImageHitInterception = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(MirrorImageHitInterception),
   }
 
   action doDiscoverPassWithoutTraceStealthModifier = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(PassWithoutTraceStealthModifier),
   }
 
   action doDiscoverWardingBondLinkedEffect = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(WardingBondLinkedEffect),
   }
 

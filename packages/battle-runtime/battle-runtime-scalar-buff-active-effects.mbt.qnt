@@ -23,6 +23,8 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
   //   Hit Points, Spell Invocation, and Spell Effect.
   type Hole = | NoHole
 
+  type ScalarBuffActiveEffectsScenarioOutcome = | Init | ShieldOfFaith | Longstrider | SpiderClimb | Aid | FalseLife
+
   type ScalarBuffActiveEffectsWitnessState = {
     affectedArmorClass: int,
     affectedSpeedFeet: int,
@@ -35,7 +37,7 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
     specialSpeedGrantActive: bool,
     hitPointMaximumIncreaseActive: bool,
     casterConcentrating: bool,
-    scenarioResult: str,
+    scenarioOutcome: ScalarBuffActiveEffectsScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -53,7 +55,7 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
     specialSpeedGrantActive: bool,
     hitPointMaximumIncreaseActive: bool,
     casterConcentrating: bool,
-    scenarioResult: str,
+    scenarioOutcome: ScalarBuffActiveEffectsScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -68,7 +70,7 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       specialSpeedGrantActive: specialSpeedGrantActive,
       hitPointMaximumIncreaseActive: hitPointMaximumIncreaseActive,
       casterConcentrating: casterConcentrating,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -85,12 +87,11 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
     false,
     false,
     false,
-    "init",
-    witnessInit(NoHole),
-  )
+    Init,
+    witnessInit(NoHole))
 
   action doCastShieldOfFaith = all {
-    qState.scenarioResult == "init",
+    qState.scenarioOutcome == Init,
     recordScalarBuffState(
       12,
       30,
@@ -103,13 +104,12 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       false,
       false,
       true,
-      "shieldOfFaith",
-      witnessResolved(NoHole),
-    ),
+      ShieldOfFaith,
+      witnessResolved(NoHole)),
   }
 
   action doCastLongstrider = all {
-    qState.scenarioResult == "shieldOfFaith",
+    qState.scenarioOutcome == ShieldOfFaith,
     recordScalarBuffState(
       10,
       40,
@@ -122,13 +122,12 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       false,
       false,
       false,
-      "longstrider",
-      witnessResolved(NoHole),
-    ),
+      Longstrider,
+      witnessResolved(NoHole)),
   }
 
   action doCastSpiderClimb = all {
-    qState.scenarioResult == "longstrider",
+    qState.scenarioOutcome == Longstrider,
     recordScalarBuffState(
       10,
       30,
@@ -141,13 +140,12 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       true,
       false,
       true,
-      "spiderClimb",
-      witnessResolved(NoHole),
-    ),
+      SpiderClimb,
+      witnessResolved(NoHole)),
   }
 
   action doCastAid = all {
-    qState.scenarioResult == "spiderClimb",
+    qState.scenarioOutcome == SpiderClimb,
     recordScalarBuffState(
       10,
       30,
@@ -160,13 +158,12 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       false,
       true,
       false,
-      "aid",
-      witnessResolved(NoHole),
-    ),
+      Aid,
+      witnessResolved(NoHole)),
   }
 
   action doCastFalseLife = all {
-    qState.scenarioResult == "aid",
+    qState.scenarioOutcome == Aid,
     recordScalarBuffState(
       10,
       30,
@@ -179,13 +176,12 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       false,
       false,
       false,
-      "falseLife",
-      witnessResolved(NoHole),
-    ),
+      FalseLife,
+      witnessResolved(NoHole)),
   }
 
   action doStutter = all {
-    qState.scenarioResult == "falseLife",
+    qState.scenarioOutcome == FalseLife,
     recordScalarBuffState(
       qState.affectedArmorClass,
       qState.affectedSpeedFeet,
@@ -198,7 +194,7 @@ module battleRuntimeScalarBuffActiveEffectsMbt {
       qState.specialSpeedGrantActive,
       qState.hitPointMaximumIncreaseActive,
       qState.casterConcentrating,
-      qState.scenarioResult,
+      qState.scenarioOutcome,
       qState.protocol,
     ),
   }

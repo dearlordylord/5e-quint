@@ -340,34 +340,11 @@ export function decodeWitnessProtocolState<
 >(input: {
   readonly state: Readonly<Record<string, unknown>>;
   readonly noInvalidReason: NoInvalidReason;
-  readonly holesField?: string;
-  readonly protocolField?: string;
+  readonly protocolField: string;
   readonly decodeHole: (raw: unknown) => Hole;
   readonly compareHoles?: (left: Hole, right: Hole) => number;
 }): MbtWitnessProtocolState<Hole, NoInvalidReason> {
-  if (input.protocolField !== undefined) {
-    return decodeTypedWitnessProtocolState({
-      ...input,
-      protocolField: input.protocolField,
-    });
-  }
-
-  const holesField = input.holesField ?? "qHoles";
-  return {
-    holes: quintSet(quintField(input.state, holesField), holesField)
-      .map(input.decodeHole)
-      .sort(input.compareHoles),
-    lastResult: stringLiteralField(
-      input.state,
-      "qLastResult",
-      MBT_WITNESS_LAST_RESULTS,
-    ),
-    lastInvalidReason: stringLiteralField(
-      input.state,
-      "qLastInvalidReason",
-      mbtWitnessLastInvalidReasons(input.noInvalidReason),
-    ),
-  };
+  return decodeTypedWitnessProtocolState(input);
 }
 
 function decodeTypedWitnessProtocolState<
@@ -402,7 +379,7 @@ function decodeTypedWitnessProtocolState<
 
 export function assertWitnessProtocolConsistentWithScenario(input: {
   readonly label: string;
-  readonly scenarioResult: string;
+  readonly scenarioOutcome: string;
   readonly protocol: Pick<
     MbtWitnessProtocolState<unknown, string>,
     "holes" | "lastResult"
@@ -411,18 +388,18 @@ export function assertWitnessProtocolConsistentWithScenario(input: {
   readonly invalidScenarioReasons?: Readonly<Record<string, string>>;
 }): void {
   const initScenarioResult = input.initScenarioResult ?? "init";
-  const invalidReason = input.invalidScenarioReasons?.[input.scenarioResult];
+  const invalidReason = input.invalidScenarioReasons?.[input.scenarioOutcome];
   const expected: MbtWitnessLastResult =
     invalidReason !== undefined
       ? "invalid"
-      : input.scenarioResult === initScenarioResult
+      : input.scenarioOutcome === initScenarioResult
         ? "init"
         : input.protocol.holes.length > 0
           ? "needsHoles"
           : "resolved";
   if (input.protocol.lastResult !== expected) {
     throw new Error(
-      `Expected ${input.label} witness protocol result ${expected} for scenario ${input.scenarioResult}, got ${input.protocol.lastResult}.`,
+      `Expected ${input.label} witness protocol result ${expected} for scenario ${input.scenarioOutcome}, got ${input.protocol.lastResult}.`,
     );
   }
   if (
@@ -430,7 +407,7 @@ export function assertWitnessProtocolConsistentWithScenario(input: {
     input.protocol.lastInvalidReason !== invalidReason
   ) {
     throw new Error(
-      `Expected ${input.label} witness invalid reason ${invalidReason} for scenario ${input.scenarioResult}, got ${String(input.protocol.lastInvalidReason)}.`,
+      `Expected ${input.label} witness invalid reason ${invalidReason} for scenario ${input.scenarioOutcome}, got ${String(input.protocol.lastInvalidReason)}.`,
     );
   }
 }
@@ -3135,9 +3112,14 @@ function normalizeQuintState(raw: unknown): MbtProjection {
     : Object.hasOwn(state, "protocol")
       ? "protocol"
       : undefined;
+  if (protocolField === undefined) {
+    throw new Error(
+      "Expected typed witness protocol field qProtocol or protocol.",
+    );
+  }
   const protocol = decodeWitnessProtocolState({
     state,
-    ...(protocolField === undefined ? {} : { protocolField }),
+    protocolField,
     noInvalidReason: "",
     decodeHole: holeName,
   });

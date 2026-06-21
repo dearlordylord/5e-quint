@@ -12,18 +12,15 @@ module battleRuntimeSpellAttackOrderingMbt {
   var qProtocol: WitnessProtocol[BattleHoleFamilyKind]
   var qLastOrderingError: str
 
-  pure def qHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
+  pure def openHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
 
   pure val witnessHoleType: BattleHoleFamilyKind = TargetChoiceHoleKind
 
   pure def witnessProtocolForProjection(
     holes: Set[BattleHoleFamilyKind],
-    lastResult: str,
+    result: WitnessResult,
   ): WitnessProtocol[BattleHoleFamilyKind] =
-    if (lastResult == "init") witnessInit(witnessHoleType)
-    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved(witnessHoleType)
+    witnessProtocolFromResult(holes, witnessHoleType, result)
 
   pure def orderingErrorLabel(error: SpellAttackFillOrderingError): str =
     match error {
@@ -43,12 +40,12 @@ module battleRuntimeSpellAttackOrderingMbt {
       | SpellAttackFillNotOrderingError(stage) => stage
     }
 
-  pure def acceptedRuntimeResult(result: SpellAttackFillOrderResult): str =
+  pure def acceptedRuntimeResult(result: SpellAttackFillOrderResult): WitnessResult =
     match result {
       | SpellAttackFillAccepted(stage) =>
-          if (stage == SpellAttackResolvedStage) "resolved" else "needsHoles"
-      | SpellAttackFillRequestedEarlier(_) => "needsHoles"
-      | SpellAttackFillNotOrderingError(_) => "needsHoles"
+          if (stage == SpellAttackResolvedStage) WResolved else WNeedsHoles
+      | SpellAttackFillRequestedEarlier(_) => WNeedsHoles
+      | SpellAttackFillNotOrderingError(_) => WNeedsHoles
     }
 
   pure def requestedEarlierLabel(result: SpellAttackFillOrderResult): str =
@@ -60,22 +57,22 @@ module battleRuntimeSpellAttackOrderingMbt {
 
   action recordProjection(
     stage: SpellAttackFrontierStage,
-    lastResult: str,
+    result: WitnessResult,
     lastOrderingError: str,
   ): bool = all {
     qStage' = stage,
     qProtocol' = witnessProtocolForProjection(
       spellAttackHoleFrontier(stage),
-      lastResult,
+      result,
     ),
     qLastOrderingError' = lastOrderingError,
   }
 
-  action init = recordProjection(SpellAttackActSelectionStage, "init", "")
+  action init = recordProjection(SpellAttackActSelectionStage, WInit, "")
 
   action doDiscoverSingleTargetSpellAttack = all {
     qStage == SpellAttackActSelectionStage,
-    recordProjection(SpellAttackTargetChoiceStage, "needsHoles", ""),
+    recordProjection(SpellAttackTargetChoiceStage, WNeedsHoles, ""),
   }
 
   action doSubmitAttackRollBeforeTargetChoice = all {
@@ -170,7 +167,7 @@ module battleRuntimeSpellAttackOrderingMbt {
     qStage == SpellAttackActSelectionStage,
     recordProjection(
       SpellAttackDamageTypeAndTargetChoiceStage,
-      "needsHoles",
+      WNeedsHoles,
       "",
     ),
   }

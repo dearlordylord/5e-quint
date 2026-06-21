@@ -14,14 +14,13 @@ module battleRuntimeFireballSelectedIdentityMbt {
 
   var qState: FireballSelectedIdentityWitnessState
 
-  pure def qLastResult: FireballSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: FireballSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def fireballSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: FireballSelectedIdentityScenarioOutcome,
-    _scenarioInvalidReason: str,
+    scenarioOutcome: FireballSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -29,14 +28,14 @@ module battleRuntimeFireballSelectedIdentityMbt {
   action recordProjection(lastResult: FireballSelectedIdentityScenarioOutcome): bool = all {
     qState' = {
       qScenarioOutcome: lastResult,
-      protocol: fireballSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: fireballSelectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
 
   action init = recordProjection(Init)
 
   action doDiscoverFireballSaveGatedDamage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(FireballSaveGatedDamage),
   }
 

@@ -30,6 +30,7 @@ import {
   numberFromQuintInt,
   quintRecordField,
   quintStateRecord,
+  quintVariantTag,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -76,7 +77,14 @@ const LAST_RESULTS = [
   "falseLife",
 ] as const;
 type LastResult = (typeof LAST_RESULTS)[number];
-const LAST_RESULT_SET: ReadonlySet<string> = new Set(LAST_RESULTS);
+const SCENARIO_OUTCOME_BY_TAG = {
+  Init: "init",
+  ShieldOfFaith: "shieldOfFaith",
+  Longstrider: "longstrider",
+  SpiderClimb: "spiderClimb",
+  Aid: "aid",
+  FalseLife: "falseLife",
+} as const satisfies Readonly<Record<string, LastResult>>;
 const RESULT_SOURCE_SPELL_IDS = {
   init: null,
   shieldOfFaith: shieldOfFaithUnitId,
@@ -410,7 +418,7 @@ function normalizeScalarBuffQuintState(
   raw: unknown,
 ): ScalarBuffActiveEffectsProjection {
   const state = quintRecordField(quintStateRecord(raw), "qState");
-  const scenarioResult = lastResult(state["scenarioResult"]);
+  const scenarioResult = lastResult(state["scenarioOutcome"]);
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
@@ -419,7 +427,7 @@ function normalizeScalarBuffQuintState(
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "scalar buff active effects",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {
@@ -468,16 +476,17 @@ function compareScalarBuffStates(
 }
 
 function lastResult(raw: unknown): LastResult {
-  expect(raw).toBeTypeOf("string");
-  if (typeof raw !== "string" || !isLastResult(raw)) {
-    throw new Error(`Unexpected scalar buff result ${String(raw)}.`);
-  }
-  return raw;
+  const tag = quintVariantTag(raw, "qState.scenarioOutcome");
+  if (isScenarioOutcomeTag(tag)) return SCENARIO_OUTCOME_BY_TAG[tag];
+  throw new Error(`Unexpected scenario outcome variant ${tag}.`);
 }
 
-function isLastResult(value: string): value is LastResult {
-  return LAST_RESULT_SET.has(value);
+function isScenarioOutcomeTag(
+  tag: string,
+): tag is keyof typeof SCENARIO_OUTCOME_BY_TAG {
+  return Object.hasOwn(SCENARIO_OUTCOME_BY_TAG, tag);
 }
+
 
 function scalarBuffActiveEffectsUnexpectedHole(raw: unknown): never {
   throw new Error(

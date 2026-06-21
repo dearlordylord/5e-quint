@@ -23,7 +23,7 @@ module battleRuntimeMagicMissileMbt {
 
   pure def qSkeletonHp: int = qState.qSkeletonHp
   pure def qActionAvailable: bool = qState.qActionAvailable
-  pure def qHoles: Set[Hole] = qState.protocol.holes
+  pure def openHoles: Set[Hole] = qState.protocol.holes
 
   pure val skeletonInitialHp: int = 13
 
@@ -74,7 +74,7 @@ module battleRuntimeMagicMissileMbt {
 
   action doFillMagicMissileAllocation = all {
     qActionAvailable,
-    qHoles == Set(SpellTargetAllocation),
+    openHoles == Set(SpellTargetAllocation),
     recordMagicMissileState(
       qSkeletonHp,
       qState.qSkeletonDead,
@@ -91,7 +91,7 @@ module battleRuntimeMagicMissileMbt {
     nondet dartRollTotal = Set(3, 12).oneOf()
     all {
       qActionAvailable,
-      qHoles == Set(SpellDamageRoll),
+      openHoles == Set(SpellDamageRoll),
       recordMagicMissileState(
         skeletonHpAfterMagicMissileDamage(qSkeletonHp, dartRollTotal),
         skeletonHpAfterMagicMissileDamage(qSkeletonHp, dartRollTotal) == 0,

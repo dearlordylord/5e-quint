@@ -7,21 +7,39 @@ module characterSheetSpellSlotsPactSlotsMbt {
   import spellSlotTable.* from "../shared-algebras/proofs/rule-core/spell-slot-table"
   import spellSlotTransitions.* from "../shared-algebras/proofs/rule-core/spell-slot-transitions"
 
-  var qLastResult: str
-  var qAccepted: bool
-  var qMessage: str
-  var qOrdinaryLevel1Capacity: int
-  var qOrdinaryLevel1Expended: int
-  var qOrdinaryLevel2Capacity: int
-  var qOrdinaryLevel2Expended: int
-  var qCreatedLevel1Capacity: int
-  var qCreatedLevel1Expended: int
-  var qPactSlotLevel: int
-  var qPactSlotCapacity: int
-  var qPactSlotExpended: int
-  var qArcaneRecoveryUsedSinceLongRest: bool
-  var qMagicalCunningUsedSinceLongRest: bool
-  var qReplayIndex: int
+  type CharacterSheetSpellSlotsPactSlotsOutcome =
+    | CharacterSheetSpellSlotsPactSlotsInit
+    | CharacterSheetSpellSlotsPactSlotsOrdinaryCapacityMismatchRejected
+    | CharacterSheetSpellSlotsPactSlotsPactExpenditureOverCapacityRejected
+    | CharacterSheetSpellSlotsPactSlotsShortRestRestoresPactSlotsOnly
+    | CharacterSheetSpellSlotsPactSlotsShortRestArcaneRecoveryRefundsOrdinarySpellSlot
+    | CharacterSheetSpellSlotsPactSlotsLongRestRestoresOrdinaryPactAndClearsCreatedSlots
+    | CharacterSheetSpellSlotsPactSlotsShortRestInterruptedNoSlotBenefit
+    | CharacterSheetSpellSlotsPactSlotsLongRestInterruptedBeforeOneHourNoSlotBenefit
+    | CharacterSheetSpellSlotsPactSlotsLongRestInterruptedWithShortRestSlotBenefits
+    | CharacterSheetSpellSlotsPactSlotsMagicalCunningRecoversPactSlots
+    | CharacterSheetSpellSlotsPactSlotsMagicalCunningNoExpendedPactSlotsRejected
+    | CharacterSheetSpellSlotsPactSlotsArcaneRecoveryPactSlotRefundRejected
+
+  type CharacterSheetSpellSlotsPactSlotsState = {
+    outcome: CharacterSheetSpellSlotsPactSlotsOutcome,
+    accepted: bool,
+    message: str,
+    ordinaryLevel1Capacity: int,
+    ordinaryLevel1Expended: int,
+    ordinaryLevel2Capacity: int,
+    ordinaryLevel2Expended: int,
+    createdLevel1Capacity: int,
+    createdLevel1Expended: int,
+    pactSlotLevel: int,
+    pactSlotCapacity: int,
+    pactSlotExpended: int,
+    arcaneRecoveryUsedSinceLongRest: bool,
+    magicalCunningUsedSinceLongRest: bool,
+    replayIndex: int,
+  }
+
+  var qState: CharacterSheetSpellSlotsPactSlotsState
 
   pure def shortRestPactSpentSlots: SheetSlotFacts = {
     ordinary: ordinarySlotsFromTable(fullCasterSpellSlotTable(FullCasterLevelOne), 1, 0, 0, 0),
@@ -75,36 +93,44 @@ module characterSheetSpellSlotsPactSlotsMbt {
         .with("level2Expended", 0))
 
   action recordProjection(
-    lastResult: str,
+    outcome: CharacterSheetSpellSlotsPactSlotsOutcome,
     accepted: bool,
     message: str,
     sheet: SheetSlotFacts,
     replayIndex: int,
   ): bool = all {
-    qLastResult' = lastResult,
-    qAccepted' = accepted,
-    qMessage' = message,
-    qOrdinaryLevel1Capacity' = sheet.ordinary.level1Capacity,
-    qOrdinaryLevel1Expended' = sheet.ordinary.level1Expended,
-    qOrdinaryLevel2Capacity' = sheet.ordinary.level2Capacity,
-    qOrdinaryLevel2Expended' = sheet.ordinary.level2Expended,
-    qCreatedLevel1Capacity' = sheet.ordinary.createdLevel1Capacity,
-    qCreatedLevel1Expended' = sheet.ordinary.createdLevel1Expended,
-    qPactSlotLevel' = sheet.pact.slotLevel,
-    qPactSlotCapacity' = sheet.pact.capacity,
-    qPactSlotExpended' = sheet.pact.expended,
-    qArcaneRecoveryUsedSinceLongRest' = sheet.arcaneRecoveryUsedSinceLongRest,
-    qMagicalCunningUsedSinceLongRest' = sheet.magicalCunningUsedSinceLongRest,
-    qReplayIndex' = replayIndex,
+    qState' = {
+      outcome: outcome,
+      accepted: accepted,
+      message: message,
+      ordinaryLevel1Capacity: sheet.ordinary.level1Capacity,
+      ordinaryLevel1Expended: sheet.ordinary.level1Expended,
+      ordinaryLevel2Capacity: sheet.ordinary.level2Capacity,
+      ordinaryLevel2Expended: sheet.ordinary.level2Expended,
+      createdLevel1Capacity: sheet.ordinary.createdLevel1Capacity,
+      createdLevel1Expended: sheet.ordinary.createdLevel1Expended,
+      pactSlotLevel: sheet.pact.slotLevel,
+      pactSlotCapacity: sheet.pact.capacity,
+      pactSlotExpended: sheet.pact.expended,
+      arcaneRecoveryUsedSinceLongRest: sheet.arcaneRecoveryUsedSinceLongRest,
+      magicalCunningUsedSinceLongRest: sheet.magicalCunningUsedSinceLongRest,
+      replayIndex: replayIndex,
+    },
   }
 
   action init =
-    recordProjection("init", false, "none", emptySlotFacts, 0)
+    recordProjection(
+      CharacterSheetSpellSlotsPactSlotsInit,
+      false,
+      "none",
+      emptySlotFacts,
+      0,
+    )
 
   action doRejectMismatchedOrdinarySpellSlotCapacity = all {
-    qReplayIndex == 0,
+    qState.replayIndex == 0,
     recordProjection(
-      "ordinary-capacity-mismatch-rejected",
+      CharacterSheetSpellSlotsPactSlotsOrdinaryCapacityMismatchRejected,
       false,
       "Spell Slot state does not match build capacity for level 1.",
       mismatchedOrdinaryLevel1Capacity,
@@ -114,9 +140,9 @@ module characterSheetSpellSlotsPactSlotsMbt {
   }
 
   action doRejectPactSlotExpenditureOverCapacity = all {
-    qReplayIndex == 1,
+    qState.replayIndex == 1,
     recordProjection(
-      "pact-expenditure-over-capacity-rejected",
+      CharacterSheetSpellSlotsPactSlotsPactExpenditureOverCapacityRejected,
       false,
       "Pact Slot state must match Pact Magic build capacity.",
       pactSlotExpendedOverCapacity,
@@ -126,9 +152,9 @@ module characterSheetSpellSlotsPactSlotsMbt {
   }
 
   action doShortRestRestoresPactSlotsOnly = all {
-    qReplayIndex == 2,
+    qState.replayIndex == 2,
     recordProjection(
-      "short-rest-restores-pact-slots-only",
+      CharacterSheetSpellSlotsPactSlotsShortRestRestoresPactSlotsOnly,
       true,
       "none",
       recoverPactSlots(shortRestPactSpentSlots),
@@ -137,9 +163,9 @@ module characterSheetSpellSlotsPactSlotsMbt {
   }
 
   action doShortRestArcaneRecoveryRefundsOrdinarySpellSlot = all {
-    qReplayIndex == 3,
+    qState.replayIndex == 3,
     recordProjection(
-      "short-rest-arcane-recovery-refunds-ordinary-spell-slot",
+      CharacterSheetSpellSlotsPactSlotsShortRestArcaneRecoveryRefundsOrdinarySpellSlot,
       true,
       "none",
       applyArcaneRecovery(recoverPactSlots(arcaneRecoveryLevel2SpentSlots), 0, 1),
@@ -149,9 +175,9 @@ module characterSheetSpellSlotsPactSlotsMbt {
   }
 
   action doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots = all {
-    qReplayIndex == 4,
+    qState.replayIndex == 4,
     recordProjection(
-      "long-rest-restores-ordinary-pact-and-clears-created-slots",
+      CharacterSheetSpellSlotsPactSlotsLongRestRestoresOrdinaryPactAndClearsCreatedSlots,
       true,
       "none",
       completeLongRestSlotBenefits(longRestCreatedSlotSpentSlots),
@@ -160,9 +186,9 @@ module characterSheetSpellSlotsPactSlotsMbt {
   }
 
   action doInterruptShortRestNoSlotBenefit = all {
-    qReplayIndex == 5,
+    qState.replayIndex == 5,
     recordProjection(
-      "short-rest-interrupted-no-slot-benefit",
+      CharacterSheetSpellSlotsPactSlotsShortRestInterruptedNoSlotBenefit,
       true,
       "none",
       shortRestPactSpentSlots,
@@ -171,9 +197,9 @@ module characterSheetSpellSlotsPactSlotsMbt {
   }
 
   action doInterruptLongRestBeforeOneHourNoSlotBenefit = all {
-    qReplayIndex == 6,
+    qState.replayIndex == 6,
     recordProjection(
-      "long-rest-interrupted-before-one-hour-no-slot-benefit",
+      CharacterSheetSpellSlotsPactSlotsLongRestInterruptedBeforeOneHourNoSlotBenefit,
       true,
       "none",
       shortRestPactSpentSlots,
@@ -182,9 +208,9 @@ module characterSheetSpellSlotsPactSlotsMbt {
   }
 
   action doInterruptLongRestWithShortRestSlotBenefits = all {
-    qReplayIndex == 7,
+    qState.replayIndex == 7,
     recordProjection(
-      "long-rest-interrupted-with-short-rest-slot-benefits",
+      CharacterSheetSpellSlotsPactSlotsLongRestInterruptedWithShortRestSlotBenefits,
       true,
       "none",
       recoverPactSlots(shortRestPactSpentSlots),
@@ -193,9 +219,9 @@ module characterSheetSpellSlotsPactSlotsMbt {
   }
 
   action doMagicalCunningRecoversPactSlots = all {
-    qReplayIndex == 8,
+    qState.replayIndex == 8,
     recordProjection(
-      "magical-cunning-recovers-pact-slots",
+      CharacterSheetSpellSlotsPactSlotsMagicalCunningRecoversPactSlots,
       true,
       "none",
       applyMagicalCunning(magicalCunningSpentPactSlots),
@@ -205,9 +231,9 @@ module characterSheetSpellSlotsPactSlotsMbt {
   }
 
   action doRejectMagicalCunningWithoutExpendedPactSlots = all {
-    qReplayIndex == 9,
+    qState.replayIndex == 9,
     recordProjection(
-      "magical-cunning-no-expended-pact-slots-rejected",
+      CharacterSheetSpellSlotsPactSlotsMagicalCunningNoExpendedPactSlotsRejected,
       false,
       "Magical Cunning must recover expended Pact Slots.",
       magicalCunningFreshPactSlots,
@@ -217,9 +243,9 @@ module characterSheetSpellSlotsPactSlotsMbt {
   }
 
   action doRejectArcaneRecoveryPactSlotRefund = all {
-    qReplayIndex == 10,
+    qState.replayIndex == 10,
     recordProjection(
-      "arcane-recovery-pact-slot-refund-rejected",
+      CharacterSheetSpellSlotsPactSlotsArcaneRecoveryPactSlotRefundRejected,
       false,
       "Arcane Recovery cannot refund more Spell Slots than are expended.",
       arcaneRecoveryNoExpendedOrdinarySlots,

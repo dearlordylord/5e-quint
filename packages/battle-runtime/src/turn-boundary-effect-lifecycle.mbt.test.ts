@@ -620,7 +620,7 @@ function turnBoundaryLifecycleProjectionFromQuint(
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "turn-boundary lifecycle",
-    scenarioResult: scenario,
+    scenarioOutcome: scenario,
     protocol,
   });
   return {

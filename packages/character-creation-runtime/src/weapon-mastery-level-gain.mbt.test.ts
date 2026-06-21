@@ -137,146 +137,143 @@ const noRejectedGainSchema = {
   duplicateRejected: z.literal(false),
   rejectedWithoutStateChange: z.literal(false),
 } as const;
-const weaponMasteryLevelGainProjectionSchema = z.discriminatedUnion(
-  "lastResult",
-  [
-    z.object({
-      lastResult: z.literal("init"),
-      classUnitId: z.literal("none"),
-      featureUnitId: z.literal("none"),
-      currentClassLevel: z.literal(0),
-      nextClassLevel: z.literal(0),
-      currentChoiceCount: z.literal(0),
-      nextChoiceCount: z.literal(0),
-      requestedWeaponCount: z.literal(0),
-      selectedWeaponCount: z.literal(0),
-      gainCount: z.literal(0),
-      firstWeaponUnitId: z.literal("none"),
-      secondWeaponUnitId: z.literal("none"),
-      thirdWeaponUnitId: z.literal("none"),
-      fourthWeaponUnitId: z.literal("none"),
-      accepted: z.literal(false),
-      ...noRejectedGainSchema,
-    }),
-    z.object({
-      lastResult: z.literal("fighterLevelFourAccepted"),
-      classUnitId: z.literal(FIGHTER_CLASS_UNIT_ID),
-      featureUnitId: z.literal(FIGHTER_WEAPON_MASTERY_UNIT_ID),
-      currentClassLevel: z.literal(3),
-      nextClassLevel: z.literal(4),
-      currentChoiceCount: z.literal(3),
-      nextChoiceCount: z.literal(4),
-      requestedWeaponCount: z.literal(4),
-      selectedWeaponCount: z.literal(4),
-      gainCount: z.literal(1),
-      firstWeaponUnitId: z.literal("weapon_longsword"),
-      secondWeaponUnitId: z.literal("weapon_spear"),
-      thirdWeaponUnitId: z.literal("weapon_flail"),
-      fourthWeaponUnitId: z.literal("weapon_shortsword"),
-      accepted: z.literal(true),
-      ...noRejectedGainSchema,
-    }),
-    z.object({
-      lastResult: z.literal("barbarianLevelFourAccepted"),
-      classUnitId: z.literal(BARBARIAN_CLASS_UNIT_ID),
-      featureUnitId: z.literal(BARBARIAN_WEAPON_MASTERY_UNIT_ID),
-      currentClassLevel: z.literal(3),
-      nextClassLevel: z.literal(4),
-      currentChoiceCount: z.literal(2),
-      nextChoiceCount: z.literal(3),
-      requestedWeaponCount: z.literal(3),
-      selectedWeaponCount: z.literal(3),
-      gainCount: z.literal(1),
-      firstWeaponUnitId: z.literal("weapon_longsword"),
-      secondWeaponUnitId: z.literal("weapon_dagger"),
-      thirdWeaponUnitId: z.literal("weapon_spear"),
-      fourthWeaponUnitId: z.literal("none"),
-      accepted: z.literal(true),
-      ...noRejectedGainSchema,
-    }),
-    z.object({
-      lastResult: z.literal("fighterOverCountRejected"),
-      classUnitId: z.literal(FIGHTER_CLASS_UNIT_ID),
-      featureUnitId: z.literal(FIGHTER_WEAPON_MASTERY_UNIT_ID),
-      currentClassLevel: z.literal(3),
-      nextClassLevel: z.literal(4),
-      currentChoiceCount: z.literal(3),
-      nextChoiceCount: z.literal(4),
-      requestedWeaponCount: z.literal(5),
-      selectedWeaponCount: z.literal(3),
-      gainCount: z.literal(0),
-      firstWeaponUnitId: z.literal("weapon_longsword"),
-      secondWeaponUnitId: z.literal("weapon_spear"),
-      thirdWeaponUnitId: z.literal("weapon_flail"),
-      fourthWeaponUnitId: z.literal("none"),
-      accepted: z.literal(false),
-      overCountRejected: z.literal(true),
-      duplicateRejected: z.literal(false),
-      rejectedWithoutStateChange: z.literal(true),
-    }),
-    z.object({
-      lastResult: z.literal("fighterDuplicateRejected"),
-      classUnitId: z.literal(FIGHTER_CLASS_UNIT_ID),
-      featureUnitId: z.literal(FIGHTER_WEAPON_MASTERY_UNIT_ID),
-      currentClassLevel: z.literal(3),
-      nextClassLevel: z.literal(4),
-      currentChoiceCount: z.literal(3),
-      nextChoiceCount: z.literal(4),
-      requestedWeaponCount: z.literal(4),
-      selectedWeaponCount: z.literal(3),
-      gainCount: z.literal(0),
-      firstWeaponUnitId: z.literal("weapon_longsword"),
-      secondWeaponUnitId: z.literal("weapon_spear"),
-      thirdWeaponUnitId: z.literal("weapon_flail"),
-      fourthWeaponUnitId: z.literal("none"),
-      accepted: z.literal(false),
-      overCountRejected: z.literal(false),
-      duplicateRejected: z.literal(true),
-      rejectedWithoutStateChange: z.literal(true),
-    }),
-  ],
-);
+const weaponMasteryLevelGainProjectionSchema = z.discriminatedUnion("outcome", [
+  z.object({
+    outcome: z.literal("init"),
+    classUnitId: z.literal("none"),
+    featureUnitId: z.literal("none"),
+    currentClassLevel: z.literal(0),
+    nextClassLevel: z.literal(0),
+    currentChoiceCount: z.literal(0),
+    nextChoiceCount: z.literal(0),
+    requestedWeaponCount: z.literal(0),
+    selectedWeaponCount: z.literal(0),
+    gainCount: z.literal(0),
+    firstWeaponUnitId: z.literal("none"),
+    secondWeaponUnitId: z.literal("none"),
+    thirdWeaponUnitId: z.literal("none"),
+    fourthWeaponUnitId: z.literal("none"),
+    accepted: z.literal(false),
+    ...noRejectedGainSchema,
+  }),
+  z.object({
+    outcome: z.literal("fighterLevelFourAccepted"),
+    classUnitId: z.literal(FIGHTER_CLASS_UNIT_ID),
+    featureUnitId: z.literal(FIGHTER_WEAPON_MASTERY_UNIT_ID),
+    currentClassLevel: z.literal(3),
+    nextClassLevel: z.literal(4),
+    currentChoiceCount: z.literal(3),
+    nextChoiceCount: z.literal(4),
+    requestedWeaponCount: z.literal(4),
+    selectedWeaponCount: z.literal(4),
+    gainCount: z.literal(1),
+    firstWeaponUnitId: z.literal("weapon_longsword"),
+    secondWeaponUnitId: z.literal("weapon_spear"),
+    thirdWeaponUnitId: z.literal("weapon_flail"),
+    fourthWeaponUnitId: z.literal("weapon_shortsword"),
+    accepted: z.literal(true),
+    ...noRejectedGainSchema,
+  }),
+  z.object({
+    outcome: z.literal("barbarianLevelFourAccepted"),
+    classUnitId: z.literal(BARBARIAN_CLASS_UNIT_ID),
+    featureUnitId: z.literal(BARBARIAN_WEAPON_MASTERY_UNIT_ID),
+    currentClassLevel: z.literal(3),
+    nextClassLevel: z.literal(4),
+    currentChoiceCount: z.literal(2),
+    nextChoiceCount: z.literal(3),
+    requestedWeaponCount: z.literal(3),
+    selectedWeaponCount: z.literal(3),
+    gainCount: z.literal(1),
+    firstWeaponUnitId: z.literal("weapon_longsword"),
+    secondWeaponUnitId: z.literal("weapon_dagger"),
+    thirdWeaponUnitId: z.literal("weapon_spear"),
+    fourthWeaponUnitId: z.literal("none"),
+    accepted: z.literal(true),
+    ...noRejectedGainSchema,
+  }),
+  z.object({
+    outcome: z.literal("fighterOverCountRejected"),
+    classUnitId: z.literal(FIGHTER_CLASS_UNIT_ID),
+    featureUnitId: z.literal(FIGHTER_WEAPON_MASTERY_UNIT_ID),
+    currentClassLevel: z.literal(3),
+    nextClassLevel: z.literal(4),
+    currentChoiceCount: z.literal(3),
+    nextChoiceCount: z.literal(4),
+    requestedWeaponCount: z.literal(5),
+    selectedWeaponCount: z.literal(3),
+    gainCount: z.literal(0),
+    firstWeaponUnitId: z.literal("weapon_longsword"),
+    secondWeaponUnitId: z.literal("weapon_spear"),
+    thirdWeaponUnitId: z.literal("weapon_flail"),
+    fourthWeaponUnitId: z.literal("none"),
+    accepted: z.literal(false),
+    overCountRejected: z.literal(true),
+    duplicateRejected: z.literal(false),
+    rejectedWithoutStateChange: z.literal(true),
+  }),
+  z.object({
+    outcome: z.literal("fighterDuplicateRejected"),
+    classUnitId: z.literal(FIGHTER_CLASS_UNIT_ID),
+    featureUnitId: z.literal(FIGHTER_WEAPON_MASTERY_UNIT_ID),
+    currentClassLevel: z.literal(3),
+    nextClassLevel: z.literal(4),
+    currentChoiceCount: z.literal(3),
+    nextChoiceCount: z.literal(4),
+    requestedWeaponCount: z.literal(4),
+    selectedWeaponCount: z.literal(3),
+    gainCount: z.literal(0),
+    firstWeaponUnitId: z.literal("weapon_longsword"),
+    secondWeaponUnitId: z.literal("weapon_spear"),
+    thirdWeaponUnitId: z.literal("weapon_flail"),
+    fourthWeaponUnitId: z.literal("none"),
+    accepted: z.literal(false),
+    overCountRejected: z.literal(false),
+    duplicateRejected: z.literal(true),
+    rejectedWithoutStateChange: z.literal(true),
+  }),
+]);
 const quintStateSchema = z.object({
-  qLastResult: z.enum(WEAPON_MASTERY_LEVEL_GAIN_RESULTS),
-  qClassUnitId: z.union([
+  outcome: z.unknown().transform(outcomeField),
+  classUnitId: z.union([
     z.literal("none"),
     z.literal(FIGHTER_CLASS_UNIT_ID),
     z.literal(BARBARIAN_CLASS_UNIT_ID),
   ]),
-  qFeatureUnitId: z.union([
+  featureUnitId: z.union([
     z.literal("none"),
     z.literal(FIGHTER_WEAPON_MASTERY_UNIT_ID),
     z.literal(BARBARIAN_WEAPON_MASTERY_UNIT_ID),
   ]),
-  qCurrentClassLevel: z.bigint(),
-  qNextClassLevel: z.bigint(),
-  qCurrentChoiceCount: z.bigint(),
-  qNextChoiceCount: z.bigint(),
-  qRequestedWeaponCount: z.bigint(),
-  qSelectedWeaponCount: z.bigint(),
-  qGainCount: z.bigint(),
-  qFirstWeaponUnitId: z.union([
+  currentClassLevel: z.bigint(),
+  nextClassLevel: z.bigint(),
+  currentChoiceCount: z.bigint(),
+  nextChoiceCount: z.bigint(),
+  requestedWeaponCount: z.bigint(),
+  selectedWeaponCount: z.bigint(),
+  gainCount: z.bigint(),
+  firstWeaponUnitId: z.union([
     z.literal("none"),
     z.literal("weapon_longsword"),
   ]),
-  qSecondWeaponUnitId: z.union([
+  secondWeaponUnitId: z.union([
     z.literal("none"),
     z.literal("weapon_spear"),
     z.literal("weapon_dagger"),
   ]),
-  qThirdWeaponUnitId: z.union([
+  thirdWeaponUnitId: z.union([
     z.literal("none"),
     z.literal("weapon_flail"),
     z.literal("weapon_spear"),
   ]),
-  qFourthWeaponUnitId: z.union([
+  fourthWeaponUnitId: z.union([
     z.literal("none"),
     z.literal("weapon_shortsword"),
   ]),
-  qAccepted: z.boolean(),
-  qOverCountRejected: z.boolean(),
-  qDuplicateRejected: z.boolean(),
-  qRejectedWithoutStateChange: z.boolean(),
+  accepted: z.boolean(),
+  overCountRejected: z.boolean(),
+  duplicateRejected: z.boolean(),
+  rejectedWithoutStateChange: z.boolean(),
 });
 
 const unitCatalogResult = buildUnitCatalog({
@@ -325,6 +322,39 @@ const weaponMasteryLevelGainReplays = [
 const advertisedReplayActions = weaponMasteryLevelGainReplays.flatMap(
   (replay) => replay.actions,
 );
+
+const qntOutcomeByVariant = {
+  CharacterCreationWeaponMasteryLevelGainInit: "init",
+  CharacterCreationWeaponMasteryLevelGainFighterLevelFourAccepted:
+    "fighterLevelFourAccepted",
+  CharacterCreationWeaponMasteryLevelGainBarbarianLevelFourAccepted:
+    "barbarianLevelFourAccepted",
+  CharacterCreationWeaponMasteryLevelGainFighterOverCountRejected:
+    "fighterOverCountRejected",
+  CharacterCreationWeaponMasteryLevelGainFighterDuplicateRejected:
+    "fighterDuplicateRejected",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
 
 describe("Character Creation Weapon Mastery level gain MBT", () => {
   it("replays Weapon Mastery level-gain scenarios deterministically", async () => {
@@ -425,7 +455,7 @@ function createWeaponMasteryLevelGainDriver() {
 
 function initialProjection(): WeaponMasteryLevelGainProjection {
   return weaponMasteryLevelGainProjectionSchema.parse({
-    lastResult: "init",
+    outcome: "init",
     classUnitId: "none",
     featureUnitId: "none",
     currentClassLevel: 0,
@@ -461,7 +491,7 @@ function fighterLevelFourAcceptedProjection(): WeaponMasteryLevelGainProjection 
   );
 
   return projectionFromBuild({
-    lastResult: "fighterLevelFourAccepted",
+    outcome: "fighterLevelFourAccepted",
     build: advanced,
     classUnitId: FIGHTER_CLASS_UNIT_ID,
     featureUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
@@ -493,7 +523,7 @@ function barbarianLevelFourAcceptedProjection(): WeaponMasteryLevelGainProjectio
   );
 
   return projectionFromBuild({
-    lastResult: "barbarianLevelFourAccepted",
+    outcome: "barbarianLevelFourAccepted",
     build: advanced,
     classUnitId: BARBARIAN_CLASS_UNIT_ID,
     featureUnitId: BARBARIAN_WEAPON_MASTERY_UNIT_ID,
@@ -524,7 +554,7 @@ function fighterOverCountRejectedProjection(): WeaponMasteryLevelGainProjection 
   expectLeftCode(result, "invalidWeaponMasterySelectionCount");
 
   return projectionFromBuild({
-    lastResult: "fighterOverCountRejected",
+    outcome: "fighterOverCountRejected",
     build,
     classUnitId: FIGHTER_CLASS_UNIT_ID,
     featureUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
@@ -555,7 +585,7 @@ function fighterDuplicateRejectedProjection(): WeaponMasteryLevelGainProjection 
   expectLeftCode(result, "duplicateWeaponMasterySelection");
 
   return projectionFromBuild({
-    lastResult: "fighterDuplicateRejected",
+    outcome: "fighterDuplicateRejected",
     build,
     classUnitId: FIGHTER_CLASS_UNIT_ID,
     featureUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
@@ -573,7 +603,7 @@ function fighterDuplicateRejectedProjection(): WeaponMasteryLevelGainProjection 
 }
 
 function projectionFromBuild(input: {
-  readonly lastResult: WeaponMasteryLevelGainResult;
+  readonly outcome: WeaponMasteryLevelGainResult;
   readonly build: CharacterBuild;
   readonly classUnitId: UnitRecord["id"];
   readonly featureUnitId: UnitRecord["id"];
@@ -597,7 +627,7 @@ function projectionFromBuild(input: {
   ).length;
 
   return weaponMasteryLevelGainProjectionSchema.parse({
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     classUnitId: input.classUnitId,
     featureUnitId: input.featureUnitId,
     currentClassLevel: input.currentClassLevel,
@@ -871,27 +901,39 @@ function selectedBuildClassChoiceUnitIds(
   );
 }
 
+function qStateValue(raw: unknown): unknown {
+  if (
+    raw !== null &&
+    typeof raw === "object" &&
+    !Array.isArray(raw) &&
+    "qState" in raw
+  ) {
+    return Object.fromEntries(Object.entries(raw))["qState"];
+  }
+  throw new Error("Expected Quint qState record.");
+}
+
 function normalizeQuintState(raw: unknown): WeaponMasteryLevelGainProjection {
-  const parsed = quintStateSchema.parse(raw);
+  const parsed = quintStateSchema.parse(qStateValue(raw));
   return weaponMasteryLevelGainProjectionSchema.parse({
-    lastResult: parsed.qLastResult,
-    classUnitId: parsed.qClassUnitId,
-    featureUnitId: parsed.qFeatureUnitId,
-    currentClassLevel: Number(parsed.qCurrentClassLevel),
-    nextClassLevel: Number(parsed.qNextClassLevel),
-    currentChoiceCount: Number(parsed.qCurrentChoiceCount),
-    nextChoiceCount: Number(parsed.qNextChoiceCount),
-    requestedWeaponCount: Number(parsed.qRequestedWeaponCount),
-    selectedWeaponCount: Number(parsed.qSelectedWeaponCount),
-    gainCount: Number(parsed.qGainCount),
-    firstWeaponUnitId: parsed.qFirstWeaponUnitId,
-    secondWeaponUnitId: parsed.qSecondWeaponUnitId,
-    thirdWeaponUnitId: parsed.qThirdWeaponUnitId,
-    fourthWeaponUnitId: parsed.qFourthWeaponUnitId,
-    accepted: parsed.qAccepted,
-    overCountRejected: parsed.qOverCountRejected,
-    duplicateRejected: parsed.qDuplicateRejected,
-    rejectedWithoutStateChange: parsed.qRejectedWithoutStateChange,
+    outcome: parsed.outcome,
+    classUnitId: parsed.classUnitId,
+    featureUnitId: parsed.featureUnitId,
+    currentClassLevel: Number(parsed.currentClassLevel),
+    nextClassLevel: Number(parsed.nextClassLevel),
+    currentChoiceCount: Number(parsed.currentChoiceCount),
+    nextChoiceCount: Number(parsed.nextChoiceCount),
+    requestedWeaponCount: Number(parsed.requestedWeaponCount),
+    selectedWeaponCount: Number(parsed.selectedWeaponCount),
+    gainCount: Number(parsed.gainCount),
+    firstWeaponUnitId: parsed.firstWeaponUnitId,
+    secondWeaponUnitId: parsed.secondWeaponUnitId,
+    thirdWeaponUnitId: parsed.thirdWeaponUnitId,
+    fourthWeaponUnitId: parsed.fourthWeaponUnitId,
+    accepted: parsed.accepted,
+    overCountRejected: parsed.overCountRejected,
+    duplicateRejected: parsed.duplicateRejected,
+    rejectedWithoutStateChange: parsed.rejectedWithoutStateChange,
   });
 }
 

@@ -28,14 +28,13 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   pure def qPrimaryTargetPoisoned: bool = qState.qPrimaryTargetPoisoned
   pure def qPrimaryTargetNextAttackRollDisadvantage: bool = qState.qPrimaryTargetNextAttackRollDisadvantage
   pure def qSecondaryTargetHp: int = qState.qSecondaryTargetHp
-  pure def qLastResult: Level1DamageSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: Level1DamageSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def level1DamageSpellSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: Level1DamageSpellSelectedIdentityScenarioOutcome,
-    _scenarioInvalidReason: str,
+    scenarioOutcome: Level1DamageSpellSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -59,14 +58,14 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       qPrimaryTargetNextAttackRollDisadvantage: primaryTargetNextAttackRollDisadvantage,
       qSecondaryTargetHp: secondaryTargetHp,
       qScenarioOutcome: lastResult,
-      protocol: level1DamageSpellSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: level1DamageSpellSelectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
 
   action init = recordProjection(true, false, 1, 12, false, false, 12, Init)
 
   action doResolveBurningHandsMixedConeSavingThrows = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       true,
@@ -80,7 +79,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   }
 
   action doResolveChromaticOrbDuplicateDamageLeap = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       true,
@@ -94,7 +93,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   }
 
   action doResolveIceKnifeHitAttackDamageAndBurstSavingThrows = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       true,
@@ -108,7 +107,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   }
 
   action doResolveIceKnifeMissBurstSavingThrows = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       true,
@@ -122,7 +121,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   }
 
   action doResolvePoisonSpraySpellAttackDamage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       false,
@@ -136,7 +135,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   }
 
   action doResolveRayOfSicknessSpellAttackDamageAndPoisoned = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       true,
@@ -150,7 +149,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   }
 
   action doResolveSacredFlameDexteritySavingThrowRadiantDamage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       false,
@@ -164,7 +163,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   }
 
   action doResolveSorcerousBurstSpellAttackDamage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       false,
@@ -178,7 +177,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   }
 
   action doResolveStarryWispObjectSpellAttackDamageAndDimLight = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       false,
@@ -192,7 +191,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   }
 
   action doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       false,

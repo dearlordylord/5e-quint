@@ -59,27 +59,44 @@ describe("battle-runtime MBT driver kit", () => {
   it("adapts quint-connect ITF transformation exports", () => {
     expect(transformITFValue({ "#bigint": "7" })).toBe(7n);
     expect(transformITFValue({ "#set": [1, 2] })).toEqual(new Set([1, 2]));
-    expect(transformITFValue({ tag: "Tagged", value: { "#bigint": "5" } }))
-      .toEqual({ tag: "Tagged", value: 5n });
+    expect(
+      transformITFValue({ tag: "Tagged", value: { "#bigint": "5" } }),
+    ).toEqual({ tag: "Tagged", value: 5n });
   });
 
-  it("decodes witness protocol fields with the witness sentinel", () => {
+  it("lists witness protocol invalid reasons with the witness sentinel", () => {
+    expect(mbtWitnessLastInvalidReasons("none")).toEqual([
+      "none",
+      "staleSubject",
+      "wrongActor",
+      "missingCombatant",
+      "invalidFill",
+      "unsupportedSubject",
+      "unsupportedActOption",
+    ]);
+  });
+
+  it("decodes typed witness protocol records with variant results", () => {
     const emptyStringProtocol = decodeWitnessProtocolState({
       state: quintStateRecord({
-        qHoles: new Set([{ tag: "Second" }, { tag: "First" }]),
-        qLastResult: "needsHoles",
-        qLastInvalidReason: "",
+        protocol: {
+          holes: new Set([{ tag: "Second" }, { tag: "First" }]),
+          result: "WNeedsHoles",
+        },
       }),
+      protocolField: "protocol",
       noInvalidReason: "",
       decodeHole: (raw): string => quintVariantTag(raw),
       compareHoles: (left, right) => left.localeCompare(right),
     });
     const noneProtocol = decodeWitnessProtocolState({
       state: quintStateRecord({
-        qHoles: new Set(["Movement"]),
-        qLastResult: "resolved",
-        qLastInvalidReason: "none",
+        protocol: {
+          holes: new Set(["Movement"]),
+          result: "WResolved",
+        },
       }),
+      protocolField: "protocol",
       noInvalidReason: "none",
       decodeHole: (raw): string => stringLiteral(raw, ["Movement"]),
     });
@@ -94,18 +111,6 @@ describe("battle-runtime MBT driver kit", () => {
       lastResult: "resolved",
       lastInvalidReason: "none",
     });
-    expect(mbtWitnessLastInvalidReasons("none")).toEqual([
-      "none",
-      "staleSubject",
-      "wrongActor",
-      "missingCombatant",
-      "invalidFill",
-      "unsupportedSubject",
-      "unsupportedActOption",
-    ]);
-  });
-
-  it("decodes typed witness protocol records with variant results", () => {
     const needsHolesProtocol = decodeWitnessProtocolState({
       state: quintStateRecord({
         protocol: {
@@ -142,11 +147,25 @@ describe("battle-runtime MBT driver kit", () => {
     });
   });
 
+  it("rejects loose root-level protocol-shaped state fields", () => {
+    expect(() =>
+      decodeWitnessProtocolState({
+        state: quintStateRecord({
+          holes: new Set(["Movement"]),
+          result: "WResolved",
+        }),
+        protocolField: "protocol",
+        noInvalidReason: "none",
+        decodeHole: (raw): string => stringLiteral(raw, ["Movement"]),
+      }),
+    ).toThrow("Expected Quint state field protocol.");
+  });
+
   it("asserts scenario labels stay consistent with typed witness protocol results", () => {
     expect(() =>
       assertWitnessProtocolConsistentWithScenario({
         label: "test",
-        scenarioResult: "init",
+        scenarioOutcome: "init",
         protocol: {
           holes: [],
           lastResult: "init",
@@ -156,7 +175,7 @@ describe("battle-runtime MBT driver kit", () => {
     expect(() =>
       assertWitnessProtocolConsistentWithScenario({
         label: "test",
-        scenarioResult: "awaitingFill",
+        scenarioOutcome: "awaitingFill",
         protocol: {
           holes: ["Fill"],
           lastResult: "needsHoles",
@@ -166,7 +185,7 @@ describe("battle-runtime MBT driver kit", () => {
     expect(() =>
       assertWitnessProtocolConsistentWithScenario({
         label: "test",
-        scenarioResult: "complete",
+        scenarioOutcome: "complete",
         protocol: {
           holes: [],
           lastResult: "resolved",
@@ -176,7 +195,7 @@ describe("battle-runtime MBT driver kit", () => {
     expect(() =>
       assertWitnessProtocolConsistentWithScenario({
         label: "test",
-        scenarioResult: "rejected",
+        scenarioOutcome: "rejected",
         protocol: {
           holes: [],
           lastResult: "invalid",
@@ -188,7 +207,7 @@ describe("battle-runtime MBT driver kit", () => {
     expect(() =>
       assertWitnessProtocolConsistentWithScenario({
         label: "test",
-        scenarioResult: "complete",
+        scenarioOutcome: "complete",
         protocol: {
           holes: [],
           lastResult: "init",
@@ -200,7 +219,7 @@ describe("battle-runtime MBT driver kit", () => {
     expect(() =>
       assertWitnessProtocolConsistentWithScenario({
         label: "test",
-        scenarioResult: "rejected",
+        scenarioOutcome: "rejected",
         protocol: {
           holes: [],
           lastResult: "invalid",
@@ -374,10 +393,14 @@ function stringLiteral<const Values extends readonly string[]>(
 async function standardValidate<T>(
   schema: {
     readonly "~standard": {
-      readonly validate: (value: unknown) =>
+      readonly validate: (
+        value: unknown,
+      ) =>
         | { readonly value: T }
         | { readonly issues: readonly unknown[] }
-        | Promise<{ readonly value: T } | { readonly issues: readonly unknown[] }>;
+        | Promise<
+            { readonly value: T } | { readonly issues: readonly unknown[] }
+          >;
     };
   },
   value: unknown,
@@ -389,7 +412,11 @@ async function standardValidate<T>(
   return result.value;
 }
 
-function withEnv(name: string, value: string | undefined, test: () => void): void {
+function withEnv(
+  name: string,
+  value: string | undefined,
+  test: () => void,
+): void {
   const original = process.env[name];
   if (value === undefined) {
     delete process.env[name];

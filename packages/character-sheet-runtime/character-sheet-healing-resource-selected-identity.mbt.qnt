@@ -1,12 +1,20 @@
 // -*- mode: Bluespec; -*-
 
 module characterSheetHealingResourceSelectedIdentityMbt {
-  var qSourceHp: int
-  var qTargetHp: int
-  var qTargetPoisoned: bool
-  var qPoolExpended: int
-  var qPoolRemaining: int
-  var qLastResult: str
+  type CharacterSheetHealingResourceSelectedIdentityOutcome =
+    | CharacterSheetHealingResourceSelectedIdentityInit
+    | CharacterSheetHealingResourceSelectedIdentityResolved
+
+  type CharacterSheetHealingResourceSelectedIdentityState = {
+    sourceHp: int,
+    targetHp: int,
+    targetPoisoned: bool,
+    poolExpended: int,
+    poolRemaining: int,
+    outcome: CharacterSheetHealingResourceSelectedIdentityOutcome,
+  }
+
+  var qState: CharacterSheetHealingResourceSelectedIdentityState
 
   action recordProjection(
     sourceHp: int,
@@ -14,21 +22,37 @@ module characterSheetHealingResourceSelectedIdentityMbt {
     targetPoisoned: bool,
     poolExpended: int,
     poolRemaining: int,
-    lastResult: str,
+    outcome: CharacterSheetHealingResourceSelectedIdentityOutcome,
   ): bool = all {
-    qSourceHp' = sourceHp,
-    qTargetHp' = targetHp,
-    qTargetPoisoned' = targetPoisoned,
-    qPoolExpended' = poolExpended,
-    qPoolRemaining' = poolRemaining,
-    qLastResult' = lastResult,
+    qState' = {
+      sourceHp: sourceHp,
+      targetHp: targetHp,
+      targetPoisoned: targetPoisoned,
+      poolExpended: poolExpended,
+      poolRemaining: poolRemaining,
+      outcome: outcome,
+    },
   }
 
-  action init = recordProjection(12, 3, true, 0, 10, "init")
+  action init = recordProjection(
+      12,
+      3,
+      true,
+      0,
+      10,
+      CharacterSheetHealingResourceSelectedIdentityInit,
+    )
 
   action doLayOnHandsRestoreHpAndRemovePoisoned = all {
-    qLastResult == "init",
-    recordProjection(12, 5, false, 7, 3, "resolved"),
+    qState.outcome == CharacterSheetHealingResourceSelectedIdentityInit,
+    recordProjection(
+      12,
+      5,
+      false,
+      7,
+      3,
+      CharacterSheetHealingResourceSelectedIdentityResolved,
+    ),
   }
 
   action step = any {

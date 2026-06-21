@@ -5,6 +5,8 @@ module battleRuntimeSpellSequencingIntegrationMbt {
 
   type Hole = | NoHole
 
+  type SpellSequencingIntegrationScenarioOutcome = | Init | CastDragonsBreath | TargetTurnWithBreath | ExhaledBreath | CasterTurnAfterBreath | CastHeatMetal | TargetTurnWithHeatMetal | CasterTurnWithHeatMetalRepeat | RepeatHeatMetal
+
   type SpellSequencingWitnessState = {
     turnRole: str,
     magicActionAvailable: bool,
@@ -15,7 +17,7 @@ module battleRuntimeSpellSequencingIntegrationMbt {
     heatMetalRepeatAvailable: bool,
     casterHp: int,
     targetHp: int,
-    scenarioResult: str,
+    scenarioOutcome: SpellSequencingIntegrationScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -42,7 +44,7 @@ module battleRuntimeSpellSequencingIntegrationMbt {
     heatMetalRepeatAvailable: bool,
     casterHp: int,
     targetHp: int,
-    scenarioResult: str,
+    scenarioOutcome: SpellSequencingIntegrationScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -55,7 +57,7 @@ module battleRuntimeSpellSequencingIntegrationMbt {
       heatMetalRepeatAvailable: heatMetalRepeatAvailable,
       casterHp: casterHp,
       targetHp: targetHp,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -70,12 +72,11 @@ module battleRuntimeSpellSequencingIntegrationMbt {
     false,
     initialCasterHp,
     initialTargetHp,
-    "init",
-    witnessInit(NoHole),
-  )
+    Init,
+    witnessInit(NoHole))
 
   action doCastDragonsBreath = all {
-    qState.scenarioResult == "init",
+    qState.scenarioOutcome == Init,
     qState.turnRole == casterTurnRole,
     qState.magicActionAvailable,
     qState.bonusActionAvailable,
@@ -92,13 +93,12 @@ module battleRuntimeSpellSequencingIntegrationMbt {
       false,
       qState.casterHp,
       qState.targetHp,
-      "castDragonsBreath",
-      witnessResolved(NoHole),
-    ),
+      CastDragonsBreath,
+      witnessResolved(NoHole)),
   }
 
   action doEndCasterTurnForDragonsBreath = all {
-    qState.scenarioResult == "castDragonsBreath",
+    qState.scenarioOutcome == CastDragonsBreath,
     qState.turnRole == casterTurnRole,
     qState.dragonsBreathActive,
     qState.concentrationSpell == dragonsBreathConcentrationSpell,
@@ -112,13 +112,12 @@ module battleRuntimeSpellSequencingIntegrationMbt {
       false,
       qState.casterHp,
       qState.targetHp,
-      "targetTurnWithBreath",
-      witnessResolved(NoHole),
-    ),
+      TargetTurnWithBreath,
+      witnessResolved(NoHole)),
   }
 
   action doExhaleAndMaintainConcentration = all {
-    qState.scenarioResult == "targetTurnWithBreath",
+    qState.scenarioOutcome == TargetTurnWithBreath,
     qState.turnRole == targetTurnRole,
     qState.magicActionAvailable,
     qState.dragonsBreathActive,
@@ -133,13 +132,12 @@ module battleRuntimeSpellSequencingIntegrationMbt {
       false,
       qState.casterHp - dragonsBreathDamage,
       qState.targetHp,
-      "exhaledBreath",
-      witnessResolved(NoHole),
-    ),
+      ExhaledBreath,
+      witnessResolved(NoHole)),
   }
 
   action doEndTargetTurnAfterBreath = all {
-    qState.scenarioResult == "exhaledBreath",
+    qState.scenarioOutcome == ExhaledBreath,
     qState.turnRole == targetTurnRole,
     qState.dragonsBreathActive,
     qState.concentrationSpell == dragonsBreathConcentrationSpell,
@@ -153,13 +151,12 @@ module battleRuntimeSpellSequencingIntegrationMbt {
       false,
       qState.casterHp,
       qState.targetHp,
-      "casterTurnAfterBreath",
-      witnessResolved(NoHole),
-    ),
+      CasterTurnAfterBreath,
+      witnessResolved(NoHole)),
   }
 
   action doCastHeatMetalContact = all {
-    qState.scenarioResult == "casterTurnAfterBreath",
+    qState.scenarioOutcome == CasterTurnAfterBreath,
     qState.turnRole == casterTurnRole,
     qState.magicActionAvailable,
     qState.dragonsBreathActive,
@@ -174,13 +171,12 @@ module battleRuntimeSpellSequencingIntegrationMbt {
       false,
       qState.casterHp,
       qState.targetHp - heatMetalCastDamage,
-      "castHeatMetal",
-      witnessResolved(NoHole),
-    ),
+      CastHeatMetal,
+      witnessResolved(NoHole)),
   }
 
   action doEndCasterTurnForHeatMetal = all {
-    qState.scenarioResult == "castHeatMetal",
+    qState.scenarioOutcome == CastHeatMetal,
     qState.turnRole == casterTurnRole,
     qState.heatMetalActive,
     qState.concentrationSpell == heatMetalConcentrationSpell,
@@ -194,13 +190,12 @@ module battleRuntimeSpellSequencingIntegrationMbt {
       false,
       qState.casterHp,
       qState.targetHp,
-      "targetTurnWithHeatMetal",
-      witnessResolved(NoHole),
-    ),
+      TargetTurnWithHeatMetal,
+      witnessResolved(NoHole)),
   }
 
   action doEndTargetTurnForHeatMetal = all {
-    qState.scenarioResult == "targetTurnWithHeatMetal",
+    qState.scenarioOutcome == TargetTurnWithHeatMetal,
     qState.turnRole == targetTurnRole,
     qState.heatMetalActive,
     qState.concentrationSpell == heatMetalConcentrationSpell,
@@ -214,13 +209,12 @@ module battleRuntimeSpellSequencingIntegrationMbt {
       true,
       qState.casterHp,
       qState.targetHp,
-      "casterTurnWithHeatMetalRepeat",
-      witnessResolved(NoHole),
-    ),
+      CasterTurnWithHeatMetalRepeat,
+      witnessResolved(NoHole)),
   }
 
   action doRepeatHeatMetalContactDamage = all {
-    qState.scenarioResult == "casterTurnWithHeatMetalRepeat",
+    qState.scenarioOutcome == CasterTurnWithHeatMetalRepeat,
     qState.turnRole == casterTurnRole,
     qState.bonusActionAvailable,
     qState.heatMetalRepeatAvailable,
@@ -236,9 +230,8 @@ module battleRuntimeSpellSequencingIntegrationMbt {
       false,
       qState.casterHp,
       qState.targetHp - heatMetalRepeatDamage,
-      "repeatHeatMetal",
-      witnessResolved(NoHole),
-    ),
+      RepeatHeatMetal,
+      witnessResolved(NoHole)),
   }
 
   action step = any {

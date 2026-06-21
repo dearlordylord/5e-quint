@@ -42,14 +42,13 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
   pure def qPactReactionAttackResolved: bool = qState.qPactReactionAttackResolved
   pure def qSpellSlotCommitted: bool = qState.qSpellSlotCommitted
   pure def qTargetHp: int = qState.qTargetHp
-  pure def qLastResult: FindFamiliarCompanionLifecycleScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: FindFamiliarCompanionLifecycleScenarioOutcome = qState.qScenarioOutcome
 
   pure def findFamiliarCompanionLifecycleProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: FindFamiliarCompanionLifecycleScenarioOutcome,
-    _scenarioInvalidReason: str,
+    scenarioOutcome: FindFamiliarCompanionLifecycleScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -109,7 +108,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleMbt {
       qSpellSlotCommitted: spellSlotCommitted,
       qTargetHp: targetHp,
       qScenarioOutcome: lastResult,
-      protocol: findFamiliarCompanionLifecycleProtocolForProjection(Set(), lastResult, ""),
+      protocol: findFamiliarCompanionLifecycleProtocolForProjection(Set(), lastResult),
     },
   }
 

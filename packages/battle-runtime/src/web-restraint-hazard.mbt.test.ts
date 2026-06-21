@@ -540,7 +540,7 @@ function normalizeWebQuintState(raw: unknown): WebRestraintHazardState {
   const scenarioResult = webLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Web restraint hazard",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

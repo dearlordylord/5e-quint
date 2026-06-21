@@ -7,9 +7,11 @@ Status: Draft
 Owner: battle-runtime QNT architecture
 
 Origin: architecture review 2026-06-10, candidate 1 ("give the battle protocol
-a QNT owner"). Companion PRDs: `prd/03_MBT_PARITY_DRIVER_KIT.md` and
-`prd/04_TYPED_WITNESS_PROTOCOL.md`. This PRD does not depend on them, but its
-new parity witnesses get cheaper if they land first.
+a QNT owner"). Companion context: `prd/03_MBT_PARITY_DRIVER_KIT.md`,
+`docs/adr/0001-forest-of-qnt-slices.md`, and
+`plans/RALPH_WITNESS_PROTOCOL_STORAGE_MIGRATION.md`. This PRD does not depend
+on them, but its new parity witnesses get cheaper if the driver-kit and typed
+protocol-storage work land first.
 
 ## Context Primer For A Fresh Agent
 
@@ -91,11 +93,11 @@ What already exists and must be built on, not duplicated:
   covering obligation ids, and rationale. The vocabulary design input is this
   registry, not a fresh survey.
 - `battle-runtime-reaction-window.qnt` + `battle-runtime-interrupt-bridge.qnt`
-  + rule-core `reactions-continuations-concentration.qnt` already own the
-  single reaction window offer/decline/spend/resume
-  (`BATTLE.REACTION.OFFER_DECLINE_RESUME`, covered). The gap is nesting,
-  resume interleaved with active-effect mutation, and replay-from-root — not
-  the basic window.
+  - rule-core `reactions-continuations-concentration.qnt` already own the
+    single reaction window offer/decline/spend/resume
+    (`BATTLE.REACTION.OFFER_DECLINE_RESUME`, covered). The gap is nesting,
+    resume interleaved with active-effect mutation, and replay-from-root — not
+    the basic window.
 - `battle-runtime-public-trace-contract.qnt` owns public checkpoint order for
   a weapon-attack trace with a 3-kind `PublicTraceHole` type. It is a narrow
   precedent for ordering ownership, not a general frontier model.
@@ -236,9 +238,9 @@ QNT owners as evidence.
   witness driving production APIs (`resolveBattleSubject`,
   `resolveBattleInterrupt`, `snapshotBattle`); deterministic reducer tests
   cover fixed projections.
-- If `prd/03`/`prd/04` have landed, write witnesses through the driver kit and
-  typed witness protocol; otherwise follow the current driver shape and accept
-  later mechanical migration.
+- If `prd/03` and the typed protocol-storage migration have landed, write
+  witnesses through the driver kit and typed witness protocol; otherwise follow
+  the current driver shape and accept later mechanical migration.
 - Run only the new focused MBT files and affected unit tests during
   development; `pnpm quality` runs the closure and coverage checkers. If a new
   `.qnt` has `run` blocks, run

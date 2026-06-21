@@ -1048,7 +1048,7 @@ function normalizeWeaponHostedQuintState(raw: unknown): WeaponHostedState {
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "Weapon-hosted attack and riders",
-    scenarioResult: protocol.lastResult,
+    scenarioOutcome: protocol.lastResult,
     protocol,
     initScenarioResult: "init",
   });

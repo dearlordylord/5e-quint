@@ -30,14 +30,13 @@ module battleRuntimeHeatMetalObjectContactMbt {
   pure def qObjectContactEffectActive: bool = qState.qObjectContactEffectActive
   pure def qCasterConcentrating: bool = qState.qCasterConcentrating
   pure def qTargetHp: int = qState.qTargetHp
-  pure def qLastResult: HeatMetalObjectContactScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: HeatMetalObjectContactScenarioOutcome = qState.qScenarioOutcome
 
   pure def heatMetalObjectContactProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: HeatMetalObjectContactScenarioOutcome,
-    _scenarioInvalidReason: str,
+    scenarioOutcome: HeatMetalObjectContactScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -69,7 +68,7 @@ module battleRuntimeHeatMetalObjectContactMbt {
       qCasterConcentrating: casterConcentrating,
       qTargetHp: targetHp,
       qScenarioOutcome: lastResult,
-      protocol: heatMetalObjectContactProtocolForProjection(Set(), lastResult, ""),
+      protocol: heatMetalObjectContactProtocolForProjection(Set(), lastResult),
     },
   }
 

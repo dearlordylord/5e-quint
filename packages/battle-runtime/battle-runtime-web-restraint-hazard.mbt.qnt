@@ -20,8 +20,8 @@ module battleRuntimeWebRestraintHazardMbt {
   var qProtocol: WitnessProtocol[Hole]
   var qScenarioOutcome: WebRestraintHazardScenarioOutcome
 
-  pure def qHoles: Set[Hole] = qProtocol.holes
-  pure def qLastResult: WebRestraintHazardScenarioOutcome = qScenarioOutcome
+  pure def openHoles: Set[Hole] = qProtocol.holes
+  pure def scenarioOutcome: WebRestraintHazardScenarioOutcome = qScenarioOutcome
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -32,9 +32,9 @@ module battleRuntimeWebRestraintHazardMbt {
 
   pure def webProtocolForProjection(
     holes: Set[Hole],
-    scenarioResult: WebRestraintHazardScenarioOutcome,
+    scenarioOutcome: WebRestraintHazardScenarioOutcome,
   ): WitnessProtocol[Hole] =
-    if (scenarioResult == Init) witnessInit("EntrySavingThrowOutcome")
+    if (scenarioOutcome == Init) witnessInit("EntrySavingThrowOutcome")
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved("EntrySavingThrowOutcome")
 
@@ -85,7 +85,7 @@ module battleRuntimeWebRestraintHazardMbt {
     qActionAvailable,
     qSpellAvailable,
     not(qHazardActive),
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordWebState(
       casterTurnRole,
       false,
@@ -105,7 +105,7 @@ module battleRuntimeWebRestraintHazardMbt {
     qCurrentTurnRole == casterTurnRole,
     qHazardActive,
     qCasterConcentrating,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordWebState(
       targetTurnRole,
       true,
@@ -125,7 +125,7 @@ module battleRuntimeWebRestraintHazardMbt {
     qCurrentTurnRole == targetTurnRole,
     qHazardActive,
     not(qEntrySavedThisTurn),
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordWebState(
       targetTurnRole,
       qActionAvailable,
@@ -145,7 +145,7 @@ module battleRuntimeWebRestraintHazardMbt {
     qCurrentTurnRole == targetTurnRole,
     qHazardActive,
     not(qStartTurnSavedThisTurn),
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordWebState(
       targetTurnRole,
       qActionAvailable,
@@ -163,7 +163,7 @@ module battleRuntimeWebRestraintHazardMbt {
 
   action doFillEntrySaveFailure = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == entrySavingThrowOutcomeHoles,
+    openHoles == entrySavingThrowOutcomeHoles,
     recordWebState(
       targetTurnRole,
       qActionAvailable,
@@ -181,7 +181,7 @@ module battleRuntimeWebRestraintHazardMbt {
 
   action doFillEntrySaveSuccess = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == entrySavingThrowOutcomeHoles,
+    openHoles == entrySavingThrowOutcomeHoles,
     recordWebState(
       targetTurnRole,
       qActionAvailable,
@@ -199,7 +199,7 @@ module battleRuntimeWebRestraintHazardMbt {
 
   action doFillStartTurnSaveFailure = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == startTurnSavingThrowOutcomeHoles,
+    openHoles == startTurnSavingThrowOutcomeHoles,
     recordWebState(
       targetTurnRole,
       qActionAvailable,
@@ -217,7 +217,7 @@ module battleRuntimeWebRestraintHazardMbt {
 
   action doFillStartTurnSaveSuccess = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == startTurnSavingThrowOutcomeHoles,
+    openHoles == startTurnSavingThrowOutcomeHoles,
     recordWebState(
       targetTurnRole,
       qActionAvailable,
@@ -237,7 +237,7 @@ module battleRuntimeWebRestraintHazardMbt {
     qCurrentTurnRole == targetTurnRole,
     qActionAvailable,
     qTargetRestrained,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordWebState(
       targetTurnRole,
       false,
@@ -257,7 +257,7 @@ module battleRuntimeWebRestraintHazardMbt {
     qCurrentTurnRole == targetTurnRole,
     qActionAvailable,
     qTargetRestrained,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordWebState(
       targetTurnRole,
       false,
@@ -277,7 +277,7 @@ module battleRuntimeWebRestraintHazardMbt {
     qCurrentTurnRole == targetTurnRole,
     qHazardActive,
     qTargetRestrained,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordWebState(
       targetTurnRole,
       qActionAvailable,
@@ -298,7 +298,7 @@ module battleRuntimeWebRestraintHazardMbt {
     qHazardActive,
     not(qTargetRestrained),
     qMovementSpentFeet == 0,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordWebState(
       targetTurnRole,
       qActionAvailable,
@@ -316,7 +316,7 @@ module battleRuntimeWebRestraintHazardMbt {
 
   action doRemoveArea = all {
     qHazardActive,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordWebState(
       qCurrentTurnRole,
       qActionAvailable,

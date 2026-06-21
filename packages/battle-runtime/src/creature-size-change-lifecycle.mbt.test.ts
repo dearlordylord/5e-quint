@@ -645,7 +645,7 @@ function normalizeCreatureSizeChangeQuintState(
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "Enlarge/Reduce",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

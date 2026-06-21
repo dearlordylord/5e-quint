@@ -34,11 +34,22 @@ const abilityCheckProficiencyBonusScenarios = [
 ] as const;
 type AbilityCheckProficiencyBonusScenario =
   (typeof abilityCheckProficiencyBonusScenarios)[number];
+const abilityCheckScenarioByVariant = {
+  AbilityCheckInit: "init",
+  AbilityCheckJackOfAllTradesLevelTwo: "jack-of-all-trades-level-two",
+  AbilityCheckJackOfAllTradesRoundedDown: "jack-of-all-trades-rounded-down",
+  AbilityCheckSkillProficiency: "skill-proficiency",
+  AbilityCheckExpertise: "expertise",
+  AbilityCheckOtherProficiencyBonusApplies: "other-proficiency-bonus-applies",
+  AbilityCheckMissingBardLevelTwo: "missing-bard-level-two",
+} as const satisfies Readonly<
+  Record<string, AbilityCheckProficiencyBonusScenario>
+>;
 const abilityCheckProficiencyBonusReplayStepCount =
   abilityCheckProficiencyBonusScenarios.length - 1;
 
 type AbilityCheckProficiencyBonusProjection = {
-  readonly lastResult: AbilityCheckProficiencyBonusScenario;
+  readonly outcome: AbilityCheckProficiencyBonusScenario;
   readonly projectionTag: CharacterSheetAbilityCheckProficiencyBonus["tag"];
   readonly sourceUnitId: string;
   readonly skill: Skill | "none";
@@ -79,21 +90,21 @@ function createAbilityCheckProficiencyBonusDriver() {
       init: reset,
       doProjectJackOfAllTradesLevelTwo: () => {
         projection = projectAbilityCheckProficiencyBonus({
-          lastResult: "jack-of-all-trades-level-two",
+          outcome: "jack-of-all-trades-level-two",
           build: bardAbilityCheckBuild({ totalLevel: 2 }),
           replayIndex: 1,
         });
       },
       doProjectJackOfAllTradesRoundedDown: () => {
         projection = projectAbilityCheckProficiencyBonus({
-          lastResult: "jack-of-all-trades-rounded-down",
+          outcome: "jack-of-all-trades-rounded-down",
           build: bardAbilityCheckBuild({ totalLevel: 5 }),
           replayIndex: 2,
         });
       },
       doProjectSkillProficiency: () => {
         projection = projectAbilityCheckProficiencyBonus({
-          lastResult: "skill-proficiency",
+          outcome: "skill-proficiency",
           build: bardAbilityCheckBuild({
             totalLevel: 5,
             proficiencyChoices: [{ kind: "skill", skill: "performance" }],
@@ -103,7 +114,7 @@ function createAbilityCheckProficiencyBonusDriver() {
       },
       doProjectExpertise: () => {
         projection = projectAbilityCheckProficiencyBonus({
-          lastResult: "expertise",
+          outcome: "expertise",
           build: bardAbilityCheckBuild({
             totalLevel: 5,
             proficiencyChoices: [
@@ -115,7 +126,7 @@ function createAbilityCheckProficiencyBonusDriver() {
       },
       doRejectOtherProficiencyBonus: () => {
         projection = projectAbilityCheckProficiencyBonus({
-          lastResult: "other-proficiency-bonus-applies",
+          outcome: "other-proficiency-bonus-applies",
           build: bardAbilityCheckBuild({ totalLevel: 5 }),
           otherProficiencyBonus:
             CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
@@ -124,7 +135,7 @@ function createAbilityCheckProficiencyBonusDriver() {
       },
       doRejectMissingBardLevelTwo: () => {
         projection = projectAbilityCheckProficiencyBonus({
-          lastResult: "missing-bard-level-two",
+          outcome: "missing-bard-level-two",
           build: bardAbilityCheckBuild({ totalLevel: 1 }),
           replayIndex: 6,
         });
@@ -160,7 +171,7 @@ describe("Character Sheet Ability Check Proficiency Bonus deterministic QNT repl
 
 function initialProjection(): AbilityCheckProficiencyBonusProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
     projectionTag: "none",
     sourceUnitId: "none",
     skill: "none",
@@ -170,7 +181,7 @@ function initialProjection(): AbilityCheckProficiencyBonusProjection {
 }
 
 function projectAbilityCheckProficiencyBonus(input: {
-  readonly lastResult: Exclude<AbilityCheckProficiencyBonusScenario, "init">;
+  readonly outcome: Exclude<AbilityCheckProficiencyBonusScenario, "init">;
   readonly build: CharacterBuild;
   readonly otherProficiencyBonus?: CharacterSheetAbilityCheckOtherProficiencyBonusState;
   readonly replayIndex: number;
@@ -188,7 +199,7 @@ function projectAbilityCheckProficiencyBonus(input: {
   );
 
   return {
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     projectionTag: result.tag,
     sourceUnitId:
       result.tag === "jackOfAllTrades" ? result.sourceUnitId : "none",
@@ -253,14 +264,14 @@ function baseBuild(input: {
 function normalizeAbilityCheckProficiencyBonusQuintState(
   raw: unknown,
 ): AbilityCheckProficiencyBonusProjection {
-  const state = quintStateRecord(raw);
+  const state = recordField(quintStateRecord(raw), "qState");
   return {
-    lastResult: scenarioField(state["qLastResult"]),
-    projectionTag: projectionTagField(state["qProjectionTag"]),
-    sourceUnitId: stringField(state["qSourceUnitId"], "qSourceUnitId"),
-    skill: skillField(state["qSkill"]),
-    bonus: numberFromQuintInt(state["qBonus"], "qBonus"),
-    replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
+    outcome: scenarioVariantField(state["outcome"]),
+    projectionTag: projectionTagField(state["projectionTag"]),
+    sourceUnitId: stringField(state["sourceUnitId"], "qState.sourceUnitId"),
+    skill: skillField(state["skill"]),
+    bonus: numberFromQuintInt(state["bonus"], "qState.bonus"),
+    replayIndex: numberFromQuintInt(state["replayIndex"], "qState.replayIndex"),
   };
 }
 
@@ -277,20 +288,16 @@ function compareAbilityCheckProficiencyBonusState(
   return true;
 }
 
-function scenarioField(raw: unknown): AbilityCheckProficiencyBonusScenario {
-  if (typeof raw === "string" && isAbilityCheckProficiencyBonusScenario(raw)) {
-    return raw;
-  }
+function scenarioVariantField(
+  raw: unknown,
+): AbilityCheckProficiencyBonusScenario {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const scenario = Object.entries(abilityCheckScenarioByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (scenario !== undefined) return scenario;
   throw new Error(
-    `Unknown Ability Check Proficiency Bonus scenario ${String(raw)}.`,
-  );
-}
-
-function isAbilityCheckProficiencyBonusScenario(
-  raw: string,
-): raw is AbilityCheckProficiencyBonusScenario {
-  return abilityCheckProficiencyBonusScenarios.some(
-    (scenario) => scenario === raw,
+    `Unknown Ability Check Proficiency Bonus outcome variant ${tag}.`,
   );
 }
 
@@ -320,6 +327,30 @@ function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
     throw new Error("Expected Quint Ability Check Proficiency Bonus state.");
   }
   return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag !== "string") {
+      throw new Error(`Expected string tag for Quint variant field ${field}.`);
+    }
+    return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function stringField(raw: unknown, field: string): string {

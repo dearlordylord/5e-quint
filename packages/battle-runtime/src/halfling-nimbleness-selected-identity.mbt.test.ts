@@ -60,14 +60,23 @@ defineSelectedIdentityWitness({
   ),
   quintStateField: "qState",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "scenarioResult" },
+  quintFieldNames: { lastResult: "scenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      MoveThroughLargerCreatureSpace: "moveThroughLargerCreatureSpace",
+      RejectOccupiedStop: "rejectOccupiedStop",
+      RejectMissingProfile: "rejectMissingProfile",
+      RejectSameSizeTraversal: "rejectSameSizeTraversal",
+    },
+  },
   projectionSchema: {
     traversalAccepted: "bool",
     acceptedMovementSpentFeet: "int",
     occupiedStopRejected: "bool",
     missingProfileRejected: "bool",
     sameSizeRejected: "bool",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: expectedProjection(),
   units: [

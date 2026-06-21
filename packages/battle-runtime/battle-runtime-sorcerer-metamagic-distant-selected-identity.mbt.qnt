@@ -5,12 +5,14 @@ module battleRuntimeSorcererMetamagicDistantSelectedIdentity {
 
   type Hole = | NoHole
 
+  type SorcererMetamagicDistantSelectedIdentityScenarioOutcome = | Init | DistantObjectLight
+
   type SorcererMetamagicDistantSelectedIdentityWitnessState = {
     sorceryPointsRemaining: int,
     lightEmitterCount: int,
     brightRadiusFeet: int,
     dimAdditionalFeet: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicDistantSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -21,7 +23,7 @@ module battleRuntimeSorcererMetamagicDistantSelectedIdentity {
     lightEmitterCount: int,
     brightRadiusFeet: int,
     dimAdditionalFeet: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicDistantSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -29,16 +31,16 @@ module battleRuntimeSorcererMetamagicDistantSelectedIdentity {
       lightEmitterCount: lightEmitterCount,
       brightRadiusFeet: brightRadiusFeet,
       dimAdditionalFeet: dimAdditionalFeet,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection(2, 0, 0, 0, "init", witnessInit(NoHole))
+  action init = recordProjection(2, 0, 0, 0, Init, witnessInit(NoHole))
 
   action doResolveDistantObjectLight = all {
     qState.protocol.result == WInit,
-    recordProjection(1, 1, 20, 20, "distantObjectLight", witnessResolved(NoHole))
+    recordProjection(1, 1, 20, 20, DistantObjectLight, witnessResolved(NoHole))
   }
 
   action step = any {

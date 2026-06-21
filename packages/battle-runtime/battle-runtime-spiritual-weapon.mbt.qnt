@@ -15,16 +15,13 @@ module battleRuntimeSpiritualWeaponMbt {
   var qForcePositionId: int
   var qProtocol: WitnessProtocol[Hole]
 
-  pure def qHoles: Set[Hole] = qProtocol.holes
+  pure def openHoles: Set[Hole] = qProtocol.holes
 
   pure def spiritualWeaponProtocolForProjection(
     holes: Set[Hole],
-    lastResult: str,
+    result: WitnessResult,
   ): WitnessProtocol[Hole] =
-    if (lastResult == "init") witnessInitWithHoles(holes)
-    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved(TargetChoice)
+    witnessProtocolFromResult(holes, TargetChoice, result)
 
   action init = all {
     qTargetHp' = 13,
@@ -33,44 +30,44 @@ module battleRuntimeSpiritualWeaponMbt {
     qForcePositionId' = 0,
     qProtocol' = spiritualWeaponProtocolForProjection(
       Set(TargetChoice, SpiritualWeaponForcePosition),
-      "init",
+      WInit,
     ),
   }
 
   action doFillCastTargetAndForce = all {
     qBonusActionAvailable,
-    qHoles == Set(TargetChoice, SpiritualWeaponForcePosition),
+    openHoles == Set(TargetChoice, SpiritualWeaponForcePosition),
     qTargetHp' = qTargetHp,
     qBonusActionAvailable' = qBonusActionAvailable,
     qCasterConcentrating' = qCasterConcentrating,
     qForcePositionId' = qForcePositionId,
-    qProtocol' = spiritualWeaponProtocolForProjection(Set(AttackRoll), "needsHoles"),
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(AttackRoll), WNeedsHoles),
   }
 
   action doFillCastAttackHit = all {
     qBonusActionAvailable,
     qTargetHp == 13,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     qTargetHp' = qTargetHp,
     qBonusActionAvailable' = false,
     qCasterConcentrating' = true,
     qForcePositionId' = 1,
-    qProtocol' = spiritualWeaponProtocolForProjection(Set(SpellDamageRoll), "needsHoles"),
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(SpellDamageRoll), WNeedsHoles),
   }
 
   action doFillCastDamageLow = all {
-    qHoles == Set(SpellDamageRoll),
+    openHoles == Set(SpellDamageRoll),
     qForcePositionId == 1,
     qTargetHp == 13,
     qTargetHp' = 8,
     qBonusActionAvailable' = false,
     qCasterConcentrating' = true,
     qForcePositionId' = qForcePositionId,
-    qProtocol' = spiritualWeaponProtocolForProjection(Set(), "resolved"),
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(), WResolved),
   }
 
   action doAdvanceToLaterCasterTurn = all {
-    qHoles == Set(),
+    openHoles == Set(),
     not(qBonusActionAvailable),
     qCasterConcentrating,
     qForcePositionId == 1,
@@ -78,19 +75,19 @@ module battleRuntimeSpiritualWeaponMbt {
     qBonusActionAvailable' = true,
     qCasterConcentrating' = qCasterConcentrating,
     qForcePositionId' = qForcePositionId,
-    qProtocol' = spiritualWeaponProtocolForProjection(qHoles, "resolved"),
+    qProtocol' = spiritualWeaponProtocolForProjection(openHoles, WResolved),
   }
 
   action doFillRepeatTargetAndForce = all {
     qBonusActionAvailable,
     qCasterConcentrating,
     qForcePositionId == 1,
-    qHoles == Set(),
+    openHoles == Set(),
     qTargetHp' = qTargetHp,
     qBonusActionAvailable' = qBonusActionAvailable,
     qCasterConcentrating' = qCasterConcentrating,
     qForcePositionId' = qForcePositionId,
-    qProtocol' = spiritualWeaponProtocolForProjection(Set(AttackRoll), "needsHoles"),
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(AttackRoll), WNeedsHoles),
   }
 
   action doFillRepeatAttackHit = all {
@@ -98,23 +95,23 @@ module battleRuntimeSpiritualWeaponMbt {
     qCasterConcentrating,
     qTargetHp == 8,
     qForcePositionId == 1,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     qTargetHp' = qTargetHp,
     qBonusActionAvailable' = qBonusActionAvailable,
     qCasterConcentrating' = qCasterConcentrating,
     qForcePositionId' = qForcePositionId,
-    qProtocol' = spiritualWeaponProtocolForProjection(Set(SpellDamageRoll), "needsHoles"),
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(SpellDamageRoll), WNeedsHoles),
   }
 
   action doFillRepeatDamageLow = all {
-    qHoles == Set(SpellDamageRoll),
+    openHoles == Set(SpellDamageRoll),
     qForcePositionId == 1,
     qTargetHp == 8,
     qTargetHp' = 3,
     qBonusActionAvailable' = false,
     qCasterConcentrating' = qCasterConcentrating,
     qForcePositionId' = 2,
-    qProtocol' = spiritualWeaponProtocolForProjection(Set(), "resolved"),
+    qProtocol' = spiritualWeaponProtocolForProjection(Set(), WResolved),
   }
 
   action step = any {

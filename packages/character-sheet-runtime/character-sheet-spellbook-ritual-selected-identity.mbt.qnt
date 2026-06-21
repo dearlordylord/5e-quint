@@ -5,19 +5,31 @@
 module characterSheetSpellbookRitualSelectedIdentityMbt {
   import spellbookRitualAccess.* from "../shared-algebras/proofs/rule-core/spellbook-ritual-access"
 
-  var qFeatureUnitId: str
-  var qSpellId: str
-  var qSpellcastingSourceUnitId: str
-  var qSpellbookContainsRitual: bool
-  var qPreparedContainsRitual: bool
-  var qInvocationAccepted: bool
-  var qSpellSlotCostKind: str
-  var qPreparationRequirement: str
-  var qRequiredSpellAccess: str
-  var qAdditionalCastingTimeMinutes: int
-  var qRequiresReadingSpellbook: bool
-  var qFirstLevelSpellSlotsExpended: int
-  var qLastResult: str
+  type CharacterSheetSpellbookRitualSelectedIdentityOutcome =
+    | CharacterSheetSpellbookRitualSelectedIdentityInit
+    | CharacterSheetSpellbookRitualSelectedIdentityInvoked
+    | CharacterSheetSpellbookRitualSelectedIdentityPreparedOnlyRejected
+    | CharacterSheetSpellbookRitualSelectedIdentityNonRitualRejected
+    | CharacterSheetSpellbookRitualSelectedIdentityMissingFeatureRejected
+    | CharacterSheetSpellbookRitualSelectedIdentityNonLeveledRejected
+
+  type CharacterSheetSpellbookRitualSelectedIdentityState = {
+    featureUnitId: str,
+    spellId: str,
+    spellcastingSourceUnitId: str,
+    spellbookContainsRitual: bool,
+    preparedContainsRitual: bool,
+    invocationAccepted: bool,
+    spellSlotCostKind: str,
+    preparationRequirement: str,
+    requiredSpellAccess: str,
+    additionalCastingTimeMinutes: int,
+    requiresReadingSpellbook: bool,
+    firstLevelSpellSlotsExpended: int,
+    outcome: CharacterSheetSpellbookRitualSelectedIdentityOutcome,
+  }
+
+  var qState: CharacterSheetSpellbookRitualSelectedIdentityState
 
   action recordProjection(
     featureUnitId: str,
@@ -32,25 +44,41 @@ module characterSheetSpellbookRitualSelectedIdentityMbt {
     additionalCastingTimeMinutes: int,
     requiresReadingSpellbook: bool,
     firstLevelSpellSlotsExpended: int,
-    lastResult: str,
+    outcome: CharacterSheetSpellbookRitualSelectedIdentityOutcome,
   ): bool = all {
-    qFeatureUnitId' = featureUnitId,
-    qSpellId' = spellId,
-    qSpellcastingSourceUnitId' = spellcastingSourceUnitId,
-    qSpellbookContainsRitual' = spellbookContainsRitual,
-    qPreparedContainsRitual' = preparedContainsRitual,
-    qInvocationAccepted' = invocationAccepted,
-    qSpellSlotCostKind' = spellSlotCostKind,
-    qPreparationRequirement' = preparationRequirement,
-    qRequiredSpellAccess' = requiredSpellAccess,
-    qAdditionalCastingTimeMinutes' = additionalCastingTimeMinutes,
-    qRequiresReadingSpellbook' = requiresReadingSpellbook,
-    qFirstLevelSpellSlotsExpended' = firstLevelSpellSlotsExpended,
-    qLastResult' = lastResult,
+    qState' = {
+      featureUnitId: featureUnitId,
+      spellId: spellId,
+      spellcastingSourceUnitId: spellcastingSourceUnitId,
+      spellbookContainsRitual: spellbookContainsRitual,
+      preparedContainsRitual: preparedContainsRitual,
+      invocationAccepted: invocationAccepted,
+      spellSlotCostKind: spellSlotCostKind,
+      preparationRequirement: preparationRequirement,
+      requiredSpellAccess: requiredSpellAccess,
+      additionalCastingTimeMinutes: additionalCastingTimeMinutes,
+      requiresReadingSpellbook: requiresReadingSpellbook,
+      firstLevelSpellSlotsExpended: firstLevelSpellSlotsExpended,
+      outcome: outcome,
+    },
   }
 
   action init =
-    recordProjection("none", "none", "none", false, false, false, "none", "none", "none", 0, false, 0, "init")
+    recordProjection(
+      "none",
+      "none",
+      "none",
+      false,
+      false,
+      false,
+      "none",
+      "none",
+      "none",
+      0,
+      false,
+      0,
+      CharacterSheetSpellbookRitualSelectedIdentityInit,
+    )
 
   pure def acceptedSpellbookRitualAccess(facts: SpellbookRitualAccessFacts): bool =
     match applySpellbookRitualAccess(facts) {
@@ -81,33 +109,103 @@ module characterSheetSpellbookRitualSelectedIdentityMbt {
   }
 
   action doInvokeSpellbookRitual = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetSpellbookRitualSelectedIdentityInit,
     acceptedSpellbookRitualAccess(spellbookRitualReplayFacts(SpellbookRitualTaggedLevelOnePlusSpell, SpellbookRitualInSpellbook, SpellbookRitualFeaturePresentForSpellbookSource)),
-    recordProjection("wizard_ritual_adept", "detect_magic", "class_wizard", true, false, true, "none", "not_required", "spellbook", 10, true, 0, "invoked"),
+    recordProjection(
+      "wizard_ritual_adept",
+      "detect_magic",
+      "class_wizard",
+      true,
+      false,
+      true,
+      "none",
+      "not_required",
+      "spellbook",
+      10,
+      true,
+      0,
+      CharacterSheetSpellbookRitualSelectedIdentityInvoked,
+    ),
   }
 
   action doRejectPreparedOnlyRitual = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetSpellbookRitualSelectedIdentityInit,
     rejectedSpellbookRitualAccess(spellbookRitualReplayFacts(SpellbookRitualTaggedLevelOnePlusSpell, SpellbookRitualPreparedOnlyNotInSpellbook, SpellbookRitualFeaturePresentForSpellbookSource)),
-    recordProjection("wizard_ritual_adept", "detect_magic", "class_wizard", false, true, false, "none", "none", "none", 0, false, 0, "prepared_only_rejected"),
+    recordProjection(
+      "wizard_ritual_adept",
+      "detect_magic",
+      "class_wizard",
+      false,
+      true,
+      false,
+      "none",
+      "none",
+      "none",
+      0,
+      false,
+      0,
+      CharacterSheetSpellbookRitualSelectedIdentityPreparedOnlyRejected,
+    ),
   }
 
   action doRejectNonRitualSpellbookSpell = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetSpellbookRitualSelectedIdentityInit,
     rejectedSpellbookRitualAccess(spellbookRitualReplayFacts(SpellbookNonRitualLevelOnePlusSpell, SpellbookRitualInSpellbook, SpellbookRitualFeaturePresentForSpellbookSource)),
-    recordProjection("none", "none", "none", false, false, false, "none", "none", "none", 0, false, 0, "non_ritual_rejected"),
+    recordProjection(
+      "none",
+      "none",
+      "none",
+      false,
+      false,
+      false,
+      "none",
+      "none",
+      "none",
+      0,
+      false,
+      0,
+      CharacterSheetSpellbookRitualSelectedIdentityNonRitualRejected,
+    ),
   }
 
   action doRejectMissingRitualAccessFeature = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetSpellbookRitualSelectedIdentityInit,
     rejectedSpellbookRitualAccess(spellbookRitualReplayFacts(SpellbookRitualTaggedLevelOnePlusSpell, SpellbookRitualInSpellbook, SpellbookRitualFeatureMissing)),
-    recordProjection("none", "none", "none", true, false, false, "none", "none", "none", 0, false, 0, "missing_feature_rejected"),
+    recordProjection(
+      "none",
+      "none",
+      "none",
+      true,
+      false,
+      false,
+      "none",
+      "none",
+      "none",
+      0,
+      false,
+      0,
+      CharacterSheetSpellbookRitualSelectedIdentityMissingFeatureRejected,
+    ),
   }
 
   action doRejectNonLeveledRitualSpellbookSpell = all {
-    qLastResult == "init",
+    qState.outcome == CharacterSheetSpellbookRitualSelectedIdentityInit,
     rejectedSpellbookRitualAccess(spellbookRitualReplayFacts(SpellbookNonLeveledSpell, SpellbookRitualInSpellbook, SpellbookRitualFeaturePresentForSpellbookSource)),
-    recordProjection("none", "none", "none", true, false, false, "none", "none", "none", 0, false, 0, "non_leveled_rejected"),
+    recordProjection(
+      "none",
+      "none",
+      "none",
+      true,
+      false,
+      false,
+      "none",
+      "none",
+      "none",
+      0,
+      false,
+      0,
+      CharacterSheetSpellbookRitualSelectedIdentityNonLeveledRejected,
+    ),
   }
 
   action stepInvokeSpellbookRitual = any {

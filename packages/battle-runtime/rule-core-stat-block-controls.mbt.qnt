@@ -19,21 +19,13 @@ module ruleCoreStatBlockControlsMbt {
   var qMultiattackContinuationOpen: bool
   var qProtocol: WitnessProtocol[str]
 
-  pure def qHoles: Set[str] = qProtocol.holes
-
-  pure def witnessInvalidReasonForProjection(reason: str): WitnessInvalidReason =
-    if (reason == "staleSubject") WStaleSubject else WInvalidFill
+  pure def openHoles: Set[str] = qProtocol.holes
 
   pure def witnessProtocolForProjection(
     holes: Set[str],
-    result: str,
-    invalidReason: str,
+    result: WitnessResult,
   ): WitnessProtocol[str] =
-    if (result == "init") witnessInit("Movement")
-    else if (result == "invalid")
-      witnessInvalidWithHoles(holes, witnessInvalidReasonForProjection(invalidReason))
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved("Movement")
+    witnessProtocolFromResult(holes, "Movement", result)
 
   pure def initialMovementRemainingFeet: int = 30
   pure def interleavedMovementFeet: int = 5
@@ -52,8 +44,7 @@ module ruleCoreStatBlockControlsMbt {
     movementRemainingFeet: int,
     multiattackContinuationOpen: bool,
     holes: Set[str],
-    result: str,
-    invalidReason: str,
+    result: WitnessResult,
   ): bool = all {
     qAttackActionAvailable' = attackActionAvailable,
     qBonusActionAvailable' = bonusActionAvailable,
@@ -62,12 +53,12 @@ module ruleCoreStatBlockControlsMbt {
     qMovementSpentFeet' = movementSpentFeet,
     qMovementRemainingFeet' = movementRemainingFeet,
     qMultiattackContinuationOpen' = multiattackContinuationOpen,
-    qProtocol' = witnessProtocolForProjection(holes, result, invalidReason),
+    qProtocol' = witnessProtocolForProjection(holes, result),
   }
 
   action init = recordProjection(
     true, true, 0, 0, 0, initialMovementRemainingFeet, false,
-    Set(), "init", "none"
+    Set(), WInit
   )
 
   action doStartMultiattack = {
@@ -78,7 +69,7 @@ module ruleCoreStatBlockControlsMbt {
     }
     val started = startStatBlockMultiattack(initialStatBlockControlState, profile)
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       qAttackActionAvailable,
       not(qMultiattackContinuationOpen),
       recordProjection(
@@ -90,14 +81,13 @@ module ruleCoreStatBlockControlsMbt {
         qMovementRemainingFeet,
         statBlockMultiattackContinuationOpen(started),
         Set(),
-        "resolved",
-        "none"
+        WResolved
       ),
     }
   }
 
   action doMoveDuringDispatch = all {
-    qHoles == Set(),
+    openHoles == Set(),
     qMultiattackContinuationOpen,
     qMovementRemainingFeet >= interleavedMovementFeet,
     multiattackDispatchSubjectPermitted(
@@ -113,13 +103,12 @@ module ruleCoreStatBlockControlsMbt {
       qMovementRemainingFeet - interleavedMovementFeet,
       qMultiattackContinuationOpen,
       Set(),
-      "resolved",
-      "none"
+      WResolved
     ),
   }
 
   action doRejectBonusActionDuringDispatch = all {
-    qHoles == Set(),
+    openHoles == Set(),
     qMultiattackContinuationOpen,
     not(multiattackDispatchSubjectPermitted(
       initialStatBlockControlState.with("multiattack", qDispatches),
@@ -134,13 +123,12 @@ module ruleCoreStatBlockControlsMbt {
       qMovementRemainingFeet,
       qMultiattackContinuationOpen,
       Set(),
-      "invalid",
-      "staleSubject"
+      WInvalid(WStaleSubject)
     ),
   }
 
   action doRejectOrdinaryActionDuringDispatch = all {
-    qHoles == Set(),
+    openHoles == Set(),
     qMultiattackContinuationOpen,
     not(multiattackDispatchSubjectPermitted(
       initialStatBlockControlState.with("multiattack", qDispatches),
@@ -155,8 +143,7 @@ module ruleCoreStatBlockControlsMbt {
       qMovementRemainingFeet,
       qMultiattackContinuationOpen,
       Set(),
-      "invalid",
-      "staleSubject"
+      WInvalid(WStaleSubject)
     ),
   }
 
@@ -166,7 +153,7 @@ module ruleCoreStatBlockControlsMbt {
       PrimaryStatBlockAttack
     )
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       qMultiattackContinuationOpen,
       qPendingPrimaryDispatches > 0,
       recordProjection(
@@ -178,8 +165,7 @@ module ruleCoreStatBlockControlsMbt {
         qMovementRemainingFeet,
         statBlockMultiattackContinuationOpen(dispatched),
         Set(),
-        "resolved",
-        "none"
+        WResolved
       ),
     }
   }
@@ -190,7 +176,7 @@ module ruleCoreStatBlockControlsMbt {
       SecondaryStatBlockAttack
     )
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       qMultiattackContinuationOpen,
       qPendingSecondaryDispatches > 0,
       recordProjection(
@@ -202,8 +188,7 @@ module ruleCoreStatBlockControlsMbt {
         qMovementRemainingFeet,
         statBlockMultiattackContinuationOpen(dispatched),
         Set(),
-        "resolved",
-        "none"
+        WResolved
       ),
     }
   }
@@ -213,7 +198,7 @@ module ruleCoreStatBlockControlsMbt {
       initialStatBlockControlState.with("multiattack", qDispatches)
     )
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       qMultiattackContinuationOpen,
       recordProjection(
         true,
@@ -224,8 +209,7 @@ module ruleCoreStatBlockControlsMbt {
         initialMovementRemainingFeet,
         statBlockMultiattackContinuationOpen(ended),
         Set(),
-        "resolved",
-        "none"
+        WResolved
       ),
     }
   }

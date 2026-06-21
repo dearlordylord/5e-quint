@@ -9,9 +9,10 @@ Owner: battle-runtime verification architecture
 Origin: architecture review 2026-06-10, candidate 2 ("deepen the 106 MBT
 drivers into one parity-driver kit"). Companion PRDs:
 `prd/02_QNT_BATTLE_PROTOCOL_KERNEL.md` (its new witnesses should be written
-through this kit) and `prd/04_TYPED_WITNESS_PROTOCOL.md` (the QNT-side half of
-the same seam; the kit isolates drivers from that migration). Recommended
-execution order: this PRD first.
+through this kit) and the typed protocol-storage guidance in
+`docs/adr/0001-forest-of-qnt-slices.md` plus
+`plans/RALPH_WITNESS_PROTOCOL_STORAGE_MIGRATION.md`. Recommended execution
+order: this PRD first.
 
 ## Context Primer For A Fresh Agent
 
@@ -95,14 +96,14 @@ Kit surface (names indicative, implementer refines against
    bigint), bool, string-literal unions, variant tag + parameterized variant
    value (per the CLAUDE.md `{tag, value}` gotcha), `Set`, `List`, nested
    records. One error style: precise field-named failures.
-2. **Witness-protocol decode + recorder.** The shared protocol shape
-   (`holes`, `lastResult`, `lastInvalidReason`) decoded from spec state once,
-   and a production-side recorder that wraps
+2. **Witness-protocol decode + recorder.** The shared typed protocol record
+   (`WitnessProtocol[h]`: open holes plus `WitnessResult`) decoded from spec
+   state once, and a production-side recorder that wraps
    `resolveBattleSubject`/`resolveBattleInterrupt` calls and folds
-   `BattleResolutionResult` into the same shape (today's duplicated
+   `BattleResolutionResult` into the same semantic shape (today's duplicated
    `submit`/`recordResult` pattern). This module is the single point that
-   absorbs `prd/04`'s migration from string vars to a typed protocol record —
-   drivers should not notice that change.
+   absorbs storage-shape changes, so drivers should not parse protocol outcome
+   or invalid reason from loose state fields.
 3. **Run conventions.** `focusedMbtMaxSteps` (domain cap wins over
    `MBT_STEPS`), `MBT_TRACES` default 1, standard timeout, spec-path
    resolution relative to the test file.
@@ -159,7 +160,7 @@ for a typical literal witness.
   `*.mbt.test.ts` re-declares kit-owned helper names. Keep the list in one
   place, named after the invariant.
 - Kit code follows repo TS conventions: branded/narrow types, typed failures
-  (no throwing on ordinary decode failure of *domain* outcomes — but malformed
+  (no throwing on ordinary decode failure of _domain_ outcomes — but malformed
   ITF state from the evaluator is a harness invariant violation, where a
   precise thrown error is acceptable and matches current driver style).
 
@@ -217,12 +218,12 @@ lines, above the 51,528-line target. Moving large bodies into imported support
 modules was not accepted as a real reduction because it preserved comparable
 driver source.
 
-This miss is recorded as a PRD/03 closeout finding, not as a dependency for
-`prd/04_TYPED_WITNESS_PROTOCOL.md`. The typed witness-protocol lane depends on
-the completed driver kit and migrated driver surface, not on satisfying this
-line-count success metric. Future work may either add explicit extraction scope
-to remove the remaining comparable-source gap or revise this PRD's acceptance
-target; neither blocks PDS-A10+ witness-protocol tasks.
+This miss is recorded as a PRD/03 closeout finding, not as a dependency for the
+typed protocol-storage migration. That lane depends on the completed driver kit
+and migrated driver surface, not on satisfying this line-count success metric.
+Future work may either add explicit extraction scope to remove the remaining
+comparable-source gap or revise this PRD's acceptance target; neither blocks
+PDS-A10+ witness-protocol tasks.
 
 ## Verification
 
@@ -238,7 +239,8 @@ target; neither blocks PDS-A10+ witness-protocol tasks.
 
 ## Out of Scope
 
-- Changing any `*.mbt.qnt` witness (that is `prd/04`).
+- Changing any `*.mbt.qnt` witness (owned by the typed protocol-storage
+  migration).
 - Publishing changes to `@firfi/quint-connect`.
 - New QNT coverage (that is `prd/02`).
 - A Rust harness implementation (cleanroom experiment owns it; this PRD only

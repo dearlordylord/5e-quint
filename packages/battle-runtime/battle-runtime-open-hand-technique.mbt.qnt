@@ -24,15 +24,14 @@ module battleRuntimeOpenHandTechniqueMbt {
   pure def qTargetOpportunityAttackDenied: bool = qState.qTargetOpportunityAttackDenied
   pure def qTargetProne: bool = qState.qTargetProne
   pure def qPushDistanceFeet: int = qState.qPushDistanceFeet
-  pure def qLastResult: OpenHandTechniqueScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: OpenHandTechniqueScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: OpenHandTechniqueScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: OpenHandTechniqueScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
+    else if (scenarioOutcome.in(Set(RejectNonFlurry, RejectPushTooFar, RejectTopplePushDisposition))) witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -41,56 +40,55 @@ module battleRuntimeOpenHandTechniqueMbt {
     targetProne: bool,
     pushDistanceFeet: int,
     lastResult: OpenHandTechniqueScenarioOutcome,
-    lastInvalidReason: str,
   ): bool = all {
     qState' = {
       qTargetOpportunityAttackDenied: targetOpportunityAttackDenied,
       qTargetProne: targetProne,
       qPushDistanceFeet: pushDistanceFeet,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, lastInvalidReason),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
-  action init = recordProjection(false, false, 0, Init, "")
+  action init = recordProjection(false, false, 0, Init)
 
   action doAddle = all {
-    qLastResult == Init,
-    recordProjection(true, false, 0, Addle, ""),
+    scenarioOutcome == Init,
+    recordProjection(true, false, 0, Addle),
   }
 
   action doPushSaveSucceeded = all {
-    qLastResult == Init,
-    recordProjection(false, false, 0, PushSaveSucceeded, ""),
+    scenarioOutcome == Init,
+    recordProjection(false, false, 0, PushSaveSucceeded),
   }
 
   action doPushSaveFailed = all {
-    qLastResult == Init,
-    recordProjection(false, false, 10, PushSaveFailed, ""),
+    scenarioOutcome == Init,
+    recordProjection(false, false, 10, PushSaveFailed),
   }
 
   action doToppleSaveSucceeded = all {
-    qLastResult == Init,
-    recordProjection(false, false, 0, ToppleSaveSucceeded, ""),
+    scenarioOutcome == Init,
+    recordProjection(false, false, 0, ToppleSaveSucceeded),
   }
 
   action doToppleSaveFailed = all {
-    qLastResult == Init,
-    recordProjection(false, true, 0, ToppleSaveFailed, ""),
+    scenarioOutcome == Init,
+    recordProjection(false, true, 0, ToppleSaveFailed),
   }
 
   action doRejectNonFlurry = all {
-    qLastResult == Init,
-    recordProjection(false, false, 0, RejectNonFlurry, "invalidFill"),
+    scenarioOutcome == Init,
+    recordProjection(false, false, 0, RejectNonFlurry),
   }
 
   action doRejectPushTooFar = all {
-    qLastResult == Init,
-    recordProjection(false, false, 0, RejectPushTooFar, "invalidFill"),
+    scenarioOutcome == Init,
+    recordProjection(false, false, 0, RejectPushTooFar),
   }
 
   action doRejectTopplePushDisposition = all {
-    qLastResult == Init,
-    recordProjection(false, false, 0, RejectTopplePushDisposition, "invalidFill"),
+    scenarioOutcome == Init,
+    recordProjection(false, false, 0, RejectTopplePushDisposition),
   }
 
   action step = any {

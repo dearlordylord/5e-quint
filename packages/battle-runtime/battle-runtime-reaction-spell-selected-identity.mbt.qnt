@@ -31,15 +31,13 @@ module battleRuntimeReactionSpellSelectedIdentityMbt {
   pure def qFirstLevelSlotsExpended: int = qState.qFirstLevelSlotsExpended
   pure def qSecondLevelSlotsExpended: int = qState.qSecondLevelSlotsExpended
   pure def qThirdLevelSlotsExpended: int = qState.qThirdLevelSlotsExpended
-  pure def qLastResult: ReactionSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: ReactionSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: ReactionSpellSelectedIdentityScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: ReactionSpellSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -64,23 +62,23 @@ module battleRuntimeReactionSpellSelectedIdentityMbt {
       qSecondLevelSlotsExpended: secondLevelSlotsExpended,
       qThirdLevelSlotsExpended: thirdLevelSlotsExpended,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
   action init = recordProjection(12, 12, 10, true, 0, 0, 0, 0, Init)
 
   action doResolveShieldReactionSpellHit = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(12, 12, 15, false, 0, 1, 0, 0, Resolved),
   }
 
   action doResolveHellishRebukeFailedSavingThrow = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(11, 9, 10, false, 0, 0, 1, 0, Resolved),
   }
 
   action doResolveCounterspellMagicMissileCast = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(12, 12, 10, false, 0, 0, 0, 1, Resolved),
   }
 

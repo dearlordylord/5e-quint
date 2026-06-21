@@ -49,15 +49,13 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
   pure def qInvalidTargetRejected: bool = qState.qInvalidTargetRejected
   pure def qDamageReductionType: str = qState.qDamageReductionType
   pure def qDamageReductionUsed: bool = qState.qDamageReductionUsed
-  pure def qLastResult: RollModifierBuffSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: RollModifierBuffSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: RollModifierBuffSelectedIdentityScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: RollModifierBuffSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -96,7 +94,7 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
       qDamageReductionType: damageReductionType,
       qDamageReductionUsed: damageReductionUsed,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
   action init = recordProjection(
@@ -105,7 +103,7 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
   )
 
   action doBlessAttackAndSaveModifier = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       true, 12, 0, 1, 1, 10, 12, "+", true, true, false,
       "none", false, "none", false, Bless,
@@ -113,7 +111,7 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
   }
 
   action doBaneFailedSavePenalty = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       true, 12, 0, 1, 0, 10, 12, "-", true, true, false,
       "none", false, "none", false, Bane,
@@ -121,7 +119,7 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
   }
 
   action doGuidanceSkillAbilityCheckModifier = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       true, 12, 1, 0, 0, 10, 12, "+", false, false, true,
       "stealth", true, "none", false, Guidance,
@@ -130,7 +128,7 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
 
   action doResistanceReducesMatchingDamage = {
     all {
-      qLastResult == Init,
+      scenarioOutcome == Init,
       recordProjection(
         true, 12, 1, 0, 0, 10, 12, "none", false, false, false,
         "none", false, "bludgeoning", true,
@@ -140,7 +138,7 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
   }
 
   action doShieldOfFaithArmorClassBonus = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       true, 12, 0, 1, 0, 12, 12, "none", false, false, false,
       "none", false, "none", false, ShieldOfFaith,

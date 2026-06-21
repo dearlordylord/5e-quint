@@ -30,14 +30,13 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
   pure def qOwnerActionAvailable: bool = qState.qOwnerActionAvailable
   pure def qOwnerSpellSlotCommitted: bool = qState.qOwnerSpellSlotCommitted
   pure def qTargetHp: int = qState.qTargetHp
-  pure def qLastResult: FindFamiliarSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: FindFamiliarSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def findFamiliarSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: FindFamiliarSelectedIdentityScenarioOutcome,
-    _scenarioInvalidReason: str,
+    scenarioOutcome: FindFamiliarSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -63,7 +62,7 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
       qOwnerSpellSlotCommitted: ownerSpellSlotCommitted,
       qTargetHp: targetHp,
       qScenarioOutcome: lastResult,
-      protocol: findFamiliarSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: findFamiliarSelectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
 
@@ -80,7 +79,7 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
   )
 
   action doCastFindFamiliar = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordFindFamiliarState(
       "present",
       "cat",
@@ -95,7 +94,7 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
   }
 
   action doRecastFindFamiliarReplacement = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordFindFamiliarState(
       "present",
       "rat",
@@ -110,7 +109,7 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
   }
 
   action doDismissAndReappearFindFamiliar = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordFindFamiliarState(
       "present",
       "cat",
@@ -125,7 +124,7 @@ module battleRuntimeFindFamiliarSelectedIdentityMbt {
   }
 
   action doDeliverTouchSpellThroughFindFamiliar = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordFindFamiliarState(
       "present",
       "cat",

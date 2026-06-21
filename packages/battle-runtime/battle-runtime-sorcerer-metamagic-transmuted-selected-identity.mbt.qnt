@@ -5,13 +5,15 @@ module battleRuntimeSorcererMetamagicTransmutedSelectedIdentityMbt {
 
   type Hole = | NoHole
 
+  type SorcererMetamagicTransmutedSelectedIdentityScenarioOutcome = | Init | TransmutedSaveGatedDamage | TransmutedSpellAttack
+
   type SorcererMetamagicTransmutedSelectedIdentityWitnessState = {
     magicActionAvailable: bool,
     bonusActionAvailable: bool,
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicTransmutedSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -23,7 +25,7 @@ module battleRuntimeSorcererMetamagicTransmutedSelectedIdentityMbt {
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicTransmutedSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -32,27 +34,25 @@ module battleRuntimeSorcererMetamagicTransmutedSelectedIdentityMbt {
       sorceryPointsRemaining: sorceryPointsRemaining,
       targetHp: targetHp,
       targetActiveEffectCount: targetActiveEffectCount,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection(true, true, 4, 10, 0, "init", witnessInit(NoHole))
+  action init = recordProjection(true, true, 4, 10, 0, Init, witnessInit(NoHole))
 
   action doResolveTransmutedSaveGatedDamage = all {
     qState.protocol.result == WInit,
     recordProjection(
-      false, true, 3, 1, 0, "transmutedSaveGatedDamage",
-      witnessResolved(NoHole),
-    )
+      false, true, 3, 1, 0, TransmutedSaveGatedDamage,
+      witnessResolved(NoHole))
   }
 
   action doResolveTransmutedSpellAttack = all {
     qState.protocol.result == WInit,
     recordProjection(
-      false, true, 3, 3, 1, "transmutedSpellAttack",
-      witnessResolved(NoHole),
-    )
+      false, true, 3, 3, 1, TransmutedSpellAttack,
+      witnessResolved(NoHole))
   }
 
   action step = any {

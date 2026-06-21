@@ -18,8 +18,8 @@ module battleRuntimeSpikeGrowthMovementHazardMbt {
   var qProtocol: WitnessProtocol[Hole]
   var qScenarioOutcome: SpikeGrowthMovementHazardScenarioOutcome
 
-  pure def qHoles: Set[Hole] = qProtocol.holes
-  pure def qLastResult: SpikeGrowthMovementHazardScenarioOutcome = qScenarioOutcome
+  pure def openHoles: Set[Hole] = qProtocol.holes
+  pure def scenarioOutcome: SpikeGrowthMovementHazardScenarioOutcome = qScenarioOutcome
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -38,9 +38,9 @@ module battleRuntimeSpikeGrowthMovementHazardMbt {
 
   pure def spikeGrowthProtocolForProjection(
     holes: Set[Hole],
-    scenarioResult: SpikeGrowthMovementHazardScenarioOutcome,
+    scenarioOutcome: SpikeGrowthMovementHazardScenarioOutcome,
   ): WitnessProtocol[Hole] =
-    if (scenarioResult == Init) witnessInit("MovementDamage")
+    if (scenarioOutcome == Init) witnessInit("MovementDamage")
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved("MovementDamage")
 
@@ -85,7 +85,7 @@ module battleRuntimeSpikeGrowthMovementHazardMbt {
     qActionAvailable,
     qSpellAvailable,
     not(qHazardActive),
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordSpikeGrowthState(
       casterTurnRole,
       false,
@@ -103,7 +103,7 @@ module battleRuntimeSpikeGrowthMovementHazardMbt {
     qCurrentTurnRole == casterTurnRole,
     qHazardActive,
     qCasterConcentrating,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordSpikeGrowthState(
       targetTurnRole,
       true,
@@ -121,7 +121,7 @@ module battleRuntimeSpikeGrowthMovementHazardMbt {
     qCurrentTurnRole == targetTurnRole,
     qHazardActive,
     qMovementSpentFeet == 0,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordSpikeGrowthState(
       targetTurnRole,
       qActionAvailable,
@@ -140,7 +140,7 @@ module battleRuntimeSpikeGrowthMovementHazardMbt {
     qHazardActive,
     qTargetHp == targetFullHp,
     qMovementSpentFeet == 0,
-    qHoles == movementDamageHoles,
+    openHoles == movementDamageHoles,
     recordSpikeGrowthState(
       targetTurnRole,
       qActionAvailable,
@@ -157,7 +157,7 @@ module battleRuntimeSpikeGrowthMovementHazardMbt {
   action doBreakConcentration = all {
     qHazardActive,
     qCasterConcentrating,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordSpikeGrowthState(
       qCurrentTurnRole,
       qActionAvailable,
