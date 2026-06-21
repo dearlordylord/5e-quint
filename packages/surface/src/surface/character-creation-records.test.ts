@@ -604,6 +604,7 @@ describe("character-creation Surface records", () => {
               "shield_of_faith",
               "healing_word",
               "inflict_wounds",
+              "sanctuary",
               { spellId: "aid", spellLevel: 2 },
             ],
             cantrips: ["guidance", "sacred_flame", "thaumaturgy"],

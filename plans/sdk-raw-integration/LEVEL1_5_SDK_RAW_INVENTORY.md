@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 454 |
+| sdk-scenario-needed | 453 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 50 |
+| seed-scenario-present | 51 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -85,7 +85,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 92 |
+| battle-spell-sdk | 91 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 10 |
 | owner-review | 6 |
-| seed-present | 50 |
+| seed-present | 51 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -170,6 +170,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy` / `spell-level-0:Cleric:thaumaturgy`: level1-sdk-raw-integration: Cleric Thaumaturgy Booming Voice cantrip resolves from a level-1 sheet with Advantage on Charisma (Intimidation) Ability Checks
 - `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt` / `spell-level-1:Cleric:guiding_bolt`: level1-sdk-raw-integration: Cleric Guiding Bolt resolves from a level-1 sheet as a ranged Spell Attack with Advantage on the next Attack Roll against the target before the caster's next turn ends
 - `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds` / `spell-level-1:Cleric:inflict_wounds`: level1-sdk-raw-integration: Cleric Inflict Wounds resolves from a level-1 sheet as a Constitution save with Necrotic damage
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary` / `spell-level-1:Cleric:sanctuary`: level1-sdk-raw-integration: Cleric Sanctuary resolves from a level-1 sheet as a one-minute Bonus Action ward with a Wisdom save interdiction
 - `srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray` / `spell-level-0:Warlock:poison_spray`: level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage
 - `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray` / `spell-level-0:Wizard:poison_spray`: level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage
 - `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch` / `spell-level-0:Sorcerer:chill_touch`: level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention

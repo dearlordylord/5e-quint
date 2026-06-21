@@ -245,6 +245,17 @@ Current generated findings:
   access omission for the already-authored SRD `inflict_wounds` spell. It does
   not claim actual touch-distance enforcement or higher-level Spell Slot
   scaling.
+- The level-1 Sanctuary seed covers the Cleric spell-list row through level-1
+  Cleric character creation, prepared-spell sheet projection, Bonus Action
+  spell-slot battle act discovery, one-creature target-list hole shape with a
+  table-spatial witness, 30-foot range projection, one-minute non-Concentration
+  `sanctuaryWard` Spell Effect storage, Wisdom Saving Throw interdiction facts,
+  Bonus Action spend, current-turn Spell Slot commitment, and level-1 Spell Slot
+  spend. The seed exposed and fixed a narrow `class_cleric` prepared spell
+  access omission for the already-authored SRD `sanctuary` spell. It does not
+  claim the full choose-new-target-or-lose interdiction matrix, area-effect
+  exclusion, early-end lifecycle, target-legality derivation, or higher-level
+  Spell Slot scaling; those remain lower battle-runtime obligations.
 - The level-1 Chill Touch seed covers the Sorcerer, Warlock, and Wizard
   cantrip spell-list rows through level-1 sheet projection, battle act
   discovery, Touch-range melee Spell Attack resolution, creature-or-object
@@ -300,8 +311,8 @@ Current generated findings:
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
   closure reviews, 12 explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
-- Across all level 1-5 rows, the current SDK dispositions are: 50 seed scenarios
-  present, 454 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+- Across all level 1-5 rows, the current SDK dispositions are: 51 seed scenarios
+  present, 453 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
   144 unresolved closure reviews, 11 table-only closures, 60 explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
@@ -515,8 +526,8 @@ First implementation slice:
   and Wizard sheets, plus class-specific rows when SRD access differs such as
   Bard Dissonant Whispers, Bard Vicious Mockery, Druid/Warlock Poison Spray,
   Druid Produce Flame, Cleric Sacred Flame, Cleric Thaumaturgy, Cleric Guiding
-  Bolt, Cleric Inflict Wounds, Sorcerer Sorcerous Burst, Warlock Chill Touch,
-  and Warlock Eldritch Blast.
+  Bolt, Cleric Inflict Wounds, Cleric Sanctuary, Sorcerer Sorcerous Burst,
+  Warlock Chill Touch, and Warlock Eldritch Blast.
 - Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
   is Warlock level 3, not character level 1.
 

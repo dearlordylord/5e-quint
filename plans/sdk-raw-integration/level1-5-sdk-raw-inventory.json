@@ -20602,6 +20602,20 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Sanctuary",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Sanctuary resolves from a level-1 sheet as a one-minute Bonus Action ward with a Wisdom save interdiction",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:31-76",
+          ".references/srd-5.2.1/Classes/Cleric.md:158-175",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-118",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:142-148",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:156-176",
+          ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:22-31"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -20609,7 +20623,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 175,
         "lineStart": 175,
@@ -56338,16 +56352,16 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 454,
+      "sdk-scenario-needed": 453,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 50,
+      "seed-scenario-present": 51,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 401,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 92,
+      "battle-spell-sdk": 91,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -56357,7 +56371,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 10,
       "owner-review": 6,
-      "seed-present": 50,
+      "seed-present": 51,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -58987,61 +59001,6 @@
       "sampleConcepts": [
         "Cleric spell list Resistance",
         "Druid spell list Resistance"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "sanctuary"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:sanctuary",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"sanctuary\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:175"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "sanctuary",
-          "className": "Cleric",
-          "concept": "Cleric spell list Sanctuary",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 175,
-            "lineStart": 175,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Sanctuary"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -65766,6 +65725,69 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Inflict Wounds"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "sanctuary"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-cleric-sanctuary",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Cleric:sanctuary\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:158-175",
+        ".references/srd-5.2.1/Classes/Cleric.md:175",
+        ".references/srd-5.2.1/Classes/Cleric.md:31-76",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:22-31",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-118",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:142-148",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:156-176",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "sanctuary",
+          "className": "Cleric",
+          "concept": "Cleric spell list Sanctuary",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 175,
+            "lineStart": 175,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Sanctuary"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -86076,6 +86098,110 @@
         "build: clericBuild,",
         "casterId: inflictWoundsClericId,",
         "expectedSpellSaveDc: 12,"
+      ]
+    },
+    {
+      "candidateUnitId": "sanctuary",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Sanctuary resolves from a level-1 sheet as a one-minute Bonus Action ward with a Wisdom save interdiction",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:31-76",
+          ".references/srd-5.2.1/Classes/Cleric.md:158-175",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-100",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-118",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:142-148",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:156-176",
+          ".references/srd-5.2.1/Spells/Descriptions-S-Z.md:22-31"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneClericSanctuaryBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneClericBuild({",
+            "draftIdText: \"draft:l1-sdk-cleric-sanctuary\"",
+            "expectedBuildLabel: \"Cleric Sanctuary\"",
+            "sanctuarySpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneClericBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "\"class_cleric\"",
+            "\"class_cantrip_choices\"",
+            "\"class_prepared_spell_choices\"",
+            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneSanctuary",
+          "needles": [
+            "sanctuaryBonusActionSpellSlotAct(",
+            "\"sanctuaryTargetingInterdiction\"",
+            "\"spellTargetList\"",
+            "label: \"Sanctuary targets\"",
+            "minTargets: 1",
+            "maxTargets: 1",
+            "requiresTableSpatialFact: true",
+            "choices: expect.arrayContaining([input.wardedId])",
+            "access: { tag: \"prepared\" }",
+            "resource: { tag: \"spellSlot\", slotLevel: 1 }",
+            "actionCost: \"bonusAction\"",
+            "targeting: { kind: \"targetList\", minTargets: 1, maxTargets: 1 }",
+            "rangeFeet: movementFeet(30)",
+            "kind: \"sanctuaryWard\"",
+            "sourceSpellId: sanctuarySpellId",
+            "sourceCombatantId: input.casterId",
+            "save: { ability: \"wis\", dc: { kind: \"caster_spell_save_dc\" } }",
+            "durationTicks: sanctuaryDurationTicks",
+            "sanctuaryTargetListFill(",
+            "expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);",
+            "kind: \"committed\"",
+            "combatantId: input.casterId",
+            "expect(caster.concentration).toBeNull();",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        },
+        {
+          "anchor": "function sanctuaryBonusActionSpellSlotAct",
+          "needles": [
+            "candidate.subject.tag === \"bonusActionSpell\"",
+            "candidate.subject.invocation.tag === \"spellSlot\"",
+            "candidate.subject.invocation.spellId === sanctuarySpellId",
+            "candidate.subject.invocation.slotLevel === 1",
+            "\"sanctuaryTargetingInterdiction\"",
+            "return act;"
+          ]
+        },
+        {
+          "anchor": "function sanctuaryTargetListFill",
+          "needles": [
+            "kind: \"spellTargetList\"",
+            "value: { targetIds: [targetId] }",
+            "kind: \"spellTarget\"",
+            "casterId",
+            "targetId",
+            "spellId: sanctuarySpellId"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
+      "rowKey": "spell-level-1:Cleric:sanctuary",
+      "tracerNeedles": [
+        "const clericBuild = finalizedLevelOneClericSanctuaryBuild();",
+        "sourceUnitId: \"class_cleric\"",
+        "spellcastingAbility: \"wis\"",
+        "preparedSpells: expect.arrayContaining([sanctuarySpellId])",
+        "build: clericBuild,",
+        "casterId: sanctuaryClericId,",
+        "wardedId: sanctuaryWardedAllyId,"
       ]
     },
     {

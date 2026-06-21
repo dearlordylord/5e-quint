@@ -117,6 +117,10 @@
           "spellLevel": 1
         },
         {
+          "spellId": "sanctuary",
+          "spellLevel": 1
+        },
+        {
           "spellId": "aid",
           "spellLevel": 2
         }

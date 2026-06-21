@@ -70,6 +70,7 @@ let cleric =
                 , { spellId = "shield_of_faith", spellLevel = 1 }
                 , { spellId = "healing_word", spellLevel = 1 }
                 , { spellId = "inflict_wounds", spellLevel = 1 }
+                , { spellId = "sanctuary", spellLevel = 1 }
                 , { spellId = "aid", spellLevel = 2 }
                 ]
               : List ClassSpellAccess

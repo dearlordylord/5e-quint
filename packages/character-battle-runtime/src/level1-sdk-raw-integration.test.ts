@@ -123,6 +123,10 @@ const sacredFlameClericId = combatantId(
   "combatant:l1-sdk-sacred-flame-cleric",
 );
 const thaumaturgyClericId = combatantId("combatant:l1-sdk-thaumaturgy-cleric");
+const sanctuaryClericId = combatantId("combatant:l1-sdk-sanctuary-cleric");
+const sanctuaryWardedAllyId = combatantId(
+  "combatant:l1-sdk-sanctuary-warded-ally",
+);
 const guidingBoltClericId = combatantId(
   "combatant:l1-sdk-guiding-bolt-cleric",
 );
@@ -214,6 +218,7 @@ const poisonSpraySpellId = "poison_spray";
 const produceFlameSpellId = "produce_flame";
 const sacredFlameSpellId = "sacred_flame";
 const thaumaturgySpellId = "thaumaturgy";
+const sanctuarySpellId = "sanctuary";
 const guidingBoltSpellId = "guiding_bolt";
 const inflictWoundsSpellId = "inflict_wounds";
 const chillTouchSpellId = "chill_touch";
@@ -230,6 +235,7 @@ const magicMissileSpellId = "magic_missile";
 const thunderwaveSpellId = "thunderwave";
 const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
 const thaumaturgyDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
+const sanctuaryDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 
 describe("level 1 SDK RAW integration", () => {
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
@@ -1039,6 +1045,28 @@ describe("level 1 SDK RAW integration", () => {
       build: clericBuild,
       casterId: inflictWoundsClericId,
       expectedSpellSaveDc: 12,
+    });
+  });
+
+  test("Cleric Sanctuary resolves from a level-1 sheet as a one-minute Bonus Action ward with a Wisdom save interdiction", () => {
+    const clericBuild = finalizedLevelOneClericSanctuaryBuild();
+
+    expect(clericBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([sanctuarySpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneSanctuary({
+      battleIdText: "battle:l1-sdk-sanctuary-cleric",
+      characterIdText: "character:l1-sdk-sanctuary-cleric",
+      build: clericBuild,
+      casterId: sanctuaryClericId,
+      wardedId: sanctuaryWardedAllyId,
     });
   });
 
@@ -2993,6 +3021,102 @@ function assertLevelOneInflictWounds(input: {
   ]);
 }
 
+function assertLevelOneSanctuary(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly wardedId: CombatantId;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 10,
+      }),
+      characterSheet({
+        characterIdText: "character:l1-sdk-sanctuary-warded-ally",
+        build: levelOneSingleClassBuild({
+          classUnitId: "class_fighter",
+          weaponUnitId: "weapon_longsword",
+        }),
+        combatantId: input.wardedId,
+        initiative: 15,
+        maximumHp: 12,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = sanctuaryBonusActionSpellSlotAct(state, input.casterId);
+  const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
+
+  expect(targetList).toMatchObject({
+    label: "Sanctuary targets",
+    minTargets: 1,
+    maxTargets: 1,
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([input.wardedId]),
+    spell: {
+      access: { tag: "prepared" },
+      procedure: "sanctuaryTargetingInterdiction",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      actionCost: "bonusAction",
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+      rangeFeet: movementFeet(30),
+      activeEffect: {
+        kind: "sanctuaryWard",
+        sourceSpellId: sanctuarySpellId,
+        sourceCombatantId: input.casterId,
+        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: sanctuaryDurationTicks,
+        },
+      },
+    },
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        sanctuaryTargetListFill(targetList, input.casterId, input.wardedId),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, input.wardedId).activeEffects).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "sanctuaryWard",
+        sourceSpellId: sanctuarySpellId,
+        sourceCombatantId: input.casterId,
+        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: sanctuaryDurationTicks,
+        },
+      }),
+    ]),
+  );
+  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(caster.concentration).toBeNull();
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
 function assertLevelOneGuidingBolt(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -4794,6 +4918,20 @@ function finalizedLevelOneClericInflictWoundsBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneClericSanctuaryBuild(): CharacterBuild {
+  return finalizedLevelOneClericBuild({
+    draftIdText: "draft:l1-sdk-cleric-sanctuary",
+    expectedBuildLabel: "Cleric Sanctuary",
+    cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
+    preparedSpells: [
+      "bless",
+      "cure_wounds",
+      guidingBoltSpellId,
+      sanctuarySpellId,
+    ],
+  });
+}
+
 function finalizedLevelOneClericBuild(input: {
   readonly draftIdText: string;
   readonly expectedBuildLabel: string;
@@ -6007,6 +6145,27 @@ function cantripCastHeldLightBonusActionSpellAct(
   return act;
 }
 
+function sanctuaryBonusActionSpellSlotAct(
+  state: BattleState,
+  actorId: CombatantId,
+): CastBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is CastBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.mode.tag === "cast" &&
+      candidate.subject.invocation.tag === "spellSlot" &&
+      candidate.subject.invocation.spellId === sanctuarySpellId &&
+      candidate.subject.invocation.slotLevel === 1 &&
+      candidate.subject.invocation.procedure ===
+        "sanctuaryTargetingInterdiction",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Sanctuary Bonus Action spell-slot act.");
+  }
+  return act;
+}
+
 function hasCantripSpellInvocationAct(
   state: BattleState,
   actorId: CombatantId,
@@ -6163,6 +6322,21 @@ function spellTargetFill(
     holeId: hole.holeId,
     value: targetId,
     spatialFacts: [{ kind: "spellTarget", casterId, targetId, spellId }],
+  };
+}
+
+function sanctuaryTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds: [targetId] },
+    spatialFacts: [
+      { kind: "spellTarget", casterId, targetId, spellId: sanctuarySpellId },
+    ],
   };
 }
 
