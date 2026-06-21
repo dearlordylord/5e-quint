@@ -8,7 +8,8 @@
     "component-first",
     "substrate-first",
     "catalog-after-substrate",
-    "replay-refresh-only"
+    "replay-refresh-only",
+    "source-qnt-corpus-blocker"
   ],
   "defaultRoutingPolicy": [
     {
@@ -168,6 +169,2989 @@
             ]
           }
         }
+      ]
+    }
+  ],
+  "levelDenominators": [
+    {
+      "denominatorId": "level-1-5-cleanroom-route-v1",
+      "purpose": "Defines the driver and branch denominator for routing current cleanroom branch coverage through reducer-route QNT architecture up to character level 5.",
+      "characterLevels": [1, 2, 3, 4, 5],
+      "includedSpellLevels": [0, 1, 2, 3],
+      "excludedCharacterLevels": [6, 7],
+      "excludedSpellLevels": [4, 5],
+      "sourceBranchInventory": {
+        "driverFiles": 97,
+        "branchObligations": 699,
+        "currentInScopeBranchObligations": 646,
+        "currentOutOfScopeBranchObligations": 53,
+        "sampledInputs": 24,
+        "baselineWitnessDriverFiles": 1,
+        "alreadyReducerRoutedDriverFiles": 3,
+        "currentNonBaselineRemainingDriverFiles": 93,
+        "currentDriverFilesWithoutRouteOrComponentConnector": 93,
+        "currentOutOfScopeBranchDecisionsInLevelDenominator": 44,
+        "currentOutOfScopeBranchDecisionsOutsideLevelDenominator": 8,
+        "currentOutOfScopeBranchDecisionSourceBlockers": 1
+      },
+      "baselineWitnessDriverPaths": [
+        "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt"
+      ],
+      "alreadyReducerRoutedDriverPaths": [
+        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt"
+      ],
+      "denominatorRules": [
+        "Promote current level-2 spell branches, level-3 subclass/class/spell branches, and level-5 class/spell-level-3 pressure only through later route tasks after generic substrates exist.",
+        "Keep character levels 6 and 7, Epic Boons, spell-level-4 branches, and spell-level-5 branches outside this lane.",
+        "Use source-qnt-corpus-blocker when the copied QNT/RAW/domain corpus does not establish the generic route fact.",
+        "Keep selected identity at catalog, selection, fixture, or support-profile admission boundaries; production reducer routing must use runtime shape and typed facts."
+      ],
+      "driverRouteAssignments": [
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 12,
+          "currentOutOfScopeBranchObligations": 3,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle feature or species substrate",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "branchObligations": 26,
+          "currentOutOfScopeBranchObligations": 4,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt is present in source-branch-inventory.json with 26 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+            ],
+            "blockers": [
+              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 6,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "branchObligations": 10,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+            ],
+            "blockers": [
+              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 15,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt is present in source-branch-inventory.json with 15 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 19,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt is present in source-branch-inventory.json with 19 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
+          "subjectFamily": "remaining current reducer-spine diagnostic lifecycle subject",
+          "branchObligations": 5,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD Hit Point, Death Saving Throw, and Concentration rules define the durable lifecycle owner before replay evidence is meaningful."
+            ],
+            "blockers": [
+              "Add the minimal durable death-save or Concentration owner before marking this reducer-routed."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 9,
+          "currentOutOfScopeBranchObligations": 5,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 7,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
+          "subjectFamily": "remaining current reducer-spine diagnostic lifecycle subject",
+          "branchObligations": 3,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD Hit Point, Death Saving Throw, and Concentration rules define the durable lifecycle owner before replay evidence is meaningful."
+            ],
+            "blockers": [
+              "Add the minimal durable death-save or Concentration owner before marking this reducer-routed."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle feature or species substrate",
+          "branchObligations": 5,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle feature or species substrate",
+          "branchObligations": 7,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 8,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 3,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 5,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 4,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 4,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "completed-reducer-route-tracer",
+          "subjectFamily": "already routed battle reducer diagnostic subject",
+          "branchObligations": 9,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "The first reducer-route tranche already tied this driver to local SRD/ubiquitous-language facts in its diagnostic batch entry."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 3,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 12,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 10,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 10,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 4,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "completed-reducer-route-tracer",
+          "subjectFamily": "already routed battle reducer diagnostic subject",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "The first reducer-route tranche already tied this driver to local SRD/ubiquitous-language facts in its diagnostic batch entry."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 6,
+          "currentOutOfScopeBranchObligations": 2,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle feature or species substrate",
+          "branchObligations": 11,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 3,
+          "currentOutOfScopeBranchObligations": 2,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 3,
+          "currentOutOfScopeBranchObligations": 1,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+          "route": "replay-refresh-only",
+          "routeTaskId": "completed-baseline-reducer-spine-witness",
+          "subjectFamily": "battle reducer lifecycle composition witness",
+          "branchObligations": 9,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "UBIQUITOUS_LANGUAGE.md names the battle reducer subject/hole/fill lifecycle used by the composition witness."
+            ],
+            "blockers": [
+              "This witness is a baseline composition check, not a queued cleanroom implementation driver."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 16,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt is present in source-branch-inventory.json with 16 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 5,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 9,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "completed-reducer-route-tracer",
+          "subjectFamily": "already routed battle reducer diagnostic subject",
+          "branchObligations": 10,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "The first reducer-route tranche already tied this driver to local SRD/ubiquitous-language facts in its diagnostic batch entry."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 6,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 8,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 5,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 4,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "branchObligations": 12,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+            ],
+            "blockers": [
+              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 7,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "branchObligations": 12,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+            ],
+            "blockers": [
+              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "branchObligations": 3,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+            ],
+            "blockers": [
+              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "branchObligations": 3,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+            ],
+            "blockers": [
+              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "branchObligations": 7,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+            ],
+            "blockers": [
+              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "branchObligations": 14,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt is present in source-branch-inventory.json with 14 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+            ],
+            "blockers": [
+              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "branchObligations": 23,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt is present in source-branch-inventory.json with 23 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+            ],
+            "blockers": [
+              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "subjectFamily": "battle selected-identity driver requiring generic substrate",
+          "branchObligations": 3,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD class, species, feat, and spell rules define runtime shape through capabilities and support-profile facts rather than authored identity dispatch."
+            ],
+            "blockers": [
+              "Extract generic runtime substrate before retaining catalog identity at selection/admission boundaries."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+          "subjectFamily": "battle spell, condition, active-effect, or restoration subject",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+            ],
+            "blockers": [
+              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/creature-attack.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+          "subjectFamily": "battle action, attack, weapon, or stat-block subject",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/creature-attack.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD attack, damage, action, and monster Stat Block rules define generic shape; runtime routing must not depend on authored creature or weapon identity."
+            ],
+            "blockers": [
+              "Depends on rule-core attack/damage/stat-block component connectors and battle-owned action/HP state."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 32,
+          "currentOutOfScopeBranchObligations": 1,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt is present in source-branch-inventory.json with 32 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+            ],
+            "blockers": [
+              "Add a component connector instead of forcing the rule-core proof through BattleState."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+            ],
+            "blockers": [
+              "Add a component connector instead of forcing the rule-core proof through BattleState."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 27,
+          "currentOutOfScopeBranchObligations": 9,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-features.mbt.qnt is present in source-branch-inventory.json with 27 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+            ],
+            "blockers": [
+              "Add a component connector instead of forcing the rule-core proof through BattleState."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 4,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+            ],
+            "blockers": [
+              "Add a component connector instead of forcing the rule-core proof through BattleState."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 21,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-movement.mbt.qnt is present in source-branch-inventory.json with 21 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+            ],
+            "blockers": [
+              "Add a component connector instead of forcing the rule-core proof through BattleState."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 11,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-reactions.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+            ],
+            "blockers": [
+              "Add a component connector instead of forcing the rule-core proof through BattleState."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 6,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+            ],
+            "blockers": [
+              "Add a component connector instead of forcing the rule-core proof through BattleState."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 30,
+          "currentOutOfScopeBranchObligations": 6,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-spells.mbt.qnt is present in source-branch-inventory.json with 30 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+            ],
+            "blockers": [
+              "Add a component connector instead of forcing the rule-core proof through BattleState."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 7,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Rule-core drivers own reusable SRD mechanic facts before any battle subject consumes them."
+            ],
+            "blockers": [
+              "Add a component connector instead of forcing the rule-core proof through BattleState."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+          "subjectFamily": "character sheet to battle handoff reducer",
+          "branchObligations": 4,
+          "currentOutOfScopeBranchObligations": 1,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD battle setup, resource expenditure, and rest/settlement rules define sheet-to-battle handoff facts."
+            ],
+            "blockers": [
+              "Use existing sheet and battle owners rather than a third resource ledger."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+          "subjectFamily": "character-battle selected-reference handoff",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD battle setup, resource expenditure, and rest/settlement rules define sheet-to-battle handoff facts."
+            ],
+            "blockers": [
+              "Use existing sheet and battle owners rather than a third resource ledger."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+          "subjectFamily": "character sheet to battle handoff reducer",
+          "branchObligations": 8,
+          "currentOutOfScopeBranchObligations": 1,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-battle-settlement.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD battle setup, resource expenditure, and rest/settlement rules define sheet-to-battle handoff facts."
+            ],
+            "blockers": [
+              "Use existing sheet and battle owners rather than a third resource ledger."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+          "subjectFamily": "character sheet to battle handoff reducer",
+          "branchObligations": 5,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD battle setup, resource expenditure, and rest/settlement rules define sheet-to-battle handoff facts."
+            ],
+            "blockers": [
+              "Use existing sheet and battle owners rather than a third resource ledger."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+          "subjectFamily": "character sheet to battle handoff reducer",
+          "branchObligations": 14,
+          "currentOutOfScopeBranchObligations": 5,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt is present in source-branch-inventory.json with 14 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD battle setup, resource expenditure, and rest/settlement rules define sheet-to-battle handoff facts."
+            ],
+            "blockers": [
+              "Use existing sheet and battle owners rather than a third resource ledger."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+          "subjectFamily": "character creation draft/fill/finalize reducer",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+            ],
+            "blockers": [
+              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+          "subjectFamily": "character creation selected-reference retention",
+          "branchObligations": 12,
+          "currentOutOfScopeBranchObligations": 1,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+            ],
+            "blockers": [
+              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+          "subjectFamily": "character creation selected-reference retention",
+          "branchObligations": 4,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+            ],
+            "blockers": [
+              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+          "subjectFamily": "character creation selected-reference retention",
+          "branchObligations": 8,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+            ],
+            "blockers": [
+              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+          "subjectFamily": "character creation selected-reference retention",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 1,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+            ],
+            "blockers": [
+              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+          "subjectFamily": "character creation draft/fill/finalize reducer",
+          "branchObligations": 16,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-runtime.mbt.qnt is present in source-branch-inventory.json with 16 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+            ],
+            "blockers": [
+              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+          "subjectFamily": "character creation selected-reference retention",
+          "branchObligations": 6,
+          "currentOutOfScopeBranchObligations": 3,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+            ],
+            "blockers": [
+              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+          "subjectFamily": "character creation selected-reference retention",
+          "branchObligations": 5,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character creation and class progression rules define draft choices, retained selections, and final build facts."
+            ],
+            "blockers": [
+              "Define the creation route vocabulary over draft state and fills before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+          "subjectFamily": "character sheet resource/rest/projection reducer",
+          "branchObligations": 6,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+            ],
+            "blockers": [
+              "Define the sheet route vocabulary before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+          "subjectFamily": "character sheet selected-reference projection",
+          "branchObligations": 3,
+          "currentOutOfScopeBranchObligations": 1,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+            ],
+            "blockers": [
+              "Define the sheet route vocabulary before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+          "subjectFamily": "character sheet selected-reference projection",
+          "branchObligations": 6,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+            ],
+            "blockers": [
+              "Define the sheet route vocabulary before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+          "subjectFamily": "character sheet selected-reference projection",
+          "branchObligations": 8,
+          "currentOutOfScopeBranchObligations": 5,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+            ],
+            "blockers": [
+              "Define the sheet route vocabulary before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+          "subjectFamily": "character sheet selected-reference projection",
+          "branchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+            ],
+            "blockers": [
+              "Define the sheet route vocabulary before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+          "subjectFamily": "character sheet resource/rest/projection reducer",
+          "branchObligations": 6,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+            ],
+            "blockers": [
+              "Define the sheet route vocabulary before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+          "subjectFamily": "character sheet resource/rest/projection reducer",
+          "branchObligations": 13,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt is present in source-branch-inventory.json with 13 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+            ],
+            "blockers": [
+              "Define the sheet route vocabulary before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+          "subjectFamily": "character sheet resource/rest/projection reducer",
+          "branchObligations": 11,
+          "currentOutOfScopeBranchObligations": 2,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+            ],
+            "blockers": [
+              "Define the sheet route vocabulary before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+          "subjectFamily": "character sheet selected-reference projection",
+          "branchObligations": 5,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+            ],
+            "blockers": [
+              "Define the sheet route vocabulary before target replay evidence counts."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+          "subjectFamily": "character sheet selected-reference projection",
+          "branchObligations": 8,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+            ],
+            "rawDomainFacts": [
+              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+            ],
+            "blockers": [
+              "Define the sheet route vocabulary before target replay evidence counts."
+            ]
+          }
+        }
+      ],
+      "branchDecisionClasses": [
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doEnhanceAbilityChoiceOpen",
+          "currentScopeReason": "Enhance Ability is a level-2 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityChoiceOpen under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Enhance Ability is a level-2 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doEnhanceAbilityDex",
+          "currentScopeReason": "Enhance Ability is a level-2 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityDex under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Enhance Ability is a level-2 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doEnhanceAbilityInvalidSkillFillRejected",
+          "currentScopeReason": "Enhance Ability is a level-2 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityInvalidSkillFillRejected under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Enhance Ability is a level-2 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doBreakShiningConcentration",
+          "currentScopeReason": "Shining Smite is a level-2 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doBreakShiningConcentration under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Shining Smite is a level-2 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doChooseShiningSmite",
+          "currentScopeReason": "Shining Smite is a level-2 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doChooseShiningSmite under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Shining Smite is a level-2 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doFillShiningSmiteDamage",
+          "currentScopeReason": "Shining Smite is a level-2 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doFillShiningSmiteDamage under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Shining Smite is a level-2 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doStartShiningSmite",
+          "currentScopeReason": "Shining Smite is a level-2 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doStartShiningSmite under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Shining Smite is a level-2 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doResolveBlindnessDeafnessBlindedSavingThrow",
+          "currentScopeReason": "Blindness/Deafness is a level-2 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveBlindnessDeafnessBlindedSavingThrow under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Blindness/Deafness is a level-2 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doResolveBlindnessDeafnessDeafenedSavingThrow",
+          "currentScopeReason": "Blindness/Deafness is a level-2 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveBlindnessDeafnessDeafenedSavingThrow under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Blindness/Deafness is a level-2 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doResolveHoldPersonFailedSavingThrow",
+          "currentScopeReason": "Hold Person is a level-2 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveHoldPersonFailedSavingThrow under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Hold Person is a level-2 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doResolveHoldPersonRepeatSavingThrowSuccess",
+          "currentScopeReason": "Hold Person is a level-2 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveHoldPersonRepeatSavingThrowSuccess under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Hold Person is a level-2 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doResolveHypnoticPatternFailedSavingThrow",
+          "currentScopeReason": "Hypnotic Pattern is a level-3 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveHypnoticPatternFailedSavingThrow under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Hypnotic Pattern is a level-3 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doBarbarianFastMovementDash",
+          "currentScopeReason": "Barbarian Fast Movement is a level-5 feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt exposes doBarbarianFastMovementDash under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Barbarian Fast Movement is a level-5 feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doRangerRovingClimbSwimMovement",
+          "currentScopeReason": "Ranger Roving is a level-6 feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "out-of-level-1-5-denominator",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt exposes doRangerRovingClimbSwimMovement under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Ranger Roving is a level-6 feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Outside the character level 1-5 denominator for this lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doCounterspellAllowsSpellCastResume",
+          "currentScopeReason": "Counterspell is a level-3 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt exposes doCounterspellAllowsSpellCastResume under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Counterspell is a level-3 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doCounterspellEndsSpellCast",
+          "currentScopeReason": "Counterspell is a level-3 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt exposes doCounterspellEndsSpellCast under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Counterspell is a level-3 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doResolveCounterspellMagicMissileCast",
+          "currentScopeReason": "Counterspell is a level-3 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt exposes doResolveCounterspellMagicMissileCast under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Counterspell is a level-3 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doEnhanceAbilityChoice",
+          "currentScopeReason": "Enhance Ability is a level-2 spell and is outside the current level-1/2 branch harness scope.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "in-denominator",
+          "route": "component-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt exposes doEnhanceAbilityChoice under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Enhance Ability is a level-2 spell and is outside the current level-1/2 branch harness scope.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doCombatProwessMissToHit",
+          "currentScopeReason": "Boon of Combat Prowess is an Epic Boon with level 19+ prerequisite.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "component-first",
+          "routeTaskId": "out-of-level-1-5-denominator",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doCombatProwessMissToHit under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Boon of Combat Prowess is an Epic Boon with level 19+ prerequisite.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Outside the character level 1-5 denominator for this lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doCuttingWordsDamage",
+          "currentScopeReason": "Bard Cutting Words is a level-3 subclass feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "component-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doCuttingWordsDamage under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Bard Cutting Words is a level-3 subclass feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDeflectAttacksDamageReduction",
+          "currentScopeReason": "Monk Deflect Attacks is a level-3 feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "component-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doDeflectAttacksDamageReduction under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Monk Deflect Attacks is a level-3 feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doEvasionFailure",
+          "currentScopeReason": "Evasion is a level-7 Rogue or Monk feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "component-first",
+          "routeTaskId": "out-of-level-1-5-denominator",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doEvasionFailure under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Evasion is a level-7 Rogue or Monk feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Outside the character level 1-5 denominator for this lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doEvasionSuccess",
+          "currentScopeReason": "Evasion is a level-7 Rogue or Monk feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "component-first",
+          "routeTaskId": "out-of-level-1-5-denominator",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doEvasionSuccess under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Evasion is a level-7 Rogue or Monk feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Outside the character level 1-5 denominator for this lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doFrenzy",
+          "currentScopeReason": "Barbarian Frenzy is a level-3 subclass feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "component-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doFrenzy under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Barbarian Frenzy is a level-3 subclass feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doImprovedCritical",
+          "currentScopeReason": "Fighter Improved Critical is a level-3 subclass feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "component-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doImprovedCritical under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Fighter Improved Critical is a level-3 subclass feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doMyceliumStepDash",
+          "currentScopeReason": "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level.",
+          "currentReplay": "source-blocker",
+          "levelDenominatorScope": "source-qnt-corpus-blocker",
+          "route": "source-qnt-corpus-blocker",
+          "routeTaskId": "source-qnt-corpus-blocker",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doMyceliumStepDash under branch family step."
+            ],
+            "rawDomainFacts": [
+              "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doUncannyDodge",
+          "currentScopeReason": "Rogue Uncanny Dodge is a level-5 feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "component-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doUncannyDodge under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Rogue Uncanny Dodge is a level-5 feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doMassCureWoundsNeedsHealingRoll",
+          "currentScopeReason": "Mass Cure Wounds is a level-5 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "component-first",
+          "routeTaskId": "out-of-level-1-5-denominator",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassCureWoundsNeedsHealingRoll under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Mass Cure Wounds is a level-5 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Outside the character level 1-5 denominator for this lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doMassCureWoundsNeedsTargetList",
+          "currentScopeReason": "Mass Cure Wounds is a level-5 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "component-first",
+          "routeTaskId": "out-of-level-1-5-denominator",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassCureWoundsNeedsTargetList under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Mass Cure Wounds is a level-5 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Outside the character level 1-5 denominator for this lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doMassCureWoundsWounded",
+          "currentScopeReason": "Mass Cure Wounds is a level-5 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "component-first",
+          "routeTaskId": "out-of-level-1-5-denominator",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassCureWoundsWounded under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Mass Cure Wounds is a level-5 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Outside the character level 1-5 denominator for this lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doMassHealingWordNeedsHealingRoll",
+          "currentScopeReason": "Mass Healing Word is a level-3 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "component-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordNeedsHealingRoll under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Mass Healing Word is a level-3 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doMassHealingWordNeedsTargetList",
+          "currentScopeReason": "Mass Healing Word is a level-3 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "component-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordNeedsTargetList under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Mass Healing Word is a level-3 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doMassHealingWordWounded",
+          "currentScopeReason": "Mass Healing Word is a level-3 spell.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "component-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordWounded under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Mass Healing Word is a level-3 spell.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doProjectSheetSpellcastingAndMetamagic",
+          "currentScopeReason": "This projection fixture includes spell level 2/3 capacity facts beyond the current level-1/2 scope.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt exposes doProjectSheetSpellcastingAndMetamagic under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This projection fixture includes spell level 2/3 capacity facts beyond the current level-1/2 scope.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doRejectAmbiguousCreatedSpellSlotSource",
+          "currentScopeReason": "This settlement rejection fixture uses a created level-3 spell slot beyond the current level-1/2 scope.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-battle-settlement.mbt.qnt exposes doRejectAmbiguousCreatedSpellSlotSource under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This settlement rejection fixture uses a created level-3 spell slot beyond the current level-1/2 scope.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doFontOfMagicPointsToSlot",
+          "currentScopeReason": "This Font of Magic branch creates a level-3 spell slot beyond the current level-1/2 scope.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doFontOfMagicPointsToSlot under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This Font of Magic branch creates a level-3 spell slot beyond the current level-1/2 scope.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doFontOfMagicSlotToPoints",
+          "currentScopeReason": "Font of Magic slot conversion requires Sorcerer level 2 and uses slot facts outside the current level-1/2 active harness scope.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doFontOfMagicSlotToPoints under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Font of Magic slot conversion requires Sorcerer level 2 and uses slot facts outside the current level-1/2 active harness scope.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doMetamagicBridgeUsesSharedPointPool",
+          "currentScopeReason": "This metamagic bridge fixture uses a five-point Sorcery Point pool beyond the current level-1/2 scope.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doMetamagicBridgeUsesSharedPointPool under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This metamagic bridge fixture uses a five-point Sorcery Point pool beyond the current level-1/2 scope.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doRejectFontOfMagicAmbiguousSlotSource",
+          "currentScopeReason": "This rejection branch uses created level-3 slot ambiguity facts beyond the current level-1/2 scope.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doRejectFontOfMagicAmbiguousSlotSource under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This rejection branch uses created level-3 slot ambiguity facts beyond the current level-1/2 scope.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doRejectFontOfMagicInsufficientPoints",
+          "currentScopeReason": "This rejection branch uses higher-slot Font of Magic creation facts beyond the current level-1/2 scope.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doRejectFontOfMagicInsufficientPoints under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This rejection branch uses higher-slot Font of Magic creation facts beyond the current level-1/2 scope.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doSelectWizardEvocationSavant",
+          "currentScopeReason": "Wizard Evocation Savant is a level-3 subclass feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt exposes doSelectWizardEvocationSavant under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Wizard Evocation Savant is a level-3 subclass feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doSelectLevelSixAdditionalOwnedSkillExpertise",
+          "currentScopeReason": "Rogue gains this additional Expertise projection at level 6.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "out-of-level-1-5-denominator",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt exposes doSelectLevelSixAdditionalOwnedSkillExpertise under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Rogue gains this additional Expertise projection at level 6.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Outside the character level 1-5 denominator for this lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doRejectPrerequisiteRetainedInvocationReplacement",
+          "currentScopeReason": "This prerequisite-retained invocation replacement rejection uses Warlock level 5 facts.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt exposes doRejectPrerequisiteRetainedInvocationReplacement under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This prerequisite-retained invocation replacement rejection uses Warlock level 5 facts.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doReplaceArmorWithEldritchMindOnWarlockLevelGain",
+          "currentScopeReason": "This invocation replacement projection uses Warlock level 3 facts.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt exposes doReplaceArmorWithEldritchMindOnWarlockLevelGain under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This invocation replacement projection uses Warlock level 3 facts.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doReplaceRepeatableInvocationByChoice",
+          "currentScopeReason": "This repeatable invocation replacement projection uses Warlock level 3 facts.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt exposes doReplaceRepeatableInvocationByChoice under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This repeatable invocation replacement projection uses Warlock level 3 facts.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doRecoverSecondLevelSpellSlot",
+          "currentScopeReason": "Second-level Arcane Recovery is unavailable to ordinary level-1/2 Wizards.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt exposes doRecoverSecondLevelSpellSlot under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Second-level Arcane Recovery is unavailable to ordinary level-1/2 Wizards.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doProjectClericLifeDomainSpells",
+          "currentScopeReason": "Cleric Life Domain Spells are a level-3 subclass spell feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt exposes doProjectClericLifeDomainSpells under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Cleric Life Domain Spells are a level-3 subclass spell feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doProjectDruidCircleLandSpells",
+          "currentScopeReason": "Druid Circle of the Land Spells are a level-3 subclass spell feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt exposes doProjectDruidCircleLandSpells under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Druid Circle of the Land Spells are a level-3 subclass spell feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doProjectPaladinOathDevotionSpells",
+          "currentScopeReason": "Paladin Oath of Devotion Spells are a level-3 subclass spell feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt exposes doProjectPaladinOathDevotionSpells under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Paladin Oath of Devotion Spells are a level-3 subclass spell feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doProjectSorcererDraconicSpells",
+          "currentScopeReason": "Sorcerer Draconic Spells are a level-3 subclass spell feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt exposes doProjectSorcererDraconicSpells under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Sorcerer Draconic Spells are a level-3 subclass spell feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doProjectWarlockFiendSpells",
+          "currentScopeReason": "Warlock Fiend Spells are a level-3 subclass spell feature.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt exposes doProjectWarlockFiendSpells under branch family step."
+            ],
+            "rawDomainFacts": [
+              "Warlock Fiend Spells are a level-3 subclass spell feature.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doRejectArcaneRecoveryPactSlotRefund",
+          "currentScopeReason": "This rejection branch depends on the same later-slot Arcane Recovery fixture and needs a level-1/2 legal fixture before it becomes active scope.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt exposes doRejectArcaneRecoveryPactSlotRefund under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This rejection branch depends on the same later-slot Arcane Recovery fixture and needs a level-1/2 legal fixture before it becomes active scope.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+          "currentScopeReason": "This Arcane Recovery fixture restores a second-level ordinary spell slot, outside the current level-1/2 scope.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "in-denominator",
+          "route": "substrate-first",
+          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "derivability": {
+            "qntFacts": [
+              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt exposes doShortRestArcaneRecoveryRefundsOrdinarySpellSlot under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This Arcane Recovery fixture restores a second-level ordinary spell slot, outside the current level-1/2 scope.",
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+            ],
+            "blockers": [
+              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
+            ]
+          }
+        }
+      ],
+      "rawTraceabilitySources": [
+        ".references/srd-5.2.1/Character-Creation.md",
+        ".references/srd-5.2.1/Classes/*.md",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md",
+        ".references/srd-5.2.1/Spells/Descriptions-*.md",
+        ".references/srd-5.2.1/Playing-the-Game.md",
+        ".references/srd-5.2.1/Rules-Glossary.md",
+        "UBIQUITOUS_LANGUAGE.md",
+        "ASSUMPTIONS.md"
       ]
     }
   ]

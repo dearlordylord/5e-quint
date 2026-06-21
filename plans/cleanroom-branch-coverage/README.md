@@ -35,6 +35,22 @@ diagnostics and records the route class, derivability facts, durable state
 owner expectations, blockers, and `routeConnectorPath` when the route is
 already expressed in QNT.
 
+`levelDenominators[]` records broader route-readiness denominators without
+changing the active branch-scope harness. The `level-1-5-cleanroom-route-v1`
+denominator assigns every current driver a route class and classifies each
+current out-of-scope branch decision as:
+
+- `in-denominator` for character level 1-5 work that should later be promoted
+  by a route task;
+- `out-of-denominator` for level 6/7, Epic Boon, spell-level-4, or
+  spell-level-5 work outside the lane;
+- `source-qnt-corpus-blocker` when copied QNT/RAW/domain guidance is
+  insufficient.
+
+This denominator is not cleanroom replay evidence. It answers queue questions
+such as "how many drivers remain" and tells later tasks which branch decisions
+can be promoted only after the corresponding generic route substrate exists.
+
 `packages/battle-runtime/*.route.mbt.qnt` is the executable source of truth for
 reducer routing. A `reducer-routed` row is meaningful only when the connector
 projects `qRoute` through the reducer-route vocabulary. Guidance prose may

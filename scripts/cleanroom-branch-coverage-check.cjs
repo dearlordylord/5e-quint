@@ -83,6 +83,13 @@ const reducerRouteTags = new Set([
   "substrate-first",
   "catalog-after-substrate",
   "replay-refresh-only",
+  "source-qnt-corpus-blocker",
+]);
+
+const levelDenominatorBranchScopeTags = new Set([
+  "in-denominator",
+  "out-of-denominator",
+  "source-qnt-corpus-blocker",
 ]);
 
 function validatePassingStateCheck(stateCheck, context, issues) {
@@ -694,7 +701,302 @@ function validateScopeRow(entry, rootPath, scopePath) {
   return { row, issues };
 }
 
-function validateReducerRouteInventory(routeInventory, scopeRows) {
+function validateDerivability(value, context) {
+  const issues = [];
+  if (!isRecord(value)) {
+    return [`${context}: derivability must be an object.`];
+  }
+  for (const field of ["qntFacts", "rawDomainFacts", "blockers"]) {
+    if (!Array.isArray(value[field])) {
+      issues.push(`${context}: derivability.${field} must be an array.`);
+    }
+  }
+  return issues;
+}
+
+function validateLevelDenominator(denominator, context, inventory) {
+  const issues = [];
+  if (!isRecord(denominator)) {
+    return [`${context}: denominator must be an object.`];
+  }
+  if (
+    typeof denominator.denominatorId !== "string" ||
+    denominator.denominatorId.trim() === ""
+  ) {
+    issues.push(`${context}: denominatorId must be a non-empty string.`);
+  }
+  if (!isRecord(denominator.sourceBranchInventory)) {
+    issues.push(`${context}: sourceBranchInventory must be an object.`);
+  } else if (inventory !== undefined) {
+    const uniqueDrivers = new Set(
+      inventory.branchObligations.map((obligation) => obligation.driverPath),
+    );
+    const expectedCounts = new Map([
+      ["driverFiles", uniqueDrivers.size],
+      ["branchObligations", inventory.branchObligations.length],
+      [
+        "currentInScopeBranchObligations",
+        inventory.branchObligations.filter(
+          (obligation) => obligation.scope.tag === "in-scope",
+        ).length,
+      ],
+      [
+        "currentOutOfScopeBranchObligations",
+        inventory.branchObligations.filter(
+          (obligation) => obligation.scope.tag === "out-of-scope",
+        ).length,
+      ],
+      ["sampledInputs", inventory.sampledInputs.length],
+    ]);
+    for (const [field, expected] of expectedCounts.entries()) {
+      if (denominator.sourceBranchInventory[field] !== expected) {
+        issues.push(
+          `${context}: sourceBranchInventory.${field} must be ${expected}.`,
+        );
+      }
+    }
+    const baselineWitnessDriverPaths = Array.isArray(
+      denominator.baselineWitnessDriverPaths,
+    )
+      ? denominator.baselineWitnessDriverPaths
+      : undefined;
+    const alreadyReducerRoutedDriverPaths = Array.isArray(
+      denominator.alreadyReducerRoutedDriverPaths,
+    )
+      ? denominator.alreadyReducerRoutedDriverPaths
+      : undefined;
+    if (baselineWitnessDriverPaths === undefined) {
+      issues.push(`${context}: baselineWitnessDriverPaths must be an array.`);
+    } else {
+      if (
+        denominator.sourceBranchInventory.baselineWitnessDriverFiles !==
+        baselineWitnessDriverPaths.length
+      ) {
+        issues.push(
+          `${context}: sourceBranchInventory.baselineWitnessDriverFiles must match baselineWitnessDriverPaths length.`,
+        );
+      }
+      for (const driverPath of baselineWitnessDriverPaths) {
+        if (!uniqueDrivers.has(driverPath)) {
+          issues.push(
+            `${context}: baselineWitnessDriverPaths contains unknown driver ${driverPath}.`,
+          );
+        }
+      }
+    }
+    if (alreadyReducerRoutedDriverPaths === undefined) {
+      issues.push(
+        `${context}: alreadyReducerRoutedDriverPaths must be an array.`,
+      );
+    } else {
+      if (
+        denominator.sourceBranchInventory.alreadyReducerRoutedDriverFiles !==
+        alreadyReducerRoutedDriverPaths.length
+      ) {
+        issues.push(
+          `${context}: sourceBranchInventory.alreadyReducerRoutedDriverFiles must match alreadyReducerRoutedDriverPaths length.`,
+        );
+      }
+      for (const driverPath of alreadyReducerRoutedDriverPaths) {
+        if (!uniqueDrivers.has(driverPath)) {
+          issues.push(
+            `${context}: alreadyReducerRoutedDriverPaths contains unknown driver ${driverPath}.`,
+          );
+        }
+      }
+    }
+    if (
+      baselineWitnessDriverPaths !== undefined &&
+      alreadyReducerRoutedDriverPaths !== undefined
+    ) {
+      const remaining =
+        uniqueDrivers.size -
+        baselineWitnessDriverPaths.length -
+        alreadyReducerRoutedDriverPaths.length;
+      for (const field of [
+        "currentNonBaselineRemainingDriverFiles",
+        "currentDriverFilesWithoutRouteOrComponentConnector",
+      ]) {
+        if (denominator.sourceBranchInventory[field] !== remaining) {
+          issues.push(
+            `${context}: sourceBranchInventory.${field} must be ${remaining}.`,
+          );
+        }
+      }
+    }
+  }
+  if (!Array.isArray(denominator.driverRouteAssignments)) {
+    issues.push(`${context}: driverRouteAssignments must be an array.`);
+  } else if (inventory !== undefined) {
+    const inventoryDrivers = new Set(
+      inventory.branchObligations.map((obligation) => obligation.driverPath),
+    );
+    const assignedDrivers = new Set();
+    for (const [
+      index,
+      assignment,
+    ] of denominator.driverRouteAssignments.entries()) {
+      const assignmentContext = `${context}: driverRouteAssignments[${index}]`;
+      if (!isRecord(assignment)) {
+        issues.push(`${assignmentContext}: assignment must be an object.`);
+        continue;
+      }
+      if (
+        typeof assignment.driverPath !== "string" ||
+        assignment.driverPath.trim() === ""
+      ) {
+        issues.push(
+          `${assignmentContext}: driverPath must be a non-empty string.`,
+        );
+      } else {
+        if (!inventoryDrivers.has(assignment.driverPath)) {
+          issues.push(
+            `${assignmentContext}: driverPath is not in source inventory.`,
+          );
+        }
+        if (assignedDrivers.has(assignment.driverPath)) {
+          issues.push(
+            `${assignmentContext}: duplicate driverPath ${assignment.driverPath}.`,
+          );
+        }
+        assignedDrivers.add(assignment.driverPath);
+      }
+      if (!reducerRouteTags.has(assignment.route)) {
+        issues.push(
+          `${assignmentContext}: route must be one of ${Array.from(reducerRouteTags).join(", ")}.`,
+        );
+      }
+      for (const field of ["routeTaskId", "subjectFamily"]) {
+        if (
+          typeof assignment[field] !== "string" ||
+          assignment[field].trim() === ""
+        ) {
+          issues.push(
+            `${assignmentContext}: ${field} must be a non-empty string.`,
+          );
+        }
+      }
+      issues.push(
+        ...validateDerivability(assignment.derivability, assignmentContext),
+      );
+    }
+    for (const driverPath of inventoryDrivers) {
+      if (!assignedDrivers.has(driverPath)) {
+        issues.push(
+          `${context}: missing driverRouteAssignment for ${driverPath}.`,
+        );
+      }
+    }
+  }
+  if (!Array.isArray(denominator.branchDecisionClasses)) {
+    issues.push(`${context}: branchDecisionClasses must be an array.`);
+  } else if (inventory !== undefined) {
+    const outOfScopeBranches = new Set(
+      inventory.branchObligations
+        .filter((obligation) => obligation.scope.tag === "out-of-scope")
+        .map(
+          (obligation) =>
+            `${obligation.driverPath}#${obligation.branchFamily}:${obligation.branchAction}`,
+        ),
+    );
+    const classifiedBranches = new Set();
+    for (const [
+      index,
+      decision,
+    ] of denominator.branchDecisionClasses.entries()) {
+      const decisionContext = `${context}: branchDecisionClasses[${index}]`;
+      if (!isRecord(decision)) {
+        issues.push(`${decisionContext}: branch decision must be an object.`);
+        continue;
+      }
+      for (const field of ["driverPath", "branchFamily", "branchAction"]) {
+        if (
+          typeof decision[field] !== "string" ||
+          decision[field].trim() === ""
+        ) {
+          issues.push(
+            `${decisionContext}: ${field} must be a non-empty string.`,
+          );
+        }
+      }
+      const key = `${decision.driverPath}#${decision.branchFamily}:${decision.branchAction}`;
+      if (!outOfScopeBranches.has(key)) {
+        issues.push(
+          `${decisionContext}: branch decision does not match a current out-of-scope branch.`,
+        );
+      }
+      if (classifiedBranches.has(key)) {
+        issues.push(`${decisionContext}: duplicate branch decision ${key}.`);
+      }
+      classifiedBranches.add(key);
+      if (
+        !levelDenominatorBranchScopeTags.has(decision.levelDenominatorScope)
+      ) {
+        issues.push(
+          `${decisionContext}: levelDenominatorScope must be one of ${Array.from(levelDenominatorBranchScopeTags).join(", ")}.`,
+        );
+      }
+      if (!reducerRouteTags.has(decision.route)) {
+        issues.push(
+          `${decisionContext}: route must be one of ${Array.from(reducerRouteTags).join(", ")}.`,
+        );
+      }
+      if (
+        typeof decision.routeTaskId !== "string" ||
+        decision.routeTaskId.trim() === ""
+      ) {
+        issues.push(
+          `${decisionContext}: routeTaskId must be a non-empty string.`,
+        );
+      }
+      issues.push(
+        ...validateDerivability(decision.derivability, decisionContext),
+      );
+    }
+    for (const branchKey of outOfScopeBranches) {
+      if (!classifiedBranches.has(branchKey)) {
+        issues.push(
+          `${context}: missing branchDecisionClass for ${branchKey}.`,
+        );
+      }
+    }
+    const branchDecisionCounts = new Map(
+      Array.from(levelDenominatorBranchScopeTags).map((scope) => [scope, 0]),
+    );
+    for (const decision of denominator.branchDecisionClasses) {
+      if (levelDenominatorBranchScopeTags.has(decision.levelDenominatorScope)) {
+        branchDecisionCounts.set(
+          decision.levelDenominatorScope,
+          branchDecisionCounts.get(decision.levelDenominatorScope) + 1,
+        );
+      }
+    }
+    const expectedScopeCountFields = new Map([
+      ["currentOutOfScopeBranchDecisionsInLevelDenominator", "in-denominator"],
+      [
+        "currentOutOfScopeBranchDecisionsOutsideLevelDenominator",
+        "out-of-denominator",
+      ],
+      [
+        "currentOutOfScopeBranchDecisionSourceBlockers",
+        "source-qnt-corpus-blocker",
+      ],
+    ]);
+    if (isRecord(denominator.sourceBranchInventory)) {
+      for (const [field, scope] of expectedScopeCountFields.entries()) {
+        const expected = branchDecisionCounts.get(scope);
+        if (denominator.sourceBranchInventory[field] !== expected) {
+          issues.push(
+            `${context}: sourceBranchInventory.${field} must be ${expected}.`,
+          );
+        }
+      }
+    }
+  }
+  return issues;
+}
+
+function validateReducerRouteInventory(routeInventory, scopeRows, inventory) {
   const issues = [];
   if (routeInventory === undefined) return issues;
   const context = repoPath(root, reducerRouteInventoryPath);
@@ -796,17 +1098,7 @@ function validateReducerRouteInventory(routeInventory, scopeRows) {
           issues.push(`${entryContext}: ${field} must be a non-empty string.`);
         }
       }
-      if (!isRecord(entry.derivability)) {
-        issues.push(`${entryContext}: derivability must be an object.`);
-      } else {
-        for (const field of ["qntFacts", "rawDomainFacts", "blockers"]) {
-          if (!Array.isArray(entry.derivability[field])) {
-            issues.push(
-              `${entryContext}: derivability.${field} must be an array.`,
-            );
-          }
-        }
-      }
+      issues.push(...validateDerivability(entry.derivability, entryContext));
     }
   }
   if (
@@ -816,6 +1108,24 @@ function validateReducerRouteInventory(routeInventory, scopeRows) {
     issues.push(
       `${context}: activeDiagnosticBatchId ${routeInventory.activeDiagnosticBatchId} is not a diagnostic batch.`,
     );
+  }
+  if (routeInventory.levelDenominators !== undefined) {
+    if (!Array.isArray(routeInventory.levelDenominators)) {
+      issues.push(`${context}: levelDenominators must be an array.`);
+    } else {
+      for (const [
+        denominatorIndex,
+        denominator,
+      ] of routeInventory.levelDenominators.entries()) {
+        issues.push(
+          ...validateLevelDenominator(
+            denominator,
+            `${context}: levelDenominators[${denominatorIndex}]`,
+            inventory,
+          ),
+        );
+      }
+    }
   }
   return issues;
 }
@@ -1712,6 +2022,7 @@ function main() {
   const routeIssues = validateReducerRouteInventory(
     reducerRouteInventory,
     scopeRows,
+    inventory,
   );
   if (routeIssues.length > 0) {
     console.error("cleanroom reducer route inventory FAILED:");

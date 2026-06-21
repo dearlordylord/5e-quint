@@ -7,13 +7,13 @@
     {
       "number": 1,
       "id": "L15-RR01-DENOMINATOR-AND-CLASSIFIER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Define the level 1-5 reducer-route denominator and route classes"
     },
     {
       "number": 2,
       "id": "L15-RR02-ROUTE-VOCABULARY-AND-GATES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Generalize executable route vocabulary and checker gates"
     },
     {
@@ -128,14 +128,14 @@ Current source-side cleanroom branch coverage:
 
 Current in-scope driver families:
 
-| Family | Current driver files |
-| --- | ---: |
-| Battle focused drivers | 34 |
-| Battle rule-core drivers | 9 |
-| Battle selected-identity drivers | 31 |
-| Character-battle handoff drivers | 5 |
-| Character creation drivers | 8 |
-| Character sheet drivers | 10 |
+| Family                           | Current driver files |
+| -------------------------------- | -------------------: |
+| Battle focused drivers           |                   34 |
+| Battle rule-core drivers         |                    9 |
+| Battle selected-identity drivers |                   31 |
+| Character-battle handoff drivers |                    5 |
+| Character creation drivers       |                    8 |
+| Character sheet drivers          |                   10 |
 
 Already handled by the reducer-route architecture:
 
@@ -204,33 +204,33 @@ Task 1 must recompute this number after any branch-scope or driver changes.
 
 The route classes are deliberately not all `reducer-routed`:
 
-| Route class | Meaning |
-| --- | --- |
-| `reducer-routed` | Driver has a copied `*.route.mbt.qnt` connector and target replay must match `qRoute` through the reducer surface. |
-| `component-first` | Rule-core or reusable pure component must be implemented and tested through its own component API before a battle subject consumes it. |
-| `substrate-first` | A durable state owner or generic runtime shape must exist before replay evidence is meaningful. |
-| `catalog-after-substrate` | Selected identity waits for generic substrate; catalog identity may appear only at selection/admission boundaries. |
-| `replay-refresh-only` | Existing route/substrate is sufficient; regenerate evidence without production behavior changes. |
-| `source-qnt-corpus-blocker` | Copied QNT/RAW/domain guidance is insufficient; fix source QNT/guidance before cleanroom evidence counts. |
+| Route class                 | Meaning                                                                                                                                |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `reducer-routed`            | Driver has a copied `*.route.mbt.qnt` connector and target replay must match `qRoute` through the reducer surface.                     |
+| `component-first`           | Rule-core or reusable pure component must be implemented and tested through its own component API before a battle subject consumes it. |
+| `substrate-first`           | A durable state owner or generic runtime shape must exist before replay evidence is meaningful.                                        |
+| `catalog-after-substrate`   | Selected identity waits for generic substrate; catalog identity may appear only at selection/admission boundaries.                     |
+| `replay-refresh-only`       | Existing route/substrate is sufficient; regenerate evidence without production behavior changes.                                       |
+| `source-qnt-corpus-blocker` | Copied QNT/RAW/domain guidance is insufficient; fix source QNT/guidance before cleanroom evidence counts.                              |
 
 ## DAG / Queue Order
 
-| # | Task | Status | Depends on | Notes |
-| ---: | --- | --- | --- | --- |
-| 1 | L15-RR01-DENOMINATOR-AND-CLASSIFIER - Define the level 1-5 reducer-route denominator and route classes | ready-for-research | none | Establishes the exact driver/branch denominator and updates this plan if counts change. |
-| 2 | L15-RR02-ROUTE-VOCABULARY-AND-GATES - Generalize executable route vocabulary and checker gates | blocked | L15-RR01-DENOMINATOR-AND-CLASSIFIER | Adds source-side architecture gates before broad connector work. |
-| 3 | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE - Route the remaining current reducer-spine diagnostic drivers | blocked | L15-RR02-ROUTE-VOCABULARY-AND-GATES | Finishes death-save and Concentration from the existing diagnostic queue. |
-| 4 | L15-RR04-RULE-CORE-COMPONENT-CONNECTORS - Add component-first QNT connectors for rule-core drivers | blocked | L15-RR02-ROUTE-VOCABULARY-AND-GATES | Keeps reusable components out of battle-local replay islands. |
-| 5 | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES - Route action, attack, weapon, and stat-block battle subjects | blocked | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS | Uses HP/action/attack owners before larger spell families. |
-| 6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects | blocked | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS | Extends routed spell/effect subjects without selected-identity dispatch. |
-| 7 | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES - Route feature, species, metamagic, and mastery battle substrates | blocked | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES | Converts selected-identity battle pressure into shape/profile substrate. |
-| 8 | L15-RR08-CHARACTER-CREATION-ROUTES - Add QNT route connectors for character creation drivers | blocked | L15-RR02-ROUTE-VOCABULARY-AND-GATES | Adds route shape for Draft/Fill/finalization rather than battle subjects. |
-| 9 | L15-RR09-CHARACTER-SHEET-ROUTES - Add QNT route connectors for character sheet drivers | blocked | L15-RR02-ROUTE-VOCABULARY-AND-GATES | Adds route shape for sheet resource/rest/projection state. |
-| 10 | L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES - Add QNT route connectors for character-battle handoff drivers | blocked | L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES; L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE | Handoff routes depend on both sheet and battle state owners. |
-| 11 | L15-RR11-LEVEL3-4-SCOPE-PROMOTION - Promote level 3-4 branch scope into route connector tasks | blocked | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES | Widen current level-1/2 branch-scope rows only after generic route shapes exist. |
-| 12 | L15-RR12-LEVEL5-SCOPE-PROMOTION - Promote level 5 class and spell-level-3 route connector tasks | blocked | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES; L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES; L15-RR11-LEVEL3-4-SCOPE-PROMOTION | Handles level-5 features and spell-level-3 pressure; does not promote spell level 4/5. |
-| 13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom | blocked | L15-RR12-LEVEL5-SCOPE-PROMOTION | Uses the existing dirty cleanroom as a diagnostic target with current source package. |
-| 14 | L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE - Package a fresh cleanroom-ready level 1-5 route evidence gate | blocked | L15-RR13-DIRTY-CLEANROOM-REHEARSAL | Produces the fresh-run package and acceptance gate; does not depend on stale dirty artifacts. |
+|   # | Task                                                                                                          | Status             | Depends on                                                                                                                                               | Notes                                                                                         |
+| --: | ------------------------------------------------------------------------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+|   1 | L15-RR01-DENOMINATOR-AND-CLASSIFIER - Define the level 1-5 reducer-route denominator and route classes        | done               | none                                                                                                                                                     | Established the exact driver/branch denominator in `reducer-route-inventory.json`.            |
+|   2 | L15-RR02-ROUTE-VOCABULARY-AND-GATES - Generalize executable route vocabulary and checker gates                | ready-for-research | L15-RR01-DENOMINATOR-AND-CLASSIFIER                                                                                                                      | Adds source-side architecture gates before broad connector work.                              |
+|   3 | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE - Route the remaining current reducer-spine diagnostic drivers       | blocked            | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Finishes death-save and Concentration from the existing diagnostic queue.                     |
+|   4 | L15-RR04-RULE-CORE-COMPONENT-CONNECTORS - Add component-first QNT connectors for rule-core drivers            | blocked            | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Keeps reusable components out of battle-local replay islands.                                 |
+|   5 | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES - Route action, attack, weapon, and stat-block battle subjects | blocked            | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Uses HP/action/attack owners before larger spell families.                                    |
+|   6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects         | blocked            | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Extends routed spell/effect subjects without selected-identity dispatch.                      |
+|   7 | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES - Route feature, species, metamagic, and mastery battle substrates   | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Converts selected-identity battle pressure into shape/profile substrate.                      |
+|   8 | L15-RR08-CHARACTER-CREATION-ROUTES - Add QNT route connectors for character creation drivers                  | blocked            | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for Draft/Fill/finalization rather than battle subjects.                     |
+|   9 | L15-RR09-CHARACTER-SHEET-ROUTES - Add QNT route connectors for character sheet drivers                        | blocked            | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for sheet resource/rest/projection state.                                    |
+|  10 | L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES - Add QNT route connectors for character-battle handoff drivers      | blocked            | L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES; L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE                                            | Handoff routes depend on both sheet and battle state owners.                                  |
+|  11 | L15-RR11-LEVEL3-4-SCOPE-PROMOTION - Promote level 3-4 branch scope into route connector tasks                 | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES | Widen current level-1/2 branch-scope rows only after generic route shapes exist.              |
+|  12 | L15-RR12-LEVEL5-SCOPE-PROMOTION - Promote level 5 class and spell-level-3 route connector tasks               | blocked            | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES; L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES; L15-RR11-LEVEL3-4-SCOPE-PROMOTION                                    | Handles level-5 features and spell-level-3 pressure; does not promote spell level 4/5.        |
+|  13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom              | blocked            | L15-RR12-LEVEL5-SCOPE-PROMOTION                                                                                                                          | Uses the existing dirty cleanroom as a diagnostic target with current source package.         |
+|  14 | L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE - Package a fresh cleanroom-ready level 1-5 route evidence gate         | blocked            | L15-RR13-DIRTY-CLEANROOM-REHEARSAL                                                                                                                       | Produces the fresh-run package and acceptance gate; does not depend on stale dirty artifacts. |
 
 ## Shared Verification
 
@@ -254,7 +254,7 @@ The route classes are deliberately not all `reducer-routed`:
 
 ### Task 1 - L15-RR01-DENOMINATOR-AND-CLASSIFIER
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -318,12 +318,16 @@ Verification:
 
 Plan Impact:
 
-- Expected. This task owns durable updates to later task counts, task splits,
-  and blocker details.
+- Applied. `plans/cleanroom-branch-coverage/reducer-route-inventory.json` now
+  contains `level-1-5-cleanroom-route-v1`, with 97 current driver assignments,
+  53 current out-of-scope branch decisions classified, 44 branch decisions in
+  the level-1 through level-5 denominator, 8 branch decisions outside it, and 1
+  source-QNT corpus blocker.
+- Task 2 is unblocked for research.
 
 ### Task 2 - L15-RR02-ROUTE-VOCABULARY-AND-GATES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
