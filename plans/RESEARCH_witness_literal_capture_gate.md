@@ -3,8 +3,9 @@
 Date: 2026-06-10
 
 Status: research only — no implementation task is open. A PRD should be
-written only after `prd/04_TYPED_WITNESS_PROTOCOL.md` M1 lands (see "When to
-PRD" below).
+written only after the typed protocol-storage migration in
+`plans/RALPH_WITNESS_PROTOCOL_STORAGE_MIGRATION.md` lands (see "When to PRD"
+below).
 
 ## Problem
 
@@ -65,10 +66,10 @@ witnesses); multi-owner rows become explicit follow-ups.
 
 ## When To PRD (ordering gates)
 
-1. **After `prd/04` M1.** The typed-witness-protocol migration changes every
+1. **After the typed protocol-storage migration.** That migration changes every
    witness's AST shape (single record var, `.with(...)` updates, picks-based
-   actions with conditional literals). An extractor built against today's
-   parallel-vars shape is throwaway; the post-04 shape is also simpler to
+   actions with conditional literals). An extractor built against the old
+   parallel-vars shape is throwaway; the migrated shape is also simpler to
    extract (uniform protocol record, shared step helpers as stable anchors).
 2. **Oracle disambiguation belongs to `prd/02`'s registry milestones.** When
    `prd/02` touches `obligations.jsonl`, add the outcome-oracle

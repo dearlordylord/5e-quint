@@ -18,6 +18,8 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
   //   Bonus Action, Spell Attack, Concentration, Illumination, and Spell Slot.
   type Hole = | NoHole
 
+  type SpellCreatedHeldObjectLifecycleScenarioOutcome = | Init | CastHeldObject | AttackedHeldObject | ReleasedHeldObject | NextCasterTurn | ReEvokedHeldObject | ConcentrationCleaned | DurationCleaned
+
   type SpellCreatedHeldObjectWitnessState = {
     magicActionAvailable: bool,
     bonusActionAvailable: bool,
@@ -32,7 +34,7 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
     attackAvailable: bool,
     reEvokeAvailable: bool,
     targetHp: int,
-    scenarioResult: str,
+    scenarioOutcome: SpellCreatedHeldObjectLifecycleScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -55,7 +57,7 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
     attackAvailable: bool,
     reEvokeAvailable: bool,
     targetHp: int,
-    scenarioResult: str,
+    scenarioOutcome: SpellCreatedHeldObjectLifecycleScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -72,7 +74,7 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
       attackAvailable: attackAvailable,
       reEvokeAvailable: reEvokeAvailable,
       targetHp: targetHp,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -91,9 +93,8 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
     false,
     false,
     initialTargetHp,
-    "init",
-    witnessInit(NoHole),
-  )
+    Init,
+    witnessInit(NoHole))
 
   action doCastHeldObject = all {
     qState.initialCastAvailable,
@@ -114,9 +115,8 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
       true,
       false,
       initialTargetHp,
-      "castHeldObject",
-      witnessResolved(NoHole),
-    ),
+      CastHeldObject,
+      witnessResolved(NoHole)),
   }
 
   action doAttackHeldObject = all {
@@ -138,9 +138,8 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
       false,
       false,
       hitTargetHp,
-      "attackedHeldObject",
-      witnessResolved(NoHole),
-    ),
+      AttackedHeldObject,
+      witnessResolved(NoHole)),
   }
 
   action doReleaseHeldObject = all {
@@ -160,9 +159,8 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
       false,
       qState.bonusActionAvailable,
       qState.targetHp,
-      "releasedHeldObject",
-      witnessResolved(NoHole),
-    ),
+      ReleasedHeldObject,
+      witnessResolved(NoHole)),
   }
 
   action doAdvanceToCasterTurn = all {
@@ -182,9 +180,8 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
       qState.heldObjectHeld,
       not(qState.heldObjectHeld),
       qState.targetHp,
-      "nextCasterTurn",
-      witnessResolved(NoHole),
-    ),
+      NextCasterTurn,
+      witnessResolved(NoHole)),
   }
 
   action doReEvokeHeldObject = all {
@@ -207,9 +204,8 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
       qState.magicActionAvailable,
       false,
       qState.targetHp,
-      "reEvokedHeldObject",
-      witnessResolved(NoHole),
-    ),
+      ReEvokedHeldObject,
+      witnessResolved(NoHole)),
   }
 
   action doBreakConcentration = all {
@@ -229,9 +225,8 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
       false,
       false,
       qState.targetHp,
-      "concentrationCleaned",
-      witnessResolved(NoHole),
-    ),
+      ConcentrationCleaned,
+      witnessResolved(NoHole)),
   }
 
   action doExpireDuration = all {
@@ -251,9 +246,8 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
       false,
       false,
       qState.targetHp,
-      "durationCleaned",
-      witnessResolved(NoHole),
-    ),
+      DurationCleaned,
+      witnessResolved(NoHole)),
   }
 
   action doStutter = recordSpellCreatedHeldObjectState(
@@ -270,7 +264,7 @@ module battleRuntimeSpellCreatedHeldObjectLifecycleMbt {
     qState.attackAvailable,
     qState.reEvokeAvailable,
     qState.targetHp,
-    qState.scenarioResult,
+    qState.scenarioOutcome,
     qState.protocol,
   )
 

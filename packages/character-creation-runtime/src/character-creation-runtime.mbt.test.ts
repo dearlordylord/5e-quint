@@ -83,9 +83,9 @@ type RuntimeMbtState = {
   readonly draft: DraftProjection;
   readonly holes: readonly HoleVariant[];
   readonly finalization: "ready" | "incomplete" | "invalid";
-  readonly lastResult: "init" | "accepted" | "rejected";
-  readonly lastBatchIssueCodes: readonly CreationBatchIssueCode[];
-  readonly lastFillIssues: readonly FillIssueProjection[];
+  readonly outcome: "init" | "accepted" | "rejected";
+  readonly batchIssueCodes: readonly CreationBatchIssueCode[];
+  readonly fillIssues: readonly FillIssueProjection[];
 };
 
 type FillIssueProjection = {
@@ -118,33 +118,38 @@ const quintDraftSchema = z.object({
 });
 
 const quintStateSchema = z.object({
-  qDraft: quintDraftSchema,
-  qHoles: z.unknown(),
-  qFinalization: z.unknown(),
-  qLastResult: z.union([
-    z.literal("init"),
-    z.literal("accepted"),
-    z.literal("rejected"),
-  ]),
-  qLastBatchIssueCodes: z.unknown(),
-  qLastFillIssues: z.unknown(),
+  qState: z.object({
+    draft: quintDraftSchema,
+    openHoles: z.unknown(),
+    finalization: z.unknown(),
+    outcome: z.unknown(),
+    batchIssueCodes: z.unknown(),
+    fillIssues: z.unknown(),
+  }),
 });
 
 function normalizeQuintState(raw: unknown): RuntimeMbtState {
   const parsed = quintStateSchema.parse(raw);
+  const state = parsed.qState;
   return {
     draft: {
-      ...parsed.qDraft,
-      revision: Number(parsed.qDraft.revision),
+      ...state.draft,
+      revision: Number(state.draft.revision),
     },
-    holes: normalizeHoleSet(parsed.qHoles),
-    finalization: normalizeFinalization(parsed.qFinalization),
-    lastResult: parsed.qLastResult,
-    lastBatchIssueCodes: normalizeBatchIssueCodeSet(
-      parsed.qLastBatchIssueCodes,
-    ),
-    lastFillIssues: normalizeFillIssueSet(parsed.qLastFillIssues),
+    holes: normalizeHoleSet(state.openHoles),
+    finalization: normalizeFinalization(state.finalization),
+    outcome: normalizeRuntimeOutcome(state.outcome),
+    batchIssueCodes: normalizeBatchIssueCodeSet(state.batchIssueCodes),
+    fillIssues: normalizeFillIssueSet(state.fillIssues),
   };
+}
+
+function normalizeRuntimeOutcome(raw: unknown): RuntimeMbtState["outcome"] {
+  const tag = nullaryVariantToString(raw, "creation runtime outcome");
+  if (tag === "CreationInit") return "init";
+  if (tag === "CreationAccepted") return "accepted";
+  if (tag === "CreationRejected") return "rejected";
+  throw new Error(`Unknown creation runtime outcome ${tag}.`);
 }
 
 function normalizeHoleSet(raw: unknown): readonly HoleVariant[] {
@@ -210,7 +215,7 @@ function variantToString(value: unknown): string {
   }
 
   if (typeof value === "object" && value !== null && "tag" in value) {
-    return String((value as { readonly tag: unknown }).tag);
+    return String(Object.fromEntries(Object.entries(value))["tag"]);
   }
 
   throw new Error(
@@ -230,7 +235,7 @@ function nullaryVariantToString(value: unknown, context: string): string {
         throw new Error(`Expected nullary Quint ${context} variant.`);
       }
     }
-    return String((value as { readonly tag: unknown }).tag);
+    return String(Object.fromEntries(Object.entries(value))["tag"]);
   }
 
   throw new Error(
@@ -533,17 +538,17 @@ function createCharacterCreationDriver() {
     let draft = newDraft();
     let holes: readonly CreationHole[] = [];
     let finalization = finalizeCharacterDraft({ draft, unitLibrary });
-    let lastResult: RuntimeMbtState["lastResult"] = "init";
-    let lastBatchIssueCodes: readonly CreationBatchIssueCode[] = [];
-    let lastFillIssues: readonly FillIssueProjection[] = [];
+    let outcome: RuntimeMbtState["outcome"] = "init";
+    let batchIssueCodes: readonly CreationBatchIssueCode[] = [];
+    let fillIssues: readonly FillIssueProjection[] = [];
 
     function reset(): void {
       draft = newDraft();
       holes = discoverCreationHoles({ draft, unitLibrary });
       finalization = finalizeCharacterDraft({ draft, unitLibrary });
-      lastResult = "init";
-      lastBatchIssueCodes = [];
-      lastFillIssues = [];
+      outcome = "init";
+      batchIssueCodes = [];
+      fillIssues = [];
     }
 
     function submit(
@@ -559,9 +564,9 @@ function createCharacterCreationDriver() {
       draft = result.draft;
       holes = result.holes;
       finalization = result.finalization;
-      lastResult = result.tag;
-      lastBatchIssueCodes = batchIssueCodes(result);
-      lastFillIssues = fillIssues(result);
+      outcome = result.tag;
+      batchIssueCodes = batchIssueCodesForResult(result);
+      fillIssues = fillIssuesForResult(result);
     }
 
     return {
@@ -615,9 +620,9 @@ function createCharacterCreationDriver() {
           .map((hole) => holeVariantForId(String(hole.holeId)))
           .sort(),
         finalization: finalization.tag,
-        lastResult,
-        lastBatchIssueCodes,
-        lastFillIssues,
+        outcome,
+        batchIssueCodes,
+        fillIssues,
       }),
     };
   });
@@ -665,7 +670,7 @@ function choiceFillForKnownProtocolHole(
   };
 }
 
-function batchIssueCodes(
+function batchIssueCodesForResult(
   result: CreationBatchFillResult,
 ): readonly CreationBatchIssueCode[] {
   return result.tag === "accepted"
@@ -676,7 +681,7 @@ function batchIssueCodes(
         .sort();
 }
 
-function fillIssues(
+function fillIssuesForResult(
   result: CreationBatchFillResult,
 ): readonly FillIssueProjection[] {
   return result.tag === "accepted"

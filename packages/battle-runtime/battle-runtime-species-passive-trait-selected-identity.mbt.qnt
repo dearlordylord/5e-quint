@@ -21,6 +21,8 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
   //   escape checks and Resistance damage halving.
   type Hole = | NoHole
 
+  type SpeciesPassiveTraitSelectedIdentityScenarioOutcome = | Init | DragonbornDamageResistance | DwarvenResilience | HalflingBrave | GoliathPowerfulBuild
+
   type SpeciesPassiveTraitSelectedIdentityWitnessState = {
     dragonbornFireDamageAfter: int,
     dragonbornColdDamageAfter: int,
@@ -33,7 +35,7 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
     halflingPoisonedSaveAdvantage: bool,
     goliathEscapeRollMode: str,
     goliathPoisonedEscapeRollMode: str,
-    scenarioResult: str,
+    scenarioOutcome: SpeciesPassiveTraitSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -51,7 +53,7 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
     halflingPoisonedSaveAdvantage: bool,
     goliathEscapeRollMode: str,
     goliathPoisonedEscapeRollMode: str,
-    scenarioResult: str,
+    scenarioOutcome: SpeciesPassiveTraitSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -66,50 +68,45 @@ module battleRuntimeSpeciesPassiveTraitSelectedIdentityMbt {
       halflingPoisonedSaveAdvantage: halflingPoisonedSaveAdvantage,
       goliathEscapeRollMode: goliathEscapeRollMode,
       goliathPoisonedEscapeRollMode: goliathPoisonedEscapeRollMode,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
   action init = recordProjection(
-    9, 9, 9, 9, false, false, false, false, false, "normal", "normal", "init",
-    witnessInit(NoHole),
-  )
+    9, 9, 9, 9, false, false, false, false, false, "normal", "normal", Init,
+    witnessInit(NoHole))
 
   action doDragonbornDamageResistance = all {
     qState.protocol.result == WInit,
     recordProjection(
       4, 9, 9, 9, false, false, false, false, false, "normal", "normal",
-      "dragonbornDamageResistance",
-      witnessResolved(NoHole),
-    ),
+      DragonbornDamageResistance,
+      witnessResolved(NoHole)),
   }
 
   action doDwarvenResilience = all {
     qState.protocol.result == WInit,
     recordProjection(
       9, 9, 4, 9, true, false, false, false, false, "normal", "normal",
-      "dwarvenResilience",
-      witnessResolved(NoHole),
-    ),
+      DwarvenResilience,
+      witnessResolved(NoHole)),
   }
 
   action doHalflingBrave = all {
     qState.protocol.result == WInit,
     recordProjection(
       9, 9, 9, 9, false, false, true, true, false, "normal", "normal",
-      "halflingBrave",
-      witnessResolved(NoHole),
-    ),
+      HalflingBrave,
+      witnessResolved(NoHole)),
   }
 
   action doGoliathPowerfulBuild = all {
     qState.protocol.result == WInit,
     recordProjection(
       9, 9, 9, 9, false, false, false, false, false, "advantage", "normal",
-      "goliathPowerfulBuild",
-      witnessResolved(NoHole),
-    ),
+      GoliathPowerfulBuild,
+      witnessResolved(NoHole)),
   }
 
   action step = any {

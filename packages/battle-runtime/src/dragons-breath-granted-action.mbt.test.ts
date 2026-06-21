@@ -792,7 +792,7 @@ function normalizeDragonsBreathQuintState(
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "Dragon's Breath granted action",
-    scenarioResult: lastResult,
+    scenarioOutcome: lastResult,
     protocol,
   });
   return {

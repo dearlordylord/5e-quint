@@ -41,16 +41,14 @@ const TASK_ID_B5 = "B5-CLASS-FEATURE-IDENTITY-BATCH-2";
 const BARD_JACK_OF_ALL_TRADES_UNIT_ID = "bard_jack_of_all_trades";
 const CLERIC_LIFE_DOMAIN_SPELLS_UNIT_ID = "cleric_life_domain_spells";
 const DRUID_CIRCLE_LAND_SPELLS_UNIT_ID = "druid_circle_of_the_land_spells";
-const PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID =
-  "paladin_oath_of_devotion_spells";
+const PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID = "paladin_oath_of_devotion_spells";
 const PALADIN_PALADINS_SMITE_UNIT_ID = "paladin_paladins_smite";
 const RANGER_FAVORED_ENEMY_UNIT_ID = "ranger_favored_enemy";
 const SORCERER_DRACONIC_SPELLS_UNIT_ID = "sorcerer_draconic_spells";
 const WARLOCK_FIEND_SPELLS_UNIT_ID = "warlock_fiend_spells";
 const CLERIC_LIFE_DOMAIN_LEVEL_3_EXPECTED_SPELL_ID = "aid";
 const DRUID_CIRCLE_LAND_TEMPERATE_EXPECTED_SPELL_ID = "misty_step";
-const PALADIN_OATH_DEVOTION_EXPECTED_SPELL_ID =
-  "protection_from_evil_and_good";
+const PALADIN_OATH_DEVOTION_EXPECTED_SPELL_ID = "protection_from_evil_and_good";
 const PALADINS_SMITE_EXPECTED_SPELL_ID = "divine_smite";
 const RANGER_FAVORED_ENEMY_EXPECTED_SPELL_ID = "hunters_mark";
 const SORCERER_DRACONIC_EXPECTED_SPELL_ID = "alter_self";
@@ -85,7 +83,7 @@ type ClassFeatureSelectedIdentityUnitId =
   | typeof SORCERER_DRACONIC_SPELLS_UNIT_ID
   | typeof WARLOCK_FIEND_SPELLS_UNIT_ID;
 type ClassFeatureSelectedIdentityProjection = {
-  readonly lastResult: ClassFeatureSelectedIdentityResult;
+  readonly outcome: ClassFeatureSelectedIdentityResult;
   readonly featureUnitId: ClassFeatureSelectedIdentityUnitId | "none";
   readonly spellcastingSourceUnitId: UnitRecord["id"] | "none";
   readonly expectedSpellPresent: boolean;
@@ -129,8 +127,7 @@ const qntStepByDriverAction = {
   doProjectBardJackOfAllTrades: "stepProjectBardJackOfAllTrades",
   doProjectClericLifeDomainSpells: "stepProjectClericLifeDomainSpells",
   doProjectDruidCircleLandSpells: "stepProjectDruidCircleLandSpells",
-  doProjectPaladinOathDevotionSpells:
-    "stepProjectPaladinOathDevotionSpells",
+  doProjectPaladinOathDevotionSpells: "stepProjectPaladinOathDevotionSpells",
   doProjectPaladinsSmite: "stepProjectPaladinsSmite",
   doProjectRangerFavoredEnemy: "stepProjectRangerFavoredEnemy",
   doProjectSorcererDraconicSpells: "stepProjectSorcererDraconicSpells",
@@ -366,7 +363,7 @@ function createClassFeatureSelectedIdentityDriver() {
 
 function initialProjection(): ClassFeatureSelectedIdentityProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
     featureUnitId: "none",
     spellcastingSourceUnitId: "none",
     expectedSpellPresent: false,
@@ -390,7 +387,7 @@ function bardJackOfAllTradesProjection(): ClassFeatureSelectedIdentityProjection
     throw new Error("Expected Jack of All Trades ability check projection.");
   }
   return {
-    lastResult: "bard-jack-of-all-trades",
+    outcome: "bard-jack-of-all-trades",
     featureUnitId: expectedClassFeatureUnitId(
       result.sourceUnitId,
       BARD_JACK_OF_ALL_TRADES_UNIT_ID,
@@ -420,7 +417,7 @@ function clericLifeDomainSpellsProjection(): ClassFeatureSelectedIdentityProject
     CLERIC_LIFE_DOMAIN_SPELLS_UNIT_ID,
   );
   return {
-    lastResult: "cleric-life-domain-spells",
+    outcome: "cleric-life-domain-spells",
     featureUnitId: expectedClassFeatureUnitId(
       access.sourceUnitId,
       CLERIC_LIFE_DOMAIN_SPELLS_UNIT_ID,
@@ -462,7 +459,7 @@ function druidCircleLandSpellsProjection(): ClassFeatureSelectedIdentityProjecti
     "Expected Circle of the Land prepared Spell Access.",
   );
   return {
-    lastResult: "druid-circle-land-spells",
+    outcome: "druid-circle-land-spells",
     featureUnitId: expectedClassFeatureUnitId(
       access.sourceUnitId,
       DRUID_CIRCLE_LAND_SPELLS_UNIT_ID,
@@ -494,7 +491,7 @@ function paladinOathDevotionSpellsProjection(): ClassFeatureSelectedIdentityProj
     PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID,
   );
   return preparedSpellAccessProjection({
-    lastResult: "paladin-oath-devotion-spells",
+    outcome: "paladin-oath-devotion-spells",
     access,
     expectedUnitId: PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID,
     expectedSpellId: PALADIN_OATH_DEVOTION_EXPECTED_SPELL_ID,
@@ -507,7 +504,7 @@ function paladinsSmiteProjection(): ClassFeatureSelectedIdentityProjection {
     PALADIN_PALADINS_SMITE_UNIT_ID,
   );
   return preparedSpellAccessProjection({
-    lastResult: "paladins-smite",
+    outcome: "paladins-smite",
     access,
     expectedUnitId: PALADIN_PALADINS_SMITE_UNIT_ID,
     expectedSpellId: PALADINS_SMITE_EXPECTED_SPELL_ID,
@@ -520,7 +517,7 @@ function rangerFavoredEnemyProjection(): ClassFeatureSelectedIdentityProjection 
     RANGER_FAVORED_ENEMY_UNIT_ID,
   );
   return preparedSpellAccessProjection({
-    lastResult: "ranger-favored-enemy",
+    outcome: "ranger-favored-enemy",
     access,
     expectedUnitId: RANGER_FAVORED_ENEMY_UNIT_ID,
     expectedSpellId: RANGER_FAVORED_ENEMY_EXPECTED_SPELL_ID,
@@ -543,7 +540,7 @@ function sorcererDraconicSpellsProjection(): ClassFeatureSelectedIdentityProject
     SORCERER_DRACONIC_SPELLS_UNIT_ID,
   );
   return preparedSpellAccessProjection({
-    lastResult: "sorcerer-draconic-spells",
+    outcome: "sorcerer-draconic-spells",
     access,
     expectedUnitId: SORCERER_DRACONIC_SPELLS_UNIT_ID,
     expectedSpellId: SORCERER_DRACONIC_EXPECTED_SPELL_ID,
@@ -566,7 +563,7 @@ function warlockFiendSpellsProjection(): ClassFeatureSelectedIdentityProjection 
     WARLOCK_FIEND_SPELLS_UNIT_ID,
   );
   return preparedSpellAccessProjection({
-    lastResult: "warlock-fiend-spells",
+    outcome: "warlock-fiend-spells",
     access,
     expectedUnitId: WARLOCK_FIEND_SPELLS_UNIT_ID,
     expectedSpellId: WARLOCK_FIEND_EXPECTED_SPELL_ID,
@@ -574,7 +571,7 @@ function warlockFiendSpellsProjection(): ClassFeatureSelectedIdentityProjection 
 }
 
 function preparedSpellAccessProjection(input: {
-  readonly lastResult: ClassFeatureSelectedIdentityResult;
+  readonly outcome: ClassFeatureSelectedIdentityResult;
   readonly access: ReturnType<
     typeof characterSheetClassFeaturePreparedSpellAccessesForBuild
   >[number];
@@ -582,15 +579,13 @@ function preparedSpellAccessProjection(input: {
   readonly expectedSpellId: UnitRecord["id"];
 }): ClassFeatureSelectedIdentityProjection {
   return {
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     featureUnitId: expectedClassFeatureUnitId(
       input.access.sourceUnitId,
       input.expectedUnitId,
     ),
     spellcastingSourceUnitId: "none",
-    expectedSpellPresent: input.access.spellIds.includes(
-      input.expectedSpellId,
-    ),
+    expectedSpellPresent: input.access.spellIds.includes(input.expectedSpellId),
     spellCount: input.access.spellIds.length,
     abilityCheckBonus: 0,
     land: "none",
@@ -617,12 +612,16 @@ function expectedClassFeatureUnitId(
   expected: ClassFeatureSelectedIdentityUnitId,
 ): ClassFeatureSelectedIdentityUnitId {
   if (actual === expected) return expected;
-  throw new Error(`Expected class-feature Unit ${expected}, received ${actual}.`);
+  throw new Error(
+    `Expected class-feature Unit ${expected}, received ${actual}.`,
+  );
 }
 
 function expectedTemperateLand(actual: string): "temperate" {
   if (actual === "temperate") return actual;
-  throw new Error(`Expected Circle of the Land choice temperate, got ${actual}.`);
+  throw new Error(
+    `Expected Circle of the Land choice temperate, got ${actual}.`,
+  );
 }
 
 function druidCircleLandBuild(): CharacterBuild {
@@ -706,25 +705,25 @@ function classBuild(input: {
 function normalizeClassFeatureSelectedIdentityQuintState(
   raw: unknown,
 ): ClassFeatureSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
+  const state = recordField(quintStateRecord(raw), "qState");
   return {
-    lastResult: resultField(state["qLastResult"]),
-    featureUnitId: featureUnitIdField(state["qFeatureUnitId"]),
+    outcome: outcomeField(state["outcome"]),
+    featureUnitId: featureUnitIdField(state["featureUnitId"]),
     spellcastingSourceUnitId: stringField(
-      state["qSpellcastingSourceUnitId"],
-      "qSpellcastingSourceUnitId",
+      state["spellcastingSourceUnitId"],
+      "qState.spellcastingSourceUnitId",
     ),
     expectedSpellPresent: booleanField(
-      state["qExpectedSpellPresent"],
-      "qExpectedSpellPresent",
+      state["expectedSpellPresent"],
+      "qState.expectedSpellPresent",
     ),
-    spellCount: numberFromQuintInt(state["qSpellCount"], "qSpellCount"),
+    spellCount: numberFromQuintInt(state["spellCount"], "qState.spellCount"),
     abilityCheckBonus: numberFromQuintInt(
-      state["qAbilityCheckBonus"],
-      "qAbilityCheckBonus",
+      state["abilityCheckBonus"],
+      "qState.abilityCheckBonus",
     ),
-    land: landField(state["qLand"]),
-    accepted: booleanField(state["qAccepted"], "qAccepted"),
+    land: landField(state["land"]),
+    accepted: booleanField(state["accepted"], "qState.accepted"),
   };
 }
 
@@ -739,23 +738,6 @@ function compareClassFeatureSelectedIdentityState(
     throw error;
   }
   return true;
-}
-
-function resultField(raw: unknown): ClassFeatureSelectedIdentityResult {
-  if (
-    raw === "init" ||
-    raw === "bard-jack-of-all-trades" ||
-    raw === "cleric-life-domain-spells" ||
-    raw === "druid-circle-land-spells" ||
-    raw === "paladin-oath-devotion-spells" ||
-    raw === "paladins-smite" ||
-    raw === "ranger-favored-enemy" ||
-    raw === "sorcerer-draconic-spells" ||
-    raw === "warlock-fiend-spells"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unknown class-feature selected identity result ${String(raw)}.`);
 }
 
 function featureUnitIdField(
@@ -791,6 +773,17 @@ function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
   return Object.fromEntries(Object.entries(raw));
 }
 
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
+}
+
 function stringField(raw: unknown, field: string): string {
   if (typeof raw === "string") return raw;
   throw new Error(`Expected string field ${field}.`);
@@ -805,6 +798,46 @@ function numberFromQuintInt(raw: unknown, field: string): number {
 function booleanField(raw: unknown, field: string): boolean {
   if (typeof raw === "boolean") return raw;
   throw new Error(`Expected boolean field ${field}.`);
+}
+
+const qntOutcomeByVariant = {
+  CharacterSheetClassFeatureSelectedIdentityInit: "init",
+  CharacterSheetClassFeatureSelectedIdentityBardJackOfAllTrades:
+    "bard-jack-of-all-trades",
+  CharacterSheetClassFeatureSelectedIdentityClericLifeDomainSpells:
+    "cleric-life-domain-spells",
+  CharacterSheetClassFeatureSelectedIdentityDruidCircleLandSpells:
+    "druid-circle-land-spells",
+  CharacterSheetClassFeatureSelectedIdentityPaladinOathDevotionSpells:
+    "paladin-oath-devotion-spells",
+  CharacterSheetClassFeatureSelectedIdentityPaladinsSmite: "paladins-smite",
+  CharacterSheetClassFeatureSelectedIdentityRangerFavoredEnemy:
+    "ranger-favored-enemy",
+  CharacterSheetClassFeatureSelectedIdentitySorcererDraconicSpells:
+    "sorcerer-draconic-spells",
+  CharacterSheetClassFeatureSelectedIdentityWarlockFiendSpells:
+    "warlock-fiend-spells",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function requireRight<T, E>(result: Either.Either<T, E>): T {

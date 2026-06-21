@@ -68,4 +68,17 @@ module battleRuntimeWitnessProtocol {
     holes: holes,
     result: WInvalid(reason),
   }
+
+  pure def witnessProtocolFromResult(
+    holes: Set[h],
+    holeType: h,
+    result: WitnessResult,
+  ): WitnessProtocol[h] =
+    match result {
+      | WInit =>
+          if (holes == Set()) witnessInit(holeType) else witnessInitWithHoles(holes)
+      | WNeedsHoles => witnessNeedsHoles(holes)
+      | WResolved => witnessResolved(holeType)
+      | WInvalid(reason) => witnessInvalidWithHoles(holes, reason)
+    }
 }

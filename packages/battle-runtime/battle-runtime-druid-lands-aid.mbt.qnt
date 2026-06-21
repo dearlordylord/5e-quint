@@ -30,12 +30,11 @@ module battleRuntimeDruidLandsAidMbt {
   pure def qHealingTargetHp: int = qState.qHealingTargetHp
   pure def qWildShapeUsesRemaining: int = qState.qWildShapeUsesRemaining
   pure def qActionResourcesRemaining: int = qState.qActionResourcesRemaining
-  pure def qLastResult: DruidLandsAidScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: DruidLandsAidScenarioOutcome = qState.qScenarioOutcome
 
   pure def druidLandsAidProtocolForProjection(
     holes: Set[WitnessHole],
     scenarioOutcome: DruidLandsAidScenarioOutcome,
-    _scenarioInvalidReason: str,
   ): WitnessProtocol[WitnessHole] =
     if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
@@ -66,7 +65,7 @@ module battleRuntimeDruidLandsAidMbt {
       qWildShapeUsesRemaining: wildShapeUsesRemaining,
       qActionResourcesRemaining: actionResourcesRemaining,
       qScenarioOutcome: lastResult,
-      protocol: druidLandsAidProtocolForProjection(Set(), lastResult, ""),
+      protocol: druidLandsAidProtocolForProjection(Set(), lastResult),
     },
   }
 
@@ -75,47 +74,47 @@ module battleRuntimeDruidLandsAidMbt {
   // Level variants stay enumerated because each one witnesses a distinct
   // Druid-level fixture and die-count projection, not a sampled fill value.
   action doResolveAreaSaveDamageHealing = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(12, 16, 12, 1, 0, Resolved),
   }
 
   action doResolveAreaSaveDamageHealingLevel10 = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(8, 14, 17, 1, 0, Resolved),
   }
 
   action doResolveAreaSaveDamageHealingLevel14 = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(4, 12, 20, 1, 0, Resolved),
   }
 
   action doRejectMissingResource = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 20, 5, 0, 1, RejectMissingResource),
   }
 
   action doRejectMissingAreaMembership = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 20, 5, 2, 1, RejectMissingAreaMembership),
   }
 
   action doRejectDuplicateSaveFill = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 20, 5, 2, 1, RejectDuplicateSaveFill),
   }
 
   action doRejectInvalidHealingTarget = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 20, 5, 2, 1, RejectInvalidHealingTarget),
   }
 
   action doRejectInvalidDamageRoll = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 20, 5, 2, 1, RejectInvalidDamageRoll),
   }
 
   action doRejectInvalidHealingRoll = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(20, 20, 5, 2, 1, RejectInvalidHealingRoll),
   }
 

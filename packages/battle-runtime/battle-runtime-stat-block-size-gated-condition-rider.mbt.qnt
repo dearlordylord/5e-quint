@@ -16,7 +16,7 @@ module battleRuntimeStatBlockSizeGatedConditionRiderMbt {
   var qTargetSizeGate: TargetSizeGate
   var qProtocol: WitnessProtocol[Hole]
 
-  pure def qHoles: Set[Hole] = qProtocol.holes
+  pure def openHoles: Set[Hole] = qProtocol.holes
 
   pure val targetInitialHp: int = 20
   pure val targetHpAfterBiteDamage: int = 17
@@ -59,7 +59,7 @@ module battleRuntimeStatBlockSizeGatedConditionRiderMbt {
   )
 
   action doFillTargetChoice = all {
-    qHoles == Set(TargetChoice),
+    openHoles == Set(TargetChoice),
     recordProjection(
       qTargetHp,
       qTargetProne,
@@ -70,7 +70,7 @@ module battleRuntimeStatBlockSizeGatedConditionRiderMbt {
   }
 
   action doFillHitAttackRoll = all {
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     val conditionApplies = qTargetSizeGate == MediumOrSmallerTarget
     recordProjection(
       qTargetHp,
@@ -82,7 +82,7 @@ module battleRuntimeStatBlockSizeGatedConditionRiderMbt {
   }
 
   action doResolveDamage = all {
-    qHoles == Set(DamageRoll),
+    openHoles == Set(DamageRoll),
     recordProjection(
       targetHpAfterBiteDamage,
       qTargetProne,

@@ -492,7 +492,7 @@ function normalizeMindSpikeQuintState(
   const lastResult = quintSelectedIdentityResult(state, "qScenarioOutcome");
   assertWitnessProtocolConsistentWithScenario({
     label: "Mind Spike selected identity",
-    scenarioResult: lastResult,
+    scenarioOutcome: lastResult,
     protocol,
   });
   return {

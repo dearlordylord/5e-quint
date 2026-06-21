@@ -27,8 +27,8 @@ module battleRuntimeSleetStormAreaHazardMbt {
   var qProtocol: WitnessProtocol[Hole]
   var qScenarioOutcome: SleetStormAreaHazardScenarioOutcome
 
-  pure def qHoles: Set[Hole] = qProtocol.holes
-  pure def qLastResult: SleetStormAreaHazardScenarioOutcome = qScenarioOutcome
+  pure def openHoles: Set[Hole] = qProtocol.holes
+  pure def scenarioOutcome: SleetStormAreaHazardScenarioOutcome = qScenarioOutcome
 
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
@@ -39,9 +39,9 @@ module battleRuntimeSleetStormAreaHazardMbt {
 
   pure def sleetStormProtocolForProjection(
     holes: Set[Hole],
-    scenarioResult: SleetStormAreaHazardScenarioOutcome,
+    scenarioOutcome: SleetStormAreaHazardScenarioOutcome,
   ): WitnessProtocol[Hole] =
-    if (scenarioResult == Init) witnessInit("EntrySavingThrowOutcome")
+    if (scenarioOutcome == Init) witnessInit("EntrySavingThrowOutcome")
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved("EntrySavingThrowOutcome")
 
@@ -95,7 +95,7 @@ module battleRuntimeSleetStormAreaHazardMbt {
     qActionAvailable,
     qSpellAvailable,
     not(qHazardActive),
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordSleetStormState(
       casterTurnRole,
       false,
@@ -116,7 +116,7 @@ module battleRuntimeSleetStormAreaHazardMbt {
     qCurrentTurnRole == casterTurnRole,
     qHazardActive,
     qCasterConcentrating,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordSleetStormState(
       targetTurnRole,
       true,
@@ -137,7 +137,7 @@ module battleRuntimeSleetStormAreaHazardMbt {
     qCurrentTurnRole == targetTurnRole,
     qHazardActive,
     not(qSavedThisTurn),
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordSleetStormState(
       targetTurnRole,
       qActionAvailable,
@@ -158,7 +158,7 @@ module battleRuntimeSleetStormAreaHazardMbt {
     qCurrentTurnRole == targetTurnRole,
     qHazardActive,
     not(qSavedThisTurn),
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordSleetStormState(
       targetTurnRole,
       qActionAvailable,
@@ -177,7 +177,7 @@ module battleRuntimeSleetStormAreaHazardMbt {
 
   action doFillEntrySaveFailure = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == entrySavingThrowOutcomeHoles,
+    openHoles == entrySavingThrowOutcomeHoles,
     recordSleetStormState(
       targetTurnRole,
       qActionAvailable,
@@ -196,7 +196,7 @@ module battleRuntimeSleetStormAreaHazardMbt {
 
   action doFillEntrySaveSuccess = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == entrySavingThrowOutcomeHoles,
+    openHoles == entrySavingThrowOutcomeHoles,
     recordSleetStormState(
       targetTurnRole,
       qActionAvailable,
@@ -215,7 +215,7 @@ module battleRuntimeSleetStormAreaHazardMbt {
 
   action doFillStartTurnSaveFailure = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == startTurnSavingThrowOutcomeHoles,
+    openHoles == startTurnSavingThrowOutcomeHoles,
     recordSleetStormState(
       targetTurnRole,
       qActionAvailable,
@@ -234,7 +234,7 @@ module battleRuntimeSleetStormAreaHazardMbt {
 
   action doFillStartTurnSaveSuccess = all {
     qCurrentTurnRole == targetTurnRole,
-    qHoles == startTurnSavingThrowOutcomeHoles,
+    openHoles == startTurnSavingThrowOutcomeHoles,
     recordSleetStormState(
       targetTurnRole,
       qActionAvailable,
@@ -256,7 +256,7 @@ module battleRuntimeSleetStormAreaHazardMbt {
     qHazardActive,
     not(qTargetProne),
     qMovementSpentFeet == 0,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordSleetStormState(
       targetTurnRole,
       qActionAvailable,
@@ -276,7 +276,7 @@ module battleRuntimeSleetStormAreaHazardMbt {
   action doEndTargetTurn = all {
     qCurrentTurnRole == targetTurnRole,
     qHazardActive,
-    qHoles == noHoles,
+    openHoles == noHoles,
     recordSleetStormState(
       casterTurnRole,
       true,

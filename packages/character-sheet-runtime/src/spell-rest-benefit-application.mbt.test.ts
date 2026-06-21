@@ -36,7 +36,7 @@ type SpellRestBenefitScenario = (typeof spellRestBenefitScenarios)[number];
 const spellRestBenefitReplayStepCount = spellRestBenefitScenarios.length - 1;
 
 type SpellRestBenefitProjection = {
-  readonly lastResult: SpellRestBenefitScenario;
+  readonly outcome: SpellRestBenefitScenario;
   readonly slotSpent: boolean;
   readonly shortRestBenefitApplied: boolean;
   readonly healingApplied: boolean;
@@ -93,7 +93,7 @@ const selectedUnitIdentityReplays = [
           "doRejectRecipientLongRestLockout",
         ],
         expected: {
-          lastResult: "recipient-lockout-rejected",
+          outcome: "recipient-lockout-rejected",
           slotSpent: false,
           shortRestBenefitApplied: false,
           healingApplied: false,
@@ -186,7 +186,7 @@ describe("Character Sheet Spell Rest Benefit deterministic QNT replay", () => {
 
 function initialProjection(): SpellRestBenefitProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
     slotSpent: false,
     shortRestBenefitApplied: false,
     healingApplied: false,
@@ -221,7 +221,7 @@ function projectPrayerOfHealingApplication(): SpellRestBenefitProjection {
   const recipientAfter = result.recipients[0] ?? fail("Expected recipient.");
 
   return {
-    lastResult: "applied",
+    outcome: "applied",
     slotSpent: spellSlotExpended(result.caster, 2) === 1,
     shortRestBenefitApplied:
       requireRight(characterSheetHitDice(recipientAfter, unitLibrary))[0]
@@ -256,7 +256,7 @@ function projectPrayerOfHealingRecipientLockoutRejection(): SpellRestBenefitProj
   }
 
   return {
-    lastResult: "recipient-lockout-rejected",
+    outcome: "recipient-lockout-rejected",
     slotSpent: false,
     shortRestBenefitApplied: false,
     healingApplied: false,
@@ -408,24 +408,27 @@ function hasPrayerOfHealingLockout(sheet: CharacterSheet): boolean {
 function normalizeSpellRestBenefitQuintState(
   raw: unknown,
 ): SpellRestBenefitProjection {
-  const state = quintStateRecord(raw);
+  const state = recordField(quintStateRecord(raw), "qState");
   return {
-    lastResult: scenarioField(state["qLastResult"]),
-    slotSpent: booleanField(state["qSlotSpent"], "qSlotSpent"),
+    outcome: outcomeField(state["outcome"]),
+    slotSpent: booleanField(state["slotSpent"], "qState.slotSpent"),
     shortRestBenefitApplied: booleanField(
-      state["qShortRestBenefitApplied"],
-      "qShortRestBenefitApplied",
+      state["shortRestBenefitApplied"],
+      "qState.shortRestBenefitApplied",
     ),
-    healingApplied: booleanField(state["qHealingApplied"], "qHealingApplied"),
+    healingApplied: booleanField(
+      state["healingApplied"],
+      "qState.healingApplied",
+    ),
     healingDiceCount: numberFromQuintInt(
-      state["qHealingDiceCount"],
-      "qHealingDiceCount",
+      state["healingDiceCount"],
+      "qState.healingDiceCount",
     ),
     longRestLockoutStored: booleanField(
-      state["qLongRestLockoutStored"],
-      "qLongRestLockoutStored",
+      state["longRestLockoutStored"],
+      "qState.longRestLockoutStored",
     ),
-    replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
+    replayIndex: numberFromQuintInt(state["replayIndex"], "qState.replayIndex"),
   };
 }
 
@@ -442,22 +445,22 @@ function compareSpellRestBenefitState(
   return true;
 }
 
-function scenarioField(raw: unknown): SpellRestBenefitScenario {
-  if (typeof raw === "string" && isSpellRestBenefitScenario(raw)) return raw;
-  throw new Error(`Unknown Spell Rest Benefit scenario ${String(raw)}.`);
-}
-
-function isSpellRestBenefitScenario(
-  raw: string,
-): raw is SpellRestBenefitScenario {
-  return spellRestBenefitScenarios.some((scenario) => scenario === raw);
-}
-
 function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("Expected Quint Spell Rest Benefit state.");
   }
   return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }
 
 function booleanField(raw: unknown, field: string): boolean {
@@ -469,6 +472,34 @@ function numberFromQuintInt(raw: unknown, field: string): number {
   if (typeof raw === "number") return raw;
   if (typeof raw === "bigint") return Number(raw);
   throw new Error(`Expected Quint integer field ${field}.`);
+}
+
+const qntOutcomeByVariant = {
+  CharacterSheetSpellRestBenefitApplicationInit: "init",
+  CharacterSheetSpellRestBenefitApplicationApplied: "applied",
+  CharacterSheetSpellRestBenefitApplicationRecipientLockoutRejected:
+    "recipient-lockout-rejected",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function requireRight<T, E>(result: Either.Either<T, E>): T {

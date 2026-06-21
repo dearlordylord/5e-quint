@@ -561,13 +561,13 @@ function compareRuleCoreStatBlockControlState(
 function statBlockControlHoleName(
   raw: unknown,
 ): RuleCoreStatBlockControlMbtHole {
-  const name = stringFieldValue(raw, "qHoles entry");
+  const name = stringFieldValue(raw, "protocol.holes entry");
   if (isRuleCoreStatBlockControlMbtHole(name)) return name;
   throw new Error(`Unexpected rule-core Stat Block control MBT hole: ${name}`);
 }
 
 function statBlockControlResult(raw: unknown): RuleCoreStatBlockControlResult {
-  const value = stringFieldValue(raw, "qLastResult");
+  const value = stringFieldValue(raw, "protocol.result");
   if (isRuleCoreStatBlockControlResult(value)) return value;
   throw new Error(
     `Unexpected rule-core Stat Block control MBT result: ${value}`,
@@ -577,7 +577,7 @@ function statBlockControlResult(raw: unknown): RuleCoreStatBlockControlResult {
 function statBlockControlInvalidReason(
   raw: unknown,
 ): RuleCoreStatBlockControlInvalidReason {
-  const value = stringFieldValue(raw, "qLastInvalidReason");
+  const value = stringFieldValue(raw, "protocol.invalidReason");
   if (isRuleCoreStatBlockControlInvalidReason(value)) return value;
   throw new Error(
     `Unexpected rule-core Stat Block control MBT invalid reason: ${value}`,

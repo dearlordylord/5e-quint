@@ -32,15 +32,13 @@ module battleRuntimeCunningStrikeSelectedIdentityMbt {
   pure def qSneakAttackDiceRolled: int = qState.qSneakAttackDiceRolled
   pure def qCunningStrikeUnitBound: bool = qState.qCunningStrikeUnitBound
   pure def qSourceDamageRiderUnitBound: bool = qState.qSourceDamageRiderUnitBound
-  pure def qLastResult: CunningStrikeSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: CunningStrikeSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: CunningStrikeSelectedIdentityScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: CunningStrikeSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -63,7 +61,7 @@ module battleRuntimeCunningStrikeSelectedIdentityMbt {
       qCunningStrikeUnitBound: cunningStrikeUnitBound,
       qSourceDamageRiderUnitBound: sourceDamageRiderUnitBound,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
 
@@ -79,7 +77,7 @@ module battleRuntimeCunningStrikeSelectedIdentityMbt {
   )
 
   action doResolveCunningStrikeTripFailedSave = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       22,
       true,
@@ -93,7 +91,7 @@ module battleRuntimeCunningStrikeSelectedIdentityMbt {
   }
 
   action doResolveCunningStrikePoisonFailedSave = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       22,
       false,
@@ -107,7 +105,7 @@ module battleRuntimeCunningStrikeSelectedIdentityMbt {
   }
 
   action doResolveCunningStrikeWithdrawMove = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       22,
       false,

@@ -4,27 +4,38 @@
 module characterCreationWeaponMasteryLevelGainMbt {
   import weaponMasteryReselection.* from "../shared-algebras/proofs/rule-core/weapon-mastery-reselection"
 
-  var qLastResult: str
-  var qClassUnitId: str
-  var qFeatureUnitId: str
-  var qCurrentClassLevel: int
-  var qNextClassLevel: int
-  var qCurrentChoiceCount: int
-  var qNextChoiceCount: int
-  var qRequestedWeaponCount: int
-  var qSelectedWeaponCount: int
-  var qGainCount: int
-  var qFirstWeaponUnitId: str
-  var qSecondWeaponUnitId: str
-  var qThirdWeaponUnitId: str
-  var qFourthWeaponUnitId: str
-  var qAccepted: bool
-  var qOverCountRejected: bool
-  var qDuplicateRejected: bool
-  var qRejectedWithoutStateChange: bool
+  type CharacterCreationWeaponMasteryLevelGainOutcome =
+    | CharacterCreationWeaponMasteryLevelGainInit
+    | CharacterCreationWeaponMasteryLevelGainFighterLevelFourAccepted
+    | CharacterCreationWeaponMasteryLevelGainBarbarianLevelFourAccepted
+    | CharacterCreationWeaponMasteryLevelGainFighterOverCountRejected
+    | CharacterCreationWeaponMasteryLevelGainFighterDuplicateRejected
+
+  type CharacterCreationWeaponMasteryLevelGainState = {
+    outcome: CharacterCreationWeaponMasteryLevelGainOutcome,
+    classUnitId: str,
+    featureUnitId: str,
+    currentClassLevel: int,
+    nextClassLevel: int,
+    currentChoiceCount: int,
+    nextChoiceCount: int,
+    requestedWeaponCount: int,
+    selectedWeaponCount: int,
+    gainCount: int,
+    firstWeaponUnitId: str,
+    secondWeaponUnitId: str,
+    thirdWeaponUnitId: str,
+    fourthWeaponUnitId: str,
+    accepted: bool,
+    overCountRejected: bool,
+    duplicateRejected: bool,
+    rejectedWithoutStateChange: bool,
+  }
+
+  var qState: CharacterCreationWeaponMasteryLevelGainState
 
   action recordProjection(
-    lastResult: str,
+    outcome: CharacterCreationWeaponMasteryLevelGainOutcome,
     classUnitId: str,
     featureUnitId: str,
     currentClassLevel: int,
@@ -43,28 +54,49 @@ module characterCreationWeaponMasteryLevelGainMbt {
     duplicateRejected: bool,
     rejectedWithoutStateChange: bool,
   ): bool = all {
-    qLastResult' = lastResult,
-    qClassUnitId' = classUnitId,
-    qFeatureUnitId' = featureUnitId,
-    qCurrentClassLevel' = currentClassLevel,
-    qNextClassLevel' = nextClassLevel,
-    qCurrentChoiceCount' = currentChoiceCount,
-    qNextChoiceCount' = nextChoiceCount,
-    qRequestedWeaponCount' = requestedWeaponCount,
-    qSelectedWeaponCount' = selectedWeaponCount,
-    qGainCount' = gainCount,
-    qFirstWeaponUnitId' = firstWeaponUnitId,
-    qSecondWeaponUnitId' = secondWeaponUnitId,
-    qThirdWeaponUnitId' = thirdWeaponUnitId,
-    qFourthWeaponUnitId' = fourthWeaponUnitId,
-    qAccepted' = accepted,
-    qOverCountRejected' = overCountRejected,
-    qDuplicateRejected' = duplicateRejected,
-    qRejectedWithoutStateChange' = rejectedWithoutStateChange,
+    qState' = {
+      outcome: outcome,
+      classUnitId: classUnitId,
+      featureUnitId: featureUnitId,
+      currentClassLevel: currentClassLevel,
+      nextClassLevel: nextClassLevel,
+      currentChoiceCount: currentChoiceCount,
+      nextChoiceCount: nextChoiceCount,
+      requestedWeaponCount: requestedWeaponCount,
+      selectedWeaponCount: selectedWeaponCount,
+      gainCount: gainCount,
+      firstWeaponUnitId: firstWeaponUnitId,
+      secondWeaponUnitId: secondWeaponUnitId,
+      thirdWeaponUnitId: thirdWeaponUnitId,
+      fourthWeaponUnitId: fourthWeaponUnitId,
+      accepted: accepted,
+      overCountRejected: overCountRejected,
+      duplicateRejected: duplicateRejected,
+      rejectedWithoutStateChange: rejectedWithoutStateChange,
+    },
   }
 
   action init =
-    recordProjection("init", "none", "none", 0, 0, 0, 0, 0, 0, 0, "none", "none", "none", "none", false, false, false, false)
+    recordProjection(
+      CharacterCreationWeaponMasteryLevelGainInit,
+      "none",
+      "none",
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      "none",
+      "none",
+      "none",
+      "none",
+      false,
+      false,
+      false,
+      false,
+    )
 
   pure def acceptedWeaponMasteryLevelGain(facts: WeaponMasteryLevelGainFacts): bool =
     match applyWeaponMasteryLevelGain(facts) {
@@ -95,27 +127,103 @@ module characterCreationWeaponMasteryLevelGainMbt {
   }
 
   action doAcceptFighterLevelFourWeaponMasteryGain = all {
-    qLastResult == "init",
+    qState.outcome == CharacterCreationWeaponMasteryLevelGainInit,
     acceptedWeaponMasteryLevelGain(fighterLevelFourFacts(["weapon_longsword", "weapon_spear", "weapon_flail", "weapon_shortsword"])),
-    recordProjection("fighterLevelFourAccepted", "class_fighter", "fighter_weapon_mastery", 3, 4, 3, 4, 4, 4, 1, "weapon_longsword", "weapon_spear", "weapon_flail", "weapon_shortsword", true, false, false, false),
+    recordProjection(
+      CharacterCreationWeaponMasteryLevelGainFighterLevelFourAccepted,
+      "class_fighter",
+      "fighter_weapon_mastery",
+      3,
+      4,
+      3,
+      4,
+      4,
+      4,
+      1,
+      "weapon_longsword",
+      "weapon_spear",
+      "weapon_flail",
+      "weapon_shortsword",
+      true,
+      false,
+      false,
+      false,
+    ),
   }
 
   action doAcceptBarbarianLevelFourWeaponMasteryGain = all {
-    qLastResult == "init",
+    qState.outcome == CharacterCreationWeaponMasteryLevelGainInit,
     acceptedWeaponMasteryLevelGain(barbarianLevelFourFacts(["weapon_longsword", "weapon_dagger", "weapon_spear"])),
-    recordProjection("barbarianLevelFourAccepted", "class_barbarian", "barbarian_weapon_mastery", 3, 4, 2, 3, 3, 3, 1, "weapon_longsword", "weapon_dagger", "weapon_spear", "none", true, false, false, false),
+    recordProjection(
+      CharacterCreationWeaponMasteryLevelGainBarbarianLevelFourAccepted,
+      "class_barbarian",
+      "barbarian_weapon_mastery",
+      3,
+      4,
+      2,
+      3,
+      3,
+      3,
+      1,
+      "weapon_longsword",
+      "weapon_dagger",
+      "weapon_spear",
+      "none",
+      true,
+      false,
+      false,
+      false,
+    ),
   }
 
   action doRejectFighterOverCountWeaponMasteryGain = all {
-    qLastResult == "init",
+    qState.outcome == CharacterCreationWeaponMasteryLevelGainInit,
     rejectedWeaponMasteryLevelGain(fighterLevelFourFacts(["weapon_longsword", "weapon_spear", "weapon_flail", "weapon_shortsword", "weapon_shortbow"])),
-    recordProjection("fighterOverCountRejected", "class_fighter", "fighter_weapon_mastery", 3, 4, 3, 4, 5, 3, 0, "weapon_longsword", "weapon_spear", "weapon_flail", "none", false, true, false, true),
+    recordProjection(
+      CharacterCreationWeaponMasteryLevelGainFighterOverCountRejected,
+      "class_fighter",
+      "fighter_weapon_mastery",
+      3,
+      4,
+      3,
+      4,
+      5,
+      3,
+      0,
+      "weapon_longsword",
+      "weapon_spear",
+      "weapon_flail",
+      "none",
+      false,
+      true,
+      false,
+      true,
+    ),
   }
 
   action doRejectFighterDuplicateWeaponMasteryGain = all {
-    qLastResult == "init",
+    qState.outcome == CharacterCreationWeaponMasteryLevelGainInit,
     rejectedWeaponMasteryLevelGain(fighterLevelFourFacts(["weapon_longsword", "weapon_spear", "weapon_flail", "weapon_longsword"])),
-    recordProjection("fighterDuplicateRejected", "class_fighter", "fighter_weapon_mastery", 3, 4, 3, 4, 4, 3, 0, "weapon_longsword", "weapon_spear", "weapon_flail", "none", false, false, true, true),
+    recordProjection(
+      CharacterCreationWeaponMasteryLevelGainFighterDuplicateRejected,
+      "class_fighter",
+      "fighter_weapon_mastery",
+      3,
+      4,
+      3,
+      4,
+      4,
+      3,
+      0,
+      "weapon_longsword",
+      "weapon_spear",
+      "weapon_flail",
+      "none",
+      false,
+      false,
+      true,
+      true,
+    ),
   }
 
   action stepAcceptFighterLevelFourWeaponMasteryGain = any {

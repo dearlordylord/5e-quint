@@ -577,7 +577,7 @@ function normalizeAntimagicQuintState(
   }
   assertWitnessProtocolConsistentWithScenario({
     label: "Antimagic Field ongoing suppression",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

@@ -5,13 +5,15 @@ module battleRuntimeSorcererMetamagicCarefulSelectedIdentityMbt {
 
   type Hole = | NoHole
 
+  type SorcererMetamagicCarefulSelectedIdentityScenarioOutcome = | Init | CarefulSaveGatedDamage | CarefulSaveGatedNoEffect
+
   type SorcererMetamagicCarefulSelectedIdentityWitnessState = {
     magicActionAvailable: bool,
     bonusActionAvailable: bool,
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicCarefulSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -23,7 +25,7 @@ module battleRuntimeSorcererMetamagicCarefulSelectedIdentityMbt {
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicCarefulSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -32,27 +34,25 @@ module battleRuntimeSorcererMetamagicCarefulSelectedIdentityMbt {
       sorceryPointsRemaining: sorceryPointsRemaining,
       targetHp: targetHp,
       targetActiveEffectCount: targetActiveEffectCount,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection(true, true, 4, 10, 0, "init", witnessInit(NoHole))
+  action init = recordProjection(true, true, 4, 10, 0, Init, witnessInit(NoHole))
 
   action doResolveCarefulSaveGatedDamage = all {
     qState.protocol.result == WInit,
     recordProjection(
-      false, true, 3, 10, 0, "carefulSaveGatedDamage",
-      witnessResolved(NoHole),
-    )
+      false, true, 3, 10, 0, CarefulSaveGatedDamage,
+      witnessResolved(NoHole))
   }
 
   action doResolveCarefulSaveGatedNoEffect = all {
     qState.protocol.result == WInit,
     recordProjection(
-      false, true, 3, 10, 0, "carefulSaveGatedNoEffect",
-      witnessResolved(NoHole),
-    )
+      false, true, 3, 10, 0, CarefulSaveGatedNoEffect,
+      witnessResolved(NoHole))
   }
 
   action step = any {

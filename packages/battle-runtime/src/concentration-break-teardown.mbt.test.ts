@@ -571,7 +571,7 @@ function normalizeConcentrationBreakTeardownQuintState(
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "Concentration break teardown",
-    scenarioResult: scenario,
+    scenarioOutcome: scenario,
     protocol,
   });
   return {

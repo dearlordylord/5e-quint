@@ -349,17 +349,17 @@ function normalizeQuintState(
       );
     result[field] = parseQuintField(quintField(state, qKey), spec, qKey);
   }
-  const scenarioResultField = witness.quintFieldNames?.["lastResult"];
-  const scenarioResult = result["lastResult"];
+  const scenarioOutcomeField = witness.quintFieldNames?.["lastResult"];
+  const scenarioOutcome = result["lastResult"];
   if (
     protocol !== undefined &&
-    scenarioResultField !== undefined &&
-    typeof scenarioResult === "string"
+    scenarioOutcomeField !== undefined &&
+    typeof scenarioOutcome === "string"
   ) {
     const invalidScenarioReasons = witness.witnessInvalidScenarioReasons;
     assertWitnessProtocolConsistentWithScenario({
       label: "selected identity",
-      scenarioResult,
+      scenarioOutcome,
       protocol,
       ...(invalidScenarioReasons === undefined
         ? {}

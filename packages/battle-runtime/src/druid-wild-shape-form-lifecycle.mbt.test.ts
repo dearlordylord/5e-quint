@@ -747,7 +747,7 @@ function normalizeDruidWildShapeFormQuintState(
   const scenarioResult = wildShapeLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Druid Wild Shape form lifecycle",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

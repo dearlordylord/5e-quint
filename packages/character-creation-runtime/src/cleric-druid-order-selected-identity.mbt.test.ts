@@ -86,7 +86,7 @@ type ClericOrderProjectionInput = {
     | typeof PROTECTOR_OPTION_ID
     | typeof THAUMATURGE_OPTION_ID;
   readonly extraCantripUnitId: typeof LIGHT_CANTRIP_UNIT_ID | "none";
-  readonly lastResult: "clericProtector" | "clericThaumaturge";
+  readonly outcome: "clericProtector" | "clericThaumaturge";
 };
 type DruidOrderProjectionInput = {
   readonly draftId: string;
@@ -97,7 +97,7 @@ type DruidOrderProjectionInput = {
     | typeof MAGICIAN_OPTION_ID
     | typeof WARDEN_OPTION_ID;
   readonly extraCantripUnitId: typeof GUIDANCE_CANTRIP_UNIT_ID | "none";
-  readonly lastResult: "druidMagician" | "druidWarden";
+  readonly outcome: "druidMagician" | "druidWarden";
 };
 type OrderProjectionInput =
   | ClericOrderProjectionInput
@@ -132,10 +132,10 @@ const orderProjectionBaseSchema = {
   totalLevel: z.literal(1),
 } as const;
 const clericDruidOrderSelectedIdentityProjectionSchema = z.discriminatedUnion(
-  "lastResult",
+  "outcome",
   [
     z.object({
-      lastResult: z.literal("init"),
+      outcome: z.literal("init"),
       selectedOrderUnitId: z.literal("none"),
       selectedOrderOptionId: z.literal("none"),
       extraCantripUnitId: z.literal("none"),
@@ -151,7 +151,7 @@ const clericDruidOrderSelectedIdentityProjectionSchema = z.discriminatedUnion(
       totalLevel: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("clericProtector"),
+      outcome: z.literal("clericProtector"),
       selectedOrderUnitId: z.literal(CLERIC_DIVINE_ORDER_UNIT_ID),
       selectedOrderOptionId: z.literal(PROTECTOR_OPTION_ID),
       extraCantripUnitId: z.literal("none"),
@@ -164,7 +164,7 @@ const clericDruidOrderSelectedIdentityProjectionSchema = z.discriminatedUnion(
       abilityCheckBonusFeatureCount: z.literal(0),
     }),
     z.object({
-      lastResult: z.literal("clericThaumaturge"),
+      outcome: z.literal("clericThaumaturge"),
       selectedOrderUnitId: z.literal(CLERIC_DIVINE_ORDER_UNIT_ID),
       selectedOrderOptionId: z.literal(THAUMATURGE_OPTION_ID),
       extraCantripUnitId: z.literal(LIGHT_CANTRIP_UNIT_ID),
@@ -177,7 +177,7 @@ const clericDruidOrderSelectedIdentityProjectionSchema = z.discriminatedUnion(
       abilityCheckBonusFeatureCount: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("druidMagician"),
+      outcome: z.literal("druidMagician"),
       selectedOrderUnitId: z.literal(DRUID_PRIMAL_ORDER_UNIT_ID),
       selectedOrderOptionId: z.literal(MAGICIAN_OPTION_ID),
       extraCantripUnitId: z.literal(GUIDANCE_CANTRIP_UNIT_ID),
@@ -190,7 +190,7 @@ const clericDruidOrderSelectedIdentityProjectionSchema = z.discriminatedUnion(
       abilityCheckBonusFeatureCount: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("druidWarden"),
+      outcome: z.literal("druidWarden"),
       selectedOrderUnitId: z.literal(DRUID_PRIMAL_ORDER_UNIT_ID),
       selectedOrderOptionId: z.literal(WARDEN_OPTION_ID),
       extraCantripUnitId: z.literal("none"),
@@ -256,41 +256,67 @@ const selectedUnitIdentityReplays = [
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 const quintStateSchema = z.object({
-  qLastResult: z.union([
-    z.literal("init"),
-    z.literal("clericProtector"),
-    z.literal("clericThaumaturge"),
-    z.literal("druidMagician"),
-    z.literal("druidWarden"),
-  ]),
-  qSelectedOrderUnitId: z.union([
+  outcome: z.unknown().transform(outcomeField),
+  selectedOrderUnitId: z.union([
     z.literal("none"),
     z.literal(CLERIC_DIVINE_ORDER_UNIT_ID),
     z.literal(DRUID_PRIMAL_ORDER_UNIT_ID),
   ]),
-  qSelectedOrderOptionId: z.union([
+  selectedOrderOptionId: z.union([
     z.literal("none"),
     z.literal(PROTECTOR_OPTION_ID),
     z.literal(THAUMATURGE_OPTION_ID),
     z.literal(MAGICIAN_OPTION_ID),
     z.literal(WARDEN_OPTION_ID),
   ]),
-  qExtraCantripUnitId: z.union([
+  extraCantripUnitId: z.union([
     z.literal("none"),
     z.literal(LIGHT_CANTRIP_UNIT_ID),
     z.literal(GUIDANCE_CANTRIP_UNIT_ID),
   ]),
-  qSelectedOrderOptionCount: z.bigint(),
-  qSelectedSuborderClassChoiceFeatureCount: z.bigint(),
-  qOrderUnitRefPresent: z.boolean(),
-  qExtraCantripUnitRefPresent: z.boolean(),
-  qMartialWeaponProficiencyPresent: z.boolean(),
-  qHeavyArmorTrainingPresent: z.boolean(),
-  qMediumArmorTrainingPresent: z.boolean(),
-  qAbilityCheckBonusKind: z.enum(ORDER_ABILITY_CHECK_BONUS_KINDS),
-  qAbilityCheckBonusFeatureCount: z.bigint(),
-  qTotalLevel: z.bigint(),
+  selectedOrderOptionCount: z.bigint(),
+  selectedSuborderClassChoiceFeatureCount: z.bigint(),
+  orderUnitRefPresent: z.boolean(),
+  extraCantripUnitRefPresent: z.boolean(),
+  martialWeaponProficiencyPresent: z.boolean(),
+  heavyArmorTrainingPresent: z.boolean(),
+  mediumArmorTrainingPresent: z.boolean(),
+  abilityCheckBonusKind: z.enum(ORDER_ABILITY_CHECK_BONUS_KINDS),
+  abilityCheckBonusFeatureCount: z.bigint(),
+  totalLevel: z.bigint(),
 });
+
+const qntOutcomeByVariant = {
+  CharacterCreationClericDruidOrderSelectedIdentityInit: "init",
+  CharacterCreationClericDruidOrderSelectedIdentityClericProtector:
+    "clericProtector",
+  CharacterCreationClericDruidOrderSelectedIdentityClericThaumaturge:
+    "clericThaumaturge",
+  CharacterCreationClericDruidOrderSelectedIdentityDruidMagician:
+    "druidMagician",
+  CharacterCreationClericDruidOrderSelectedIdentityDruidWarden: "druidWarden",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
 
 describe("Character Creation Cleric and Druid Order selected identity MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
@@ -374,10 +400,10 @@ function createClericDruidOrderSelectedIdentityDriver() {
 
 function initialProjection(): Extract<
   ClericDruidOrderSelectedIdentityProjection,
-  { readonly lastResult: "init" }
+  { readonly outcome: "init" }
 > {
   return {
-    lastResult: "init",
+    outcome: "init",
     selectedOrderUnitId: "none",
     selectedOrderOptionId: "none",
     extraCantripUnitId: "none",
@@ -402,7 +428,7 @@ function clericProtectorProjection(): ClericDruidOrderSelectedIdentityProjection
     orderChoiceKey: DIVINE_ORDER_CHOICE_KEY,
     selectedOrderOptionId: PROTECTOR_OPTION_ID,
     extraCantripUnitId: "none",
-    lastResult: "clericProtector",
+    outcome: "clericProtector",
   });
 }
 
@@ -414,7 +440,7 @@ function clericThaumaturgeProjection(): ClericDruidOrderSelectedIdentityProjecti
     orderChoiceKey: DIVINE_ORDER_CHOICE_KEY,
     selectedOrderOptionId: THAUMATURGE_OPTION_ID,
     extraCantripUnitId: LIGHT_CANTRIP_UNIT_ID,
-    lastResult: "clericThaumaturge",
+    outcome: "clericThaumaturge",
   });
 }
 
@@ -426,7 +452,7 @@ function druidMagicianProjection(): ClericDruidOrderSelectedIdentityProjection {
     orderChoiceKey: PRIMAL_ORDER_CHOICE_KEY,
     selectedOrderOptionId: MAGICIAN_OPTION_ID,
     extraCantripUnitId: GUIDANCE_CANTRIP_UNIT_ID,
-    lastResult: "druidMagician",
+    outcome: "druidMagician",
   });
 }
 
@@ -438,7 +464,7 @@ function druidWardenProjection(): ClericDruidOrderSelectedIdentityProjection {
     orderChoiceKey: PRIMAL_ORDER_CHOICE_KEY,
     selectedOrderOptionId: WARDEN_OPTION_ID,
     extraCantripUnitId: "none",
-    lastResult: "druidWarden",
+    outcome: "druidWarden",
   });
 }
 
@@ -448,7 +474,7 @@ function orderProjection(
   const finalized = finalizedOrderState(input);
   const facts = orderBuildFacts(finalized, input);
   const projection = {
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     selectedOrderUnitId: input.orderUnitId,
     selectedOrderOptionId: input.selectedOrderOptionId,
     extraCantripUnitId: input.extraCantripUnitId,
@@ -606,10 +632,12 @@ function supportProfileFillForHole(
   const preferredOptionIds =
     hole.source.tag === "draft" && hole.source.path === "draft.background"
       ? [creationChoiceOptionId("background_soldier")]
-      : hole.source.tag === "unitChoice"
-        ? (preferredOptionIdsBySource[unitChoiceSourceKey(hole.source)] ??
-          soldierBackgroundFixtureOptionIds(hole.source))
-        : undefined;
+      : hole.source.tag === "draft" && hole.source.path === "draft.species"
+        ? [creationChoiceOptionId("species_orc")]
+        : hole.source.tag === "unitChoice"
+          ? (preferredOptionIdsBySource[unitChoiceSourceKey(hole.source)] ??
+            soldierBackgroundFixtureOptionIds(hole.source))
+          : undefined;
   const defaultOptionIds = hole.options.map((option) => option.optionId);
   const selectedOptionIds = (preferredOptionIds ?? defaultOptionIds)
     .filter((optionId) => holeOptionIdSet.has(optionId))
@@ -843,29 +871,39 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   return result.right;
 }
 
+function qStateValue(raw: unknown): unknown {
+  if (
+    raw !== null &&
+    typeof raw === "object" &&
+    !Array.isArray(raw) &&
+    "qState" in raw
+  ) {
+    return Object.fromEntries(Object.entries(raw))["qState"];
+  }
+  throw new Error("Expected Quint qState record.");
+}
+
 function normalizeQuintState(
   raw: unknown,
 ): ClericDruidOrderSelectedIdentityProjection {
-  const parsed = quintStateSchema.parse(raw);
+  const parsed = quintStateSchema.parse(qStateValue(raw));
   return clericDruidOrderSelectedIdentityProjectionSchema.parse({
-    lastResult: parsed.qLastResult,
-    selectedOrderUnitId: parsed.qSelectedOrderUnitId,
-    selectedOrderOptionId: parsed.qSelectedOrderOptionId,
-    extraCantripUnitId: parsed.qExtraCantripUnitId,
-    selectedOrderOptionCount: Number(parsed.qSelectedOrderOptionCount),
+    outcome: parsed.outcome,
+    selectedOrderUnitId: parsed.selectedOrderUnitId,
+    selectedOrderOptionId: parsed.selectedOrderOptionId,
+    extraCantripUnitId: parsed.extraCantripUnitId,
+    selectedOrderOptionCount: Number(parsed.selectedOrderOptionCount),
     selectedSuborderClassChoiceFeatureCount: Number(
-      parsed.qSelectedSuborderClassChoiceFeatureCount,
+      parsed.selectedSuborderClassChoiceFeatureCount,
     ),
-    orderUnitRefPresent: parsed.qOrderUnitRefPresent,
-    extraCantripUnitRefPresent: parsed.qExtraCantripUnitRefPresent,
-    martialWeaponProficiencyPresent: parsed.qMartialWeaponProficiencyPresent,
-    heavyArmorTrainingPresent: parsed.qHeavyArmorTrainingPresent,
-    mediumArmorTrainingPresent: parsed.qMediumArmorTrainingPresent,
-    abilityCheckBonusKind: parsed.qAbilityCheckBonusKind,
-    abilityCheckBonusFeatureCount: Number(
-      parsed.qAbilityCheckBonusFeatureCount,
-    ),
-    totalLevel: Number(parsed.qTotalLevel),
+    orderUnitRefPresent: parsed.orderUnitRefPresent,
+    extraCantripUnitRefPresent: parsed.extraCantripUnitRefPresent,
+    martialWeaponProficiencyPresent: parsed.martialWeaponProficiencyPresent,
+    heavyArmorTrainingPresent: parsed.heavyArmorTrainingPresent,
+    mediumArmorTrainingPresent: parsed.mediumArmorTrainingPresent,
+    abilityCheckBonusKind: parsed.abilityCheckBonusKind,
+    abilityCheckBonusFeatureCount: Number(parsed.abilityCheckBonusFeatureCount),
+    totalLevel: Number(parsed.totalLevel),
   });
 }
 

@@ -18,6 +18,8 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
   //   Spell Effect, Spell Slot, and Unarmed Strike.
   type Hole = | NoHole
 
+  type SelfTransformationModeLifecycleScenarioOutcome = | Init | AquaticCast | NaturalWeaponsCast | NextCasterTurn | ChangeAppearanceReplacement | NaturalWeaponsReplacement
+
   type SelfTransformationWitnessState = {
     magicActionAvailable: bool,
     castSpellAvailable: bool,
@@ -34,7 +36,7 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
     naturalWeaponAttackBonus: int,
     naturalWeaponDamageOnRoll4: int,
     durationTicks: int,
-    scenarioResult: str,
+    scenarioOutcome: SelfTransformationModeLifecycleScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -64,7 +66,7 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
     activeMode: str,
     naturalWeaponDamageType: str,
     durationTicks: int,
-    scenarioResult: str,
+    scenarioOutcome: SelfTransformationModeLifecycleScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -86,7 +88,7 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
       naturalWeaponDamageOnRoll4:
         if (activeMode == naturalWeaponsMode) 4 + spellcastingAbilityModifier else 0,
       durationTicks: durationTicks,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -101,9 +103,8 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
     noMode,
     noDamageType,
     0,
-    "init",
-    witnessInit(NoHole),
-  )
+    Init,
+    witnessInit(NoHole))
 
   action doCastAquaticAdaptation = all {
     qState.magicActionAvailable,
@@ -119,9 +120,8 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
       aquaticAdaptationMode,
       noDamageType,
       alterSelfDurationTicks,
-      "aquaticCast",
-      witnessResolved(NoHole),
-    ),
+      AquaticCast,
+      witnessResolved(NoHole)),
   }
 
   action doCastNaturalWeapons = all {
@@ -138,9 +138,8 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
       naturalWeaponsMode,
       slashingDamageType,
       alterSelfDurationTicks,
-      "naturalWeaponsCast",
-      witnessResolved(NoHole),
-    ),
+      NaturalWeaponsCast,
+      witnessResolved(NoHole)),
   }
 
   action doStartNextCasterTurn = all {
@@ -157,9 +156,8 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
       qState.activeMode,
       qState.naturalWeaponDamageType,
       qState.durationTicks - 1,
-      "nextCasterTurn",
-      witnessResolved(NoHole),
-    ),
+      NextCasterTurn,
+      witnessResolved(NoHole)),
   }
 
   action doReplaceChangeAppearance = all {
@@ -177,9 +175,8 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
       changeAppearanceMode,
       noDamageType,
       qState.durationTicks,
-      "changeAppearanceReplacement",
-      witnessResolved(NoHole),
-    ),
+      ChangeAppearanceReplacement,
+      witnessResolved(NoHole)),
   }
 
   action doReplaceNaturalWeapons = all {
@@ -197,9 +194,8 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
       naturalWeaponsMode,
       piercingDamageType,
       qState.durationTicks,
-      "naturalWeaponsReplacement",
-      witnessResolved(NoHole),
-    ),
+      NaturalWeaponsReplacement,
+      witnessResolved(NoHole)),
   }
 
   action doStutter = recordSelfTransformationState(
@@ -212,7 +208,7 @@ module battleRuntimeSelfTransformationModeLifecycleMbt {
     qState.activeMode,
     qState.naturalWeaponDamageType,
     qState.durationTicks,
-    qState.scenarioResult,
+    qState.scenarioOutcome,
     qState.protocol,
   )
 

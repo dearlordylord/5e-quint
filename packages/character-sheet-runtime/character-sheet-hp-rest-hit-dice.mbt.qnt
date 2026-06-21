@@ -7,17 +7,37 @@ module characterSheetHpRestHitDiceMbt {
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
   import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
 
-  var qLastResult: str
-  var qAccepted: bool
-  var qMessage: str
-  var qCurrentHp: int
-  var qHitPointMaximum: int
-  var qHitPointMaximumReduction: int
-  var qTemporaryHitPoints: int
-  var qSpentHitDice: int
-  var qRequiredLongRestTicks: int
-  var qRemainingWaitTicks: int
-  var qReplayIndex: int
+  type CharacterSheetHpRestHitDiceOutcome =
+    | CharacterSheetHpRestHitDiceInit
+    | CharacterSheetHpRestHitDiceLongRestStartZeroHpRejected
+    | CharacterSheetHpRestHitDiceLongRestSixteenHourWaitRejected
+    | CharacterSheetHpRestHitDiceShortRestSpendHitPointDie
+    | CharacterSheetHpRestHitDiceShortRestInterruptedNoBenefit
+    | CharacterSheetHpRestHitDiceLongRestRestoresHpHitPointDiceAndMaximum
+    | CharacterSheetHpRestHitDiceLongRestInterruptedBeforeOneHourNoBenefit
+    | CharacterSheetHpRestHitDiceLongRestInterruptedWithShortRestBenefits
+    | CharacterSheetHpRestHitDiceShortRestStartZeroHpRejected
+    | CharacterSheetHpRestHitDiceShortRestDurationTooShortRejected
+    | CharacterSheetHpRestHitDiceLongRestDurationTooShortRejected
+    | CharacterSheetHpRestHitDiceLongRestPhysicalExertionTooShortRejected
+    | CharacterSheetHpRestHitDiceShortRestSpendHitPointDiceSequentially
+    | CharacterSheetHpRestHitDiceLongRestInterruptionAtRequiredDurationRejected
+
+  type CharacterSheetHpRestHitDiceState = {
+    outcome: CharacterSheetHpRestHitDiceOutcome,
+    accepted: bool,
+    message: str,
+    currentHp: int,
+    hitPointMaximum: int,
+    hitPointMaximumReduction: int,
+    temporaryHitPoints: int,
+    spentHitDice: int,
+    requiredLongRestTicks: int,
+    remainingWaitTicks: int,
+    replayIndex: int,
+  }
+
+  var qState: CharacterSheetHpRestHitDiceState
 
   type SheetHpState = {
     currentHp: int,
@@ -67,7 +87,7 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action recordProjection(
-    lastResult: str,
+    outcome: CharacterSheetHpRestHitDiceOutcome,
     accepted: bool,
     message: str,
     sheet: SheetHpState,
@@ -75,17 +95,19 @@ module characterSheetHpRestHitDiceMbt {
     remainingWaitTicks: int,
     replayIndex: int,
   ): bool = all {
-    qLastResult' = lastResult,
-    qAccepted' = accepted,
-    qMessage' = message,
-    qCurrentHp' = sheet.currentHp,
-    qHitPointMaximum' = effectiveHitPointMaximum(sheet),
-    qHitPointMaximumReduction' = sheet.hitPointMaximumReduction,
-    qTemporaryHitPoints' = sheet.temporaryHitPoints,
-    qSpentHitDice' = sheet.spentHitDice,
-    qRequiredLongRestTicks' = requiredLongRestTicks,
-    qRemainingWaitTicks' = remainingWaitTicks,
-    qReplayIndex' = replayIndex,
+    qState' = {
+      outcome: outcome,
+      accepted: accepted,
+      message: message,
+      currentHp: sheet.currentHp,
+      hitPointMaximum: effectiveHitPointMaximum(sheet),
+      hitPointMaximumReduction: sheet.hitPointMaximumReduction,
+      temporaryHitPoints: sheet.temporaryHitPoints,
+      spentHitDice: sheet.spentHitDice,
+      requiredLongRestTicks: requiredLongRestTicks,
+      remainingWaitTicks: remainingWaitTicks,
+      replayIndex: replayIndex,
+    },
   }
 
   pure def woundedWizard: SheetHpState = {
@@ -97,18 +119,26 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action init =
-    recordProjection("init", false, "none", {
+    recordProjection(
+      CharacterSheetHpRestHitDiceInit,
+      false,
+      "none",
+      {
       currentHp: 0,
       normalHitPointMaximum: 1,
       hitPointMaximumReduction: 0,
       temporaryHitPoints: 0,
       spentHitDice: 0,
-    }, 0, 0, 0)
+    },
+      0,
+      0,
+      0,
+    )
 
   action doRejectLongRestStartAtZeroHp = all {
-    qReplayIndex == 0,
+    qState.replayIndex == 0,
     recordProjection(
-      "long-rest-start-zero-hp-rejected",
+      CharacterSheetHpRestHitDiceLongRestStartZeroHpRejected,
       false,
       "Long Rest requires the Character Sheet to have at least 1 HP.",
       {
@@ -125,9 +155,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doRejectLongRestBeforeSixteenHourWait = all {
-    qReplayIndex == 1,
+    qState.replayIndex == 1,
     recordProjection(
-      "long-rest-sixteen-hour-wait-rejected",
+      CharacterSheetHpRestHitDiceLongRestSixteenHourWaitRejected,
       false,
       "Long Rest requires waiting 16 hours after finishing the previous Long Rest.",
       {
@@ -144,9 +174,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doSpendShortRestHitPointDie = all {
-    qReplayIndex == 2,
+    qState.replayIndex == 2,
     recordProjection(
-      "short-rest-spend-hit-point-die",
+      CharacterSheetHpRestHitDiceShortRestSpendHitPointDie,
       true,
       "none",
       spendHitPointDie(woundedWizard, 4, 1),
@@ -157,9 +187,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doInterruptShortRestNoBenefit = all {
-    qReplayIndex == 3,
+    qState.replayIndex == 3,
     recordProjection(
-      "short-rest-interrupted-no-benefit",
+      CharacterSheetHpRestHitDiceShortRestInterruptedNoBenefit,
       true,
       "none",
       woundedWizard,
@@ -170,9 +200,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doCompleteLongRestRestoresHpHitPointDiceAndMaximum = all {
-    qReplayIndex == 4,
+    qState.replayIndex == 4,
     recordProjection(
-      "long-rest-restores-hp-hit-point-dice-and-maximum",
+      CharacterSheetHpRestHitDiceLongRestRestoresHpHitPointDiceAndMaximum,
       true,
       "none",
       completeLongRestBenefits({
@@ -189,9 +219,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doInterruptLongRestBeforeOneHourNoBenefit = all {
-    qReplayIndex == 5,
+    qState.replayIndex == 5,
     recordProjection(
-      "long-rest-interrupted-before-one-hour-no-benefit",
+      CharacterSheetHpRestHitDiceLongRestInterruptedBeforeOneHourNoBenefit,
       true,
       "none",
       woundedWizard,
@@ -202,9 +232,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doInterruptLongRestWithShortRestBenefits = all {
-    qReplayIndex == 6,
+    qState.replayIndex == 6,
     recordProjection(
-      "long-rest-interrupted-with-short-rest-benefits",
+      CharacterSheetHpRestHitDiceLongRestInterruptedWithShortRestBenefits,
       true,
       "none",
       spendHitPointDie(woundedWizard, 4, 1),
@@ -215,9 +245,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doRejectShortRestStartAtZeroHp = all {
-    qReplayIndex == 7,
+    qState.replayIndex == 7,
     recordProjection(
-      "short-rest-start-zero-hp-rejected",
+      CharacterSheetHpRestHitDiceShortRestStartZeroHpRejected,
       false,
       "Short Rest requires the Character Sheet to have at least 1 HP.",
       {
@@ -234,9 +264,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doRejectShortRestDurationTooShort = all {
-    qReplayIndex == 8,
+    qState.replayIndex == 8,
     recordProjection(
-      "short-rest-duration-too-short-rejected",
+      CharacterSheetHpRestHitDiceShortRestDurationTooShortRejected,
       false,
       "Short Rest requires 1 hour before benefits can be received.",
       woundedWizard,
@@ -247,9 +277,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doRejectLongRestDurationTooShort = all {
-    qReplayIndex == 9,
+    qState.replayIndex == 9,
     recordProjection(
-      "long-rest-duration-too-short-rejected",
+      CharacterSheetHpRestHitDiceLongRestDurationTooShortRejected,
       false,
       "Long Rest requires the full required duration before benefits can be received.",
       woundedWizard,
@@ -260,9 +290,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doRejectLongRestPhysicalExertionTooShort = all {
-    qReplayIndex == 10,
+    qState.replayIndex == 10,
     recordProjection(
-      "long-rest-physical-exertion-too-short-rejected",
+      CharacterSheetHpRestHitDiceLongRestPhysicalExertionTooShortRejected,
       false,
       "Long Rest physical exertion interruption requires at least 1 hour.",
       woundedWizard,
@@ -273,9 +303,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doSpendShortRestHitPointDiceSequentially = all {
-    qReplayIndex == 11,
+    qState.replayIndex == 11,
     recordProjection(
-      "short-rest-spend-hit-point-dice-sequentially",
+      CharacterSheetHpRestHitDiceShortRestSpendHitPointDiceSequentially,
       true,
       "none",
       spendHitPointDie(spendHitPointDie(woundedWizard, 4, 1), 3, 1),
@@ -286,9 +316,9 @@ module characterSheetHpRestHitDiceMbt {
   }
 
   action doRejectLongRestInterruptionAtRequiredDuration = all {
-    qReplayIndex == 12,
+    qState.replayIndex == 12,
     recordProjection(
-      "long-rest-interruption-at-required-duration-rejected",
+      CharacterSheetHpRestHitDiceLongRestInterruptionAtRequiredDurationRejected,
       false,
       "Long Rest interruption requires rested time before the required Long Rest duration.",
       woundedWizard,

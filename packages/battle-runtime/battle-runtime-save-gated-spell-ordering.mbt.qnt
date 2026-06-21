@@ -12,18 +12,15 @@ module battleRuntimeSaveGatedSpellOrderingMbt {
   var qProtocol: WitnessProtocol[BattleHoleFamilyKind]
   var qLastOrderingError: str
 
-  pure def qHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
+  pure def openHoles: Set[BattleHoleFamilyKind] = qProtocol.holes
 
   pure val witnessHoleType: BattleHoleFamilyKind = TargetChoiceHoleKind
 
   pure def witnessProtocolForProjection(
     holes: Set[BattleHoleFamilyKind],
-    lastResult: str,
+    result: WitnessResult,
   ): WitnessProtocol[BattleHoleFamilyKind] =
-    if (lastResult == "init") witnessInit(witnessHoleType)
-    else if (lastResult == "invalid") witnessInvalidWithHoles(holes, WInvalidFill)
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved(witnessHoleType)
+    witnessProtocolFromResult(holes, witnessHoleType, result)
 
   pure def orderingErrorLabel(error: SaveGatedSpellFillOrderingError): str =
     match error {
@@ -41,12 +38,12 @@ module battleRuntimeSaveGatedSpellOrderingMbt {
       | SaveGatedSpellFillNotOrderingError(stage) => stage
     }
 
-  pure def acceptedRuntimeResult(result: SaveGatedSpellFillOrderResult): str =
+  pure def acceptedRuntimeResult(result: SaveGatedSpellFillOrderResult): WitnessResult =
     match result {
       | SaveGatedSpellFillAccepted(stage) =>
-          if (stage == SaveGatedSpellResolvedStage) "resolved" else "needsHoles"
-      | SaveGatedSpellFillRejected(_) => "needsHoles"
-      | SaveGatedSpellFillNotOrderingError(_) => "needsHoles"
+          if (stage == SaveGatedSpellResolvedStage) WResolved else WNeedsHoles
+      | SaveGatedSpellFillRejected(_) => WNeedsHoles
+      | SaveGatedSpellFillNotOrderingError(_) => WNeedsHoles
     }
 
   pure def rejectedOrderingLabel(result: SaveGatedSpellFillOrderResult): str =
@@ -58,22 +55,22 @@ module battleRuntimeSaveGatedSpellOrderingMbt {
 
   action recordProjection(
     stage: SaveGatedSpellFrontierStage,
-    lastResult: str,
+    result: WitnessResult,
     lastOrderingError: str,
   ): bool = all {
     qStage' = stage,
     qProtocol' = witnessProtocolForProjection(
       saveGatedSpellHoleFrontier(stage),
-      lastResult,
+      result,
     ),
     qLastOrderingError' = lastOrderingError,
   }
 
-  action init = recordProjection(SaveGatedSpellActSelectionStage, "init", "")
+  action init = recordProjection(SaveGatedSpellActSelectionStage, WInit, "")
 
   action doDiscoverAreaSaveDamage = all {
     qStage == SaveGatedSpellActSelectionStage,
-    recordProjection(SaveGatedSpellDamageSavingThrowOutcomeStage, "needsHoles", ""),
+    recordProjection(SaveGatedSpellDamageSavingThrowOutcomeStage, WNeedsHoles, ""),
   }
 
   action doSubmitDamageBeforeSavingThrow = all {
@@ -83,7 +80,7 @@ module battleRuntimeSaveGatedSpellOrderingMbt {
         saveGatedSpellFillOrderResult(qStage, RolledDiceFillKind, true),
         qStage,
       ),
-      "needsHoles",
+      WNeedsHoles,
       rejectedOrderingLabel(
         saveGatedSpellFillOrderResult(qStage, RolledDiceFillKind, true)
       ),
@@ -122,7 +119,7 @@ module battleRuntimeSaveGatedSpellOrderingMbt {
     qStage == SaveGatedSpellActSelectionStage,
     recordProjection(
       SaveGatedSpellTargetListAndConditionChoiceStage,
-      "needsHoles",
+      WNeedsHoles,
       "",
     ),
   }

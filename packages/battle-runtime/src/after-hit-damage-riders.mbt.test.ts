@@ -1079,7 +1079,7 @@ function normalizeAfterHitQuintState(raw: unknown): AfterHitDamageRidersState {
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "After-hit damage riders",
-    scenarioResult: protocol.lastResult,
+    scenarioOutcome: protocol.lastResult,
     protocol,
     initScenarioResult: "init",
   });

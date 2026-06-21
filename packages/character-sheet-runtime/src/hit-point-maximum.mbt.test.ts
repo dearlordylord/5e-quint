@@ -35,7 +35,7 @@ type HitPointMaximumScenario = (typeof hitPointMaximumScenarios)[number];
 const hitPointMaximumReplayStepCount = hitPointMaximumScenarios.length - 1;
 
 type HitPointMaximumProjection = {
-  readonly lastResult: HitPointMaximumScenario;
+  readonly outcome: HitPointMaximumScenario;
   readonly normalHitPointMaximum: number;
   readonly effectiveHitPointMaximum: number;
   readonly hitDiceTotal: number;
@@ -74,7 +74,7 @@ function createHitPointMaximumDriver() {
       init: reset,
       doProjectFighterLevelOne: () => {
         projection = projectHitPointMaximum({
-          lastResult: "fighter-level-one",
+          outcome: "fighter-level-one",
           build: buildFixture({
             startingClass: "class_fighter",
             constitutionScore: 13,
@@ -84,7 +84,7 @@ function createHitPointMaximumDriver() {
       },
       doProjectFighterLevelTwo: () => {
         projection = projectHitPointMaximum({
-          lastResult: "fighter-level-two",
+          outcome: "fighter-level-two",
           build: buildFixture({
             startingClass: "class_fighter",
             constitutionScore: 13,
@@ -95,7 +95,7 @@ function createHitPointMaximumDriver() {
       },
       doProjectWizardFighterMulticlass: () => {
         projection = projectHitPointMaximum({
-          lastResult: "wizard-fighter-multiclass",
+          outcome: "wizard-fighter-multiclass",
           build: buildFixture({
             startingClass: "class_wizard",
             constitutionScore: 13,
@@ -106,7 +106,7 @@ function createHitPointMaximumDriver() {
       },
       doProjectMinimumHigherLevelGain: () => {
         projection = projectHitPointMaximum({
-          lastResult: "minimum-higher-level-gain",
+          outcome: "minimum-higher-level-gain",
           build: buildFixture({
             startingClass: "class_wizard",
             constitutionScore: 2,
@@ -117,7 +117,7 @@ function createHitPointMaximumDriver() {
       },
       doProjectSorcererDraconicResilience: () => {
         projection = projectHitPointMaximum({
-          lastResult: "sorcerer-draconic-resilience",
+          outcome: "sorcerer-draconic-resilience",
           build: {
             ...buildFixture({
               startingClass: "class_sorcerer",
@@ -137,7 +137,7 @@ function createHitPointMaximumDriver() {
       },
       doProjectReducedEffectiveMaximum: () => {
         projection = projectHitPointMaximum({
-          lastResult: "reduced-effective-maximum",
+          outcome: "reduced-effective-maximum",
           build: buildFixture({
             startingClass: "class_fighter",
             constitutionScore: 13,
@@ -178,7 +178,7 @@ describe("Character Sheet Hit Point maximum deterministic QNT replay", () => {
 
 function initialProjection(): HitPointMaximumProjection {
   return projectHitPointMaximum({
-    lastResult: "init",
+    outcome: "init",
     build: buildFixture({
       startingClass: "class_fighter",
       constitutionScore: 10,
@@ -188,7 +188,7 @@ function initialProjection(): HitPointMaximumProjection {
 }
 
 function projectHitPointMaximum(input: {
-  readonly lastResult: HitPointMaximumScenario;
+  readonly outcome: HitPointMaximumScenario;
   readonly build: CharacterBuild;
   readonly hitPointMaximumReduction?: number;
   readonly replayIndex: number;
@@ -199,7 +199,7 @@ function projectHitPointMaximum(input: {
   const hitPointMaximumReduction = input.hitPointMaximumReduction ?? 0;
   const sheet = requireRight(
     createFreshCharacterSheet({
-      characterId: characterSheetId(`character:hp-maximum:${input.lastResult}`),
+      characterId: characterSheetId(`character:hp-maximum:${input.outcome}`),
       build: input.build,
       maximumHp: Hp(Number(hitPoints.maximum)),
       currentHp: Hp(Number(hitPoints.maximum) - hitPointMaximumReduction),
@@ -211,7 +211,7 @@ function projectHitPointMaximum(input: {
   );
 
   return {
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     normalHitPointMaximum: Number(hitPoints.maximum),
     effectiveHitPointMaximum: Number(characterSheetHitPointMaximum(sheet)),
     hitDiceTotal: hitPoints.hitDice.reduce(
@@ -266,25 +266,29 @@ function normalizeHitPointMaximumQuintState(
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("Expected Quint Hit Point maximum state object.");
   }
-  const state: Readonly<Record<string, unknown>> = Object.fromEntries(
+  const root: Readonly<Record<string, unknown>> = Object.fromEntries(
     Object.entries(raw),
   );
+  const state = recordField(root, "qState");
   return {
-    lastResult: scenarioField(state["qLastResult"]),
+    outcome: outcomeField(state["outcome"]),
     normalHitPointMaximum: numberFromQuintInt(
-      state["qNormalHitPointMaximum"],
-      "qNormalHitPointMaximum",
+      state["normalHitPointMaximum"],
+      "qState.normalHitPointMaximum",
     ),
     effectiveHitPointMaximum: numberFromQuintInt(
-      state["qEffectiveHitPointMaximum"],
-      "qEffectiveHitPointMaximum",
+      state["effectiveHitPointMaximum"],
+      "qState.effectiveHitPointMaximum",
     ),
-    hitDiceTotal: numberFromQuintInt(state["qHitDiceTotal"], "qHitDiceTotal"),
+    hitDiceTotal: numberFromQuintInt(
+      state["hitDiceTotal"],
+      "qState.hitDiceTotal",
+    ),
     hitPointMaximumReduction: numberFromQuintInt(
-      state["qHitPointMaximumReduction"],
-      "qHitPointMaximumReduction",
+      state["hitPointMaximumReduction"],
+      "qState.hitPointMaximumReduction",
     ),
-    replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
+    replayIndex: numberFromQuintInt(state["replayIndex"], "qState.replayIndex"),
   };
 }
 
@@ -303,24 +307,59 @@ function compareHitPointMaximumState(
   return true;
 }
 
-function scenarioField(raw: unknown): HitPointMaximumScenario {
-  if (typeof raw !== "string") {
-    throw new Error(`Unknown Hit Point maximum scenario ${String(raw)}.`);
-  }
-  const scenario = hitPointMaximumScenarios.find(
-    (candidate) => candidate === raw,
-  );
-  if (scenario !== undefined) return scenario;
-  throw new Error(`Unknown Hit Point maximum scenario ${String(raw)}.`);
-}
-
 function numberFromQuintInt(raw: unknown, field: string): number {
   if (typeof raw === "number") return raw;
   if (typeof raw === "bigint") return Number(raw);
   throw new Error(`Expected Quint integer field ${field}.`);
 }
 
+const qntOutcomeByVariant = {
+  CharacterSheetHitPointMaximumInit: "init",
+  CharacterSheetHitPointMaximumFighterLevelOne: "fighter-level-one",
+  CharacterSheetHitPointMaximumFighterLevelTwo: "fighter-level-two",
+  CharacterSheetHitPointMaximumWizardFighterMulticlass:
+    "wizard-fighter-multiclass",
+  CharacterSheetHitPointMaximumMinimumHigherLevelGain:
+    "minimum-higher-level-gain",
+  CharacterSheetHitPointMaximumSorcererDraconicResilience:
+    "sorcerer-draconic-resilience",
+  CharacterSheetHitPointMaximumReducedEffectiveMaximum:
+    "reduced-effective-maximum",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
+
 function requireRight<A, E>(either: Either.Either<A, E>): A {
   if (Either.isRight(either)) return either.right;
   throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }

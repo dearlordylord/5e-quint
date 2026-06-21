@@ -3,21 +3,29 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner character-creation.wizard-spellbook-learning-choice
 
 module characterCreationWizardEvocationSavantMbt {
-  var qLastResult: str
-  var qFeatureUnitId: str
-  var qAcquisitionChoiceCount: int
-  var qAcquisitionMaximumSpellLevel: int
-  var qLaterSlotAccessChoiceCount: int
-  var qLaterSlotAccessTimingKind: str
-  var qLaterSlotAccessCreatesCreationHole: bool
-  var qLevel3CreationChoiceCount: int
-  var qFinalSpellbookAddedCount: int
-  var qFinalSpellbookTotalCount: int
-  var qFirstLaterSlotAccessCharacterLevel: int
-  var qFirstLaterNewSlotLevel: int
+  type CharacterCreationWizardEvocationSavantOutcome =
+    | CharacterCreationWizardEvocationSavantInit
+    | CharacterCreationWizardEvocationSavantWizardEvocationSavantLevel3Creation
+
+  type CharacterCreationWizardEvocationSavantState = {
+    outcome: CharacterCreationWizardEvocationSavantOutcome,
+    featureUnitId: str,
+    acquisitionChoiceCount: int,
+    acquisitionMaximumSpellLevel: int,
+    laterSlotAccessChoiceCount: int,
+    laterSlotAccessTimingKind: str,
+    laterSlotAccessCreatesCreationHole: bool,
+    level3CreationChoiceCount: int,
+    finalSpellbookAddedCount: int,
+    finalSpellbookTotalCount: int,
+    firstLaterSlotAccessCharacterLevel: int,
+    firstLaterNewSlotLevel: int,
+  }
+
+  var qState: CharacterCreationWizardEvocationSavantState
 
   action recordProjection(
-    lastResult: str,
+    outcome: CharacterCreationWizardEvocationSavantOutcome,
     featureUnitId: str,
     acquisitionChoiceCount: int,
     acquisitionMaximumSpellLevel: int,
@@ -30,27 +38,42 @@ module characterCreationWizardEvocationSavantMbt {
     firstLaterSlotAccessCharacterLevel: int,
     firstLaterNewSlotLevel: int,
   ): bool = all {
-    qLastResult' = lastResult,
-    qFeatureUnitId' = featureUnitId,
-    qAcquisitionChoiceCount' = acquisitionChoiceCount,
-    qAcquisitionMaximumSpellLevel' = acquisitionMaximumSpellLevel,
-    qLaterSlotAccessChoiceCount' = laterSlotAccessChoiceCount,
-    qLaterSlotAccessTimingKind' = laterSlotAccessTimingKind,
-    qLaterSlotAccessCreatesCreationHole' = laterSlotAccessCreatesCreationHole,
-    qLevel3CreationChoiceCount' = level3CreationChoiceCount,
-    qFinalSpellbookAddedCount' = finalSpellbookAddedCount,
-    qFinalSpellbookTotalCount' = finalSpellbookTotalCount,
-    qFirstLaterSlotAccessCharacterLevel' = firstLaterSlotAccessCharacterLevel,
-    qFirstLaterNewSlotLevel' = firstLaterNewSlotLevel,
+    qState' = {
+      outcome: outcome,
+      featureUnitId: featureUnitId,
+      acquisitionChoiceCount: acquisitionChoiceCount,
+      acquisitionMaximumSpellLevel: acquisitionMaximumSpellLevel,
+      laterSlotAccessChoiceCount: laterSlotAccessChoiceCount,
+      laterSlotAccessTimingKind: laterSlotAccessTimingKind,
+      laterSlotAccessCreatesCreationHole: laterSlotAccessCreatesCreationHole,
+      level3CreationChoiceCount: level3CreationChoiceCount,
+      finalSpellbookAddedCount: finalSpellbookAddedCount,
+      finalSpellbookTotalCount: finalSpellbookTotalCount,
+      firstLaterSlotAccessCharacterLevel: firstLaterSlotAccessCharacterLevel,
+      firstLaterNewSlotLevel: firstLaterNewSlotLevel,
+    },
   }
 
   action init =
-    recordProjection("init", "none", 0, 0, 0, "none", false, 0, 0, 0, 0, 0)
+    recordProjection(
+      CharacterCreationWizardEvocationSavantInit,
+      "none",
+      0,
+      0,
+      0,
+      "none",
+      false,
+      0,
+      0,
+      0,
+      0,
+      0,
+    )
 
   action doProjectLevel3Creation = all {
-    qLastResult == "init",
+    qState.outcome == CharacterCreationWizardEvocationSavantInit,
     recordProjection(
-      "wizard-evocation-savant-level3-creation",
+      CharacterCreationWizardEvocationSavantWizardEvocationSavantLevel3Creation,
       "wizard_evocation_savant",
       2,
       2,

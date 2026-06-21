@@ -56,7 +56,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   pure def qQuickenedLevelOnePlusCastThisTurn: bool = qState.qQuickenedLevelOnePlusCastThisTurn
   pure def qSpellSlotActsAvailable: bool = qState.qSpellSlotActsAvailable
   pure def qInvalidKind: str = qState.qInvalidKind
-  pure def qLastResult: QuickenedSpellGovernorScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: QuickenedSpellGovernorScenarioOutcome = qState.qScenarioOutcome
 
   pure val initialSorceryPoints: int = 4
   pure val highSorceryPoints: int = 5
@@ -66,12 +66,9 @@ module battleRuntimeQuickenedSpellGovernorMbt {
 
   pure def witnessProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: QuickenedSpellGovernorScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: QuickenedSpellGovernorScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
-    else if (scenarioInvalidReason == "staleSubject") witnessInvalid(WitnessProtocolHole, WStaleSubject)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -108,7 +105,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
       qSpellSlotActsAvailable: spellSlotActsAvailable,
       qInvalidKind: invalidKind,
       qScenarioOutcome: lastResult,
-      protocol: witnessProtocolForProjection(Set(), lastResult, ""),
+      protocol: witnessProtocolForProjection(Set(), lastResult),
     },
   }
 

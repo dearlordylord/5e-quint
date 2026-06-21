@@ -6,13 +6,22 @@
 module characterSheetSpellRestBenefitApplicationMbt {
   import spellRestBenefitApplication.* from "../shared-algebras/proofs/rule-core/spell-rest-benefit-application"
 
-  var qLastResult: str
-  var qSlotSpent: bool
-  var qShortRestBenefitApplied: bool
-  var qHealingApplied: bool
-  var qHealingDiceCount: int
-  var qLongRestLockoutStored: bool
-  var qReplayIndex: int
+  type CharacterSheetSpellRestBenefitApplicationOutcome =
+    | CharacterSheetSpellRestBenefitApplicationInit
+    | CharacterSheetSpellRestBenefitApplicationApplied
+    | CharacterSheetSpellRestBenefitApplicationRecipientLockoutRejected
+
+  type CharacterSheetSpellRestBenefitApplicationState = {
+    outcome: CharacterSheetSpellRestBenefitApplicationOutcome,
+    slotSpent: bool,
+    shortRestBenefitApplied: bool,
+    healingApplied: bool,
+    healingDiceCount: int,
+    longRestLockoutStored: bool,
+    replayIndex: int,
+  }
+
+  var qState: CharacterSheetSpellRestBenefitApplicationState
 
   pure def witnessedSpellRestBenefitProfile: SpellRestBenefitProfile = {
     baseSpellLevel: 2,
@@ -51,7 +60,7 @@ module characterSheetSpellRestBenefitApplicationMbt {
     )
 
   action recordProjection(
-    lastResult: str,
+    outcome: CharacterSheetSpellRestBenefitApplicationOutcome,
     slotSpent: bool,
     shortRestBenefitApplied: bool,
     healingApplied: bool,
@@ -59,37 +68,47 @@ module characterSheetSpellRestBenefitApplicationMbt {
     longRestLockoutStored: bool,
     replayIndex: int,
   ): bool = all {
-    qLastResult' = lastResult,
-    qSlotSpent' = slotSpent,
-    qShortRestBenefitApplied' = shortRestBenefitApplied,
-    qHealingApplied' = healingApplied,
-    qHealingDiceCount' = healingDiceCount,
-    qLongRestLockoutStored' = longRestLockoutStored,
-    qReplayIndex' = replayIndex,
+    qState' = {
+      outcome: outcome,
+      slotSpent: slotSpent,
+      shortRestBenefitApplied: shortRestBenefitApplied,
+      healingApplied: healingApplied,
+      healingDiceCount: healingDiceCount,
+      longRestLockoutStored: longRestLockoutStored,
+      replayIndex: replayIndex,
+    },
   }
 
   action recordSpellRestBenefitProjection(
-    lastResult: str,
+    outcome: CharacterSheetSpellRestBenefitApplicationOutcome,
     projection: SpellRestBenefitProjection,
     replayIndex: int,
   ): bool =
     recordProjection(
-      lastResult,
+      outcome,
       projection.slotSpent,
       projection.shortRestBenefitApplied,
       projection.healingApplied,
       projection.healingDiceCount,
       projection.longRestLockoutStored,
-      replayIndex
+      replayIndex,
     )
 
   action init =
-    recordProjection("init", false, false, false, 0, false, 0)
+    recordProjection(
+      CharacterSheetSpellRestBenefitApplicationInit,
+      false,
+      false,
+      false,
+      0,
+      false,
+      0,
+    )
 
   action doApplyPrayerOfHealingRestBenefit = all {
-    qReplayIndex == 0,
+    qState.replayIndex == 0,
     recordSpellRestBenefitProjection(
-      "applied",
+      CharacterSheetSpellRestBenefitApplicationApplied,
       spellRestBenefitProjection(witnessedSpellRestBenefitApplicationResult, true),
       1
     ),
@@ -103,9 +122,9 @@ module characterSheetSpellRestBenefitApplicationMbt {
   }
 
   action doRejectRecipientLongRestLockout = all {
-    qReplayIndex == 1,
+    qState.replayIndex == 1,
     recordSpellRestBenefitProjection(
-      "recipient-lockout-rejected",
+      CharacterSheetSpellRestBenefitApplicationRecipientLockoutRejected,
       spellRestBenefitProjection(lockedRecipientSpellRestBenefitResult, true),
       2
     ),

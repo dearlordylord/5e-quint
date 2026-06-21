@@ -467,7 +467,7 @@ function normalizeAcidArrowQuintState(raw: unknown): AcidArrowTimingState {
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "Acid Arrow timing",
-    scenarioResult: protocol.lastResult,
+    scenarioOutcome: protocol.lastResult,
     protocol,
     initScenarioResult: "init",
   });

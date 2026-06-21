@@ -47,21 +47,13 @@ module ruleCoreFeaturesMbt {
   var qProtocol: WitnessProtocol[str]
   var qPendingReaction: bool
 
-  pure def qHoles: Set[str] = qProtocol.holes
-
-  pure def witnessInvalidReasonForProjection(reason: str): WitnessInvalidReason =
-    if (reason == "staleSubject") WStaleSubject else WInvalidFill
+  pure def openHoles: Set[str] = qProtocol.holes
 
   pure def witnessProtocolForProjection(
     holes: Set[str],
-    result: str,
-    invalidReason: str,
+    result: WitnessResult,
   ): WitnessProtocol[str] =
-    if (result == "init") witnessInit("DamageRoll")
-    else if (result == "invalid")
-      witnessInvalidWithHoles(holes, witnessInvalidReasonForProjection(invalidReason))
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved("DamageRoll")
+    witnessProtocolFromResult(holes, "DamageRoll", result)
 
   pure def qTurn: TurnProcedureState =
     initialTurnProcedureState
@@ -116,8 +108,7 @@ module ruleCoreFeaturesMbt {
     actorArmorClass: int,
     holes: Set[str],
     pendingReaction: bool,
-    result: str,
-    invalidReason: str,
+    result: WitnessResult,
   ): bool = all {
     qActionAvailable' = actionAvailable,
     qBonusActionAvailable' = bonusActionAvailable,
@@ -136,7 +127,7 @@ module ruleCoreFeaturesMbt {
     qLastDamageAmount' = lastDamageAmount,
     qCritical' = critical,
     qActorArmorClass' = actorArmorClass,
-    qProtocol' = witnessProtocolForProjection(holes, result, invalidReason),
+    qProtocol' = witnessProtocolForProjection(holes, result),
     qPendingReaction' = pendingReaction,
   }
 
@@ -160,15 +151,14 @@ module ruleCoreFeaturesMbt {
     actorArmorClass: int,
     holes: Set[str],
     pendingReaction: bool,
-    result: str,
-    invalidReason: str,
+    result: WitnessResult,
   ): bool = all {
     recordBaseProjection(
       actionAvailable, bonusActionAvailable, reactionAvailable,
       featureUsesRemaining, actionSurgeGrant, actorHp, targetHp,
       dashBonusFeet, disengaged, hidden, rageActive, recklessActive,
       incomingAttackAdvantage, sneakAttackUsedThisTurn, lastDamageAmount,
-      critical, actorArmorClass, holes, pendingReaction, result, invalidReason
+      critical, actorArmorClass, holes, pendingReaction, result
     ),
     qAbilityCheckBoostedTotal' = 0,
     qAbilityCheckBoostedSucceeded' = false,
@@ -196,15 +186,14 @@ module ruleCoreFeaturesMbt {
     actorArmorClass: int,
     holes: Set[str],
     pendingReaction: bool,
-    result: str,
-    invalidReason: str,
+    result: WitnessResult,
   ): bool = all {
     recordBaseProjection(
       actionAvailable, bonusActionAvailable, reactionAvailable,
       featureUsesRemaining, actionSurgeGrant, actorHp, targetHp,
       dashBonusFeet, disengaged, hidden, rageActive, recklessActive,
       incomingAttackAdvantage, sneakAttackUsedThisTurn, lastDamageAmount,
-      critical, actorArmorClass, holes, pendingReaction, result, invalidReason
+      critical, actorArmorClass, holes, pendingReaction, result
     ),
     qAbilityCheckBoostedTotal' = abilityCheckBoostedTotal,
     qAbilityCheckBoostedSucceeded' = abilityCheckBoostedSucceeded,
@@ -212,16 +201,16 @@ module ruleCoreFeaturesMbt {
 
   action init = recordProjection(
     true, true, true, 1, NoActionSurgeActionGrant, 12, 12, 0, false, false,
-    false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, "init", "none"
+    false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, WInit
   )
 
   action doActionSurgeActivate = {
     val surged = activateActionSurge(initialActionSurgeState({ usesRemaining: 1, maximumUses: 1 }), true)
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         true, true, true, surged.pool.usesRemaining, surged.actionGrant,
-        12, 12, 0, false, false, false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        12, 12, 0, false, false, false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -230,35 +219,35 @@ module ruleCoreFeaturesMbt {
     val spent = spendActionSurgeAction(qActionSurgeState, AttackAction)
     all {
       qActionSurgeGrant == ActionSurgeActionAvailable,
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, qBonusActionAvailable, qReactionAvailable,
         spent.actionSurge.pool.usesRemaining, spent.actionSurge.actionGrant,
         qActorHp, 5, qDashBonusFeet, qDisengaged, qHidden, qRageActive,
         qRecklessActive, qIncomingAttackAdvantage, qSneakAttackUsedThisTurn,
-        7, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        7, false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
 
   action doActionSurgeRejectTwice = all {
     qActionSurgeGrant == ActionSurgeActionAvailable,
-    qHoles == Set(),
+    openHoles == Set(),
     recordProjection(
       qActionAvailable, qBonusActionAvailable, qReactionAvailable,
       qFeatureUsesRemaining, qActionSurgeGrant, qActorHp, qTargetHp,
       qDashBonusFeet, qDisengaged, qHidden, qRageActive, qRecklessActive,
       qIncomingAttackAdvantage, qSneakAttackUsedThisTurn, qLastDamageAmount,
-      qCritical, qActorArmorClass, Set(), false, "invalid", "staleSubject"
+      qCritical, qActorArmorClass, Set(), false, WInvalid(WStaleSubject)
     ),
   }
 
   action doDiscoverSecondWind = all {
-    qHoles == Set(),
+    openHoles == Set(),
     recordProjection(
       true, true, true, 1, NoActionSurgeActionGrant, 4, 12, 0, false, false,
       false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set("DamageRoll"), false,
-      "needsHoles", "none"
+      WNeedsHoles
     ),
   }
 
@@ -279,12 +268,12 @@ module ruleCoreFeaturesMbt {
       { healingRoll: 1, fighterLevel: 2 }
     )
     all {
-      qHoles == Set("DamageRoll"),
+      openHoles == Set("DamageRoll"),
       recordProjection(
         true, result.turn.bonusActionAvailable, true, result.pool.usesRemaining,
         NoActionSurgeActionGrant, result.recovery.vitals.hitPoints, 12, 0,
         false, false, false, false, false, false,
-        result.recovery.hitPointsRegained, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        result.recovery.hitPointsRegained, false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -306,12 +295,12 @@ module ruleCoreFeaturesMbt {
       { healingRoll: 8, fighterLevel: 2 }
     )
     all {
-      qHoles == Set("DamageRoll"),
+      openHoles == Set("DamageRoll"),
       recordProjection(
         true, result.turn.bonusActionAvailable, true, result.pool.usesRemaining,
         NoActionSurgeActionGrant, result.recovery.vitals.hitPoints, 12, 0,
         false, false, false, false, false, false,
-        result.recovery.hitPointsRegained, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        result.recovery.hitPointsRegained, false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -322,12 +311,12 @@ module ruleCoreFeaturesMbt {
       { originalTotal: 13, dc: 15, boostRoll: 3 }
     )
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordAbilityCheckBoostProjection(
         true, true, true, result.pool.usesRemaining, NoActionSurgeActionGrant,
         12, 12, 0, false, false, false, false, false, false, 0,
         result.boostedTotal, result.boostedSucceeded, false,
-        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -338,12 +327,12 @@ module ruleCoreFeaturesMbt {
       { originalTotal: 10, dc: 15, boostRoll: 4 }
     )
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordAbilityCheckBoostProjection(
         true, true, true, result.pool.usesRemaining, NoActionSurgeActionGrant,
         12, 12, 0, false, false, false, false, false, false, 0,
         result.boostedTotal, result.boostedSucceeded, false,
-        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -355,11 +344,11 @@ module ruleCoreFeaturesMbt {
       hideFacts: { prerequisiteSatisfied: true, checkTotal: 16, dc: 15 },
     })
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         true, turn.bonusActionAvailable, true, 1, NoActionSurgeActionGrant,
         12, 12, turn.dashMovementBonusFeet, turn.disengaged, turn.hidden,
-        false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -371,11 +360,11 @@ module ruleCoreFeaturesMbt {
       hideFacts: { prerequisiteSatisfied: true, checkTotal: 16, dc: 15 },
     })
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         true, turn.bonusActionAvailable, true, 1, NoActionSurgeActionGrant,
         12, 12, turn.dashMovementBonusFeet, turn.disengaged, turn.hidden,
-        false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -387,11 +376,11 @@ module ruleCoreFeaturesMbt {
       hideFacts: { prerequisiteSatisfied: true, checkTotal: 16, dc: 15 },
     })
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         true, turn.bonusActionAvailable, true, 1, NoActionSurgeActionGrant,
         12, 12, turn.dashMovementBonusFeet, turn.disengaged, turn.hidden,
-        false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -399,11 +388,11 @@ module ruleCoreFeaturesMbt {
   action doMyceliumStepDash = {
     val turn = resolveDash(initialTurnProcedureState, 30, BonusActionCost)
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         true, turn.bonusActionAvailable, true, 1, NoActionSurgeActionGrant,
         12, 12, turn.dashMovementBonusFeet, turn.disengaged, turn.hidden,
-        false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -421,12 +410,12 @@ module ruleCoreFeaturesMbt {
       attackForm: RageWeaponAttack,
     }, 9, 4)
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, rage.turn.bonusActionAvailable, true, rage.pool.usesRemaining,
         NoActionSurgeActionGrant, 12, 12 - damage, 0, false, false,
         rage.occurrence != NoRageOccurrence, false, false, false, damage,
-        false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -437,12 +426,12 @@ module ruleCoreFeaturesMbt {
       { choosesRecklessAttack: true, strengthAttackRoll: true }
     )
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, true, 1, NoActionSurgeActionGrant, 12, 5, 0, false, false,
         false, reckless.occurrence == RecklessAttackUntilStartOfTurn,
         recklessAttackGrantsIncomingAttackAdvantage(reckless), false, 7,
-        false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -460,11 +449,11 @@ module ruleCoreFeaturesMbt {
       weaponDamageType: SlashingDamage,
     })
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, true, 1, NoActionSurgeActionGrant, 12, 12 - 10, 0,
         false, false, false, false, false, result.usedThisTurn,
-        result.damageDice, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        result.damageDice, false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -485,11 +474,11 @@ module ruleCoreFeaturesMbt {
       }
     )
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, false, true, 0, NoActionSurgeActionGrant, 12, 7, 0,
         false, false, true, true, true, false, result.damageDice, false,
-        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -504,11 +493,11 @@ module ruleCoreFeaturesMbt {
       })),
     })
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, true, 1, NoActionSurgeActionGrant, 12, 4, 0,
         false, false, false, false, false, false, 8, outcome.critical,
-        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -527,12 +516,12 @@ module ruleCoreFeaturesMbt {
       damageModifier: 0,
     }, 2)
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, true, 1, NoActionSurgeActionGrant, 12,
         12 - result.effectiveDamage, 0, false, false, false, false, false,
         false, result.effectiveDamage, false, featureMbtBaselineArmorClass,
-        Set(), false, "resolved", "none"
+        Set(), false, WResolved
       ),
     }
   }
@@ -552,12 +541,12 @@ module ruleCoreFeaturesMbt {
       { incomingDamage: 4, choosesFeature: true }
     )
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, true, result.pool.usesRemaining, NoActionSurgeActionGrant, 12,
         result.vitals.hitPoints, 0, false, false, false, false, false,
         false, result.vitals.hitPoints, false,
-        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -570,10 +559,10 @@ module ruleCoreFeaturesMbt {
       incapacitated: false,
     }, 6)
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, true, 1, NoActionSurgeActionGrant, 12, 12, 0,
-        false, false, false, false, false, false, damage, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        false, false, false, false, false, false, damage, false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -586,10 +575,10 @@ module ruleCoreFeaturesMbt {
       incapacitated: false,
     }, 6)
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, true, 1, NoActionSurgeActionGrant, 12 - damage, 12, 0,
-        false, false, false, false, false, false, damage, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        false, false, false, false, false, false, damage, false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -605,12 +594,12 @@ module ruleCoreFeaturesMbt {
       }
     )
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, reduced.turn.reactionAvailable, reduced.pool.usesRemaining,
         NoActionSurgeActionGrant, 12 - reduced.reducedAmount, 12, 0,
         false, false, false, false, false, false, reduced.reducedAmount,
-        false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        false, featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -627,12 +616,12 @@ module ruleCoreFeaturesMbt {
       }
     )
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, reduced.turn.reactionAvailable, 1,
         NoActionSurgeActionGrant, 12 - reduced.reducedAmount, 12, 0, false,
         false, false, false, false, false, reduced.reducedAmount, false,
-        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }
@@ -643,12 +632,12 @@ module ruleCoreFeaturesMbt {
       { attackerSeen: true, hitWithAttackRoll: true, incomingDamage: 6 }
     )
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, reduced.turn.reactionAvailable, 1, NoActionSurgeActionGrant,
         12 - reduced.reducedAmount, 12, 0, false, false, false, false,
         false, false, reduced.reducedAmount, false, featureMbtBaselineArmorClass, Set(), false,
-        "resolved", "none"
+        WResolved
       ),
     }
   }
@@ -658,11 +647,11 @@ module ruleCoreFeaturesMbt {
       armorWorn: LightArmorWorn,
     })
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         true, true, true, 1, NoActionSurgeActionGrant, 12, 12, 0, false, false,
         false, false, false, false, 0, false, armorClass, Set(), false,
-        "resolved", "none"
+        WResolved
       ),
     }
   }
@@ -675,11 +664,11 @@ module ruleCoreFeaturesMbt {
       naturalD20: 10,
     })
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, true, 1, NoActionSurgeActionGrant, 12, 12, 0, false, false,
         false, false, false, false, result.bonus, result.hits,
-        result.effectiveAttackRollTotal, Set(), false, "resolved", "none"
+        result.effectiveAttackRollTotal, Set(), false, WResolved
       ),
     }
   }
@@ -693,13 +682,13 @@ module ruleCoreFeaturesMbt {
       choosesFeature: true,
     })
     all {
-      qHoles == Set(),
+      openHoles == Set(),
       recordProjection(
         false, true, true, if (result.usedSinceTurnStart) 0 else 1,
         NoActionSurgeActionGrant, 12,
         if (result.effectiveHits) 8 else 12, 0, false, false, false, false,
         false, false, if (result.effectiveHits) 4 else 0, result.critical,
-        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+        featureMbtBaselineArmorClass, Set(), false, WResolved
       ),
     }
   }

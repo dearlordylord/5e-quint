@@ -3324,7 +3324,7 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
   const scenarioResult = mbtLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "level-1 buff/mark/smite selected identity",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

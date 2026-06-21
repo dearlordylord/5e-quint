@@ -76,7 +76,7 @@ fixture entries, before using the invariant as `--inductive-invariant`.
   advancement and fighter choices imply primary class, background choices imply
   background, equipment purchase implies class and background equipment, and
   loadout choices imply equipment purchase;
-- `qHoles == openCreationHoles(qDraft)`;
+- the draft frontier projection matches `openCreationHoles(qDraft)`;
 - `qFinalization == finalizeDraft(qDraft)`;
 - `Ready` is equivalent to no holes and all required manifest fields being
   filled;

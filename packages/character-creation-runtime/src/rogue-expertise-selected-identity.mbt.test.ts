@@ -76,7 +76,7 @@ type RogueExpertiseProjectionInput = {
   readonly totalLevel: 1 | 6;
   readonly selectedSkillProficiencies: readonly Skill[];
   readonly selectedExpertiseSkills: readonly Skill[];
-  readonly lastResult: RogueExpertiseResult;
+  readonly outcome: RogueExpertiseResult;
 };
 type RogueExpertiseFacts = {
   readonly selectedExpertiseChoiceCount: number;
@@ -117,10 +117,10 @@ const expertisePresenceSchema = {
   stealthExpertisePresent: z.literal(true),
 } as const;
 const rogueExpertiseSelectedIdentityProjectionSchema = z.discriminatedUnion(
-  "lastResult",
+  "outcome",
   [
     z.object({
-      lastResult: z.literal("init"),
+      outcome: z.literal("init"),
       selectedExpertiseUnitId: z.literal("none"),
       selectedExpertiseChoiceCount: z.literal(0),
       buildExpertiseCount: z.literal(0),
@@ -133,7 +133,7 @@ const rogueExpertiseSelectedIdentityProjectionSchema = z.discriminatedUnion(
       totalLevel: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("levelOne"),
+      outcome: z.literal("levelOne"),
       selectedExpertiseUnitId: z.literal(ROGUE_EXPERTISE_UNIT_ID),
       selectedExpertiseChoiceCount: z.literal(2),
       buildExpertiseCount: z.literal(2),
@@ -144,7 +144,7 @@ const rogueExpertiseSelectedIdentityProjectionSchema = z.discriminatedUnion(
       totalLevel: z.literal(1),
     }),
     z.object({
-      lastResult: z.literal("levelSix"),
+      outcome: z.literal("levelSix"),
       selectedExpertiseUnitId: z.literal(ROGUE_EXPERTISE_UNIT_ID),
       selectedExpertiseChoiceCount: z.literal(4),
       buildExpertiseCount: z.literal(4),
@@ -194,25 +194,48 @@ const selectedUnitIdentityReplays = [
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 const quintStateSchema = z.object({
-  qLastResult: z.union([
-    z.literal("init"),
-    z.literal("levelOne"),
-    z.literal("levelSix"),
-  ]),
-  qSelectedExpertiseUnitId: z.union([
+  outcome: z.unknown().transform(outcomeField),
+  selectedExpertiseUnitId: z.union([
     z.literal("none"),
     z.literal(ROGUE_EXPERTISE_UNIT_ID),
   ]),
-  qSelectedExpertiseChoiceCount: z.bigint(),
-  qBuildExpertiseCount: z.bigint(),
-  qOwnedSkillProficiencyCount: z.bigint(),
-  qRogueExpertiseUnitRefPresent: z.boolean(),
-  qAcrobaticsExpertisePresent: z.boolean(),
-  qPerceptionExpertisePresent: z.boolean(),
-  qSleightOfHandExpertisePresent: z.boolean(),
-  qStealthExpertisePresent: z.boolean(),
-  qTotalLevel: z.bigint(),
+  selectedExpertiseChoiceCount: z.bigint(),
+  buildExpertiseCount: z.bigint(),
+  ownedSkillProficiencyCount: z.bigint(),
+  rogueExpertiseUnitRefPresent: z.boolean(),
+  acrobaticsExpertisePresent: z.boolean(),
+  perceptionExpertisePresent: z.boolean(),
+  sleightOfHandExpertisePresent: z.boolean(),
+  stealthExpertisePresent: z.boolean(),
+  totalLevel: z.bigint(),
 });
+
+const qntOutcomeByVariant = {
+  CharacterCreationRogueExpertiseSelectedIdentityInit: "init",
+  CharacterCreationRogueExpertiseSelectedIdentityLevelOne: "levelOne",
+  CharacterCreationRogueExpertiseSelectedIdentityLevelSix: "levelSix",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
 
 describe("Character Creation Rogue Expertise selected identity MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
@@ -291,10 +314,10 @@ function createRogueExpertiseSelectedIdentityDriver() {
 
 function initialProjection(): Extract<
   RogueExpertiseSelectedIdentityProjection,
-  { readonly lastResult: "init" }
+  { readonly outcome: "init" }
 > {
   return {
-    lastResult: "init",
+    outcome: "init",
     selectedExpertiseUnitId: "none",
     selectedExpertiseChoiceCount: 0,
     buildExpertiseCount: 0,
@@ -314,7 +337,7 @@ function levelOneExpertiseProjection(): RogueExpertiseSelectedIdentityProjection
     totalLevel: 1,
     selectedSkillProficiencies: LEVEL_ONE_ROGUE_SKILL_PROFICIENCIES,
     selectedExpertiseSkills: LEVEL_ONE_EXPERTISE_SKILLS,
-    lastResult: "levelOne",
+    outcome: "levelOne",
   });
 }
 
@@ -324,7 +347,7 @@ function levelSixExpertiseProjection(): RogueExpertiseSelectedIdentityProjection
     totalLevel: 6,
     selectedSkillProficiencies: LEVEL_ONE_ROGUE_SKILL_PROFICIENCIES,
     selectedExpertiseSkills: LEVEL_SIX_EXPERTISE_SKILLS,
-    lastResult: "levelSix",
+    outcome: "levelSix",
   });
 }
 
@@ -345,7 +368,7 @@ function rogueExpertiseProjection(
     input,
   });
   return rogueExpertiseSelectedIdentityProjectionSchema.parse({
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     selectedExpertiseUnitId: ROGUE_EXPERTISE_UNIT_ID,
     selectedExpertiseChoiceCount: facts.selectedExpertiseChoiceCount,
     buildExpertiseCount: facts.buildExpertiseCount,
@@ -540,6 +563,9 @@ function preferredOptionIdsForHole(input: {
   if (source.tag === "draft" && source.path === "draft.background") {
     return [creationChoiceOptionId("background_soldier")];
   }
+  if (source.tag === "draft" && source.path === "draft.species") {
+    return [creationChoiceOptionId("species_orc")];
+  }
   if (source.tag !== "unitChoice") {
     return undefined;
   }
@@ -712,22 +738,34 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   return result.right;
 }
 
+function qStateValue(raw: unknown): unknown {
+  if (
+    raw !== null &&
+    typeof raw === "object" &&
+    !Array.isArray(raw) &&
+    "qState" in raw
+  ) {
+    return Object.fromEntries(Object.entries(raw))["qState"];
+  }
+  throw new Error("Expected Quint qState record.");
+}
+
 function normalizeQuintState(
   raw: unknown,
 ): RogueExpertiseSelectedIdentityProjection {
-  const parsed = quintStateSchema.parse(raw);
+  const parsed = quintStateSchema.parse(qStateValue(raw));
   return rogueExpertiseSelectedIdentityProjectionSchema.parse({
-    lastResult: parsed.qLastResult,
-    selectedExpertiseUnitId: parsed.qSelectedExpertiseUnitId,
-    selectedExpertiseChoiceCount: Number(parsed.qSelectedExpertiseChoiceCount),
-    buildExpertiseCount: Number(parsed.qBuildExpertiseCount),
-    ownedSkillProficiencyCount: Number(parsed.qOwnedSkillProficiencyCount),
-    rogueExpertiseUnitRefPresent: parsed.qRogueExpertiseUnitRefPresent,
-    acrobaticsExpertisePresent: parsed.qAcrobaticsExpertisePresent,
-    perceptionExpertisePresent: parsed.qPerceptionExpertisePresent,
-    sleightOfHandExpertisePresent: parsed.qSleightOfHandExpertisePresent,
-    stealthExpertisePresent: parsed.qStealthExpertisePresent,
-    totalLevel: Number(parsed.qTotalLevel),
+    outcome: parsed.outcome,
+    selectedExpertiseUnitId: parsed.selectedExpertiseUnitId,
+    selectedExpertiseChoiceCount: Number(parsed.selectedExpertiseChoiceCount),
+    buildExpertiseCount: Number(parsed.buildExpertiseCount),
+    ownedSkillProficiencyCount: Number(parsed.ownedSkillProficiencyCount),
+    rogueExpertiseUnitRefPresent: parsed.rogueExpertiseUnitRefPresent,
+    acrobaticsExpertisePresent: parsed.acrobaticsExpertisePresent,
+    perceptionExpertisePresent: parsed.perceptionExpertisePresent,
+    sleightOfHandExpertisePresent: parsed.sleightOfHandExpertisePresent,
+    stealthExpertisePresent: parsed.stealthExpertisePresent,
+    totalLevel: Number(parsed.totalLevel),
   });
 }
 

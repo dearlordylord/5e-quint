@@ -14,14 +14,13 @@ module battleRuntimeLevel2DamageSpellSelectedIdentityMbt {
 
   var qState: Level2DamageSpellSelectedIdentityWitnessState
 
-  pure def qLastResult: Level2DamageSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: Level2DamageSpellSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def level2DamageSpellSelectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: Level2DamageSpellSelectedIdentityScenarioOutcome,
-    _scenarioInvalidReason: str,
+    scenarioOutcome: Level2DamageSpellSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -29,59 +28,59 @@ module battleRuntimeLevel2DamageSpellSelectedIdentityMbt {
   action recordProjection(lastResult: Level2DamageSpellSelectedIdentityScenarioOutcome): bool = all {
     qState' = {
       qScenarioOutcome: lastResult,
-      protocol: level2DamageSpellSelectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: level2DamageSpellSelectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
 
   action init = recordProjection(Init)
 
   action doDiscoverAcidArrowAttackTiming = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(AcidArrowAttackTiming),
   }
 
   action doDiscoverDragonsBreathInitial = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(DragonsBreathInitial),
   }
 
   action doDiscoverFlameBladeHeldObject = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(FlameBladeHeldObject),
   }
 
   action doDiscoverFlamingSphereHazard = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(FlamingSphereHazard),
   }
 
   action doDiscoverHeatMetalObjectContact = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(HeatMetalObjectContact),
   }
 
   action doDiscoverMoonbeamMovableZone = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(MoonbeamMovableZone),
   }
 
   action doDiscoverRayOfEnfeeblementSaveGate = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(RayOfEnfeeblementSaveGate),
   }
 
   action doDiscoverScorchingRayAttackSequence = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(ScorchingRayAttackSequence),
   }
 
   action doDiscoverShatterSaveGatedDamage = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(ShatterSaveGatedDamage),
   }
 
   action doDiscoverSpiritualWeaponAttackProxy = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(SpiritualWeaponAttackProxy),
   }
 

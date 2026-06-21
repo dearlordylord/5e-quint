@@ -504,7 +504,7 @@ function normalizeBlurAttackRollDefenseQuintState(
   }
   assertWitnessProtocolConsistentWithScenario({
     label: "Blur attack-roll defense",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

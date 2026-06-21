@@ -863,7 +863,7 @@ function normalizeLevitateCreatureQuintState(
   const scenarioResult = lastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Levitate creature lifecycle",
-    scenarioResult,
+    scenarioOutcome: scenarioResult,
     protocol,
   });
   return {

@@ -5,31 +5,32 @@ module battleRuntimeShiningSmiteSelectedIdentityMbt {
 
   type Hole = | NoHole
 
+  type ShiningSmiteSelectedIdentityScenarioOutcome = | Init | ShiningSmiteAfterHitDamageIllumination
+
   type ShiningSmiteSelectedIdentityWitnessState = {
-    scenarioResult: str,
+    scenarioOutcome: ShiningSmiteSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
   var qState: ShiningSmiteSelectedIdentityWitnessState
 
   action recordProjection(
-    scenarioResult: str,
+    scenarioOutcome: ShiningSmiteSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection("init", witnessInit(NoHole))
+  action init = recordProjection(Init, witnessInit(NoHole))
 
   action doDiscoverShiningSmiteAfterHitDamageIllumination = all {
     qState.protocol.result == WInit,
     recordProjection(
-      "shiningSmiteAfterHitDamageIllumination",
-      witnessResolved(NoHole),
-    ),
+      ShiningSmiteAfterHitDamageIllumination,
+      witnessResolved(NoHole)),
   }
 
   action step = any {

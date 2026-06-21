@@ -63,7 +63,7 @@ type SlotScenario = (typeof slotScenarios)[number];
 const slotReplayStepCount = slotScenarios.length - 1;
 
 type SlotProjection = {
-  readonly lastResult: SlotScenario;
+  readonly outcome: SlotScenario;
   readonly accepted: boolean;
   readonly message: string;
   readonly ordinaryLevel1Capacity: number;
@@ -267,7 +267,7 @@ function rejectMismatchedOrdinarySpellSlotCapacityProjection(): SlotProjection {
     throw new Error("Expected ordinary Spell Slot capacity mismatch.");
   }
   return projectFromParts({
-    lastResult: "ordinary-capacity-mismatch-rejected",
+    outcome: "ordinary-capacity-mismatch-rejected",
     accepted: false,
     message: result.left.message,
     ordinaryLevel1Capacity: 3,
@@ -293,7 +293,7 @@ function rejectPactSlotExpenditureOverCapacityProjection(): SlotProjection {
     throw new Error("Expected Pact Slot expenditure over capacity.");
   }
   return projectFromParts({
-    lastResult: "pact-expenditure-over-capacity-rejected",
+    outcome: "pact-expenditure-over-capacity-rejected",
     accepted: false,
     message: result.left.message,
     pactSlotLevel: 1,
@@ -307,7 +307,7 @@ function shortRestRestoresPactSlotsOnlyProjection(): SlotProjection {
   const sheet = wizardWarlockSpentSheet("character:short-rest-pact");
   const rested = requireRight(completeShortRestForSheet({ sheet }));
   return projectAccepted({
-    lastResult: "short-rest-restores-pact-slots-only",
+    outcome: "short-rest-restores-pact-slots-only",
     sheet: rested,
     replayIndex: 3,
   });
@@ -330,7 +330,7 @@ function shortRestArcaneRecoveryRefundsOrdinarySpellSlotProjection(): SlotProjec
     }),
   );
   return projectAccepted({
-    lastResult: "short-rest-arcane-recovery-refunds-ordinary-spell-slot",
+    outcome: "short-rest-arcane-recovery-refunds-ordinary-spell-slot",
     sheet: rested,
     replayIndex: 4,
   });
@@ -346,7 +346,7 @@ function completeLongRestRestoresOrdinaryPactAndClearsCreatedSlotsProjection(): 
   );
   const rested = requireRight(completeLongRestForSheet(sheet));
   return projectAccepted({
-    lastResult: "long-rest-restores-ordinary-pact-and-clears-created-slots",
+    outcome: "long-rest-restores-ordinary-pact-and-clears-created-slots",
     sheet: rested,
     replayIndex: 5,
   });
@@ -359,7 +359,7 @@ function interruptShortRestNoSlotBenefitProjection(): SlotProjection {
     interruption: "takeDamage",
   });
   return projectAccepted({
-    lastResult: "short-rest-interrupted-no-slot-benefit",
+    outcome: "short-rest-interrupted-no-slot-benefit",
     sheet: interrupted.sheet,
     replayIndex: 6,
   });
@@ -380,7 +380,7 @@ function interruptLongRestBeforeOneHourNoSlotBenefitProjection(): SlotProjection
     }),
   );
   return projectAccepted({
-    lastResult: "long-rest-interrupted-before-one-hour-no-slot-benefit",
+    outcome: "long-rest-interrupted-before-one-hour-no-slot-benefit",
     sheet: interrupted.rest.sheet,
     replayIndex: 7,
   });
@@ -399,7 +399,7 @@ function interruptLongRestWithShortRestSlotBenefitsProjection(): SlotProjection 
     }),
   );
   return projectAccepted({
-    lastResult: "long-rest-interrupted-with-short-rest-slot-benefits",
+    outcome: "long-rest-interrupted-with-short-rest-slot-benefits",
     sheet: interrupted.rest.sheet,
     replayIndex: 8,
   });
@@ -415,7 +415,7 @@ function magicalCunningRecoversPactSlotsProjection(): SlotProjection {
     completeMagicalCunningRite({ sheet, unitLibrary }),
   );
   return projectAccepted({
-    lastResult: "magical-cunning-recovers-pact-slots",
+    outcome: "magical-cunning-recovers-pact-slots",
     sheet: recovered,
     replayIndex: 9,
   });
@@ -432,7 +432,7 @@ function rejectMagicalCunningWithoutExpendedPactSlotsProjection(): SlotProjectio
     throw new Error("Expected Magical Cunning to reject fresh Pact Slots.");
   }
   return projectRejected({
-    lastResult: "magical-cunning-no-expended-pact-slots-rejected",
+    outcome: "magical-cunning-no-expended-pact-slots-rejected",
     message: result.left.message,
     sheet,
     replayIndex: 10,
@@ -457,7 +457,7 @@ function rejectArcaneRecoveryPactSlotRefundProjection(): SlotProjection {
     throw new Error("Expected Arcane Recovery to reject Pact Slot recovery.");
   }
   return projectRejected({
-    lastResult: "arcane-recovery-pact-slot-refund-rejected",
+    outcome: "arcane-recovery-pact-slot-refund-rejected",
     message: result.left.message,
     sheet,
     replayIndex: 11,
@@ -879,7 +879,7 @@ function requireClassSpellcastingAtLevel(
 
 function initialProjection(): SlotProjection {
   return projectFromParts({
-    lastResult: "init",
+    outcome: "init",
     accepted: false,
     message: "none",
     replayIndex: 0,
@@ -887,12 +887,12 @@ function initialProjection(): SlotProjection {
 }
 
 function projectAccepted(input: {
-  readonly lastResult: SlotScenario;
+  readonly outcome: SlotScenario;
   readonly sheet: CharacterSheet;
   readonly replayIndex: number;
 }): SlotProjection {
   return projectFromSheet({
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     accepted: true,
     message: "none",
     sheet: input.sheet,
@@ -901,13 +901,13 @@ function projectAccepted(input: {
 }
 
 function projectRejected(input: {
-  readonly lastResult: SlotScenario;
+  readonly outcome: SlotScenario;
   readonly message: string;
   readonly sheet: CharacterSheet;
   readonly replayIndex: number;
 }): SlotProjection {
   return projectFromSheet({
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     accepted: false,
     message: input.message,
     sheet: input.sheet,
@@ -916,7 +916,7 @@ function projectRejected(input: {
 }
 
 function projectFromSheet(input: {
-  readonly lastResult: SlotScenario;
+  readonly outcome: SlotScenario;
   readonly accepted: boolean;
   readonly message: string;
   readonly sheet: CharacterSheet;
@@ -925,7 +925,7 @@ function projectFromSheet(input: {
   const sourceState = characterSheetSpellSlotSourceState(input.sheet);
   const pactSlots = characterSheetPactSlots(input.sheet);
   return projectFromParts({
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     accepted: input.accepted,
     message: input.message,
     ordinaryLevel1Capacity: ordinarySpellSlotCapacity(input.sheet, 1),
@@ -950,17 +950,14 @@ function projectFromSheet(input: {
 function projectFromParts(
   input: Pick<
     SlotProjection,
-    "lastResult" | "accepted" | "message" | "replayIndex"
+    "outcome" | "accepted" | "message" | "replayIndex"
   > &
     Partial<
-      Omit<
-        SlotProjection,
-        "lastResult" | "accepted" | "message" | "replayIndex"
-      >
+      Omit<SlotProjection, "outcome" | "accepted" | "message" | "replayIndex">
     >,
 ): SlotProjection {
   return {
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     accepted: input.accepted,
     message: input.message,
     ordinaryLevel1Capacity: input.ordinaryLevel1Capacity ?? 0,
@@ -1031,58 +1028,59 @@ function normalizeSlotQuintState(raw: unknown): SlotProjection {
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("Expected Quint Spell Slot/Pact Slot state object.");
   }
-  const state: Readonly<Record<string, unknown>> = Object.fromEntries(
+  const root: Readonly<Record<string, unknown>> = Object.fromEntries(
     Object.entries(raw),
   );
+  const state = recordField(root, "qState");
   return {
-    lastResult: scenarioField(state["qLastResult"]),
-    accepted: booleanField(state["qAccepted"], "qAccepted"),
-    message: stringField(state["qMessage"], "qMessage"),
+    outcome: outcomeField(state["outcome"]),
+    accepted: booleanField(state["accepted"], "qState.accepted"),
+    message: stringField(state["message"], "qState.message"),
     ordinaryLevel1Capacity: numberFromQuintInt(
-      state["qOrdinaryLevel1Capacity"],
-      "qOrdinaryLevel1Capacity",
+      state["ordinaryLevel1Capacity"],
+      "qState.ordinaryLevel1Capacity",
     ),
     ordinaryLevel1Expended: numberFromQuintInt(
-      state["qOrdinaryLevel1Expended"],
-      "qOrdinaryLevel1Expended",
+      state["ordinaryLevel1Expended"],
+      "qState.ordinaryLevel1Expended",
     ),
     ordinaryLevel2Capacity: numberFromQuintInt(
-      state["qOrdinaryLevel2Capacity"],
-      "qOrdinaryLevel2Capacity",
+      state["ordinaryLevel2Capacity"],
+      "qState.ordinaryLevel2Capacity",
     ),
     ordinaryLevel2Expended: numberFromQuintInt(
-      state["qOrdinaryLevel2Expended"],
-      "qOrdinaryLevel2Expended",
+      state["ordinaryLevel2Expended"],
+      "qState.ordinaryLevel2Expended",
     ),
     createdLevel1Capacity: numberFromQuintInt(
-      state["qCreatedLevel1Capacity"],
-      "qCreatedLevel1Capacity",
+      state["createdLevel1Capacity"],
+      "qState.createdLevel1Capacity",
     ),
     createdLevel1Expended: numberFromQuintInt(
-      state["qCreatedLevel1Expended"],
-      "qCreatedLevel1Expended",
+      state["createdLevel1Expended"],
+      "qState.createdLevel1Expended",
     ),
     pactSlotLevel: numberFromQuintInt(
-      state["qPactSlotLevel"],
-      "qPactSlotLevel",
+      state["pactSlotLevel"],
+      "qState.pactSlotLevel",
     ),
     pactSlotCapacity: numberFromQuintInt(
-      state["qPactSlotCapacity"],
-      "qPactSlotCapacity",
+      state["pactSlotCapacity"],
+      "qState.pactSlotCapacity",
     ),
     pactSlotExpended: numberFromQuintInt(
-      state["qPactSlotExpended"],
-      "qPactSlotExpended",
+      state["pactSlotExpended"],
+      "qState.pactSlotExpended",
     ),
     arcaneRecoveryUsedSinceLongRest: booleanField(
-      state["qArcaneRecoveryUsedSinceLongRest"],
-      "qArcaneRecoveryUsedSinceLongRest",
+      state["arcaneRecoveryUsedSinceLongRest"],
+      "qState.arcaneRecoveryUsedSinceLongRest",
     ),
     magicalCunningUsedSinceLongRest: booleanField(
-      state["qMagicalCunningUsedSinceLongRest"],
-      "qMagicalCunningUsedSinceLongRest",
+      state["magicalCunningUsedSinceLongRest"],
+      "qState.magicalCunningUsedSinceLongRest",
     ),
-    replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
+    replayIndex: numberFromQuintInt(state["replayIndex"], "qState.replayIndex"),
   };
 }
 
@@ -1095,21 +1093,12 @@ function compareSlotState(
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(
-        `${runtime.lastResult}: ${error.message}\nruntime=${JSON.stringify(runtime)}\nquint=${JSON.stringify(quint)}`,
+        `${runtime.outcome}: ${error.message}\nruntime=${JSON.stringify(runtime)}\nquint=${JSON.stringify(quint)}`,
       );
     }
     throw error;
   }
   return true;
-}
-
-function scenarioField(raw: unknown): SlotScenario {
-  if (typeof raw === "string" && isSlotScenario(raw)) return raw;
-  throw new Error(`Unknown Spell Slot/Pact Slot scenario ${String(raw)}.`);
-}
-
-function isSlotScenario(raw: string): raw is SlotScenario {
-  return slotScenarios.some((scenario) => scenario === raw);
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {
@@ -1128,7 +1117,65 @@ function stringField(raw: unknown, field: string): string {
   throw new Error(`Expected Quint string field ${field}.`);
 }
 
+const qntOutcomeByVariant = {
+  CharacterSheetSpellSlotsPactSlotsInit: "init",
+  CharacterSheetSpellSlotsPactSlotsOrdinaryCapacityMismatchRejected:
+    "ordinary-capacity-mismatch-rejected",
+  CharacterSheetSpellSlotsPactSlotsPactExpenditureOverCapacityRejected:
+    "pact-expenditure-over-capacity-rejected",
+  CharacterSheetSpellSlotsPactSlotsShortRestRestoresPactSlotsOnly:
+    "short-rest-restores-pact-slots-only",
+  CharacterSheetSpellSlotsPactSlotsShortRestArcaneRecoveryRefundsOrdinarySpellSlot:
+    "short-rest-arcane-recovery-refunds-ordinary-spell-slot",
+  CharacterSheetSpellSlotsPactSlotsLongRestRestoresOrdinaryPactAndClearsCreatedSlots:
+    "long-rest-restores-ordinary-pact-and-clears-created-slots",
+  CharacterSheetSpellSlotsPactSlotsShortRestInterruptedNoSlotBenefit:
+    "short-rest-interrupted-no-slot-benefit",
+  CharacterSheetSpellSlotsPactSlotsLongRestInterruptedBeforeOneHourNoSlotBenefit:
+    "long-rest-interrupted-before-one-hour-no-slot-benefit",
+  CharacterSheetSpellSlotsPactSlotsLongRestInterruptedWithShortRestSlotBenefits:
+    "long-rest-interrupted-with-short-rest-slot-benefits",
+  CharacterSheetSpellSlotsPactSlotsMagicalCunningRecoversPactSlots:
+    "magical-cunning-recovers-pact-slots",
+  CharacterSheetSpellSlotsPactSlotsMagicalCunningNoExpendedPactSlotsRejected:
+    "magical-cunning-no-expended-pact-slots-rejected",
+  CharacterSheetSpellSlotsPactSlotsArcaneRecoveryPactSlotRefundRejected:
+    "arcane-recovery-pact-slot-refund-rejected",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
+
 function requireRight<A, E>(either: Either.Either<A, E>): A {
   if (Either.isRight(either)) return either.right;
   throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }

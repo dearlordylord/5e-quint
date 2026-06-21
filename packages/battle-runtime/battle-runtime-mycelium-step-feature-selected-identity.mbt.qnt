@@ -19,15 +19,13 @@ module battleRuntimeMyceliumStepFeatureSelectedIdentityMbt {
 
   pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
   pure def qDashBonusFeet: int = qState.qDashBonusFeet
-  pure def qLastResult: MyceliumStepFeatureSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: MyceliumStepFeatureSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioResult: MyceliumStepFeatureSelectedIdentityScenarioOutcome,
-    scenarioInvalidReason: str,
+    scenarioOutcome: MyceliumStepFeatureSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
-    if (scenarioResult == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioInvalidReason == "invalidFill") witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -40,7 +38,7 @@ module battleRuntimeMyceliumStepFeatureSelectedIdentityMbt {
       qBonusActionAvailable: bonusActionAvailable,
       qDashBonusFeet: dashBonusFeet,
       qScenarioOutcome: lastResult,
-      protocol: selectedIdentityProtocolForProjection(Set(), lastResult, ""),
+      protocol: selectedIdentityProtocolForProjection(Set(), lastResult),
     },
   }
   action init = recordProjection(
@@ -50,7 +48,7 @@ module battleRuntimeMyceliumStepFeatureSelectedIdentityMbt {
   )
 
   action doDiscoverMyceliumStepDash = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       true,
       0,
@@ -59,7 +57,7 @@ module battleRuntimeMyceliumStepFeatureSelectedIdentityMbt {
   }
 
   action doDashAsBonusAction = all {
-    qLastResult == Init,
+    scenarioOutcome == Init,
     recordProjection(
       false,
       30,

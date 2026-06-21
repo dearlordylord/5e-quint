@@ -21,6 +21,8 @@ module battleRuntimeSelfTeleportLifecycleMbt {
   //   Opportunity Attack, Teleportation, and Holding / Wielding.
   type Hole = | NoHole
 
+  type SelfTeleportLifecycleScenarioOutcome = | Init | DestinationWitnessRequired | SelfTeleported | AntimagicTransitBlocked
+
   type SelfTeleportWitnessState = {
     bonusActionAvailable: bool,
     spellAvailable: bool,
@@ -36,7 +38,7 @@ module battleRuntimeSelfTeleportLifecycleMbt {
     destinationDistanceFeet: int,
     destinationInsideAntimagicAuraWitness: bool,
     antimagicTransitBlocked: bool,
-    scenarioResult: str,
+    scenarioOutcome: SelfTeleportLifecycleScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -57,7 +59,7 @@ module battleRuntimeSelfTeleportLifecycleMbt {
     destinationDistanceFeet: int,
     destinationInsideAntimagicAuraWitness: bool,
     antimagicTransitBlocked: bool,
-    scenarioResult: str,
+    scenarioOutcome: SelfTeleportLifecycleScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -75,7 +77,7 @@ module battleRuntimeSelfTeleportLifecycleMbt {
       destinationDistanceFeet: destinationDistanceFeet,
       destinationInsideAntimagicAuraWitness: destinationInsideAntimagicAuraWitness,
       antimagicTransitBlocked: antimagicTransitBlocked,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
@@ -95,9 +97,8 @@ module battleRuntimeSelfTeleportLifecycleMbt {
     0,
     false,
     false,
-    "init",
-    witnessInit(NoHole),
-  )
+    Init,
+    witnessInit(NoHole))
 
   action doRequestDestinationWitness = all {
     qState.spellAvailable,
@@ -118,9 +119,8 @@ module battleRuntimeSelfTeleportLifecycleMbt {
       0,
       false,
       false,
-      "destinationWitnessRequired",
-      witnessResolved(NoHole),
-    ),
+      DestinationWitnessRequired,
+      witnessResolved(NoHole)),
   }
 
   action doCastSelfTeleport = all {
@@ -143,9 +143,8 @@ module battleRuntimeSelfTeleportLifecycleMbt {
       30,
       false,
       false,
-      "selfTeleported",
-      witnessResolved(NoHole),
-    ),
+      SelfTeleported,
+      witnessResolved(NoHole)),
   }
 
   action doRejectAntimagicDestinationTransit = all {
@@ -168,9 +167,8 @@ module battleRuntimeSelfTeleportLifecycleMbt {
       0,
       true,
       true,
-      "antimagicTransitBlocked",
-      witnessResolved(NoHole),
-    ),
+      AntimagicTransitBlocked,
+      witnessResolved(NoHole)),
   }
 
   action doStutter = recordSelfTeleportState(
@@ -188,7 +186,7 @@ module battleRuntimeSelfTeleportLifecycleMbt {
     qState.destinationDistanceFeet,
     qState.destinationInsideAntimagicAuraWitness,
     qState.antimagicTransitBlocked,
-    qState.scenarioResult,
+    qState.scenarioOutcome,
     qState.protocol,
   )
 

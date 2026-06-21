@@ -21,7 +21,7 @@ module battleRuntimeEldritchBlastMbt {
   pure def qActionAvailable: bool = qState.qActionAvailable
   pure def qTargetHp: int = qState.qTargetHp
   pure def qResolvedBeams: int = qState.qResolvedBeams
-  pure def qHoles: Set[Hole] = qState.protocol.holes
+  pure def openHoles: Set[Hole] = qState.protocol.holes
 
   pure def eldritchBlastState(
     actionAvailable: bool,
@@ -49,7 +49,7 @@ module battleRuntimeEldritchBlastMbt {
 
   action doFillTwoCreatureTargets = all {
     qActionAvailable,
-    qHoles == Set(TargetChoice, ObjectTargetChoice),
+    openHoles == Set(TargetChoice, ObjectTargetChoice),
     qState' = eldritchBlastState(
       qActionAvailable,
       qTargetHp,
@@ -61,7 +61,7 @@ module battleRuntimeEldritchBlastMbt {
   action doFillFirstAttackMiss = all {
     qActionAvailable,
     qResolvedBeams == 0,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     qState' = eldritchBlastState(
       qActionAvailable,
       qTargetHp,
@@ -73,7 +73,7 @@ module battleRuntimeEldritchBlastMbt {
   action doFillFirstAttackHit = all {
     qActionAvailable,
     qResolvedBeams == 0,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     qState' = eldritchBlastState(
       qActionAvailable,
       qTargetHp,
@@ -85,7 +85,7 @@ module battleRuntimeEldritchBlastMbt {
   action doFillFirstDamageLow = all {
     qActionAvailable,
     qResolvedBeams == 0,
-    qHoles == Set(SpellDamageRoll),
+    openHoles == Set(SpellDamageRoll),
     qState' = eldritchBlastState(
       qActionAvailable,
       9,
@@ -97,7 +97,7 @@ module battleRuntimeEldritchBlastMbt {
   action doFillSecondAttackMiss = all {
     qActionAvailable,
     qResolvedBeams == 1,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     qState' = eldritchBlastState(
       false,
       qTargetHp,
@@ -109,7 +109,7 @@ module battleRuntimeEldritchBlastMbt {
   action doFillSecondAttackHit = all {
     qActionAvailable,
     qResolvedBeams == 1,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     qState' = eldritchBlastState(
       qActionAvailable,
       qTargetHp,
@@ -121,7 +121,7 @@ module battleRuntimeEldritchBlastMbt {
   action doFillSecondDamageLow = all {
     qActionAvailable,
     qResolvedBeams == 1,
-    qHoles == Set(SpellDamageRoll),
+    openHoles == Set(SpellDamageRoll),
     qState' = eldritchBlastState(
       false,
       qTargetHp - 4,
@@ -132,7 +132,7 @@ module battleRuntimeEldritchBlastMbt {
 
   action doRejectStaleAfterResolved = all {
     not(qActionAvailable),
-    qHoles == Set(),
+    openHoles == Set(),
     qState' = eldritchBlastState(
       qActionAvailable,
       qTargetHp,

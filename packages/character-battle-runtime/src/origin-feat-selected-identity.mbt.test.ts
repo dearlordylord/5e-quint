@@ -44,7 +44,7 @@ const originFeatSelectedIdentityResults = [
 type OriginFeatSelectedIdentityResult =
   (typeof originFeatSelectedIdentityResults)[number];
 type OriginFeatSelectedIdentityProjection = {
-  readonly lastResult: OriginFeatSelectedIdentityResult;
+  readonly outcome: OriginFeatSelectedIdentityResult;
   readonly originFeatUnitId: typeof ALERT_UNIT_ID | "none";
   readonly backgroundUnitId: typeof CRIMINAL_BACKGROUND_UNIT_ID | "none";
   readonly initiativeScore: number;
@@ -114,8 +114,7 @@ const originFeatSelectedIdentityStateCheck = stateCheck(
 describe("Character Battle origin feat selected identity MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions =
-        new Set<OriginFeatSelectedIdentityDriverAction>();
+      const replayedActions = new Set<OriginFeatSelectedIdentityDriverAction>();
 
       for (const sequence of replay.sequences) {
         const driver = createOriginFeatSelectedIdentityDriver()();
@@ -185,8 +184,7 @@ describe("Character Battle origin feat selected identity MBT", () => {
       expect(
         build.features.some(
           (feature) =>
-            "unitId" in feature &&
-            feature.unitId === expected.originFeatUnitId,
+            "unitId" in feature && feature.unitId === expected.originFeatUnitId,
         ),
       ).toBe(false);
     }
@@ -233,7 +231,7 @@ function createOriginFeatSelectedIdentityDriver() {
 
 function initialProjection(): OriginFeatSelectedIdentityProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
     originFeatUnitId: "none",
     backgroundUnitId: "none",
     initiativeScore: 0,
@@ -257,7 +255,7 @@ function criminalAlertOriginFeatProjection(): OriginFeatSelectedIdentityProjecti
   }
 
   return {
-    lastResult: "criminal-alert-origin-feat",
+    outcome: "criminal-alert-origin-feat",
     originFeatUnitId: ALERT_UNIT_ID,
     backgroundUnitId: CRIMINAL_BACKGROUND_UNIT_ID,
     initiativeScore: 0,
@@ -283,7 +281,7 @@ function alertInitiativeHandoffProjection(): OriginFeatSelectedIdentityProjectio
 
   return {
     ...criminalAlertOriginFeatProjection(),
-    lastResult: "alert-initiative-handoff",
+    outcome: "alert-initiative-handoff",
     initiativeScore: score.right,
   };
 }
@@ -367,7 +365,10 @@ function completeFighterDraftForBackground(input: {
           "survival",
         ),
         choiceFill(
-          unitChoiceHoleId("fighter_fighting_style", "class_feature_feat_choice"),
+          unitChoiceHoleId(
+            "fighter_fighting_style",
+            "class_feature_feat_choice",
+          ),
           "defense",
         ),
         choiceFill(
@@ -392,7 +393,10 @@ function completeFighterDraftForBackground(input: {
           "option_c",
         ),
         choiceFill(
-          unitChoiceHoleId(input.backgroundUnitId, "background_equipment_choice"),
+          unitChoiceHoleId(
+            input.backgroundUnitId,
+            "background_equipment_choice",
+          ),
           "option_b",
         ),
       ],
@@ -485,14 +489,14 @@ function loadoutHoleId(
 function normalizeOriginFeatSelectedIdentityQuintState(
   raw: unknown,
 ): OriginFeatSelectedIdentityProjection {
-  const state = quintStateRecord(raw);
+  const state = recordField(quintStateRecord(raw), "qState");
   return {
-    lastResult: resultField(state["qLastResult"]),
-    originFeatUnitId: originFeatUnitIdField(state["qOriginFeatUnitId"]),
-    backgroundUnitId: backgroundUnitIdField(state["qBackgroundUnitId"]),
+    outcome: outcomeField(state["outcome"]),
+    originFeatUnitId: originFeatUnitIdField(state["originFeatUnitId"]),
+    backgroundUnitId: backgroundUnitIdField(state["backgroundUnitId"]),
     initiativeScore: numberFromQuintInt(
-      state["qInitiativeScore"],
-      "qInitiativeScore",
+      state["initiativeScore"],
+      "qState.initiativeScore",
     ),
   };
 }
@@ -510,17 +514,6 @@ function compareOriginFeatSelectedIdentityState(
   return true;
 }
 
-function resultField(raw: unknown): OriginFeatSelectedIdentityResult {
-  if (
-    raw === "init" ||
-    raw === "criminal-alert-origin-feat" ||
-    raw === "alert-initiative-handoff"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unknown origin feat selected identity result ${String(raw)}.`);
-}
-
 function originFeatUnitIdField(
   raw: unknown,
 ): OriginFeatSelectedIdentityProjection["originFeatUnitId"] {
@@ -535,11 +528,51 @@ function backgroundUnitIdField(
   throw new Error(`Unknown origin feat background Unit id ${String(raw)}.`);
 }
 
+const qntOutcomeByVariant = {
+  CharacterBattleOriginFeatSelectedIdentityInit: "init",
+  CharacterBattleOriginFeatSelectedIdentityCriminalAlertOriginFeat:
+    "criminal-alert-origin-feat",
+  CharacterBattleOriginFeatSelectedIdentityAlertInitiativeHandoff:
+    "alert-initiative-handoff",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
+
 function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("Expected Quint origin feat selected identity state.");
   }
   return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {

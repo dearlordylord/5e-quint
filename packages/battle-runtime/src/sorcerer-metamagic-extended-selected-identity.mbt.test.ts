@@ -50,12 +50,18 @@ defineSelectedIdentityWitness({
   ),
   quintStateField: "qState",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "scenarioResult" },
+  quintFieldNames: { lastResult: "scenarioOutcome" },
+  quintVariantFieldTags: {
+    lastResult: {
+      Init: "init",
+      ExtendedCreatureSizeIncrease: "extendedCreatureSizeIncrease",
+    },
+  },
   projectionSchema: {
     sorceryPointsRemaining: "int",
     durationTicks: "int",
     concentrationSavingThrowMode: "str",
-    lastResult: "str",
+    lastResult: "variant",
   },
   initialProjection: {
     sorceryPointsRemaining: 2,

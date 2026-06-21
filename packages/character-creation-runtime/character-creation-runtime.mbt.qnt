@@ -3,18 +3,34 @@
 module characterCreationRuntimeMbt {
   import characterCreationRuntimeSlice.* from "./character-creation-runtime-slice"
 
-  var qDraft: Draft
-  var qHoles: Set[HoleId]
-  var qFinalization: FinalizationStatus
-  var qLastResult: str
-  var qLastBatchIssueCodes: Set[str]
-  var qLastFillIssues: Set[FillIssueProjection]
-
   type FillIssueProjection = {
     fillIndex: int,
     hole: HoleId,
     code: str,
   }
+
+  type CreationRuntimeOutcome =
+    | CreationInit
+    | CreationAccepted
+    | CreationRejected
+
+  type CreationRuntimeWitnessState = {
+    draft: Draft,
+    openHoles: Set[HoleId],
+    finalization: FinalizationStatus,
+    outcome: CreationRuntimeOutcome,
+    batchIssueCodes: Set[str],
+    fillIssues: Set[FillIssueProjection],
+  }
+
+  var qState: CreationRuntimeWitnessState
+
+  pure def draft: Draft = qState.draft
+  pure def openHoles: Set[HoleId] = qState.openHoles
+  pure def finalization: FinalizationStatus = qState.finalization
+  pure def outcome: CreationRuntimeOutcome = qState.outcome
+  pure def batchIssueCodes: Set[str] = qState.batchIssueCodes
+  pure def fillIssues: Set[FillIssueProjection] = qState.fillIssues
 
   pure val initialChoicesOnlyFills: List[Fill] = [
     FChoice({ hole: HProgression, options: [OClassFighterLevel1] }),
@@ -58,9 +74,9 @@ module characterCreationRuntimeMbt {
     | Rejected(v) => v.finalization
   }
 
-  pure def resultTag(result: FillBatchResult): str = match result {
-    | Accepted(_) => "accepted"
-    | Rejected(_) => "rejected"
+  pure def resultOutcome(result: FillBatchResult): CreationRuntimeOutcome = match result {
+    | Accepted(_) => CreationAccepted
+    | Rejected(_) => CreationRejected
   }
 
   pure def fillIssueCodeName(code: FillIssueCode): str = match code {
@@ -98,111 +114,115 @@ module characterCreationRuntimeMbt {
   }
 
   action recordResult(result: FillBatchResult): bool = all {
-    qDraft' = resultDraft(result),
-    qHoles' = resultHoles(result),
-    qFinalization' = resultFinalization(result),
-    qLastResult' = resultTag(result),
-    qLastBatchIssueCodes' = resultBatchIssueCodes(result),
-    qLastFillIssues' = resultFillIssues(result),
+    qState' = {
+      draft: resultDraft(result),
+      openHoles: resultHoles(result),
+      finalization: resultFinalization(result),
+      outcome: resultOutcome(result),
+      batchIssueCodes: resultBatchIssueCodes(result),
+      fillIssues: resultFillIssues(result),
+    },
   }
 
   action init = all {
-    qDraft' = emptyDraft,
-    qHoles' = openCreationHoles(emptyDraft),
-    qFinalization' = finalizeDraft(emptyDraft),
-    qLastResult' = "init",
-    qLastBatchIssueCodes' = Set(),
-    qLastFillIssues' = Set(),
+    qState' = {
+      draft: emptyDraft,
+      openHoles: openCreationHoles(emptyDraft),
+      finalization: finalizeDraft(emptyDraft),
+      outcome: CreationInit,
+      batchIssueCodes: Set(),
+      fillIssues: Set(),
+    },
   }
 
   action doFillInitialManifest =
     all {
-      qHoles == initialHoleIds,
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, initialManifestFills)),
+      openHoles == initialHoleIds,
+      recordResult(fillCreationHoles(draft, draft.revision, initialManifestFills)),
     }
 
   action doFillInitialChoicesOnly =
     all {
-      qHoles.contains(HProgression),
-      qHoles.contains(HBackground),
-      qHoles.contains(HSpecies),
-      qHoles.contains(HLanguages),
-      qHoles.contains(HAlignment),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, initialChoicesOnlyFills)),
+      openHoles.contains(HProgression),
+      openHoles.contains(HBackground),
+      openHoles.contains(HSpecies),
+      openHoles.contains(HLanguages),
+      openHoles.contains(HAlignment),
+      recordResult(fillCreationHoles(draft, draft.revision, initialChoicesOnlyFills)),
     }
 
   action doFillAbilityScoresOnly =
     all {
-      qHoles.contains(HAbilityScores),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, abilityScoresOnlyFills)),
+      openHoles.contains(HAbilityScores),
+      recordResult(fillCreationHoles(draft, draft.revision, abilityScoresOnlyFills)),
     }
 
   action doFillManifestChoices =
     all {
-      qHoles == afterInitialHoleIds,
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, manifestChoiceFills)),
+      openHoles == afterInitialHoleIds,
+      recordResult(fillCreationHoles(draft, draft.revision, manifestChoiceFills)),
     }
 
   action doFillManifestPurchase =
     all {
-      qHoles == Set(HEquipmentPurchase),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, manifestPurchaseFills)),
+      openHoles == Set(HEquipmentPurchase),
+      recordResult(fillCreationHoles(draft, draft.revision, manifestPurchaseFills)),
     }
 
   action doFillManifestLoadout =
     all {
-      qHoles == Set(HLoadoutArmor, HLoadoutShield, HLoadoutWeapon),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, manifestLoadoutFills)),
+      openHoles == Set(HLoadoutArmor, HLoadoutShield, HLoadoutWeapon),
+      recordResult(fillCreationHoles(draft, draft.revision, manifestLoadoutFills)),
     }
 
   action doRejectStaleInitialManifest =
     all {
-      qHoles == initialHoleIds,
-      recordResult(fillCreationHoles(qDraft, staleExpectedRevision, initialManifestFills)),
+      openHoles == initialHoleIds,
+      recordResult(fillCreationHoles(draft, staleExpectedRevision, initialManifestFills)),
     }
 
   action doRejectUnsupportedLanguage =
     all {
-      qHoles.contains(HLanguages),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+      openHoles.contains(HLanguages),
+      recordResult(fillCreationHoles(draft, draft.revision, [
         FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageElvish] }),
       ])),
     }
 
   action doRejectDuplicateLanguage =
     all {
-      qHoles.contains(HLanguages),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+      openHoles.contains(HLanguages),
+      recordResult(fillCreationHoles(draft, draft.revision, [
         FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageDwarvish] }),
       ])),
     }
 
   action doRejectDuplicateFill =
     all {
-      qHoles.contains(HLanguages),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, duplicateLanguageHoleFills)),
+      openHoles.contains(HLanguages),
+      recordResult(fillCreationHoles(draft, draft.revision, duplicateLanguageHoleFills)),
     }
 
   action doRejectTooFewLanguages =
     all {
-      qHoles.contains(HLanguages),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+      openHoles.contains(HLanguages),
+      recordResult(fillCreationHoles(draft, draft.revision, [
         FChoice({ hole: HLanguages, options: [OLanguageDwarvish] }),
       ])),
     }
 
   action doRejectTooManyLanguages =
     all {
-      qHoles.contains(HLanguages),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+      openHoles.contains(HLanguages),
+      recordResult(fillCreationHoles(draft, draft.revision, [
         FChoice({ hole: HLanguages, options: [OLanguageDwarvish, OLanguageGoblin, OLanguageElvish] }),
       ])),
     }
 
   action doRejectWrongKindPrimaryClass =
     all {
-      qHoles.contains(HProgression),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+      openHoles.contains(HProgression),
+      recordResult(fillCreationHoles(draft, draft.revision, [
         FAbilityScores({
           hole: HProgression,
           method: StandardArray,
@@ -213,23 +233,23 @@ module characterCreationRuntimeMbt {
 
   action doRejectClosedInitialProgressionHole =
     all {
-      not(qHoles.contains(HProgression)),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, closedInitialProgressionHoleFills)),
+      not(openHoles.contains(HProgression)),
+      recordResult(fillCreationHoles(draft, draft.revision, closedInitialProgressionHoleFills)),
     }
 
   action doRejectUnknownLoadoutArmor =
     all {
-      not(qHoles.contains(HLoadoutArmor)),
-      not(qDraft.equipmentPurchase),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+      not(openHoles.contains(HLoadoutArmor)),
+      not(draft.equipmentPurchase),
+      recordResult(fillCreationHoles(draft, draft.revision, [
         FChoice({ hole: HLoadoutArmor, options: [OLoadoutWorn] }),
       ])),
     }
 
   action doRejectUnsupportedClassEquipment =
     all {
-      qHoles.contains(HClassEquipment),
-      recordResult(fillCreationHoles(qDraft, qDraft.revision, [
+      openHoles.contains(HClassEquipment),
+      recordResult(fillCreationHoles(draft, draft.revision, [
         FChoice({ hole: HClassEquipment, options: [OClassEquipmentPackageA] }),
       ])),
     }
@@ -252,9 +272,6 @@ module characterCreationRuntimeMbt {
     doRejectUnknownLoadoutArmor,
     doRejectUnsupportedClassEquipment,
   }
-
-  pure def validLastResult(result: str): bool =
-    Set("init", "accepted", "rejected").contains(result)
 
   pure def draftFillCount(draft: Draft): int =
     (if (hasProgression(draft)) 1 else 0)
@@ -310,16 +327,15 @@ module characterCreationRuntimeMbt {
       and draft.loadoutWeapon
 
   val invariant =
-    qDraft.revision >= 0
-      and qDraft.revision <= 5
-      and qDraft.revision <= draftFillCount(qDraft)
-      and (qLastResult == "init" implies qDraft == emptyDraft)
-      and draftPrerequisitesHold(qDraft)
-      and qHoles == openCreationHoles(qDraft)
-      and qFinalization == finalizeDraft(qDraft)
-      and ((qFinalization == Ready) == draftReadyFieldsHold(qDraft))
-      and ((qFinalization == Ready) == (qHoles == Set()))
-      and validLastResult(qLastResult)
-      and (qLastResult != "rejected" implies qLastBatchIssueCodes == Set())
-      and (qLastResult != "rejected" implies qLastFillIssues == Set())
+    draft.revision >= 0
+      and draft.revision <= 5
+      and draft.revision <= draftFillCount(draft)
+      and (outcome == CreationInit implies draft == emptyDraft)
+      and draftPrerequisitesHold(draft)
+      and openHoles == openCreationHoles(draft)
+      and finalization == finalizeDraft(draft)
+      and ((finalization == Ready) == draftReadyFieldsHold(draft))
+      and ((finalization == Ready) == (openHoles == Set()))
+      and (outcome != CreationRejected implies batchIssueCodes == Set())
+      and (outcome != CreationRejected implies fillIssues == Set())
 }

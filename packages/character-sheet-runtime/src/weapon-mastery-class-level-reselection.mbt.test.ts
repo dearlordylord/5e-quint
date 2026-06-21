@@ -29,8 +29,7 @@ const WEAPON_MASTERY_CLASS_LEVEL_RESELECTION_RESULTS = [
 const FIGHTER_CLASS_UNIT_ID = "class_fighter" as const;
 const BARBARIAN_CLASS_UNIT_ID = "class_barbarian" as const;
 const FIGHTER_WEAPON_MASTERY_UNIT_ID = "fighter_weapon_mastery" as const;
-const BARBARIAN_WEAPON_MASTERY_UNIT_ID =
-  "barbarian_weapon_mastery" as const;
+const BARBARIAN_WEAPON_MASTERY_UNIT_ID = "barbarian_weapon_mastery" as const;
 const FIGHTER_LEVEL_FOUR_CURRENT_WEAPON_UNIT_IDS = [
   "weapon_longsword",
   "weapon_dagger",
@@ -90,7 +89,7 @@ type WeaponMasteryClassLevelReselectionProfile = {
   readonly requestedWeaponUnitIds: WeaponMasterySelectedWeaponUnitIds;
 };
 type WeaponMasteryClassLevelReselectionProjection = {
-  readonly lastResult: WeaponMasteryClassLevelReselectionResult;
+  readonly outcome: WeaponMasteryClassLevelReselectionResult;
   readonly classUnitId: "none" | WeaponMasteryClassUnitId;
   readonly featureUnitId: "none" | WeaponMasteryFeatureUnitId;
   readonly classLevel: number;
@@ -183,7 +182,7 @@ const weaponMasteryClassLevelReselectionReplays = [
         name: "fighter-level-four-accepts-one-long-rest-change",
         actions: ["doAcceptFighterLevelFourOneChangeWeaponMasteryReselection"],
         expected: acceptedProjection({
-          lastResult: "fighterLevelFourOneChangeAccepted",
+          outcome: "fighterLevelFourOneChangeAccepted",
           profile: FIGHTER_ONE_CHANGE_PROFILE,
           unchangedPreserved: false,
         }),
@@ -194,7 +193,7 @@ const weaponMasteryClassLevelReselectionReplays = [
           "doAcceptBarbarianLevelFourOneChangeWeaponMasteryReselection",
         ],
         expected: acceptedProjection({
-          lastResult: "barbarianLevelFourOneChangeAccepted",
+          outcome: "barbarianLevelFourOneChangeAccepted",
           profile: BARBARIAN_ONE_CHANGE_PROFILE,
           unchangedPreserved: false,
         }),
@@ -205,7 +204,7 @@ const weaponMasteryClassLevelReselectionReplays = [
           "doPreserveFighterLevelFourUnchangedWeaponMasteryReselection",
         ],
         expected: acceptedProjection({
-          lastResult: "fighterLevelFourUnchangedPreserved",
+          outcome: "fighterLevelFourUnchangedPreserved",
           profile: FIGHTER_UNCHANGED_PROFILE,
           unchangedPreserved: true,
         }),
@@ -294,51 +293,48 @@ describe("Character Sheet Weapon Mastery class-level reselection MBT", () => {
 });
 
 function createWeaponMasteryClassLevelReselectionDriver() {
-  return defineDriver(
-    weaponMasteryClassLevelReselectionDriverSchema,
-    () => {
-      let projection: WeaponMasteryClassLevelReselectionProjection =
-        initialProjection();
+  return defineDriver(weaponMasteryClassLevelReselectionDriverSchema, () => {
+    let projection: WeaponMasteryClassLevelReselectionProjection =
+      initialProjection();
 
-      function reset(): void {
-        projection = initialProjection();
-      }
+    function reset(): void {
+      projection = initialProjection();
+    }
 
-      return {
-        init: reset,
-        doAcceptFighterLevelFourOneChangeWeaponMasteryReselection: () => {
-          projection = acceptedProjection({
-            lastResult: "fighterLevelFourOneChangeAccepted",
-            profile: FIGHTER_ONE_CHANGE_PROFILE,
-            unchangedPreserved: false,
-          });
-        },
-        doAcceptBarbarianLevelFourOneChangeWeaponMasteryReselection: () => {
-          projection = acceptedProjection({
-            lastResult: "barbarianLevelFourOneChangeAccepted",
-            profile: BARBARIAN_ONE_CHANGE_PROFILE,
-            unchangedPreserved: false,
-          });
-        },
-        doPreserveFighterLevelFourUnchangedWeaponMasteryReselection: () => {
-          projection = acceptedProjection({
-            lastResult: "fighterLevelFourUnchangedPreserved",
-            profile: FIGHTER_UNCHANGED_PROFILE,
-            unchangedPreserved: true,
-          });
-        },
-        doRejectFighterLevelFourTooManyChangesWeaponMasteryReselection: () => {
-          projection = rejectedTooManyChangesProjection();
-        },
-        step: () => {},
-        getState: () => projection,
-      };
-    },
-  );
+    return {
+      init: reset,
+      doAcceptFighterLevelFourOneChangeWeaponMasteryReselection: () => {
+        projection = acceptedProjection({
+          outcome: "fighterLevelFourOneChangeAccepted",
+          profile: FIGHTER_ONE_CHANGE_PROFILE,
+          unchangedPreserved: false,
+        });
+      },
+      doAcceptBarbarianLevelFourOneChangeWeaponMasteryReselection: () => {
+        projection = acceptedProjection({
+          outcome: "barbarianLevelFourOneChangeAccepted",
+          profile: BARBARIAN_ONE_CHANGE_PROFILE,
+          unchangedPreserved: false,
+        });
+      },
+      doPreserveFighterLevelFourUnchangedWeaponMasteryReselection: () => {
+        projection = acceptedProjection({
+          outcome: "fighterLevelFourUnchangedPreserved",
+          profile: FIGHTER_UNCHANGED_PROFILE,
+          unchangedPreserved: true,
+        });
+      },
+      doRejectFighterLevelFourTooManyChangesWeaponMasteryReselection: () => {
+        projection = rejectedTooManyChangesProjection();
+      },
+      step: () => {},
+      getState: () => projection,
+    };
+  });
 }
 
 function acceptedProjection(input: {
-  readonly lastResult: Exclude<
+  readonly outcome: Exclude<
     WeaponMasteryClassLevelReselectionResult,
     "init" | "fighterLevelFourTooManyChangesRejected"
   >;
@@ -388,7 +384,7 @@ function rejectedTooManyChangesProjection(): WeaponMasteryClassLevelReselectionP
     "Weapon Mastery Long Rest reselection changes too many weapon choices.",
   );
   return projectionFromSelectedWeapons({
-    lastResult: "fighterLevelFourTooManyChangesRejected",
+    outcome: "fighterLevelFourTooManyChangesRejected",
     profile,
     selectedWeaponUnitIds: selectedClassChoiceUnitIds(
       sheet.build,
@@ -402,7 +398,7 @@ function rejectedTooManyChangesProjection(): WeaponMasteryClassLevelReselectionP
 }
 
 function projectionFromSelectedWeapons(input: {
-  readonly lastResult: WeaponMasteryClassLevelReselectionResult;
+  readonly outcome: WeaponMasteryClassLevelReselectionResult;
   readonly profile: WeaponMasteryClassLevelReselectionProfile;
   readonly selectedWeaponUnitIds: readonly UnitRecord["id"][];
   readonly accepted: boolean;
@@ -412,7 +408,7 @@ function projectionFromSelectedWeapons(input: {
 }): WeaponMasteryClassLevelReselectionProjection {
   expectSelectedWeaponsMatchChoiceCount(input.selectedWeaponUnitIds, input);
   return {
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     classUnitId: input.profile.classUnitId,
     featureUnitId: input.profile.featureUnitId,
     classLevel: input.profile.classLevel,
@@ -479,12 +475,12 @@ function expectSelectedWeaponsMatchChoiceCount(
   selectedWeaponUnitIds: readonly UnitRecord["id"][],
   input: {
     readonly profile: WeaponMasteryClassLevelReselectionProfile;
-    readonly lastResult: WeaponMasteryClassLevelReselectionResult;
+    readonly outcome: WeaponMasteryClassLevelReselectionResult;
   },
 ): void {
   if (selectedWeaponUnitIds.length !== input.profile.choiceCount) {
     throw new Error(
-      `${input.lastResult} expected ${input.profile.choiceCount} selected Weapon Mastery choices, received ${selectedWeaponUnitIds.length}.`,
+      `${input.outcome} expected ${input.profile.choiceCount} selected Weapon Mastery choices, received ${selectedWeaponUnitIds.length}.`,
     );
   }
 }
@@ -505,7 +501,7 @@ function expectLeftMessage<T, E extends { readonly message?: string }>(
 
 function initialProjection(): WeaponMasteryClassLevelReselectionProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
     classUnitId: "none",
     featureUnitId: "none",
     classLevel: 0,
@@ -528,90 +524,119 @@ function initialProjection(): WeaponMasteryClassLevelReselectionProjection {
 function normalizeWeaponMasteryClassLevelReselectionQuintState(
   raw: unknown,
 ): WeaponMasteryClassLevelReselectionProjection {
-  const state = quintStateRecord(raw);
-  const lastResult = mbtLastResult(state["qLastResult"]);
-  const projection = projectionForLastResult(lastResult);
-  assertStringField(state, "qClassUnitId", projection.classUnitId);
-  assertStringField(state, "qFeatureUnitId", projection.featureUnitId);
-  assertNumberField(state, "qClassLevel", projection.classLevel);
-  assertNumberField(state, "qChoiceCount", projection.choiceCount);
+  const state = recordField(quintStateRecord(raw), "qState");
+  const outcome = outcomeField(state["outcome"]);
+  const projection = projectionForOutcome(outcome);
+  assertStringField(state, "classUnitId", projection.classUnitId);
+  assertStringField(state, "featureUnitId", projection.featureUnitId);
+  assertNumberField(state, "classLevel", projection.classLevel);
+  assertNumberField(state, "choiceCount", projection.choiceCount);
   assertNumberField(
     state,
-    "qLongRestChangeCount",
+    "longRestChangeCount",
     projection.longRestChangeCount,
   );
   assertNumberField(
     state,
-    "qRequestedWeaponCount",
+    "requestedWeaponCount",
     projection.requestedWeaponCount,
   );
   assertNumberField(
     state,
-    "qSelectedWeaponCount",
+    "selectedWeaponCount",
     projection.selectedWeaponCount,
   );
   assertNumberField(
     state,
-    "qRequestedChangeCount",
+    "requestedChangeCount",
     projection.requestedChangeCount,
   );
-  assertNumberField(
-    state,
-    "qAppliedChangeCount",
-    projection.appliedChangeCount,
-  );
-  assertStringField(state, "qFirstWeaponUnitId", projection.firstWeaponUnitId);
-  assertStringField(state, "qSecondWeaponUnitId", projection.secondWeaponUnitId);
-  assertStringField(state, "qThirdWeaponUnitId", projection.thirdWeaponUnitId);
-  assertStringField(state, "qFourthWeaponUnitId", projection.fourthWeaponUnitId);
-  assertBooleanField(state, "qAccepted", projection.accepted);
+  assertNumberField(state, "appliedChangeCount", projection.appliedChangeCount);
+  assertStringField(state, "firstWeaponUnitId", projection.firstWeaponUnitId);
+  assertStringField(state, "secondWeaponUnitId", projection.secondWeaponUnitId);
+  assertStringField(state, "thirdWeaponUnitId", projection.thirdWeaponUnitId);
+  assertStringField(state, "fourthWeaponUnitId", projection.fourthWeaponUnitId);
+  assertBooleanField(state, "accepted", projection.accepted);
   assertBooleanField(
     state,
-    "qUnchangedPreserved",
+    "unchangedPreserved",
     projection.unchangedPreserved,
   );
   assertBooleanField(
     state,
-    "qTooManyChangesRejected",
+    "tooManyChangesRejected",
     projection.tooManyChangesRejected,
   );
   assertBooleanField(
     state,
-    "qRejectedWithoutStateChange",
+    "rejectedWithoutStateChange",
     projection.rejectedWithoutStateChange,
   );
   return projection;
 }
 
-function projectionForLastResult(
-  lastResult: WeaponMasteryClassLevelReselectionResult,
+function projectionForOutcome(
+  outcome: WeaponMasteryClassLevelReselectionResult,
 ): WeaponMasteryClassLevelReselectionProjection {
-  if (lastResult === "init") return initialProjection();
-  if (lastResult === "fighterLevelFourOneChangeAccepted") {
+  if (outcome === "init") return initialProjection();
+  if (outcome === "fighterLevelFourOneChangeAccepted") {
     return acceptedProjection({
-      lastResult,
+      outcome,
       profile: FIGHTER_ONE_CHANGE_PROFILE,
       unchangedPreserved: false,
     });
   }
-  if (lastResult === "barbarianLevelFourOneChangeAccepted") {
+  if (outcome === "barbarianLevelFourOneChangeAccepted") {
     return acceptedProjection({
-      lastResult,
+      outcome,
       profile: BARBARIAN_ONE_CHANGE_PROFILE,
       unchangedPreserved: false,
     });
   }
-  if (lastResult === "fighterLevelFourUnchangedPreserved") {
+  if (outcome === "fighterLevelFourUnchangedPreserved") {
     return acceptedProjection({
-      lastResult,
+      outcome,
       profile: FIGHTER_UNCHANGED_PROFILE,
       unchangedPreserved: true,
     });
   }
-  if (lastResult === "fighterLevelFourTooManyChangesRejected") {
+  if (outcome === "fighterLevelFourTooManyChangesRejected") {
     return rejectedTooManyChangesProjection();
   }
-  return assertNever(lastResult);
+  return assertNever(outcome);
+}
+
+const qntOutcomeByVariant = {
+  CharacterSheetWeaponMasteryClassLevelReselectionInit: "init",
+  CharacterSheetWeaponMasteryClassLevelReselectionFighterLevelFourOneChangeAccepted:
+    "fighterLevelFourOneChangeAccepted",
+  CharacterSheetWeaponMasteryClassLevelReselectionBarbarianLevelFourOneChangeAccepted:
+    "barbarianLevelFourOneChangeAccepted",
+  CharacterSheetWeaponMasteryClassLevelReselectionFighterLevelFourUnchangedPreserved:
+    "fighterLevelFourUnchangedPreserved",
+  CharacterSheetWeaponMasteryClassLevelReselectionFighterLevelFourTooManyChangesRejected:
+    "fighterLevelFourTooManyChangesRejected",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function assertNever(value: never): never {
@@ -625,6 +650,17 @@ function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
     throw new Error("Expected Quint state record.");
   }
   return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {
@@ -688,26 +724,6 @@ function assertNumberField(
       `Expected Quint integer field ${field} to equal ${expected}, got ${value}.`,
     );
   }
-}
-
-function mbtLastResult(
-  raw: unknown,
-): WeaponMasteryClassLevelReselectionResult {
-  if (
-    typeof raw === "string" &&
-    isWeaponMasteryClassLevelReselectionResult(raw)
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
-}
-
-function isWeaponMasteryClassLevelReselectionResult(
-  raw: string,
-): raw is WeaponMasteryClassLevelReselectionResult {
-  return WEAPON_MASTERY_CLASS_LEVEL_RESELECTION_RESULTS.some(
-    (result) => result === raw,
-  );
 }
 
 function compareProjection(

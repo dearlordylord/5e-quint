@@ -5,13 +5,15 @@ module battleRuntimeSorcererMetamagicSelectedIdentityMbt {
 
   type Hole = | NoHole
 
+  type SorcererMetamagicSelectedIdentityScenarioOutcome = | Init | QuickenedSaveGatedDamage
+
   type SorcererMetamagicSelectedIdentityWitnessState = {
     magicActionAvailable: bool,
     bonusActionAvailable: bool,
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -23,7 +25,7 @@ module battleRuntimeSorcererMetamagicSelectedIdentityMbt {
     sorceryPointsRemaining: int,
     targetHp: int,
     targetActiveEffectCount: int,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
@@ -32,19 +34,18 @@ module battleRuntimeSorcererMetamagicSelectedIdentityMbt {
       sorceryPointsRemaining: sorceryPointsRemaining,
       targetHp: targetHp,
       targetActiveEffectCount: targetActiveEffectCount,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection(true, true, 4, 10, 0, "init", witnessInit(NoHole))
+  action init = recordProjection(true, true, 4, 10, 0, Init, witnessInit(NoHole))
 
   action doResolveQuickenedSaveGatedDamage = all {
     qState.protocol.result == WInit,
     recordProjection(
-      true, false, 2, 1, 0, "quickenedSaveGatedDamage",
-      witnessResolved(NoHole),
-    )
+      true, false, 2, 1, 0, QuickenedSaveGatedDamage,
+      witnessResolved(NoHole))
   }
 
   action step = any {

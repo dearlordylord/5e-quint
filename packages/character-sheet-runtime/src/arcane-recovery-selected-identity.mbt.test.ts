@@ -52,7 +52,7 @@ type ArcaneRecoverySelectedIdentityDriverAction = Exclude<
 
 type ArcaneRecoverySelectedIdentityProjection =
   | {
-      readonly lastResult: "init";
+      readonly outcome: "init";
       readonly featureUnitId: "none";
       readonly firstLevelSpellSlotsExpended: 0;
       readonly secondLevelSpellSlotsExpended: 0;
@@ -63,7 +63,7 @@ type ArcaneRecoverySelectedIdentityProjection =
       readonly recoveredCombinedSlotLevels: 0;
     }
   | {
-      readonly lastResult: "short_rest_recovered";
+      readonly outcome: "short_rest_recovered";
       readonly featureUnitId: typeof WIZARD_ARCANE_RECOVERY_UNIT_ID;
       readonly firstLevelSpellSlotsExpended: 2;
       readonly secondLevelSpellSlotsExpended: 0;
@@ -74,7 +74,7 @@ type ArcaneRecoverySelectedIdentityProjection =
       readonly recoveredCombinedSlotLevels: 2;
     }
   | {
-      readonly lastResult: "long_rest_reset";
+      readonly outcome: "long_rest_reset";
       readonly featureUnitId: typeof WIZARD_ARCANE_RECOVERY_UNIT_ID;
       readonly firstLevelSpellSlotsExpended: 0;
       readonly secondLevelSpellSlotsExpended: 0;
@@ -85,7 +85,7 @@ type ArcaneRecoverySelectedIdentityProjection =
       readonly recoveredCombinedSlotLevels: 0;
     }
   | {
-      readonly lastResult: "pact_slot_rejected";
+      readonly outcome: "pact_slot_rejected";
       readonly featureUnitId: typeof WIZARD_ARCANE_RECOVERY_UNIT_ID;
       readonly firstLevelSpellSlotsExpended: 0;
       readonly secondLevelSpellSlotsExpended: 0;
@@ -254,7 +254,7 @@ function createArcaneRecoverySelectedIdentityDriver() {
 
 function recoverSecondLevelSpellSlotProjection(): Extract<
   ArcaneRecoverySelectedIdentityProjection,
-  { readonly lastResult: "short_rest_recovered" }
+  { readonly outcome: "short_rest_recovered" }
 > {
   const sheet = arcaneRecoverySheet({
     firstLevelSpellSlotsExpended: 2,
@@ -274,7 +274,7 @@ function recoverSecondLevelSpellSlotProjection(): Extract<
     }),
   );
   return {
-    lastResult: "short_rest_recovered",
+    outcome: "short_rest_recovered",
     featureUnitId: wizardArcaneRecoveryFeatureUnitId(rested),
     firstLevelSpellSlotsExpended: expectSpellSlotsExpended(rested, 1, 2),
     secondLevelSpellSlotsExpended: expectSpellSlotsExpended(rested, 2, 0),
@@ -291,7 +291,7 @@ function recoverSecondLevelSpellSlotProjection(): Extract<
 
 function resetArcaneRecoveryOnLongRestProjection(): Extract<
   ArcaneRecoverySelectedIdentityProjection,
-  { readonly lastResult: "long_rest_reset" }
+  { readonly outcome: "long_rest_reset" }
 > {
   const sheet = arcaneRecoverySheet({
     firstLevelSpellSlotsExpended: 1,
@@ -301,7 +301,7 @@ function resetArcaneRecoveryOnLongRestProjection(): Extract<
   });
   const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
   return {
-    lastResult: "long_rest_reset",
+    outcome: "long_rest_reset",
     featureUnitId: wizardArcaneRecoveryFeatureUnitId(rested),
     firstLevelSpellSlotsExpended: expectSpellSlotsExpended(rested, 1, 0),
     secondLevelSpellSlotsExpended: expectSpellSlotsExpended(rested, 2, 0),
@@ -318,7 +318,7 @@ function resetArcaneRecoveryOnLongRestProjection(): Extract<
 
 function rejectPactSlotArcaneRecoveryProjection(): Extract<
   ArcaneRecoverySelectedIdentityProjection,
-  { readonly lastResult: "pact_slot_rejected" }
+  { readonly outcome: "pact_slot_rejected" }
 > {
   const sheet = arcaneRecoverySheet({
     firstLevelSpellSlotsExpended: 0,
@@ -344,7 +344,7 @@ function rejectPactSlotArcaneRecoveryProjection(): Extract<
     );
   }
   return {
-    lastResult: "pact_slot_rejected",
+    outcome: "pact_slot_rejected",
     featureUnitId: wizardArcaneRecoveryFeatureUnitId(sheet),
     firstLevelSpellSlotsExpended: expectSpellSlotsExpended(sheet, 1, 0),
     secondLevelSpellSlotsExpended: expectSpellSlotsExpended(sheet, 2, 0),
@@ -525,10 +525,10 @@ function expectArcaneRecoveryUsedSinceLongRest<const TExpected extends boolean>(
 
 function initialProjection(): Extract<
   ArcaneRecoverySelectedIdentityProjection,
-  { readonly lastResult: "init" }
+  { readonly outcome: "init" }
 > {
   return {
-    lastResult: "init",
+    outcome: "init",
     featureUnitId: "none",
     firstLevelSpellSlotsExpended: 0,
     secondLevelSpellSlotsExpended: 0,
@@ -542,10 +542,10 @@ function initialProjection(): Extract<
 
 function shortRestRecoveredProjection(): Extract<
   ArcaneRecoverySelectedIdentityProjection,
-  { readonly lastResult: "short_rest_recovered" }
+  { readonly outcome: "short_rest_recovered" }
 > {
   return {
-    lastResult: "short_rest_recovered",
+    outcome: "short_rest_recovered",
     featureUnitId: WIZARD_ARCANE_RECOVERY_UNIT_ID,
     firstLevelSpellSlotsExpended: 2,
     secondLevelSpellSlotsExpended: 0,
@@ -559,10 +559,10 @@ function shortRestRecoveredProjection(): Extract<
 
 function longRestResetProjection(): Extract<
   ArcaneRecoverySelectedIdentityProjection,
-  { readonly lastResult: "long_rest_reset" }
+  { readonly outcome: "long_rest_reset" }
 > {
   return {
-    lastResult: "long_rest_reset",
+    outcome: "long_rest_reset",
     featureUnitId: WIZARD_ARCANE_RECOVERY_UNIT_ID,
     firstLevelSpellSlotsExpended: 0,
     secondLevelSpellSlotsExpended: 0,
@@ -576,10 +576,10 @@ function longRestResetProjection(): Extract<
 
 function pactSlotRejectedProjection(): Extract<
   ArcaneRecoverySelectedIdentityProjection,
-  { readonly lastResult: "pact_slot_rejected" }
+  { readonly outcome: "pact_slot_rejected" }
 > {
   return {
-    lastResult: "pact_slot_rejected",
+    outcome: "pact_slot_rejected",
     featureUnitId: WIZARD_ARCANE_RECOVERY_UNIT_ID,
     firstLevelSpellSlotsExpended: 0,
     secondLevelSpellSlotsExpended: 0,
@@ -589,6 +589,36 @@ function pactSlotRejectedProjection(): Extract<
     message: ARCANE_RECOVERY_PACT_SLOT_REJECTION,
     recoveredCombinedSlotLevels: 0,
   };
+}
+
+const qntOutcomeByVariant = {
+  CharacterSheetArcaneRecoverySelectedIdentityInit: "init",
+  CharacterSheetArcaneRecoverySelectedIdentityShortRestRecovered:
+    "short_rest_recovered",
+  CharacterSheetArcaneRecoverySelectedIdentityLongRestReset: "long_rest_reset",
+  CharacterSheetArcaneRecoverySelectedIdentityPactSlotRejected:
+    "pact_slot_rejected",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function requireRight<T, E>(result: Either.Either<T, E>): T {
@@ -608,43 +638,42 @@ function requireRight<T, E>(result: Either.Either<T, E>): T {
 function normalizeArcaneRecoverySelectedIdentityQuintState(
   raw: unknown,
 ): ArcaneRecoverySelectedIdentityProjection {
-  const state = quintStateRecord(raw);
-  const lastResult = mbtLastResult(state["qLastResult"]);
-  const projection = projectionForLastResult(lastResult);
-  assertStringField(state, "qFeatureUnitId", projection.featureUnitId);
+  const state = recordField(quintStateRecord(raw), "qState");
+  const outcome = outcomeField(state["outcome"]);
+  const projection = projectionForOutcome(outcome);
+  assertStringField(state, "featureUnitId", projection.featureUnitId);
   assertNumberField(
     state,
-    "qFirstLevelSpellSlotsExpended",
+    "firstLevelSpellSlotsExpended",
     projection.firstLevelSpellSlotsExpended,
   );
   assertNumberField(
     state,
-    "qSecondLevelSpellSlotsExpended",
+    "secondLevelSpellSlotsExpended",
     projection.secondLevelSpellSlotsExpended,
   );
-  assertNumberField(state, "qPactSlotsExpended", projection.pactSlotsExpended);
+  assertNumberField(state, "pactSlotsExpended", projection.pactSlotsExpended);
   assertBooleanField(
     state,
-    "qArcaneRecoveryUsedSinceLongRest",
+    "arcaneRecoveryUsedSinceLongRest",
     projection.arcaneRecoveryUsedSinceLongRest,
   );
-  assertBooleanField(state, "qAccepted", projection.accepted);
-  assertStringField(state, "qMessage", projection.message);
+  assertBooleanField(state, "accepted", projection.accepted);
+  assertStringField(state, "message", projection.message);
   assertNumberField(
     state,
-    "qRecoveredCombinedSlotLevels",
+    "recoveredCombinedSlotLevels",
     projection.recoveredCombinedSlotLevels,
   );
   return projection;
 }
 
-function projectionForLastResult(
-  lastResult: ArcaneRecoverySelectedIdentityProjection["lastResult"],
+function projectionForOutcome(
+  outcome: ArcaneRecoverySelectedIdentityProjection["outcome"],
 ): ArcaneRecoverySelectedIdentityProjection {
-  if (lastResult === "init") return initialProjection();
-  if (lastResult === "short_rest_recovered")
-    return shortRestRecoveredProjection();
-  if (lastResult === "long_rest_reset") return longRestResetProjection();
+  if (outcome === "init") return initialProjection();
+  if (outcome === "short_rest_recovered") return shortRestRecoveredProjection();
+  if (outcome === "long_rest_reset") return longRestResetProjection();
   return pactSlotRejectedProjection();
 }
 
@@ -653,6 +682,17 @@ function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
     throw new Error("Expected Quint state record.");
   }
   return Object.fromEntries(Object.entries(raw));
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {
@@ -716,20 +756,6 @@ function assertNumberField(
       `Expected Quint integer field ${field} to equal ${expected}.`,
     );
   }
-}
-
-function mbtLastResult(
-  raw: unknown,
-): ArcaneRecoverySelectedIdentityProjection["lastResult"] {
-  if (
-    raw === "init" ||
-    raw === "short_rest_recovered" ||
-    raw === "long_rest_reset" ||
-    raw === "pact_slot_rejected"
-  ) {
-    return raw;
-  }
-  throw new Error(`Unexpected MBT result ${String(raw)}.`);
 }
 
 const arcaneRecoverySelectedIdentityStateCheck = stateCheck(

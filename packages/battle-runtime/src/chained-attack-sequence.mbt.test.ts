@@ -964,7 +964,7 @@ function normalizeChainedAttackQuintState(
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "chained attack",
-    scenarioResult: lastResult,
+    scenarioOutcome: lastResult,
     protocol,
   });
   return {

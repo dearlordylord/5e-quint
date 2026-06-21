@@ -4,101 +4,151 @@
 module characterSheetHitPointMaximumMbt {
   import hitPointMaximum.* from "../shared-algebras/proofs/rule-core/hit-point-maximum"
 
-  var qLastResult: str
-  var qNormalHitPointMaximum: int
-  var qEffectiveHitPointMaximum: int
-  var qHitDiceTotal: int
-  var qHitPointMaximumReduction: int
-  var qReplayIndex: int
+  type CharacterSheetHitPointMaximumOutcome =
+    | CharacterSheetHitPointMaximumInit
+    | CharacterSheetHitPointMaximumFighterLevelOne
+    | CharacterSheetHitPointMaximumFighterLevelTwo
+    | CharacterSheetHitPointMaximumWizardFighterMulticlass
+    | CharacterSheetHitPointMaximumMinimumHigherLevelGain
+    | CharacterSheetHitPointMaximumSorcererDraconicResilience
+    | CharacterSheetHitPointMaximumReducedEffectiveMaximum
+
+  type CharacterSheetHitPointMaximumState = {
+    outcome: CharacterSheetHitPointMaximumOutcome,
+    normalHitPointMaximum: int,
+    effectiveHitPointMaximum: int,
+    hitDiceTotal: int,
+    hitPointMaximumReduction: int,
+    replayIndex: int,
+  }
+
+  var qState: CharacterSheetHitPointMaximumState
 
   action recordProjection(
-    lastResult: str,
+    outcome: CharacterSheetHitPointMaximumOutcome,
     facts: HitPointMaximumFacts,
     hitDiceTotal: int,
     replayIndex: int,
   ): bool = all {
     legalHitPointMaximumFacts(facts),
-    qLastResult' = lastResult,
-    qNormalHitPointMaximum' = normalHitPointMaximum(facts),
-    qEffectiveHitPointMaximum' = effectiveHitPointMaximum(facts),
-    qHitDiceTotal' = hitDiceTotal,
-    qHitPointMaximumReduction' = facts.hitPointMaximumReduction,
-    qReplayIndex' = replayIndex,
+    qState' = {
+      outcome: outcome,
+      normalHitPointMaximum: normalHitPointMaximum(facts),
+      effectiveHitPointMaximum: effectiveHitPointMaximum(facts),
+      hitDiceTotal: hitDiceTotal,
+      hitPointMaximumReduction: facts.hitPointMaximumReduction,
+      replayIndex: replayIndex,
+    },
   }
 
   action init =
-    recordProjection("init", {
+    recordProjection(
+      CharacterSheetHitPointMaximumInit,
+      {
       startingHitPointDie: 10,
       constitutionModifier: 0,
       fixedHigherLevelHitPointDice: [],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
-    }, 1, 0)
+    },
+      1,
+      0,
+    )
 
   action doProjectFighterLevelOne = all {
-    qReplayIndex == 0,
-    recordProjection("fighter-level-one", {
+    qState.replayIndex == 0,
+    recordProjection(
+      CharacterSheetHitPointMaximumFighterLevelOne,
+      {
       startingHitPointDie: 10,
       constitutionModifier: 1,
       fixedHigherLevelHitPointDice: [],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
-    }, 1, 1),
+    },
+      1,
+      1,
+    ),
   }
 
   action doProjectFighterLevelTwo = all {
-    qReplayIndex == 1,
-    recordProjection("fighter-level-two", {
+    qState.replayIndex == 1,
+    recordProjection(
+      CharacterSheetHitPointMaximumFighterLevelTwo,
+      {
       startingHitPointDie: 10,
       constitutionModifier: 1,
       fixedHigherLevelHitPointDice: [10],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
-    }, 2, 2),
+    },
+      2,
+      2,
+    ),
   }
 
   action doProjectWizardFighterMulticlass = all {
-    qReplayIndex == 2,
-    recordProjection("wizard-fighter-multiclass", {
+    qState.replayIndex == 2,
+    recordProjection(
+      CharacterSheetHitPointMaximumWizardFighterMulticlass,
+      {
       startingHitPointDie: 6,
       constitutionModifier: 1,
       fixedHigherLevelHitPointDice: [10],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
-    }, 2, 3),
+    },
+      2,
+      3,
+    ),
   }
 
   action doProjectMinimumHigherLevelGain = all {
-    qReplayIndex == 3,
-    recordProjection("minimum-higher-level-gain", {
+    qState.replayIndex == 3,
+    recordProjection(
+      CharacterSheetHitPointMaximumMinimumHigherLevelGain,
+      {
       startingHitPointDie: 6,
       constitutionModifier: -4,
       fixedHigherLevelHitPointDice: [6],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 0,
-    }, 2, 4),
+    },
+      2,
+      4,
+    ),
   }
 
   action doProjectSorcererDraconicResilience = all {
-    qReplayIndex == 4,
-    recordProjection("sorcerer-draconic-resilience", {
+    qState.replayIndex == 4,
+    recordProjection(
+      CharacterSheetHitPointMaximumSorcererDraconicResilience,
+      {
       startingHitPointDie: 6,
       constitutionModifier: 1,
       fixedHigherLevelHitPointDice: [6, 6],
       hitPointMaximumBonus: 3,
       hitPointMaximumReduction: 0,
-    }, 3, 5),
+    },
+      3,
+      5,
+    ),
   }
 
   action doProjectReducedEffectiveMaximum = all {
-    qReplayIndex == 5,
-    recordProjection("reduced-effective-maximum", {
+    qState.replayIndex == 5,
+    recordProjection(
+      CharacterSheetHitPointMaximumReducedEffectiveMaximum,
+      {
       startingHitPointDie: 10,
       constitutionModifier: 1,
       fixedHigherLevelHitPointDice: [10],
       hitPointMaximumBonus: 0,
       hitPointMaximumReduction: 3,
-    }, 2, 6),
+    },
+      2,
+      6,
+    ),
   }
 
   action step = any {

@@ -58,7 +58,7 @@ type HpRestHitDiceScenario = (typeof hpRestHitDiceScenarios)[number];
 const hpRestHitDiceReplayStepCount = hpRestHitDiceScenarios.length - 1;
 
 type HpRestHitDiceProjection = {
-  readonly lastResult: HpRestHitDiceScenario;
+  readonly outcome: HpRestHitDiceScenario;
   readonly accepted: boolean;
   readonly message: string;
   readonly currentHp: number;
@@ -189,7 +189,7 @@ function rejectLongRestStartAtZeroHpProjection(): HpRestHitDiceProjection {
     timing: { tag: "noPriorLongRest" },
   });
   return projectResult({
-    lastResult: "long-rest-start-zero-hp-rejected",
+    outcome: "long-rest-start-zero-hp-rejected",
     sheet,
     result,
     replayIndex: 1,
@@ -206,7 +206,7 @@ function rejectShortRestStartAtZeroHpProjection(): HpRestHitDiceProjection {
   });
   const result = startShortRest({ sheet });
   return projectResult({
-    lastResult: "short-rest-start-zero-hp-rejected",
+    outcome: "short-rest-start-zero-hp-rejected",
     sheet,
     result,
     replayIndex: 8,
@@ -221,7 +221,7 @@ function rejectShortRestDurationTooShortProjection(): HpRestHitDiceProjection {
     restedTicks: elapsedTimeTicks(Number(CHARACTER_SHEET_SHORT_REST_TICKS) - 1),
   });
   return projectResult({
-    lastResult: "short-rest-duration-too-short-rejected",
+    outcome: "short-rest-duration-too-short-rejected",
     sheet,
     result,
     replayIndex: 9,
@@ -240,7 +240,7 @@ function rejectLongRestDurationTooShortProjection(): HpRestHitDiceProjection {
     ),
   });
   return projectResult({
-    lastResult: "long-rest-duration-too-short-rejected",
+    outcome: "long-rest-duration-too-short-rejected",
     sheet,
     result,
     requiredLongRestTicks: CHARACTER_SHEET_LONG_REST_BASE_TICKS,
@@ -264,7 +264,7 @@ function rejectLongRestPhysicalExertionTooShortProjection(): HpRestHitDiceProjec
     },
   });
   return projectResult({
-    lastResult: "long-rest-physical-exertion-too-short-rejected",
+    outcome: "long-rest-physical-exertion-too-short-rejected",
     sheet,
     result,
     replayIndex: 11,
@@ -294,7 +294,7 @@ function rejectLongRestBeforeSixteenHourWaitProjection(): HpRestHitDiceProjectio
     },
   });
   return projectResult({
-    lastResult: "long-rest-sixteen-hour-wait-rejected",
+    outcome: "long-rest-sixteen-hour-wait-rejected",
     sheet,
     result,
     remainingWaitTicks: gate.tag === "mustWait" ? gate.remainingTicks : 0,
@@ -312,7 +312,7 @@ function spendShortRestHitPointDieProjection(): HpRestHitDiceProjection {
     }),
   );
   return projectAccepted({
-    lastResult: "short-rest-spend-hit-point-die",
+    outcome: "short-rest-spend-hit-point-die",
     sheet: rested,
     replayIndex: 3,
   });
@@ -331,7 +331,7 @@ function spendShortRestHitPointDiceSequentiallyProjection(): HpRestHitDiceProjec
     }),
   );
   return projectAccepted({
-    lastResult: "short-rest-spend-hit-point-dice-sequentially",
+    outcome: "short-rest-spend-hit-point-dice-sequentially",
     sheet: rested,
     replayIndex: 12,
   });
@@ -348,7 +348,7 @@ function rejectLongRestInterruptionAtRequiredDurationProjection(): HpRestHitDice
     interruption: "takeDamage",
   });
   return projectResult({
-    lastResult: "long-rest-interruption-at-required-duration-rejected",
+    outcome: "long-rest-interruption-at-required-duration-rejected",
     sheet,
     result,
     requiredLongRestTicks: Number(CHARACTER_SHEET_LONG_REST_BASE_TICKS),
@@ -363,7 +363,7 @@ function interruptShortRestNoBenefitProjection(): HpRestHitDiceProjection {
     interruption: "takeDamage",
   });
   return projectAccepted({
-    lastResult: "short-rest-interrupted-no-benefit",
+    outcome: "short-rest-interrupted-no-benefit",
     sheet: interrupted.sheet,
     replayIndex: 4,
   });
@@ -386,7 +386,7 @@ function completeLongRestRestoresHpHitPointDiceAndMaximumProjection(): HpRestHit
     }),
   );
   return projectAccepted({
-    lastResult: "long-rest-restores-hp-hit-point-dice-and-maximum",
+    outcome: "long-rest-restores-hp-hit-point-dice-and-maximum",
     sheet: rested,
     replayIndex: 5,
   });
@@ -407,7 +407,7 @@ function interruptLongRestBeforeOneHourNoBenefitProjection(): HpRestHitDiceProje
     }),
   );
   return projectAccepted({
-    lastResult: "long-rest-interrupted-before-one-hour-no-benefit",
+    outcome: "long-rest-interrupted-before-one-hour-no-benefit",
     sheet: interrupted.rest.sheet,
     requiredLongRestTicks: interrupted.requiredLongRestTicks,
     replayIndex: 6,
@@ -430,7 +430,7 @@ function interruptLongRestWithShortRestBenefitsProjection(): HpRestHitDiceProjec
     }),
   );
   return projectAccepted({
-    lastResult: "long-rest-interrupted-with-short-rest-benefits",
+    outcome: "long-rest-interrupted-with-short-rest-benefits",
     sheet: interrupted.rest.sheet,
     requiredLongRestTicks: interrupted.requiredLongRestTicks,
     replayIndex: 7,
@@ -439,7 +439,7 @@ function interruptLongRestWithShortRestBenefitsProjection(): HpRestHitDiceProjec
 
 function initialProjection(): HpRestHitDiceProjection {
   return {
-    lastResult: "init",
+    outcome: "init",
     accepted: false,
     message: "none",
     currentHp: 0,
@@ -470,7 +470,7 @@ function longRestCompletionForSheet(sheet: CharacterSheet) {
 }
 
 function projectResult(input: {
-  readonly lastResult: HpRestHitDiceScenario;
+  readonly outcome: HpRestHitDiceScenario;
   readonly sheet: CharacterSheet;
   readonly result: Either.Either<unknown, { readonly message: string }>;
   readonly requiredLongRestTicks?: number | undefined;
@@ -479,14 +479,14 @@ function projectResult(input: {
 }): HpRestHitDiceProjection {
   return Either.isRight(input.result)
     ? projectAccepted({
-        lastResult: input.lastResult,
+        outcome: input.outcome,
         sheet: input.sheet,
         requiredLongRestTicks: input.requiredLongRestTicks,
         remainingWaitTicks: input.remainingWaitTicks,
         replayIndex: input.replayIndex,
       })
     : projectFromSheet({
-        lastResult: input.lastResult,
+        outcome: input.outcome,
         accepted: false,
         message: input.result.left.message,
         sheet: input.sheet,
@@ -497,14 +497,14 @@ function projectResult(input: {
 }
 
 function projectAccepted(input: {
-  readonly lastResult: HpRestHitDiceScenario;
+  readonly outcome: HpRestHitDiceScenario;
   readonly sheet: CharacterSheet;
   readonly requiredLongRestTicks?: number | undefined;
   readonly remainingWaitTicks?: number | undefined;
   readonly replayIndex: number;
 }): HpRestHitDiceProjection {
   return projectFromSheet({
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     accepted: true,
     message: "none",
     sheet: input.sheet,
@@ -515,7 +515,7 @@ function projectAccepted(input: {
 }
 
 function projectFromSheet(input: {
-  readonly lastResult: HpRestHitDiceScenario;
+  readonly outcome: HpRestHitDiceScenario;
   readonly accepted: boolean;
   readonly message: string;
   readonly sheet: CharacterSheet;
@@ -524,7 +524,7 @@ function projectFromSheet(input: {
   readonly replayIndex: number;
 }): HpRestHitDiceProjection {
   return {
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     accepted: input.accepted,
     message: input.message,
     currentHp: Number(characterSheetCurrentHp(input.sheet)),
@@ -653,36 +653,40 @@ function normalizeHpRestHitDiceQuintState(
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("Expected Quint HP/rest/Hit Dice state object.");
   }
-  const state: Readonly<Record<string, unknown>> = Object.fromEntries(
+  const root: Readonly<Record<string, unknown>> = Object.fromEntries(
     Object.entries(raw),
   );
+  const state = recordField(root, "qState");
   return {
-    lastResult: scenarioField(state["qLastResult"]),
-    accepted: booleanField(state["qAccepted"], "qAccepted"),
-    message: stringField(state["qMessage"], "qMessage"),
-    currentHp: numberFromQuintInt(state["qCurrentHp"], "qCurrentHp"),
+    outcome: outcomeField(state["outcome"]),
+    accepted: booleanField(state["accepted"], "qState.accepted"),
+    message: stringField(state["message"], "qState.message"),
+    currentHp: numberFromQuintInt(state["currentHp"], "qState.currentHp"),
     hitPointMaximum: numberFromQuintInt(
-      state["qHitPointMaximum"],
-      "qHitPointMaximum",
+      state["hitPointMaximum"],
+      "qState.hitPointMaximum",
     ),
     hitPointMaximumReduction: numberFromQuintInt(
-      state["qHitPointMaximumReduction"],
-      "qHitPointMaximumReduction",
+      state["hitPointMaximumReduction"],
+      "qState.hitPointMaximumReduction",
     ),
     temporaryHitPoints: numberFromQuintInt(
-      state["qTemporaryHitPoints"],
-      "qTemporaryHitPoints",
+      state["temporaryHitPoints"],
+      "qState.temporaryHitPoints",
     ),
-    spentHitDice: numberFromQuintInt(state["qSpentHitDice"], "qSpentHitDice"),
+    spentHitDice: numberFromQuintInt(
+      state["spentHitDice"],
+      "qState.spentHitDice",
+    ),
     requiredLongRestTicks: numberFromQuintInt(
-      state["qRequiredLongRestTicks"],
-      "qRequiredLongRestTicks",
+      state["requiredLongRestTicks"],
+      "qState.requiredLongRestTicks",
     ),
     remainingWaitTicks: numberFromQuintInt(
-      state["qRemainingWaitTicks"],
-      "qRemainingWaitTicks",
+      state["remainingWaitTicks"],
+      "qState.remainingWaitTicks",
     ),
-    replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
+    replayIndex: numberFromQuintInt(state["replayIndex"], "qState.replayIndex"),
   };
 }
 
@@ -701,15 +705,6 @@ function compareHpRestHitDiceState(
   return true;
 }
 
-function scenarioField(raw: unknown): HpRestHitDiceScenario {
-  if (typeof raw === "string" && isHpRestHitDiceScenario(raw)) return raw;
-  throw new Error(`Unknown HP/rest/Hit Dice scenario ${String(raw)}.`);
-}
-
-function isHpRestHitDiceScenario(raw: string): raw is HpRestHitDiceScenario {
-  return hpRestHitDiceScenarios.some((scenario) => scenario === raw);
-}
-
 function numberFromQuintInt(raw: unknown, field: string): number {
   if (typeof raw === "number") return raw;
   if (typeof raw === "bigint") return Number(raw);
@@ -726,7 +721,69 @@ function stringField(raw: unknown, field: string): string {
   throw new Error(`Expected Quint string field ${field}.`);
 }
 
+const qntOutcomeByVariant = {
+  CharacterSheetHpRestHitDiceInit: "init",
+  CharacterSheetHpRestHitDiceLongRestStartZeroHpRejected:
+    "long-rest-start-zero-hp-rejected",
+  CharacterSheetHpRestHitDiceLongRestSixteenHourWaitRejected:
+    "long-rest-sixteen-hour-wait-rejected",
+  CharacterSheetHpRestHitDiceShortRestSpendHitPointDie:
+    "short-rest-spend-hit-point-die",
+  CharacterSheetHpRestHitDiceShortRestInterruptedNoBenefit:
+    "short-rest-interrupted-no-benefit",
+  CharacterSheetHpRestHitDiceLongRestRestoresHpHitPointDiceAndMaximum:
+    "long-rest-restores-hp-hit-point-dice-and-maximum",
+  CharacterSheetHpRestHitDiceLongRestInterruptedBeforeOneHourNoBenefit:
+    "long-rest-interrupted-before-one-hour-no-benefit",
+  CharacterSheetHpRestHitDiceLongRestInterruptedWithShortRestBenefits:
+    "long-rest-interrupted-with-short-rest-benefits",
+  CharacterSheetHpRestHitDiceShortRestStartZeroHpRejected:
+    "short-rest-start-zero-hp-rejected",
+  CharacterSheetHpRestHitDiceShortRestDurationTooShortRejected:
+    "short-rest-duration-too-short-rejected",
+  CharacterSheetHpRestHitDiceLongRestDurationTooShortRejected:
+    "long-rest-duration-too-short-rejected",
+  CharacterSheetHpRestHitDiceLongRestPhysicalExertionTooShortRejected:
+    "long-rest-physical-exertion-too-short-rejected",
+  CharacterSheetHpRestHitDiceShortRestSpendHitPointDiceSequentially:
+    "short-rest-spend-hit-point-dice-sequentially",
+  CharacterSheetHpRestHitDiceLongRestInterruptionAtRequiredDurationRejected:
+    "long-rest-interruption-at-required-duration-rejected",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
+
 function requireRight<A, E>(either: Either.Either<A, E>): A {
   if (Either.isRight(either)) return either.right;
   throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }

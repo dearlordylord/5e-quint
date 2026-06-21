@@ -73,7 +73,7 @@ type SettlementScenario = (typeof settlementScenarios)[number];
 const settlementReplayStepCount = settlementScenarios.length - 1;
 
 type BattleSettlementProjection = {
-  readonly lastResult: SettlementScenario;
+  readonly outcome: SettlementScenario;
   readonly accepted: boolean;
   readonly message: string;
   readonly currentHp: number;
@@ -250,7 +250,7 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
     }),
   );
   return projectFromSheet({
-    lastResult: "settle-hit-points-conditions-slots-and-preserved-sheet-state",
+    outcome: "settle-hit-points-conditions-slots-and-preserved-sheet-state",
     accepted: true,
     message: "none",
     sheet: settled,
@@ -312,7 +312,7 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
     }),
   );
   return projectFromSheet({
-    lastResult: "settle-feature-resource-expenditure",
+    outcome: "settle-feature-resource-expenditure",
     accepted: true,
     message: "none",
     sheet: settled,
@@ -384,7 +384,7 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
     throw new Error("Expected ambiguous created Spell Slot handoff rejection.");
   }
   return projectFromParts({
-    lastResult: "ambiguous-created-spell-slot-source-rejected",
+    outcome: "ambiguous-created-spell-slot-source-rejected",
     accepted: false,
     message: result.left.message,
     createdLevel3Capacity: createdSpellSlotCapacity(withCreatedSlot, 3),
@@ -423,7 +423,7 @@ function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
     throw new Error("Expected mismatched identity handoff rejection.");
   }
   return projectFromParts({
-    lastResult: "mismatched-character-identity-rejected",
+    outcome: "mismatched-character-identity-rejected",
     accepted: false,
     message: result.left.message,
     replayIndex: 4,
@@ -457,7 +457,7 @@ function rejectMaximumHpDrift(): BattleSettlementProjection {
     throw new Error("Expected maximum HP drift handoff rejection.");
   }
   return projectFromParts({
-    lastResult: "maximum-hp-drift-rejected",
+    outcome: "maximum-hp-drift-rejected",
     accepted: false,
     message: result.left.message,
     replayIndex: 5,
@@ -513,7 +513,7 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
     throw new Error("Expected active Wild Shape handoff rejection.");
   }
   return projectFromParts({
-    lastResult: "active-wild-shape-handoff-rejected",
+    outcome: "active-wild-shape-handoff-rejected",
     accepted: false,
     message: result.left.message,
     replayIndex: 6,
@@ -574,7 +574,7 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
     throw new Error("Expected in-progress Stable recovery handoff rejection.");
   }
   return projectFromParts({
-    lastResult: "stable-recovery-progress-rejected",
+    outcome: "stable-recovery-progress-rejected",
     accepted: false,
     message: result.left.message,
     zeroHpState: "stable",
@@ -636,7 +636,7 @@ function settleZeroHpStableLifecycle(): BattleSettlementProjection {
     }),
   );
   return projectFromSheet({
-    lastResult: "settle-zero-hp-stable-lifecycle",
+    outcome: "settle-zero-hp-stable-lifecycle",
     accepted: true,
     message: "none",
     sheet: settled,
@@ -709,7 +709,7 @@ function requireCharacterSpellcasting(
 }
 
 function projectFromSheet(input: {
-  readonly lastResult: SettlementScenario;
+  readonly outcome: SettlementScenario;
   readonly accepted: boolean;
   readonly message: string;
   readonly sheet: CharacterSheet;
@@ -717,7 +717,7 @@ function projectFromSheet(input: {
   readonly replayIndex: number;
 }): BattleSettlementProjection {
   return projectFromParts({
-    lastResult: input.lastResult,
+    outcome: input.outcome,
     accepted: input.accepted,
     message: input.message,
     currentHp: characterSheetCurrentHp(input.sheet),
@@ -1039,7 +1039,7 @@ function druidWildShapeBuild(): CharacterBuild {
 
 function initialProjection(): BattleSettlementProjection {
   return projectFromParts({
-    lastResult: "init",
+    outcome: "init",
     accepted: false,
     message: "none",
     replayIndex: 0,
@@ -1049,12 +1049,12 @@ function initialProjection(): BattleSettlementProjection {
 function projectFromParts(
   input: Pick<
     BattleSettlementProjection,
-    "lastResult" | "accepted" | "message" | "replayIndex"
+    "outcome" | "accepted" | "message" | "replayIndex"
   > &
     Partial<
       Omit<
         BattleSettlementProjection,
-        "lastResult" | "accepted" | "message" | "replayIndex"
+        "outcome" | "accepted" | "message" | "replayIndex"
       >
     >,
 ): BattleSettlementProjection {
@@ -1085,60 +1085,68 @@ function normalizeSettlementQuintState(
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("Expected Quint battle-settlement state object.");
   }
-  const state: Readonly<Record<string, unknown>> = Object.fromEntries(
+  const root: Readonly<Record<string, unknown>> = Object.fromEntries(
     Object.entries(raw),
   );
+  const state = recordField(root, "qState");
+  const facts = recordField(state, "facts");
   return {
-    lastResult: scenarioField(state["qLastResult"]),
-    accepted: booleanField(state["qAccepted"], "qAccepted"),
-    message: stringField(state["qMessage"], "qMessage"),
-    currentHp: numberFromQuintInt(state["qCurrentHp"], "qCurrentHp"),
+    outcome: outcomeField(state["outcome"]),
+    accepted: booleanField(state["accepted"], "qState.accepted"),
+    message: stringField(state["message"], "qState.message"),
+    currentHp: numberFromQuintInt(facts["currentHp"], "facts.currentHp"),
     temporaryHitPoints: numberFromQuintInt(
-      state["qTemporaryHitPoints"],
-      "qTemporaryHitPoints",
+      facts["temporaryHitPoints"],
+      "facts.temporaryHitPoints",
     ),
-    poisoned: booleanField(state["qPoisoned"], "qPoisoned"),
-    prone: booleanField(state["qProne"], "qProne"),
+    poisoned: booleanField(facts["poisoned"], "facts.poisoned"),
+    prone: booleanField(facts["prone"], "facts.prone"),
     spellLevel1Expended: numberFromQuintInt(
-      state["qSpellLevel1Expended"],
-      "qSpellLevel1Expended",
+      facts["spellLevel1Expended"],
+      "facts.spellLevel1Expended",
     ),
     createdLevel3Capacity: numberFromQuintInt(
-      state["qCreatedLevel3Capacity"],
-      "qCreatedLevel3Capacity",
+      facts["createdLevel3Capacity"],
+      "facts.createdLevel3Capacity",
     ),
     createdLevel3Expended: numberFromQuintInt(
-      state["qCreatedLevel3Expended"],
-      "qCreatedLevel3Expended",
+      facts["createdLevel3Expended"],
+      "facts.createdLevel3Expended",
     ),
     pactSlotsExpended: numberFromQuintInt(
-      state["qPactSlotsExpended"],
-      "qPactSlotsExpended",
+      facts["pactSlotsExpended"],
+      "facts.pactSlotsExpended",
     ),
     featureResourceExpended: numberFromQuintInt(
-      state["qFeatureResourceExpended"],
-      "qFeatureResourceExpended",
+      facts["featureResourceExpended"],
+      "facts.featureResourceExpended",
     ),
-    spentHitDice: numberFromQuintInt(state["qSpentHitDice"], "qSpentHitDice"),
+    spentHitDice: numberFromQuintInt(
+      facts["spentHitDice"],
+      "facts.spentHitDice",
+    ),
     restFeatureUsed: booleanField(
-      state["qRestFeatureUsed"],
-      "qRestFeatureUsed",
+      facts["restFeatureUsed"],
+      "facts.restFeatureUsed",
     ),
-    buildUnchanged: booleanField(state["qBuildUnchanged"], "qBuildUnchanged"),
-    zeroHpState: zeroHpStateField(state["qZeroHpState"]),
+    buildUnchanged: booleanField(
+      facts["buildUnchanged"],
+      "facts.buildUnchanged",
+    ),
+    zeroHpState: zeroHpStateField(facts["zeroHpState"]),
     zeroHpSuccesses: numberFromQuintInt(
-      state["qZeroHpSuccesses"],
-      "qZeroHpSuccesses",
+      facts["zeroHpSuccesses"],
+      "facts.zeroHpSuccesses",
     ),
     zeroHpFailures: numberFromQuintInt(
-      state["qZeroHpFailures"],
-      "qZeroHpFailures",
+      facts["zeroHpFailures"],
+      "facts.zeroHpFailures",
     ),
     stableRecoveryElapsed: numberFromQuintInt(
-      state["qStableRecoveryElapsed"],
-      "qStableRecoveryElapsed",
+      facts["stableRecoveryElapsed"],
+      "facts.stableRecoveryElapsed",
     ),
-    replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
+    replayIndex: numberFromQuintInt(state["replayIndex"], "qState.replayIndex"),
   };
 }
 
@@ -1153,17 +1161,6 @@ function compareSettlementState(
     throw error;
   }
   return true;
-}
-
-function scenarioField(raw: unknown): SettlementScenario {
-  if (typeof raw === "string" && isSettlementScenario(raw)) {
-    return raw;
-  }
-  throw new Error(`Unknown battle-settlement scenario ${String(raw)}.`);
-}
-
-function isSettlementScenario(raw: string): raw is SettlementScenario {
-  return settlementScenarios.some((scenario) => scenario === raw);
 }
 
 function zeroHpStateField(
@@ -1196,7 +1193,58 @@ function stringField(raw: unknown, field: string): string {
   throw new Error(`Expected Quint string field ${field}.`);
 }
 
+const qntOutcomeByVariant = {
+  CharacterBattleSettlementInit: "init",
+  CharacterBattleSettlementSettleHitPointsConditionsSlotsAndPreservedSheetState:
+    "settle-hit-points-conditions-slots-and-preserved-sheet-state",
+  CharacterBattleSettlementSettleFeatureResourceExpenditure:
+    "settle-feature-resource-expenditure",
+  CharacterBattleSettlementAmbiguousCreatedSpellSlotSourceRejected:
+    "ambiguous-created-spell-slot-source-rejected",
+  CharacterBattleSettlementMismatchedCharacterIdentityRejected:
+    "mismatched-character-identity-rejected",
+  CharacterBattleSettlementMaximumHpDriftRejected: "maximum-hp-drift-rejected",
+  CharacterBattleSettlementActiveWildShapeHandoffRejected:
+    "active-wild-shape-handoff-rejected",
+  CharacterBattleSettlementStableRecoveryProgressRejected:
+    "stable-recovery-progress-rejected",
+  CharacterBattleSettlementSettleZeroHpStableLifecycle:
+    "settle-zero-hp-stable-lifecycle",
+} as const;
+
+function outcomeField(
+  raw: unknown,
+): (typeof qntOutcomeByVariant)[keyof typeof qntOutcomeByVariant] {
+  const tag = nullaryVariantTag(raw, "qState.outcome");
+  const outcome = Object.entries(qntOutcomeByVariant).find(
+    ([variant]) => variant === tag,
+  )?.[1];
+  if (outcome !== undefined) return outcome;
+  throw new Error(`Unknown Quint outcome variant ${tag}.`);
+}
+
+function nullaryVariantTag(raw: unknown, field: string): string {
+  if (typeof raw === "string") return raw;
+  if (raw !== null && typeof raw === "object" && "tag" in raw) {
+    const record = Object.fromEntries(Object.entries(raw));
+    const tag = record["tag"];
+    if (typeof tag === "string") return tag;
+  }
+  throw new Error(`Expected Quint variant field ${field}.`);
+}
+
 function requireRight<A, E>(either: Either.Either<A, E>): A {
   if (Either.isRight(either)) return either.right;
   throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+}
+
+function recordField(
+  raw: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = raw[field];
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Expected Quint record field ${field}.`);
+  }
+  return Object.fromEntries(Object.entries(value));
 }

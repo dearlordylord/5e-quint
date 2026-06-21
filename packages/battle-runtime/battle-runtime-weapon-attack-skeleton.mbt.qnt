@@ -18,24 +18,16 @@ module battleRuntimeWeaponAttackSkeletonMbt {
   var qSneakAttackUsedThisTurn: bool
   var qProtocol: WitnessProtocol[Hole]
 
-  pure def qHoles: Set[Hole] = qProtocol.holes
+  pure def openHoles: Set[Hole] = qProtocol.holes
 
   pure val skeletonInitialHp: int = 13
   pure val rogueAttackModifier: int = 3
 
   pure def weaponAttackSkeletonProtocolForProjection(
     holes: Set[Hole],
-    lastResult: str,
-    invalidReason: str,
+    result: WitnessResult,
   ): WitnessProtocol[Hole] =
-    if (lastResult == "init") witnessInitWithHoles(holes)
-    else if (lastResult == "invalid")
-      witnessInvalidWithHoles(
-        holes,
-        if (invalidReason == "staleSubject") WStaleSubject else WInvalidFill,
-      )
-    else if (holes != Set()) witnessNeedsHoles(holes)
-    else witnessResolved(TargetChoice)
+    witnessProtocolFromResult(holes, TargetChoice, result)
 
   pure def skeletonHpAfterPiercingWeaponDamage(
     hp: int,
@@ -53,168 +45,167 @@ module battleRuntimeWeaponAttackSkeletonMbt {
     qSneakAttackUsedThisTurn' = false,
     qProtocol' = weaponAttackSkeletonProtocolForProjection(
       Set(TargetChoice),
-      "init",
-      "",
+      WInit,
     ),
   }
 
   action doDiscoverAttack = all {
     qActionAvailable,
-    qHoles == Set(TargetChoice),
+    openHoles == Set(TargetChoice),
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(TargetChoice), "needsHoles", ""),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(TargetChoice), WNeedsHoles),
   }
 
   action doFillTarget = all {
     qActionAvailable,
-    qHoles == Set(TargetChoice),
+    openHoles == Set(TargetChoice),
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(AttackRoll), "needsHoles", ""),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(AttackRoll), WNeedsHoles),
   }
 
   action doRejectWrongTarget = all {
     qActionAvailable,
-    qHoles == Set(TargetChoice),
+    openHoles == Set(TargetChoice),
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(qHoles, "invalid", "invalidFill"),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(openHoles, WInvalid(WInvalidFill)),
   }
 
   action doFillAttackRollMiss = all {
     qActionAvailable,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), WResolved),
   }
 
   action doFillAttackRollHit = all {
     qActionAvailable,
-    qHoles == Set(AttackRoll),
+    openHoles == Set(AttackRoll),
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(DamageRoll), "needsHoles", ""),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(DamageRoll), WNeedsHoles),
   }
 
   action doFillDamageLow = all {
     qActionAvailable,
-    qHoles == Set(DamageRoll),
+    openHoles == Set(DamageRoll),
     qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 2),
     qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 2) == 0,
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), WResolved),
   }
 
   action doFillDamageHigh = all {
     qActionAvailable,
-    qHoles == Set(DamageRoll),
+    openHoles == Set(DamageRoll),
     qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4),
     qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4) == 0,
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), WResolved),
   }
 
   action doFillDamageLowSneakAttack = all {
     qActionAvailable,
-    qHoles == Set(DamageRoll),
+    openHoles == Set(DamageRoll),
     not(qSneakAttackUsedThisTurn),
     qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4),
     qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 4) == 0,
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = true,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), WResolved),
   }
 
   action doFillDamageHighSneakAttack = all {
     qActionAvailable,
-    qHoles == Set(DamageRoll),
+    openHoles == Set(DamageRoll),
     not(qSneakAttackUsedThisTurn),
     qSkeletonHp' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 8),
     qSkeletonDead' = skeletonHpAfterPiercingWeaponDamage(qSkeletonHp, 8) == 0,
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = true,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), WResolved),
   }
 
   action doRejectStaleAfterResolved = all {
     not(qActionAvailable),
-    qHoles == Set(),
+    openHoles == Set(),
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(qHoles, "invalid", "staleSubject"),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(openHoles, WInvalid(WStaleSubject)),
   }
 
   action doStartSkeletonTurn = all {
     qActionAvailable,
-    qHoles == Set(TargetChoice),
+    openHoles == Set(TargetChoice),
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = true,
     qMultiattackDispatchesAvailable' = 0,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), WResolved),
   }
 
   action doResolveSkeletonMultiattack = all {
     qActionAvailable,
-    qHoles == Set(),
+    openHoles == Set(),
     qMultiattackDispatchesAvailable == 0,
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = false,
     qMultiattackDispatchesAvailable' = 1,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), WResolved),
   }
 
   action doRejectRecursiveSkeletonMultiattack = all {
     not(qActionAvailable),
-    qHoles == Set(),
+    openHoles == Set(),
     qMultiattackDispatchesAvailable > 0,
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(qHoles, "invalid", "staleSubject"),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(openHoles, WInvalid(WStaleSubject)),
   }
 
   action doSpendSkeletonMultiattackDispatch = all {
     not(qActionAvailable),
-    qHoles == Set(),
+    openHoles == Set(),
     qMultiattackDispatchesAvailable > 0,
     qSkeletonHp' = qSkeletonHp,
     qSkeletonDead' = qSkeletonDead,
     qActionAvailable' = qActionAvailable,
     qMultiattackDispatchesAvailable' = qMultiattackDispatchesAvailable - 1,
     qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
-    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), "resolved", ""),
+    qProtocol' = weaponAttackSkeletonProtocolForProjection(Set(), WResolved),
   }
 
   action step = any {

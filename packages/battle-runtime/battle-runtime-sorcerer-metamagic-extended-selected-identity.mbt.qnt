@@ -5,11 +5,13 @@ module battleRuntimeSorcererMetamagicExtendedSelectedIdentity {
 
   type Hole = | NoHole
 
+  type SorcererMetamagicExtendedSelectedIdentityScenarioOutcome = | Init | ExtendedCreatureSizeIncrease
+
   type SorcererMetamagicExtendedSelectedIdentityWitnessState = {
     sorceryPointsRemaining: int,
     durationTicks: int,
     concentrationSavingThrowMode: str,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicExtendedSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
@@ -19,26 +21,25 @@ module battleRuntimeSorcererMetamagicExtendedSelectedIdentity {
     sorceryPointsRemaining: int,
     durationTicks: int,
     concentrationSavingThrowMode: str,
-    scenarioResult: str,
+    scenarioOutcome: SorcererMetamagicExtendedSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
       sorceryPointsRemaining: sorceryPointsRemaining,
       durationTicks: durationTicks,
       concentrationSavingThrowMode: concentrationSavingThrowMode,
-      scenarioResult: scenarioResult,
+      scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
-  action init = recordProjection(2, 0, "normal", "init", witnessInit(NoHole))
+  action init = recordProjection(2, 0, "normal", Init, witnessInit(NoHole))
 
   action doResolveExtendedCreatureSizeIncrease = all {
     qState.protocol.result == WInit,
     recordProjection(
-      1, 20, "advantage", "extendedCreatureSizeIncrease",
-      witnessResolved(NoHole),
-    )
+      1, 20, "advantage", ExtendedCreatureSizeIncrease,
+      witnessResolved(NoHole))
   }
 
   action step = any {

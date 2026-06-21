@@ -538,7 +538,7 @@ function normalizeRayOfEnfeeblementQuintState(
   const lastResultValue = rayLastResult(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Ray of Enfeeblement lifecycle",
-    scenarioResult: lastResultValue,
+    scenarioOutcome: lastResultValue,
     protocol,
   });
   return {

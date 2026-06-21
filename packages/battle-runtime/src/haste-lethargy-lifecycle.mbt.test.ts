@@ -596,7 +596,7 @@ function normalizeHasteLethargyQuintState(
   });
   assertWitnessProtocolConsistentWithScenario({
     label: "Haste lethargy lifecycle",
-    scenarioResult: scenario,
+    scenarioOutcome: scenario,
     protocol,
   });
   return {
