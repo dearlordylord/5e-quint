@@ -68,7 +68,8 @@
         "fire_bolt",
         "ray_of_frost",
         "minor_illusion",
-        "acid_splash"
+        "acid_splash",
+        "shocking_grasp"
       ]
     },
     "featureLevel": 1,

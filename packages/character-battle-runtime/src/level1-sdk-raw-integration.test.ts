@@ -80,6 +80,12 @@ const rayOfFrostSorcererId = combatantId(
   "combatant:l1-sdk-ray-of-frost-sorcerer",
 );
 const rayOfFrostWizardId = combatantId("combatant:l1-sdk-ray-of-frost-wizard");
+const shockingGraspSorcererId = combatantId(
+  "combatant:l1-sdk-shocking-grasp-sorcerer",
+);
+const shockingGraspWizardId = combatantId(
+  "combatant:l1-sdk-shocking-grasp-wizard",
+);
 const chromaticOrbSorcererId = combatantId(
   "combatant:l1-sdk-chromatic-orb-sorcerer",
 );
@@ -111,6 +117,7 @@ const acidSplashSpellId = "acid_splash";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
 const rayOfFrostSpellId = "ray_of_frost";
+const shockingGraspSpellId = "shocking_grasp";
 const chromaticOrbSpellId = "chromatic_orb";
 const magicMissileSpellId = "magic_missile";
 
@@ -703,6 +710,43 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
+  test("Sorcerer and Wizard Shocking Grasp cantrips resolve from level-1 sheets as melee spell attacks with Lightning damage and Opportunity Attack denial", () => {
+    const sorcererBuild = finalizedLevelOneSorcererShockingGraspBuild();
+    const wizardBuild = finalizedLevelOneWizardShockingGraspBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          cantrips: expect.arrayContaining([shockingGraspSpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          cantrips: expect.arrayContaining([shockingGraspSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneShockingGrasp({
+      battleIdText: "battle:l1-sdk-shocking-grasp-sorcerer",
+      characterIdText: "character:l1-sdk-shocking-grasp-sorcerer",
+      build: sorcererBuild,
+      casterId: shockingGraspSorcererId,
+      expectedSpellAttackBonus: 4,
+    });
+    assertLevelOneShockingGrasp({
+      battleIdText: "battle:l1-sdk-shocking-grasp-wizard",
+      characterIdText: "character:l1-sdk-shocking-grasp-wizard",
+      build: wizardBuild,
+      casterId: shockingGraspWizardId,
+      expectedSpellAttackBonus: 5,
+    });
+  });
+
   test("Sorcerer and Wizard Chromatic Orb resolve from level-1 spell access with chosen damage and one duplicate-dice leap", () => {
     const sorcererBuild = finalizedLevelOneSorcererChromaticOrbBuild();
     const wizardBuild = finalizedLevelOneWizardChromaticOrbBuild();
@@ -1250,6 +1294,144 @@ function assertLevelOneRayOfFrost(input: {
   });
 }
 
+function assertLevelOneShockingGrasp(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellAttackBonus: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        maximumHp: 8,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(
+        secondMonsterId,
+        15,
+        srdStatBlock("stat_block_skeleton"),
+      ),
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = cantripCastActionSpellAct(
+    state,
+    input.casterId,
+    shockingGraspSpellId,
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          target,
+          shockingGraspSpellId,
+          input.casterId,
+          monsterId,
+        ),
+      ],
+    }),
+    "attackRoll",
+  );
+
+  expect(attackRoll).toMatchObject({
+    attackBonus: input.expectedSpellAttackBonus,
+    spell: {
+      attackKind: "melee_spell_attack",
+      targeting: { kind: "singleCombatant" },
+      damage: { expr: { dice: 1, dieSize: 8 }, damageType: "lightning" },
+      rangeFeet: 5,
+    },
+  });
+
+  const damage = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          target,
+          shockingGraspSpellId,
+          input.casterId,
+          monsterId,
+        ),
+        attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+      ],
+    }),
+    "rolledDice",
+  );
+
+  expect(damage).toMatchObject({
+    label: "Shocking Grasp damage (1d8-lightning)",
+    critical: false,
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          target,
+          shockingGraspSpellId,
+          input.casterId,
+          monsterId,
+        ),
+        attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+        damageRollFillWithGroups(damage, [[4]]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId)).toMatchObject({
+    hp: Hp(9),
+    activeEffects: [
+      {
+        kind: "opportunityAttackDenied",
+        sourceSpellId: shockingGraspSpellId,
+        sourceCombatantId: input.casterId,
+        expiresAt: { kind: "startOfTurn", combatantId: monsterId },
+      },
+    ],
+  });
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+
+  const afterInterveningTurnStart = requireResolved(
+    endTurn({ state: resolved.state, actorId: input.casterId }),
+  );
+  expect(
+    afterInterveningTurnStart.state.combatants.get(monsterId)?.activeEffects,
+  ).toEqual([
+    expect.objectContaining({
+      kind: "opportunityAttackDenied",
+      sourceSpellId: shockingGraspSpellId,
+    }),
+  ]);
+
+  const afterTargetTurnStart = requireResolved(
+    endTurn({
+      state: afterInterveningTurnStart.state,
+      actorId: secondMonsterId,
+    }),
+  );
+  expect(
+    afterTargetTurnStart.state.combatants.get(monsterId)?.activeEffects,
+  ).toEqual([]);
+}
+
 function assertLevelOneChromaticOrb(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -1672,7 +1854,7 @@ function levelOneSorcererBurningHandsBuild(): CharacterBuild {
           cantrips: [
             "fire_bolt",
             "light",
-            "shocking_grasp",
+            shockingGraspSpellId,
             sorcerousBurstSpellId,
           ],
           spellbook: [],
@@ -1697,7 +1879,7 @@ function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild {
     cantrips: [
       fireBoltSpellId,
       "light",
-      "shocking_grasp",
+      shockingGraspSpellId,
       sorcerousBurstSpellId,
     ],
     preparedSpells: [burningHandsSpellId, "detect_magic"],
@@ -1732,6 +1914,20 @@ function finalizedLevelOneSorcererRayOfFrostBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererShockingGraspBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-shocking-grasp",
+    expectedBuildLabel: "Sorcerer Shocking Grasp",
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      shockingGraspSpellId,
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [burningHandsSpellId, "detect_magic"],
+  });
+}
+
 function finalizedLevelOneSorcererChromaticOrbBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-chromatic-orb",
@@ -1739,7 +1935,7 @@ function finalizedLevelOneSorcererChromaticOrbBuild(): CharacterBuild {
     cantrips: [
       fireBoltSpellId,
       "light",
-      "shocking_grasp",
+      shockingGraspSpellId,
       sorcerousBurstSpellId,
     ],
     preparedSpells: [chromaticOrbSpellId, burningHandsSpellId],
@@ -1753,7 +1949,7 @@ function finalizedLevelOneSorcererMagicMissileBuild(): CharacterBuild {
     cantrips: [
       fireBoltSpellId,
       "light",
-      "shocking_grasp",
+      shockingGraspSpellId,
       sorcerousBurstSpellId,
     ],
     preparedSpells: [magicMissileSpellId, burningHandsSpellId],
@@ -1935,6 +2131,23 @@ function finalizedLevelOneWizardRayOfFrostBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-wizard-ray-of-frost",
     expectedBuildLabel: "Wizard Ray of Frost",
     cantrips: ["light", fireBoltSpellId, rayOfFrostSpellId],
+    spellbook: [
+      "detect_magic",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+      "thunderwave",
+    ],
+    preparedSpells: ["detect_magic", "mage_armor", "magic_missile", "shield"],
+  });
+}
+
+function finalizedLevelOneWizardShockingGraspBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-shocking-grasp",
+    expectedBuildLabel: "Wizard Shocking Grasp",
+    cantrips: ["light", fireBoltSpellId, shockingGraspSpellId],
     spellbook: [
       "detect_magic",
       "mage_armor",
