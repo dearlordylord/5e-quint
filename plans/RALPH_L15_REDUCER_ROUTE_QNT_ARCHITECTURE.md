@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Promote level 5 class and spell-level-3 route connector tasks"
     },
     {
@@ -333,8 +333,8 @@ The route classes are deliberately not all `reducer-routed`:
 |   9 | L15-RR09-CHARACTER-SHEET-ROUTES - Add QNT route connectors for character sheet drivers                        | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for sheet resource/rest/projection state.                                    |
 |  10 | L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES - Add QNT route connectors for character-battle handoff drivers      | done               | L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES; L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE                                            | Handoff routes use existing sheet, build projection, battle runtime, resource projection, and settlement owners. |
 |  11 | L15-RR11-LEVEL3-4-SCOPE-PROMOTION - Promote level 3-4 branch scope into route connector tasks                 | done | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES | Widen current level-1/2 branch-scope rows only after generic route shapes exist.              |
-|  12 | L15-RR12-LEVEL5-SCOPE-PROMOTION - Promote level 5 class and spell-level-3 route connector tasks               | blocked            | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES; L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES; L15-RR11-LEVEL3-4-SCOPE-PROMOTION                                    | Handles level-5 features and spell-level-3 pressure; does not promote spell level 4/5.        |
-|  13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom              | blocked            | L15-RR12-LEVEL5-SCOPE-PROMOTION; L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT; L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES; L15-RR17-WEAPON-HOSTED-RIDER-ROUTES; L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES; L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES; L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES; L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES; L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES | Uses the existing dirty cleanroom as a diagnostic target with current source package.         |
+|  12 | L15-RR12-LEVEL5-SCOPE-PROMOTION - Promote level 5 class and spell-level-3 route connector tasks               | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES, L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES, L15-RR11-LEVEL3-4-SCOPE-PROMOTION                                    | Handles level-5 features and spell-level-3 pressure; does not promote spell level 4/5.        |
+|  13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom              | blocked            | L15-RR12-LEVEL5-SCOPE-PROMOTION, L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT, L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES, L15-RR17-WEAPON-HOSTED-RIDER-ROUTES, L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES, L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES, L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES, L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES, L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES | Uses the existing dirty cleanroom as a diagnostic target with current source package.         |
 |  14 | L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE - Package a fresh cleanroom-ready level 1-5 route evidence gate         | blocked            | L15-RR13-DIRTY-CLEANROOM-REHEARSAL                                                                                                                       | Produces the fresh-run package and acceptance gate; does not depend on stale dirty artifacts. |
 |  15 | L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT - Split after-hit rider routes by durable battle owner                   | done               | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Prevents one route connector from accumulating interrupt, condition, Concentration, and HP owners. |
 |  16 | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES - Route chained attack sequences through procedure owners            | done | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Requires the generic multi-step spell/attack procedure route owner before routing chain continuation. |
@@ -1324,7 +1324,7 @@ Plan Impact:
 
 ### Task 12 - L15-RR12-LEVEL5-SCOPE-PROMOTION
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
