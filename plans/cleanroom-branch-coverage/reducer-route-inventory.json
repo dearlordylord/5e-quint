@@ -311,27 +311,33 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
+          "routeConnectorPaths": [
+            "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt"
+          ],
           "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "selected spell attack, save-gated damage, and post-hit active-effect substrates",
           "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
-              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt exposes SpellAttackRouteSubject evidence for the selected spell-attack branches' target, Attack Roll, damage dice, and damage-type fills.",
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for the selected save-gated damage branches' Saving Throw and damage frontiers.",
+              "The post-hit active-effect branches in this grouped selected-identity witness split into separate generic active-effect substrates before target replay may count them."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Attack Rolls and #Saving Throws define the generic spell attack and spell save shapes represented by the connector evidence.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack, #Damage Rolls, and #Hit Points define the attack, damage, and Hit Point effects represented by the route subjects.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Attack Roll, Saving Throw, Damage, Hit Points, Reaction, and Action Lifecycle vocabulary."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
+              "source-qnt-corpus-blocker: add a generic hit-point-regain-prevention active-effect route subject before doChillTouchHitPointRegainPrevention may count for target replay.",
+              "source-qnt-corpus-blocker: add a generic next-attack advantage active-effect route subject before doGuidingBoltNextAttackAdvantage may count for target replay.",
+              "source-qnt-corpus-blocker: add a generic Opportunity Attack denial / reaction-interdiction active-effect route subject before doShockingGraspOpportunityAttackDenied may count for target replay."
             ]
-          },
-          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
@@ -428,51 +434,55 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "routeConnectorPaths": [
+            "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt"
+          ],
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "selected save-gated condition spell and repeat-save substrates",
           "branchObligations": 9,
           "currentOutOfScopeBranchObligations": 5,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s).",
-              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for selected initial condition-save branches that need target/list, condition-choice, and Saving Throw fills.",
+              "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt exposes RepeatSaveConditionEffectRouteSubject evidence for selected repeat-save condition lifecycle branches.",
+              "The level-3 Hypnotic Pattern selected-identity branch remains assigned to L15-RR12-LEVEL5-SCOPE-PROMOTION; this Task 23 split does not promote that later-scope branch."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines spell save outcomes as generic spell-effect facts.",
+              ".references/srd-5.2.1/Rules-Glossary.md condition entries and #Concentration define the condition and active-effect cleanup shapes represented by the connector evidence.",
+              "UBIQUITOUS_LANGUAGE.md defines Saving Throw, Condition, Spell Effect, Concentration, Boundary Crossing, and Turn Structure vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
           "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "creature-type target admission, charm, and protection active-effect substrates",
           "branchObligations": 7,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s).",
-              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt supplies the generic Saving Throw frontier for the failed-save charm branch.",
+              "The remaining branches require generic creature-type target admission, scoped protection/charm active-effect, roll-mode projection, and charm-break lifecycle substrates instead of authored spell identity dispatch."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets and #Saving Throws define target admission and save outcome boundaries.",
+              ".references/srd-5.2.1/Rules-Glossary.md condition entries and #Concentration define Charm, protection, roll-mode, and effect cleanup boundaries.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Target, Saving Throw, Condition, Damage, and D20 Rolls vocabulary."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
+              "source-qnt-corpus-blocker: add a generic creature-type target admission route subject before doDiscoverAnimalFriendshipBeastTargetAdmission may count for target replay.",
+              "source-qnt-corpus-blocker: add a generic scoped protection/charm active-effect route subject before doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection, doPreventProtectionFromEvilAndGoodScopedCharmAndPossession, doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage, and doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage may count for target replay.",
+              "source-qnt-corpus-blocker: add a generic charm-break-on-source-damage lifecycle route subject before doResolveAnimalFriendshipCasterDamageBreak may count for target replay."
             ]
-          },
-          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
@@ -638,27 +648,24 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "selected companion lifecycle, replacement, reappearance, and touch-delivery substrates",
           "branchObligations": 4,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s).",
-              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt records CompanionLifecycleRouteSubject, CompanionSharedSensesRouteSubject, CompanionTouchDeliveryRouteSubject, and CompanionReactionAttackRouteSubject evidence for selected companion creation, replacement, dismissal/reappearance, and touch-delivery branches.",
+              "Selected spell identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through companion and action-economy route subjects."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Find Familiar defines companion creation, one familiar at a time, dismissal/reappearance, shared senses, touch spell delivery, and Reaction use.",
+              "UBIQUITOUS_LANGUAGE.md defines Companion, Companion Control, Companion Execution, Table Decision, Spell Invocation, Bonus Action, Reaction, Attack Roll, and Hit Points."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
@@ -754,99 +761,123 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
+          "routeConnectorPaths": [
+            "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt"
+          ],
           "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "selected weapon-hosted buff, after-hit rider, scalar buff, and marked-effect substrates",
           "branchObligations": 12,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s).",
-              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt exposes AfterHitDamageRiderRouteSubject evidence for selected after-hit damage, condition, turn-start, and cleanup rider branches.",
+              "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt exposes ScalarBuffEffectRouteSubject evidence for selected scalar buff branches such as temporary Hit Points and Speed increases.",
+              "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt, battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt, and battle-runtime-held-weapon-active-effect.route.mbt.qnt expose the generic weapon-hosted rider and held-weapon override substrates.",
+              "Marked-target transfer and condition-immunity / turn-start temporary Hit Point behavior still require generic active-effect substrates before target replay may count those selected-identity branches."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
+              ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack, #Damage Rolls, #Temporary Hit Points, and #Movement and Position define the generic attack, damage, temporary Hit Point, and Speed facts represented by connector evidence.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Concentration and condition entries define active-effect, condition-immunity, and cleanup ownership boundaries.",
+              "UBIQUITOUS_LANGUAGE.md defines Rider, Attack Damage Rider, Spell Invocation, Spell Effect, Spend, Concentration, Condition, Hit Points, and Movement."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
+              "source-qnt-corpus-blocker: add a generic marked-target damage rider plus transfer active-effect route subject before doHexMarkedDamageRiderAndLaterTurnTransfer and doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer may count for target replay.",
+              "source-qnt-corpus-blocker: add a generic condition-immunity plus turn-start temporary Hit Points active-effect route subject before doHeroismFrightenedImmunityTurnStartTemporaryHitPoints and doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup may count for target replay."
             ]
-          },
-          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+          "routeConnectorPaths": [
+            "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt"
+          ],
           "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "selected damage spell attack, save-gated damage, object-target, and mixed-shape substrates",
           "branchObligations": 10,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s).",
-              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for selected area and single-target save-gated damage branches.",
+              "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt exposes SpellAttackRouteSubject evidence for selected spell attack damage branches.",
+              "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt exposes SpellAttackProcedureRouteSubject evidence for selected chained spell-attack duplicate damage branches.",
+              "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt exposes ObjectTargetSpellAttackRouteSubject evidence for selected object-target spell attack and active-effect branches."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Attack Rolls and #Saving Throws define spell attack and save-gated spell shapes.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls, #Damage against Multiple Targets, and #Hit Points define damage and Hit Point updates represented by the route subjects.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Attack Roll, Saving Throw, Damage, Damage Type, Target, and Hit Points."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
+              "source-qnt-corpus-blocker: add a generic mixed spell-attack plus burst saving-throw route subject before doResolveIceKnifeHitAttackDamageAndBurstSavingThrows and doResolveIceKnifeMissBurstSavingThrows may count for target replay.",
+              "source-qnt-corpus-blocker: add a generic post-damage condition / next-attack roll-mode active-effect route subject before doResolveRayOfSicknessSpellAttackDamageAndPoisoned and doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage may count for target replay."
             ]
-          },
-          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+          "routeConnectorPaths": [
+            "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt"
+          ],
           "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "selected spatial, light, area hazard, movement, and reaction mitigation substrates",
           "branchObligations": 10,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s).",
-              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt supplies generic Saving Throw frontier evidence for the selected save-gated spatial branches.",
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt supplies generic Reaction spell casting-time evidence, but not the spatial mitigation effect that follows.",
+              "The grouped spatial witness still contains light emitters, outline/advantage effects, area hazard/obscurement, falling mitigation, movement replacement, and forced-movement/object-push behavior that must split into generic route substrates."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Areas of Effect, #Targets, and #Saving Throws define spell area, target, and save frontiers.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Movement and Position and .references/srd-5.2.1/Rules-Glossary.md#Reaction define movement, forced movement, falling response, and Reaction vocabulary.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Area of Effect, Movement, Reaction, Target, Saving Throw, and Boundary Crossing."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
+              "source-qnt-corpus-blocker: add generic movable, held, and object light-emitter active-effect route subjects before doDancingLightsMovableDimLight, doLightObjectEmitterProjectionReplacementCleanup, and doProduceFlameHeldLightProjectionHurlCleanup may count for target replay.",
+              "source-qnt-corpus-blocker: add a generic outline / invisible-revealing / attack-advantage active-effect route subject before doFaerieFireOutlineAdvantageInvisibleDimLight may count for target replay.",
+              "source-qnt-corpus-blocker: add generic area hazard and obscurement lifecycle route subjects before doFogCloudAreaIdentityObscurementStrongWindCleanup, doGreaseCastGroundHazardSavingThrows, and doGreaseMovementAndTurnTriggers may count for target replay.",
+              "source-qnt-corpus-blocker: add generic falling mitigation and movement replacement route subjects before doFeatherFallReactionMitigationLanding and doJumpMovementReplacementLandingWitness may count for target replay.",
+              "source-qnt-corpus-blocker: add a generic forced-movement plus object-push/presentation-effect route subject before doThunderwaveSavePushObjectsBoom may count for target replay."
             ]
-          },
-          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt",
           "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "selected armor-class base active-effect and target-admission substrate",
           "branchObligations": 4,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s).",
-              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
+              "No copied source qRoute connector currently exposes a generic armor-class base active-effect route for unarmored target admission, armored target rejection, base Armor Class projection, and duration expiry.",
+              "Selected spell identity must remain at catalog, selection, admission, and SRD fixture boundaries until that generic armor-class substrate exists."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets and #Duration define target admission and duration boundaries.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Armor Class defines Armor Class as the defensive projection affected by the spell effect.",
+              "UBIQUITOUS_LANGUAGE.md defines Armor Class, Spell Effect, Target, Duration, and Boundary Crossing."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
+              "source-qnt-corpus-blocker: add a generic armor-class base active-effect route subject covering unarmored target admission, armored target rejection, base Armor Class projection, and duration expiry before any branch in this witness may count for target replay."
             ]
-          },
-          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
@@ -943,27 +974,29 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
           "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "selected reaction spell casting and reaction armor-class active-effect substrates",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 1,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
-              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt exposes ReactionSpellRouteSubject evidence for the selected reaction spell casting-time, spell-slot/action-economy, Saving Throw, and Hit Point damage branch.",
+              "The level-3 Counterspell branch remains assigned to L15-RR12-LEVEL5-SCOPE-PROMOTION; this Task 23 split does not promote that later-scope branch.",
+              "The Shield reaction Armor Class branch still needs a generic reaction active-effect / Armor Class substrate before target replay may count it."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting Time defines Reaction casting-time triggers for spells.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Reactions and .references/srd-5.2.1/Rules-Glossary.md#Reaction establish Reaction spend and interrupted-turn continuation.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Armor Class defines the Armor Class projection needed by the missing reaction active-effect substrate.",
+              "UBIQUITOUS_LANGUAGE.md names Reaction, Spell Slot, Magic Action, Saving Throw, Damage Roll, Armor Class, Offer, Decline, and Advance."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
+              "source-qnt-corpus-blocker: add a generic reaction-triggered Armor Class active-effect route subject before doResolveShieldReactionSpellHit may count for target replay."
             ]
-          },
-          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
@@ -1039,26 +1072,25 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
           "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "selected warded-target interdiction and early-end active-effect substrate",
           "branchObligations": 9,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s).",
-              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
+              "No copied source qRoute connector currently exposes a generic warded-target interdiction route for ward creation, direct attack/spell target interdiction, Saving Throw outcome, replacement target legality, area-effect exclusion, or early ward end.",
+              "Selected spell identity must remain at catalog, selection, admission, and SRD fixture boundaries until that generic ward active-effect substrate exists."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets, #Areas of Effect, and #Saving Throws define direct target, area exclusion, and save outcome boundaries.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Attack Roll and condition/effect entries define attack targeting and active-effect cleanup vocabulary.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Target, Area of Effect, Saving Throw, Attack Roll, Damage, and Boundary Crossing."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
+              "source-qnt-corpus-blocker: add a generic warded-target interdiction active-effect route subject covering ward creation, direct attack/spell interdiction, Saving Throw outcome, replacement-target legality, area-effect exclusion, and early-end cleanup before any branch in this witness may count for target replay."
             ]
-          },
-          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
@@ -1567,27 +1599,24 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+          "subjectFamily": "selected roll-modifier active-effect substrate",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
-              "No copied source qRoute connector currently extracts level-1 selected-identity spell/effect bundles from packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt exposes RollModifierEffectRouteSubject evidence for the selected roll-modifier active-effect branch; the one-minute-effect count remains table-owned boundary evidence, not a reducer-route hole.",
+              "Selected spell identity remains a catalog, selection, admission, and SRD fixture boundary."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is level-1 selected-identity spell/effect bundles."
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Thaumaturgy defines the roll-modifier active Spell Effect branch represented by the generic route subject.",
+              "UBIQUITOUS_LANGUAGE.md defines D20 Rolls, Spell Invocation, Spell Effect, and Concentration."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-              "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
@@ -2634,19 +2663,20 @@
           "currentScopeReason": "Blindness/Deafness is a level-2 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
           "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveBlindnessDeafnessBlindedSavingThrow under branch family step."
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveBlindnessDeafnessBlindedSavingThrow under branch family step.",
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for the selected condition Saving Throw frontier."
             ],
             "rawDomainFacts": [
               "Blindness/Deafness is a level-2 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines the generic spell save frontier represented by the connector."
             ],
-            "blockers": [
-              "Task 11 left this selected-identity level-2 condition spell branch out of branch scope because no generic selected-identity condition spell substrate route connector exists yet; L15-RR07-FU01 already owns the selected spell identity substrate driver family that includes this condition-saving-throw driver."
-            ]
+            "blockers": []
           }
         },
         {
@@ -2656,19 +2686,20 @@
           "currentScopeReason": "Blindness/Deafness is a level-2 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
           "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveBlindnessDeafnessDeafenedSavingThrow under branch family step."
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveBlindnessDeafnessDeafenedSavingThrow under branch family step.",
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for the selected condition Saving Throw frontier."
             ],
             "rawDomainFacts": [
               "Blindness/Deafness is a level-2 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines the generic spell save frontier represented by the connector."
             ],
-            "blockers": [
-              "Task 11 left this selected-identity level-2 condition spell branch out of branch scope because no generic selected-identity condition spell substrate route connector exists yet; L15-RR07-FU01 already owns the selected spell identity substrate driver family that includes this condition-saving-throw driver."
-            ]
+            "blockers": []
           }
         },
         {
@@ -2678,19 +2709,20 @@
           "currentScopeReason": "Hold Person is a level-2 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
           "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveHoldPersonFailedSavingThrow under branch family step."
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveHoldPersonFailedSavingThrow under branch family step.",
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for the selected condition Saving Throw frontier."
             ],
             "rawDomainFacts": [
               "Hold Person is a level-2 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines the generic spell save frontier represented by the connector."
             ],
-            "blockers": [
-              "Task 11 left this selected-identity level-2 condition spell branch out of branch scope because no generic selected-identity condition spell substrate route connector exists yet; L15-RR07-FU01 already owns the selected spell identity substrate driver family that includes this condition-saving-throw driver."
-            ]
+            "blockers": []
           }
         },
         {
@@ -2700,19 +2732,20 @@
           "currentScopeReason": "Hold Person is a level-2 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
           "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveHoldPersonRepeatSavingThrowSuccess under branch family step."
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveHoldPersonRepeatSavingThrowSuccess under branch family step.",
+              "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt exposes RepeatSaveConditionEffectRouteSubject evidence for the selected repeat-save condition cleanup frontier."
             ],
             "rawDomainFacts": [
               "Hold Person is a level-2 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Concentration and condition entries define repeat-save condition cleanup as a generic active-effect boundary."
             ],
-            "blockers": [
-              "Task 11 left this selected-identity level-2 condition spell branch out of branch scope because no generic selected-identity condition spell substrate route connector exists yet; L15-RR07-FU01 already owns the selected spell identity substrate driver family that includes this condition-saving-throw driver."
-            ]
+            "blockers": []
           }
         },
         {
@@ -3265,10 +3298,10 @@
       "task7FollowUpTasks": [
         {
           "taskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-          "subjectFamily": "level-1 selected-identity spell/effect bundles",
+          "subjectFamily": "selected spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates",
           "requiredSourceWork": [
-            "Split grouped level-1 spell identity witnesses into generic spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates before target replay counts.",
-            "Retain spell identity only at catalog, selection, admission, and SRD fixture boundaries."
+            "Task 23 records connector-backed generic substrate evidence and precise source-QNT blockers on the selected spell identity driverRouteAssignments.",
+            "Use the remaining source-qnt-corpus-blocker records for follow-on source work; do not infer target replay from selected spell identity."
           ]
         },
         {

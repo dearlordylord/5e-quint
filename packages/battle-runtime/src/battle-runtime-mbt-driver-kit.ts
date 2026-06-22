@@ -7861,6 +7861,7 @@ function independentSpellAttackSequenceAct(
     (candidate): candidate is IndependentSpellAttackSequenceAct =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === spellCasterId &&
+      // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
       candidate.subject.invocation.spellId ===
         INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID &&
       candidate.subject.invocation.procedure === "spellAttackSequence",
