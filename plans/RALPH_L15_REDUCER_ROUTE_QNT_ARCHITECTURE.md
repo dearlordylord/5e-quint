@@ -175,7 +175,7 @@
     {
       "number": 29,
       "id": "L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Route attack-action area save damage replacement feature substrate"
     },
     {
@@ -350,7 +350,7 @@ The route classes are deliberately not all `reducer-routed`:
 |  26 | L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE - Route zero-Hit-Point stabilization substrates                 | done | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes stabilization through the BattleState zero-Hit-Point lifecycle owner.                  |
 |  27 | L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES - Route feature movement and form lifecycle substrates     | done               | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Splits movement-resource, active-form, speed, and forced-movement owners; keeps teleport destination legality table-owned. |
 |  28 | L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES - Route weapon mastery property substrates                   | done               | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes mastery properties by property facts, attack/save holes, and durable rider owners.      |
-|  29 | L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE - Route attack-action area save damage replacement feature substrate | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                         | Adds area save damage replacement route owners before selected species replay counts.          |
+|  29 | L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE - Route attack-action area save damage replacement feature substrate | done | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                         | Adds area save damage replacement route owners before selected species replay counts.          |
 |  30 | L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES - Route metamagic governor and option substrates       | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes metamagic by typed option facts, Sorcery Point spend, and spell procedure owners.       |
 |  31 | L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE - Route active feature spell benefit substrates          | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes active feature spell-save and spell-attack benefits by typed active-effect facts.       |
 
@@ -995,7 +995,7 @@ Plan Impact:
 
 ### Task 29 - L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1032,8 +1032,10 @@ Verification:
 
 Plan Impact:
 
-- Split area-shape, save, and damage owners if one connector would accumulate
-  unrelated durable state.
+- Applied. The connector uses one generic attack-action area save damage
+  replacement subject with split feature-resource, area-shape, Saving Throw
+  outcome, damage-type, damage-roll, Hit Point, and Attack-action procedure
+  owners, so no narrower follow-up task was added.
 
 ### Task 30 - L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES
 

@@ -828,6 +828,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "hitPointRestoration",
   "weaponAttack",
   "weaponMasteryProperty",
+  "attackActionAreaSaveDamageReplacement",
   "spellAttack",
   "spellAttackProcedure",
   "spellHostedWeaponAttack",
@@ -874,9 +875,12 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleHoleFrontier",
   "battleTargetSelection",
   "battleAttackRoll",
+  "battleAttackActionProcedure",
   "battleSpellAttackProcedure",
   "battleAbilityCheck",
   "battleHitPoint",
+  "battleDamageRoll",
+  "battleDamageType",
   "battleHitPointAndZeroHpLifecycle",
   "battleConditionLifecycle",
   "battleStatBlockAction",
@@ -890,6 +894,8 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleTurnBoundary",
   "battleCompanion",
   "battleObjectTargetBoundary",
+  "battleAreaShape",
+  "battleSavingThrowOutcome",
   "battleDamageAdjustment",
   "battleSavingThrowRollMode",
   "battleAbilityCheckRollMode",
@@ -1019,6 +1025,9 @@ type ReducerRoutedWeaponAttackOrderingProjection =
     readonly route: readonly ReducerRouteEvent[];
   };
 type ReducerRoutedWeaponMasteryPropertyProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedAttackActionAreaSaveDamageReplacementProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
 type ReducerRoutedSaveGatedSpellOrderingProjection =
@@ -1323,6 +1332,19 @@ const weaponMasteryPropertyRouteDriverSchema = {
   doRouteCleavePropertySecondTarget: {},
   doRouteCleavePropertySecondAttack: {},
   doRouteCleavePropertySecondDamage: {},
+  step: {},
+} as const;
+
+const attackActionAreaSaveDamageReplacementRouteDriverSchema = {
+  init: {},
+  doDiscoverAreaSaveDamageReplacement: {},
+  doFillAreaSavingThrows: {},
+  doFillDamageRoll: {},
+  doResolveWithoutExtraAttackContinuation: {},
+  doOpenExtraAttackContinuation: {},
+  doRejectMissingResource: {},
+  doRejectMismatchedArea: {},
+  doRejectInvalidDamageRoll: {},
   step: {},
 } as const;
 
@@ -2927,6 +2949,250 @@ export function createWeaponMasteryPropertyRouteDriver() {
       getState: (): ReducerRoutedWeaponMasteryPropertyProjection => ({ route }),
     };
   });
+}
+
+const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT =
+  "attackActionAreaSaveDamageReplacement" satisfies ReducerRouteSubjectFamily;
+const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_EXTRA_ATTACK_SUBJECT =
+  "weaponAttack" satisfies ReducerRouteSubjectFamily;
+const NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES =
+  [] as const satisfies readonly ReducerRouteHole[];
+const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SAVE_HOLES = [
+  "savingThrowOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_DAMAGE_HOLES = [
+  "rolledDice",
+] as const satisfies readonly ReducerRouteHole[];
+const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_EXTRA_ATTACK_HOLES = [
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+
+function attackActionAreaSaveDamageReplacementDiscoverRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function attackActionAreaSaveDamageReplacementResolveRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: input.subject,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function attackActionAreaSaveDamageReplacementInitialRoute(): readonly ReducerRouteEvent[] {
+  return [reducerRouteStartBattle("battleActionEconomy")];
+}
+
+function attackActionAreaSaveDamageReplacementDiscoveredRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementDiscoverRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SAVE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementSavingThrowsRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_DAMAGE_HOLES,
+      owner: "battleAreaShape",
+    }),
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_DAMAGE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_DAMAGE_HOLES,
+      owner: "battleDamageType",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementDamageRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES,
+      owner: "battleDamageRoll",
+    }),
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementResolvedRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES,
+      owner: "battleAttackActionProcedure",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementExtraAttackRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementDiscoverRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_EXTRA_ATTACK_SUBJECT,
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_EXTRA_ATTACK_HOLES,
+      owner: "battleAttackActionProcedure",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementMissingResourceRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementMismatchedAreaRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SAVE_HOLES,
+      owner: "battleAreaShape",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementInvalidDamageRollRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_DAMAGE_HOLES,
+      owner: "battleDamageRoll",
+    }),
+  ];
+}
+
+export function createAttackActionAreaSaveDamageReplacementRouteDriver() {
+  return defineDriver(
+    attackActionAreaSaveDamageReplacementRouteDriverSchema,
+    () => {
+      let route: readonly ReducerRouteEvent[] =
+        attackActionAreaSaveDamageReplacementInitialRoute();
+
+      function reset(): void {
+        route = attackActionAreaSaveDamageReplacementInitialRoute();
+      }
+
+      reset();
+
+      return {
+        init: reset,
+        doDiscoverAreaSaveDamageReplacement: () => {
+          route = attackActionAreaSaveDamageReplacementDiscoveredRoute(route);
+        },
+        doFillAreaSavingThrows: () => {
+          route = attackActionAreaSaveDamageReplacementSavingThrowsRoute(route);
+        },
+        doFillDamageRoll: () => {
+          route = attackActionAreaSaveDamageReplacementDamageRoute(route);
+        },
+        doResolveWithoutExtraAttackContinuation: () => {
+          route = attackActionAreaSaveDamageReplacementResolvedRoute(route);
+        },
+        doOpenExtraAttackContinuation: () => {
+          route = attackActionAreaSaveDamageReplacementExtraAttackRoute(route);
+        },
+        doRejectMissingResource: () => {
+          route = attackActionAreaSaveDamageReplacementMissingResourceRoute(
+            route,
+          );
+        },
+        doRejectMismatchedArea: () => {
+          route = attackActionAreaSaveDamageReplacementMismatchedAreaRoute(
+            route,
+          );
+        },
+        doRejectInvalidDamageRoll: () => {
+          route = attackActionAreaSaveDamageReplacementInvalidDamageRollRoute(
+            route,
+          );
+        },
+        step: () => {},
+        getState:
+          (): ReducerRoutedAttackActionAreaSaveDamageReplacementProjection => ({
+            route,
+          }),
+      };
+    },
+  );
 }
 
 export function createSaveGatedSpellOrderingRouteDriver() {
@@ -6096,6 +6362,8 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   HitPointRestorationRouteSubject: "hitPointRestoration",
   WeaponAttackRouteSubject: "weaponAttack",
   WeaponMasteryPropertyRouteSubject: "weaponMasteryProperty",
+  AttackActionAreaSaveDamageReplacementRouteSubject:
+    "attackActionAreaSaveDamageReplacement",
   SpellAttackRouteSubject: "spellAttack",
   SpellAttackProcedureRouteSubject: "spellAttackProcedure",
   SpellHostedWeaponAttackRouteSubject: "spellHostedWeaponAttack",
@@ -6144,9 +6412,12 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleHoleFrontierOwner: "battleHoleFrontier",
   BattleTargetSelectionOwner: "battleTargetSelection",
   BattleAttackRollOwner: "battleAttackRoll",
+  BattleAttackActionProcedureOwner: "battleAttackActionProcedure",
   BattleSpellAttackProcedureOwner: "battleSpellAttackProcedure",
   BattleAbilityCheckOwner: "battleAbilityCheck",
   BattleHitPointOwner: "battleHitPoint",
+  BattleDamageRollOwner: "battleDamageRoll",
+  BattleDamageTypeOwner: "battleDamageType",
   BattleHitPointAndZeroHpLifecycleOwner: "battleHitPointAndZeroHpLifecycle",
   BattleConditionLifecycleOwner: "battleConditionLifecycle",
   BattleStatBlockActionOwner: "battleStatBlockAction",
@@ -6160,6 +6431,8 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleTurnBoundaryOwner: "battleTurnBoundary",
   BattleCompanionOwner: "battleCompanion",
   BattleObjectTargetBoundaryOwner: "battleObjectTargetBoundary",
+  BattleAreaShapeOwner: "battleAreaShape",
+  BattleSavingThrowOutcomeOwner: "battleSavingThrowOutcome",
   BattleDamageAdjustmentOwner: "battleDamageAdjustment",
   BattleSavingThrowRollModeOwner: "battleSavingThrowRollMode",
   BattleAbilityCheckRollModeOwner: "battleAbilityCheckRollMode",
@@ -6443,6 +6716,15 @@ function normalizeReducerRoutedWeaponAttackOrderingQuintState(
 function normalizeReducerRoutedWeaponMasteryPropertyQuintState(
   raw: unknown,
 ): ReducerRoutedWeaponMasteryPropertyProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedAttackActionAreaSaveDamageReplacementQuintState(
+  raw: unknown,
+): ReducerRoutedAttackActionAreaSaveDamageReplacementProjection {
   const state = quintStateRecord(raw);
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
@@ -7006,6 +7288,17 @@ export const reducerRoutedWeaponMasteryPropertyStateCheck = stateCheck(
     return true;
   },
 );
+export const reducerRoutedAttackActionAreaSaveDamageReplacementStateCheck =
+  stateCheck(
+    normalizeReducerRoutedAttackActionAreaSaveDamageReplacementQuintState,
+    (
+      spec: ReducerRoutedAttackActionAreaSaveDamageReplacementProjection,
+      impl: ReducerRoutedAttackActionAreaSaveDamageReplacementProjection,
+    ) => {
+      expect(impl).toEqual(spec);
+      return true;
+    },
+  );
 export const saveGatedSpellOrderingStateCheck = stateCheck(
   normalizeSaveGatedSpellOrderingQuintState,
   (

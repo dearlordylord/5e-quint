@@ -509,26 +509,24 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-attack-action-area-save-damage-replacement.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE",
           "subjectFamily": "attack-action area save damage replacement feature substrate",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
-              "No copied source qRoute connector currently extracts attack-action area save damage replacement feature substrate from packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-attack-action-area-save-damage-replacement.route.mbt.qnt exposes AttackActionAreaSaveDamageReplacementRouteSubject evidence through feature-resource, area-shape, Saving Throw outcome, damage-type, damage-roll, Hit Point, and Attack-action procedure owners.",
+              "Extra Attack continuation routes through BattleAttackActionProcedureOwner by discovering a generic WeaponAttackRouteSubject rather than retaining species or trait identity in the route."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is attack-action area save damage replacement feature substrate."
+              ".references/srd-5.2.1/Character-Origins.md#Dragonborn defines Breath Weapon as replacing one attack in the Attack action with a self-origin Cone or Line, Dexterity Saving Throws, typed damage, half damage on success, Proficiency Bonus uses, and Long Rest reset.",
+              ".references/srd-5.2.1/Classes/Fighter.md#Level 5: Extra Attack defines additional attacks inside the same Attack action; UBIQUITOUS_LANGUAGE.md distinguishes Attack action resources from attacks made as part of that action and defines Area of Effect, Saving Throw, Damage Type, Proficiency Bonus, and Long Rest terms."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE before cleanroom target replay may infer this selected-identity behavior.",
-              "Add a route connector for generic attack-action area save damage replacement with feature resource, area shape, saving throw, damage type, damage roll, and extra-attack continuation owners."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
@@ -3316,7 +3314,7 @@
           "taskId": "L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE",
           "subjectFamily": "attack-action area save damage replacement feature substrate",
           "requiredSourceWork": [
-            "Add a route connector for generic attack-action area save damage replacement with feature resource, area shape, saving throw, damage type, damage roll, and extra-attack continuation owners."
+            "Task 29 supplied packages/battle-runtime/battle-runtime-attack-action-area-save-damage-replacement.route.mbt.qnt as generic AttackActionAreaSaveDamageReplacementRouteSubject evidence through feature-resource, area-shape, Saving Throw outcome, damage-type, damage-roll, Hit Point, and Attack-action procedure owners before selected species identity replay counts."
           ]
         },
         {

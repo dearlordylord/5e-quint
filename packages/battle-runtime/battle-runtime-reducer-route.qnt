@@ -16,6 +16,7 @@ module battleRuntimeReducerRoute {
     | HitPointRestorationRouteSubject
     | WeaponAttackRouteSubject
     | WeaponMasteryPropertyRouteSubject
+    | AttackActionAreaSaveDamageReplacementRouteSubject
     | SpellAttackRouteSubject
     | SpellAttackProcedureRouteSubject
     | SpellHostedWeaponAttackRouteSubject
@@ -60,9 +61,12 @@ module battleRuntimeReducerRoute {
     | BattleHoleFrontierOwner
     | BattleTargetSelectionOwner
     | BattleAttackRollOwner
+    | BattleAttackActionProcedureOwner
     | BattleSpellAttackProcedureOwner
     | BattleAbilityCheckOwner
     | BattleHitPointOwner
+    | BattleDamageRollOwner
+    | BattleDamageTypeOwner
     | BattleHitPointAndZeroHpLifecycleOwner
     | BattleConditionLifecycleOwner
     | BattleStatBlockActionOwner
@@ -76,6 +80,8 @@ module battleRuntimeReducerRoute {
     | BattleTurnBoundaryOwner
     | BattleCompanionOwner
     | BattleObjectTargetBoundaryOwner
+    | BattleAreaShapeOwner
+    | BattleSavingThrowOutcomeOwner
     | BattleDamageAdjustmentOwner
     | BattleSavingThrowRollModeOwner
     | BattleAbilityCheckRollModeOwner

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   MBT_TEST_TIMEOUT_MS,
   createAdrenalineRushRouteDriver,
+  createAttackActionAreaSaveDamageReplacementRouteDriver,
   createChainedAttackProcedureRouteDriver,
   createConcentrationBreakTeardownRouteDriver,
   createBattleRuntimeRouteDriver,
@@ -26,6 +27,7 @@ import {
   reducerRoutedDeathSavingThrowStateCheck,
   reducerRoutedHitPointRestorationOrderingStateCheck,
   reducerRoutedAdrenalineRushStateCheck,
+  reducerRoutedAttackActionAreaSaveDamageReplacementStateCheck,
   reducerRoutedChainedAttackProcedureStateCheck,
   reducerRoutedIndependentSpellAttackSequenceStateCheck,
   reducerRoutedMagicMissileStateCheck,
@@ -100,6 +102,22 @@ describe("battle reducer route connector MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(4),
       stateCheck: reducerRoutedWeaponMasteryPropertyStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes Attack-action area save damage replacement substrates through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-attack-action-area-save-damage-replacement.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createAttackActionAreaSaveDamageReplacementRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(4),
+      stateCheck: reducerRoutedAttackActionAreaSaveDamageReplacementStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 
