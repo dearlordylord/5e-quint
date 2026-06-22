@@ -68,7 +68,7 @@ module characterCreationWarlockEldritchInvocationsSelectedIdentityRouteMbt {
         )
       )
 
-  pure def rejectDuplicateInvocationRoute(
+  pure def rejectInvocationSelectionRoute(
     route: List[CharacterCreationRouteEvent],
   ): List[CharacterCreationRouteEvent] =
     route.append(
@@ -114,9 +114,14 @@ module characterCreationWarlockEldritchInvocationsSelectedIdentityRouteMbt {
     recordRoute(invocationLevelGainRoute(qRoute)),
   }
 
+  action doRejectPrerequisiteRetainedInvocationReplacement = all {
+    qState.ready,
+    recordRoute(rejectInvocationSelectionRoute(qRoute)),
+  }
+
   action doRejectDuplicateInvocationSelections = all {
     qState.ready,
-    recordRoute(rejectDuplicateInvocationRoute(qRoute)),
+    recordRoute(rejectInvocationSelectionRoute(qRoute)),
   }
 
   action step = any {
@@ -124,6 +129,7 @@ module characterCreationWarlockEldritchInvocationsSelectedIdentityRouteMbt {
     doGainLevelTwoInvocations,
     doReplaceArmorWithEldritchMindOnWarlockLevelGain,
     doReplaceRepeatableInvocationByChoice,
+    doRejectPrerequisiteRetainedInvocationReplacement,
     doRejectDuplicateInvocationSelections,
   }
 }

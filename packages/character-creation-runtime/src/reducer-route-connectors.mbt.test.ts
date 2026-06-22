@@ -241,6 +241,7 @@ const warlockInvocationRouteDriverSchema = {
   doGainLevelTwoInvocations: {},
   doReplaceArmorWithEldritchMindOnWarlockLevelGain: {},
   doReplaceRepeatableInvocationByChoice: {},
+  doRejectPrerequisiteRetainedInvocationReplacement: {},
   doRejectDuplicateInvocationSelections: {},
   step: {},
 } as const;
@@ -386,7 +387,9 @@ describe("character creation reducer route connector MBT", () => {
           doReplaceArmorWithEldritchMindOnWarlockLevelGain:
             replaceSelectedReferenceRoute,
           doReplaceRepeatableInvocationByChoice: replaceSelectedReferenceRoute,
-          doRejectDuplicateInvocationSelections: duplicateInvocationRejectionRoute,
+          doRejectPrerequisiteRetainedInvocationReplacement:
+            rejectedInvocationSelectionRoute,
+          doRejectDuplicateInvocationSelections: rejectedInvocationSelectionRoute,
         },
       ),
       maxSteps: focusedMbtMaxSteps(1),
@@ -1164,7 +1167,7 @@ function replaceSelectedReferenceRoute(
   ];
 }
 
-function duplicateInvocationRejectionRoute(
+function rejectedInvocationSelectionRoute(
   route: readonly CharacterCreationRouteEvent[],
 ): readonly CharacterCreationRouteEvent[] {
   return [

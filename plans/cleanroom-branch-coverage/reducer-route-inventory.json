@@ -431,7 +431,7 @@
               "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s).",
               "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for selected initial condition-save branches that need target/list, condition-choice, and Saving Throw fills.",
               "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt exposes RepeatSaveConditionEffectRouteSubject evidence for selected repeat-save condition lifecycle branches.",
-              "The level-3 Hypnotic Pattern selected-identity branch remains assigned to L15-RR12-LEVEL5-SCOPE-PROMOTION; this Task 23 split does not promote that later-scope branch."
+              "The level-3 Hypnotic Pattern selected-identity branch has branch-specific connector evidence in the L15-RR12 branchDecisionClasses entry; this driver-level row remains catalog-after-substrate because selected spell identity is still a catalog/admission boundary."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines spell save outcomes as generic spell-effect facts.",
@@ -963,7 +963,7 @@
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
               "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt exposes ReactionSpellRouteSubject evidence for the selected reaction spell casting-time, spell-slot/action-economy, Saving Throw, and Hit Point damage branch.",
-              "The level-3 Counterspell branch remains assigned to L15-RR12-LEVEL5-SCOPE-PROMOTION; this Task 23 split does not promote that later-scope branch.",
+              "The level-3 Counterspell selected-identity branch has branch-specific connector evidence in the L15-RR12 branchDecisionClasses entry; this driver-level row remains source-qnt-corpus-blocker because the Shield branch still lacks a generic Armor Class reaction active-effect substrate.",
               "The Shield reaction Armor Class branch still needs a generic reaction active-effect / Armor Class substrate before target replay may count it."
             ],
             "rawDomainFacts": [
@@ -2317,7 +2317,7 @@
           "derivability": {
             "qntFacts": [
               "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
-              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt exposes qRoute for level-1/2 invocation selection, duplicate rejection, retained selected references, Pact Magic projection, and finalization."
+              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt exposes qRoute for invocation selection, prerequisite-retained replacement rejection, duplicate rejection, retained selected references, Pact Magic projection, and finalization."
             ],
             "rawDomainFacts": [
               "Warlock Eldritch Invocation choices are option ownership facts; Pact Magic spell access and Pact Slot facts project from Warlock class facts without making invocation execution a creation reducer responsibility.",
@@ -2811,13 +2811,16 @@
           "levelDenominatorScope": "in-denominator",
           "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveHypnoticPatternFailedSavingThrow under branch family step."
+              "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveHypnoticPatternFailedSavingThrow under branch family step.",
+              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for the selected Wisdom Saving Throw condition frontier."
             ],
             "rawDomainFacts": [
               "Hypnotic Pattern is a level-3 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hypnotic Pattern defines a Wisdom Saving Throw that applies Charmed, Incapacitated, and Speed 0 on a failed save."
             ],
             "blockers": []
           }
@@ -2923,13 +2926,16 @@
           "levelDenominatorScope": "in-denominator",
           "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt exposes doResolveCounterspellMagicMissileCast under branch family step."
+              "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt exposes doResolveCounterspellMagicMissileCast under branch family step.",
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt exposes ReactionSpellRouteSubject evidence for Counterspell interruption, reaction spend, triggering spell slot non-expenditure, and resumed subject routing."
             ],
             "rawDomainFacts": [
               "Counterspell is a level-3 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell defines the Reaction trigger, Constitution Saving Throw, spell interruption, and non-expenditure of the countered spell slot."
             ],
             "blockers": []
           }
@@ -3031,13 +3037,16 @@
           "levelDenominatorScope": "in-denominator",
           "route": "component-first",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doUncannyDodge under branch family step."
+              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doUncannyDodge under branch family step.",
+              "packages/battle-runtime/rule-core-features.mbt.qnt imports rule-core reaction-damage-reduction facts and exposes qComponentRoute through RuleCoreFeatureProfileSemanticsOwner."
             ],
             "rawDomainFacts": [
               "Rogue Uncanny Dodge is a level-5 feature.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Classes/Rogue.md#Level 5: Uncanny Dodge defines the visible-hit Reaction and half-damage reduction."
             ],
             "blockers": []
           }
@@ -3117,13 +3126,16 @@
           "levelDenominatorScope": "in-denominator",
           "route": "component-first",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordNeedsHealingRoll under branch family step."
+              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordNeedsHealingRoll under branch family step.",
+              "packages/battle-runtime/rule-core-spells.mbt.qnt imports spell procedure profile and Hit Point restoration rule-core facts and exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
             ],
             "rawDomainFacts": [
               "Mass Healing Word is a level-3 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Mass Healing Word defines a Bonus Action level-3 healing spell for up to six visible creatures."
             ],
             "blockers": []
           }
@@ -3137,13 +3149,16 @@
           "levelDenominatorScope": "in-denominator",
           "route": "component-first",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordNeedsTargetList under branch family step."
+              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordNeedsTargetList under branch family step.",
+              "packages/battle-runtime/rule-core-spells.mbt.qnt imports spell procedure profile and target-list rule-core facts and exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
             ],
             "rawDomainFacts": [
               "Mass Healing Word is a level-3 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Mass Healing Word defines choosing up to six visible creatures within range."
             ],
             "blockers": []
           }
@@ -3157,13 +3172,16 @@
           "levelDenominatorScope": "in-denominator",
           "route": "component-first",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordWounded under branch family step."
+              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordWounded under branch family step.",
+              "packages/battle-runtime/rule-core-spells.mbt.qnt imports spell procedure profile and Hit Point restoration rule-core facts and exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
             ],
             "rawDomainFacts": [
               "Mass Healing Word is a level-3 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Mass Healing Word defines Hit Point regain equal to 2d4 plus the caster spellcasting ability modifier."
             ],
             "blockers": []
           }
@@ -3175,19 +3193,20 @@
           "currentScopeReason": "This projection fixture includes spell level 2/3 capacity facts beyond the current level-1/2 scope.",
           "currentReplay": "transit-only",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "routeConnectorPath": "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt exposes doProjectSheetSpellcastingAndMetamagic under branch family step."
+              "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt exposes doProjectSheetSpellcastingAndMetamagic under branch family step.",
+              "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt records sheet spellcasting and Metamagic handoff through HandoffResourceProjectionRouteSubject, HandoffFeatureResourceProjectionRouteSubject, CharacterBattleSheetOwner, CharacterBattleResourceProjectionOwner, and CharacterBattleInitProjectionOwner."
             ],
             "rawDomainFacts": [
               "This projection fixture includes spell level 2/3 capacity facts beyond the current level-1/2 scope.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots and .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic define the spell-resource facts handed from sheet to battle."
             ],
-            "blockers": [
-              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
-            ]
+            "blockers": []
           }
         },
         {
@@ -3197,19 +3216,20 @@
           "currentScopeReason": "This settlement rejection fixture uses a created level-3 spell slot beyond the current level-1/2 scope.",
           "currentReplay": "transit-only",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "routeConnectorPath": "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-battle-settlement.mbt.qnt exposes doRejectAmbiguousCreatedSpellSlotSource under branch family step."
+              "packages/character-battle-runtime/character-battle-settlement.mbt.qnt exposes doRejectAmbiguousCreatedSpellSlotSource under branch family step.",
+              "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt records ambiguous created-slot settlement rejection through HandoffResourceProjectionRouteSubject, HandoffSettlementRejectionFill, HandoffSpellResourceProjectionHoleFamily, HandoffSettlementConflictHoleFamily, and CharacterBattleResourceProjectionOwner."
             ],
             "rawDomainFacts": [
               "This settlement rejection fixture uses a created level-3 spell slot beyond the current level-1/2 scope.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic defines created slots and their Long Rest expiry; settlement must preserve source-exact Spell Slot accounting."
             ],
-            "blockers": [
-              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
-            ]
+            "blockers": []
           }
         },
         {
@@ -3219,19 +3239,20 @@
           "currentScopeReason": "This Font of Magic branch creates a level-3 spell slot beyond the current level-1/2 scope.",
           "currentReplay": "transit-only",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "routeConnectorPath": "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doFontOfMagicPointsToSlot under branch family step."
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doFontOfMagicPointsToSlot under branch family step.",
+              "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt records accepted Font of Magic point-to-slot projection through HandoffFeatureResourceProjectionRouteSubject, HandoffResourceProjectionRouteSubject, and CharacterBattleResourceProjectionOwner."
             ],
             "rawDomainFacts": [
               "This Font of Magic branch creates a level-3 spell slot beyond the current level-1/2 scope.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic defines creating a level-3 Spell Slot for 5 Sorcery Points at minimum Sorcerer level 5."
             ],
-            "blockers": [
-              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
-            ]
+            "blockers": []
           }
         },
         {
@@ -3241,15 +3262,18 @@
           "currentScopeReason": "This metamagic bridge fixture uses a five-point Sorcery Point pool beyond the current level-1/2 scope.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "routeConnectorPath": "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doMetamagicBridgeUsesSharedPointPool under branch family step."
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doMetamagicBridgeUsesSharedPointPool under branch family step.",
+              "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt records the Metamagic bridge through feature-resource projection, battle mutation entry, and resource projection entry without adding a third point-pool owner."
             ],
             "rawDomainFacts": [
               "This metamagic bridge fixture uses a five-point Sorcery Point pool beyond the current level-1/2 scope.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic and #Level 2: Metamagic define the shared Sorcery Point pool used by created slots and Metamagic."
             ],
             "blockers": []
           }
@@ -3261,19 +3285,20 @@
           "currentScopeReason": "This rejection branch uses created level-3 slot ambiguity facts beyond the current level-1/2 scope.",
           "currentReplay": "transit-only",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "routeConnectorPath": "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doRejectFontOfMagicAmbiguousSlotSource under branch family step."
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doRejectFontOfMagicAmbiguousSlotSource under branch family step.",
+              "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt records ambiguous created-slot source rejection through HandoffResourceProjectionRouteSubject, HandoffSpellResourceProjectionHoleFamily, HandoffSettlementConflictHoleFamily, and CharacterBattleResourceProjectionOwner."
             ],
             "rawDomainFacts": [
               "This rejection branch uses created level-3 slot ambiguity facts beyond the current level-1/2 scope.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic defines created Spell Slots as feature-created resources that vanish on Long Rest."
             ],
-            "blockers": [
-              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
-            ]
+            "blockers": []
           }
         },
         {
@@ -3283,19 +3308,20 @@
           "currentScopeReason": "This rejection branch uses higher-slot Font of Magic creation facts beyond the current level-1/2 scope.",
           "currentReplay": "transit-only",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "routeConnectorPath": "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doRejectFontOfMagicInsufficientPoints under branch family step."
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doRejectFontOfMagicInsufficientPoints under branch family step.",
+              "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt records insufficient Sorcery Point rejection through HandoffFeatureResourceProjectionRouteSubject, HandoffFeatureResourceProjectionHoleFamily, and CharacterBattleResourceProjectionOwner."
             ],
             "rawDomainFacts": [
               "This rejection branch uses higher-slot Font of Magic creation facts beyond the current level-1/2 scope.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic defines the Sorcery Point cost table for creating Spell Slots."
             ],
-            "blockers": [
-              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
-            ]
+            "blockers": []
           }
         },
         {
@@ -3329,17 +3355,18 @@
           "levelDenominatorScope": "in-denominator",
           "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt exposes doRejectPrerequisiteRetainedInvocationReplacement under branch family step."
+              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt exposes doRejectPrerequisiteRetainedInvocationReplacement under branch family step.",
+              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt records prerequisite-retained invocation replacement rejection through CreationSelectedReferenceRouteSubject, CreationUnitChoiceHoleFamily, and CreationSupportProfileAdmissionOwner."
             ],
             "rawDomainFacts": [
               "This prerequisite-retained invocation replacement rejection uses Warlock level 5 facts.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Classes/Warlock.md#Level 1: Eldritch Invocations defines invocation prerequisites and forbids replacing an invocation that is a prerequisite for another invocation the character has."
             ],
-            "blockers": [
-              "Task 8 routes the level-1/2 Warlock invocation creation surface only; this level-band replacement branch remains deferred to L15-RR12-LEVEL5-SCOPE-PROMOTION."
-            ]
+            "blockers": []
           }
         }
       ],
