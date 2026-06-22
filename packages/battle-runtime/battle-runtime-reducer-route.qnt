@@ -27,6 +27,8 @@ module battleRuntimeReducerRoute {
     | DeathSavingThrowRouteSubject
     | ConcentrationTeardownRouteSubject
     | CommandEffectRouteSubject
+    | ReactionSpellRouteSubject
+    | InterruptStackResumeRouteSubject
     | RollModifierEffectRouteSubject
     | ScalarBuffEffectRouteSubject
     | RepeatSaveConditionEffectRouteSubject
@@ -73,6 +75,12 @@ module battleRuntimeReducerRoute {
         holes: Set[BattleHoleFamilyKind],
         owner: ReducerRouteOwnerGroup,
       })
+    | RouteResolveBattleInterrupt({
+        subject: ReducerRouteSubjectFamily,
+        fill: BattleFillKind,
+        holes: Set[BattleHoleFamilyKind],
+        owner: ReducerRouteOwnerGroup,
+      })
 
   pure def routeStartBattle(
     owner: ReducerRouteOwnerGroup,
@@ -110,6 +118,19 @@ module battleRuntimeReducerRoute {
   ): ReducerRouteEvent =
     RouteResolveBattleSubjectWithoutFill({
       subject: subject,
+      holes: holes,
+      owner: owner,
+    })
+
+  pure def routeResolveBattleInterrupt(
+    subject: ReducerRouteSubjectFamily,
+    fill: BattleFillKind,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    RouteResolveBattleInterrupt({
+      subject: subject,
+      fill: fill,
       holes: holes,
       owner: owner,
     })

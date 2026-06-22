@@ -839,6 +839,8 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "deathSavingThrow",
   "concentrationTeardown",
   "commandEffect",
+  "reactionSpell",
+  "interruptStackResume",
   "rollModifierEffect",
   "scalarBuffEffect",
   "repeatSaveConditionEffect",
@@ -964,6 +966,13 @@ type ReducerRouteEvent =
   | {
       readonly kind: "resolveBattleSubjectWithoutFill";
       readonly subject: ReducerRouteSubjectFamily;
+      readonly holes: readonly ReducerRouteHole[];
+      readonly owner: ReducerRouteOwnerGroup;
+    }
+  | {
+      readonly kind: "resolveBattleInterrupt";
+      readonly subject: ReducerRouteSubjectFamily;
+      readonly fill: ReducerRouteFill;
       readonly holes: readonly ReducerRouteHole[];
       readonly owner: ReducerRouteOwnerGroup;
     };
@@ -5590,6 +5599,8 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   DeathSavingThrowRouteSubject: "deathSavingThrow",
   ConcentrationTeardownRouteSubject: "concentrationTeardown",
   CommandEffectRouteSubject: "commandEffect",
+  ReactionSpellRouteSubject: "reactionSpell",
+  InterruptStackResumeRouteSubject: "interruptStackResume",
   RollModifierEffectRouteSubject: "rollModifierEffect",
   ScalarBuffEffectRouteSubject: "scalarBuffEffect",
   RepeatSaveConditionEffectRouteSubject: "repeatSaveConditionEffect",
@@ -5731,6 +5742,16 @@ function decodeReducerRouteEvent(raw: unknown): ReducerRouteEvent {
     return {
       kind: "resolveBattleSubjectWithoutFill",
       subject: reducerRouteSubject(quintField(payload, "subject")),
+      holes: reducerRouteHoles(quintField(payload, "holes")),
+      owner: reducerRouteOwner(quintField(payload, "owner")),
+    };
+  }
+  if (tag === "RouteResolveBattleInterrupt") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "resolveBattleInterrupt",
+      subject: reducerRouteSubject(quintField(payload, "subject")),
+      fill: reducerRouteFill(quintField(payload, "fill")),
       holes: reducerRouteHoles(quintField(payload, "holes")),
       owner: reducerRouteOwner(quintField(payload, "owner")),
     };

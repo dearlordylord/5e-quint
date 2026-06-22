@@ -701,21 +701,31 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
-          "subjectFamily": "reaction spell and interrupt-stack route",
+          "subjectFamily": "interrupt stack continuation and reaction resume route",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_interrupt"
+          ],
+          "durableStateOwner": "BattleState owns interrupt-stack push/resume frames, reaction availability, spell-slot/action-economy spend, active effects, Hit Points, and continuation holes; table choices stay boundary fills.",
+          "acceptanceCondition": "Target replay evidence routes nested decline, reaction active-effect mutation, and resumed procedure continuation through owner route events without naming authored spells or fixture action names.",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-interrupt-stack-resume.route.mbt.qnt exposes qRoute for InterruptStackResumeRouteSubject through pending interrupt/continuation discovery, interrupt-stack push/resume, spell-slot/action-economy, active-effect, save-gated spell, weapon-attack, and Hit Point owners."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Playing-the-Game.md#Reactions establishes that an interrupted creature can continue after the Reaction.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Ready-Action establishes readied spell release with a Reaction.",
+              "UBIQUITOUS_LANGUAGE.md names Offer, Decline, Advance, Reaction, Spell Effect, and Readied Spell Response."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {
@@ -879,21 +889,32 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
-          "subjectFamily": "reaction spell and interrupt-stack route",
+          "subjectFamily": "reaction spell casting-time and interrupt route",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_interrupt"
+          ],
+          "durableStateOwner": "BattleState owns reaction availability, reaction spell-slot spend, triggering spell slot spend or non-spend, interrupt-stack clear/resume, and Hit Point effects; table-trigger facts and chosen reaction decisions stay boundary fills.",
+          "acceptanceCondition": "Target replay evidence routes Counterspell end/resume and after-damage reaction spell resolution through battle owners rather than authored spell identity or a local reaction replay island.",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 2,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt exposes qRoute for ReactionSpellRouteSubject through pending interrupt decisions, reaction spell-slot/action-economy, interrupt-stack, resumed slot-spell, and Hit Point owners."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting-Time establishes Reaction casting-time triggers.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Reactions and .references/srd-5.2.1/Rules-Glossary.md#Reaction establish reaction spend and interrupted-turn continuation.",
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell establishes spell interruption and non-expenditure of the countered spell slot.",
+              "UBIQUITOUS_LANGUAGE.md names Reaction, Spell Slot, Magic Action, Saving Throw, Damage Roll, Offer, Decline, and Advance."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {
@@ -2732,15 +2753,18 @@
           "currentScopeReason": "Counterspell is a level-3 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
-          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt exposes doCounterspellAllowsSpellCastResume under branch family step."
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt exposes doCounterspellAllowsSpellCastResume under branch family step.",
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt records the Counterspell resume path through resolve_battle_interrupt plus resumed subject Hit Point and slot owners."
             ],
             "rawDomainFacts": [
               "Counterspell is a level-3 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Reactions establishes that an interrupted creature can continue after the Reaction."
             ],
             "blockers": []
           }
@@ -2752,15 +2776,18 @@
           "currentScopeReason": "Counterspell is a level-3 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
-          "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt exposes doCounterspellEndsSpellCast under branch family step."
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt exposes doCounterspellEndsSpellCast under branch family step.",
+              "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt records the Counterspell end path through resolve_battle_interrupt, interrupt-stack clearing, and reaction spell slot/action-economy owners."
             ],
             "rawDomainFacts": [
               "Counterspell is a level-3 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell establishes that an interrupted slotted spell has no effect and its slot is not expended."
             ],
             "blockers": []
           }
