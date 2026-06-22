@@ -595,22 +595,25 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
-          "subjectFamily": "companion lifecycle spell-effect route",
+          "subjectFamily": "companion lifecycle, shared-sense, touch-delivery, and familiar Reaction route",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt records CompanionLifecycleRouteSubject, CompanionSharedSensesRouteSubject, CompanionTouchDeliveryRouteSubject, and CompanionReactionAttackRouteSubject evidence through battle companion, action-economy, spell-slot/action-economy, active-effect, stat-block action, target-selection, attack-roll, and Hit Point owners.",
+              "packages/battle-runtime/src/companion-state.ts stores BattleCompanions as one BattleCompanionState entry per owner on BattleState; the route connector does not introduce a route-local companion ledger."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Find Familiar defines familiar form admission, one familiar at a time, telepathic connection, Bonus Action shared senses, Touch spell delivery using the familiar's Reaction, independent Initiative, and non-attack familiar actions.",
+              ".references/srd-5.2.1/Classes/Warlock.md#Pact of the Chain lets the owner forgo one Attack-action attack so the familiar makes one attack with its Reaction.",
+              "UBIQUITOUS_LANGUAGE.md defines Companion, Companion Control, Companion Execution, Table Decision, Spell Invocation, Bonus Action, Reaction, Attack Roll, and Hit Points."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
@@ -1457,22 +1460,26 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
           "subjectFamily": "object-target spell attack boundary route",
           "branchObligations": 7,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt records ObjectTargetSpellAttackRouteSubject evidence through the object-target boundary, attack-roll, active-effect, and stale-replay hole-frontier owners.",
+              "The connector intentionally has no reducer-route hole for object target identity, object Armor Class, object Hit Points, or spatial/range facts; those remain table-supplied boundary facts."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Starry Wisp defines the one creature-or-object target, ranged spell attack, Radiant damage, Dim Light, and Invisible-benefit denial.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack defines target choice, attack-roll, and hit-damage order for object targets.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Breaking Objects defines object Armor Class and Hit Point facts as object/table facts.",
+              "UBIQUITOUS_LANGUAGE.md defines Table Decision, Attack Roll, Damage, Spell Invocation, and Spell Effect."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",

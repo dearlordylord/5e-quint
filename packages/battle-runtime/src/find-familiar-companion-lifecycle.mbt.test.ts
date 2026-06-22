@@ -29,17 +29,24 @@ import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintRecordField,
   quintStateRecord,
   quintVariantTag,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteResolveBattleSubjectWithoutFill,
+  reducerRouteStartBattle,
   run,
   stateCheck,
+  type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   battleId,
@@ -143,6 +150,16 @@ const driverSchema = {
   step: {},
 } as const;
 
+const findFamiliarCompanionRouteDriverSchema = {
+  init: {},
+  doRouteFamiliarCreation: {},
+  doRouteFamiliarReplacement: {},
+  doRouteSharedSenses: {},
+  doRouteTouchDelivery: {},
+  doRoutePactFamiliarAttack: {},
+  step: {},
+} as const;
+
 function createFindFamiliarCompanionLifecycleDriver() {
   return defineDriver(driverSchema, () => {
     let state = initialRuntimeState();
@@ -171,9 +188,56 @@ function createFindFamiliarCompanionLifecycleDriver() {
   });
 }
 
+type FindFamiliarCompanionRouteState = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const findFamiliarCompanionRouteStart = reducerRouteStartBattle(
+  "battleActionEconomy",
+);
+
+function createFindFamiliarCompanionRouteDriver() {
+  return defineDriver(findFamiliarCompanionRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [findFamiliarCompanionRouteStart];
+    return {
+      init: () => {
+        route = [findFamiliarCompanionRouteStart];
+      },
+      doRouteFamiliarCreation: () => {
+        route = routeFamiliarLifecycle();
+      },
+      doRouteFamiliarReplacement: () => {
+        route = routeFamiliarLifecycle();
+      },
+      doRouteSharedSenses: () => {
+        route = routeSharedSenses();
+      },
+      doRouteTouchDelivery: () => {
+        route = routeTouchDelivery();
+      },
+      doRoutePactFamiliarAttack: () => {
+        route = routePactFamiliarAttack();
+      },
+      step: () => {},
+      getState: (): FindFamiliarCompanionRouteState => ({ route }),
+    };
+  });
+}
+
 const findFamiliarCompanionStateCheck = stateCheck(
   normalizeFindFamiliarCompanionQuintState,
   compareFindFamiliarCompanionStates,
+);
+
+const findFamiliarCompanionRouteStateCheck = stateCheck(
+  normalizeFindFamiliarCompanionRouteQuintState,
+  (
+    spec: FindFamiliarCompanionRouteState,
+    impl: FindFamiliarCompanionRouteState,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
 );
 
 describe("Find Familiar companion lifecycle MBT parity", () => {
@@ -250,7 +314,127 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
       stateCheck: findFamiliarCompanionStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes companion lifecycle and familiar actions through battle owners", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createFindFamiliarCompanionRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: findFamiliarCompanionRouteStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
 });
+
+function routeFamiliarLifecycle(): readonly ReducerRouteEvent[] {
+  return [
+    findFamiliarCompanionRouteStart,
+    reducerRouteDiscoverBattleActs({
+      subject: "companionLifecycle",
+      holes: [],
+      owner: "battleCompanion",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "companionLifecycle",
+      holes: [],
+      owner: "battleCompanion",
+    }),
+  ];
+}
+
+function routeSharedSenses(): readonly ReducerRouteEvent[] {
+  return [
+    findFamiliarCompanionRouteStart,
+    reducerRouteDiscoverBattleActs({
+      subject: "companionSharedSenses",
+      holes: [],
+      owner: "battleCompanion",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "companionSharedSenses",
+      holes: [],
+      owner: "battleActionEconomy",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "companionSharedSenses",
+      holes: [],
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function routeTouchDelivery(): readonly ReducerRouteEvent[] {
+  return [
+    findFamiliarCompanionRouteStart,
+    reducerRouteDiscoverBattleActs({
+      subject: "companionTouchDelivery",
+      holes: [{ kind: "targetChoice" }],
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "companionTouchDelivery",
+      fill: "targetChoice",
+      holes: [{ kind: "rolledDice" }],
+      owner: "battleCompanion",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "companionTouchDelivery",
+      fill: "rolledDice",
+      holes: [],
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "companionTouchDelivery",
+      holes: [],
+      owner: "battleActionEconomy",
+    }),
+  ];
+}
+
+function routePactFamiliarAttack(): readonly ReducerRouteEvent[] {
+  return [
+    findFamiliarCompanionRouteStart,
+    reducerRouteDiscoverBattleActs({
+      subject: "companionReactionAttack",
+      holes: [{ kind: "targetChoice" }],
+      owner: "battleCompanion",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "companionReactionAttack",
+      holes: [{ kind: "targetChoice" }],
+      owner: "battleStatBlockAction",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "companionReactionAttack",
+      fill: "targetChoice",
+      holes: [{ kind: "attackRoll" }],
+      owner: "battleTargetSelection",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "companionReactionAttack",
+      fill: "attackRoll",
+      holes: [{ kind: "rolledDice" }],
+      owner: "battleAttackRoll",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "companionReactionAttack",
+      fill: "rolledDice",
+      holes: [],
+      owner: "battleHitPoint",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "companionReactionAttack",
+      holes: [],
+      owner: "battleActionEconomy",
+    }),
+  ];
+}
 
 function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
   const result = startBattle({
@@ -681,6 +865,15 @@ function normalizeFindFamiliarCompanionQuintState(
     spellSlotCommitted: booleanField(state, "qSpellSlotCommitted"),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
     lastResult: scenarioResult,
+  };
+}
+
+function normalizeFindFamiliarCompanionRouteQuintState(
+  raw: unknown,
+): FindFamiliarCompanionRouteState {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 

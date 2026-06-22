@@ -35,6 +35,11 @@ module battleRuntimeReducerRoute {
     | TurnBoundaryEffectLifecycleRouteSubject
     | ZeroHitPointSpellEffectTeardownRouteSubject
     | UnitFeatureBonusActionRouteSubject
+    | CompanionLifecycleRouteSubject
+    | CompanionSharedSensesRouteSubject
+    | CompanionTouchDeliveryRouteSubject
+    | CompanionReactionAttackRouteSubject
+    | ObjectTargetSpellAttackRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner
@@ -56,6 +61,8 @@ module battleRuntimeReducerRoute {
     | BattleFeatureResourceOwner
     | BattleTemporaryHitPointOwner
     | BattleTurnBoundaryOwner
+    | BattleCompanionOwner
+    | BattleObjectTargetBoundaryOwner
 
   type ReducerRouteEvent =
     | RouteStartBattle({ owner: ReducerRouteOwnerGroup })

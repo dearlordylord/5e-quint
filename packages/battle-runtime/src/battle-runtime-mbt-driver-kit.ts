@@ -847,6 +847,11 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "turnBoundaryEffectLifecycle",
   "zeroHitPointSpellEffectTeardown",
   "unitFeatureBonusAction",
+  "companionLifecycle",
+  "companionSharedSenses",
+  "companionTouchDelivery",
+  "companionReactionAttack",
+  "objectTargetSpellAttack",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -870,6 +875,8 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleFeatureResource",
   "battleTemporaryHitPoint",
   "battleTurnBoundary",
+  "battleCompanion",
+  "battleObjectTargetBoundary",
 ] as const;
 type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
 const REDUCER_ROUTE_HOLES = [
@@ -5608,6 +5615,11 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   ZeroHitPointSpellEffectTeardownRouteSubject:
     "zeroHitPointSpellEffectTeardown",
   UnitFeatureBonusActionRouteSubject: "unitFeatureBonusAction",
+  CompanionLifecycleRouteSubject: "companionLifecycle",
+  CompanionSharedSensesRouteSubject: "companionSharedSenses",
+  CompanionTouchDeliveryRouteSubject: "companionTouchDelivery",
+  CompanionReactionAttackRouteSubject: "companionReactionAttack",
+  ObjectTargetSpellAttackRouteSubject: "objectTargetSpellAttack",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -5630,6 +5642,8 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleFeatureResourceOwner: "battleFeatureResource",
   BattleTemporaryHitPointOwner: "battleTemporaryHitPoint",
   BattleTurnBoundaryOwner: "battleTurnBoundary",
+  BattleCompanionOwner: "battleCompanion",
+  BattleObjectTargetBoundaryOwner: "battleObjectTargetBoundary",
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
