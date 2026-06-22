@@ -671,26 +671,25 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE",
           "subjectFamily": "zero-Hit-Point stabilization feature/spell substrate",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
-              "No copied source qRoute connector currently extracts zero-Hit-Point stabilization feature/spell substrate from packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt records ZeroHitPointStabilizationRouteSubject evidence through BattleActionEconomyOwner for target-choice discovery and BattleHitPointAndZeroHpLifecycleOwner for the Stable lifecycle mutation.",
+              "Selected healing or stabilization identity remains a catalog, support-profile admission, and SRD fixture boundary; reducer evidence flows through 0-Hit-Point, non-dead target state, Stable state, Unconscious state, Death Saving Throw counters, and typed target-choice facts."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is zero-Hit-Point stabilization feature/spell substrate."
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spare the Dying defines the authored spell boundary as choosing a 0-Hit-Point non-dead creature that becomes Stable.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Death Saving Throws and #Stabilizing a Character define Stable as a zero-Hit-Point lifecycle state that resets Death Saving Throw counters while leaving the creature Unconscious.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Temporary Hit Points and UBIQUITOUS_LANGUAGE.md#Hit Points and Death keep Temporary Hit Points, true healing, Stable state, and Death Saving Throw state distinct."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE before cleanroom target replay may infer this selected-identity behavior.",
-              "Route stabilization through the BattleState zero-Hit-Point lifecycle owner before selected healing/stabilization identity replay counts."
-            ]
+            "blockers": []
           },
-          "followUpTaskId": "L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE"
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
@@ -3284,7 +3283,7 @@
           "taskId": "L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE",
           "subjectFamily": "zero-Hit-Point stabilization feature/spell substrate",
           "requiredSourceWork": [
-            "Route stabilization through the BattleState zero-Hit-Point lifecycle owner before selected healing/stabilization identity replay counts."
+            "Task 26 supplied packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt as generic substrate evidence for 0-Hit-Point non-dead target stabilization, Stable state, Unconscious state, Death Saving Throw counter reset, and Temporary Hit Point non-healing separation before selected healing/stabilization identity replay counts."
           ]
         },
         {

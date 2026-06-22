@@ -26,6 +26,7 @@ module battleRuntimeReducerRoute {
     | StatBlockActionRouteSubject
     | CreatureAttackRouteSubject
     | DeathSavingThrowRouteSubject
+    | ZeroHitPointStabilizationRouteSubject
     | ConcentrationTeardownRouteSubject
     | CommandEffectRouteSubject
     | ReactionSpellRouteSubject
