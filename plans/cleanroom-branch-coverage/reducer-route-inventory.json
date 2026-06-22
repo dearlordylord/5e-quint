@@ -324,23 +324,29 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
-          "route": "substrate-first",
-          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle attack/rider bundle requiring split durable route owners",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES",
+          "subjectFamily": "generic chained spell-attack procedure route",
+          "requiredReducerEntrypoints": [
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns the chained spell-attack procedure fill frontier through the typed spell procedure subject: damage-type choice, per-step target history, Attack Roll resolution, Hit Point damage, and leap continuation. Table-supplied spell-target and leap-range facts stay boundary fills.",
+          "acceptanceCondition": "Target replay evidence routes chained spell attack sequence fills through SpellAttackProcedureRouteSubject and BattleSpellAttackProcedureOwner without selected spell identity dispatch or a single attack-route replay island.",
           "branchObligations": 10,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt exposes qRoute for SpellAttackProcedureRouteSubject through spell-slot/action-economy, spell-attack procedure, target-selection, attack-roll, and Hit Point owners."
             ],
             "rawDomainFacts": [
-              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
-              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
-              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Chromatic Orb defines the damage-type choice, ranged Spell Attack, duplicate-d8 leap admission, higher-slot leap cap, and one target per casting represented by the generic chained spell-attack procedure route.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Attack Roll, #Damage Roll, #Damage Types, and #Spell Attack define the generic roll and damage vocabulary used by the route owners.",
+              "UBIQUITOUS_LANGUAGE.md defines Attack Roll, Damage, Damage Type, Resolve, Apply, and Advance terms used by the procedure route owner."
             ],
-            "blockers": [
-              "Split chained spell-attack sequence routing after the generic multi-step spell procedure owner is promoted; the driver carries spell procedure state, target history, damage-type choice, attack-roll, damage, and leap continuation state beyond a single attack/stat-block route connector."
-            ]
+            "blockers": []
           }
         },
         {

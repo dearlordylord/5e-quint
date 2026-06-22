@@ -56,6 +56,13 @@ import {
   statBlockCreature,
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture-support.ts";
+import {
+  chromaticOrbUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -820,6 +827,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "hitPointRestoration",
   "weaponAttack",
   "spellAttack",
+  "spellAttackProcedure",
   "afterHitDamageRider",
   "statBlockAction",
   "creatureAttack",
@@ -837,6 +845,7 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleHoleFrontier",
   "battleTargetSelection",
   "battleAttackRoll",
+  "battleSpellAttackProcedure",
   "battleAbilityCheck",
   "battleHitPoint",
   "battleHitPointAndZeroHpLifecycle",
@@ -972,6 +981,22 @@ type ReducerRoutedSpellAttackOrderingProjection =
   SpellAttackOrderingProjection & {
     readonly route: readonly ReducerRouteEvent[];
   };
+type ReducerRoutedChainedAttackProcedureProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ActionSpellSubject = Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+>;
+type ChainedAttackProcedureSubject = ActionSpellSubject & {
+  readonly invocation: ActionSpellSubject["invocation"] & {
+    readonly procedure: "chainedSpellAttackDamage";
+  };
+};
+type ChainedAttackProcedureAct = ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: ChainedAttackProcedureSubject;
+};
+type ChainedAttackProcedureSlotLevel = 1 | 2;
 type ReducerRoutedHitPointRestorationOrderingProjection =
   HitPointRestorationOrderingProjection & {
     readonly route: readonly ReducerRouteEvent[];
@@ -1114,6 +1139,12 @@ const deathSavingThrowTargetId = combatantId("death-saving-throw-target");
 const concentrationBreakAttackerId = combatantId(
   "concentration-break-attacker",
 );
+const chainedAttackProcedureSecondTargetId = combatantId(
+  "chained-attack-procedure-second-target",
+);
+const chainedAttackProcedureThirdTargetId = combatantId(
+  "chained-attack-procedure-third-target",
+);
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 const statBlockCatalogResult = buildStatBlockCatalog({
@@ -1251,6 +1282,21 @@ const spellAttackOrderingDriverSchema = {
   doFillTargetChoiceBeforeDamageType: {},
   doFillDamageTypeAfterTargetChoice: {},
   doFillTargetChoiceAfterDamageType: {},
+  step: {},
+} as const;
+
+const chainedAttackProcedureRouteDriverSchema = {
+  init: {},
+  doStartCast: { slotLevel: mbtPickSchemas.int },
+  doChooseDamageType: {},
+  doChooseInitialTarget: {},
+  doResolveStep0AttackHit: {},
+  doResolveStep0DamageNoDuplicate: {},
+  doResolveStep0DamageDuplicate: {},
+  doChooseFirstLeapTarget: {},
+  doResolveStep1AttackHit: {},
+  doResolveStep1DuplicateDamageSlot1Limit: {},
+  doResolveStep1DuplicateDamageSlot2AllowsLeap: {},
   step: {},
 } as const;
 
@@ -3307,6 +3353,222 @@ export function createSpellAttackOrderingRouteDriver() {
   });
 }
 
+const CHAINED_ATTACK_PROCEDURE_ROUTE_SUBJECT =
+  "spellAttackProcedure" satisfies ReducerRouteSubjectFamily;
+const CHAINED_ATTACK_PROCEDURE_DAMAGE_TYPE = "fire" satisfies DamageType;
+const CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_FACES = [
+  1,
+  2,
+  3,
+] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_SLOT2_FACES = [
+  1,
+  2,
+  3,
+  4,
+] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_FACES = [
+  2,
+  2,
+  5,
+] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_SLOT2_FACES = [
+  2,
+  2,
+  5,
+  1,
+] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP1_SLOT1_LIMIT_FACES = [
+  1,
+  1,
+  1,
+] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP1_SLOT2_LEAP_FACES = [
+  1,
+  1,
+  1,
+  1,
+] as const;
+
+export function createChainedAttackProcedureRouteDriver() {
+  return defineDriver(chainedAttackProcedureRouteDriverSchema, () => {
+    let state = chainedAttackProcedureBattle();
+    let subject: ChainedAttackProcedureSubject | null = null;
+    let slotLevel: ChainedAttackProcedureSlotLevel | null = null;
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      state = chainedAttackProcedureBattle();
+      subject = null;
+      slotLevel = null;
+      fills = [];
+      holes = [];
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+    }
+
+    function recordResolvedFill(input: {
+      readonly fill: BattleFill;
+      readonly expectedTag: "needsHoles" | "resolved";
+      readonly routeFill: ReducerRouteFill;
+      readonly owners: readonly ReducerRouteOwnerGroup[];
+    }): void {
+      const currentSubject = requireChainedAttackProcedureSubject(subject);
+      fills = [...fills, input.fill];
+      const result = resolveBattleSubject({
+        state,
+        subject: currentSubject,
+        fills,
+      });
+      if (result.tag !== input.expectedTag) {
+        throw new Error(
+          `Expected chained attack procedure ${input.expectedTag}, got ${
+            result.tag
+          }: ${"message" in result ? result.message : ""}`,
+        );
+      }
+      holes = result.tag === "needsHoles" ? result.holes : [];
+      route = [
+        ...route,
+        ...input.owners.map((owner) =>
+          reducerRouteResolveBattleSubject({
+            subject: CHAINED_ATTACK_PROCEDURE_ROUTE_SUBJECT,
+            fill: input.routeFill,
+            holes,
+            owner,
+          }),
+        ),
+      ];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doStartCast: (input: { readonly slotLevel: number }) => {
+        slotLevel = chainedAttackProcedureSlotLevel(input.slotLevel);
+        const act = chainedAttackProcedureAct(state, slotLevel);
+        subject = act.subject;
+        fills = [];
+        holes = act.initialHoles;
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: CHAINED_ATTACK_PROCEDURE_ROUTE_SUBJECT,
+            holes,
+            owner: "battleSpellSlotAndActionEconomy",
+          }),
+        ];
+      },
+      doChooseDamageType: () => {
+        recordResolvedFill({
+          fill: spellDamageTypeChoiceFill(
+            requireTypedHole(holes, "damageTypeChoice"),
+            CHAINED_ATTACK_PROCEDURE_DAMAGE_TYPE,
+          ),
+          expectedTag: "needsHoles",
+          routeFill: "damageTypeChoice",
+          owners: ["battleSpellAttackProcedure"],
+        });
+      },
+      doChooseInitialTarget: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureTargetFill(
+            requireTypedHole(holes, "targetChoice"),
+            spellTargetId,
+          ),
+          expectedTag: "needsHoles",
+          routeFill: "targetChoice",
+          owners: ["battleTargetSelection", "battleSpellAttackProcedure"],
+        });
+      },
+      doResolveStep0AttackHit: () => {
+        recordResolvedFill({
+          fill: attackRollFill(requireTypedHole(holes, "attackRoll"), {
+            total: 18,
+            naturalD20: 12,
+          }),
+          expectedTag: "needsHoles",
+          routeFill: "attackRoll",
+          owners: ["battleAttackRoll"],
+        });
+      },
+      doResolveStep0DamageNoDuplicate: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureDamageRollFill(
+            requireTypedHole(holes, "rolledDice"),
+            chainedAttackProcedureStep0NoDuplicateFaces(
+              requireChainedAttackProcedureSlotLevel(slotLevel),
+            ),
+          ),
+          expectedTag: "resolved",
+          routeFill: "rolledDice",
+          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
+        });
+      },
+      doResolveStep0DamageDuplicate: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureDamageRollFill(
+            requireTypedHole(holes, "rolledDice"),
+            chainedAttackProcedureStep0DuplicateFaces(
+              requireChainedAttackProcedureSlotLevel(slotLevel),
+            ),
+          ),
+          expectedTag: "needsHoles",
+          routeFill: "rolledDice",
+          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
+        });
+      },
+      doChooseFirstLeapTarget: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureLeapTargetFill(
+            requireTypedHole(holes, "targetChoice"),
+          ),
+          expectedTag: "needsHoles",
+          routeFill: "targetChoice",
+          owners: ["battleTargetSelection", "battleSpellAttackProcedure"],
+        });
+      },
+      doResolveStep1AttackHit: () => {
+        recordResolvedFill({
+          fill: attackRollFill(requireTypedHole(holes, "attackRoll"), {
+            total: 18,
+            naturalD20: 12,
+          }),
+          expectedTag: "needsHoles",
+          routeFill: "attackRoll",
+          owners: ["battleAttackRoll"],
+        });
+      },
+      doResolveStep1DuplicateDamageSlot1Limit: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureDamageRollFill(
+            requireTypedHole(holes, "rolledDice"),
+            CHAINED_ATTACK_PROCEDURE_STEP1_SLOT1_LIMIT_FACES,
+          ),
+          expectedTag: "resolved",
+          routeFill: "rolledDice",
+          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
+        });
+      },
+      doResolveStep1DuplicateDamageSlot2AllowsLeap: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureDamageRollFill(
+            requireTypedHole(holes, "rolledDice"),
+            CHAINED_ATTACK_PROCEDURE_STEP1_SLOT2_LEAP_FACES,
+          ),
+          expectedTag: "needsHoles",
+          routeFill: "rolledDice",
+          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
+        });
+      },
+      step: () => {},
+      getState: () => ({ route }),
+    };
+  });
+}
+
 export function createHitPointRestorationOrderingDriver() {
   return defineDriver(hitPointRestorationOrderingDriverSchema, () => {
     let state = healingSpellOrderingBattle();
@@ -5304,6 +5566,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   HitPointRestorationRouteSubject: "hitPointRestoration",
   WeaponAttackRouteSubject: "weaponAttack",
   SpellAttackRouteSubject: "spellAttack",
+  SpellAttackProcedureRouteSubject: "spellAttackProcedure",
   AfterHitDamageRiderRouteSubject: "afterHitDamageRider",
   StatBlockActionRouteSubject: "statBlockAction",
   CreatureAttackRouteSubject: "creatureAttack",
@@ -5320,6 +5583,7 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleHoleFrontierOwner: "battleHoleFrontier",
   BattleTargetSelectionOwner: "battleTargetSelection",
   BattleAttackRollOwner: "battleAttackRoll",
+  BattleSpellAttackProcedureOwner: "battleSpellAttackProcedure",
   BattleAbilityCheckOwner: "battleAbilityCheck",
   BattleHitPointOwner: "battleHitPoint",
   BattleHitPointAndZeroHpLifecycleOwner: "battleHitPointAndZeroHpLifecycle",
@@ -5652,6 +5916,15 @@ function normalizeReducerRoutedSpellAttackOrderingQuintState(
   const state = quintStateRecord(raw);
   return {
     ...normalizeSpellAttackOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedChainedAttackProcedureQuintState(
+  raw: unknown,
+): ReducerRoutedChainedAttackProcedureProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
@@ -6160,6 +6433,16 @@ export const reducerRoutedSpellAttackOrderingStateCheck = stateCheck(
   (
     spec: ReducerRoutedSpellAttackOrderingProjection,
     impl: ReducerRoutedSpellAttackOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedChainedAttackProcedureStateCheck = stateCheck(
+  normalizeReducerRoutedChainedAttackProcedureQuintState,
+  (
+    spec: ReducerRoutedChainedAttackProcedureProjection,
+    impl: ReducerRoutedChainedAttackProcedureProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;
@@ -7233,6 +7516,62 @@ function spellAttackSubject(
   };
 }
 
+function chainedAttackProcedureAct(
+  state: BattleState,
+  slotLevel: ChainedAttackProcedureSlotLevel,
+): ChainedAttackProcedureAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ChainedAttackProcedureAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "chainedSpellAttackDamage" &&
+      candidate.subject.invocation.tag === "spellSlot" &&
+      Number(candidate.subject.invocation.slotLevel) === slotLevel,
+  );
+  if (act === undefined) {
+    throw new Error(
+      `Expected chained spell attack procedure act at slot ${slotLevel}.`,
+    );
+  }
+  return act;
+}
+
+function chainedAttackProcedureSlotLevel(
+  raw: number,
+): ChainedAttackProcedureSlotLevel {
+  if (raw === 1 || raw === 2) return raw;
+  throw new Error(`Unknown chained attack procedure slot level: ${raw}.`);
+}
+
+function requireChainedAttackProcedureSlotLevel(
+  slotLevel: ChainedAttackProcedureSlotLevel | null,
+): ChainedAttackProcedureSlotLevel {
+  if (slotLevel !== null) return slotLevel;
+  throw new Error("Expected chained attack procedure slot level.");
+}
+
+function chainedAttackProcedureStep0NoDuplicateFaces(
+  slotLevel: ChainedAttackProcedureSlotLevel,
+): readonly number[] {
+  return slotLevel === 1
+    ? CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_FACES
+    : CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_SLOT2_FACES;
+}
+
+function chainedAttackProcedureStep0DuplicateFaces(
+  slotLevel: ChainedAttackProcedureSlotLevel,
+): readonly number[] {
+  return slotLevel === 1
+    ? CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_FACES
+    : CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_SLOT2_FACES;
+}
+
+function requireChainedAttackProcedureSubject(
+  subject: ChainedAttackProcedureSubject | null,
+): ChainedAttackProcedureSubject {
+  if (subject !== null) return subject;
+  throw new Error("Expected chained attack procedure subject.");
+}
+
 function healingWordSubject(): Extract<
   BattleSubject,
   { readonly tag: "bonusActionSpell" }
@@ -7446,6 +7785,20 @@ function spellAttackOrderingBattle(
         spellId,
       }),
       skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function chainedAttackProcedureBattle(): BattleState {
+  return spellBattle({
+    preparedSpells: [spellRecord(chromaticOrbUnitId)],
+    spellSlots: [
+      { spellLevel: 1, count: 1 },
+      { spellLevel: 2, count: 1 },
+    ],
+    extraTargetIds: [
+      chainedAttackProcedureSecondTargetId,
+      chainedAttackProcedureThirdTargetId,
     ],
   });
 }
@@ -8585,6 +8938,44 @@ function spellTargetChoiceFill(
   };
 }
 
+function chainedAttackProcedureTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: spellCasterId,
+        targetId,
+        spellId: chromaticOrbUnitId,
+      },
+    ],
+  };
+}
+
+function chainedAttackProcedureLeapTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: chainedAttackProcedureSecondTargetId,
+    spatialFacts: [
+      {
+        kind: "spellLeapTargetWithinRange",
+        previousTargetId: spellTargetId,
+        targetId: chainedAttackProcedureSecondTargetId,
+        spellId: chromaticOrbUnitId,
+        rangeFeet: movementFeet(30),
+      },
+    ],
+  };
+}
+
 function spellTargetListFill(
   hole: BattleHole,
   spellId: string,
@@ -8820,6 +9211,13 @@ function damageRollFill(
   value: number,
 ): Extract<BattleFill, { readonly kind: "rolledDice" }> {
   return damageRollFillWithGroups(hole, [[value]]);
+}
+
+function chainedAttackProcedureDamageRollFill(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+  faces: readonly number[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  return damageRollFillWithGroups(hole, [faces]);
 }
 
 function damageRollFillWithGroups(

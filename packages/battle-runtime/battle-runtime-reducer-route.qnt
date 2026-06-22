@@ -15,6 +15,7 @@ module battleRuntimeReducerRoute {
     | HitPointRestorationRouteSubject
     | WeaponAttackRouteSubject
     | SpellAttackRouteSubject
+    | SpellAttackProcedureRouteSubject
     | AfterHitDamageRiderRouteSubject
     | StatBlockActionRouteSubject
     | CreatureAttackRouteSubject
@@ -30,6 +31,7 @@ module battleRuntimeReducerRoute {
     | BattleHoleFrontierOwner
     | BattleTargetSelectionOwner
     | BattleAttackRollOwner
+    | BattleSpellAttackProcedureOwner
     | BattleAbilityCheckOwner
     | BattleHitPointOwner
     | BattleHitPointAndZeroHpLifecycleOwner

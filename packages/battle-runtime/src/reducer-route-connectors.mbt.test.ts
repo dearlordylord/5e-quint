@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   MBT_TEST_TIMEOUT_MS,
   createAdrenalineRushRouteDriver,
+  createChainedAttackProcedureRouteDriver,
   createConcentrationBreakTeardownRouteDriver,
   createBattleRuntimeRouteDriver,
   createCommandOrderingRouteDriver,
@@ -23,6 +24,7 @@ import {
   reducerRoutedDeathSavingThrowStateCheck,
   reducerRoutedHitPointRestorationOrderingStateCheck,
   reducerRoutedAdrenalineRushStateCheck,
+  reducerRoutedChainedAttackProcedureStateCheck,
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedCommandOrderingStateCheck,
   reducerRoutedScalarBuffStateCheck,
@@ -110,6 +112,22 @@ describe("battle reducer route connector MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(5),
       stateCheck: reducerRoutedSpellAttackOrderingStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes chained spell Attack procedures through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-chained-attack-sequence.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createChainedAttackProcedureRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(8),
+      stateCheck: reducerRoutedChainedAttackProcedureStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 
