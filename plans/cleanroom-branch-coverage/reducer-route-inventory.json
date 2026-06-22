@@ -894,26 +894,33 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 11,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
@@ -1169,279 +1176,363 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+          "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+          "acceptanceCondition": "Target replay evidence routes Metamagic through typed option effect facts, spell procedure shape, Sorcery Point spend, and split option-specific reducer owners instead of dispatching on Metamagic option names.",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
-              "No copied source qRoute connector currently extracts metamagic resource governor and option-specific spell procedure substrates from packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt exposes qRoute for MetamagicSpellGovernorRouteSubject, MetamagicBonusActionCastingTimeRouteSubject, MetamagicSavingThrowProtectionRouteSubject, MetamagicSavingThrowRollModeRouteSubject, MetamagicDamageTypeSubstitutionRouteSubject, MetamagicEffectiveSpellLevelRouteSubject, MetamagicSpellRangeProjectionRouteSubject, MetamagicSpellDurationProjectionRouteSubject, MetamagicSpellComponentProjectionRouteSubject, MetamagicMissedSpellAttackRerollRouteSubject, and MetamagicDamageDiceRerollRouteSubject.",
+              "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt records Sorcery Point and stacking gates through BattleFeatureResourceOwner; Bonus Action casting-time and same-turn level-1-plus spell locks through action-economy, spell-slot, spell-attack procedure, target-selection, and turn-boundary owners; and option-specific effects through Saving Throw, damage adjustment, damage type, target selection, object target, active-effect, Concentration, Attack Roll, damage-roll, and Hit Point owners.",
+              "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed effectKind/stackingMode facts, spell procedure shape, resource owners, and hole/fill families."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is metamagic resource governor and option-specific spell procedure substrates."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic defines chosen Metamagic options, Sorcery Point costs, and the default one-option-per-spell rule.",
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Metamagic Options defines save protection, range projection, damage dice rerolls, duration projection, save roll mode, Bonus Action casting-time rewrite, missed spell Attack rerolls, component projection, damage-type substitution, and effective spell level projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Pool, Spend, Lock, Saving Throw, Attack Roll, Damage Type, Spell Component, Magic Action, and Bonus Action vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
@@ -3321,7 +3412,7 @@
           "taskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
           "subjectFamily": "metamagic resource governor and option-specific spell procedure substrates",
           "requiredSourceWork": [
-            "Route metamagic by typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
+            "Task 30 supplied packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt as generic Metamagic substrate evidence for typed option facts, Sorcery Point spend, spell timing governor, one-option-per-spell constraints, and option-specific spell procedure owners before selected metamagic identity replay counts."
           ]
         },
         {

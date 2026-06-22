@@ -866,6 +866,17 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "specialSpeedProjection",
   "forcedMovement",
   "activeFormLifecycle",
+  "metamagicSpellGovernor",
+  "metamagicBonusActionCastingTime",
+  "metamagicSavingThrowProtection",
+  "metamagicSavingThrowRollMode",
+  "metamagicDamageTypeSubstitution",
+  "metamagicEffectiveSpellLevel",
+  "metamagicSpellRangeProjection",
+  "metamagicSpellDurationProjection",
+  "metamagicSpellComponentProjection",
+  "metamagicMissedSpellAttackReroll",
+  "metamagicDamageDiceReroll",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -1028,6 +1039,9 @@ type ReducerRoutedWeaponMasteryPropertyProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
 type ReducerRoutedAttackActionAreaSaveDamageReplacementProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedMetamagicProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
 type ReducerRoutedSaveGatedSpellOrderingProjection =
@@ -1345,6 +1359,24 @@ const attackActionAreaSaveDamageReplacementRouteDriverSchema = {
   doRejectMissingResource: {},
   doRejectMismatchedArea: {},
   doRejectInvalidDamageRoll: {},
+  step: {},
+} as const;
+
+const metamagicRouteDriverSchema = {
+  init: {},
+  doRouteMetamagicResourceGovernor: {},
+  doRejectMetamagicResourceGovernor: {},
+  doRouteBonusActionCastingTime: {},
+  doRejectPriorLevelOnePlusSpell: {},
+  doRouteSavingThrowProtection: {},
+  doRouteSavingThrowRollMode: {},
+  doRouteDamageTypeSubstitution: {},
+  doRouteEffectiveSpellLevel: {},
+  doRouteSpellRangeProjection: {},
+  doRouteSpellDurationProjection: {},
+  doRouteSpellComponentProjection: {},
+  doRouteMissedSpellAttackReroll: {},
+  doRouteDamageDiceReroll: {},
   step: {},
 } as const;
 
@@ -3193,6 +3225,439 @@ export function createAttackActionAreaSaveDamageReplacementRouteDriver() {
       };
     },
   );
+}
+
+const METAMAGIC_SPELL_GOVERNOR_ROUTE_SUBJECT =
+  "metamagicSpellGovernor" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT =
+  "metamagicBonusActionCastingTime" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT =
+  "metamagicSavingThrowProtection" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT =
+  "metamagicSavingThrowRollMode" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT =
+  "metamagicDamageTypeSubstitution" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_EFFECTIVE_SPELL_LEVEL_ROUTE_SUBJECT =
+  "metamagicEffectiveSpellLevel" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_SPELL_RANGE_PROJECTION_ROUTE_SUBJECT =
+  "metamagicSpellRangeProjection" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_SPELL_DURATION_PROJECTION_ROUTE_SUBJECT =
+  "metamagicSpellDurationProjection" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_SPELL_COMPONENT_PROJECTION_ROUTE_SUBJECT =
+  "metamagicSpellComponentProjection" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_MISSED_SPELL_ATTACK_REROLL_ROUTE_SUBJECT =
+  "metamagicMissedSpellAttackReroll" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_DAMAGE_DICE_REROLL_ROUTE_SUBJECT =
+  "metamagicDamageDiceReroll" satisfies ReducerRouteSubjectFamily;
+const NO_METAMAGIC_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_ATTACK_ROLL_HOLES = [
+  "attackRoll",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_DAMAGE_ROLL_HOLES = [
+  "rolledDice",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_DAMAGE_TYPE_HOLES = [
+  "damageTypeChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_SAVING_THROW_HOLES = [
+  "savingThrowOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_TARGET_CHOICE_HOLES = [
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_TARGET_LIST_HOLES = [
+  "spellTargetList",
+] as const satisfies readonly ReducerRouteHole[];
+
+function metamagicDiscoverRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function metamagicResolveRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: input.subject,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function metamagicResolveWithoutFillRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function metamagicInitialRoute(): readonly ReducerRouteEvent[] {
+  return [reducerRouteStartBattle("battleSpellSlotAndActionEconomy")];
+}
+
+function metamagicResourceGovernorRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_SPELL_GOVERNOR_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SPELL_GOVERNOR_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function metamagicBonusActionCastingTimeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: METAMAGIC_ATTACK_ROLL_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleSpellAttackProcedure",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+  ];
+}
+
+function metamagicPriorLevelOnePlusSpellRejectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+  ];
+}
+
+function metamagicSavingThrowProtectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleDamageAdjustment",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function metamagicSavingThrowRollModeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleSavingThrowRollMode",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+  ];
+}
+
+function metamagicDamageTypeSubstitutionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT,
+      holes: METAMAGIC_DAMAGE_TYPE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT,
+      fill: "damageTypeChoice",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleDamageType",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleDamageRoll",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function metamagicEffectiveSpellLevelRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_EFFECTIVE_SPELL_LEVEL_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_EFFECTIVE_SPELL_LEVEL_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_EFFECTIVE_SPELL_LEVEL_ROUTE_SUBJECT,
+      fill: "spellTargetList",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function metamagicSpellRangeProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_SPELL_RANGE_PROJECTION_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SPELL_RANGE_PROJECTION_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleObjectTargetBoundary",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_SPELL_RANGE_PROJECTION_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function metamagicSpellDurationProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_SPELL_DURATION_PROJECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SPELL_DURATION_PROJECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SPELL_DURATION_PROJECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleConcentration",
+    }),
+  ];
+}
+
+function metamagicSpellComponentProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_SPELL_COMPONENT_PROJECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SPELL_COMPONENT_PROJECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+  ];
+}
+
+function metamagicMissedSpellAttackRerollRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_MISSED_SPELL_ATTACK_REROLL_ROUTE_SUBJECT,
+      holes: METAMAGIC_ATTACK_ROLL_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_MISSED_SPELL_ATTACK_REROLL_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: METAMAGIC_ATTACK_ROLL_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_MISSED_SPELL_ATTACK_REROLL_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_MISSED_SPELL_ATTACK_REROLL_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function metamagicDamageDiceRerollRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_DAMAGE_DICE_REROLL_ROUTE_SUBJECT,
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_DAMAGE_DICE_REROLL_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleDamageRoll",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_DAMAGE_DICE_REROLL_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleDamageRoll",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_DAMAGE_DICE_REROLL_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+export function createMetamagicRouteDriver() {
+  return defineDriver(metamagicRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = metamagicInitialRoute();
+
+    function reset(): void {
+      route = metamagicInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteMetamagicResourceGovernor: () => {
+        route = metamagicResourceGovernorRoute();
+      },
+      doRejectMetamagicResourceGovernor: () => {
+        route = metamagicResourceGovernorRoute();
+      },
+      doRouteBonusActionCastingTime: () => {
+        route = metamagicBonusActionCastingTimeRoute();
+      },
+      doRejectPriorLevelOnePlusSpell: () => {
+        route = metamagicPriorLevelOnePlusSpellRejectionRoute();
+      },
+      doRouteSavingThrowProtection: () => {
+        route = metamagicSavingThrowProtectionRoute();
+      },
+      doRouteSavingThrowRollMode: () => {
+        route = metamagicSavingThrowRollModeRoute();
+      },
+      doRouteDamageTypeSubstitution: () => {
+        route = metamagicDamageTypeSubstitutionRoute();
+      },
+      doRouteEffectiveSpellLevel: () => {
+        route = metamagicEffectiveSpellLevelRoute();
+      },
+      doRouteSpellRangeProjection: () => {
+        route = metamagicSpellRangeProjectionRoute();
+      },
+      doRouteSpellDurationProjection: () => {
+        route = metamagicSpellDurationProjectionRoute();
+      },
+      doRouteSpellComponentProjection: () => {
+        route = metamagicSpellComponentProjectionRoute();
+      },
+      doRouteMissedSpellAttackReroll: () => {
+        route = metamagicMissedSpellAttackRerollRoute();
+      },
+      doRouteDamageDiceReroll: () => {
+        route = metamagicDamageDiceRerollRoute();
+      },
+      step: () => {},
+      getState: (): ReducerRoutedMetamagicProjection => ({ route }),
+    };
+  });
 }
 
 export function createSaveGatedSpellOrderingRouteDriver() {
@@ -6404,6 +6869,26 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   SpecialSpeedProjectionRouteSubject: "specialSpeedProjection",
   ForcedMovementRouteSubject: "forcedMovement",
   ActiveFormLifecycleRouteSubject: "activeFormLifecycle",
+  MetamagicSpellGovernorRouteSubject: "metamagicSpellGovernor",
+  MetamagicBonusActionCastingTimeRouteSubject:
+    "metamagicBonusActionCastingTime",
+  MetamagicSavingThrowProtectionRouteSubject:
+    "metamagicSavingThrowProtection",
+  MetamagicSavingThrowRollModeRouteSubject:
+    "metamagicSavingThrowRollMode",
+  MetamagicDamageTypeSubstitutionRouteSubject:
+    "metamagicDamageTypeSubstitution",
+  MetamagicEffectiveSpellLevelRouteSubject:
+    "metamagicEffectiveSpellLevel",
+  MetamagicSpellRangeProjectionRouteSubject:
+    "metamagicSpellRangeProjection",
+  MetamagicSpellDurationProjectionRouteSubject:
+    "metamagicSpellDurationProjection",
+  MetamagicSpellComponentProjectionRouteSubject:
+    "metamagicSpellComponentProjection",
+  MetamagicMissedSpellAttackRerollRouteSubject:
+    "metamagicMissedSpellAttackReroll",
+  MetamagicDamageDiceRerollRouteSubject: "metamagicDamageDiceReroll",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -6725,6 +7210,15 @@ function normalizeReducerRoutedWeaponMasteryPropertyQuintState(
 function normalizeReducerRoutedAttackActionAreaSaveDamageReplacementQuintState(
   raw: unknown,
 ): ReducerRoutedAttackActionAreaSaveDamageReplacementProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedMetamagicQuintState(
+  raw: unknown,
+): ReducerRoutedMetamagicProjection {
   const state = quintStateRecord(raw);
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
@@ -7299,6 +7793,16 @@ export const reducerRoutedAttackActionAreaSaveDamageReplacementStateCheck =
       return true;
     },
   );
+export const reducerRoutedMetamagicStateCheck = stateCheck(
+  normalizeReducerRoutedMetamagicQuintState,
+  (
+    spec: ReducerRoutedMetamagicProjection,
+    impl: ReducerRoutedMetamagicProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const saveGatedSpellOrderingStateCheck = stateCheck(
   normalizeSaveGatedSpellOrderingQuintState,
   (

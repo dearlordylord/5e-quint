@@ -54,6 +54,17 @@ module battleRuntimeReducerRoute {
     | SpecialSpeedProjectionRouteSubject
     | ForcedMovementRouteSubject
     | ActiveFormLifecycleRouteSubject
+    | MetamagicSpellGovernorRouteSubject
+    | MetamagicBonusActionCastingTimeRouteSubject
+    | MetamagicSavingThrowProtectionRouteSubject
+    | MetamagicSavingThrowRollModeRouteSubject
+    | MetamagicDamageTypeSubstitutionRouteSubject
+    | MetamagicEffectiveSpellLevelRouteSubject
+    | MetamagicSpellRangeProjectionRouteSubject
+    | MetamagicSpellDurationProjectionRouteSubject
+    | MetamagicSpellComponentProjectionRouteSubject
+    | MetamagicMissedSpellAttackRerollRouteSubject
+    | MetamagicDamageDiceRerollRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner

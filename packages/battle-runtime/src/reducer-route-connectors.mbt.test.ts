@@ -14,6 +14,7 @@ import {
   createHitPointRestorationOrderingRouteDriver,
   createIndependentSpellAttackSequenceRouteDriver,
   createMagicMissileRouteDriver,
+  createMetamagicRouteDriver,
   createScalarBuffRouteDriver,
   createSaveGatedSpellOrderingRouteDriver,
   createSpellAttackOrderingRouteDriver,
@@ -32,6 +33,7 @@ import {
   reducerRoutedIndependentSpellAttackSequenceStateCheck,
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedCommandOrderingStateCheck,
+  reducerRoutedMetamagicStateCheck,
   reducerRoutedScalarBuffStateCheck,
   reducerRoutedSaveGatedSpellOrderingStateCheck,
   reducerRoutedWeaponAttackOrderingStateCheck,
@@ -118,6 +120,22 @@ describe("battle reducer route connector MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(4),
       stateCheck: reducerRoutedAttackActionAreaSaveDamageReplacementStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes Metamagic governor and option substrates through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createMetamagicRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedMetamagicStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 
