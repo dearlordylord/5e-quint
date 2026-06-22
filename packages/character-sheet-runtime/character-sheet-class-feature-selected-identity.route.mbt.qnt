@@ -5,8 +5,8 @@
 //   class feature choices are retained on the Character Sheet.
 // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Always-Prepared
 //   Spells: class features can project prepared Spell Access.
-// - Level-3 subclass spell projections remain behind
-//   L15-RR11-LEVEL3-4-SCOPE-PROMOTION.
+// - Level-3 subclass spell projections use the same selected-reference
+//   projection route as lower-level class-feature projections.
 module characterSheetClassFeatureSelectedIdentityRouteMbt {
   import characterSheetReducerRoute.* from "./character-sheet-reducer-route"
 
@@ -64,6 +64,21 @@ module characterSheetClassFeatureSelectedIdentityRouteMbt {
     recordRoute(projectClassFeatureSelectedReferenceRoute(qRoute)),
   }
 
+  action doProjectClericLifeDomainSpells = all {
+    qState.ready,
+    recordRoute(projectClassFeatureSelectedReferenceRoute(qRoute)),
+  }
+
+  action doProjectDruidCircleLandSpells = all {
+    qState.ready,
+    recordRoute(projectClassFeatureSelectedReferenceRoute(qRoute)),
+  }
+
+  action doProjectPaladinOathDevotionSpells = all {
+    qState.ready,
+    recordRoute(projectClassFeatureSelectedReferenceRoute(qRoute)),
+  }
+
   action doProjectPaladinsSmite = all {
     qState.ready,
     recordRoute(projectClassFeatureSelectedReferenceRoute(qRoute)),
@@ -74,8 +89,30 @@ module characterSheetClassFeatureSelectedIdentityRouteMbt {
     recordRoute(projectClassFeatureSelectedReferenceRoute(qRoute)),
   }
 
+  action doProjectSorcererDraconicSpells = all {
+    qState.ready,
+    recordRoute(projectClassFeatureSelectedReferenceRoute(qRoute)),
+  }
+
+  action doProjectWarlockFiendSpells = all {
+    qState.ready,
+    recordRoute(projectClassFeatureSelectedReferenceRoute(qRoute)),
+  }
+
   action stepProjectBardJackOfAllTrades = any {
     doProjectBardJackOfAllTrades,
+  }
+
+  action stepProjectClericLifeDomainSpells = any {
+    doProjectClericLifeDomainSpells,
+  }
+
+  action stepProjectDruidCircleLandSpells = any {
+    doProjectDruidCircleLandSpells,
+  }
+
+  action stepProjectPaladinOathDevotionSpells = any {
+    doProjectPaladinOathDevotionSpells,
   }
 
   action stepProjectPaladinsSmite = any {
@@ -86,9 +123,22 @@ module characterSheetClassFeatureSelectedIdentityRouteMbt {
     doProjectRangerFavoredEnemy,
   }
 
+  action stepProjectSorcererDraconicSpells = any {
+    doProjectSorcererDraconicSpells,
+  }
+
+  action stepProjectWarlockFiendSpells = any {
+    doProjectWarlockFiendSpells,
+  }
+
   action step = any {
     doProjectBardJackOfAllTrades,
+    doProjectClericLifeDomainSpells,
+    doProjectDruidCircleLandSpells,
+    doProjectPaladinOathDevotionSpells,
     doProjectPaladinsSmite,
     doProjectRangerFavoredEnemy,
+    doProjectSorcererDraconicSpells,
+    doProjectWarlockFiendSpells,
   }
 }

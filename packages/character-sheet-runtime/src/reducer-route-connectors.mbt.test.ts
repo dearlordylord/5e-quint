@@ -140,8 +140,13 @@ const armorClassRouteDriverSchema = {
 const classFeatureSelectedReferenceRouteDriverSchema = {
   init: {},
   doProjectBardJackOfAllTrades: {},
+  doProjectClericLifeDomainSpells: {},
+  doProjectDruidCircleLandSpells: {},
+  doProjectPaladinOathDevotionSpells: {},
   doProjectPaladinsSmite: {},
   doProjectRangerFavoredEnemy: {},
+  doProjectSorcererDraconicSpells: {},
+  doProjectWarlockFiendSpells: {},
   step: {},
 } as const;
 
@@ -153,6 +158,7 @@ const healingResourceRouteDriverSchema = {
 
 const arcaneRecoveryRouteDriverSchema = {
   init: {},
+  doRecoverSecondLevelSpellSlot: {},
   doResetArcaneRecoveryOnLongRest: {},
   doRejectPactSlotArcaneRecovery: {},
   step: {},
@@ -181,12 +187,14 @@ const spellResourceRouteDriverSchema = {
   doRejectMismatchedOrdinarySpellSlotCapacity: {},
   doRejectPactSlotExpenditureOverCapacity: {},
   doShortRestRestoresPactSlotsOnly: {},
+  doShortRestArcaneRecoveryRefundsOrdinarySpellSlot: {},
   doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots: {},
   doInterruptShortRestNoSlotBenefit: {},
   doInterruptLongRestBeforeOneHourNoSlotBenefit: {},
   doInterruptLongRestWithShortRestSlotBenefits: {},
   doMagicalCunningRecoversPactSlots: {},
   doRejectMagicalCunningWithoutExpendedPactSlots: {},
+  doRejectArcaneRecoveryPactSlotRefund: {},
   step: {},
 } as const;
 
@@ -377,8 +385,13 @@ const armorClassRouteActions = {
 
 const classFeatureSelectedReferenceRouteActions = {
   doProjectBardJackOfAllTrades: projectClassFeatureSelectedReferenceRoute,
+  doProjectClericLifeDomainSpells: projectClassFeatureSelectedReferenceRoute,
+  doProjectDruidCircleLandSpells: projectClassFeatureSelectedReferenceRoute,
+  doProjectPaladinOathDevotionSpells: projectClassFeatureSelectedReferenceRoute,
   doProjectPaladinsSmite: projectClassFeatureSelectedReferenceRoute,
   doProjectRangerFavoredEnemy: projectClassFeatureSelectedReferenceRoute,
+  doProjectSorcererDraconicSpells: projectClassFeatureSelectedReferenceRoute,
+  doProjectWarlockFiendSpells: projectClassFeatureSelectedReferenceRoute,
 } as const satisfies ReadyRouteActionMap<
   typeof classFeatureSelectedReferenceRouteDriverSchema
 >;
@@ -388,6 +401,7 @@ const healingResourceRouteActions = {
 } as const satisfies ReadyRouteActionMap<typeof healingResourceRouteDriverSchema>;
 
 const arcaneRecoveryRouteActions = {
+  doRecoverSecondLevelSpellSlot: resetArcaneRecoveryRoute,
   doResetArcaneRecoveryOnLongRest: resetArcaneRecoveryRoute,
   doRejectPactSlotArcaneRecovery: rejectPactSlotArcaneRecoveryRoute,
 } as const satisfies ReadyRouteActionMap<typeof arcaneRecoveryRouteDriverSchema>;
@@ -428,6 +442,8 @@ const spellResourceRouteActions = {
     rejectSpellResourceRoute("spellSlot"),
   doRejectPactSlotExpenditureOverCapacity: rejectSpellResourceRoute("pactSlot"),
   doShortRestRestoresPactSlotsOnly: completeRestoredSlotRoute("pactSlot"),
+  doShortRestArcaneRecoveryRefundsOrdinarySpellSlot:
+    arcaneRecoverySpellSlotRoute,
   doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots:
     completeLongRestSpellResourceRoute,
   doInterruptShortRestNoSlotBenefit: noSlotBenefitRestRoute,
@@ -437,6 +453,7 @@ const spellResourceRouteActions = {
   doMagicalCunningRecoversPactSlots: pactSlotRecoveryRoute,
   doRejectMagicalCunningWithoutExpendedPactSlots:
     rejectPactSlotRecoveryRoute,
+  doRejectArcaneRecoveryPactSlotRefund: rejectPactSlotRecoveryRoute,
 } as const satisfies ReadyRouteActionMap<typeof spellResourceRouteDriverSchema>;
 
 const spellbookRitualRouteActions = {
@@ -553,6 +570,12 @@ function resetArcaneRecoveryRoute(
       owner: "spellSlot",
     }),
   ];
+}
+
+function arcaneRecoverySpellSlotRoute(
+  route: readonly CharacterSheetRouteEvent[],
+): readonly CharacterSheetRouteEvent[] {
+  return resetArcaneRecoveryRoute(route);
 }
 
 function rejectPactSlotArcaneRecoveryRoute(

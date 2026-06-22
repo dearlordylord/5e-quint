@@ -104,6 +104,16 @@ module characterCreationWarlockEldritchInvocationsSelectedIdentityRouteMbt {
     recordRoute(invocationLevelGainRoute(qRoute)),
   }
 
+  action doReplaceArmorWithEldritchMindOnWarlockLevelGain = all {
+    qState.ready,
+    recordRoute(invocationLevelGainRoute(qRoute)),
+  }
+
+  action doReplaceRepeatableInvocationByChoice = all {
+    qState.ready,
+    recordRoute(invocationLevelGainRoute(qRoute)),
+  }
+
   action doRejectDuplicateInvocationSelections = all {
     qState.ready,
     recordRoute(rejectDuplicateInvocationRoute(qRoute)),
@@ -112,6 +122,8 @@ module characterCreationWarlockEldritchInvocationsSelectedIdentityRouteMbt {
   action step = any {
     doSelectLevelOneArmorOfShadows,
     doGainLevelTwoInvocations,
+    doReplaceArmorWithEldritchMindOnWarlockLevelGain,
+    doReplaceRepeatableInvocationByChoice,
     doRejectDuplicateInvocationSelections,
   }
 }

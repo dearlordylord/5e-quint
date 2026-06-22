@@ -7926,19 +7926,16 @@
         "step",
         "doEnhanceAbilityChoice"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doEnhanceAbilityChoice",
       "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
       "replay": {
-        "reason": "The sequential driver traverses this level-2 spell branch to reach later level-1 Command branches.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "transit-only"
+        "stepAction": "step",
+        "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Enhance Ability is a level-2 spell and is outside the current level-1/2 branch harness scope.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -8520,7 +8517,7 @@
         "step",
         "doCuttingWordsDamage"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCuttingWordsDamage",
       "qntFileSha256": "74149393cbc722a0ffaa8c9d2aa09765bd5139401c52cd5ba74024b72085dd01",
@@ -8529,9 +8526,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Bard Cutting Words is a level-3 subclass feature.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -8560,7 +8555,7 @@
         "step",
         "doDeflectAttacksDamageReduction"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doDeflectAttacksDamageReduction",
       "qntFileSha256": "74149393cbc722a0ffaa8c9d2aa09765bd5139401c52cd5ba74024b72085dd01",
@@ -8569,9 +8564,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Monk Deflect Attacks is a level-3 feature.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -8642,7 +8635,7 @@
         "step",
         "doFrenzy"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doFrenzy",
       "qntFileSha256": "74149393cbc722a0ffaa8c9d2aa09765bd5139401c52cd5ba74024b72085dd01",
@@ -8651,9 +8644,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Barbarian Frenzy is a level-3 subclass feature.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -8663,7 +8654,7 @@
         "step",
         "doImprovedCritical"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doImprovedCritical",
       "qntFileSha256": "74149393cbc722a0ffaa8c9d2aa09765bd5139401c52cd5ba74024b72085dd01",
@@ -8672,9 +8663,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Fighter Improved Critical is a level-3 subclass feature.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -10801,19 +10790,16 @@
         "step",
         "doFontOfMagicSlotToPoints"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doFontOfMagicSlotToPoints",
       "qntFileSha256": "444674c7064ce635e3442b719c5b03f4997f88b99940993ae647c7dc125ee346",
       "replay": {
-        "reason": "The sequential driver traverses this Font of Magic branch to reach later level-1/2 feature-resource branches.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "transit-only"
+        "stepAction": "step",
+        "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Font of Magic slot conversion requires Sorcerer level 2 and uses slot facts outside the current level-1/2 active harness scope.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -11287,7 +11273,7 @@
         "step",
         "doSelectWizardEvocationSavant"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
       "obligationId": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectWizardEvocationSavant",
       "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
@@ -11296,9 +11282,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Wizard Evocation Savant is a level-3 subclass feature.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -11958,7 +11942,7 @@
         "step",
         "doReplaceArmorWithEldritchMindOnWarlockLevelGain"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
       "obligationId": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doReplaceArmorWithEldritchMindOnWarlockLevelGain",
       "qntFileSha256": "aa258c7268f7f2ad3fc41280771be7fe14c5e7917c5c4866a7592e0e26ab4ec4",
@@ -11967,9 +11951,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "This invocation replacement projection uses Warlock level 3 facts.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -11979,7 +11961,7 @@
         "step",
         "doReplaceRepeatableInvocationByChoice"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
       "obligationId": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doReplaceRepeatableInvocationByChoice",
       "qntFileSha256": "aa258c7268f7f2ad3fc41280771be7fe14c5e7917c5c4866a7592e0e26ab4ec4",
@@ -11988,9 +11970,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "This repeatable invocation replacement projection uses Warlock level 3 facts.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -12228,7 +12208,7 @@
         "step",
         "doRecoverSecondLevelSpellSlot"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
       "obligationId": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doRecoverSecondLevelSpellSlot",
       "qntFileSha256": "59b45a618627202dbecdb09ebeee2e5a566f2c749e9b92248b268dad8f8196b0",
@@ -12237,9 +12217,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Second-level Arcane Recovery is unavailable to ordinary level-1/2 Wizards.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -12420,7 +12398,7 @@
         "step",
         "doProjectClericLifeDomainSpells"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
       "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectClericLifeDomainSpells",
       "qntFileSha256": "69fce725edb821136d412cf3a1ada4712f31a76bd086741c1ab4af23f9b17eb8",
@@ -12429,9 +12407,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Cleric Life Domain Spells are a level-3 subclass spell feature.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -12441,7 +12417,7 @@
         "step",
         "doProjectDruidCircleLandSpells"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
       "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectDruidCircleLandSpells",
       "qntFileSha256": "69fce725edb821136d412cf3a1ada4712f31a76bd086741c1ab4af23f9b17eb8",
@@ -12450,9 +12426,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Druid Circle of the Land Spells are a level-3 subclass spell feature.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -12462,7 +12436,7 @@
         "step",
         "doProjectPaladinOathDevotionSpells"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
       "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectPaladinOathDevotionSpells",
       "qntFileSha256": "69fce725edb821136d412cf3a1ada4712f31a76bd086741c1ab4af23f9b17eb8",
@@ -12471,9 +12445,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Paladin Oath of Devotion Spells are a level-3 subclass spell feature.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -12521,7 +12493,7 @@
         "step",
         "doProjectSorcererDraconicSpells"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
       "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectSorcererDraconicSpells",
       "qntFileSha256": "69fce725edb821136d412cf3a1ada4712f31a76bd086741c1ab4af23f9b17eb8",
@@ -12530,9 +12502,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Sorcerer Draconic Spells are a level-3 subclass spell feature.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -12542,7 +12512,7 @@
         "step",
         "doProjectWarlockFiendSpells"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
       "obligationId": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectWarlockFiendSpells",
       "qntFileSha256": "69fce725edb821136d412cf3a1ada4712f31a76bd086741c1ab4af23f9b17eb8",
@@ -12551,9 +12521,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "Warlock Fiend Spells are a level-3 subclass spell feature.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -13038,7 +13006,7 @@
         "step",
         "doRejectArcaneRecoveryPactSlotRefund"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
       "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectArcaneRecoveryPactSlotRefund",
       "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
@@ -13047,9 +13015,7 @@
         "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "This rejection branch depends on the same later-slot Arcane Recovery fixture and needs a level-1/2 legal fixture before it becomes active scope.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {
@@ -13116,19 +13082,16 @@
         "step",
         "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot"
       ],
-      "decisionSource": "branch-decision",
+      "decisionSource": "default",
       "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
       "obligationId": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
       "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
       "replay": {
-        "reason": "The sequential driver traverses this later-slot branch to reach later level-1/2 slot lifecycle branches.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "transit-only"
+        "stepAction": "step",
+        "tag": "observable-from-step"
       },
       "scope": {
-        "reason": "This Arcane Recovery fixture restores a second-level ordinary spell slot, outside the current level-1/2 scope.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
+        "tag": "in-scope"
       }
     },
     {

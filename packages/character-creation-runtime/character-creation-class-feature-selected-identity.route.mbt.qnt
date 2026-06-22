@@ -117,6 +117,11 @@ module characterCreationClassFeatureSelectedIdentityRouteMbt {
     recordRoute(retainSelectedReferenceRoute(qRoute)),
   }
 
+  action doSelectWizardEvocationSavant = all {
+    qState.ready,
+    recordRoute(retainSelectedReferenceRoute(qRoute)),
+  }
+
   action stepSelectBardExpertise = any {
     doSelectBardExpertise,
   }
@@ -161,6 +166,10 @@ module characterCreationClassFeatureSelectedIdentityRouteMbt {
     doSelectWizardScholar,
   }
 
+  action stepSelectWizardEvocationSavant = any {
+    doSelectWizardEvocationSavant,
+  }
+
   action step = any {
     doSelectBardExpertise,
     doProjectClericChannelDivinity,
@@ -173,5 +182,6 @@ module characterCreationClassFeatureSelectedIdentityRouteMbt {
     doSelectRangerFightingStyle,
     doProjectWarlockPactMagic,
     doSelectWizardScholar,
+    doSelectWizardEvocationSavant,
   }
 }

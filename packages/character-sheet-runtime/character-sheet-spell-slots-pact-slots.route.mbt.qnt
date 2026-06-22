@@ -5,8 +5,8 @@
 //   Long Rest restores expended Spell Slots.
 // - .references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic: Pact
 //   Slots recover on a Short or Long Rest.
-// - L15-RR11-LEVEL3-4-SCOPE-PROMOTION owns the second-level Arcane Recovery
-//   slot branches.
+// - Second-level Arcane Recovery slot branches use the existing Spell Slot and
+//   Pact Slot recovery route owners.
 module characterSheetSpellSlotsPactSlotsRouteMbt {
   import characterSheetReducerRoute.* from "./character-sheet-reducer-route"
 
@@ -95,6 +95,18 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
         )
       )
 
+  pure def arcaneRecoverySpellSlotRoute(
+    route: List[CharacterSheetRouteEvent],
+  ): List[CharacterSheetRouteEvent] =
+    route.append(
+      routeCompleteCharacterSheetRest(
+        SheetSpellResourceRouteSubject,
+        SheetRecoverySelectionFill,
+        Set(),
+        CharacterSheetSpellSlotOwner,
+      )
+    )
+
   pure def rejectPactSlotRecoveryRoute(
     route: List[CharacterSheetRouteEvent],
   ): List[CharacterSheetRouteEvent] =
@@ -136,6 +148,11 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
     recordRoute(completeRestoredSlotRoute(qRoute, CharacterSheetPactSlotOwner)),
   }
 
+  action doShortRestArcaneRecoveryRefundsOrdinarySpellSlot = all {
+    qState.ready,
+    recordRoute(arcaneRecoverySpellSlotRoute(qRoute)),
+  }
+
   action doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots = all {
     qState.ready,
     recordRoute(completeLongRestSpellResourceRoute(qRoute)),
@@ -166,15 +183,22 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
     recordRoute(rejectPactSlotRecoveryRoute(qRoute)),
   }
 
+  action doRejectArcaneRecoveryPactSlotRefund = all {
+    qState.ready,
+    recordRoute(rejectPactSlotRecoveryRoute(qRoute)),
+  }
+
   action step = any {
     doRejectMismatchedOrdinarySpellSlotCapacity,
     doRejectPactSlotExpenditureOverCapacity,
     doShortRestRestoresPactSlotsOnly,
+    doShortRestArcaneRecoveryRefundsOrdinarySpellSlot,
     doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots,
     doInterruptShortRestNoSlotBenefit,
     doInterruptLongRestBeforeOneHourNoSlotBenefit,
     doInterruptLongRestWithShortRestSlotBenefits,
     doMagicalCunningRecoversPactSlots,
     doRejectMagicalCunningWithoutExpendedPactSlots,
+    doRejectArcaneRecoveryPactSlotRefund,
   }
 }

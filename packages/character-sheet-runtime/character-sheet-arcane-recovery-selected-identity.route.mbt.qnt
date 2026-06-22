@@ -69,12 +69,18 @@ module characterSheetArcaneRecoverySelectedIdentityRouteMbt {
     recordRoute(resetArcaneRecoveryRoute(qRoute)),
   }
 
+  action doRecoverSecondLevelSpellSlot = all {
+    qState.ready,
+    recordRoute(resetArcaneRecoveryRoute(qRoute)),
+  }
+
   action doRejectPactSlotArcaneRecovery = all {
     qState.ready,
     recordRoute(rejectPactSlotArcaneRecoveryRoute(qRoute)),
   }
 
   action step = any {
+    doRecoverSecondLevelSpellSlot,
     doResetArcaneRecoveryOnLongRest,
     doRejectPactSlotArcaneRecovery,
   }

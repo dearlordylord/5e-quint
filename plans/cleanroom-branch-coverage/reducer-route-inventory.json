@@ -208,14 +208,14 @@
       "sourceBranchInventory": {
         "driverFiles": 97,
         "branchObligations": 699,
-        "currentInScopeBranchObligations": 646,
-        "currentOutOfScopeBranchObligations": 53,
+        "currentInScopeBranchObligations": 663,
+        "currentOutOfScopeBranchObligations": 36,
         "sampledInputs": 24,
         "baselineWitnessDriverFiles": 1,
         "alreadyReducerRoutedDriverFiles": 3,
         "currentNonBaselineRemainingDriverFiles": 93,
         "currentDriverFilesWithoutRouteOrComponentConnector": 84,
-        "currentOutOfScopeBranchDecisionsInLevelDenominator": 44,
+        "currentOutOfScopeBranchDecisionsInLevelDenominator": 27,
         "currentOutOfScopeBranchDecisionsOutsideLevelDenominator": 8,
         "currentOutOfScopeBranchDecisionSourceBlockers": 1
       },
@@ -1661,7 +1661,7 @@
           ],
           "subjectFamily": "rule-core reusable component",
           "branchObligations": 32,
-          "currentOutOfScopeBranchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt is present in source-branch-inventory.json with 32 branch obligation(s).",
@@ -1713,7 +1713,7 @@
           ],
           "subjectFamily": "rule-core reusable component",
           "branchObligations": 27,
-          "currentOutOfScopeBranchObligations": 9,
+          "currentOutOfScopeBranchObligations": 5,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/rule-core-features.mbt.qnt is present in source-branch-inventory.json with 27 branch obligation(s).",
@@ -1967,7 +1967,7 @@
           "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
           "subjectFamily": "character sheet feature-resource handoff",
           "branchObligations": 14,
-          "currentOutOfScopeBranchObligations": 5,
+          "currentOutOfScopeBranchObligations": 4,
           "derivability": {
             "qntFacts": [
               "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt is present in source-branch-inventory.json with 14 branch obligation(s).",
@@ -2007,7 +2007,7 @@
           "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
           "subjectFamily": "character creation selected-reference retention",
           "branchObligations": 12,
-          "currentOutOfScopeBranchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s).",
@@ -2107,7 +2107,7 @@
           "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
           "subjectFamily": "character creation invocation option retention and Pact Magic projection",
           "branchObligations": 6,
-          "currentOutOfScopeBranchObligations": 3,
+          "currentOutOfScopeBranchObligations": 1,
           "derivability": {
             "qntFacts": [
               "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
@@ -2167,11 +2167,11 @@
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet selected-reference projection",
           "branchObligations": 3,
-          "currentOutOfScopeBranchObligations": 1,
+          "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
-              "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt exposes qRoute for in-scope Arcane Recovery reset/rejection through existing Spell Slot and Pact Slot owners; the second-level recovery branch remains a Task 11 branch row."
+              "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt exposes qRoute for in-scope Arcane Recovery reset, second-level recovery, and rejection through existing Spell Slot and Pact Slot owners."
             ],
             "rawDomainFacts": [
               "Arcane Recovery recovers ordinary Spell Slots after a Short Rest and resets on a Long Rest; Pact Slots are not ordinary Spell Slots for this sheet recovery owner.",
@@ -2207,11 +2207,11 @@
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet selected-reference projection",
           "branchObligations": 8,
-          "currentOutOfScopeBranchObligations": 5,
+          "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s).",
-              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.route.mbt.qnt exposes qRoute for in-scope class-feature selected-reference projection; level-3 subclass spell projection branches remain Task 11 branch rows."
+              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.route.mbt.qnt exposes qRoute for in-scope class-feature selected-reference projection, including level-3 subclass spell projection branches promoted by Task 11."
             ],
             "rawDomainFacts": [
               "Class feature choices are retained selected references whose sheet projections derive spell access or Ability Check facts from existing build facts, not from a duplicate feature-resource cache.",
@@ -2287,11 +2287,11 @@
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet resource/rest/projection reducer",
           "branchObligations": 11,
-          "currentOutOfScopeBranchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s).",
-              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt exposes qRoute for in-scope ordinary Spell Slot, Pact Slot, created-slot clearing, rest recovery, and Magical Cunning transitions; second-level Arcane Recovery branches remain Task 11 branch rows."
+              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt exposes qRoute for in-scope ordinary Spell Slot, Pact Slot, created-slot clearing, rest recovery, Magical Cunning, and second-level Arcane Recovery transitions."
             ],
             "rawDomainFacts": [
               "Spell Slots recover on Long Rest, Pact Slots recover on Short or Long Rest, and created slots remain in existing sheet Spell Slot source state rather than a duplicate slot table.",
@@ -2351,7 +2351,7 @@
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "routeTaskId": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityChoiceOpen under branch family step."
@@ -2360,7 +2360,9 @@
               "Enhance Ability is a level-2 spell.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 11 left this level-2 spell branch out of branch scope because the battle ability/search/choice route is still substrate-first; L15-RR21 owns the generic route connector."
+            ]
           }
         },
         {
@@ -2371,7 +2373,7 @@
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "routeTaskId": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityDex under branch family step."
@@ -2380,7 +2382,9 @@
               "Enhance Ability is a level-2 spell.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 11 left this level-2 spell branch out of branch scope because the battle ability/search/choice route is still substrate-first; L15-RR21 owns the generic route connector."
+            ]
           }
         },
         {
@@ -2391,7 +2395,7 @@
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "routeTaskId": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityInvalidSkillFillRejected under branch family step."
@@ -2400,7 +2404,9 @@
               "Enhance Ability is a level-2 spell.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 11 left this level-2 spell branch out of branch scope because the battle ability/search/choice route is still substrate-first; L15-RR21 owns the generic route connector."
+            ]
           }
         },
         {
@@ -2411,7 +2417,7 @@
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "routeTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doBreakShiningConcentration under branch family step."
@@ -2420,7 +2426,9 @@
               "Shining Smite is a level-2 spell.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 11 left this level-2 after-hit spell branch out of branch scope because after-hit rider owners still need split route connectors; L15-RR15 owns that substrate split."
+            ]
           }
         },
         {
@@ -2431,7 +2439,7 @@
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "routeTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doChooseShiningSmite under branch family step."
@@ -2440,7 +2448,9 @@
               "Shining Smite is a level-2 spell.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 11 left this level-2 after-hit spell branch out of branch scope because after-hit rider owners still need split route connectors; L15-RR15 owns that substrate split."
+            ]
           }
         },
         {
@@ -2451,7 +2461,7 @@
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "routeTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doFillShiningSmiteDamage under branch family step."
@@ -2460,7 +2470,9 @@
               "Shining Smite is a level-2 spell.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 11 left this level-2 after-hit spell branch out of branch scope because after-hit rider owners still need split route connectors; L15-RR15 owns that substrate split."
+            ]
           }
         },
         {
@@ -2471,7 +2483,7 @@
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
           "route": "substrate-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "routeTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doStartShiningSmite under branch family step."
@@ -2480,7 +2492,9 @@
               "Shining Smite is a level-2 spell.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 11 left this level-2 after-hit spell branch out of branch scope because after-hit rider owners still need split route connectors; L15-RR15 owns that substrate split."
+            ]
           }
         },
         {
@@ -2491,7 +2505,7 @@
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
           "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveBlindnessDeafnessBlindedSavingThrow under branch family step."
@@ -2500,7 +2514,9 @@
               "Blindness/Deafness is a level-2 spell.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 11 left this selected-identity level-2 condition spell branch out of branch scope because no generic selected-identity condition spell substrate route connector exists yet; L15-RR07-FU01 already owns the selected spell identity substrate driver family that includes this condition-saving-throw driver."
+            ]
           }
         },
         {
@@ -2511,7 +2527,7 @@
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
           "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveBlindnessDeafnessDeafenedSavingThrow under branch family step."
@@ -2520,7 +2536,9 @@
               "Blindness/Deafness is a level-2 spell.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 11 left this selected-identity level-2 condition spell branch out of branch scope because no generic selected-identity condition spell substrate route connector exists yet; L15-RR07-FU01 already owns the selected spell identity substrate driver family that includes this condition-saving-throw driver."
+            ]
           }
         },
         {
@@ -2531,7 +2549,7 @@
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
           "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveHoldPersonFailedSavingThrow under branch family step."
@@ -2540,7 +2558,9 @@
               "Hold Person is a level-2 spell.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 11 left this selected-identity level-2 condition spell branch out of branch scope because no generic selected-identity condition spell substrate route connector exists yet; L15-RR07-FU01 already owns the selected spell identity substrate driver family that includes this condition-saving-throw driver."
+            ]
           }
         },
         {
@@ -2551,7 +2571,7 @@
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
           "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+          "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt exposes doResolveHoldPersonRepeatSavingThrowSuccess under branch family step."
@@ -2560,7 +2580,9 @@
               "Hold Person is a level-2 spell.",
               "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
             ],
-            "blockers": []
+            "blockers": [
+              "Task 11 left this selected-identity level-2 condition spell branch out of branch scope because no generic selected-identity condition spell substrate route connector exists yet; L15-RR07-FU01 already owns the selected spell identity substrate driver family that includes this condition-saving-throw driver."
+            ]
           }
         },
         {
@@ -2686,28 +2708,6 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doEnhanceAbilityChoice",
-          "currentScopeReason": "Enhance Ability is a level-2 spell and is outside the current level-1/2 branch harness scope.",
-          "currentReplay": "transit-only",
-          "levelDenominatorScope": "in-denominator",
-          "route": "component-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt exposes doEnhanceAbilityChoice under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Enhance Ability is a level-2 spell and is outside the current level-1/2 branch harness scope.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": [
-              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
-            ]
-          }
-        },
-        {
           "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doCombatProwessMissToHit",
@@ -2727,46 +2727,6 @@
             "blockers": [
               "Outside the character level 1-5 denominator for this lane."
             ]
-          }
-        },
-        {
-          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doCuttingWordsDamage",
-          "currentScopeReason": "Bard Cutting Words is a level-3 subclass feature.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "component-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doCuttingWordsDamage under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Bard Cutting Words is a level-3 subclass feature.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
-          }
-        },
-        {
-          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doDeflectAttacksDamageReduction",
-          "currentScopeReason": "Monk Deflect Attacks is a level-3 feature.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "component-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doDeflectAttacksDamageReduction under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Monk Deflect Attacks is a level-3 feature.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
           }
         },
         {
@@ -2811,46 +2771,6 @@
             "blockers": [
               "Outside the character level 1-5 denominator for this lane."
             ]
-          }
-        },
-        {
-          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doFrenzy",
-          "currentScopeReason": "Barbarian Frenzy is a level-3 subclass feature.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "component-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doFrenzy under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Barbarian Frenzy is a level-3 subclass feature.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
-          }
-        },
-        {
-          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doImprovedCritical",
-          "currentScopeReason": "Fighter Improved Critical is a level-3 subclass feature.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "component-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doImprovedCritical under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Fighter Improved Critical is a level-3 subclass feature.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
           }
         },
         {
@@ -3090,28 +3010,6 @@
         {
           "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
           "branchFamily": "step",
-          "branchAction": "doFontOfMagicSlotToPoints",
-          "currentScopeReason": "Font of Magic slot conversion requires Sorcerer level 2 and uses slot facts outside the current level-1/2 active harness scope.",
-          "currentReplay": "transit-only",
-          "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt exposes doFontOfMagicSlotToPoints under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Font of Magic slot conversion requires Sorcerer level 2 and uses slot facts outside the current level-1/2 active harness scope.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": [
-              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
-            ]
-          }
-        },
-        {
-          "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
-          "branchFamily": "step",
           "branchAction": "doMetamagicBridgeUsesSharedPointPool",
           "currentScopeReason": "This metamagic bridge fixture uses a five-point Sorcery Point pool beyond the current level-1/2 scope.",
           "currentReplay": "observable-from-step",
@@ -3174,26 +3072,6 @@
           }
         },
         {
-          "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doSelectWizardEvocationSavant",
-          "currentScopeReason": "Wizard Evocation Savant is a level-3 subclass feature.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt exposes doSelectWizardEvocationSavant under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Wizard Evocation Savant is a level-3 subclass feature.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
-          }
-        },
-        {
           "driverPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doSelectLevelSixAdditionalOwnedSkillExpertise",
@@ -3234,212 +3112,6 @@
             ],
             "blockers": [
               "Task 8 routes the level-1/2 Warlock invocation creation surface only; this level-band replacement branch remains deferred to L15-RR12-LEVEL5-SCOPE-PROMOTION."
-            ]
-          }
-        },
-        {
-          "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doReplaceArmorWithEldritchMindOnWarlockLevelGain",
-          "currentScopeReason": "This invocation replacement projection uses Warlock level 3 facts.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt exposes doReplaceArmorWithEldritchMindOnWarlockLevelGain under branch family step."
-            ],
-            "rawDomainFacts": [
-              "This invocation replacement projection uses Warlock level 3 facts.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": [
-              "Task 8 routes the level-1/2 Warlock invocation creation surface only; this level-band replacement branch remains deferred to L15-RR11-LEVEL3-4-SCOPE-PROMOTION."
-            ]
-          }
-        },
-        {
-          "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doReplaceRepeatableInvocationByChoice",
-          "currentScopeReason": "This repeatable invocation replacement projection uses Warlock level 3 facts.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt exposes doReplaceRepeatableInvocationByChoice under branch family step."
-            ],
-            "rawDomainFacts": [
-              "This repeatable invocation replacement projection uses Warlock level 3 facts.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": [
-              "Task 8 routes the level-1/2 Warlock invocation creation surface only; this level-band replacement branch remains deferred to L15-RR11-LEVEL3-4-SCOPE-PROMOTION."
-            ]
-          }
-        },
-        {
-          "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doRecoverSecondLevelSpellSlot",
-          "currentScopeReason": "Second-level Arcane Recovery is unavailable to ordinary level-1/2 Wizards.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt exposes doRecoverSecondLevelSpellSlot under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Second-level Arcane Recovery is unavailable to ordinary level-1/2 Wizards.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
-          }
-        },
-        {
-          "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doProjectClericLifeDomainSpells",
-          "currentScopeReason": "Cleric Life Domain Spells are a level-3 subclass spell feature.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt exposes doProjectClericLifeDomainSpells under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Cleric Life Domain Spells are a level-3 subclass spell feature.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
-          }
-        },
-        {
-          "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doProjectDruidCircleLandSpells",
-          "currentScopeReason": "Druid Circle of the Land Spells are a level-3 subclass spell feature.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt exposes doProjectDruidCircleLandSpells under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Druid Circle of the Land Spells are a level-3 subclass spell feature.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
-          }
-        },
-        {
-          "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doProjectPaladinOathDevotionSpells",
-          "currentScopeReason": "Paladin Oath of Devotion Spells are a level-3 subclass spell feature.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt exposes doProjectPaladinOathDevotionSpells under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Paladin Oath of Devotion Spells are a level-3 subclass spell feature.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
-          }
-        },
-        {
-          "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doProjectSorcererDraconicSpells",
-          "currentScopeReason": "Sorcerer Draconic Spells are a level-3 subclass spell feature.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt exposes doProjectSorcererDraconicSpells under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Sorcerer Draconic Spells are a level-3 subclass spell feature.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
-          }
-        },
-        {
-          "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doProjectWarlockFiendSpells",
-          "currentScopeReason": "Warlock Fiend Spells are a level-3 subclass spell feature.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "catalog-after-substrate",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt exposes doProjectWarlockFiendSpells under branch family step."
-            ],
-            "rawDomainFacts": [
-              "Warlock Fiend Spells are a level-3 subclass spell feature.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
-          }
-        },
-        {
-          "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doRejectArcaneRecoveryPactSlotRefund",
-          "currentScopeReason": "This rejection branch depends on the same later-slot Arcane Recovery fixture and needs a level-1/2 legal fixture before it becomes active scope.",
-          "currentReplay": "observable-from-step",
-          "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt exposes doRejectArcaneRecoveryPactSlotRefund under branch family step."
-            ],
-            "rawDomainFacts": [
-              "This rejection branch depends on the same later-slot Arcane Recovery fixture and needs a level-1/2 legal fixture before it becomes active scope.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": []
-          }
-        },
-        {
-          "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
-          "branchFamily": "step",
-          "branchAction": "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
-          "currentScopeReason": "This Arcane Recovery fixture restores a second-level ordinary spell slot, outside the current level-1/2 scope.",
-          "currentReplay": "transit-only",
-          "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
-          "routeTaskId": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-          "derivability": {
-            "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt exposes doShortRestArcaneRecoveryRefundsOrdinarySpellSlot under branch family step."
-            ],
-            "rawDomainFacts": [
-              "This Arcane Recovery fixture restores a second-level ordinary spell slot, outside the current level-1/2 scope.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
-            ],
-            "blockers": [
-              "Current level-1/2 branch scope marks this as transit-only; active promotion must replace that with observable route evidence when the L1-5 route surface exists."
             ]
           }
         }

@@ -203,6 +203,7 @@ const classFeatureSelectedIdentityRouteDriverSchema = {
   doSelectRangerFightingStyle: {},
   doProjectWarlockPactMagic: {},
   doSelectWizardScholar: {},
+  doSelectWizardEvocationSavant: {},
   step: {},
 } as const;
 
@@ -238,6 +239,8 @@ const warlockInvocationRouteDriverSchema = {
   init: {},
   doSelectLevelOneArmorOfShadows: {},
   doGainLevelTwoInvocations: {},
+  doReplaceArmorWithEldritchMindOnWarlockLevelGain: {},
+  doReplaceRepeatableInvocationByChoice: {},
   doRejectDuplicateInvocationSelections: {},
   step: {},
 } as const;
@@ -304,6 +307,7 @@ describe("character creation reducer route connector MBT", () => {
           doSelectRangerFightingStyle: retainSelectedReferenceRoute,
           doProjectWarlockPactMagic: projectSelectedReferenceRoute,
           doSelectWizardScholar: retainSelectedReferenceRoute,
+          doSelectWizardEvocationSavant: retainSelectedReferenceRoute,
         },
       ),
       maxSteps: focusedMbtMaxSteps(1),
@@ -379,6 +383,9 @@ describe("character creation reducer route connector MBT", () => {
         {
           doSelectLevelOneArmorOfShadows: retainAndProjectSelectedReferenceRoute,
           doGainLevelTwoInvocations: replaceSelectedReferenceRoute,
+          doReplaceArmorWithEldritchMindOnWarlockLevelGain:
+            replaceSelectedReferenceRoute,
+          doReplaceRepeatableInvocationByChoice: replaceSelectedReferenceRoute,
           doRejectDuplicateInvocationSelections: duplicateInvocationRejectionRoute,
         },
       ),
