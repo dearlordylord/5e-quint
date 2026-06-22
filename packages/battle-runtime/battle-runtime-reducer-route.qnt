@@ -31,6 +31,7 @@ module battleRuntimeReducerRoute {
     | ReactionSpellRouteSubject
     | InterruptStackResumeRouteSubject
     | RollModifierEffectRouteSubject
+    | SpellDamageReductionRouteSubject
     | ScalarBuffEffectRouteSubject
     | RepeatSaveConditionEffectRouteSubject
     | TurnBoundaryEffectLifecycleRouteSubject

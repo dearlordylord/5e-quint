@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff resistance doResistanceReducesMatchingDamage
 // UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff shield_of_faith doShieldOfFaithArmorClassBonus
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
+import { describe, expect, it } from "vitest";
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -45,7 +46,23 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  decodeReducerRoute,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  quintField,
+  quintStateRecord,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteResolveBattleSubjectWithoutFill,
+  reducerRouteStartBattle,
+  run,
+  stateCheck,
+  type ReducerRouteEvent,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const rollModifierBuffSpellIds = [
@@ -913,4 +930,140 @@ function isTrackedSpellEffect(
       effect.sourceSpellId,
     )
   );
+}
+
+type SpellDamageReductionRouteProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const spellDamageReductionRouteDriverSchema = {
+  init: {},
+  doDiscoverResistanceTargetChoice: {},
+  doFillResistanceTarget: {},
+  doChooseResistanceDamageType: {},
+  doApplyResistanceReductionRoll: {},
+  step: {},
+} as const;
+
+describe("Spell damage-reduction route MBT", () => {
+  it(
+    "routes Resistance through target, damage-type, active-effect, and reduction-roll owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-spell-damage-reduction.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createSpellDamageReductionRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: spellDamageReductionRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+});
+
+function createSpellDamageReductionRouteDriver() {
+  return defineDriver<
+    typeof spellDamageReductionRouteDriverSchema,
+    SpellDamageReductionRouteProjection
+  >(spellDamageReductionRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverResistanceTargetChoice: () => {
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: "spellDamageReduction",
+            holes: [{ kind: "targetChoice" }],
+            owner: "battleSpellSlotAndActionEconomy",
+          }),
+        ];
+      },
+      doFillResistanceTarget: () => {
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "spellDamageReduction",
+            fill: "targetChoice",
+            holes: [{ kind: "damageTypeChoice" }],
+            owner: "battleTargetSelection",
+          }),
+        ];
+      },
+      doChooseResistanceDamageType: () => {
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "spellDamageReduction",
+            fill: "damageTypeChoice",
+            holes: [],
+            owner: "battleActiveEffect",
+          }),
+          reducerRouteResolveBattleSubjectWithoutFill({
+            subject: "spellDamageReduction",
+            holes: [],
+            owner: "battleConcentration",
+          }),
+        ];
+      },
+      doApplyResistanceReductionRoll: () => {
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: "spellDamageReduction",
+            holes: [{ kind: "rolledDice" }],
+            owner: "battleDamageAdjustment",
+          }),
+          reducerRouteResolveBattleSubject({
+            subject: "spellDamageReduction",
+            fill: "rolledDice",
+            holes: [],
+            owner: "battleDamageAdjustment",
+          }),
+          reducerRouteResolveBattleSubjectWithoutFill({
+            subject: "spellDamageReduction",
+            holes: [],
+            owner: "battleActiveEffect",
+          }),
+        ];
+      },
+      step: () => {},
+      getState: () => ({ route }),
+    };
+  });
+}
+
+const spellDamageReductionRouteStateCheck = stateCheck(
+  normalizeSpellDamageReductionRouteQuintState,
+  compareSpellDamageReductionRouteStates,
+);
+
+function normalizeSpellDamageReductionRouteQuintState(
+  raw: unknown,
+): SpellDamageReductionRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function compareSpellDamageReductionRouteStates(
+  spec: SpellDamageReductionRouteProjection,
+  impl: SpellDamageReductionRouteProjection,
+): boolean {
+  expect(impl).toEqual(spec);
+  return true;
 }

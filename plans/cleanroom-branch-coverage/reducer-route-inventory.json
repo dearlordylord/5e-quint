@@ -184,27 +184,10 @@
     {
       "denominatorId": "level-1-5-cleanroom-route-v1",
       "purpose": "Defines the driver and branch denominator for routing current cleanroom branch coverage through reducer-route QNT architecture up to character level 5.",
-      "characterLevels": [
-        1,
-        2,
-        3,
-        4,
-        5
-      ],
-      "includedSpellLevels": [
-        0,
-        1,
-        2,
-        3
-      ],
-      "excludedCharacterLevels": [
-        6,
-        7
-      ],
-      "excludedSpellLevels": [
-        4,
-        5
-      ],
+      "characterLevels": [1, 2, 3, 4, 5],
+      "includedSpellLevels": [0, 1, 2, 3],
+      "excludedCharacterLevels": [6, 7],
+      "excludedSpellLevels": [4, 5],
       "sourceBranchInventory": {
         "driverFiles": 97,
         "branchObligations": 704,
@@ -486,26 +469,24 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "feature-hosted condition and d20 roll modifier substrates",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
+          "subjectFamily": "feature-hosted passive saving throw roll-mode and condition-suppression substrates",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
-              "No copied source qRoute connector currently extracts feature-hosted condition and d20 roll modifier substrates from packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt records PassiveSavingThrowRollModeRouteSubject evidence through BattleSavingThrowRollModeOwner and BattleConditionLifecycleOwner.",
+              "Selected feature identity remains a catalog, support-profile admission, and SRD fixture boundary; reducer evidence flows through passive Saving Throw roll-mode facts and Incapacitated condition state."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is feature-hosted condition and d20 roll modifier substrates."
+              ".references/srd-5.2.1/Classes/Barbarian.md#Level 2: Danger Sense defines Dexterity Saving Throw Advantage unless the creature has the Incapacitated condition.",
+              ".references/srd-5.2.1/Playing-the-Game.md#D20 Tests and #Advantage/Disadvantage define Saving Throw roll modes; .references/srd-5.2.1/Rules-Glossary.md#Incapacitated [Condition] defines the suppressing condition fact; UBIQUITOUS_LANGUAGE.md defines Saving Throw, Advantage and Disadvantage, Condition, and Incapacitated."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Extract generic roll-modifier, condition-suppression, and saving-throw/ability-check support-profile routes without branching on feature identity."
-            ]
+            "blockers": []
           },
-          "followUpTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES"
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
@@ -1046,26 +1027,31 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "feature-hosted condition and d20 roll modifier substrates",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
+          "subjectFamily": "roll-modifier, damage-reduction, and scalar-buff active-effect substrates",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
-              "No copied source qRoute connector currently extracts feature-hosted condition and d20 roll modifier substrates from packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt records RollModifierEffectRouteSubject evidence for Bless, Bane, and Guidance through spell invocation, active-effect, and Concentration owners.",
+              "packages/battle-runtime/battle-runtime-spell-damage-reduction.route.mbt.qnt records SpellDamageReductionRouteSubject evidence for Resistance through target-choice, damage-type-choice, active-effect, Concentration, rolled-dice, and damage-adjustment owners.",
+              "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt records ScalarBuffEffectRouteSubject evidence for Shield of Faith through active-effect and Concentration owners.",
+              "Selected spell identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed procedure facts and active effect state."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is feature-hosted condition and d20 roll modifier substrates."
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bane and #Bless plus .references/srd-5.2.1/Spells/Descriptions-E-L.md#Guidance define D20 roll modifiers carried by Concentration effects.",
+              ".references/srd-5.2.1/Spells/Descriptions-Q-R.md#Resistance defines the selected damage type and 1d4 matching damage reduction; .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield of Faith defines the Armor Class bonus active effect.",
+              ".references/srd-5.2.1/Playing-the-Game.md#D20 Tests, #Advantage/Disadvantage, and #Damage plus UBIQUITOUS_LANGUAGE.md define D20 roll, Damage, Damage Type, Spell Effect, and Concentration vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Extract generic roll-modifier, condition-suppression, and saving-throw/ability-check support-profile routes without branching on feature identity."
-            ]
+            "blockers": []
           },
-          "followUpTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES"
+          "routeConnectorPaths": [
+            "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-spell-damage-reduction.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt"
+          ]
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
@@ -1142,9 +1128,7 @@
           "route": "reducer-routed",
           "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
           "subjectFamily": "scalar buff spell-effect target route",
-          "requiredReducerEntrypoints": [
-            "resolve_battle_subject"
-          ],
+          "requiredReducerEntrypoints": ["resolve_battle_subject"],
           "durableStateOwner": "BattleState owns the target Speed projection and active Spell Effect instance; the route connector does not introduce a duplicate speed/effect ledger.",
           "acceptanceCondition": "Target replay evidence routes target selection through the shared reducer subject resolution path and observes the resulting active-effect-owned Speed change.",
           "branchObligations": 2,
@@ -1800,9 +1784,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreAbilitySkillCommandOwner"
-          ],
+          "componentOwners": ["RuleCoreAbilitySkillCommandOwner"],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR11-LEVEL3-4-SCOPE-PROMOTION"
@@ -1826,9 +1808,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreAttackDamageDispositionOwner"
-          ],
+          "componentOwners": ["RuleCoreAttackDamageDispositionOwner"],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES"
           ],
@@ -1851,9 +1831,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreFeatureProfileSemanticsOwner"
-          ],
+          "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
           "dependentRouteTaskIds": [
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
             "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
@@ -1878,9 +1856,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreHitPointDamageOwner"
-          ],
+          "componentOwners": ["RuleCoreHitPointDamageOwner"],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES"
@@ -1904,9 +1880,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreMovementGrappleOwner"
-          ],
+          "componentOwners": ["RuleCoreMovementGrappleOwner"],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
@@ -1931,9 +1905,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreReactionContinuationConcentrationOwner"
-          ],
+          "componentOwners": ["RuleCoreReactionContinuationConcentrationOwner"],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES"
@@ -1957,9 +1929,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreShoveOutcomeOwner"
-          ],
+          "componentOwners": ["RuleCoreShoveOutcomeOwner"],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES"
@@ -1983,9 +1953,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreSpellProcedureProfileOwner"
-          ],
+          "componentOwners": ["RuleCoreSpellProcedureProfileOwner"],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR12-LEVEL5-SCOPE-PROMOTION"
@@ -2009,9 +1977,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreStatBlockControlOwner"
-          ],
+          "componentOwners": ["RuleCoreStatBlockControlOwner"],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES"
           ],
@@ -3311,7 +3277,7 @@
           "taskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
           "subjectFamily": "feature-hosted condition and d20 roll modifier substrates",
           "requiredSourceWork": [
-            "Extract generic roll-modifier, condition-suppression, and saving-throw/ability-check support-profile routes without branching on feature identity."
+            "Task 25 supplied packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt as generic substrate evidence for passive Saving Throw roll modes and Incapacitated suppression, and packages/battle-runtime/battle-runtime-spell-damage-reduction.route.mbt.qnt for Resistance spell damage-reduction target, damage-type, reduction-roll, active-effect, and Concentration owners. Bless, Bane, Guidance, and Shield of Faith replay counts use the existing roll-modifier and scalar-buff active-effect route connectors."
           ]
         },
         {

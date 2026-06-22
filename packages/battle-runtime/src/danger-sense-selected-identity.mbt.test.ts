@@ -1,8 +1,26 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B4-CLASS-FEATURE-IDENTITY-BATCH-1 barbarian_danger_sense
 // UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 barbarian_danger_sense doProjectDangerSenseDexterityAdvantage doSuppressDangerSenseWhileIncapacitated
+import { describe, expect, it } from "vitest";
+
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  decodeReducerRoute,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  quintField,
+  quintStateRecord,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteResolveBattleSubjectWithoutFill,
+  reducerRouteStartBattle,
+  run,
+  stateCheck,
+  type ReducerRouteEvent,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   applyCondition,
@@ -52,7 +70,9 @@ defineSelectedIdentityWitness({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: DANGER_SENSE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: DANGER_SENSE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     lastResult: "variant",
     sourceUnitId: "str",
@@ -168,4 +188,111 @@ function incapacitatedDangerSenseBattle(): BattleState {
       ),
     }),
   };
+}
+
+type DangerSenseSubstrateRouteProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const dangerSenseSubstrateRouteDriverSchema = {
+  init: {},
+  doRouteDangerSenseDexterityAdvantage: {},
+  doRouteDangerSenseIncapacitatedSuppression: {},
+  step: {},
+} as const;
+
+describe("Danger Sense substrate route MBT", () => {
+  it(
+    "routes passive save roll mode and Incapacitated suppression through generic owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-danger-sense-substrates.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createDangerSenseSubstrateRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(2),
+        stateCheck: dangerSenseSubstrateRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+});
+
+function createDangerSenseSubstrateRouteDriver() {
+  return defineDriver<
+    typeof dangerSenseSubstrateRouteDriverSchema,
+    DangerSenseSubstrateRouteProjection
+  >(dangerSenseSubstrateRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      route = [reducerRouteStartBattle("battleSavingThrowRollMode")];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteDangerSenseDexterityAdvantage: () => {
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: "passiveSavingThrowRollMode",
+            holes: [{ kind: "savingThrowOutcome" }],
+            owner: "battleSavingThrowRollMode",
+          }),
+          reducerRouteResolveBattleSubject({
+            subject: "passiveSavingThrowRollMode",
+            fill: "savingThrowOutcome",
+            holes: [],
+            owner: "battleSavingThrowRollMode",
+          }),
+        ];
+      },
+      doRouteDangerSenseIncapacitatedSuppression: () => {
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: "passiveSavingThrowRollMode",
+            holes: [],
+            owner: "battleSavingThrowRollMode",
+          }),
+          reducerRouteResolveBattleSubjectWithoutFill({
+            subject: "passiveSavingThrowRollMode",
+            holes: [],
+            owner: "battleConditionLifecycle",
+          }),
+        ];
+      },
+      step: () => {},
+      getState: () => ({ route }),
+    };
+  });
+}
+
+const dangerSenseSubstrateRouteStateCheck = stateCheck(
+  normalizeDangerSenseSubstrateRouteQuintState,
+  compareDangerSenseSubstrateRouteStates,
+);
+
+function normalizeDangerSenseSubstrateRouteQuintState(
+  raw: unknown,
+): DangerSenseSubstrateRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function compareDangerSenseSubstrateRouteStates(
+  spec: DangerSenseSubstrateRouteProjection,
+  impl: DangerSenseSubstrateRouteProjection,
+): boolean {
+  expect(impl).toEqual(spec);
+  return true;
 }
