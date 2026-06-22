@@ -6,7 +6,7 @@
     "kind": "trained"
   },
   "className": "warlock",
-  "description": "SRD Warlock class creation and early progression facts through level 4, including Pact Magic progression, the level-2 Magical Cunning feature grant, and level-3 subclass selection.",
+  "description": "SRD Warlock class creation and level 1-5 progression facts, including Pact Magic progression, the level-2 Magical Cunning feature grant, and level-3 subclass selection.",
   "featureGrants": [
     {
       "level": 1,
@@ -46,7 +46,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Warlock.md:3-24,31-54,68-102"
+    "section": "Classes/Warlock.md:3-24,31-45,68-102,332-390"
   },
   "savingThrowProficiencies": [
     "wis",
@@ -73,10 +73,13 @@
       "choose": 2,
       "kind": "known_cantrips_from_class_spell_list",
       "spellIds": [
+        "chill_touch",
         "eldritch_blast",
+        "mage_hand",
         "minor_illusion",
         "poison_spray",
-        "prestidigitation"
+        "prestidigitation",
+        "true_strike"
       ]
     },
     "featureLevel": 1,
@@ -240,23 +243,11 @@
       "kind": "prepared_from_class_spell_list",
       "spells": [
         {
-          "spellId": "charm_person",
-          "spellLevel": 1
-        },
-        {
-          "spellId": "hellish_rebuke",
-          "spellLevel": 1
-        },
-        {
-          "spellId": "hex",
-          "spellLevel": 1
-        },
-        {
-          "spellId": "mirror_image",
-          "spellLevel": 2
-        },
-        {
           "spellId": "bane",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "charm_person",
           "spellLevel": 1
         },
         {
@@ -272,7 +263,27 @@
           "spellLevel": 1
         },
         {
+          "spellId": "hellish_rebuke",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "hex",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "hideous_laughter",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "illusory_script",
+          "spellLevel": 1
+        },
+        {
           "spellId": "protection_from_evil_and_good",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "speak_with_animals",
           "spellLevel": 1
         },
         {
@@ -284,6 +295,10 @@
           "spellLevel": 2
         },
         {
+          "spellId": "enthrall",
+          "spellLevel": 2
+        },
+        {
           "spellId": "hold_person",
           "spellLevel": 2
         },
@@ -292,12 +307,72 @@
           "spellLevel": 2
         },
         {
+          "spellId": "mind_spike",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "mirror_image",
+          "spellLevel": 2
+        },
+        {
           "spellId": "misty_step",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "ray_of_enfeeblement",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "spider_climb",
           "spellLevel": 2
         },
         {
           "spellId": "suggestion",
           "spellLevel": 2
+        },
+        {
+          "spellId": "counterspell",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "dispel_magic",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "fear",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "fly",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "gaseous_form",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "hypnotic_pattern",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "magic_circle",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "major_image",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "remove_curse",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "tongues",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "vampiric_touch",
+          "spellLevel": 3
         }
       ]
     },

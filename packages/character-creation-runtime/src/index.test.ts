@@ -284,6 +284,15 @@ function finalizedWarlockBuild(draftId: string): CharacterBuild {
     draft: completeSupportedProgressionDraft({
       draftId,
       progression: testProgression("class_warlock", 1),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "class_warlock",
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("charm_person"),
+          creationChoiceOptionId("hellish_rebuke"),
+        ],
+      },
     }),
     unitLibrary,
   });
@@ -867,6 +876,7 @@ describe("character creation hole discovery", () => {
           "12:class_wizard|12:class_wizard|12:class_wizard:level_3:fixed_hp_gain",
           "12:class_wizard|12:class_wizard:level_2:fixed_hp_gain",
           "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_4:fixed_hp_gain",
+          "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
           "12:class_wizard|13:class_fighter:level_2:fixed_hp_gain",
         ],
       ],
@@ -1223,10 +1233,7 @@ describe("character creation hole discovery", () => {
       expect(
         characterBuildFeatureUnitIds(paladinFeatBuild.build, unitLibrary),
       ).toEqual(
-        expect.arrayContaining([
-          "paladin_fighting_style",
-          selectedFeatUnitId,
-        ]),
+        expect.arrayContaining(["paladin_fighting_style", selectedFeatUnitId]),
       );
       expect(
         selectedBuildClassChoiceUnitIds(
@@ -1903,6 +1910,7 @@ describe("character creation hole discovery", () => {
         { optionId: "armor_chain_mail" },
         { optionId: "weapon_longsword" },
         { optionId: "weapon_dagger" },
+        { optionId: "weapon_quarterstaff" },
         { optionId: "weapon_flail" },
         { optionId: "equipment_shield" },
       ],
@@ -2115,6 +2123,35 @@ describe("character creation hole discovery", () => {
 
     expect(
       holeById(holes, testLoadoutHoleId("weapon_flail", "weapon")),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+      options: [{ optionId: "wielded_one_handed" }],
+    });
+  });
+
+  test("opens Quarterstaff loadout when a coin-equipment Druid purchases a Shillelagh weapon", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        progression: testProgression("class_druid", 1),
+        background: "background_criminal",
+        choices: [
+          selectedChoice("class_druid", "class_equipment_choice", "option_b"),
+          selectedChoice(
+            "background_criminal",
+            "background_equipment_choice",
+            "option_b",
+          ),
+        ],
+        equipment: {
+          selectedUnitIds: ["weapon_quarterstaff"],
+        },
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(holes, testLoadoutHoleId("weapon_quarterstaff", "weapon")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
@@ -3520,7 +3557,10 @@ describe("character creation finalization", () => {
 
     expect(forestFinalization.tag).toBe("ready");
     expect(rockFinalization.tag).toBe("ready");
-    if (forestFinalization.tag !== "ready" || rockFinalization.tag !== "ready") {
+    if (
+      forestFinalization.tag !== "ready" ||
+      rockFinalization.tag !== "ready"
+    ) {
       return;
     }
 
@@ -3931,10 +3971,7 @@ describe("character creation finalization", () => {
           (ref) => ref.unitId,
         ),
       ).toEqual(
-        expect.arrayContaining([
-          "species_human_versatile",
-          featUnitId,
-        ]),
+        expect.arrayContaining(["species_human_versatile", featUnitId]),
       );
     },
   );
@@ -4247,6 +4284,11 @@ describe("character creation finalization", () => {
     const clericProtector = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-cleric-protector-feature-choice",
       progression: testProgression("class_cleric", 1),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("cleric_divine_order", "divine_order")]: [
+          creationChoiceOptionId("protector"),
+        ],
+      },
     });
     const clericThaumaturge = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-cleric-thaumaturge-feature-choice",
@@ -4258,7 +4300,7 @@ describe("character creation finalization", () => {
         [testUnitChoiceSourceKey(
           "cleric_divine_order",
           CLASS_CANTRIP_CHOICE_KEY,
-        )]: [creationChoiceOptionId("light")],
+        )]: [creationChoiceOptionId("resistance")],
       },
     });
     const druidMagician = completeSupportedProgressionDraft({
@@ -4299,7 +4341,7 @@ describe("character creation finalization", () => {
         "cleric_divine_order",
         CLASS_CANTRIP_CHOICE_KEY,
       ),
-    ).toEqual(["light"]);
+    ).toEqual(["resistance"]);
     expect(
       selectedChoiceOptionIds(
         druidMagician,
@@ -4554,7 +4596,13 @@ describe("character creation finalization", () => {
       if (result.tag !== "ready") continue;
 
       const spellcasting = classFacts.spellcasting;
-      const expectedClassCantrips = spellcasting.cantripAccess?.spellIds ?? [];
+      const expectedClassCantrips =
+        spellcasting.cantripAccess === undefined
+          ? []
+          : spellcasting.cantripAccess.spellIds.slice(
+              0,
+              spellcasting.cantripAccess.choose,
+            );
       const expectedCantrips = selectedChoiceOptionIdsByChoiceKey(
         draft,
         CLASS_CANTRIP_CHOICE_KEY,
@@ -4646,6 +4694,17 @@ describe("character creation finalization", () => {
     const paladinDraft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-class_paladin-spellcasting",
       progression: testProgression("class_paladin", 3),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "class_paladin",
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("heroism"),
+          creationChoiceOptionId("searing_smite"),
+          creationChoiceOptionId("bless"),
+          creationChoiceOptionId("command"),
+        ],
+      },
     });
     const paladinResult = finalizeCharacterDraft({
       draft: paladinDraft,
@@ -4674,6 +4733,17 @@ describe("character creation finalization", () => {
     const warlockDraft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-class_warlock-pact-magic",
       progression: testProgression("class_warlock", 3),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "class_warlock",
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("charm_person"),
+          creationChoiceOptionId("hellish_rebuke"),
+          creationChoiceOptionId("hex"),
+          creationChoiceOptionId("mirror_image"),
+        ],
+      },
     });
     const warlockResult = finalizeCharacterDraft({
       draft: warlockDraft,
@@ -6141,6 +6211,14 @@ describe("character creation finalization", () => {
           creationChoiceOptionId("guidance"),
           creationChoiceOptionId("sacred_flame"),
         ],
+        [testUnitChoiceSourceKey(
+          "class_paladin",
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("heroism"),
+          creationChoiceOptionId("searing_smite"),
+          creationChoiceOptionId("bless"),
+        ],
       },
     });
     const finalized = finalizeCharacterDraft({ draft, unitLibrary });
@@ -6217,6 +6295,14 @@ describe("character creation finalization", () => {
         )]: [
           creationChoiceOptionId("guidance"),
           creationChoiceOptionId("starry_wisp"),
+        ],
+        [testUnitChoiceSourceKey(
+          "class_ranger",
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("cure_wounds"),
+          creationChoiceOptionId("ensnaring_strike"),
+          creationChoiceOptionId("longstrider"),
         ],
       },
     });
@@ -6635,10 +6721,7 @@ describe("character creation finalization", () => {
           ),
         ),
       ),
-    ).toEqual([
-      "ability_score:str:+1:max20",
-      "ability_score:dex:+1:max20",
-    ]);
+    ).toEqual(["ability_score:str:+1:max20", "ability_score:dex:+1:max20"]);
   });
 
   test("rejects selected Grappler below Level 4", () => {
@@ -7752,8 +7835,8 @@ describe("character creation finalization", () => {
     );
 
     expect(spellcastingSourceCantrips(result, "class_warlock")).toEqual([
+      "chill_touch",
       "prestidigitation",
-      "minor_illusion",
       "true_strike",
     ]);
     expect(
@@ -7921,13 +8004,18 @@ describe("character creation finalization", () => {
           cantrips: ["light", "fire_bolt", "ray_of_frost"],
           spellbook: [
             "detect_magic",
+            "burning_hands",
             "mage_armor",
             "magic_missile",
             "shield",
             "sleep",
-            "thunderwave",
           ],
-          preparedSpells: ["detect_magic", "magic_missile", "shield", "sleep"],
+          preparedSpells: [
+            "burning_hands",
+            "detect_magic",
+            "magic_missile",
+            "shield",
+          ],
           spellcastingFocuses: ["arcane_focus", "spellbook"],
         },
       ],
@@ -7963,11 +8051,11 @@ describe("character creation finalization", () => {
       "fire_bolt",
       "ray_of_frost",
       "detect_magic",
+      "burning_hands",
       "mage_armor",
       "magic_missile",
       "shield",
       "sleep",
-      "thunderwave",
     ]);
   });
 
@@ -9546,7 +9634,11 @@ function supportedFillForHole(
     selectedOptionIds.length < choiceCardinalityBounds(hole.cardinality).max
   ) {
     throw new Error(
-      `Not enough supported options for discovered test hole: ${hole.holeId}`,
+      `Not enough supported options for discovered test hole: ${hole.holeId}; preferred=${JSON.stringify(
+        preferredOptionIds,
+      )}; supported=${JSON.stringify(supportedOptionIds)}; holeOptions=${JSON.stringify(
+        holeOptionIds,
+      )}`,
     );
   }
 
@@ -10413,18 +10505,18 @@ function completeWizardDraft(): CharacterDraft {
         choiceFill(
           testUnitHoleId("class_wizard", "wizard_spellbook_choices"),
           "detect_magic",
+          "burning_hands",
           "mage_armor",
           "magic_missile",
           "shield",
           "sleep",
-          "thunderwave",
         ),
         choiceFill(
           testUnitHoleId("class_wizard", "wizard_prepared_spell_choices"),
+          "burning_hands",
           "detect_magic",
           "magic_missile",
           "shield",
-          "sleep",
         ),
         choiceFill(
           testUnitHoleId(

@@ -207,8 +207,8 @@
       ],
       "sourceBranchInventory": {
         "driverFiles": 97,
-        "branchObligations": 699,
-        "currentInScopeBranchObligations": 663,
+        "branchObligations": 704,
+        "currentInScopeBranchObligations": 668,
         "currentOutOfScopeBranchObligations": 36,
         "sampledInputs": 24,
         "baselineWitnessDriverFiles": 1,

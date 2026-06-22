@@ -6,11 +6,14 @@ module characterBattleSettlementMbt {
   type CharacterBattleSettlementOutcome =
     | CharacterBattleSettlementInit
     | CharacterBattleSettlementSettleHitPointsConditionsSlotsAndPreservedSheetState
+    | CharacterBattleSettlementSettlePurePactMagicSlotExpenditure
+    | CharacterBattleSettlementMixedSpellAndPactSlotSettlementRejected
     | CharacterBattleSettlementSettleFeatureResourceExpenditure
     | CharacterBattleSettlementAmbiguousCreatedSpellSlotSourceRejected
     | CharacterBattleSettlementMismatchedCharacterIdentityRejected
     | CharacterBattleSettlementMaximumHpDriftRejected
     | CharacterBattleSettlementActiveWildShapeHandoffRejected
+    | CharacterBattleSettlementActiveBattleStateHandoffRejected
     | CharacterBattleSettlementStableRecoveryProgressRejected
     | CharacterBattleSettlementSettleZeroHpStableLifecycle
 
@@ -99,15 +102,38 @@ module characterBattleSettlementMbt {
         .with("poisoned", true)
         .with("prone", true)
         .with("spellLevel1Expended", 2)
-        .with("pactSlotsExpended", 1)
         .with("spentHitDice", 1)
         .with("restFeatureUsed", true),
       1,
     ),
   }
 
-  action doSettleFeatureResourceExpenditure = all {
+  action doSettlePurePactMagicSlotExpenditure = all {
     qState.replayIndex == 1,
+    recordProjection(
+      CharacterBattleSettlementSettlePurePactMagicSlotExpenditure,
+      true,
+      "none",
+      emptySettlementFacts
+        .with("currentHp", 8)
+        .with("pactSlotsExpended", 1),
+      2,
+    ),
+  }
+
+  action doRejectMixedSpellAndPactSlotSettlement = all {
+    qState.replayIndex == 2,
+    recordProjection(
+      CharacterBattleSettlementMixedSpellAndPactSlotSettlementRejected,
+      false,
+      "Battle handoff cannot project mixed Spell Slot and Pact Slot state without source-distinct battle slots.",
+      emptySettlementFacts,
+      3,
+    ),
+  }
+
+  action doSettleFeatureResourceExpenditure = all {
+    qState.replayIndex == 3,
     recordProjection(
       CharacterBattleSettlementSettleFeatureResourceExpenditure,
       true,
@@ -115,12 +141,12 @@ module characterBattleSettlementMbt {
       emptySettlementFacts
         .with("currentHp", 24)
         .with("featureResourceExpended", 3),
-      2,
+      4,
     ),
   }
 
   action doRejectAmbiguousCreatedSpellSlotSource = all {
-    qState.replayIndex == 2,
+    qState.replayIndex == 4,
     recordProjection(
       CharacterBattleSettlementAmbiguousCreatedSpellSlotSourceRejected,
       false,
@@ -128,45 +154,45 @@ module characterBattleSettlementMbt {
       emptySettlementFacts
         .with("createdLevel3Capacity", 1)
         .with("createdLevel3Expended", 0),
-      3,
+      5,
     ),
   }
 
   action doRejectMismatchedCharacterIdentity = all {
-    qState.replayIndex == 3,
+    qState.replayIndex == 5,
     recordProjection(
       CharacterBattleSettlementMismatchedCharacterIdentityRejected,
       false,
       "Battle handoff character identity does not match Character Sheet.",
       emptySettlementFacts,
-      4,
+      6,
     ),
   }
 
   action doRejectMaximumHpDrift = all {
-    qState.replayIndex == 4,
+    qState.replayIndex == 6,
     recordProjection(
       CharacterBattleSettlementMaximumHpDriftRejected,
       false,
       "Battle handoff maximum HP does not match Character Sheet.",
       emptySettlementFacts,
-      5,
+      7,
     ),
   }
 
   action doRejectActiveWildShapeHandoff = all {
-    qState.replayIndex == 5,
+    qState.replayIndex == 7,
     recordProjection(
       CharacterBattleSettlementActiveWildShapeHandoffRejected,
       false,
       "Battle handoff while Wild Shape is active is blocked; dismiss or resolve reversion before Character Sheet handoff.",
       emptySettlementFacts,
-      6,
+      8,
     ),
   }
 
   action doRejectStableRecoveryProgressHandoff = all {
-    qState.replayIndex == 6,
+    qState.replayIndex == 9,
     recordProjection(
       CharacterBattleSettlementStableRecoveryProgressRejected,
       false,
@@ -174,12 +200,23 @@ module characterBattleSettlementMbt {
       emptySettlementFacts
         .with("zeroHpState", "stable")
         .with("stableRecoveryElapsed", 1),
-      7,
+      10,
+    ),
+  }
+
+  action doRejectActiveBattleStateHandoff = all {
+    qState.replayIndex == 8,
+    recordProjection(
+      CharacterBattleSettlementActiveBattleStateHandoffRejected,
+      false,
+      "Battle handoff while active battle effects or Concentration are present is blocked; end or resolve battle-local effects before Character Sheet handoff.",
+      emptySettlementFacts,
+      9,
     ),
   }
 
   action doSettleZeroHpStableLifecycle = all {
-    qState.replayIndex == 7,
+    qState.replayIndex == 10,
     recordProjection(
       CharacterBattleSettlementSettleZeroHpStableLifecycle,
       true,
@@ -187,17 +224,20 @@ module characterBattleSettlementMbt {
       emptySettlementFacts
         .with("zeroHpState", "stable")
         .with("stableRecoveryElapsed", 0),
-      8,
+      11,
     ),
   }
 
   action step = any {
     doSettleHitPointsConditionsSlotsAndPreservedSheetState,
+    doSettlePurePactMagicSlotExpenditure,
+    doRejectMixedSpellAndPactSlotSettlement,
     doSettleFeatureResourceExpenditure,
     doRejectAmbiguousCreatedSpellSlotSource,
     doRejectMismatchedCharacterIdentity,
     doRejectMaximumHpDrift,
     doRejectActiveWildShapeHandoff,
+    doRejectActiveBattleStateHandoff,
     doRejectStableRecoveryProgressHandoff,
     doSettleZeroHpStableLifecycle,
   }

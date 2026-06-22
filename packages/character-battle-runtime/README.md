@@ -20,19 +20,22 @@ Owned boundary functions:
   invocation ownership into the `eldritchMind` battle invocation feature, which
   battle-runtime uses only for Concentration maintenance Saving Throws.
 - `settleCharacterSheetFromBattle` settles battle-owned HP, Temporary Hit
-  Points, non-Unconscious conditions, ordinary Spell Slot expenditure, and
-  supported feature-resource expenditure back onto the same Character Sheet
-  identity, then settles retained companion outcome from the same Battle State.
-  Pact Slot state is preserved from the sheet because promoted battle state does
-  not carry Pact Slot expenditure separately.
+  Points, non-Unconscious conditions, ordinary Spell Slot expenditure, pure Pact
+  Slot expenditure, and supported feature-resource expenditure back onto the
+  same Character Sheet identity, then settles retained companion outcome from
+  the same Battle State. Mixed ordinary Spell Slot plus Pact Slot state is
+  rejected until battle Spell Slots carry source-distinct slot identity.
 
 Battle handoff settlement has a fixed order:
 
 1. Reject non-character combatants, character-identity mismatch, max-HP drift,
-   over-maximum HP, and active Wild Shape forms before writing sheet state.
+   over-maximum HP, active Wild Shape forms, active battle effects,
+   Concentration, and active ongoing feature occurrences before writing sheet
+   state.
 2. Derive zero-HP lifecycle and Knock Out state from the combatant.
-3. Derive battle-owned resource and Spell Slot deltas, rejecting slot-capacity
-   drift, lower-than-sheet expenditure, over-expenditure, and source-ambiguous
+3. Derive battle-owned resource, ordinary Spell Slot, and pure Pact Slot deltas,
+   rejecting slot-capacity drift, lower-than-sheet expenditure,
+   over-expenditure, mixed ordinary-plus-Pact slot pools, and source-ambiguous
    ordinary-vs-created Spell Slot spends.
 4. Recreate the Character Sheet from durable sheet/build facts plus battle-owned
    HP, Temporary Hit Points, non-Unconscious conditions, and resource

@@ -27,6 +27,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
+  maybeBonusSpellAct,
   knownWillingSpellTargetFill,
   knownWillingSpellTargetListFill,
   spellAct,
@@ -389,6 +390,13 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ],
       },
     });
+  });
+
+  test("scalar buff admission rejects explicit non-creature target selections", () => {
+    const spell = shieldOfFaithWithObjectTarget();
+    const state = spellBattle({ preparedSpells: [spell] });
+
+    expect(maybeBonusSpellAct({ state, spellId: spell.id })).toBeUndefined();
   });
 
   test("barkskin is admitted as a Bonus Action timed willing-target Armor Class floor", () => {
@@ -1227,9 +1235,9 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       reason: "cleanupFrameMissing",
     });
     const groundedState = breakBattleConcentration(cast.state, spellCasterId);
-    expect(requirePendingFlySpeedGrantCleanup(groundedState, spellCasterId)).toBe(
-      endedEffect,
-    );
+    expect(
+      requirePendingFlySpeedGrantCleanup(groundedState, spellCasterId),
+    ).toBe(endedEffect);
     const grounded = resolveFlySpeedGrantEndFallCleanup({
       state: groundedState,
       targetId: spellCasterId,
@@ -1633,9 +1641,7 @@ function requirePendingFlySpeedGrantCleanup(
   targetId: CombatantId,
 ): EndedFlySpeedGrant {
   const frame = state.interruptStack.find(
-    (
-      candidate,
-    ): candidate is BattleFlySpeedGrantEndFallCleanupFrame =>
+    (candidate): candidate is BattleFlySpeedGrantEndFallCleanupFrame =>
       candidate.kind === "flySpeedGrantEndFallCleanup" &&
       candidate.targetId === targetId,
   );
@@ -1901,3 +1907,40 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
     expect(resolved).toMatchObject({ tag: "resolved" });
   });
 });
+
+function shieldOfFaithWithObjectTarget(): ReturnType<typeof spellRecord> {
+  const spell = spellRecord(shieldOfFaithUnitId);
+  if (spell.mechanics.family !== "activation") {
+    throw new Error("Expected Shield of Faith activation mechanics.");
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target"
+  ) {
+    throw new Error("Expected Shield of Faith direct target phase.");
+  }
+  return {
+    ...spell,
+    id: "shield_of_faith_object_target",
+    mechanics: {
+      ...spell.mechanics,
+      phases: [
+        {
+          ...phase,
+          attachment: {
+            ...phase.attachment,
+            value: {
+              ...phase.attachment.value,
+              selection: {
+                ...phase.attachment.value.selection,
+                targetKinds: ["object"],
+              },
+            },
+          },
+        },
+      ],
+    },
+  } as ReturnType<typeof spellRecord>;
+}

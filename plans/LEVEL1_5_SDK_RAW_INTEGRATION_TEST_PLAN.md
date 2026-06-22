@@ -1,0 +1,889 @@
+# Level 1-5 SDK RAW Integration Test Plan
+
+Status: in progress
+
+This plan covers the large follow-up from the initial level-5 SDK tracer bullets:
+build the rest of the character-level 1 through 5 SDK integration tests against
+local RAW. The intent is broad confidence through the real repo SDK path, not a
+new Ralph lane and not a replacement for focused runtime, QNT, or MBT parity.
+
+The current seed files are
+`packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts` and
+`packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`. They
+prove the first representative SDK paths for level-5 tracer bullets and the
+level-1 battle-feature baseline.
+
+## Scope
+
+Add deterministic SDK integration coverage for SRD-authored character levels 1
+through 5. A row counts only when the test or closure goes through the domain
+owner that a real user would exercise:
+
+- character build/finalization for authored choices and derived build facts;
+- character sheet runtime for persistent sheet state, rests, resources,
+  spellbooks, prepared spells, and recovery;
+- character-battle runtime for build/sheet to battle projection;
+- battle runtime for act discovery, fill protocol, resolution, and battle
+  snapshots when the rule is battle-executable.
+
+This is big work. Do not attempt it as one monolithic change. Split it into
+small vertical slices, keep each slice mergeable, and treat the level matrix as
+the control surface for progress.
+
+## Non-Goals
+
+- Do not add PHB+ authored ids, names, slugs, prose, examples, source headings,
+  or catalog identity.
+- Do not browse external rules sources.
+- Do not widen runtime behavior just to make an integration test pass. If a
+  tracer exposes a real gap, update the owning Surface/runtime/QNT layer first.
+- Do not use direct battle test seeds as a substitute for SDK projection. Direct
+  seeds remain valid only for lower-level focused runtime tests.
+- Do not run battle MBT for inventory or exploration. Use MBT only after actual
+  runtime/spec changes and only as the focused final validation lane.
+
+## Durable Decisions
+
+- **RAW source**: SRD 5.2.1 under `.references/srd-5.2.1/` is the source of
+  truth. `UBIQUITOUS_LANGUAGE.md` supplies project terminology.
+- **Coverage unit**: a scenario covers one or more RAW obligations only when it
+  asserts a RAW-facing effect, resource, projection, or closure. Merely touching
+  a unit id is not coverage.
+- **Integration boundary**: battle-executable rules should start from
+  `CharacterBuild` or `CharacterSheet`, project through character-battle, then
+  use battle act discovery and resolution. Sheet-only rules stop at the sheet
+  owner. Build-only rules stop at character creation/finalization.
+- **Harness style**: start with file-local builders. Promote helpers only after
+  repeated setup makes local duplication harmful. Helper promotion must encode
+  domain invariants, not hide projection failures.
+- **Evidence shape**: if a matrix/status artifact is added, it must become an
+  executable or reviewer-used boundary. Do not add inert status labels.
+- **Synthetic fixtures**: synthetic monsters, damage sources, and character ids
+  are allowed when needed to stimulate SRD mechanics. They must be visibly
+  synthetic and must not claim SRD provenance.
+
+## Source Artifacts
+
+- `.references/srd-5.2.1/Character-Creation.md`
+- `.references/srd-5.2.1/Character-Origins.md`
+- `.references/srd-5.2.1/Classes/*.md`
+- `.references/srd-5.2.1/Equipment.md`
+- `.references/srd-5.2.1/Feats.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Spells/*.md`
+- `UBIQUITOUS_LANGUAGE.md`
+- `ASSUMPTIONS.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_4_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_7_MINING_AUDIT.md`
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `plans/unit-profile-coverage/character-creation-owner-evidence.json`
+- `plans/unit-profile-coverage/character-sheet-owner-evidence.json`
+- `plans/raw-coverage/REPORT.md`
+- `plans/raw-coverage/*.jsonl`
+- `scripts/sdk-raw-integration-inventory.cjs`
+- `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+- `plans/sdk-raw-integration/LEVEL1_5_SDK_RAW_INVENTORY.md`
+- `plans/RALPH_L5_LANE_A_CLASS_FEATURES.md`
+- `plans/RALPH_L5_LANE_B_SPELL3_AUTHORED_CLOSURE.md`
+- `plans/RALPH_L5_LANE_C_SPELL3_MISSING_AUTHORED_1.md`
+- `plans/RALPH_L5_LANE_D_SPELL3_MISSING_AUTHORED_2.md`
+- package READMEs and focused tests in `packages/character-creation-runtime/`,
+  `packages/character-sheet-runtime/`,
+  `packages/character-battle-runtime/`, and `packages/battle-runtime/`
+
+## Current Inventory Findings
+
+The first Task 1 artifact is now generated by
+`scripts/sdk-raw-integration-inventory.cjs`. It intentionally separates
+existing owner-evidence reports from SDK integration disposition so the plan
+does not claim SDK coverage just because a lower owner already has focused
+coverage.
+
+Current generated findings:
+
+- The JSON inventory is schema version 4. It persists all 770 mined level 1-5
+  rows with SDK dispositions, owner-boundary evidence where used, and 411
+  scenario groups. The Markdown report stays summarized, with the level-5
+  completion rows and scenario groups expanded for the next implementation
+  slice. Schema version 4 preserves each row's full source `supportSnapshot`,
+  including states such as `not-recorded` and `not-applicable`, instead of
+  flattening them into omitted JSON properties.
+- Level 1-4 source reports are still cumulative unique-unit reports for
+  historical full-support gates. The current frontier set contains 63 unique
+  units, while the row-grained SDK inventory contains 632 level 1-4/spell 0-2
+  rows.
+- Level 5 and spell-level-3 mining rows are already row-grained enough to drive
+  completion work. There are 138 completion rows: 28 level-5 rows and 110
+  spell-level-3 rows.
+- The existing level-5 tracer suite covers 6 row-specific SDK obligations:
+  Monk Extra Attack, Monk Stunning Strike, Rogue Cunning Strike, Sorcerer
+  Sorcerous Restoration, Wizard Haste, and Wizard Protection from Energy.
+  Shared spell ids on other class lists still need their own SDK scenario or
+  explicit closure.
+- The level-1 Innate Sorcery seed uses four installed SRD Sorcerer cantrips
+  plus the SRD-recommended prepared spells. `class_sorcerer` references
+  `prestidigitation`, but the current executable Unit catalog does not install
+  that spell Unit; full level-1 Sorcerer spell access closure remains part of
+  Task 3 rather than this battle-feature seed.
+- The level-1 Burning Hands seeds cover the Sorcerer and Wizard spell-list rows
+  through level-1 sheet projection, battle act discovery, self-origin Cone
+  Saving Throw resolution, Fire damage, and spell-slot spend. The Wizard seed
+  is paired with a targeted `class_wizard` spellbook/prepared-access correction
+  plus a character-creation finalization assertion so the row is not claimed
+  through a hand-authored spellbook bypass. The seeds do not assert the RAW
+  flammable-object clause; `burning_hands.dhall` now records that clause as a
+  future object/area witness owner gap rather than table narrative.
+- The level-1 Mage Armor seed covers the Sorcerer and Wizard spell-list rows
+  through level-1 sheet projection, battle act discovery, self-target Touch
+  selection, an 8-hour `spellBaseArmorClass` effect with `targetDonsArmor`
+  early end, base AC `13 + Dexterity modifier`, action spend, and spell-slot
+  spend. The seed exposed and fixed a narrow `class_sorcerer` prepared-access
+  gap so the Sorcerer row is claimed through character creation rather than a
+  hand-authored spell list.
+- The level-1 False Life seed covers the Sorcerer and Wizard spell-list rows
+  through level-1 sheet projection, battle act discovery, a self-target
+  Temporary Hit Points Spell Effect, 2d4+4 Temporary Hit Points, instantaneous
+  no-active-effect state, action spend, and spell-slot spend. The seed exposed
+  and fixed narrow `class_sorcerer` and `class_wizard` spell-access gaps so both
+  rows are claimed through character creation rather than hand-authored spell
+  lists.
+- The level-1 Ray of Sickness seed covers the Sorcerer and Wizard spell-list
+  rows through level-1 sheet projection, battle act discovery, 60-foot ranged
+  Spell Attack resolution, RAW Instantaneous spell duration, 2d8 Poison damage,
+  the Poisoned condition until the end of the caster's next turn,
+  turn-boundary cleanup, action spend, and spell-slot spend. The seed exposed
+  and fixed narrow `class_sorcerer` and `class_wizard` spell-access gaps so
+  both rows are claimed through character creation rather than hand-authored
+  spell lists.
+- The level-1 Thunderwave seed covers the Sorcerer and Wizard spell-list rows
+  through level-1 sheet projection, battle act discovery, self-origin 15-foot
+  Cube Constitution Saving Throw shape, failed-save 2d8 Thunder damage,
+  successful-save half damage, failed-save 10-foot creature-push table fact,
+  unsecured-object 10-foot push table fact, 300-foot thunderous-boom table
+  fact, action spend, and spell-slot spend. RAW also lists Bard and Druid;
+  those class-access rows remain future Task 3 SDK slices rather than being
+  claimed by this Sorcerer/Wizard seed.
+- The level-1 Acid Splash seed covers the Sorcerer and Wizard cantrip
+  spell-list rows through level-1 sheet projection, battle act discovery,
+  point-origin 5-foot Sphere Saving Throw shape, Dexterity save, failed-save
+  1d6 Acid damage, successful-save no-damage behavior, action spend, and no
+  spell-slot spend.
+- The level-1 Sorcerous Burst seed covers the Sorcerer cantrip spell-list row
+  through level-1 Sorcerer character creation, cantrip sheet projection, battle
+  act discovery, Damage Type choice among Acid, Cold, Fire, Lightning, Poison,
+  Psychic, and Thunder, creature-or-object target shape with a combatant target
+  witness and object-target witness availability, 120-foot ranged Spell Attack,
+  1d8 chosen Thunder damage with one exploding d8 witness capped by Charisma
+  modifier, action spend, and no spell-slot spend. It does not claim object
+  hit-point disposition or higher character-level cantrip scaling.
+- The level-1 Poison Spray seed covers the Druid, Sorcerer, Warlock, and
+  Wizard cantrip spell-list rows through level-1 sheet projection, battle act
+  discovery, 30-foot ranged Spell Attack resolution, creature-only target shape, 1d12
+  Poison damage, action spend, and no spell-slot spend. The seed exposed and
+  fixed narrow `class_druid`, `class_sorcerer`, and `class_wizard`
+  cantrip-access gaps so all four rows are claimed through character creation
+  rather than hand-authored cantrip lists. The Warlock row also asserts the
+  level-1 Pact Magic pool projects into battle and remains unspent by the
+  cantrip.
+- The level-1 Produce Flame seed covers the Druid cantrip spell-list row
+  through level-1 sheet projection, Bonus Action held-light discovery and
+  resolution, 20-foot Bright Light plus 20-foot Dim Light, no hurl action before
+  the flame is held, Magic action hurl discovery, creature-or-object target
+  shape with a combatant target witness, 60-foot range, 1d8 Fire damage, held
+  light/emitter cleanup after hurl, action and Bonus Action spend, and no
+  spell-slot spend. It does not claim the RAW no-heat/no-ignition narrative or
+  object hit-point resolution, which remain lower battle-runtime concerns.
+- The level-1 Shillelagh seed covers the Druid cantrip spell-list row through
+  level-1 Druid character creation, sheet projection, held Quarterstaff battle
+  act discovery, Bonus Action resource spend without a Spell Slot, 1-minute
+  weapon override, Wisdom attack/damage ability projection, d8 damage die,
+  Force/normal damage choices, one force hit witness, no Concentration, and no
+  spell-slot spend. It exposed and fixed narrow `class_druid` cantrip-access
+  and Quarterstaff purchase/loadout admission gaps so the row is claimed through
+  character creation rather than a hand-authored cantrip or equipment list. It
+  does not claim Material component/focus possession or substitution, recast or
+  let-go cleanup, or higher-level cantrip scaling.
+- The level-1 Sacred Flame seed covers the Cleric cantrip spell-list row
+  through level-1 Cleric character creation, sheet projection, battle act
+  discovery, creature-target selection, Dexterity Saving Throw shape, failed-save
+  1d8 Radiant damage, successful-save no-damage behavior, action spend, and no
+  spell-slot spend. The seed uses the SRD Cleric recommended cantrip/prepared
+  spell set through real class access rather than a hand-authored cantrip list.
+  Protector Divine Order is selected only to complete level-1 Cleric creation
+  without adding the Thaumaturge extra-cantrip branch. The RAW Half Cover and
+  Three-Quarters Cover clause remains a table-spatial concern and is not claimed
+  by this SDK seed.
+- The level-1 Guiding Bolt seed covers the Cleric spell-list row through
+  level-1 Cleric character creation, prepared-spell sheet projection, battle act
+  discovery, 120-foot ranged Spell Attack resolution, 4d6 Radiant damage,
+  Magic Action and level-1 Spell Slot expenditure, Advantage on the next Attack
+  Roll against the hit target before the caster's next turn ends, and
+  consumption of that rider by the next allied Attack Roll. The level-1 seed
+  does not claim the RAW higher-level Spell Slot scaling row.
+- The level-1 Vicious Mockery seed covers the Bard cantrip spell-list row
+  through level-1 Bard character creation, cantrip sheet projection, battle act
+  discovery, creature target selection, Wisdom Saving Throw shape, failed-save
+  1d6 Psychic damage, successful-save no-damage behavior, next Attack Roll
+  Disadvantage rider storage and consumption by the target's next attack, action
+  spend, and no spell-slot spend. It does not claim the RAW see-or-hear
+  perception predicate or higher character-level cantrip scaling.
+- The level-1 Dissonant Whispers seed covers the Bard spell-list row through
+  level-1 Bard character creation, prepared-spell sheet projection, battle act
+  discovery, creature target selection, Wisdom Saving Throw shape, failed-save
+  3d6 Psychic damage, successful-save half damage, forced Reaction movement hole
+  and fill, target Reaction spend, Magic Action spend, and level-1 Spell Slot
+  spend. It does not claim pathfinding, Opportunity Attack derivation, the RAW
+  can-see/actual-within-range target-legality predicate, no-Reaction/no-movement
+  fallbacks, or higher-level Spell Slot scaling.
+- The level-1 Thaumaturgy seed covers the Cleric cantrip spell-list row through
+  level-1 Cleric character creation, cantrip sheet projection, battle act
+  discovery, Booming Voice active 1-minute effect count witness, Magic Action
+  spend, no Spell Slot spend, no Concentration, 1-minute active-effect storage,
+  and Advantage on Charisma (Intimidation) Ability Checks. It does not claim the
+  other Thaumaturgy minor wonders or spatial placement within range.
+- The level-1 Inflict Wounds seed covers the Cleric spell-list row through
+  level-1 Cleric character creation, prepared-spell sheet projection, battle act
+  discovery, creature target selection, Constitution Saving Throw shape,
+  failed-save 2d10 Necrotic damage, successful-save half damage, Magic Action
+  spend, level-1 Spell Slot spend, and the runtime's Touch-as-5-foot spell range
+  projection. The seed exposed and fixed a narrow `class_cleric` prepared spell
+  access omission for the already-authored SRD `inflict_wounds` spell. It does
+  not claim actual touch-distance enforcement or higher-level Spell Slot
+  scaling.
+- The level-1 Sanctuary seed covers the Cleric spell-list row through level-1
+  Cleric character creation, prepared-spell sheet projection, Bonus Action
+  spell-slot battle act discovery, one-creature target-list hole shape with a
+  table-spatial witness, 30-foot range projection, one-minute non-Concentration
+  `sanctuaryWard` Spell Effect storage, Wisdom Saving Throw interdiction facts,
+  Bonus Action spend, current-turn Spell Slot commitment, and level-1 Spell Slot
+  spend. The seed exposed and fixed a narrow `class_cleric` prepared spell
+  access omission for the already-authored SRD `sanctuary` spell. It does not
+  claim the full choose-new-target-or-lose interdiction matrix, area-effect
+  exclusion, early-end lifecycle, target-legality derivation, or higher-level
+  Spell Slot scaling; those remain lower battle-runtime obligations.
+- The level-1 Chill Touch seed covers the Sorcerer, Warlock, and Wizard
+  cantrip spell-list rows through level-1 sheet projection, battle act
+  discovery, Touch-range melee Spell Attack resolution, creature-or-object
+  target shape with a combatant target witness, 1d10 Necrotic damage, Hit Point
+  regain prevention until the end of the caster's next turn, action spend, and
+  no spell-slot spend. The seed exposed and fixed narrow `class_sorcerer`,
+  `class_warlock`, and `class_wizard` cantrip-access gaps. The Warlock row also
+  asserts the level-1 Pact Magic pool projects into battle and remains unspent
+  by the cantrip.
+- The level-1 Eldritch Blast seed covers the Warlock cantrip spell-list row
+  through level-1 sheet projection, battle act discovery, one-beam
+  creature-or-object Spell Attack Sequence shape with a combatant target
+  witness, 120-foot range, 1d10 Force damage, action spend, and no spell-slot
+  spend. The Warlock Pact Magic pool projects into battle and remains unspent
+  by the cantrip. The build pairs
+  Eldritch Blast with another battle-projectable SRD Warlock cantrip because
+  the SRD-recommended `prestidigitation` is not currently battle-projectable in
+  this SDK path; the seed claims only the Eldritch Blast row.
+- The level-1 Hex seed covers the Warlock spell-list row through level-1
+  Warlock character creation, prepared-spell sheet projection, pure Pact Magic
+  slot projection into battle, Bonus Action spell-slot act discovery, creature
+  target selection, chosen Wisdom Ability Check Disadvantage, a Concentration
+  `spellMarkedDamageRider` effect, 1d6 Necrotic attack-hit rider facts,
+  later-turn transfer timing, Bonus Action spend, Pact Slot spend, and
+  settlement of the battle expenditure back to Character Sheet Pact Slots after
+  live Concentration is broken. It also pins the current handoff boundary: live
+  battle effects or Concentration block Character Sheet handoff, and mixed
+  ordinary Spell Slot plus Pact Slot state is rejected until battle Spell Slots
+  carry source-distinct slot identity. It does not claim Material component
+  possession, derived line-of-sight, attack rider damage execution, later-turn
+  transfer resolution, or higher-level duration scaling; those remain
+  lower-runtime or future SDK slices.
+- The level-1 Ranger Favored Enemy seed covers the `ranger_favored_enemy`
+  class-feature row through level-1 Ranger character creation, normal prepared
+  spell choices that exclude Hunter's Mark, Favored Enemy free-cast act
+  discovery, creature target selection, Concentration, 1d6 Force marked-damage
+  rider facts, Wisdom (Perception or Survival) finding Advantage, same-turn
+  transfer timing, Bonus Action spend, no Spell Slot spend, settlement of the
+  Favored Enemy resource expenditure back to the Character Sheet, and Long Rest
+  reset of the free-cast pool.
+- The level-1 Ranger Hunter's Mark seed covers the Ranger `hunters_mark`
+  spell-list row through level-1 Ranger character creation, Hunter's Mark as an
+  ordinary prepared spell-list choice, a sheet with the Favored Enemy free-cast
+  pool already spent, Bonus Action spell-slot act discovery, creature target
+  selection, Concentration, the same marked-damage rider facts, Spell Slot
+  commitment, battle Spell Slot spend, and settlement of that Spell Slot
+  expenditure back to the Character Sheet. These Ranger seeds do not claim later
+  Favored Enemy scaling, line-of-sight derivation, attack rider damage
+  execution, transfer resolution, or higher-level Hunter's Mark duration
+  scaling.
+- The level-1 Cure Wounds seed covers the Bard, Cleric, Druid, Paladin, and
+  Ranger `cure_wounds` spell-list rows through level-1 character creation,
+  prepared-spell sheet projection, Magic Action spell-slot act discovery, touch
+  target selection, 2d8 plus spellcasting ability modifier Hit Point
+  restoration, Hit Point maximum capping, action spend, Bonus Action
+  preservation, and spell-slot spend. The seed exposed and fixed a narrow
+  `class_bard` prepared-spell access gap and a narrow `class_paladin`
+  prepared-spell access gap so those rows are claimed through character creation
+  rather than hand-authored spell lists.
+- The level-1 Bless seed covers the Cleric and Paladin `bless` spell-list rows
+  through level-1 character creation, prepared-spell sheet projection, Magic
+  Action Spell Slot act discovery, 30-foot target-list selection for up to
+  three creatures, Concentration, +1d4 Attack Roll and Saving Throw active
+  effects, Magic Action spend, Bonus Action preservation, and Spell Slot spend.
+  It does not claim Verbal/Somatic/Material component provision or Holy Symbol
+  focus possession; component legality remains future equipment/component owner
+  work.
+- The level-1 Shield of Faith seed covers the Cleric and Paladin
+  `shield_of_faith` spell-list rows through level-1 character creation,
+  prepared-spell sheet projection, Bonus Action Spell Slot act discovery,
+  creature target selection with a table-spatial witness, Concentration, +2
+  Armor Class active-effect storage, projected Armor Class increase, Bonus
+  Action spend, Magic Action preservation, and Spell Slot spend. The seed
+  exposed and fixed a narrow `class_paladin` prepared-spell access gap and a
+  narrow `shield_of_faith` Surface target-kind gap so the Paladin row is
+  claimed through character creation and the spell target is authored as a
+  creature target. The slice also adds direct Surface catalog evidence for that
+  creature target fact and tightens scalar-buff admission so explicit
+  non-creature target selections are not admitted into this combatant-targeting
+  profile. It does not claim Verbal/Somatic/Material component provision or
+  prayer-scroll possession; component legality remains future equipment/component
+  owner work.
+- The level-1 Healing Word seed covers the Bard, Cleric, and Druid spell-list
+  rows through level-1 character creation, prepared-spell sheet projection,
+  Bonus Action spell-slot act discovery, creature target selection, 2d4 plus
+  spellcasting ability modifier Hit Point restoration, Bonus Action spend, and
+  spell-slot spend. The seed exposed and fixed a narrow `class_druid`
+  prepared-spell access gap so the Druid row is claimed through character
+  creation rather than a hand-authored spell list. It does not claim
+  line-of-sight derivation or higher-level slot scaling; those remain lower
+  battle-runtime or future SDK slices.
+- The level-1 Animal Friendship seed covers the Bard, Druid, and Ranger
+  spell-list rows through level-1 character creation, prepared-spell sheet
+  projection, action spell-slot act discovery, Beast-only target admission,
+  Wisdom Saving Throw shape, 24-hour Charmed effect, damage-break effect shape,
+  action spend, and spell-slot spend. The seed exposed and fixed narrow
+  `class_bard` and `class_ranger` prepared-spell access gaps so those rows are
+  claimed through character creation rather than hand-authored spell lists. It
+  does not execute the later damage-break event or higher-level slot target
+  scaling; those remain focused battle-runtime coverage or future SDK slices.
+- The level-1 Ray of Frost seed covers the Sorcerer and Wizard cantrip
+  spell-list rows through level-1 sheet projection, battle act discovery,
+  60-foot ranged Spell Attack resolution, 1d8 Cold damage, Speed reduction by
+  10 feet until the start of the caster's next turn, turn-boundary cleanup,
+  action spend, and no spell-slot spend.
+- The level-1 Shocking Grasp seed covers the Sorcerer and Wizard cantrip
+  spell-list rows through level-1 sheet projection, battle act discovery,
+  Touch-range melee Spell Attack resolution, 1d8 Lightning damage, target-
+  relative Opportunity Attack denial until the start of the target's next turn,
+  turn-boundary cleanup, action spend, and no spell-slot spend. The seed exposed
+  and fixed a narrow `class_wizard` cantrip-access gap so the Wizard row is
+  claimed through character creation rather than a hand-authored spell list.
+- The level-1 Fire Bolt seed covers the Sorcerer and Wizard cantrip spell-list
+  rows through level-1 sheet projection, battle act discovery, creature target
+  selection, object-target witness availability for unattended flammable-object
+  ignition, ranged spell attack resolution, 1d10 Fire damage, action spend, and
+  no spell-slot spend.
+- The level-1 Chromatic Orb seed covers the Sorcerer and Wizard spell-list rows
+  through level-1 sheet projection, battle act discovery, chosen Poison Damage
+  Type observed through Skeleton poison Immunity, 90-foot ranged Spell Attack
+  resolution, duplicate-d8 leap targeting with the 30-foot table-spatial
+  witness, second duplicate-d8 damage resolution proving the level-1 one-leap
+  cap, action spend, and spell-slot spend. The current chained-spell runtime
+  projection is combatant-target-only; the RAW generic-target/object question
+  remains an upstream spell-targeting owner gap and is not claimed by this seed.
+- The level-1 Magic Missile seed covers the Sorcerer and Wizard spell-list rows
+  through level-1 sheet projection, battle act discovery, RAW target-allocation
+  count, visible-target/table-spatial witness requirement, 120-foot range,
+  1d4+1 Force damage per dart, split simultaneous dart damage, and spell-slot
+  spend.
+- The generated scenario groups are split by task: 174 groups for level 1,
+  33 for level 2, 107 for level 3/spell level 2, 25 for level 4, and 72 for
+  level 5/spell level 3.
+- The current level-5 SDK dispositions are: 6 seed scenarios present, 35 SDK
+  scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
+  closure reviews, 12 explicit non-runtime closures, and 43
+  future-owner-before-SDK rows.
+- Across all level 1-5 rows, the current SDK dispositions are: 70 seed scenarios
+  present, 434 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
+  144 unresolved closure reviews, 11 table-only closures, 60 explicit
+  non-runtime closures, and 45 future-owner-before-SDK rows.
+- The inventory now separates resolved owner boundaries from review buckets:
+  626 rows are resolved and 144 are `unresolved-review`; level-5/spell-level-3
+  has 102 resolved rows and 36 unresolved-review rows.
+- Class-feature owner boundaries are now classified from `unit-claims.jsonl`
+  profile ids and unit-level owner evidence. Rows with multiple profile owners
+  use `multi-owner-sdk-split` so implementation asserts build, sheet, and battle
+  facts at their real owners instead of forcing one owner. Unsupported
+  class-feature rows use exact row owner evidence when present; otherwise
+  closure rows are classified only when `battleReadinessClosure.kind` gives a
+  typed owner distinction.
+- Spell rows with typed no-battle closure evidence are split into
+  `table-only-closure` or `future-runtime-owner-before-sdk` from
+  `battleReadinessClosure.kind`. The remaining `spell-effect-owner-review` rows
+  either lack recorded closure evidence or use
+  `outside-runtime-presentation-exploration`, which is not typed enough to split
+  future-owner from table-only closure. Do not infer that split from `owner` or
+  `nextAction` prose.
+- Remaining Task 1 convergence belongs upstream of the SDK inventory. The
+  unresolved set is 4 class-feature closure-review rows and 140 spell-effect
+  owner-review rows. The spell rows split into lower-level
+  `spellUnitMissingClassifications` entries whose catalog-only status is not a
+  typed owner boundary, plus `outside-runtime-presentation-exploration` rows
+  that need a typed future-owner/table-only distinction in the source audit
+  before SDK coverage can claim them.
+- Existing level 3/4 product readiness still contains 1 owner-evidence-required
+  row in the source reports. Keep that as a follow-up signal; do not flatten it
+  into SDK coverage.
+
+## Lane Rules
+
+- Each task starts with local RAW and ubiquitous-language reading for the exact
+  rule rows it touches.
+- Make invalid states irrepresentable before adding data shape. Search for
+  existing state before adding any field, test fixture fact, or matrix column.
+- Preserve provenance, structured input, and runtime projection as distinct
+  concepts.
+- Runtime behavior must not dispatch on authored identity. SRD identity may
+  appear in catalog, selection, and test fixture boundaries, but executable
+  behavior must flow through typed facts and support profiles.
+- Prefer vertical SDK scenarios over horizontal per-package assertions. If a
+  scenario cannot reach a lower owner through the SDK path, that is either a
+  gap to fix or a documented non-executable closure.
+- Keep deterministic tests cheap. Use focused package tests and typechecks as
+  the normal gate.
+- If a task is split into actual Ralph tasks later, include the Ralph task-base
+  check in every spawned task prompt.
+
+## DAG / Queue Order
+
+|   # | Task                                                                      | Status | Depends on    | Notes                                                                                                                              |
+| --: | ------------------------------------------------------------------------- | ------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+|   1 | L15-SDK-RAW-01 - Build the level 1-5 SDK RAW inventory                    | active | none          | Full row-grained artifact and scenario groups exist; next work is typed owner/closure evidence for the 144 unresolved-review rows. |
+|   2 | L15-SDK-RAW-02 - Harden the shared SDK scenario harness                   | done   | 1             | Package-local character-battle SDK harness exists; scenario-specific ordered fills remain file-local.                              |
+|   3 | L15-SDK-RAW-03 - Level 1 baseline integration suite                       | active | 1, 2          | Character creation, starting equipment, basic attacks, cantrips, level-1 spell access, and first resource projections.             |
+|   4 | L15-SDK-RAW-04 - Level 2 resource and rest integration suite              | todo   | 3             | Short-rest/long-rest resource owners, early class features, pact/slot recovery, and battle projection.                             |
+|   5 | L15-SDK-RAW-05 - Level 3 subclass and spell-level-2 integration suite     | todo   | 4             | Subclass choice/projection, expanded class features, metamagic/frontier rules, and level-2 spells available at character level 3.  |
+|   6 | L15-SDK-RAW-06 - Level 4 ASI/feat/progression integration suite           | todo   | 5             | Ability score improvement, feat selection, feature-choice closure, and no-new-spell-level regression coverage.                     |
+|   7 | L15-SDK-RAW-07 - Level 5 class feature and spell-level-3 completion suite | todo   | 6             | Extend the existing tracer bullets to all remaining level-5 SDK obligations that should be executable or explicitly closed.        |
+|   8 | L15-SDK-RAW-08 - Matrix-backed generated gate and CI wiring               | todo   | 3, 4, 5, 6, 7 | Turn the inventory into a reviewer/checker-used gate so coverage cannot silently drift.                                            |
+|   9 | L15-SDK-RAW-09 - Final convergence and split-backlog audit                | todo   | 8             | Run reviewer loops, document deliberate exclusions, and split any remaining runtime support gaps into owner tasks.                 |
+
+## Task Details
+
+### Task 1 - L15-SDK-RAW-01 - Build the level 1-5 SDK RAW inventory
+
+Status: `active`
+
+Input:
+
+- Generated unit-profile and raw-coverage reports listed above.
+- Current level-5 tracer test file.
+- Local SRD 5.2.1 class, spell, equipment, feat, origin, glossary, and playing
+  rules.
+
+Output:
+
+- A level 1-5 integration inventory that maps every reachable SRD row to:
+  - character level and, where applicable, spell level;
+  - local RAW anchor;
+  - ubiquitous-language terms involved;
+  - owner boundary: build, sheet, battle, lower-level focused runtime, or
+    non-runtime closure;
+  - existing focused coverage;
+  - proposed SDK integration scenario or explicit reason no SDK scenario is
+    appropriate.
+- A first-pass split list for rows that need runtime/spec work before SDK
+  integration can be written.
+- Current generated outputs:
+  - `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+  - `plans/sdk-raw-integration/LEVEL1_5_SDK_RAW_INVENTORY.md`
+- Current JSON inventory also includes scenario groups for implementation
+  planning; these groups are not coverage evidence until backed by tests or
+  explicit closures.
+- Rows with `ownerBoundaryStatus: "unresolved-review"` must be resolved to a
+  real owner boundary or explicit closure before their task can claim coverage.
+
+Acceptance:
+
+- No row is left in an unclassified "maybe" state.
+- Inventory distinguishes battle-executable, sheet-only, build-only,
+  table-only, and unsupported/future-runtime obligations.
+- The inventory does not duplicate generated coverage facts unless it is going
+  to be used by a checker or reviewer workflow.
+
+Verification:
+
+- RAW/ubiquitous-language check over all inventory sections touched.
+- Reviewer-loop convergence over classification, owner boundaries, and
+  generated report interpretation.
+- `git diff --check`
+
+### Task 2 - L15-SDK-RAW-02 - Harden the shared SDK scenario harness
+
+Status: `done`
+
+Depends on:
+
+- Task 1
+
+Output:
+
+- Minimal reusable test support for:
+  - SRD catalog construction;
+  - character build and sheet fixtures;
+  - character sheet to battle projection;
+  - common battle target, attack roll, saving throw, and damage fills;
+  - synthetic stat-block stimuli with non-SRD fixture provenance;
+  - assertion helpers for typed `Either` and battle resolution results.
+- Keep helpers in the owning package test support only when multiple suites use
+  them. Otherwise keep them file-local.
+- Current implementation:
+  - `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+    holds package-local SRD catalog setup, sheet-to-battle fixtures,
+    level-five build fixtures, primitive target/roll/save/damage fill builders,
+    ordinary attack-damage fill choreography, spell/attack act lookup, and
+    typed assertion helpers.
+  - The level-5 tracer imports those helpers and keeps Protection from Energy
+    synthetic stat-block setup, the Protection from Energy damage-type fill, the
+    Extra Attack miss helper file-local.
+
+Acceptance:
+
+- The harness does not become a second SDK or adapter layer.
+- Builders encode required domain facts in types or required fields rather than
+  optional convention.
+- Existing level-5 tracer bullets either continue to pass unchanged or migrate
+  to the shared helpers with no behavior change.
+
+Verification:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level5-sdk-tracer-bullets.test.ts` (passed)
+- `pnpm --filter @dnd/character-battle-runtime typecheck` (passed)
+- `pnpm exec prettier --check packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts packages/character-battle-runtime/src/sdk-integration-test-support.ts` (passed)
+- `git diff --check` (passed)
+- Focused typechecks/tests for any package where helper code lands.
+- Reviewer-loop convergence, including connascence review for shared literals,
+  fill order, and helper sequencing. Findings resolved by narrowing shared
+  helper exports and promoting the repeated ordinary attack-damage choreography
+  into package-local SDK test support.
+
+### Task 3 - L15-SDK-RAW-03 - Level 1 baseline integration suite
+
+Status: `active`
+
+Depends on:
+
+- Task 1
+- Task 2
+
+Output:
+
+- Deterministic SDK integration scenarios for character-level-1 obligations:
+  - class/species/background creation facts that affect sheet or battle state;
+  - starting equipment, armor class, weapon attacks, damage type, and
+    proficiency projection;
+  - basic spellcasting and slot/cantrip access for classes that have level-1
+    spell paths;
+  - battle-executable level-1 features that can be asserted through act
+    discovery/resolution;
+  - sheet-only or build-only rows closed at the correct owner.
+
+Acceptance:
+
+- Every level-1 inventory row is covered by a scenario, a lower-owner focused
+  test with SDK-relevant assertion, or an explicit non-runtime closure.
+- The suite uses real character build/sheet setup for user-reachable behavior.
+- RAW-facing assertions cover effects, resources, slots, action availability,
+  damage, conditions, movement, AC, or derived sheet facts as applicable.
+
+Verification:
+
+- RAW and ubiquitous-language check for each touched level-1 rule row.
+- Focused level-1 SDK integration test command.
+- `node scripts/sdk-raw-integration-inventory.cjs` after inventory generator
+  or generated artifact changes.
+- Relevant package typechecks.
+- `pnpm unit-profile-coverage:check` and `pnpm rules-kernel-coverage:check`
+  only if coverage/evidence artifacts are changed.
+- Reviewer-loop convergence.
+
+First implementation slice:
+
+- Add a package-local level-1 battle-feature SDK suite for Fighter Second Wind,
+  Barbarian Rage, Bardic Inspiration, Rogue Sneak Attack, Sorcerer Innate
+  Sorcery, and Monk Martial Arts.
+- Add level-1 spell SDK seeds for Acid Splash, Poison Spray, Chill Touch, Fire
+  Bolt, Ray of Frost, Shocking Grasp, Burning Hands, Mage Armor, False Life,
+  Chromatic Orb, Ray of Sickness, Thunderwave, and Magic Missile from Sorcerer
+  and Wizard sheets, plus class-specific rows when SRD access differs such as
+  Bard Dissonant Whispers, Bard Vicious Mockery, Druid/Warlock Poison Spray,
+  Druid Produce Flame, Druid Shillelagh, Cleric Sacred Flame, Cleric
+  Thaumaturgy, Cleric Guiding Bolt, Cleric Inflict Wounds, Cleric Sanctuary,
+  Sorcerer Sorcerous Burst, Warlock Chill Touch, Warlock Eldritch Blast,
+  Warlock Hex, Ranger Favored Enemy, Ranger Hunter's Mark, plus
+  Bard/Cleric/Druid/Paladin/Ranger Cure Wounds, Bard/Cleric/Druid Healing
+  Word, Bard/Druid/Ranger Animal Friendship, Cleric/Paladin Bless, and
+  Cleric/Paladin Shield of Faith.
+- Keep Warlock Dark One's Blessing in the level-3 task; its SRD feature anchor
+  is Warlock level 3, not character level 1.
+
+Current seed:
+
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+
+### Task 4 - L15-SDK-RAW-04 - Level 2 resource and rest integration suite
+
+Status: `todo`
+
+Depends on:
+
+- Task 3
+
+Output:
+
+- SDK scenarios for level-2 class resources and rest behavior, including
+  battle projection where resources are battle-executable and sheet lifecycle
+  where recovery is sheet-owned.
+- Coverage should include representative action, bonus action, reaction,
+  short-rest, long-rest, spell-slot, pact-slot, and point-pool patterns as the
+  inventory requires.
+
+Acceptance:
+
+- Level-2 resources are asserted at both their source owner and their projected
+  battle shape when battle-executable.
+- Rest recovery tests assert RAW reset cadence and do not duplicate resource
+  state.
+- Any unsupported runtime behavior is split into owner tasks rather than hidden
+  behind skipped SDK tests.
+
+Verification:
+
+- Focused level-2 SDK integration test command.
+- Relevant sheet/battle package typechecks.
+- Reviewer-loop convergence with explicit rest/resource connascence review.
+
+### Task 5 - L15-SDK-RAW-05 - Level 3 subclass and spell-level-2 integration suite
+
+Status: `todo`
+
+Depends on:
+
+- Task 4
+
+Output:
+
+- SDK scenarios for character-level-3 obligations:
+  - subclass and class-choice projection that affects build, sheet, or battle;
+  - spell-level-2 access for characters that reach it at level 3;
+  - concentration, condition, movement, object, area, companion, and repeated
+    save patterns only where current runtime support can execute them through
+    the SDK path;
+  - explicit closures for table-only or non-runtime rows.
+
+Acceptance:
+
+- Subclass/authored choice identity remains at selection/catalog boundaries.
+- Runtime assertions use typed procedure facts and support profiles rather than
+  authored identity dispatch.
+- Any spell or subclass row that needs deeper runtime work is split into a
+  precise owner backlog item with RAW anchor and expected SDK assertion.
+
+Verification:
+
+- Focused level-3 SDK integration test command.
+- Relevant package typechecks.
+- Focused battle-runtime tests only for touched runtime behavior.
+- MBT only after runtime/spec changes and only for the focused changed
+  behavior.
+- Reviewer-loop convergence.
+
+### Task 6 - L15-SDK-RAW-06 - Level 4 ASI/feat/progression integration suite
+
+Status: `todo`
+
+Depends on:
+
+- Task 5
+
+Output:
+
+- SDK scenarios for character-level-4 progression:
+  - Ability Score Improvement effects on derived sheet and battle projections;
+  - feat and feature-choice selection facts;
+  - level-4 class/species/background progression rows from generated reports;
+  - regression assertions that level-4 does not accidentally widen spell-level
+    or class-feature availability beyond RAW.
+
+Acceptance:
+
+- Ability score and feat changes are asserted through canonical build/sheet
+  state, not copied derived facts.
+- Selection identity is retained only where selection identity is the domain.
+- No inert support status is added for rows whose behavior is already owned by
+  build or sheet projection.
+
+Verification:
+
+- Focused level-4 SDK integration test command.
+- `pnpm --filter @dnd/character-creation-runtime typecheck`
+- `pnpm --filter @dnd/character-sheet-runtime typecheck`
+- Character-battle typecheck if battle projection assertions are added.
+- Reviewer-loop convergence.
+
+### Task 7 - L15-SDK-RAW-07 - Level 5 class feature and spell-level-3 completion suite
+
+Status: `todo`
+
+Depends on:
+
+- Task 6
+
+Current seed:
+
+- `packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts`
+
+Output:
+
+- Extend the level-5 suite from representative tracer bullets to inventory
+  closure:
+  - remaining level-5 class-feature rows;
+  - remaining spell-level-3 rows reachable by level-5 characters;
+  - sheet/rest rows such as spell preparation, recovery, and resource refresh;
+  - battle-executable rows including action economy, concentration,
+    resistance, condition, movement, damage, companion, and stored-spell
+    patterns where supported.
+
+Acceptance:
+
+- Existing tracer bullets remain green.
+- Glyph of Warding stored-spell behavior is either covered through SDK
+  integration or split into a precise deeper owner task if the SDK path is not
+  ready.
+- Every remaining level-5 inventory row has an executable scenario, lower-owner
+  focused coverage, or explicit non-runtime closure.
+
+Verification:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level5-sdk-tracer-bullets.test.ts`
+- Focused level-5 SDK integration test command if split into additional files.
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- Focused battle-runtime tests only for touched runtime behavior.
+- MBT only after runtime/spec changes and only for the focused changed
+  behavior.
+- Reviewer-loop convergence.
+
+### Task 8 - L15-SDK-RAW-08 - Matrix-backed generated gate and CI wiring
+
+Status: `todo`
+
+Depends on:
+
+- Tasks 3 through 7
+
+Output:
+
+- A stable coverage gate that connects the level 1-5 inventory to the new SDK
+  integration tests.
+- The gate should fail if:
+  - a reachable SRD row lacks a scenario or explicit closure;
+  - a RAW anchor disappears;
+  - an SDK scenario is removed without updating the owning inventory row;
+  - a closure claims battle support without executable owner evidence.
+
+Acceptance:
+
+- The gate is deterministic and cheap enough for normal quality runs.
+- Generated artifacts, if any, are refreshed by one owner task and reviewed as
+  generated output.
+- The gate does not require battle MBT or QNT proof lanes.
+
+Verification:
+
+- New focused gate command.
+- `pnpm unit-profile-coverage:check` if unit-profile evidence changes.
+- `pnpm rules-kernel-coverage:check` if rules-kernel evidence changes.
+- Package typechecks touched by gate implementation.
+- Reviewer-loop convergence.
+
+### Task 9 - L15-SDK-RAW-09 - Final convergence and split-backlog audit
+
+Status: `todo`
+
+Depends on:
+
+- Task 8
+
+Output:
+
+- Final audit report for level 1-5 SDK RAW integration coverage.
+- Explicit list of rows intentionally closed as non-runtime/table-only.
+- Explicit backlog for rows that require future runtime/spec work before SDK
+  integration can be written.
+- Confirmation that no PHB+ authored identity entered publishable source,
+  tests, fixtures, docs, or generated artifacts.
+
+Acceptance:
+
+- All level 1-5 inventory rows are accounted for.
+- All deterministic SDK integration suites and coverage gates pass.
+- Any rejected reviewer finding has a concrete documented reason.
+- The final work can be split into reviewable PRs without cross-lane generated
+  artifact conflicts.
+
+Verification:
+
+- Run all focused level 1-5 SDK integration suites.
+- Run relevant package typechecks.
+- Run coverage gates that were added or touched.
+- `git diff --check`
+- Reviewer-loop convergence.
+
+## Shared Verification Requirements
+
+Every implementation task in this plan must include:
+
+- **RAW/ubiquitous-language check**: before implementing any rule, read the
+  relevant SRD passage in `.references/srd-5.2.1/` and check
+  `UBIQUITOUS_LANGUAGE.md`. The test or inventory row must trace modeled rules
+  to concrete local RAW anchors.
+- **Reviewer-loop convergence**: after implementation, run RAW traceability,
+  ubiquitous-language/domain-language, architecture/connascence, and code-review
+  passes. Fix every reasonable finding, reject only with a concrete reason, and
+  repeat until no reasonable findings remain.
+
+Recommended command families:
+
+- focused SDK integration tests for the level being changed;
+- `pnpm --filter @dnd/character-creation-runtime typecheck` when build logic or
+  fixtures change;
+- `pnpm --filter @dnd/character-sheet-runtime typecheck` when sheet/rest logic
+  or fixtures change;
+- `pnpm --filter @dnd/character-battle-runtime typecheck` when battle handoff
+  or SDK battle tests change;
+- focused battle-runtime tests when battle behavior changes;
+- `pnpm unit-profile-coverage:check` if unit-profile coverage artifacts or
+  evidence comments change;
+- `pnpm rules-kernel-coverage:check` if rules-kernel artifacts or evidence
+  comments change;
+- `git diff --check`.
+
+Battle MBT is not a normal verification lane for this plan. Run it only after
+actual runtime/spec behavior changes, using the focused changed behavior and the
+MBT scarcity protocol in `AGENTS.md`.
+
+## Expected Split
+
+This should be planned as multiple PRs or Ralph-style task worktrees:
+
+1. inventory plus harness;
+2. level 1;
+3. level 2;
+4. level 3;
+5. level 4;
+6. level 5 completion;
+7. generated gate and final convergence.
+
+The final split may change after Task 1 inventory, but the work should remain
+vertical: each merged slice should prove real SDK behavior against RAW rather
+than only adding scaffolding.

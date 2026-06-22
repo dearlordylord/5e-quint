@@ -12,11 +12,7 @@
       "v": true
     },
     "duration": {
-      "kind": "timed",
-      "value": {
-        "amount": 1,
-        "unit": "round"
-      }
+      "kind": "instantaneous"
     },
     "family": "activation",
     "level": 1,
@@ -54,6 +50,7 @@
           },
           {
             "condition": "poisoned",
+            "duration": "end_of_caster_next_turn",
             "kind": "apply_condition"
           }
         ],

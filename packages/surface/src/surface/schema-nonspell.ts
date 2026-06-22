@@ -9,6 +9,7 @@ import {
   BackgroundRecordKindSchema,
   ClassLevelChoiceCountSchema,
   ClassRecordKindSchema,
+  CLASS_SPELLCASTING_CLASS_NAMES,
   CLASS_NAMES,
   SubclassRecordKindSchema,
   ClassNameSchema,
@@ -2239,10 +2240,8 @@ const allSpellLevelsAtOrBelow = (
   maxSpellLevel: number,
 ): boolean => spells.every((spell) => spell.spellLevel <= maxSpellLevel);
 
-type ClassSpellcastingClassName = Extract<
-  ClassName,
-  (typeof LIST_PREPARED_SPELLCASTING_CLASS_NAMES)[number] | "warlock"
->;
+type ClassSpellcastingClassName =
+  (typeof CLASS_SPELLCASTING_CLASS_NAMES)[number];
 
 export type ClassSpellList = {
   readonly cantrips: readonly string[];
@@ -2313,6 +2312,25 @@ export const CLASS_SPELL_LISTS = {
         "suggestion",
         "zone_of_truth",
       ],
+      3: [
+        "bestow_curse",
+        "clairvoyance",
+        "dispel_magic",
+        "fear",
+        "glyph_of_warding",
+        "hypnotic_pattern",
+        "major_image",
+        "mass_healing_word",
+        "nondetection",
+        "plant_growth",
+        "sending",
+        "slow",
+        "speak_with_dead",
+        "speak_with_plants",
+        "stinking_cloud",
+        "tiny_hut",
+        "tongues",
+      ],
     },
   },
   cleric: {
@@ -2361,6 +2379,27 @@ export const CLASS_SPELL_LISTS = {
         "spiritual_weapon",
         "warding_bond",
         "zone_of_truth",
+      ],
+      3: [
+        "animate_dead",
+        "beacon_of_hope",
+        "bestow_curse",
+        "clairvoyance",
+        "create_food_and_water",
+        "daylight",
+        "dispel_magic",
+        "glyph_of_warding",
+        "magic_circle",
+        "mass_healing_word",
+        "meld_into_stone",
+        "protection_from_energy",
+        "remove_curse",
+        "revivify",
+        "sending",
+        "speak_with_dead",
+        "spirit_guardians",
+        "tongues",
+        "water_walk",
       ],
     },
   },
@@ -2422,6 +2461,21 @@ export const CLASS_SPELL_LISTS = {
         "protection_from_poison",
         "spike_growth",
       ],
+      3: [
+        "call_lightning",
+        "conjure_animals",
+        "daylight",
+        "dispel_magic",
+        "meld_into_stone",
+        "plant_growth",
+        "protection_from_energy",
+        "revivify",
+        "sleet_storm",
+        "speak_with_plants",
+        "water_breathing",
+        "water_walk",
+        "wind_wall",
+      ],
     },
   },
   paladin: {
@@ -2441,6 +2495,19 @@ export const CLASS_SPELL_LISTS = {
         "purify_food_and_drink",
         "searing_smite",
         "shield_of_faith",
+      ],
+      2: [
+        "aid",
+        "find_steed",
+        "gentle_repose",
+        "lesser_restoration",
+        "locate_object",
+        "magic_weapon",
+        "prayer_of_healing",
+        "protection_from_poison",
+        "shining_smite",
+        "warding_bond",
+        "zone_of_truth",
       ],
     },
   },
@@ -2551,6 +2618,29 @@ export const CLASS_SPELL_LISTS = {
         "suggestion",
         "web",
       ],
+      3: [
+        "blink",
+        "clairvoyance",
+        "counterspell",
+        "daylight",
+        "dispel_magic",
+        "fear",
+        "fireball",
+        "fly",
+        "gaseous_form",
+        "haste",
+        "hypnotic_pattern",
+        "lightning_bolt",
+        "major_image",
+        "protection_from_energy",
+        "sleet_storm",
+        "slow",
+        "stinking_cloud",
+        "tongues",
+        "vampiric_touch",
+        "water_breathing",
+        "water_walk",
+      ],
     },
   },
   warlock: {
@@ -2603,21 +2693,126 @@ export const CLASS_SPELL_LISTS = {
         "tongues",
         "vampiric_touch",
       ],
-      4: [
-        "banishment",
-        "blight",
-        "charm_monster",
-        "dimension_door",
-        "hallucinatory_terrain",
+    },
+  },
+  wizard: {
+    cantrips: [
+      "acid_splash",
+      "chill_touch",
+      "dancing_lights",
+      "elementalism",
+      "fire_bolt",
+      "light",
+      "mage_hand",
+      "mending",
+      "message",
+      "minor_illusion",
+      "poison_spray",
+      "prestidigitation",
+      "ray_of_frost",
+      "shocking_grasp",
+      "true_strike",
+    ],
+    leveled: {
+      1: [
+        "alarm",
+        "burning_hands",
+        "charm_person",
+        "chromatic_orb",
+        "color_spray",
+        "comprehend_languages",
+        "detect_magic",
+        "disguise_self",
+        "expeditious_retreat",
+        "false_life",
+        "feather_fall",
+        "find_familiar",
+        "floating_disk",
+        "fog_cloud",
+        "grease",
+        "hideous_laughter",
+        "ice_knife",
+        "identify",
+        "illusory_script",
+        "jump",
+        "longstrider",
+        "mage_armor",
+        "magic_missile",
+        "protection_from_evil_and_good",
+        "ray_of_sickness",
+        "shield",
+        "silent_image",
+        "sleep",
+        "thunderwave",
+        "unseen_servant",
       ],
-      5: [
-        "contact_other_plane",
-        "dream",
-        "hold_monster",
-        "mislead",
-        "planar_binding",
-        "scrying",
-        "teleportation_circle",
+      2: [
+        "acid_arrow",
+        "alter_self",
+        "arcane_lock",
+        "arcanists_magic_aura",
+        "augury",
+        "blindness_deafness",
+        "blur",
+        "continual_flame",
+        "darkness",
+        "darkvision",
+        "detect_thoughts",
+        "dragons_breath",
+        "enhance_ability",
+        "enlarge_reduce",
+        "flaming_sphere",
+        "gentle_repose",
+        "gust_of_wind",
+        "hold_person",
+        "invisibility",
+        "knock",
+        "levitate",
+        "locate_object",
+        "magic_mouth",
+        "magic_weapon",
+        "mind_spike",
+        "mirror_image",
+        "misty_step",
+        "ray_of_enfeeblement",
+        "rope_trick",
+        "scorching_ray",
+        "see_invisibility",
+        "shatter",
+        "spider_climb",
+        "suggestion",
+        "web",
+      ],
+      3: [
+        "animate_dead",
+        "bestow_curse",
+        "blink",
+        "clairvoyance",
+        "counterspell",
+        "dispel_magic",
+        "fear",
+        "fireball",
+        "fly",
+        "gaseous_form",
+        "glyph_of_warding",
+        "haste",
+        "hypnotic_pattern",
+        "lightning_bolt",
+        "magic_circle",
+        "major_image",
+        "nondetection",
+        "phantom_steed",
+        "protection_from_energy",
+        "remove_curse",
+        "sending",
+        "sleet_storm",
+        "slow",
+        "speak_with_dead",
+        "stinking_cloud",
+        "tiny_hut",
+        "tongues",
+        "vampiric_touch",
+        "water_breathing",
       ],
     },
   },
@@ -2739,7 +2934,7 @@ const CLASS_PREPARED_SPELLCASTING_FACTS = [
   },
 ] as const;
 
-const ClassSpellcastingClassNameSchema = Schema.Literal(
+const ListPreparedSpellcastingClassNameSchema = Schema.Literal(
   ...LIST_PREPARED_SPELLCASTING_CLASS_NAMES,
 );
 
@@ -3047,6 +3242,18 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
       ) {
         return false;
       }
+      if (
+        !allCantripsFromClassSpellList(
+          "wizard",
+          spellcasting.cantripAccess.spellIds,
+        ) ||
+        !allPreparedSpellsFromClassSpellList(
+          "wizard",
+          spellcasting.spellbookAccess.spells,
+        )
+      ) {
+        return false;
+      }
 
       const progressionSlotsHaveDistinctLevels =
         spellcasting.spellcastingProgression.every((row) =>
@@ -3313,7 +3520,7 @@ export const WizardClassRecordSchema = Schema.Struct({
 
 export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
   ...ClassRecordBaseFields,
-  className: ClassSpellcastingClassNameSchema,
+  className: ListPreparedSpellcastingClassNameSchema,
   spellcasting: Schema.Union(
     ListPreparedSpellcastingCreationSchema,
     ListPreparedSpellcastingProgressionCreationSchema,
@@ -3350,8 +3557,11 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
           ? unit.spellcasting.cantripAccess === undefined
           : unit.spellcasting.cantripAccess?.choose ===
               classFacts.cantripCount &&
-            unit.spellcasting.cantripAccess.spellIds.length ===
-              classFacts.cantripCount &&
+            (unit.spellcasting.kind === "list_prepared_spellcasting_creation"
+              ? unit.spellcasting.cantripAccess.spellIds.length ===
+                classFacts.cantripCount
+              : unit.spellcasting.cantripAccess.spellIds.length >=
+                classFacts.cantripCount) &&
             allCantripsFromClassSpellList(
               unit.className,
               unit.spellcasting.cantripAccess.spellIds,

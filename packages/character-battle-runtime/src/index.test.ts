@@ -1662,7 +1662,7 @@ describe("Character Sheet battle handoff", () => {
   test("preserves non-battle sheet state while settling battle-owned HP and Spell Slots", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:rest-state"),
-      build: wizardWarlockBuild(),
+      build: wizardSpellcastingBuild(),
       maximumHp: Hp(10),
       currentHp: Hp(10),
       tempHp: Hp(0),
@@ -1675,7 +1675,6 @@ describe("Character Sheet battle handoff", () => {
           expended: resourceCount(1),
         },
       ],
-      pactSlots: { expended: resourceCount(1) },
       restFeatureUses: [{ tag: "arcaneRecovery", usedSinceLongRest: true }],
     });
     expect(Either.isRight(sheet)).toBe(true);
@@ -1704,15 +1703,347 @@ describe("Character Sheet battle handoff", () => {
     expect(settled.restFeatureUses).toEqual([
       { tag: "arcaneRecovery", usedSinceLongRest: true },
     ]);
+    expect(characterSheetSpellSlots(settled)).toEqual([
+      { spellLevel: 1, count: 2, expended: 2 },
+    ]);
+    expect(characterSheetTempHp(settled)).toBe(3);
+  });
+
+  test("projects pure Pact Magic slot state from a Character Sheet into battle Spell Slots", () => {
+    const combatantIdValue = combatantId("combatant:pure-pact-magic");
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:pure-pact-magic"),
+        build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
+        maximumHp: Hp(8),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const init = expectRight(
+      characterSheetBattleInit({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: combatantIdValue,
+        displayName: "Warlock",
+        initiative: initiativeScore(12),
+        side: battleCombatantSide("party"),
+      }),
+    );
+    if (init.creatureInit.kind !== "character") {
+      throw new Error("Expected character battle creature init.");
+    }
+
+    expect(characterSheetSpellSlots(sheet)).toEqual([]);
+    expect(characterSheetPactSlots(sheet)).toEqual({
+      slotLevel: 1,
+      count: 1,
+      expended: 0,
+    });
+    expect(init.creatureInit.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 1, count: 1 },
+    ]);
+    expect(init.creatureInit.spellcasting?.spellSlotExpenditures).toEqual([
+      { spellLevel: 1, expended: 0 },
+    ]);
+  });
+
+  test("settles pure Pact Magic battle Spell Slot expenditure back to Character Sheet Pact Slots", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:pure-pact-magic-spent"),
+        build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
+        maximumHp: Hp(8),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const settled = expectRight(
+      settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:pure-pact-magic-spent"),
+            spellcasting: pactMagicHandoffSpellcastingState({
+              expended: resourceCount(1),
+            }),
+          },
+          hp: Hp(8),
+          maxHp: Hp(8),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    );
+
+    expect(characterSheetSpellSlots(settled)).toEqual([]);
     expect(characterSheetPactSlots(settled)).toEqual({
       slotLevel: 1,
       count: 1,
       expended: 1,
     });
-    expect(characterSheetSpellSlots(settled)).toEqual([
-      { spellLevel: 1, count: 2, expended: 2 },
-    ]);
-    expect(characterSheetTempHp(settled)).toBe(3);
+  });
+
+  test("rejects pure Pact Magic battle handoff when Pact Slot capacity drifts", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:pure-pact-magic-drift"),
+        build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
+        maximumHp: Hp(8),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:pure-pact-magic-drift"),
+          spellcasting: pactMagicHandoffSpellcastingState({
+            count: resourceCount(2),
+            expended: resourceCount(1),
+          }),
+        },
+        hp: Hp(8),
+        maxHp: Hp(8),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff Pact Slot state must match Character Sheet Pact Slot capacity.",
+      },
+    });
+
+    for (const spellcasting of [
+      pactMagicHandoffSpellcastingState({
+        spellLevel: spellSlotLevel(2),
+        expended: resourceCount(1),
+      }),
+      pactMagicHandoffSpellcastingState({
+        expended: resourceCount(2),
+      }),
+      {
+        ...pactMagicHandoffSpellcastingState({
+          expended: resourceCount(1),
+        }),
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(1),
+            expended: resourceCount(1),
+          },
+          {
+            spellLevel: spellSlotLevel(2),
+            count: resourceCount(1),
+            expended: resourceCount(1),
+          },
+        ],
+      },
+    ]) {
+      const rejected = settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:pure-pact-magic-drift"),
+            spellcasting,
+          },
+          hp: Hp(8),
+          maxHp: Hp(8),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      });
+
+      expect(rejected).toMatchObject({
+        _tag: "Left",
+        left: {
+          message:
+            "Battle handoff Pact Slot state must match Character Sheet Pact Slot capacity.",
+        },
+      });
+    }
+  });
+
+  test("rejects pure Pact Magic battle handoff when expenditure moves below pre-battle Pact Slot state", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:pure-pact-magic-regression"),
+        build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
+        maximumHp: Hp(8),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+        pactSlots: { expended: resourceCount(1) },
+      }),
+    );
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:pure-pact-magic-regression"),
+          spellcasting: pactMagicHandoffSpellcastingState({
+            expended: resourceCount(0),
+          }),
+        },
+        hp: Hp(8),
+        maxHp: Hp(8),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff Pact Slot state must match Character Sheet Pact Slot capacity.",
+      },
+    });
+  });
+
+  test("rejects battle Spell Slot handoff when the sheet has no Spell Slot or Pact Slot state", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:no-slot-state"),
+        build: defenseBuild({ wearingArmor: false }),
+        maximumHp: Hp(8),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:no-slot-state"),
+          spellcasting: pactMagicHandoffSpellcastingState({
+            expended: resourceCount(1),
+          }),
+        },
+        hp: Hp(8),
+        maxHp: Hp(8),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff Spell Slot state requires Character Sheet Spell Slot or Pact Slot state.",
+      },
+    });
+  });
+
+  test("rejects mixed ordinary Spell Slot and Pact Slot handoff until battle slots carry source identity", () => {
+    const combatantIdValue = combatantId("combatant:mixed-spell-pact");
+    const warlockBuild = armorOfShadowsWarlockBuild({
+      armorOfShadows: false,
+    });
+    if (warlockBuild.spellcasting === undefined) {
+      throw new Error("Expected Warlock fixture spellcasting.");
+    }
+    const pactMagic = warlockBuild.spellcasting.slotPools.pactMagic;
+    if (pactMagic === undefined) {
+      throw new Error("Expected Warlock fixture Pact Magic.");
+    }
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:mixed-spell-pact"),
+        build: {
+          ...warlockBuild,
+          spellcasting: {
+            ...warlockBuild.spellcasting,
+            slotPools: {
+              spellcasting: {
+                kind: "spellcasting",
+                slots: [{ spellLevel: 1, count: 2 }],
+              },
+              pactMagic,
+            },
+          },
+        },
+        maximumHp: Hp(8),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(2),
+            expended: resourceCount(1),
+          },
+        ],
+        pactSlots: { expended: resourceCount(0) },
+      }),
+    );
+
+    const init = characterSheetBattleInit({
+      sheet,
+      unitLibrary,
+      statBlockCatalog,
+      combatantId: combatantIdValue,
+      displayName: "Wizard/Warlock",
+      initiative: initiativeScore(12),
+      side: battleCombatantSide("party"),
+    });
+
+    expect(init).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff cannot project mixed Spell Slot and Pact Slot state without source-distinct battle slots.",
+      },
+    });
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:mixed-spell-pact"),
+          spellcasting: handoffSpellcastingState(),
+        },
+        hp: Hp(8),
+        maxHp: Hp(8),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff cannot project mixed Spell Slot and Pact Slot state without source-distinct battle slots.",
+      },
+    });
   });
 
   test("carries Font of Magic created Spell Slots into battle and rejects source-ambiguous handoff", () => {
@@ -4919,6 +5250,51 @@ function handoffSpellcastingState(): CharacterBattleSpellcastingState {
         expended: resourceCount(2),
       },
     ],
+  };
+}
+
+function pactMagicHandoffSpellcastingState(input: {
+  readonly spellLevel?: ReturnType<typeof spellSlotLevel>;
+  readonly count?: ResourceCount;
+  readonly expended: ResourceCount;
+}): CharacterBattleSpellcastingState {
+  return {
+    sourceClassName: "warlock",
+    spellcastingAbilityModifier: abilityModifier(2),
+    proficiencyBonus: proficiencyBonus(2),
+    canCastSpells: true,
+    cantrips: [],
+    preparedSpells: [],
+    spellbookRitualSpellAccesses: [],
+    bookOfShadowsSpellAccesses: [],
+    invocationSpellAccesses: [],
+    spellSlots: [
+      {
+        spellLevel: input.spellLevel ?? spellSlotLevel(1),
+        count: input.count ?? resourceCount(1),
+        expended: input.expended,
+      },
+    ],
+  };
+}
+
+function wizardSpellcastingBuild(): CharacterBuild {
+  const build = wizardWarlockBuild();
+  const spellcasting = build.spellcasting;
+  if (spellcasting === undefined) {
+    throw new Error("Expected Wizard fixture spellcasting.");
+  }
+  return {
+    ...build,
+    spellcasting: {
+      ...spellcasting,
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 2 }],
+        },
+      },
+    },
   };
 }
 

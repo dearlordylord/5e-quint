@@ -339,7 +339,6 @@ import type {
   Provenance,
   StartingEquipmentChoice,
   UnitRecord,
-  WizardSpellcastingCreation,
 } from "./types.ts";
 
 export type Srd521CollectionProvenance = {
@@ -804,7 +803,6 @@ export function buildUnitCatalog(input: {
   for (const collection of input.collections) {
     for (const unit of collection.units) {
       issues.push(...findUnknownStartingEquipmentRefs(unit, records));
-      issues.push(...findUnknownWizardSpellRefs(unit, records));
       issues.push(...findInvalidSubclassChoiceRefs(unit, records));
       issues.push(...findInvalidSpeciesTraitRefs(unit, records));
     }
@@ -898,51 +896,6 @@ function hasStartingEquipment(unit: UnitRecord): unit is UnitRecord & {
   readonly startingEquipment: readonly StartingEquipmentChoice[];
 } {
   return unit.kind === "class" || unit.kind === "background";
-}
-
-// Wizard spellbook access names authored Spell Definition records; class-list
-// Spell Access records source legality from class spell lists and do not force
-// every selected Spell Definition to be installed in this catalog.
-function findUnknownWizardSpellRefs(
-  unit: UnitRecord,
-  records: ReadonlyMap<UnitId, UnitRecord>,
-): readonly UnitCatalogBuildIssue[] {
-  if (
-    unit.kind !== "class" ||
-    !("spellcasting" in unit) ||
-    unit.spellcasting === undefined ||
-    unit.spellcasting.kind !== "wizard_spellcasting_creation"
-  ) {
-    return [];
-  }
-
-  const spellIds = wizardSpellReferenceIds(unit.spellcasting);
-
-  return spellIds.flatMap((spellId) =>
-    records.has(spellId)
-      ? []
-      : [
-          {
-            code: "unknownUnitReference",
-            referringUnitId: unit.id,
-            referencedUnitId: spellId,
-          } satisfies UnitCatalogBuildIssue,
-        ],
-  );
-}
-
-function wizardSpellReferenceIds(
-  spellcasting: WizardSpellcastingCreation,
-): readonly UnitId[] {
-  return distinctUnitIds([
-    ...spellcasting.cantripAccess.spellIds,
-    ...spellcasting.spellbookAccess.spells.map((spell) => spell.spellId),
-    ...spellcasting.preparedAccess.spellIds,
-  ]);
-}
-
-function distinctUnitIds(unitIds: readonly UnitId[]): readonly UnitId[] {
-  return Array.from(new Set(unitIds));
 }
 
 function findInvalidSubclassChoiceRefs(

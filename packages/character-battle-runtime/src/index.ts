@@ -26,12 +26,15 @@ import {
   isCharacterSheetPointPoolResourceUnitId,
   isCharacterSheetUseCountResourceUnitId,
   replaceCharacterSheetSpellSlotSourceState,
+  type CharacterPactSlotExpenditure,
   type CharacterSheet,
   type CharacterSheetBookOfShadowsPresence,
+  type CharacterSheetPactSlotState,
   type CharacterSheetPositiveHpUnconscious,
   type CharacterSheetPointPoolResourceUnitId,
   type CharacterSheetResourceExpenditure,
   type CharacterSheetSpellSlotSourceState,
+  type CharacterSheetSpellSlotState,
   type CharacterSheetStableRecovery,
   type CharacterSheetUseCountResourceUnitId,
   type CharacterSheetZeroHpLifecycleInput,
@@ -129,6 +132,9 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
   if (stableRecoveryIssue !== null) {
     return battleCreatureInitIssue(stableRecoveryIssue);
   }
+  if (hasMixedSpellAndPactSlotState(sheet)) {
+    return battleCreatureInitIssue(mixedSpellAndPactSlotStateMessage);
+  }
   const druidWildShapeAvailableForms =
     battleDruidWildShapeAvailableFormsFromSheet({
       sheet,
@@ -195,9 +201,17 @@ function settleBattleCombatantIntoCharacterSheet(input: {
       "Battle handoff current HP exceeds Character Sheet maximum HP.",
     );
   }
+  if (hasMixedSpellAndPactSlotState(input.sheet)) {
+    return characterSheetBattleHandoffIssue(mixedSpellAndPactSlotStateMessage);
+  }
   if (combatantHasActiveDruidWildShape(input.combatant)) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff while Wild Shape is active is blocked; dismiss or resolve reversion before Character Sheet handoff.",
+    );
+  }
+  if (combatantHasActiveBattleLocalState(input.combatant)) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff while active battle effects or Concentration are present is blocked; end or resolve battle-local effects before Character Sheet handoff.",
     );
   }
 
@@ -225,6 +239,13 @@ function settleBattleCombatantIntoCharacterSheet(input: {
   if (Either.isLeft(spellSlotState)) {
     return Either.left(spellSlotState.left);
   }
+  const pactSlotExpenditure =
+    pactSlots === undefined
+      ? Either.right(undefined)
+      : characterSheetPactSlotExpenditureFromBattle(input, pactSlots);
+  if (Either.isLeft(pactSlotExpenditure)) {
+    return Either.left(pactSlotExpenditure.left);
+  }
 
   const sheet = createFreshCharacterSheet({
     characterId: input.sheet.characterId,
@@ -244,9 +265,9 @@ function settleBattleCombatantIntoCharacterSheet(input: {
     ...(input.combatant.hp === 0 && zeroHpLifecycle !== undefined
       ? { zeroHpLifecycle: zeroHpLifecycle.right }
       : {}),
-    ...(pactSlots === undefined
+    ...(pactSlotExpenditure.right === undefined
       ? {}
-      : { pactSlots: { expended: pactSlots.expended } }),
+      : { pactSlots: pactSlotExpenditure.right }),
     ...(bookOfShadowsPresence === undefined ? {} : { bookOfShadowsPresence }),
     ...(druidWildShapeKnownForms === undefined
       ? {}
@@ -288,10 +309,18 @@ function characterSheetSpellSlotSourceStateFromBattle(input: {
   }
   const sheetSpellSlots = characterSheetSpellSlots(input.sheet);
   const sheetSlotState = characterSheetSpellSlotSourceState(input.sheet);
+  if (
+    characterSheetPactSlots(input.sheet) !== undefined &&
+    (sheetSpellSlots === undefined || sheetSpellSlots.length === 0)
+  ) {
+    return Either.right(undefined);
+  }
   if (sheetSpellSlots === undefined || sheetSlotState === undefined) {
-    return characterSheetBattleHandoffIssue(
-      "Battle handoff Spell Slot state requires Character Sheet Spell Slot state.",
-    );
+    return battleSpellcasting.spellSlots.length === 0
+      ? Either.right(undefined)
+      : characterSheetBattleHandoffIssue(
+          "Battle handoff Spell Slot state requires Character Sheet Spell Slot or Pact Slot state.",
+        );
   }
 
   const battleLevels = new Set<number>();
@@ -741,6 +770,16 @@ function characterSheetConditionsFromBattle(
   );
 }
 
+function combatantHasActiveBattleLocalState(
+  combatant: BattleCreatureState,
+): boolean {
+  return (
+    combatant.concentration != null ||
+    (combatant.activeEffects?.length ?? 0) > 0 ||
+    (combatant.activeOngoingFeatureOccurrences?.size ?? 0) > 0
+  );
+}
+
 function withDefinedCharacterBattleSheetState(
   sheet: CharacterSheet,
 ): Partial<
@@ -757,7 +796,7 @@ function withDefinedCharacterBattleSheetState(
   const conditions = characterSheetInitialConditions(sheet);
   const positiveHpUnconscious = characterSheetPositiveHpUnconscious(sheet);
   const zeroHpLifecycle = characterSheetZeroHpLifecycle(sheet);
-  const spellSlots = characterSheetSpellSlots(sheet);
+  const spellSlots = characterSheetBattleSpellSlots(sheet);
   return {
     ...(conditions === undefined ? {} : { conditions }),
     ...(positiveHpUnconscious === undefined ? {} : { positiveHpUnconscious }),
@@ -768,6 +807,79 @@ function withDefinedCharacterBattleSheetState(
       : { bookOfShadowsPresence: sheet.bookOfShadowsPresence }),
     resourceExpenditures: sheet.resourceExpenditures,
   };
+}
+
+function characterSheetBattleSpellSlots(
+  sheet: CharacterSheet,
+): readonly CharacterSheetSpellSlotState[] | undefined {
+  const spellSlots = characterSheetSpellSlots(sheet);
+  const pactSlots = characterSheetPactSlots(sheet);
+  if (
+    pactSlots !== undefined &&
+    (spellSlots === undefined || spellSlots.length === 0)
+  ) {
+    return [
+      {
+        spellLevel: pactSlots.slotLevel,
+        count: pactSlots.count,
+        expended: pactSlots.expended,
+      },
+    ];
+  }
+  return spellSlots;
+}
+
+const mixedSpellAndPactSlotStateMessage =
+  "Battle handoff cannot project mixed Spell Slot and Pact Slot state without source-distinct battle slots.";
+
+function hasMixedSpellAndPactSlotState(sheet: CharacterSheet): boolean {
+  const spellSlots = characterSheetSpellSlots(sheet);
+  return (
+    characterSheetPactSlots(sheet) !== undefined &&
+    spellSlots !== undefined &&
+    spellSlots.length > 0
+  );
+}
+
+function characterSheetPactSlotExpenditureFromBattle(
+  input: {
+    readonly sheet: CharacterSheet;
+    readonly combatant: BattleCreatureState;
+  },
+  pactSlots: CharacterSheetPactSlotState,
+): Either.Either<
+  CharacterPactSlotExpenditure,
+  CharacterSheetBattleHandoffIssue
+> {
+  if (hasMixedSpellAndPactSlotState(input.sheet)) {
+    return characterSheetBattleHandoffIssue(mixedSpellAndPactSlotStateMessage);
+  }
+  if (input.combatant.origin.kind !== "character") {
+    return Either.right({ expended: pactSlots.expended });
+  }
+  const battleSpellcasting = input.combatant.origin.spellcasting;
+  if (battleSpellcasting === undefined) {
+    return Either.right({ expended: pactSlots.expended });
+  }
+  if (battleSpellcasting.spellSlots.length !== 1) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff Pact Slot state must match Character Sheet Pact Slot capacity.",
+    );
+  }
+  const battleSlot = battleSpellcasting.spellSlots[0];
+  if (
+    battleSlot === undefined ||
+    battleSlot.spellLevel !== pactSlots.slotLevel ||
+    battleSlot.count !== pactSlots.count ||
+    !Number.isInteger(battleSlot.expended) ||
+    battleSlot.expended < pactSlots.expended ||
+    battleSlot.expended > pactSlots.count
+  ) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff Pact Slot state must match Character Sheet Pact Slot capacity.",
+    );
+  }
+  return Either.right({ expended: battleSlot.expended });
 }
 
 function bookOfShadowsPresenceFromBattle(input: {

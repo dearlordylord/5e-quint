@@ -192,6 +192,9 @@ export function scalarBuffSpellTargeting(
   if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
     return null;
   }
+  if (!scalarBuffCreatureTargetSelection(attachment.value.selection)) {
+    return null;
+  }
   const targetCount = scalarBuffSpellTargetCount(
     attachment.value.selection,
     spellLevel,
@@ -207,6 +210,15 @@ export function scalarBuffSpellTargeting(
           attachment.value.selection,
         ),
       };
+}
+
+function scalarBuffCreatureTargetSelection(
+  selection: TargetSelection,
+): boolean {
+  return (
+    selection.targetKinds === undefined ||
+    sameStringSet(selection.targetKinds, ["creature"])
+  );
 }
 
 function scalarBuffRequiredTargetDisposition(

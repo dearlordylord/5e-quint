@@ -117,6 +117,7 @@ export function supportedSpellPostDamageRiders(
     if (
       effect.kind === "apply_condition" &&
       effect.condition === "poisoned" &&
+      effect.duration === "end_of_caster_next_turn" &&
       isRayOfSicknessPoisonedRiderShape(spell, phase)
     ) {
       riders.push({
@@ -271,9 +272,7 @@ export function isRayOfSicknessPoisonedRiderShape(
 ): boolean {
   return (
     spell.mechanics.level === 1 &&
-    spell.mechanics.duration.kind === "timed" &&
-    spell.mechanics.duration.value.unit === "round" &&
-    spell.mechanics.duration.value.amount === 1 &&
+    spell.mechanics.duration.kind === "instantaneous" &&
     phase.attackKind === "ranged_spell_attack"
   );
 }

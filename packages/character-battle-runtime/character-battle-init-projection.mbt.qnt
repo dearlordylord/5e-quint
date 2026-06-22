@@ -7,6 +7,8 @@ module characterBattleInitProjectionMbt {
     | BattleInitProjectionInit
     | BattleInitProjectionSheetHitPointsArmorClassConditionsAndProfiles
     | BattleInitProjectionSheetSpellcastingAndMetamagic
+    | BattleInitProjectionPurePactMagicSlotProjection
+    | BattleInitProjectionMixedSpellAndPactSlotInitRejected
     | BattleInitProjectionBuildMaximumAboveBuildMaximumRejected
     | BattleInitProjectionStableRecoveryProgressDuringInitRejected
 
@@ -118,30 +120,59 @@ module characterBattleInitProjectionMbt {
   }
 
   action doRejectBuildMaximumAboveBuildMaximum = all {
-    qState.replayIndex == 2,
+    qState.replayIndex == 4,
     recordProjection(
       BattleInitProjectionBuildMaximumAboveBuildMaximumRejected,
       false,
       "Character battle initialization max HP exceeds build-derived max HP.",
       emptyProjectionFacts,
+      5,
+    ),
+  }
+
+  action doProjectPurePactMagicSlot = all {
+    qState.replayIndex == 2,
+    recordProjection(
+      BattleInitProjectionPurePactMagicSlotProjection,
+      true,
+      "none",
+      emptyProjectionFacts
+        .with("characterIdentity", "character:battle-init-warlock")
+        .with("currentHp", 8)
+        .with("maxHp", 8)
+        .with("armorClass", 12)
+        .with("spellLevel1Count", 1),
       3,
     ),
   }
 
-  action doRejectStableRecoveryProgressDuringInit = all {
+  action doRejectMixedSpellAndPactSlotInit = all {
     qState.replayIndex == 3,
+    recordProjection(
+      BattleInitProjectionMixedSpellAndPactSlotInitRejected,
+      false,
+      "Battle handoff cannot project mixed Spell Slot and Pact Slot state without source-distinct battle slots.",
+      emptyProjectionFacts,
+      4,
+    ),
+  }
+
+  action doRejectStableRecoveryProgressDuringInit = all {
+    qState.replayIndex == 5,
     recordProjection(
       BattleInitProjectionStableRecoveryProgressDuringInitRejected,
       false,
       "Battle handoff cannot preserve in-progress Stable recovery timers.",
       emptyProjectionFacts,
-      4,
+      6,
     ),
   }
 
   action step = any {
     doProjectSheetHitPointsArmorClassConditionsAndProfiles,
     doProjectSheetSpellcastingAndMetamagic,
+    doProjectPurePactMagicSlot,
+    doRejectMixedSpellAndPactSlotInit,
     doRejectBuildMaximumAboveBuildMaximum,
     doRejectStableRecoveryProgressDuringInit,
   }

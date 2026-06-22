@@ -14,8 +14,10 @@
 --   • DiceAmount.linear_per_level (axis=slot, base=3d6, +1d6/slot)
 --   • SaveSuccessOutcome.half_damage
 --
--- The flammable-objects clause is DM-agenda narrative, not
--- deterministic combat mechanics, and is omitted.
+-- The flammable-objects clause needs the same object/area witness owner as
+-- other area ignition clauses. The current combat profile admits creature
+-- damage only, so object ignition is left to a future object-aware runtime
+-- slice rather than represented as table narrative.
 
 let burningHands =
       { kind = "spell"

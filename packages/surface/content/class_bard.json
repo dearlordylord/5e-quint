@@ -6,7 +6,7 @@
     "kind": "trained"
   },
   "className": "bard",
-  "description": "SRD Bard class creation and early progression facts, including level 1-2 class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level 1-2 class feature grants, and the level 4 Ability Score Improvement feature grant.",
+  "description": "SRD Bard class creation and level 1-5 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level 1-2 class feature grants, and the level 4 Ability Score Improvement feature grant.",
   "featureGrants": [
     {
       "level": 1,
@@ -136,7 +136,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Bard.md:3-26,34-37,69-103,109-111"
+    "section": "Classes/Bard.md:3-26,34-45,69-103,109-111,143-230"
   },
   "savingThrowProficiencies": [
     "dex",
@@ -175,6 +175,14 @@
       "kind": "known_cantrips_from_class_spell_list",
       "spellIds": [
         "dancing_lights",
+        "light",
+        "mage_hand",
+        "mending",
+        "message",
+        "minor_illusion",
+        "prestidigitation",
+        "starry_wisp",
+        "true_strike",
         "vicious_mockery"
       ]
     },
@@ -189,6 +197,14 @@
       "kind": "prepared_from_class_spell_list",
       "spells": [
         {
+          "spellId": "animal_friendship",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "bane",
+          "spellLevel": 1
+        },
+        {
           "spellId": "charm_person",
           "spellLevel": 1
         },
@@ -197,7 +213,35 @@
           "spellLevel": 1
         },
         {
+          "spellId": "command",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "comprehend_languages",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "cure_wounds",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "detect_magic",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "disguise_self",
+          "spellLevel": 1
+        },
+        {
           "spellId": "dissonant_whispers",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "faerie_fire",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "feather_fall",
           "spellLevel": 1
         },
         {
@@ -205,12 +249,200 @@
           "spellLevel": 1
         },
         {
+          "spellId": "heroism",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "hideous_laughter",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "identify",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "illusory_script",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "longstrider",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "silent_image",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "sleep",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "speak_with_animals",
+          "spellLevel": 1
+        },
+        {
           "spellId": "thunderwave",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "unseen_servant",
           "spellLevel": 1
         },
         {
           "spellId": "aid",
           "spellLevel": 2
+        },
+        {
+          "spellId": "animal_messenger",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "blindness_deafness",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "calm_emotions",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "detect_thoughts",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "enhance_ability",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "enlarge_reduce",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "enthrall",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "heat_metal",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "hold_person",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "invisibility",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "knock",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "lesser_restoration",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "locate_animals_or_plants",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "locate_object",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "magic_mouth",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "mirror_image",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "see_invisibility",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "shatter",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "silence",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "suggestion",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "zone_of_truth",
+          "spellLevel": 2
+        },
+        {
+          "spellId": "bestow_curse",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "clairvoyance",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "dispel_magic",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "fear",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "glyph_of_warding",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "hypnotic_pattern",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "major_image",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "mass_healing_word",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "nondetection",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "plant_growth",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "sending",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "slow",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "speak_with_dead",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "speak_with_plants",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "stinking_cloud",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "tiny_hut",
+          "spellLevel": 3
+        },
+        {
+          "spellId": "tongues",
+          "spellLevel": 3
         }
       ]
     },
@@ -263,6 +495,40 @@
           {
             "count": 2,
             "spellLevel": 2
+          }
+        ]
+      },
+      {
+        "atLevel": 4,
+        "cantripCount": 3,
+        "preparedSpellCount": 7,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 3,
+            "spellLevel": 2
+          }
+        ]
+      },
+      {
+        "atLevel": 5,
+        "cantripCount": 3,
+        "preparedSpellCount": 9,
+        "spellSlots": [
+          {
+            "count": 4,
+            "spellLevel": 1
+          },
+          {
+            "count": 3,
+            "spellLevel": 2
+          },
+          {
+            "count": 2,
+            "spellLevel": 3
           }
         ]
       }

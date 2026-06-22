@@ -10395,6 +10395,25 @@
       }
     },
     {
+      "branchAction": "doProjectPurePactMagicSlot",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectPurePactMagicSlot"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectPurePactMagicSlot",
+      "qntFileSha256": "a1414e2e2a74e5376e544c4447c89371655d932a52d3830fd0f8d0a209d6bc91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doProjectSheetHitPointsArmorClassConditionsAndProfiles",
       "branchFamily": "step",
       "branchPath": [
@@ -10404,7 +10423,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectSheetHitPointsArmorClassConditionsAndProfiles",
-      "qntFileSha256": "3bacf72232d1c1de114a072bd1ea3a7a41365eb7604332b95d15220f5df0d895",
+      "qntFileSha256": "a1414e2e2a74e5376e544c4447c89371655d932a52d3830fd0f8d0a209d6bc91",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10423,7 +10442,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectSheetSpellcastingAndMetamagic",
-      "qntFileSha256": "3bacf72232d1c1de114a072bd1ea3a7a41365eb7604332b95d15220f5df0d895",
+      "qntFileSha256": "a1414e2e2a74e5376e544c4447c89371655d932a52d3830fd0f8d0a209d6bc91",
       "replay": {
         "reason": "The sequential driver traverses this higher-capacity projection to reach later level-1/2 init rejection branches.",
         "reviewedBy": "codex-2026-06-17",
@@ -10445,7 +10464,26 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectBuildMaximumAboveBuildMaximum",
-      "qntFileSha256": "3bacf72232d1c1de114a072bd1ea3a7a41365eb7604332b95d15220f5df0d895",
+      "qntFileSha256": "a1414e2e2a74e5376e544c4447c89371655d932a52d3830fd0f8d0a209d6bc91",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectMixedSpellAndPactSlotInit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectMixedSpellAndPactSlotInit"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectMixedSpellAndPactSlotInit",
+      "qntFileSha256": "a1414e2e2a74e5376e544c4447c89371655d932a52d3830fd0f8d0a209d6bc91",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10464,7 +10502,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectStableRecoveryProgressDuringInit",
-      "qntFileSha256": "3bacf72232d1c1de114a072bd1ea3a7a41365eb7604332b95d15220f5df0d895",
+      "qntFileSha256": "a1414e2e2a74e5376e544c4447c89371655d932a52d3830fd0f8d0a209d6bc91",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10512,6 +10550,25 @@
       }
     },
     {
+      "branchAction": "doRejectActiveBattleStateHandoff",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectActiveBattleStateHandoff"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectActiveBattleStateHandoff",
+      "qntFileSha256": "536eca6e37fd49ed0a6b850bdbe72be7bc551bcfd33ba12db5fdf7dddd669c8d",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doRejectActiveWildShapeHandoff",
       "branchFamily": "step",
       "branchPath": [
@@ -10521,7 +10578,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectActiveWildShapeHandoff",
-      "qntFileSha256": "c3ba44fa92278a97ceb2c13c8d74a856c96e824510dbb6c93c1e927cec148408",
+      "qntFileSha256": "536eca6e37fd49ed0a6b850bdbe72be7bc551bcfd33ba12db5fdf7dddd669c8d",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10540,7 +10597,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectAmbiguousCreatedSpellSlotSource",
-      "qntFileSha256": "c3ba44fa92278a97ceb2c13c8d74a856c96e824510dbb6c93c1e927cec148408",
+      "qntFileSha256": "536eca6e37fd49ed0a6b850bdbe72be7bc551bcfd33ba12db5fdf7dddd669c8d",
       "replay": {
         "reason": "The sequential driver traverses this higher-slot rejection to reach later level-1/2 settlement branches.",
         "reviewedBy": "codex-2026-06-17",
@@ -10562,7 +10619,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMaximumHpDrift",
-      "qntFileSha256": "c3ba44fa92278a97ceb2c13c8d74a856c96e824510dbb6c93c1e927cec148408",
+      "qntFileSha256": "536eca6e37fd49ed0a6b850bdbe72be7bc551bcfd33ba12db5fdf7dddd669c8d",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10581,7 +10638,26 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMismatchedCharacterIdentity",
-      "qntFileSha256": "c3ba44fa92278a97ceb2c13c8d74a856c96e824510dbb6c93c1e927cec148408",
+      "qntFileSha256": "536eca6e37fd49ed0a6b850bdbe72be7bc551bcfd33ba12db5fdf7dddd669c8d",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectMixedSpellAndPactSlotSettlement",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectMixedSpellAndPactSlotSettlement"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMixedSpellAndPactSlotSettlement",
+      "qntFileSha256": "536eca6e37fd49ed0a6b850bdbe72be7bc551bcfd33ba12db5fdf7dddd669c8d",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10600,7 +10676,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectStableRecoveryProgressHandoff",
-      "qntFileSha256": "c3ba44fa92278a97ceb2c13c8d74a856c96e824510dbb6c93c1e927cec148408",
+      "qntFileSha256": "536eca6e37fd49ed0a6b850bdbe72be7bc551bcfd33ba12db5fdf7dddd669c8d",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10619,7 +10695,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleFeatureResourceExpenditure",
-      "qntFileSha256": "c3ba44fa92278a97ceb2c13c8d74a856c96e824510dbb6c93c1e927cec148408",
+      "qntFileSha256": "536eca6e37fd49ed0a6b850bdbe72be7bc551bcfd33ba12db5fdf7dddd669c8d",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10638,7 +10714,26 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleHitPointsConditionsSlotsAndPreservedSheetState",
-      "qntFileSha256": "c3ba44fa92278a97ceb2c13c8d74a856c96e824510dbb6c93c1e927cec148408",
+      "qntFileSha256": "536eca6e37fd49ed0a6b850bdbe72be7bc551bcfd33ba12db5fdf7dddd669c8d",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSettlePurePactMagicSlotExpenditure",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSettlePurePactMagicSlotExpenditure"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettlePurePactMagicSlotExpenditure",
+      "qntFileSha256": "536eca6e37fd49ed0a6b850bdbe72be7bc551bcfd33ba12db5fdf7dddd669c8d",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10657,7 +10752,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleZeroHpStableLifecycle",
-      "qntFileSha256": "c3ba44fa92278a97ceb2c13c8d74a856c96e824510dbb6c93c1e927cec148408",
+      "qntFileSha256": "536eca6e37fd49ed0a6b850bdbe72be7bc551bcfd33ba12db5fdf7dddd669c8d",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
