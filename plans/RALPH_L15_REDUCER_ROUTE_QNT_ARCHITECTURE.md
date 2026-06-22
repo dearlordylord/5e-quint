@@ -732,7 +732,7 @@ Plan Impact:
 
 ### Task 23 - L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES
 
-Status: `done`
+Status: `ready-for-research`
 
 Depends on:
 
