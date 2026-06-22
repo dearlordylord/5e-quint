@@ -22,7 +22,6 @@ module characterBattleReducerRoute {
     | HandoffSheetProjectionFill
     | HandoffBattleDeltaFill
     | HandoffResourceDeltaFill
-    | HandoffSettlementAcceptanceFill
     | HandoffSettlementRejectionFill
 
   type CharacterBattleRouteOwnerGroup =

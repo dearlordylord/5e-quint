@@ -1883,98 +1883,103 @@
         },
         {
           "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
-          "subjectFamily": "character sheet to battle handoff reducer",
+          "subjectFamily": "character sheet to battle init projection",
           "branchObligations": 4,
           "currentOutOfScopeBranchObligations": 1,
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s)."
+              "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s).",
+              "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt exposes qRoute for sheet/build fact projection, resource projection, battle init entry, and init rejection holes through character-battle handoff owners."
             ],
             "rawDomainFacts": [
-              "Local SRD battle setup, resource expenditure, and rest/settlement rules define sheet-to-battle handoff facts."
+              "Combat setup rolls Initiative and orders battle participants; Hit Points, Temporary Hit Points, conditions, Armor Class, Spell Slots, and feature resources are projected from existing sheet/build facts into battle init.",
+              "Route events are shape/domain evidence over sheet-owned persistent facts, build projections, init projection, battle runtime entry, and source-exact resource projection; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Use existing sheet and battle owners rather than a third resource ledger."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
           "subjectFamily": "character-battle selected-reference handoff",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt exposes qRoute for selected-reference retention, battle init projection, and runtime Initiative handoff without production dispatch on authored identity."
             ],
             "rawDomainFacts": [
-              "Local SRD battle setup, resource expenditure, and rest/settlement rules define sheet-to-battle handoff facts."
+              "Initiative is a Dexterity check made at the start of combat to determine turn order; selected origin feat identity remains a retained build/sheet reference projected into battle-facing initiative facts.",
+              "Route events are shape/domain evidence over selected-reference handoff and runtime entry; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Use existing sheet and battle owners rather than a third resource ledger."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
-          "subjectFamily": "character sheet to battle handoff reducer",
+          "subjectFamily": "battle to character sheet settlement",
           "branchObligations": 8,
           "currentOutOfScopeBranchObligations": 1,
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-battle-settlement.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+              "packages/character-battle-runtime/character-battle-settlement.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s).",
+              "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt exposes qRoute for battle deltas, source-exact resource deltas, identity/maximum-HP conflict rejection, source-ambiguous created-slot rejection, and zero-HP settlement through character-battle settlement owners."
             ],
             "rawDomainFacts": [
-              "Local SRD battle setup, resource expenditure, and rest/settlement rules define sheet-to-battle handoff facts."
+              "Hit Points, Temporary Hit Points, conditions, Death Saving Throws, Stable, Spell Slots, Pact Slots, and feature pools are durable facts owned by sheet or battle state and reconciled at settlement.",
+              "Route events preserve source-exact resource accounting or reject source-ambiguous settlement instead of adding a third Spell Slot or feature-resource ledger."
             ],
-            "blockers": [
-              "Use existing sheet and battle owners rather than a third resource ledger."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
-          "subjectFamily": "character sheet to battle handoff reducer",
+          "subjectFamily": "character lifecycle layer projection",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+              "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
+              "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt exposes qRoute for build projection, sheet projection, battle runtime entry, battle mutation, and settlement without duplicating layer state."
             ],
             "rawDomainFacts": [
-              "Local SRD battle setup, resource expenditure, and rest/settlement rules define sheet-to-battle handoff facts."
+              "Combat runtime owns turn/action mutation and battle Hit Point changes; the Character Sheet owns persistent character state before init and after accepted settlement.",
+              "Route events describe layer handoff boundaries only; Draft, Build, Sheet, Battle Init Projection, Battle Runtime, and Settlement remain distinct lifecycle layers."
             ],
-            "blockers": [
-              "Use existing sheet and battle owners rather than a third resource ledger."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
-          "subjectFamily": "character sheet to battle handoff reducer",
+          "subjectFamily": "character sheet feature-resource handoff",
           "branchObligations": 14,
           "currentOutOfScopeBranchObligations": 5,
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt is present in source-branch-inventory.json with 14 branch obligation(s)."
+              "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt is present in source-branch-inventory.json with 14 branch obligation(s).",
+              "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt exposes qRoute for sheet-owned point/use state, source-exact spell resource projection, feature-resource rejection holes, and battle-owned aggregate metamagic/spell action state."
             ],
             "rawDomainFacts": [
-              "Local SRD battle setup, resource expenditure, and rest/settlement rules define sheet-to-battle handoff facts."
+              "Lay On Hands, Short Rest, Long Rest, Uncanny Metabolism, Font of Magic, and Metamagic define pool/use, recovery, created-slot, and shared Sorcery Point facts.",
+              "Feature resources route through sheet-owned point/use state and battle-owned aggregate action/spell state without introducing a duplicate feature-resource or Spell Slot ledger."
             ],
-            "blockers": [
-              "Use existing sheet and battle owners rather than a third resource ledger."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
