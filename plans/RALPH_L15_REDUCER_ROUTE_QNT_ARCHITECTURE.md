@@ -55,19 +55,19 @@
     {
       "number": 9,
       "id": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add QNT route connectors for character sheet drivers"
     },
     {
       "number": 10,
       "id": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add QNT route connectors for character-battle handoff drivers"
     },
     {
       "number": 11,
       "id": "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Promote level 3-4 branch scope into route connector tasks"
     },
     {
@@ -330,9 +330,9 @@ The route classes are deliberately not all `reducer-routed`:
 |   6 | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES - Route spell, condition, effect, and restoration battle subjects         | done               | L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE; L15-RR04-RULE-CORE-COMPONENT-CONNECTORS                                                                        | Extends routed spell/effect subjects without selected-identity dispatch.                      |
 |   7 | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES - Route feature, species, metamagic, and mastery battle substrates   | done               | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Routed bonus-action Unit feature Dash with Temporary Hit Points; split remaining missing substrate families to follow-up tasks. |
 |   8 | L15-RR08-CHARACTER-CREATION-ROUTES - Add QNT route connectors for character creation drivers                  | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for Draft/Fill/finalization rather than battle subjects.                     |
-|   9 | L15-RR09-CHARACTER-SHEET-ROUTES - Add QNT route connectors for character sheet drivers                        | ready-for-research | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for sheet resource/rest/projection state.                                    |
-|  10 | L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES - Add QNT route connectors for character-battle handoff drivers      | blocked            | L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES; L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE                                            | Handoff routes depend on both sheet and battle state owners.                                  |
-|  11 | L15-RR11-LEVEL3-4-SCOPE-PROMOTION - Promote level 3-4 branch scope into route connector tasks                 | blocked            | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES | Widen current level-1/2 branch-scope rows only after generic route shapes exist.              |
+|   9 | L15-RR09-CHARACTER-SHEET-ROUTES - Add QNT route connectors for character sheet drivers                        | done               | L15-RR02-ROUTE-VOCABULARY-AND-GATES                                                                                                                      | Adds route shape for sheet resource/rest/projection state.                                    |
+|  10 | L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES - Add QNT route connectors for character-battle handoff drivers      | ready-for-research | L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES; L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE                                            | Handoff routes depend on both sheet and battle state owners.                                  |
+|  11 | L15-RR11-LEVEL3-4-SCOPE-PROMOTION - Promote level 3-4 branch scope into route connector tasks                 | ready-for-research | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES | Widen current level-1/2 branch-scope rows only after generic route shapes exist.              |
 |  12 | L15-RR12-LEVEL5-SCOPE-PROMOTION - Promote level 5 class and spell-level-3 route connector tasks               | blocked            | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES; L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES; L15-RR11-LEVEL3-4-SCOPE-PROMOTION                                    | Handles level-5 features and spell-level-3 pressure; does not promote spell level 4/5.        |
 |  13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom              | blocked            | L15-RR12-LEVEL5-SCOPE-PROMOTION; L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT; L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES; L15-RR17-WEAPON-HOSTED-RIDER-ROUTES; L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES; L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES; L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES; L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES; L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES | Uses the existing dirty cleanroom as a diagnostic target with current source package.         |
 |  14 | L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE - Package a fresh cleanroom-ready level 1-5 route evidence gate         | blocked            | L15-RR13-DIRTY-CLEANROOM-REHEARSAL                                                                                                                       | Produces the fresh-run package and acceptance gate; does not depend on stale dirty artifacts. |
@@ -1217,12 +1217,15 @@ Verification:
 
 Plan Impact:
 
-- Add follow-up tasks for any sheet route that needs source QNT split before it
-  can be cleanroom-derived.
+- Applied. Character-sheet route connectors now cover retained build-fact
+  projection, sheet state, rest/resource owners, selected-reference retention,
+  and projection. No new follow-up task was added because the excluded
+  level-2/3 slot and subclass spell projection branches remain visible in Task
+  11.
 
 ### Task 10 - L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 
@@ -1266,7 +1269,7 @@ Plan Impact:
 
 ### Task 11 - L15-RR11-LEVEL3-4-SCOPE-PROMOTION
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on:
 

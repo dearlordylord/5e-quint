@@ -2138,193 +2138,203 @@
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet resource/rest/projection reducer",
           "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+              "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
+              "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.route.mbt.qnt exposes qRoute for Ability Check Proficiency Bonus projection through the sheet build-facts projection owner."
             ],
             "rawDomainFacts": [
-              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+              "Ability Checks add Proficiency Bonus when a relevant proficiency applies; Jack of All Trades and Expertise project from retained build facts without adding sheet-local duplicate proficiency state.",
+              "Route events are shape/domain evidence over Character Sheet creation, retained build-fact projection, sheet state, rest/resource owners, selected-reference retention, and projection; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the sheet route vocabulary before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet selected-reference projection",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 1,
           "derivability": {
             "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s)."
+              "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
+              "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt exposes qRoute for in-scope Arcane Recovery reset/rejection through existing Spell Slot and Pact Slot owners; the second-level recovery branch remains a Task 11 branch row."
             ],
             "rawDomainFacts": [
-              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+              "Arcane Recovery recovers ordinary Spell Slots after a Short Rest and resets on a Long Rest; Pact Slots are not ordinary Spell Slots for this sheet recovery owner.",
+              "Route events are shape/domain evidence over Character Sheet creation, retained build-fact projection, sheet state, rest/resource owners, selected-reference retention, and projection; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the sheet route vocabulary before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet selected-reference projection",
           "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+              "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
+              "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.route.mbt.qnt exposes qRoute for Armor Class base selection through selected-reference retention and build projection."
             ],
             "rawDomainFacts": [
-              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+              "A character can benefit from only one base Armor Class calculation at a time; armor, Shield, and class feature selections are retained refs projected into sheet Armor Class facts.",
+              "Route events are shape/domain evidence over Character Sheet creation, retained build-fact projection, sheet state, rest/resource owners, selected-reference retention, and projection; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the sheet route vocabulary before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet selected-reference projection",
           "branchObligations": 8,
           "currentOutOfScopeBranchObligations": 5,
           "derivability": {
             "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s).",
+              "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.route.mbt.qnt exposes qRoute for in-scope class-feature selected-reference projection; level-3 subclass spell projection branches remain Task 11 branch rows."
             ],
             "rawDomainFacts": [
-              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+              "Class feature choices are retained selected references whose sheet projections derive spell access or Ability Check facts from existing build facts, not from a duplicate feature-resource cache.",
+              "Route events are shape/domain evidence over Character Sheet creation, retained build-fact projection, sheet state, rest/resource owners, selected-reference retention, and projection; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the sheet route vocabulary before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet selected-reference projection",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.route.mbt.qnt exposes qRoute for Lay On Hands resource spending through the feature-resource owner and Hit Point projection owner."
             ],
             "rawDomainFacts": [
-              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+              "Lay On Hands spends one healing pool to restore Hit Points and remove Poisoned; the sheet owns the pool expenditure and Hit Point projection without a separate resource cache.",
+              "Route events are shape/domain evidence over Character Sheet creation, retained build-fact projection, sheet state, rest/resource owners, selected-reference retention, and projection; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the sheet route vocabulary before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet resource/rest/projection reducer",
           "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+              "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
+              "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt exposes qRoute for Hit Point Maximum projection through the existing Hit Point owner."
             ],
             "rawDomainFacts": [
-              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+              "Hit Point Maximum and Hit Dice derive from class, level, and Constitution facts already retained by the build/sheet boundary; route evidence does not add a duplicate HP maximum table.",
+              "Route events are shape/domain evidence over Character Sheet creation, retained build-fact projection, sheet state, rest/resource owners, selected-reference retention, and projection; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the sheet route vocabulary before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet resource/rest/projection reducer",
           "branchObligations": 13,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt is present in source-branch-inventory.json with 13 branch obligation(s)."
+              "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt is present in source-branch-inventory.json with 13 branch obligation(s).",
+              "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt exposes qRoute for HP, Short Rest, Long Rest, and Hit Dice transitions through existing sheet owners."
             ],
             "rawDomainFacts": [
-              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+              "Short Rest can spend Hit Point Dice; Long Rest restores HP, spent Hit Dice, and reduced Hit Point Maximum; interruptions route through rest lifecycle rather than a replay-local ledger.",
+              "Route events are shape/domain evidence over Character Sheet creation, retained build-fact projection, sheet state, rest/resource owners, selected-reference retention, and projection; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the sheet route vocabulary before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet resource/rest/projection reducer",
           "branchObligations": 11,
           "currentOutOfScopeBranchObligations": 2,
           "derivability": {
             "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s)."
+              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s).",
+              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt exposes qRoute for in-scope ordinary Spell Slot, Pact Slot, created-slot clearing, rest recovery, and Magical Cunning transitions; second-level Arcane Recovery branches remain Task 11 branch rows."
             ],
             "rawDomainFacts": [
-              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+              "Spell Slots recover on Long Rest, Pact Slots recover on Short or Long Rest, and created slots remain in existing sheet Spell Slot source state rather than a duplicate slot table.",
+              "Route events are shape/domain evidence over Character Sheet creation, retained build-fact projection, sheet state, rest/resource owners, selected-reference retention, and projection; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the sheet route vocabulary before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet selected-reference projection",
           "branchObligations": 5,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s)."
+              "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
+              "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.route.mbt.qnt exposes qRoute for spellbook Ritual selected-reference retention and no-slot spell resource projection."
             ],
             "rawDomainFacts": [
-              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+              "Ritual casting can avoid expending a Spell Slot when the required spell access is present; Wizard Ritual Adept can project that access from spellbook facts.",
+              "Route events are shape/domain evidence over Character Sheet creation, retained build-fact projection, sheet state, rest/resource owners, selected-reference retention, and projection; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the sheet route vocabulary before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
-          "route": "catalog-after-substrate",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
           "subjectFamily": "character sheet selected-reference projection",
           "branchObligations": 8,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+              "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s).",
+              "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt exposes qRoute for Weapon Mastery selected weapon retention and Long Rest reselection through the selected-reference owner."
             ],
             "rawDomainFacts": [
-              "Local SRD character sheet, rest, Hit Die, Spell Slot, and feature-resource rules define durable sheet owners."
+              "Weapon Mastery selected weapon refs are retained sheet/build facts whose mastery-property execution belongs elsewhere; the route uses the existing selected roster rather than adding a duplicate roster.",
+              "Route events are shape/domain evidence over Character Sheet creation, retained build-fact projection, sheet state, rest/resource owners, selected-reference retention, and projection; authored identity remains at catalog/selection boundaries."
             ],
-            "blockers": [
-              "Define the sheet route vocabulary before target replay evidence counts."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt"
         }
       ],
       "branchDecisionClasses": [

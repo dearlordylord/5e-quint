@@ -84,7 +84,19 @@ const ROUTE_SURFACES = [
     routeVocabularyPath:
       "packages/character-sheet-runtime/character-sheet-reducer-route.qnt",
     vocabularyImport: /\bimport\s+characterSheetReducerRoute\.\*\s+from\s+"\.\/character-sheet-reducer-route"/,
-    requiredEvidenceCalls: [],
+    requiredEvidenceCalls: [
+      "routeCreateCharacterSheet",
+      {
+        label:
+          "routeProjectCharacterSheetFacts, routeResolveCharacterSheetSubject, routeCompleteCharacterSheetRest, or routeRetainCharacterSheetSelectedReferences",
+        calls: [
+          "routeProjectCharacterSheetFacts",
+          "routeResolveCharacterSheetSubject",
+          "routeCompleteCharacterSheetRest",
+          "routeRetainCharacterSheetSelectedReferences",
+        ],
+      },
+    ],
   },
   {
     packageDir: "packages/character-battle-runtime",

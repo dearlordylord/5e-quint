@@ -4,10 +4,12 @@
 // module describes reducer shape, not authored catalog identity.
 module characterSheetReducerRoute {
   type CharacterSheetRouteSubjectFamily =
+    | SheetStateRouteSubject
     | SheetHitPointRouteSubject
     | SheetRestRouteSubject
     | SheetFeatureResourceRouteSubject
     | SheetSpellResourceRouteSubject
+    | SheetBuildFactsProjectionRouteSubject
     | SheetArmorClassProjectionRouteSubject
     | SheetAbilityCheckProjectionRouteSubject
     | SheetSelectedReferenceProjectionRouteSubject
@@ -27,6 +29,7 @@ module characterSheetReducerRoute {
     | SheetProjectionSelectionFill
 
   type CharacterSheetRouteOwnerGroup =
+    | CharacterSheetStateOwner
     | CharacterSheetHitPointOwner
     | CharacterSheetHitDiceOwner
     | CharacterSheetSpellSlotOwner
@@ -38,6 +41,10 @@ module characterSheetReducerRoute {
   type CharacterSheetRouteEvent =
     | RouteCreateCharacterSheet({ owner: CharacterSheetRouteOwnerGroup })
     | RouteProjectCharacterSheetFacts({
+        subject: CharacterSheetRouteSubjectFamily,
+        owner: CharacterSheetRouteOwnerGroup,
+      })
+    | RouteRetainCharacterSheetSelectedReferences({
         subject: CharacterSheetRouteSubjectFamily,
         owner: CharacterSheetRouteOwnerGroup,
       })
@@ -64,6 +71,15 @@ module characterSheetReducerRoute {
     owner: CharacterSheetRouteOwnerGroup,
   ): CharacterSheetRouteEvent =
     RouteProjectCharacterSheetFacts({
+      subject: subject,
+      owner: owner,
+    })
+
+  pure def routeRetainCharacterSheetSelectedReferences(
+    subject: CharacterSheetRouteSubjectFamily,
+    owner: CharacterSheetRouteOwnerGroup,
+  ): CharacterSheetRouteEvent =
+    RouteRetainCharacterSheetSelectedReferences({
       subject: subject,
       owner: owner,
     })
