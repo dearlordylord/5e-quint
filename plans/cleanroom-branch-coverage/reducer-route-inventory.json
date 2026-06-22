@@ -1574,24 +1574,41 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
-          "route": "substrate-first",
-          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle attack/rider bundle requiring split durable route owners",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR17-WEAPON-HOSTED-RIDER-ROUTES",
+          "subjectFamily": "weapon-hosted attack, rider, active-effect, item-target, and cleanup owner split",
           "branchObligations": 23,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt is present in source-branch-inventory.json with 23 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt is present in source-branch-inventory.json with 23 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt records SpellHostedWeaponAttackRouteSubject evidence through action-economy, target-selection, attack-roll, and Hit Point owners.",
+              "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt records HeldWeaponActiveEffectRouteSubject evidence through action-economy, active-effect, attack-roll, and Hit Point owners.",
+              "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt records WeaponDamageRiderRouteSubject evidence through spell-slot/action-economy, active-effect, and Hit Point owners.",
+              "packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt records WeaponEnhancementItemTargetRouteSubject evidence through the item-target boundary and active-effect owner, with no reducer-route hole for table-owned target item identity.",
+              "packages/battle-runtime/battle-runtime-held-weapon-release-cleanup.route.mbt.qnt, packages/battle-runtime/battle-runtime-weapon-damage-rider-cleanup.route.mbt.qnt, and packages/battle-runtime/battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt record WeaponHostedSpellEffectCleanupRouteSubject evidence as independent active-effect cleanup surfaces."
             ],
             "rawDomainFacts": [
-              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
-              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
-              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#True Strike defines the spell-hosted weapon attack shape with damage type choice and extra Radiant damage.",
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shillelagh defines the held-weapon active-effect override, damage type choice, duration, recast end, and let-go cleanup shape.",
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Divine Favor defines a weapon-hit Attack Damage Rider Spell Effect.",
+              ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Magic Weapon defines the item-targeted weapon enhancement, attack/damage bonus, duration, and same-spell replacement shape.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack and #Damage Rolls define target choice, attack-roll, damage-roll, and Hit Point ownership for weapon-hosted attack surfaces.",
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Duration defines generic Spell Effect duration and end conditions.",
+              "UBIQUITOUS_LANGUAGE.md defines Attack Roll, Damage Roll, Attack Damage Rider, Bonus Action, Spend, Spell Invocation, Spell Effect, Duration, Hit Points, and Holding / Wielding."
             ],
-            "blockers": [
-              "Split into independent route connectors for spell-hosted weapon attacks, weapon damage riders, held-weapon active effects, and magic-weapon item-target effects; one connector would otherwise combine action economy, active-effect duration, item targeting, attack-roll, damage-rider, and cleanup owners."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+          "routeConnectorPaths": [
+            "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-held-weapon-release-cleanup.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-weapon-damage-rider-cleanup.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt"
+          ]
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",

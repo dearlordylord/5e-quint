@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "L15-RR17-WEAPON-HOSTED-RIDER-ROUTES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split weapon-hosted attack and rider routes"
     },
     {
@@ -338,7 +338,7 @@ The route classes are deliberately not all `reducer-routed`:
 |  14 | L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE - Package a fresh cleanroom-ready level 1-5 route evidence gate         | blocked            | L15-RR13-DIRTY-CLEANROOM-REHEARSAL                                                                                                                       | Produces the fresh-run package and acceptance gate; does not depend on stale dirty artifacts. |
 |  15 | L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT - Split after-hit rider routes by durable battle owner                   | done               | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Prevents one route connector from accumulating interrupt, condition, Concentration, and HP owners. |
 |  16 | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES - Route chained attack sequences through procedure owners            | done | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Requires the generic multi-step spell/attack procedure route owner before routing chain continuation. |
-|  17 | L15-RR17-WEAPON-HOSTED-RIDER-ROUTES - Split weapon-hosted attack and rider routes                             | ready-for-research | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                            | Splits hosted attacks, damage riders, active effects, item-target effects, and cleanup owners. |
+|  17 | L15-RR17-WEAPON-HOSTED-RIDER-ROUTES - Split weapon-hosted attack and rider routes                             | done               | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                            | Splits hosted attacks, damage riders, active effects, item-target effects, and cleanup owners. |
 |  18 | L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES - Route remaining active spell-effect lifecycle drivers        | ready-for-research | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                      | Keeps ongoing spell effects, turn-boundary effects, Concentration, HP, and condition owners split. |
 |  19 | L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES - Route reaction spell and interrupt-stack resume drivers           | ready-for-research | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                      | Routes reaction spending, interrupt-stack continuation, and spell-cast resume without replay islands. |
 |  20 | L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES - Route companion lifecycle and object-target boundary drivers | ready-for-research | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                    | Keeps companion state in battle owners and table-owned object facts as boundary fills.        |
@@ -1449,7 +1449,7 @@ Plan Impact:
 
 ### Task 17 - L15-RR17-WEAPON-HOSTED-RIDER-ROUTES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

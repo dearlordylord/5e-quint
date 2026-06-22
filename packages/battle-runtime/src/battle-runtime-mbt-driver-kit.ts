@@ -828,6 +828,11 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "weaponAttack",
   "spellAttack",
   "spellAttackProcedure",
+  "spellHostedWeaponAttack",
+  "weaponDamageRider",
+  "heldWeaponActiveEffect",
+  "weaponEnhancementItemTarget",
+  "weaponHostedSpellEffectCleanup",
   "afterHitDamageRider",
   "statBlockAction",
   "creatureAttack",
@@ -853,6 +858,7 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleStatBlockAction",
   "battleConcentration",
   "battleActiveEffect",
+  "battleItemTargetBoundary",
   "battleMovementResource",
   "battleInterruptStack",
   "battleFeatureResource",
@@ -5567,6 +5573,12 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   WeaponAttackRouteSubject: "weaponAttack",
   SpellAttackRouteSubject: "spellAttack",
   SpellAttackProcedureRouteSubject: "spellAttackProcedure",
+  SpellHostedWeaponAttackRouteSubject: "spellHostedWeaponAttack",
+  WeaponDamageRiderRouteSubject: "weaponDamageRider",
+  HeldWeaponActiveEffectRouteSubject: "heldWeaponActiveEffect",
+  WeaponEnhancementItemTargetRouteSubject: "weaponEnhancementItemTarget",
+  WeaponHostedSpellEffectCleanupRouteSubject:
+    "weaponHostedSpellEffectCleanup",
   AfterHitDamageRiderRouteSubject: "afterHitDamageRider",
   StatBlockActionRouteSubject: "statBlockAction",
   CreatureAttackRouteSubject: "creatureAttack",
@@ -5591,6 +5603,7 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleStatBlockActionOwner: "battleStatBlockAction",
   BattleConcentrationOwner: "battleConcentration",
   BattleActiveEffectOwner: "battleActiveEffect",
+  BattleItemTargetBoundaryOwner: "battleItemTargetBoundary",
   BattleMovementResourceOwner: "battleMovementResource",
   BattleInterruptStackOwner: "battleInterruptStack",
   BattleFeatureResourceOwner: "battleFeatureResource",
@@ -9337,6 +9350,9 @@ function reducerRouteHolesFromRuntimeHole(
     return ["levitateAltitudeChange"];
   }
   if (hole.kind === "levitateInitialRise") return ["levitateInitialRise"];
+  // Magic Weapon target item identity is caller/table-supplied inventory
+  // evidence, not a durable reducer-route frontier.
+  if (hole.kind === "magicWeaponTargetItem") return [];
   if (hole.kind === "movement") return ["movement"];
   if (hole.kind === "objectDropResolution") return ["objectDropResolution"];
   // Object target choice is a table-owned boundary fact, outside this route vocabulary.

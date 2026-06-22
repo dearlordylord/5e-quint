@@ -16,6 +16,11 @@ module battleRuntimeReducerRoute {
     | WeaponAttackRouteSubject
     | SpellAttackRouteSubject
     | SpellAttackProcedureRouteSubject
+    | SpellHostedWeaponAttackRouteSubject
+    | WeaponDamageRiderRouteSubject
+    | HeldWeaponActiveEffectRouteSubject
+    | WeaponEnhancementItemTargetRouteSubject
+    | WeaponHostedSpellEffectCleanupRouteSubject
     | AfterHitDamageRiderRouteSubject
     | StatBlockActionRouteSubject
     | CreatureAttackRouteSubject
@@ -39,6 +44,7 @@ module battleRuntimeReducerRoute {
     | BattleStatBlockActionOwner
     | BattleConcentrationOwner
     | BattleActiveEffectOwner
+    | BattleItemTargetBoundaryOwner
     | BattleMovementResourceOwner
     | BattleInterruptStackOwner
     | BattleFeatureResourceOwner
