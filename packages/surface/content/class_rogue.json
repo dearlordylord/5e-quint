@@ -1,6 +1,8 @@
 {
   "armorTraining": {
-    "categories": ["light"],
+    "categories": [
+      "light"
+    ],
     "kind": "trained"
   },
   "className": "rogue",
@@ -99,14 +101,19 @@
   },
   "name": "Rogue",
   "primaryAbilities": {
-    "abilities": ["dex"],
+    "abilities": [
+      "dex"
+    ],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Rogue.md:3-25,33-36,38-39,57-79,85-150"
   },
-  "savingThrowProficiencies": ["dex", "int"],
+  "savingThrowProficiencies": [
+    "dex",
+    "int"
+  ],
   "skillProficiencyChoice": {
     "choose": 4,
     "options": [
@@ -173,7 +180,9 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": ["subclass_rogue_thief"]
+      "options": [
+        "subclass_rogue_thief"
+      ]
     }
   ],
   "toolProficiencies": {
@@ -191,7 +200,10 @@
       "kind": "weapon_category"
     },
     {
-      "anyOfProperties": ["finesse", "light"],
+      "anyOfProperties": [
+        "finesse",
+        "light"
+      ],
       "category": "martial",
       "kind": "weapon_category_with_properties"
     }
