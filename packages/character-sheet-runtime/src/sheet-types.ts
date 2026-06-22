@@ -214,8 +214,7 @@ export { RETAINED_COMPANION_PROTOCOL_TAGS, retainedCompanionProtocolFacts };
 export type CharacterSheetRetainedCompanionProtocolTag =
   RetainedCompanionProtocolTag;
 
-export type CharacterSheetRetainedCompanionProtocol =
-  RetainedCompanionProtocol;
+export type CharacterSheetRetainedCompanionProtocol = RetainedCompanionProtocol;
 
 export type CharacterSheetRetainedCompanionProtocolFacts =
   RetainedCompanionProtocolFacts;
@@ -316,7 +315,6 @@ export type CharacterSheet =
       readonly tag: "available";
       readonly characterId: CharacterSheetId;
       readonly build: SpellcastingCharacterBuild;
-      readonly maximumHp: HpType;
       readonly hitPointMaximumReduction: HpType;
       readonly hitPoints: CharacterSheetHitPoints;
       readonly conditions: readonly CharacterSheetCondition[];
@@ -338,7 +336,6 @@ export type CharacterSheet =
       readonly tag: "available";
       readonly characterId: CharacterSheetId;
       readonly build: NonSpellcastingCharacterBuild;
-      readonly maximumHp: HpType;
       readonly hitPointMaximumReduction: HpType;
       readonly hitPoints: CharacterSheetHitPoints;
       readonly conditions: readonly CharacterSheetCondition[];
@@ -759,8 +756,7 @@ export type CharacterSheetSpellRestBenefitResult = {
 export type CharacterSheetInput = {
   readonly characterId: CharacterSheetId;
   readonly build: CharacterBuild;
-  readonly maximumHp: HpType;
-  readonly currentHp: HpType;
+  readonly currentHp?: HpType;
   readonly tempHp: HpType;
   readonly hitPointMaximumReduction: HpType;
   readonly conditions: readonly CharacterSheetCondition[];
@@ -768,7 +764,7 @@ export type CharacterSheetInput = {
   readonly positiveHpUnconscious?: CharacterSheetPositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterSheetZeroHpLifecycleInput;
   readonly spentHitDice?: readonly CharacterSheetSpentHitDiePool[];
-  readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
+  readonly spellSlotExpenditures?: readonly CharacterSpellSlotExpenditure[];
   readonly pactSlots?: CharacterPactSlotExpenditure;
   readonly bookOfShadowsPresence?: CharacterSheetBookOfShadowsPresence;
   readonly restFeatureUses?: readonly CharacterSheetRestFeatureUse[];

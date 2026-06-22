@@ -195,7 +195,6 @@ function layOnHandsSheets(): {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:lay-on-hands-source"),
         build: paladinBuild({ paladinAdvancements: 1 }),
-        maximumHp: Hp(12),
         currentHp: Hp(12),
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(0),
@@ -207,7 +206,6 @@ function layOnHandsSheets(): {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:lay-on-hands-target"),
         build: characterBuild("class_fighter"),
-        maximumHp: Hp(10),
         currentHp: Hp(3),
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(0),

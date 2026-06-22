@@ -45,6 +45,7 @@ import {
 import { completeShortRestBenefits } from "./healing-rest-benefit.ts";
 import {
   characterSheetCurrentHp,
+  characterSheetHitPointMaximum,
   characterSheetHitPoints,
 } from "./hit-points.ts";
 import {
@@ -238,11 +239,6 @@ export function completeLongRest(
       "Long Rest requires the Character Sheet to have at least 1 HP.",
     );
   }
-  const hitPoints = characterSheetHitPoints({
-    currentHp: sheet.maximumHp,
-    tempHp: Hp(0),
-  });
-  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const companion = companionAfterLongRest(sheet.companion);
   const heroicInspiration = heroicInspirationAfterLongRest({
     sheet,
@@ -254,6 +250,11 @@ export function completeLongRest(
   if (isCharacterSheetWithSpellSlots(sheet)) {
     const build = characterSheetLongRestBuild(input, sheet.build);
     if (Either.isLeft(build)) return Either.left(build.left);
+    const hitPoints = characterSheetLongRestHitPoints({
+      build: build.right,
+      unitLibrary: input.unitLibrary,
+    });
+    if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
     const druidWildShapeKnownForms = druidWildShapeKnownFormsAfterLongRest({
       input,
       build: build.right,
@@ -271,7 +272,6 @@ export function completeLongRest(
     return Either.right({
       ...sheet,
       build: build.right,
-      maximumHp: sheet.maximumHp,
       hitPointMaximumReduction: Hp(0),
       hitPoints: hitPoints.right,
       spentHitDice: [],
@@ -285,19 +285,18 @@ export function completeLongRest(
       ...(druidCircleLand.right === undefined
         ? {}
         : { druidCircleLand: druidCircleLand.right }),
-      spellSlotExpenditures: sheet.spellSlotExpenditures.map((expenditure) => ({
-        ...expenditure,
-        expended: resourceCount(0),
-      })),
+      spellSlotExpenditures: [],
       createdSpellSlots: [],
-      pactSlotExpenditure:
-        sheet.pactSlotExpenditure === undefined
-          ? undefined
-          : { expended: resourceCount(0) },
+      pactSlotExpenditure: undefined,
     });
   }
   const build = characterSheetLongRestBuild(input, sheet.build);
   if (Either.isLeft(build)) return Either.left(build.left);
+  const hitPoints = characterSheetLongRestHitPoints({
+    build: build.right,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const druidWildShapeKnownForms = druidWildShapeKnownFormsAfterLongRest({
     input,
     build: build.right,
@@ -315,7 +314,6 @@ export function completeLongRest(
   return Either.right({
     ...sheet,
     build: build.right,
-    maximumHp: sheet.maximumHp,
     hitPointMaximumReduction: Hp(0),
     hitPoints: hitPoints.right,
     spentHitDice: [],
@@ -329,6 +327,24 @@ export function completeLongRest(
     ...(druidCircleLand.right === undefined
       ? {}
       : { druidCircleLand: druidCircleLand.right }),
+  });
+}
+
+function characterSheetLongRestHitPoints(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<CharacterSheet["hitPoints"], CharacterSheetIssue> {
+  const hitPointMaximum = characterSheetHitPointMaximum({
+    sheet: {
+      build: input.build,
+      hitPointMaximumReduction: Hp(0),
+    },
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(hitPointMaximum)) return Either.left(hitPointMaximum.left);
+  return characterSheetHitPoints({
+    currentHp: hitPointMaximum.right,
+    tempHp: Hp(0),
   });
 }
 
@@ -475,14 +491,11 @@ function characterSheetLongRestAfterInterruption(input: {
 export function completeMagicalCunningRite(
   input: CharacterSheetMagicalCunningInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  if (
-    !("pactSlotExpenditure" in input.sheet) ||
-    input.sheet.pactSlotExpenditure === undefined
-  ) {
-    return characterSheetIssue("Magical Cunning requires Pact Slot state.");
-  }
   const pactSlots = characterSheetPactSlots(input.sheet);
   if (pactSlots === undefined) {
+    return characterSheetIssue("Magical Cunning requires Pact Slot state.");
+  }
+  if (!isCharacterSheetWithSpellSlots(input.sheet)) {
     return characterSheetIssue("Magical Cunning requires Pact Slot state.");
   }
   const profile = pactSlotRecoveryProfileForBuild(
@@ -508,11 +521,15 @@ export function completeMagicalCunningRite(
     pactSlots,
     profile: profile.right,
   });
+  const expendedAfterRecovery = resourceCount(
+    Math.max(0, pactSlots.expended - recovered),
+  );
   return Either.right({
     ...input.sheet,
-    pactSlotExpenditure: {
-      expended: resourceCount(Math.max(0, pactSlots.expended - recovered)),
-    },
+    pactSlotExpenditure:
+      expendedAfterRecovery === resourceCount(0)
+        ? undefined
+        : { expended: expendedAfterRecovery },
     restFeatureUses: [
       ...input.sheet.restFeatureUses,
       {

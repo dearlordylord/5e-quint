@@ -453,7 +453,6 @@ function weaponMasterySheet(
         featureUnitId: profile.featureUnitId,
         selectedWeaponUnitIds: profile.currentWeaponUnitIds,
       }),
-      maximumHp: Hp(12),
       currentHp: Hp(8),
       tempHp: Hp(0),
       unitLibrary,

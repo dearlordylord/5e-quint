@@ -80,6 +80,8 @@ import {
   type CharacterSheetInput,
   type CharacterSheetRetainedCompanionCurrentHitPoints,
   type CharacterSheetRetainedCompanionManifestation,
+  type CharacterSheetSpellSlotState,
+  type CharacterSpellSlotExpenditure,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -140,16 +142,31 @@ const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
   "stat_block_cat",
 ] as const;
 
-function createFreshCharacterSheet(
-  input: Omit<CharacterSheetInput, "conditions" | "hitPointMaximumReduction"> &
-    Partial<
-      Pick<CharacterSheetInput, "conditions" | "hitPointMaximumReduction">
-    >,
-) {
+type CharacterSheetTestInput = Omit<
+  CharacterSheetInput,
+  "conditions" | "hitPointMaximumReduction" | "spellSlotExpenditures"
+> &
+  Partial<
+    Pick<CharacterSheetInput, "conditions" | "hitPointMaximumReduction">
+  > & {
+    readonly spellSlotExpenditures?: readonly CharacterSpellSlotExpenditure[];
+    readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
+  };
+
+function createFreshCharacterSheet(input: CharacterSheetTestInput) {
+  const { spellSlots, spellSlotExpenditures, ...rest } = input;
+  const ordinarySpellSlotExpenditures =
+    spellSlotExpenditures ??
+    spellSlots
+      ?.filter((slot) => slot.expended > 0)
+      .map(({ spellLevel, expended }) => ({ spellLevel, expended }));
   return createFreshCharacterSheetCore({
     conditions: [],
     hitPointMaximumReduction: Hp(0),
-    ...input,
+    ...rest,
+    ...(ordinarySpellSlotExpenditures === undefined
+      ? {}
+      : { spellSlotExpenditures: ordinarySpellSlotExpenditures }),
   });
 }
 
@@ -183,7 +200,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:sheet"),
       build,
-      maximumHp: Hp(10),
       currentHp: Hp(10),
       tempHp: Hp(0),
       unitLibrary,
@@ -209,7 +225,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:sheet"),
       build,
-      maximumHp: Hp(10),
       currentHp: Hp(10),
       tempHp: Hp(0),
       unitLibrary,
@@ -237,7 +252,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:sheet-reduced-maximum"),
       build,
-      maximumHp: Hp(10),
       hitPointMaximumReduction: Hp(3),
       currentHp: Hp(7),
       tempHp: Hp(0),
@@ -264,7 +278,14 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(handoff)).toBe(true);
     if (Either.isLeft(handoff)) return;
     expect(handoff.right.hitPointMaximumReduction).toBe(3);
-    expect(characterSheetHitPointMaximum(handoff.right)).toBe(7);
+    expect(
+      expectRight(
+        characterSheetHitPointMaximum({
+          sheet: handoff.right,
+          unitLibrary,
+        }),
+      ),
+    ).toBe(7);
     expect(characterSheetCurrentHp(handoff.right)).toBe(6);
   });
 
@@ -272,7 +293,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:sheet"),
       build,
-      maximumHp: Hp(10),
       currentHp: Hp(10),
       tempHp: Hp(0),
       unitLibrary,
@@ -305,7 +325,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:druid-wild-shape-handoff"),
       build: druidWildShapeBuild(),
-      maximumHp: Hp(16),
       currentHp: Hp(16),
       tempHp: Hp(0),
       unitLibrary,
@@ -342,7 +361,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:wild-companion-retained"),
         build: druidWildShapeBuild(),
-        maximumHp: Hp(15),
         currentHp: Hp(15),
         tempHp: Hp(0),
         unitLibrary,
@@ -417,7 +435,6 @@ describe("Character Sheet battle handoff", () => {
             },
           },
         },
-        maximumHp: Hp(8),
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -641,7 +658,6 @@ describe("Character Sheet battle handoff", () => {
             },
           },
         },
-        maximumHp: Hp(8),
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -744,7 +760,6 @@ describe("Character Sheet battle handoff", () => {
             },
           },
         },
-        maximumHp: Hp(8),
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -884,7 +899,6 @@ describe("Character Sheet battle handoff", () => {
           "character:battle-only-companion-handoff",
         ),
         build,
-        maximumHp: Hp(10),
         currentHp: Hp(10),
         tempHp: Hp(0),
         unitLibrary,
@@ -948,7 +962,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:druid-wild-shape-catalog"),
       build: druidWildShapeBuild(),
-      maximumHp: Hp(16),
       currentHp: Hp(16),
       tempHp: Hp(0),
       unitLibrary,
@@ -988,7 +1001,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:druid-wild-shape-init"),
       build: druidWildShapeBuild(),
-      maximumHp: Hp(15),
       currentHp: Hp(15),
       tempHp: Hp(0),
       unitLibrary,
@@ -1022,7 +1034,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:druid-wild-shape-no-catalog"),
         build: druidWildShapeBuild(),
-        maximumHp: Hp(15),
         currentHp: Hp(15),
         tempHp: Hp(0),
         unitLibrary,
@@ -1074,7 +1085,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:druid-wild-shape-subset"),
         build: druidWildShapeBuild(),
-        maximumHp: Hp(15),
         currentHp: Hp(15),
         tempHp: Hp(0),
         unitLibrary,
@@ -1133,7 +1143,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:reduced-maximum-init"),
       build,
-      maximumHp: Hp(10),
       hitPointMaximumReduction: Hp(3),
       currentHp: Hp(7),
       tempHp: Hp(0),
@@ -1385,7 +1394,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:dragonborn-breath-parse"),
         build: dragonbornFighterBuild(),
-        maximumHp: Hp(10),
         currentHp: Hp(10),
         tempHp: Hp(0),
         unitLibrary,
@@ -1533,7 +1541,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:dragonborn-breath-mismatch"),
         build: dragonbornFighterBuild(),
-        maximumHp: Hp(10),
         currentHp: Hp(10),
         tempHp: Hp(0),
         unitLibrary,
@@ -1570,7 +1577,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:druid-wild-shape-resource"),
       build: druidWildShapeBuild(),
-      maximumHp: Hp(15),
       currentHp: Hp(15),
       tempHp: Hp(0),
       unitLibrary,
@@ -1617,7 +1623,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:stable"),
       build,
-      maximumHp: Hp(10),
       currentHp: Hp(0),
       tempHp: Hp(0),
       unitLibrary,
@@ -1663,7 +1668,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:rest-state"),
       build: wizardSpellcastingBuild(),
-      maximumHp: Hp(10),
       currentHp: Hp(10),
       tempHp: Hp(0),
       unitLibrary,
@@ -1715,7 +1719,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:pure-pact-magic"),
         build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
-        maximumHp: Hp(8),
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -1756,7 +1759,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:pure-pact-magic-spent"),
         build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
-        maximumHp: Hp(8),
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -1796,7 +1798,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:pure-pact-magic-drift"),
         build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
-        maximumHp: Hp(8),
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -1887,7 +1888,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:pure-pact-magic-regression"),
         build: armorOfShadowsWarlockBuild({ armorOfShadows: false }),
-        maximumHp: Hp(8),
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -1927,7 +1927,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:no-slot-state"),
         build: defenseBuild({ wearingArmor: false }),
-        maximumHp: Hp(8),
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -1989,7 +1988,6 @@ describe("Character Sheet battle handoff", () => {
             },
           },
         },
-        maximumHp: Hp(8),
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -2051,7 +2049,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-battle"),
         build: sorcererMetamagicBuild(),
-        maximumHp: Hp(24),
         currentHp: Hp(24),
         tempHp: Hp(0),
         unitLibrary,
@@ -2199,7 +2196,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-battle-closed"),
         build: sorcererMetamagicBuild(),
-        maximumHp: Hp(24),
         currentHp: Hp(24),
         tempHp: Hp(0),
         unitLibrary,
@@ -2270,7 +2266,6 @@ describe("Character Sheet battle handoff", () => {
       createFreshCharacterSheet({
         characterId: characterSheetIdValue,
         build: sorcererMetamagicBuild(),
-        maximumHp: Hp(24),
         currentHp: Hp(24),
         tempHp: Hp(0),
         unitLibrary,
@@ -2362,7 +2357,7 @@ describe("Character Sheet battle handoff", () => {
     );
     const spentSorcerer = handoffBranchCombatant({
       hp: characterSheetCurrentHp(sheet),
-      maxHp: sheet.maximumHp,
+      maxHp: expectRight(characterSheetHitPointMaximum({ sheet, unitLibrary })),
       tempHp: characterSheetTempHp(sheet),
       positiveHpUnconscious: null,
       origin: {
@@ -2393,7 +2388,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:paladin-handoff"),
       build: paladinBuild(),
-      maximumHp: Hp(12),
       currentHp: Hp(12),
       tempHp: Hp(0),
       unitLibrary,
@@ -2429,7 +2423,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:ranger-handoff"),
       build: favoredEnemyRangerResourceBuild(),
-      maximumHp: Hp(12),
       currentHp: Hp(12),
       tempHp: Hp(0),
       unitLibrary,
@@ -2489,7 +2482,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:monk-focus-handoff"),
       build: monkBuild({ level: 2, str: 12, dex: 16 }),
-      maximumHp: Hp(16),
       currentHp: Hp(16),
       tempHp: Hp(0),
       unitLibrary,
@@ -2560,7 +2552,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:monk-uncanny-handoff"),
       build: monkBuild({ level: 2, str: 12, dex: 16 }),
-      maximumHp: Hp(15),
       currentHp: Hp(8),
       tempHp: Hp(0),
       unitLibrary,
@@ -2657,7 +2648,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:paladin-smite-handoff"),
       build: paladinsSmitePaladinBuild(),
-      maximumHp: Hp(20),
       currentHp: Hp(20),
       tempHp: Hp(0),
       unitLibrary,
@@ -2719,7 +2709,6 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:ranger-handoff-scaling"),
       build: favoredEnemyRangerResourceBuild(),
-      maximumHp: Hp(12),
       currentHp: Hp(12),
       tempHp: Hp(0),
       unitLibrary,
@@ -5525,7 +5514,6 @@ function retainedOrdinaryCompanionSheet(input: {
           },
         },
       },
-      maximumHp: Hp(8),
       currentHp: Hp(8),
       tempHp: Hp(0),
       unitLibrary,

@@ -53,7 +53,7 @@ import {
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitDice,
-  characterSheetHitPointMaximum,
+  characterSheetHitPointMaximum as characterSheetHitPointMaximumCore,
   characterSheetJumpDistanceAbility,
   characterSheetLinkedSpeedGrants,
   characterSheetLongRestCalendarGate,
@@ -88,9 +88,10 @@ import {
   type CharacterSheetLongRestStartTiming,
   type CharacterSheetShortRestInterruption,
   type CharacterSheetShortRestInput,
+  type CharacterSheetSpellSlotState,
   type CharacterSheetWeaponMasteryReselection,
+  type CharacterSpellSlotExpenditure,
 } from "./index.ts";
-
 
 export {
   abilityScoreAssignment,
@@ -133,7 +134,6 @@ export {
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitDice,
-  characterSheetHitPointMaximum,
   characterSheetJumpDistanceAbility,
   characterSheetLinkedSpeedGrants,
   characterSheetLongRestCalendarGate,
@@ -184,6 +184,15 @@ if (unitCatalogResult.tag !== "ok") {
 }
 export const unitLibrary = unitCatalogResult.catalog;
 export const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
+
+export function characterSheetHitPointMaximum(sheet: CharacterSheet) {
+  return requireRight(
+    characterSheetHitPointMaximumCore({
+      sheet,
+      unitLibrary,
+    }),
+  );
+}
 
 export const layOnHandsSpendsHealingPoolTestName =
   "Lay On Hands spends one healing pool for HP restoration and Poisoned removal";
@@ -266,16 +275,31 @@ export const druidWildShapeFixtureKnownFormStatBlockIds = [
   "stat_block_wolf",
 ] as const;
 
-export function createFreshCharacterSheet(
-  input: Omit<CharacterSheetInput, "conditions" | "hitPointMaximumReduction"> &
-    Partial<
-      Pick<CharacterSheetInput, "conditions" | "hitPointMaximumReduction">
-    >,
-) {
+type CharacterSheetTestInput = Omit<
+  CharacterSheetInput,
+  "conditions" | "hitPointMaximumReduction" | "spellSlotExpenditures"
+> &
+  Partial<
+    Pick<CharacterSheetInput, "conditions" | "hitPointMaximumReduction">
+  > & {
+    readonly spellSlotExpenditures?: readonly CharacterSpellSlotExpenditure[];
+    readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
+  };
+
+export function createFreshCharacterSheet(input: CharacterSheetTestInput) {
+  const { spellSlots, spellSlotExpenditures, ...rest } = input;
+  const ordinarySpellSlotExpenditures =
+    spellSlotExpenditures ??
+    spellSlots
+      ?.filter((slot) => slot.expended > 0)
+      .map(({ spellLevel, expended }) => ({ spellLevel, expended }));
   return createFreshCharacterSheetCore({
     conditions: [],
     hitPointMaximumReduction: Hp(0),
-    ...input,
+    ...rest,
+    ...(ordinarySpellSlotExpenditures === undefined
+      ? {}
+      : { spellSlotExpenditures: ordinarySpellSlotExpenditures }),
   });
 }
 
@@ -366,7 +390,6 @@ export function stableSheet(characterIdText: string): CharacterSheet {
     createFreshCharacterSheet({
       characterId: characterSheetId(characterIdText),
       build,
-      maximumHp: Hp(12),
       currentHp: Hp(0),
       tempHp: Hp(0),
       unitLibrary,
@@ -420,7 +443,6 @@ export function spellbookRitualSheet(input: {
           },
         },
       },
-      maximumHp: Hp(8),
       currentHp: Hp(8),
       tempHp: Hp(0),
       unitLibrary,
@@ -436,9 +458,8 @@ export function storedAvailableSheetInput(input: {
     tag: "available",
     characterId: input.characterId,
     build: input.build,
-    maximumHp: 12,
     hitPointMaximumReduction: 0,
-    hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
+    hitPoints: { tag: "positive", currentHp: 1, tempHp: 0 },
     conditions: [],
     spentHitDice: [],
     resourceExpenditures: [],

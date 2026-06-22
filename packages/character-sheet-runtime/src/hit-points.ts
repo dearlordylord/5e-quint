@@ -1,5 +1,10 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.HIT_POINTS.MAXIMUM_DERIVATION
 import {
+  characterBuildHitPoints,
+  type CharacterBuild,
+  type UnitCatalog,
+} from "@dnd/character-creation-runtime";
+import {
   STABLE_RECOVERY_ROLL_DICE_EXPR,
   advanceStableRecovery,
   advanceStableRecoveryWithRoll,
@@ -84,8 +89,29 @@ export function characterSheetTempHp(sheet: CharacterSheet): HpType {
   return sheet.hitPoints.tempHp;
 }
 
-export function characterSheetHitPointMaximum(sheet: CharacterSheet): HpType {
-  return Hp(Number(sheet.maximumHp) - Number(sheet.hitPointMaximumReduction));
+export function characterSheetNormalHitPointMaximum(input: {
+  readonly sheet: Pick<CharacterSheet, "build">;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<HpType, CharacterSheetIssue> {
+  return characterSheetBuildNormalHitPointMaximum({
+    build: input.sheet.build,
+    unitLibrary: input.unitLibrary,
+  });
+}
+
+export function characterSheetHitPointMaximum(input: {
+  readonly sheet: Pick<CharacterSheet, "build" | "hitPointMaximumReduction">;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<HpType, CharacterSheetIssue> {
+  const normalMaximum = characterSheetBuildNormalHitPointMaximum({
+    build: input.sheet.build,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(normalMaximum)) return Either.left(normalMaximum.left);
+  return characterSheetEffectiveHitPointMaximum({
+    normalMaximum: normalMaximum.right,
+    hitPointMaximumReduction: input.sheet.hitPointMaximumReduction,
+  });
 }
 
 export function characterSheetHitPointsCurrentHp(
@@ -98,27 +124,31 @@ export function characterSheetHitPointsCurrentHp(
 export function characterSheetHitPointCapacity(
   input: Pick<
     CharacterSheetInput,
-    "maximumHp" | "currentHp" | "hitPointMaximumReduction"
+    "build" | "unitLibrary" | "currentHp" | "hitPointMaximumReduction"
   >,
-): Either.Either<void, CharacterSheetIssue> {
-  if (input.maximumHp < 1) {
-    return characterSheetIssue("Character Sheet maximum HP must be positive.");
-  }
-  if (input.hitPointMaximumReduction >= input.maximumHp) {
-    return characterSheetIssue(
-      "Character Sheet Hit Point maximum reduction must leave a positive Hit Point maximum.",
-    );
-  }
-  if (input.currentHp > input.maximumHp - input.hitPointMaximumReduction) {
+): Either.Either<
+  { readonly currentHp: HpType; readonly hitPointMaximum: HpType },
+  CharacterSheetIssue
+> {
+  const normalMaximum = characterSheetBuildNormalHitPointMaximum(input);
+  if (Either.isLeft(normalMaximum)) return Either.left(normalMaximum.left);
+  const hitPointMaximum = characterSheetEffectiveHitPointMaximum({
+    normalMaximum: normalMaximum.right,
+    hitPointMaximumReduction: input.hitPointMaximumReduction,
+  });
+  if (Either.isLeft(hitPointMaximum)) return Either.left(hitPointMaximum.left);
+  const currentHp = input.currentHp ?? hitPointMaximum.right;
+  if (currentHp > hitPointMaximum.right) {
     return characterSheetIssue(
       "Character Sheet current HP exceeds maximum HP.",
     );
   }
-  return Either.right(undefined);
+  return Either.right({ currentHp, hitPointMaximum: hitPointMaximum.right });
 }
 
 export function recoverCharacterSheetHitPoints(input: {
   readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
   readonly healing: HpType;
   readonly overflow: CharacterSheetHitPointRecoveryOverflow;
   readonly deadCharacterMessage: string;
@@ -132,16 +162,20 @@ export function recoverCharacterSheetHitPoints(input: {
   }
 
   const currentHp = characterSheetCurrentHp(input.sheet);
-  const hitPointMaximum = characterSheetHitPointMaximum(input.sheet);
+  const hitPointMaximum = characterSheetHitPointMaximum({
+    sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(hitPointMaximum)) return Either.left(hitPointMaximum.left);
   const recoveredHp = currentHp + input.healing;
   if (
     input.overflow.tag === "rejectAboveMaximum" &&
-    recoveredHp > hitPointMaximum
+    recoveredHp > hitPointMaximum.right
   ) {
     return characterSheetIssue(input.overflow.message);
   }
   const hitPoints = characterSheetHitPoints({
-    currentHp: Hp(Math.min(Number(hitPointMaximum), Number(recoveredHp))),
+    currentHp: Hp(Math.min(Number(hitPointMaximum.right), Number(recoveredHp))),
     tempHp: characterSheetTempHp(input.sheet),
   });
   return Either.isLeft(hitPoints)
@@ -231,6 +265,38 @@ export function parseHp(
   return isNonNegativeInteger(value)
     ? Either.right(Hp(value))
     : characterSheetIssue("Expected nonnegative HP.");
+}
+
+function characterSheetBuildNormalHitPointMaximum(input: {
+  readonly build: Pick<
+    CharacterBuild,
+    "progression" | "abilityScores" | "features"
+  >;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<HpType, CharacterSheetIssue> {
+  const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
+  return Either.isLeft(hitPoints)
+    ? characterSheetIssue(
+        hitPoints.left.map((issue) => issue.message).join("; "),
+      )
+    : Either.right(Hp(Number(hitPoints.right.maximum)));
+}
+
+function characterSheetEffectiveHitPointMaximum(input: {
+  readonly normalMaximum: HpType;
+  readonly hitPointMaximumReduction: HpType;
+}): Either.Either<HpType, CharacterSheetIssue> {
+  if (input.normalMaximum < Hp(1)) {
+    return characterSheetIssue("Character Sheet maximum HP must be positive.");
+  }
+  if (input.hitPointMaximumReduction >= input.normalMaximum) {
+    return characterSheetIssue(
+      "Character Sheet Hit Point maximum reduction must leave a positive Hit Point maximum.",
+    );
+  }
+  return Either.right(
+    Hp(Number(input.normalMaximum) - Number(input.hitPointMaximumReduction)),
+  );
 }
 
 function passStableRecoveryRule(input: {

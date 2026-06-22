@@ -216,7 +216,6 @@ function createLifecycleDriver() {
             createFreshCharacterSheet({
               characterId: lifecycleCharacterId,
               build,
-              maximumHp: Hp(maximumHp),
               currentHp: Hp(maximumHp),
               tempHp: Hp(0),
               hitPointMaximumReduction: Hp(0),
@@ -231,7 +230,11 @@ function createLifecycleDriver() {
             buildFinalized: true,
             sheetOwnsHitPoints: true,
             sheetCurrentHp: Number(characterSheetCurrentHp(sheet)),
-            sheetMaxHp: Number(characterSheetHitPointMaximum(sheet)),
+            sheetMaxHp: Number(
+              requireRight(
+                characterSheetHitPointMaximum({ sheet, unitLibrary }),
+              ),
+            ),
             replayIndex: 2,
           };
         });
@@ -366,7 +369,10 @@ function finalizeLifecycleDraft(draft: CharacterDraft): CharacterBuild {
           "survival",
         ),
         choiceFill(
-          unitChoiceHoleId("fighter_fighting_style", "class_feature_feat_choice"),
+          unitChoiceHoleId(
+            "fighter_fighting_style",
+            "class_feature_feat_choice",
+          ),
           "defense",
         ),
         choiceFill(
@@ -539,7 +545,9 @@ function resolveSkeletonShortswordAttack(state: BattleState): BattleState {
     ],
   });
   if (resolved.tag !== "resolved") {
-    throw new Error(`Expected resolved Shortsword attack, got ${resolved.tag}.`);
+    throw new Error(
+      `Expected resolved Shortsword attack, got ${resolved.tag}.`,
+    );
   }
   return resolved.state;
 }
@@ -667,9 +675,9 @@ function choiceFill(
   };
 }
 
-function draftHoleId(holeId: string): NonNullable<
-  ReturnType<typeof parseCreationHoleId>
-> {
+function draftHoleId(
+  holeId: string,
+): NonNullable<ReturnType<typeof parseCreationHoleId>> {
   const parsed = parseCreationHoleId(holeId);
   if (parsed === null) {
     throw new Error(`Expected supported creation hole id: ${holeId}`);

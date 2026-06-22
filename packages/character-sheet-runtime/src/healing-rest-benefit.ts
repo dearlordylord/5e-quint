@@ -121,6 +121,7 @@ export function applyLayOnHands(
   const targetBase = sourceIsTarget ? sourceAfterSpend.right : input.target;
   const targetAfterHealing = applyLayOnHandsTargetEffects({
     sheet: targetBase,
+    unitLibrary: input.unitLibrary,
     restoreHp: input.restoreHp,
     removePoisoned: input.removePoisoned,
   });
@@ -348,8 +349,7 @@ export function completeShortRestBenefits(input: {
       : recoverSorceryPointsWithSorcerousRestoration({
           sheet: hitDiceSpent.right,
           unitLibrary: input.unitLibrary,
-          recoverSorceryPoints:
-            input.sorcerousRestoration.recoverSorceryPoints,
+          recoverSorceryPoints: input.sorcerousRestoration.recoverSorceryPoints,
         });
   if (Either.isLeft(sorceryPointsRecovered)) {
     return Either.left(sorceryPointsRecovered.left);
@@ -471,6 +471,7 @@ function applySpellRestBenefitToRecipient(input: {
   if (Either.isLeft(healing)) return Either.left(healing.left);
   const healed = recoverCharacterSheetHitPoints({
     sheet: shortRested.right,
+    unitLibrary: input.unitLibrary,
     healing: healing.right,
     overflow: { tag: "capAtMaximum" },
     deadCharacterMessage:
@@ -609,18 +610,9 @@ function characterSheetSpellSlotSpendSource(input: {
 }
 
 function recoverPactSlots(sheet: CharacterSheet): CharacterSheet {
-  if (
-    !("pactSlotExpenditure" in sheet) ||
-    sheet.pactSlotExpenditure === undefined
-  ) {
-    return sheet;
-  }
-  return {
-    ...sheet,
-    pactSlotExpenditure: {
-      expended: resourceCount(0),
-    },
-  };
+  return isCharacterSheetWithSpellSlots(sheet)
+    ? { ...sheet, pactSlotExpenditure: undefined }
+    : sheet;
 }
 
 function spendHitDice(input: {
@@ -690,6 +682,7 @@ function spendHitDice(input: {
   }
   const healed = recoverCharacterSheetHitPoints({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
     healing: Hp(healingTotal),
     overflow: { tag: "capAtMaximum" },
     deadCharacterMessage:
@@ -1041,6 +1034,7 @@ function spendCharacterSheetResource(input: {
 
 function applyLayOnHandsTargetEffects(input: {
   readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
   readonly restoreHp: HpType;
   readonly removePoisoned: boolean;
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
@@ -1060,6 +1054,7 @@ function applyLayOnHandsTargetEffects(input: {
   }
   const healed = recoverCharacterSheetHitPoints({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
     healing: input.restoreHp,
     overflow: {
       tag: "rejectAboveMaximum",

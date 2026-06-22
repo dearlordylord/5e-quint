@@ -10,6 +10,7 @@ import {
   armorClassBuild,
   build,
   characterBuildSorcererMetamagicFacts,
+  characterSheetHitPointMaximum,
   characterSheetId,
   characterSheetTempHp,
   createFreshCharacterSheet,
@@ -35,8 +36,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:test"),
       build,
-      maximumHp: Hp(12),
-      currentHp: Hp(12),
+      currentHp: Hp(8),
       tempHp: Hp(0),
       unitLibrary,
     });
@@ -45,7 +45,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     if (Either.isRight(sheet)) {
       expect(sheet.right.hitPoints).toEqual({
         tag: "positive",
-        currentHp: 12,
+        currentHp: 8,
         tempHp: 0,
       });
     }
@@ -55,8 +55,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:test"),
       build,
-      maximumHp: Hp(12),
-      currentHp: Hp(12),
+      currentHp: Hp(8),
       tempHp: Hp(5),
       unitLibrary,
     });
@@ -71,7 +70,6 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:test"),
       build,
-      maximumHp: Hp(12),
       currentHp: Hp(1),
       tempHp: Hp(0),
       unitLibrary,
@@ -88,13 +86,54 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:test"),
       build,
-      maximumHp: Hp(12),
       currentHp: Hp(13),
       tempHp: Hp(0),
       unitLibrary,
     });
 
     expect(Either.isLeft(sheet)).toBe(true);
+  });
+
+  test("defaults omitted current HP to the derived effective maximum", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:derived-current-hp"),
+      build,
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(3),
+      unitLibrary,
+    });
+
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isRight(sheet)) {
+      expect("maximumHp" in sheet.right).toBe(false);
+      expect(sheet.right.hitPoints).toEqual({
+        tag: "positive",
+        currentHp: 8,
+        tempHp: 0,
+      });
+      expect(characterSheetHitPointMaximum(sheet.right)).toBe(8);
+    }
+  });
+
+  test("rejects stale stored sheets with build-derived maximum HP", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:stale-maximum-hp",
+          build,
+        }),
+        maximumHp: 50,
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Stored Character Sheet must not carry build-derived maximum HP.",
+      },
+    });
   });
 
   test("rejects stored sheets with malformed Character Build shape", () => {
@@ -111,7 +150,6 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           features: [],
           equipment: {},
         },
-        maximumHp: 12,
         hitPointMaximumReduction: 0,
         hitPoints: { tag: "positive", currentHp: 12 },
         spentHitDice: [],
@@ -180,8 +218,6 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:rogue-language-sheet"),
         build: rogueLanguageBuild("Elvish"),
-        maximumHp: Hp(12),
-        currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
       }),
@@ -714,9 +750,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
             },
           },
         },
-        maximumHp: 12,
         hitPointMaximumReduction: 0,
-        hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
+        hitPoints: { tag: "positive", currentHp: 1, tempHp: 0 },
         bookOfShadowsPresence: { tag: "notOnPerson" },
         conditions: [],
         spentHitDice: [],

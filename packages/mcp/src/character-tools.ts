@@ -3,7 +3,6 @@ import {
   discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
-  characterBuildHitPoints,
   type CharacterDraft,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
@@ -171,21 +170,9 @@ export function handleCharacterToolCall(
       });
       const finalizedCharacterId = characterIdFromDraftId(draftId);
       if (finalization.tag === "ready") {
-        const hitPoints = characterBuildHitPoints(
-          finalization.build,
-          root.unitLibrary,
-        );
-        if (Either.isLeft(hitPoints)) {
-          return errorContent("Character finalization session failed.", {
-            code: "CHARACTER_SESSION_INVALID",
-            message: hitPoints.left.map((issue) => issue.message).join("; "),
-          });
-        }
         const session = availableCharacterSession({
           characterId: finalizedCharacterId,
           build: finalization.build,
-          maximumHp: Hp(hitPoints.right.maximum),
-          currentHp: Hp(hitPoints.right.maximum),
           tempHp: Hp(0),
           hitPointMaximumReduction: Hp(0),
           conditions: [],

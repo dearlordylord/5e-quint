@@ -156,6 +156,15 @@ export function CharacterCreationPage() {
                 {sheets.map((sheet) => {
                   const summary = characterSheetSummary(sheet)
                   const selected = selectedSheetId === sheet.characterId
+                  if (Either.isLeft(summary)) {
+                    return (
+                      <li key={sheet.characterId}>
+                        <div className="rounded-md border border-rose-900/80 bg-black/20 px-3 py-2 text-sm text-rose-100">
+                          {summary.left.message}
+                        </div>
+                      </li>
+                    )
+                  }
                   return (
                     <li key={sheet.characterId}>
                       <button
@@ -167,10 +176,11 @@ export function CharacterCreationPage() {
                         onClick={() => setSelectedSheetId(sheet.characterId)}
                         type="button"
                       >
-                        <span className="block truncate">{summary.characterId}</span>
+                        <span className="block truncate">{summary.right.characterId}</span>
                         <span className="mt-1 block text-xs text-gray-400">
-                          HP {summary.currentHp}/{summary.maximumHp}
-                          {summary.tempHp === 0 ? "" : ` + ${summary.tempHp} temp`} · {summary.hitPointState}
+                          HP {summary.right.currentHp}/{summary.right.maximumHp}
+                          {summary.right.tempHp === 0 ? "" : ` + ${summary.right.tempHp} temp`} ·{" "}
+                          {summary.right.hitPointState}
                         </span>
                       </button>
                     </li>
@@ -245,24 +255,34 @@ export function CharacterCreationPage() {
                 .filter((sheet) => sheet.characterId === selectedSheetId)
                 .map((sheet) => {
                   const summary = characterSheetSummary(sheet)
+                  if (Either.isLeft(summary)) {
+                    return (
+                      <div
+                        key={sheet.characterId}
+                        className="mt-4 rounded-md border border-rose-900 bg-black/20 p-3 text-sm text-rose-100"
+                      >
+                        {summary.left.message}
+                      </div>
+                    )
+                  }
                   return (
                     <dl key={sheet.characterId} className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                       <div className="rounded-md border border-gray-800 bg-black/20 p-3">
                         <dt className="text-gray-400">Character Sheet</dt>
-                        <dd className="mt-1 break-all text-gray-100">{summary.characterId}</dd>
+                        <dd className="mt-1 break-all text-gray-100">{summary.right.characterId}</dd>
                       </div>
                       <div className="rounded-md border border-gray-800 bg-black/20 p-3">
                         <dt className="text-gray-400">Hit Points</dt>
                         <dd className="mt-1 text-gray-100">
-                          {summary.currentHp}/{summary.maximumHp} · {summary.hitPointState}
+                          {summary.right.currentHp}/{summary.right.maximumHp} · {summary.right.hitPointState}
                         </dd>
                       </div>
                       <div className="rounded-md border border-gray-800 bg-black/20 p-3">
                         <dt className="text-gray-400">Spell Slot State</dt>
                         <dd className="mt-1 text-gray-100">
-                          {summary.spellSlotLevels.length === 0
+                          {summary.right.spellSlotLevels.length === 0
                             ? "No spell slot expenditures"
-                            : summary.spellSlotLevels.map((level) => `Level ${level}`).join(", ")}
+                            : summary.right.spellSlotLevels.map((level) => `Level ${level}`).join(", ")}
                         </dd>
                       </div>
                     </dl>

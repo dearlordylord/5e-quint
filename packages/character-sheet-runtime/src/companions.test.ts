@@ -91,7 +91,6 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:no-companion"),
         build,
-        maximumHp: Hp(12),
         currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
@@ -110,7 +109,6 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:retained-companion"),
         build,
-        maximumHp: Hp(12),
         currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
@@ -209,7 +207,6 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:bad-companion-hp"),
         build,
-        maximumHp: Hp(12),
         currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
@@ -249,7 +246,6 @@ describe("Character Sheet runtime / companions", () => {
         createFreshCharacterSheet({
           characterId: characterSheetId("character:bad-companion-protocol"),
           build,
-          maximumHp: Hp(12),
           currentHp: Hp(12),
           tempHp: Hp(0),
           unitLibrary,
@@ -267,7 +263,6 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:unknown-companion-protocol"),
         build,
-        maximumHp: Hp(12),
         currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
@@ -302,7 +297,6 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:wild-companion"),
         build,
-        maximumHp: Hp(12),
         currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
@@ -322,7 +316,6 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:familiar-rest-temp-hp"),
         build,
-        maximumHp: Hp(12),
         currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,

@@ -26,6 +26,7 @@ import {
   isCharacterSheetPointPoolResourceUnitId,
   isCharacterSheetUseCountResourceUnitId,
   replaceCharacterSheetSpellSlotSourceState,
+  replaceOrdinarySpellSlotExpenditure,
   type CharacterPactSlotExpenditure,
   type CharacterSheet,
   type CharacterSheetBookOfShadowsPresence,
@@ -45,6 +46,7 @@ import {
   resourceCount,
   type Condition,
   type ResourceCount,
+  type SpellSlotLevel,
 } from "@dnd/shared/types";
 import {
   EMPTY_CONDITION_STATE,
@@ -143,12 +145,19 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
   if (Either.isLeft(druidWildShapeAvailableForms)) {
     return Either.left(druidWildShapeAvailableForms.left);
   }
+  const hitPointMaximum = characterSheetHitPointMaximum({
+    sheet,
+    unitLibrary,
+  });
+  if (Either.isLeft(hitPointMaximum)) {
+    return battleCreatureInitIssue(hitPointMaximum.left.message);
+  }
   return battleCreatureInitFromCharacterBuild({
     ...battleInput,
     unitLibrary,
     build: sheet.build,
     characterId: sheet.characterId,
-    hitPointMaximum: characterSheetHitPointMaximum(sheet),
+    hitPointMaximum: hitPointMaximum.right,
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
     ...withDefinedCharacterBattleSheetState(sheet),
@@ -190,13 +199,17 @@ function settleBattleCombatantIntoCharacterSheet(input: {
       "Battle handoff character identity does not match Character Sheet.",
     );
   }
-  const hitPointMaximum = characterSheetHitPointMaximum(input.sheet);
-  if (input.combatant.maxHp !== hitPointMaximum) {
+  const hitPointMaximum = characterSheetHitPointMaximum({
+    sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(hitPointMaximum)) return Either.left(hitPointMaximum.left);
+  if (input.combatant.maxHp !== hitPointMaximum.right) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff maximum HP does not match Character Sheet.",
     );
   }
-  if (input.combatant.hp > hitPointMaximum) {
+  if (input.combatant.hp > hitPointMaximum.right) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff current HP exceeds Character Sheet maximum HP.",
     );
@@ -250,7 +263,6 @@ function settleBattleCombatantIntoCharacterSheet(input: {
   const sheet = createFreshCharacterSheet({
     characterId: input.sheet.characterId,
     build: input.sheet.build,
-    maximumHp: input.sheet.maximumHp,
     hitPointMaximumReduction: input.sheet.hitPointMaximumReduction,
     currentHp: input.combatant.hp,
     tempHp: input.combatant.tempHp,
@@ -396,7 +408,7 @@ function characterSheetSpellSlotSourceStateFromBattle(input: {
 }
 
 function spellSlotSourceSpendForBattleDelta(input: {
-  readonly spellLevel: number;
+  readonly spellLevel: SpellSlotLevel;
   readonly delta: ResourceCount;
   readonly totalCount: ResourceCount;
   readonly ordinarySpellSlotExpenditures: CharacterSheetSpellSlotSourceState["ordinarySpellSlotExpenditures"];
@@ -436,14 +448,11 @@ function spellSlotSourceSpendForBattleDelta(input: {
     ordinarySpellSlotExpenditures:
       ordinarySpend === 0
         ? input.ordinarySpellSlotExpenditures
-        : input.ordinarySpellSlotExpenditures.map((slot) =>
-            slot.spellLevel === input.spellLevel
-              ? {
-                  ...slot,
-                  expended: resourceCount(slot.expended + ordinarySpend),
-                }
-              : slot,
-          ),
+        : replaceOrdinarySpellSlotExpenditure({
+            expenditures: input.ordinarySpellSlotExpenditures,
+            spellLevel: input.spellLevel,
+            expended: resourceCount(ordinaryExpended + ordinarySpend),
+          }),
     createdSpellSlots:
       createdSpend === 0
         ? input.createdSpellSlots

@@ -249,17 +249,15 @@ function rejectMismatchedOrdinarySpellSlotCapacityProjection(): SlotProjection {
   const result = createFreshCharacterSheet({
     characterId: characterSheetId("character:slot-mismatch"),
     build: wizardSlotBuild({ wizardAdvancements: 1 }),
-    maximumHp: Hp(12),
     currentHp: Hp(12),
     tempHp: Hp(0),
     hitPointMaximumReduction: Hp(0),
     conditions: [],
     unitLibrary,
-    spellSlots: [
+    spellSlotExpenditures: [
       {
         spellLevel: spellSlotLevel(1),
-        count: resourceCount(2),
-        expended: resourceCount(0),
+        expended: resourceCount(4),
       },
     ],
   });
@@ -281,7 +279,6 @@ function rejectPactSlotExpenditureOverCapacityProjection(): SlotProjection {
     build: warlockMagicalCunningBuild({
       warlockAdvancements: 1,
     }),
-    maximumHp: Hp(12),
     currentHp: Hp(12),
     tempHp: Hp(0),
     hitPointMaximumReduction: Hp(0),
@@ -500,16 +497,14 @@ function wizardWarlockSpentSheet(characterIdText: string): CharacterSheet {
     createFreshCharacterSheet({
       characterId: characterSheetId(characterIdText),
       build: wizardWarlockSlotBuild(),
-      maximumHp: Hp(12),
       currentHp: Hp(12),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
-      spellSlots: [
+      spellSlotExpenditures: [
         {
           spellLevel: spellSlotLevel(1),
-          count: resourceCount(2),
           expended: resourceCount(1),
         },
       ],
@@ -527,21 +522,18 @@ function arcaneRecoveryPactSheet(input: {
     createFreshCharacterSheet({
       characterId: characterSheetId("character:arcane-recovery-pact"),
       build: wizard4BuildWithPactSlots(),
-      maximumHp: Hp(18),
       currentHp: Hp(18),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
-      spellSlots: [
+      spellSlotExpenditures: [
         {
           spellLevel: spellSlotLevel(1),
-          count: resourceCount(4),
           expended: resourceCount(input.firstLevelExpended),
         },
         {
           spellLevel: spellSlotLevel(2),
-          count: resourceCount(3),
           expended: resourceCount(input.secondLevelExpended),
         },
       ],
@@ -555,16 +547,14 @@ function sorcererWarlockLongRestSheet(): CharacterSheet {
     createFreshCharacterSheet({
       characterId: characterSheetId("character:long-rest-created-slot"),
       build: sorcererWarlockSlotBuild(),
-      maximumHp: Hp(18),
       currentHp: Hp(18),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
-      spellSlots: [
+      spellSlotExpenditures: [
         {
           spellLevel: spellSlotLevel(1),
-          count: resourceCount(3),
           expended: resourceCount(2),
         },
       ],
@@ -584,7 +574,6 @@ function warlockMagicalCunningSheet(input: {
       build: warlockMagicalCunningBuild({
         warlockAdvancements: input.warlockAdvancements,
       }),
-      maximumHp: Hp(12),
       currentHp: Hp(12),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),

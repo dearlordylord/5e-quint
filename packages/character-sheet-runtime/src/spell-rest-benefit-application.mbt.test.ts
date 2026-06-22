@@ -290,7 +290,6 @@ function prayerCaster(): CharacterSheet {
     createFreshCharacterSheet({
       characterId: characterSheetId("character:prayer-caster"),
       build: prayerOfHealingClericBuild(),
-      maximumHp: Hp(18),
       hitPointMaximumReduction: Hp(0),
       currentHp: Hp(18),
       tempHp: Hp(0),
@@ -305,7 +304,6 @@ function woundedFighter(characterId: string): CharacterSheet {
     createFreshCharacterSheet({
       characterId: characterSheetId(characterId),
       build: characterBuild({ startingClass: "class_fighter" }),
-      maximumHp: Hp(12),
       hitPointMaximumReduction: Hp(0),
       currentHp: Hp(3),
       tempHp: Hp(0),

@@ -128,7 +128,10 @@ function createCharacterSheet(
   }
 
   if (isNonSpellcastingBuild(input.build)) {
-    if (input.spellSlots !== undefined || storedSpellSlotState !== undefined) {
+    if (
+      input.spellSlotExpenditures !== undefined ||
+      storedSpellSlotState !== undefined
+    ) {
       return characterSheetIssue(
         "Non-spellcasting Character Sheet cannot carry Spell Slot state.",
       );
@@ -138,13 +141,15 @@ function createCharacterSheet(
         "Non-spellcasting Character Sheet cannot carry Pact Slot state.",
       );
     }
-    const hitPoints = characterSheetHitPoints(input);
+    const hitPoints = characterSheetHitPoints({
+      ...input,
+      currentHp: hitPointCapacity.right.currentHp,
+    });
     if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
     return Either.right({
       tag: "available",
       characterId: input.characterId,
       build: input.build,
-      maximumHp: input.maximumHp,
       hitPointMaximumReduction: input.hitPointMaximumReduction,
       hitPoints: hitPoints.right,
       conditions: conditions.right,
@@ -168,16 +173,19 @@ function createCharacterSheet(
     );
   }
   const build = input.build;
-  const hitPoints = characterSheetHitPoints(input);
+  const hitPoints = characterSheetHitPoints({
+    ...input,
+    currentHp: hitPointCapacity.right.currentHp,
+  });
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const spellSlotState =
     storedSpellSlotState === undefined
       ? spellSlotStateFromInput({
           build,
           unitLibrary: input.unitLibrary,
-          ...(input.spellSlots === undefined
+          ...(input.spellSlotExpenditures === undefined
             ? {}
-            : { spellSlots: input.spellSlots }),
+            : { spellSlotExpenditures: input.spellSlotExpenditures }),
         })
       : Either.right(storedSpellSlotState);
   if (Either.isLeft(spellSlotState)) {
@@ -195,7 +203,6 @@ function createCharacterSheet(
     tag: "available",
     characterId: input.characterId,
     build,
-    maximumHp: input.maximumHp,
     hitPointMaximumReduction: input.hitPointMaximumReduction,
     hitPoints: hitPoints.right,
     conditions: conditions.right,
@@ -233,8 +240,6 @@ function bookOfShadowsPresenceFromInput(
   return Either.right(input.bookOfShadowsPresence ?? { tag: "onPerson" });
 }
 
-
-
 export function parseCharacterSheet(
   value: unknown,
   unitLibrary: UnitCatalog,
@@ -246,6 +251,11 @@ export function parseCharacterSheet(
   if (typeof value.characterId !== "string") {
     return characterSheetIssue("Character Sheet requires character id.");
   }
+  if (Object.hasOwn(value, "maximumHp")) {
+    return characterSheetIssue(
+      "Stored Character Sheet must not carry build-derived maximum HP.",
+    );
+  }
   const build = parseCharacterBuild(value.build, unitLibrary);
   if (Either.isLeft(build)) return Either.left(build.left);
   const bookOfShadowsPresence = parseStoredCharacterSheetBookOfShadowsPresence(
@@ -255,8 +265,6 @@ export function parseCharacterSheet(
   if (Either.isLeft(bookOfShadowsPresence)) {
     return Either.left(bookOfShadowsPresence.left);
   }
-  const maximumHp = parseHp(value.maximumHp);
-  if (Either.isLeft(maximumHp)) return Either.left(maximumHp.left);
   if (!Object.hasOwn(value, "hitPointMaximumReduction")) {
     return characterSheetIssue(
       "Character Sheet Hit Point maximum reduction is required.",
@@ -311,7 +319,6 @@ export function parseCharacterSheet(
     {
       characterId: characterSheetId(value.characterId),
       build: build.right,
-      maximumHp: maximumHp.right,
       hitPointMaximumReduction: hitPointMaximumReduction.right,
       currentHp: hitPoints.right.currentHp,
       tempHp: hitPoints.right.tempHp,
@@ -349,7 +356,8 @@ export function parseCharacterSheet(
 function heroicInspirationFromInput(
   input: Pick<CharacterSheetInput, "heroicInspiration">,
 ): Either.Either<CharacterSheetHeroicInspiration, CharacterSheetIssue> {
-  const state = input.heroicInspiration ?? CHARACTER_SHEET_NO_HEROIC_INSPIRATION;
+  const state =
+    input.heroicInspiration ?? CHARACTER_SHEET_NO_HEROIC_INSPIRATION;
   return state.tag === CHARACTER_SHEET_NO_HEROIC_INSPIRATION.tag ||
     state.tag === CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE.tag
     ? Either.right(state)

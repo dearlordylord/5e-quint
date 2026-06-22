@@ -112,7 +112,7 @@ module characterSheetHpRestHitDiceMbt {
 
   pure def woundedWizard: SheetHpState = {
     currentHp: 7,
-    normalHitPointMaximum: 18,
+    normalHitPointMaximum: 12,
     hitPointMaximumReduction: 0,
     temporaryHitPoints: 0,
     spentHitDice: 0,
@@ -143,7 +143,7 @@ module characterSheetHpRestHitDiceMbt {
       "Long Rest requires the Character Sheet to have at least 1 HP.",
       {
         currentHp: 0,
-        normalHitPointMaximum: 12,
+        normalHitPointMaximum: 11,
         hitPointMaximumReduction: 0,
         temporaryHitPoints: 0,
         spentHitDice: 0,
@@ -161,8 +161,8 @@ module characterSheetHpRestHitDiceMbt {
       false,
       "Long Rest requires waiting 16 hours after finishing the previous Long Rest.",
       {
-        currentHp: 12,
-        normalHitPointMaximum: 12,
+        currentHp: 11,
+        normalHitPointMaximum: 11,
         hitPointMaximumReduction: 0,
         temporaryHitPoints: 0,
         spentHitDice: 0,
@@ -206,8 +206,8 @@ module characterSheetHpRestHitDiceMbt {
       true,
       "none",
       completeLongRestBenefits({
-        currentHp: 7,
-        normalHitPointMaximum: 18,
+        currentHp: 6,
+        normalHitPointMaximum: 12,
         hitPointMaximumReduction: 6,
         temporaryHitPoints: 2,
         spentHitDice: 1,
@@ -252,7 +252,7 @@ module characterSheetHpRestHitDiceMbt {
       "Short Rest requires the Character Sheet to have at least 1 HP.",
       {
         currentHp: 0,
-        normalHitPointMaximum: 12,
+        normalHitPointMaximum: 11,
         hitPointMaximumReduction: 0,
         temporaryHitPoints: 0,
         spentHitDice: 0,

@@ -12,6 +12,7 @@ import {
 import {
   resourceCount,
   spellSlotLevel,
+  type ResourceCount,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import { Either } from "effect";
@@ -87,19 +88,13 @@ export function replaceCharacterSheetSpellSlotSourceState(input: {
 export function characterSheetPactSlots(
   sheet: CharacterSheet,
 ): CharacterSheetPactSlotState | undefined {
-  if (
-    !("pactSlotExpenditure" in sheet) ||
-    sheet.pactSlotExpenditure === undefined
-  ) {
-    return undefined;
-  }
   const pactMagic = characterBuildPactSlotCapacity(sheet.build);
   return pactMagic === undefined
     ? undefined
     : {
         slotLevel: spellSlotLevel(pactMagic.slotLevel),
         count: resourceCount(pactMagic.count),
-        expended: sheet.pactSlotExpenditure.expended,
+        expended: sheet.pactSlotExpenditure?.expended ?? resourceCount(0),
       };
 }
 
@@ -241,14 +236,13 @@ export function ordinarySpellSlotStates(
 ): readonly CharacterSheetSpellSlotState[] {
   return characterBuildSpellcastingSlotCapacity(sheet.build).map((slot) => {
     const spellLevel = spellSlotLevel(slot.spellLevel);
-    const expenditure = requireSpellSlotExpenditure(
-      sheet.spellSlotExpenditures,
-      spellLevel,
+    const expenditure = sheet.spellSlotExpenditures.find(
+      (candidate) => candidate.spellLevel === spellLevel,
     );
     return {
       spellLevel,
       count: resourceCount(slot.count),
-      expended: expenditure.expended,
+      expended: expenditure?.expended ?? resourceCount(0),
     };
   });
 }
@@ -260,70 +254,17 @@ export function isCharacterSheetWithSpellSlots(
 }
 
 export function spellSlotStateFromInput(
-  input: Pick<CharacterSheetInput, "spellSlots"> & {
+  input: Pick<CharacterSheetInput, "spellSlotExpenditures"> & {
     readonly build: SpellcastingCharacterBuild;
     readonly unitLibrary: UnitCatalog;
   },
 ): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
-  const runtimeSlots =
-    input.spellSlots ??
-    characterBuildSpellcastingSlotCapacity(input.build).map((slot) => ({
-      spellLevel: spellSlotLevel(slot.spellLevel),
-      count: resourceCount(slot.count),
-      expended: resourceCount(0),
-    }));
-  const buildSlots = characterBuildSpellcastingSlotCapacity(input.build);
-  if (runtimeSlots.length !== buildSlots.length) {
-    return characterSheetIssue(
-      "Spell Slot state must match build capacity exactly.",
-    );
-  }
-  const runtimeLevels = new Set<number>();
-  for (const runtimeSlot of runtimeSlots) {
-    if (
-      !Number.isInteger(runtimeSlot.count) ||
-      runtimeSlot.count < 0 ||
-      !Number.isInteger(runtimeSlot.expended) ||
-      runtimeSlot.expended < 0 ||
-      runtimeSlot.expended > runtimeSlot.count
-    ) {
-      return characterSheetIssue(
-        "Spell Slot state must have nonnegative integer count and expenditure.",
-      );
-    }
-    if (runtimeLevels.has(runtimeSlot.spellLevel)) {
-      return characterSheetIssue(
-        "Spell Slot state must not duplicate spell levels.",
-      );
-    }
-    runtimeLevels.add(runtimeSlot.spellLevel);
-  }
-  const expenditures: CharacterSpellSlotExpenditure[] = [];
-  const createdSpellSlots: CharacterSheetCreatedSpellSlotState[] = [];
-  for (const buildSlot of buildSlots) {
-    const spellLevel = spellSlotLevel(buildSlot.spellLevel);
-    const runtimeSlot = runtimeSlots.find(
-      (candidate) => candidate.spellLevel === spellLevel,
-    );
-    if (
-      runtimeSlot === undefined ||
-      runtimeSlot.count !== resourceCount(buildSlot.count)
-    ) {
-      return characterSheetIssue(
-        `Spell Slot state does not match build capacity for level ${buildSlot.spellLevel}.`,
-      );
-    }
-    expenditures.push({
-      spellLevel,
-      expended: resourceCount(runtimeSlot.expended),
-    });
-  }
   return validateSpellSlotSourceState({
     build: input.build,
     unitLibrary: input.unitLibrary,
     spellSlotState: {
-      ordinarySpellSlotExpenditures: expenditures,
-      createdSpellSlots,
+      ordinarySpellSlotExpenditures: input.spellSlotExpenditures ?? [],
+      createdSpellSlots: [],
     },
   });
 }
@@ -337,6 +278,11 @@ export function validateSpellSlotSourceState(input: {
   const expenditureLevels = new Set<number>();
   for (const expenditure of input.spellSlotState
     .ordinarySpellSlotExpenditures) {
+    if (!Number.isInteger(expenditure.expended) || expenditure.expended < 0) {
+      return characterSheetIssue(
+        "Spell Slot state must have nonnegative integer expenditure.",
+      );
+    }
     if (expenditureLevels.has(expenditure.spellLevel)) {
       return characterSheetIssue(
         "Spell Slot state must not duplicate spell levels.",
@@ -352,13 +298,6 @@ export function validateSpellSlotSourceState(input: {
       );
     }
   }
-  for (const buildSlot of buildSlots) {
-    if (!expenditureLevels.has(buildSlot.spellLevel)) {
-      return characterSheetIssue(
-        `Spell Slot state does not match build capacity for level ${buildSlot.spellLevel}.`,
-      );
-    }
-  }
   const createdSpellSlots = validateCreatedSpellSlots({
     build: input.build,
     unitLibrary: input.unitLibrary,
@@ -369,7 +308,9 @@ export function validateSpellSlotSourceState(input: {
   }
   return Either.right({
     ordinarySpellSlotExpenditures:
-      input.spellSlotState.ordinarySpellSlotExpenditures,
+      input.spellSlotState.ordinarySpellSlotExpenditures
+        .filter((expenditure) => expenditure.expended > 0)
+        .sort((a, b) => a.spellLevel - b.spellLevel),
     createdSpellSlots: createdSpellSlots.right,
   });
 }
@@ -404,9 +345,11 @@ export function pactSlotExpenditureFromInput(
       "Pact Slot state must match Pact Magic build capacity.",
     );
   }
-  return Either.right({
-    expended: resourceCount(pactSlots.expended),
-  });
+  return pactSlots.expended === resourceCount(0)
+    ? Either.right(undefined)
+    : Either.right({
+        expended: resourceCount(pactSlots.expended),
+      });
 }
 
 export function characterBuildPactSlotCapacity(
@@ -486,12 +429,11 @@ function spellSlotSpendSourceState(input: {
 
   return source.right === "ordinary"
     ? Either.right({
-        ordinarySpellSlotExpenditures: input.sheet.spellSlotExpenditures.map(
-          (slot) =>
-            slot.spellLevel === input.spellLevel
-              ? { ...slot, expended: resourceCount(slot.expended + 1) }
-              : slot,
-        ),
+        ordinarySpellSlotExpenditures: replaceOrdinarySpellSlotExpenditure({
+          expenditures: input.sheet.spellSlotExpenditures,
+          spellLevel: input.spellLevel,
+          expended: resourceCount((ordinarySlot?.expended ?? 0) + 1),
+        }),
         createdSpellSlots: input.sheet.createdSpellSlots,
       })
     : Either.right({
@@ -648,15 +590,18 @@ function addCreatedSpellSlot(input: {
   return [...next].sort((a, b) => a.spellLevel - b.spellLevel);
 }
 
-function requireSpellSlotExpenditure(
-  expenditures: readonly CharacterSpellSlotExpenditure[],
-  spellLevel: SpellSlotLevel,
-): CharacterSpellSlotExpenditure {
-  const expenditure = expenditures.find(
-    (candidate) => candidate.spellLevel === spellLevel,
+export function replaceOrdinarySpellSlotExpenditure(input: {
+  expenditures: readonly CharacterSpellSlotExpenditure[];
+  spellLevel: SpellSlotLevel;
+  expended: ResourceCount;
+}): readonly CharacterSpellSlotExpenditure[] {
+  const withoutLevel = input.expenditures.filter(
+    (candidate) => candidate.spellLevel !== input.spellLevel,
   );
-  if (expenditure !== undefined) return expenditure;
-  throw new Error(
-    `Available spellcasting Character Sheet is missing Spell Slot expenditure for level ${spellLevel}.`,
-  );
+  return input.expended === resourceCount(0)
+    ? withoutLevel
+    : [
+        ...withoutLevel,
+        { spellLevel: input.spellLevel, expended: input.expended },
+      ].sort((a, b) => a.spellLevel - b.spellLevel);
 }

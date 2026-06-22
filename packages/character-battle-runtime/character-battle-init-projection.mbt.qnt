@@ -90,7 +90,7 @@ module characterBattleInitProjectionMbt {
       emptyProjectionFacts
         .with("characterIdentity", "character:battle-init-fighter")
         .with("currentHp", 6)
-        .with("maxHp", 8)
+        .with("maxHp", 9)
         .with("temporaryHitPoints", 4)
         .with("armorClass", 17)
         .with("poisoned", true)
@@ -108,7 +108,7 @@ module characterBattleInitProjectionMbt {
       emptyProjectionFacts
         .with("characterIdentity", "character:battle-init-sorcerer")
         .with("currentHp", 24)
-        .with("maxHp", 24)
+        .with("maxHp", 27)
         .with("armorClass", 12)
         .with("spellLevel1Count", 4)
         .with("spellLevel1Expended", 1)
@@ -139,7 +139,7 @@ module characterBattleInitProjectionMbt {
       emptyProjectionFacts
         .with("characterIdentity", "character:battle-init-warlock")
         .with("currentHp", 8)
-        .with("maxHp", 8)
+        .with("maxHp", 9)
         .with("armorClass", 12)
         .with("spellLevel1Count", 1),
       3,

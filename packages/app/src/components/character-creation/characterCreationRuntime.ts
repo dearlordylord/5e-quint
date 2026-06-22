@@ -1,7 +1,6 @@
 import {
   abilityScoreAssignment,
   characterBuildDruidWildShapeFacts,
-  characterBuildHitPoints,
   type CharacterDraft,
   type CharacterDraftId,
   characterDraftId,
@@ -55,10 +54,6 @@ export type CharacterSheetFromDraftIssue =
       readonly message: string
     }
   | {
-      readonly tag: "characterBuildHitPointsInvalid"
-      readonly message: string
-    }
-  | {
       readonly tag: "wildShapeKnownFormsRequired"
       readonly message: string
     }
@@ -84,13 +79,6 @@ export function createCharacterSheetFromDraft(
   const finalization = finalizeCharacterDraft({ draft, unitLibrary: characterCreationUnitLibrary })
   if (finalization.tag !== "ready")
     return characterSheetFromDraftIssue("draftNotReady", "Character Draft is not ready.")
-  const hitPoints = characterBuildHitPoints(finalization.build, characterCreationUnitLibrary)
-  if (Either.isLeft(hitPoints)) {
-    return characterSheetFromDraftIssue(
-      "characterBuildHitPointsInvalid",
-      hitPoints.left.map((issue) => issue.message).join("; ")
-    )
-  }
   const wildShapeFacts = characterBuildDruidWildShapeFacts({
     build: finalization.build,
     unitLibrary: characterCreationUnitLibrary
@@ -107,8 +95,6 @@ export function createCharacterSheetFromDraft(
   const sheet = createFreshCharacterSheet({
     characterId: characterSheetId(`app:character:${encodeURIComponent(String(draft.draftId))}`),
     build: finalization.build,
-    maximumHp: Hp(hitPoints.right.maximum),
-    currentHp: Hp(hitPoints.right.maximum),
     tempHp: Hp(0),
     hitPointMaximumReduction: Hp(0),
     conditions: [],
@@ -136,22 +122,30 @@ export function appendStoredCharacterSheet(
   return [...sheets.filter((sheet) => sheet.characterId !== nextSheet.characterId), nextSheet]
 }
 
-export function characterSheetSummary(sheet: CharacterSheet): {
+export type CharacterSheetSummary = {
   readonly characterId: string
   readonly currentHp: number
   readonly tempHp: number
   readonly maximumHp: number
   readonly hitPointState: CharacterSheet["hitPoints"]["tag"]
   readonly spellSlotLevels: ReadonlyArray<number>
-} {
-  return {
+}
+
+export function characterSheetSummary(
+  sheet: CharacterSheet
+): Either.Either<CharacterSheetSummary, CharacterSheetFromDraftIssue> {
+  const maximumHp = characterSheetHitPointMaximum({ sheet, unitLibrary: characterCreationUnitLibrary })
+  if (Either.isLeft(maximumHp)) {
+    return characterSheetFromDraftIssue("characterSheetInvalid", maximumHp.left.message)
+  }
+  return Either.right({
     characterId: sheet.characterId,
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
-    maximumHp: characterSheetHitPointMaximum(sheet),
+    maximumHp: maximumHp.right,
     hitPointState: sheet.hitPoints.tag,
     spellSlotLevels: characterSheetSpellSlots(sheet)?.map((slot) => slot.spellLevel) ?? []
-  }
+  })
 }
 
 export function applyCharacterCreationFill(draft: CharacterDraft, fill: CreationFill): CreationBatchFillResult {

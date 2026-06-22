@@ -239,15 +239,16 @@ export function parseStoredSpellSlots(
           "Non-spellcasting Character Sheet cannot carry Spell Slot state.",
         );
   }
-  if (!Array.isArray(value.spellSlotExpenditures)) {
-    return characterSheetIssue(
-      "Spellcasting Character Sheet requires Spell Slot state.",
-    );
+  if (
+    value.spellSlotExpenditures !== undefined &&
+    !Array.isArray(value.spellSlotExpenditures)
+  ) {
+    return characterSheetIssue("Spell Slot expenditure state must be a list.");
   }
   const spellSlotExpenditures: CharacterSpellSlotExpenditure[] = [];
   const expenditureLevels = new Set<number>();
   const buildSlots = characterBuildSpellcastingSlotCapacity(build);
-  for (const expenditure of value.spellSlotExpenditures) {
+  for (const expenditure of value.spellSlotExpenditures ?? []) {
     if (!isRecord(expenditure)) {
       return characterSheetIssue("Expected Spell Slot expenditure.");
     }
@@ -278,13 +279,6 @@ export function parseStoredSpellSlots(
       spellLevel: spellLevel.right,
       expended: expended.right,
     });
-  }
-  for (const buildSlot of buildSlots) {
-    if (!expenditureLevels.has(buildSlot.spellLevel)) {
-      return characterSheetIssue(
-        `Spell Slot state does not match build capacity for level ${buildSlot.spellLevel}.`,
-      );
-    }
   }
   const createdSpellSlots = parseStoredCreatedSpellSlots(
     value.createdSpellSlots,
@@ -359,9 +353,12 @@ export function parseStoredPactSlots(
           "Character Sheet without Pact Magic cannot carry Pact Slot state.",
         );
   }
+  if (value.pactSlotExpenditure === undefined) {
+    return Either.right(undefined);
+  }
   if (!isRecord(value.pactSlotExpenditure)) {
     return characterSheetIssue(
-      "Pact Magic Character Sheet requires Pact Slot state.",
+      "Pact Slot expenditure state must be an object.",
     );
   }
   const expended = parseResourceCount(value.pactSlotExpenditure.expended);
@@ -371,14 +368,12 @@ export function parseStoredPactSlots(
       "Pact Slot state must match Pact Magic build capacity.",
     );
   }
-  return Either.right({
-    expended: expended.right,
-  });
+  return expended.right === resourceCount(0)
+    ? Either.right(undefined)
+    : Either.right({
+        expended: expended.right,
+      });
 }
-
-
-
-
 
 export function parseStoredResourceExpenditures(
   value: unknown,
@@ -489,8 +484,6 @@ function parsePointPoolResourceExpenditureUnitId(
   }
   return Either.right(expenditure.unitId);
 }
-
-
 
 export function parseResourceCount(
   value: unknown,
@@ -1882,7 +1875,9 @@ function isDeathSaveCount(value: unknown): value is DeathSaveCount {
   return value === 0 || value === 1 || value === 2 || value === 3;
 }
 
-export function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+export function isRecord(
+  value: unknown,
+): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null;
 }
 

@@ -438,7 +438,6 @@ function druidCircleLandSpellsProjection(): ClassFeatureSelectedIdentityProjecti
     createFreshCharacterSheet({
       characterId: characterSheetId("character:b4-druid-circle-land"),
       build: druidCircleLandBuild(),
-      maximumHp: Hp(18),
       currentHp: Hp(18),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),

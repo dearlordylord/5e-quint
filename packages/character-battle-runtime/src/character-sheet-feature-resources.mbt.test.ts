@@ -25,6 +25,7 @@ import {
 import {
   applyLayOnHands,
   characterSheetCurrentHp,
+  characterSheetHitPointMaximum,
   characterSheetId,
   characterSheetResources,
   characterSheetSpellSlotSourceState,
@@ -41,6 +42,8 @@ import {
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
   type CharacterSheetInput,
+  type CharacterSheetSpellSlotState,
+  type CharacterSpellSlotExpenditure,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
@@ -227,13 +230,11 @@ function layOnHandsRestoresHpAndRemovesPoisonedProjection(): FeatureResourceProj
       startingClass: "class_paladin",
       advancements: ["class_paladin"],
     }),
-    maximumHp: 12,
     currentHp: 12,
   });
   const target = sheetFixture({
     characterIdText: "character:lay-on-hands-target",
     build: baseBuild({ startingClass: "class_fighter" }),
-    maximumHp: 10,
     currentHp: 3,
     conditions: ["poisoned"],
   });
@@ -271,7 +272,6 @@ function rejectLayOnHandsOverspendProjection(): FeatureResourceProjection {
   const sheet = sheetFixture({
     characterIdText: "character:lay-on-hands-overspend",
     build: baseBuild({ startingClass: "class_paladin" }),
-    maximumHp: 12,
     currentHp: 6,
     conditions: ["poisoned"],
   });
@@ -304,7 +304,6 @@ function longRestClearsLayOnHandsPoolProjection(): FeatureResourceProjection {
   const source = sheetFixture({
     characterIdText: "character:lay-on-hands-long-rest",
     build: baseBuild({ startingClass: "class_paladin" }),
-    maximumHp: 12,
     currentHp: 6,
   });
   const spent = requireRight(
@@ -336,8 +335,7 @@ function shortRestRecoversUseCountPoolsProjection(): FeatureResourceProjection {
       startingClass: "class_druid",
       advancements: ["class_druid"],
     }),
-    maximumHp: 16,
-    currentHp: 16,
+    currentHp: 15,
     druidWildShapeKnownFormStatBlockIds: [
       "stat_block_rat",
       "stat_block_riding_horse",
@@ -355,7 +353,6 @@ function shortRestRecoversUseCountPoolsProjection(): FeatureResourceProjection {
   const monk = sheetFixture({
     characterIdText: "character:monk-focus-short-rest",
     build: monkBuild(2),
-    maximumHp: 15,
     currentHp: 15,
     resourceExpenditures: [
       {
@@ -389,8 +386,7 @@ function longRestClearsPointPoolAndUseStateProjection(): FeatureResourceProjecti
   const sheet = sheetFixture({
     characterIdText: "character:sorcerer-point-pool-long-rest",
     build: sorcererFontOfMagicBuild({ level: 2 }),
-    maximumHp: 14,
-    currentHp: 14,
+    currentHp: 12,
     resourceExpenditures: [
       {
         tag: "pointPoolResource",
@@ -429,8 +425,7 @@ function fontOfMagicSlotToPointsProjection(): FeatureResourceProjection {
         { spellLevel: 2, count: 2 },
       ],
     }),
-    maximumHp: 18,
-    currentHp: 18,
+    currentHp: 17,
     spellSlots: [
       {
         spellLevel: spellSlotLevel(1),
@@ -539,8 +534,7 @@ function rejectFontOfMagicInsufficientPointsProjection(): FeatureResourceProject
         { spellLevel: 2, count: 2 },
       ],
     }),
-    maximumHp: 18,
-    currentHp: 18,
+    currentHp: 17,
     spellSlots: [
       {
         spellLevel: spellSlotLevel(1),
@@ -591,7 +585,6 @@ function shortRestPreservesUncannyUseStateProjection(): FeatureResourceProjectio
   const sheet = sheetFixture({
     characterIdText: "character:uncanny-short-rest",
     build: monkBuild(2),
-    maximumHp: 15,
     currentHp: 15,
     restFeatureUses: [{ tag: "uncannyMetabolism", usedSinceLongRest: true }],
     resourceExpenditures: [
@@ -621,7 +614,6 @@ function longRestClearsUncannyUseStateProjection(): FeatureResourceProjection {
   const sheet = sheetFixture({
     characterIdText: "character:uncanny-long-rest",
     build: monkBuild(2),
-    maximumHp: 15,
     currentHp: 15,
     restFeatureUses: [{ tag: "uncannyMetabolism", usedSinceLongRest: true }],
     resourceExpenditures: [
@@ -651,7 +643,6 @@ function uncannyMetabolismRecoversFocusAndHealsProjection(): FeatureResourceProj
   const sheet = sheetFixture({
     characterIdText: "character:uncanny-use",
     build: monkBuild(2),
-    maximumHp: 15,
     currentHp: 8,
     tempHp: 3,
     resourceExpenditures: [
@@ -691,7 +682,6 @@ function rejectUncannyMetabolismRepeatUseProjection(): FeatureResourceProjection
       sheet: sheetFixture({
         characterIdText: "character:uncanny-repeat",
         build: monkBuild(2),
-        maximumHp: 15,
         currentHp: 8,
         tempHp: 3,
         resourceExpenditures: [
@@ -740,7 +730,6 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
   const sheet = sheetFixture({
     characterIdText: characterSheetIdValue,
     build: sorcererMetamagicBuild(),
-    maximumHp: 24,
     currentHp: 24,
     resourceExpenditures: [
       {
@@ -805,7 +794,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
   const spentSorcerer: BattleCreatureState = {
     ...sorcerer,
     hp: characterSheetCurrentHp(sheet),
-    maxHp: sheet.maximumHp,
+    maxHp: requireRight(characterSheetHitPointMaximum({ sheet, unitLibrary })),
     tempHp: characterSheetTempHp(sheet),
     positiveHpUnconscious: null,
     origin: {
@@ -868,7 +857,6 @@ function fontOfMagicCreatedLevel3Sheet(): CharacterSheet {
         { spellLevel: 3, count: 2 },
       ],
     }),
-    maximumHp: 24,
     currentHp: 24,
     spellSlots: [
       {
@@ -925,33 +913,38 @@ function sheetFixture(
   input: {
     readonly characterIdText: string;
     readonly build: CharacterBuild;
-    readonly maximumHp: number;
     readonly currentHp: number;
     readonly tempHp?: number;
+    readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
   } & Partial<
     Pick<
       CharacterSheetInput,
       | "conditions"
-      | "spellSlots"
+      | "spellSlotExpenditures"
       | "resourceExpenditures"
       | "restFeatureUses"
       | "druidWildShapeKnownFormStatBlockIds"
     >
   >,
 ): CharacterSheet {
+  const ordinarySpellSlotExpenditures: readonly CharacterSpellSlotExpenditure[] =
+    input.spellSlotExpenditures ??
+    input.spellSlots
+      ?.filter((slot) => slot.expended > 0)
+      .map(({ spellLevel, expended }) => ({ spellLevel, expended })) ??
+    [];
   return requireRight(
     createFreshCharacterSheetCore({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
-      maximumHp: Hp(input.maximumHp),
       currentHp: Hp(input.currentHp),
       tempHp: Hp(input.tempHp ?? 0),
       hitPointMaximumReduction: Hp(0),
       conditions: input.conditions ?? [],
       unitLibrary,
-      ...(input.spellSlots === undefined
+      ...(ordinarySpellSlotExpenditures.length === 0
         ? {}
-        : { spellSlots: input.spellSlots }),
+        : { spellSlotExpenditures: ordinarySpellSlotExpenditures }),
       ...(input.resourceExpenditures === undefined
         ? {}
         : { resourceExpenditures: input.resourceExpenditures }),
@@ -1303,7 +1296,11 @@ function compareFeatureResourceState(
   try {
     expect(runtime).toEqual(quint);
   } catch (error) {
-    if (error instanceof Error) throw new Error(error.message);
+    if (error instanceof Error) {
+      throw new Error(
+        `${error.message}\nruntime=${JSON.stringify(runtime)}\nquint=${JSON.stringify(quint)}`,
+      );
+    }
     throw error;
   }
   return true;

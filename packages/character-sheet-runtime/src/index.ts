@@ -49,6 +49,7 @@ export {
   characterSheetHitPointMaximum,
   characterSheetHitPoints,
   characterSheetHitPointsCurrentHp,
+  characterSheetNormalHitPointMaximum,
   characterSheetTempHp,
 } from "./hit-points.ts";
 export {
@@ -81,6 +82,7 @@ export {
   characterSheetSpellSlots,
   convertFontOfMagicSorceryPointsToSpellSlot,
   convertFontOfMagicSpellSlotToSorceryPoints,
+  replaceOrdinarySpellSlotExpenditure,
   replaceCharacterSheetSpellSlotSourceState,
 } from "./spell-slots.ts";
 export { timePassed } from "./time-passage.ts";

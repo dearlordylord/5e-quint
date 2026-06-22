@@ -705,7 +705,6 @@ function weaponMasterySheet(input: {
         `character:${input.featureUnitId}:selected-identity`,
       ),
       build: weaponMasteryBuild(input),
-      maximumHp: Hp(12),
       currentHp: Hp(6),
       tempHp: Hp(2),
       hitPointMaximumReduction: Hp(0),

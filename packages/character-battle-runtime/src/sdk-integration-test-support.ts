@@ -135,7 +135,6 @@ export function characterSheet(input: {
   readonly combatantId: CombatantId;
   readonly build: CharacterBuild;
   readonly initiative: number;
-  readonly maximumHp: number;
   readonly currentHp?: number;
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
 }): SheetFixture {
@@ -146,9 +145,10 @@ export function characterSheet(input: {
       createFreshCharacterSheet({
         characterId: characterSheetId(input.characterIdText),
         build: input.build,
-        maximumHp: Hp(input.maximumHp),
         hitPointMaximumReduction: Hp(0),
-        currentHp: Hp(input.currentHp ?? input.maximumHp),
+        ...(input.currentHp === undefined
+          ? {}
+          : { currentHp: Hp(input.currentHp) }),
         tempHp: Hp(0),
         conditions: [],
         unitLibrary,

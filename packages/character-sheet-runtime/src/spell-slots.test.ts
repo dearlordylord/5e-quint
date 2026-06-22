@@ -5,6 +5,7 @@ import {
   Hp,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
   characterSheetId,
+  characterSheetPactSlots,
   characterSheetResources,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
@@ -22,10 +23,73 @@ import {
   sorcererFontOfMagicSlotCreationTestName,
   spellSlotLevel,
   unitLibrary,
-  wizardBuild
+  warlockMagicalCunningBuild,
+  wizardBuild,
 } from "./test-support.ts";
 
 describe("Character Sheet runtime / spell slots", () => {
+  test("projects absent ordinary Spell Slot expenditure as zero against build capacity", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:wizard-zero-slots"),
+        build: wizardBuild({ wizardAdvancements: 1 }),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(characterSheetSpellSlotSourceState(sheet)).toEqual({
+      ordinarySpellSlotExpenditures: [],
+      createdSpellSlots: [],
+    });
+    expect(characterSheetSpellSlots(sheet)).toEqual([
+      { spellLevel: 1, count: 3, expended: 0 },
+    ]);
+  });
+
+  test("projects absent Pact Slot expenditure as zero against build capacity", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:warlock-zero-pact"),
+        build: warlockMagicalCunningBuild({
+          warlockAdvancements: 0,
+          pactSlotCount: 1,
+          pactSlotLevel: 1,
+        }),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(characterSheetPactSlots(sheet)).toEqual({
+      slotLevel: 1,
+      count: 1,
+      expended: 0,
+    });
+  });
+
+  test("rejects nonzero ordinary Spell Slot expenditure above build capacity", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:wizard-slot-over-capacity"),
+      build: wizardBuild({ wizardAdvancements: 1 }),
+      tempHp: Hp(0),
+      unitLibrary,
+      spellSlotExpenditures: [
+        {
+          spellLevel: spellSlotLevel(1),
+          expended: resourceCount(4),
+        },
+      ],
+    });
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Spell Slot state does not match build capacity for level 1.",
+      },
+    });
+  });
+
   test(sorcererFontOfMagicSlotConversionTestName, () => {
     const sorcererBuild = sorcererFontOfMagicBuild({
       sorcererAdvancements: 2,
@@ -38,8 +102,6 @@ describe("Character Sheet runtime / spell slots", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-convert"),
         build: sorcererBuild,
-        maximumHp: Hp(18),
-        currentHp: Hp(18),
         tempHp: Hp(0),
         unitLibrary,
         spellSlots: [
@@ -95,8 +157,6 @@ describe("Character Sheet runtime / spell slots", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-capped"),
         build: sorcererBuild,
-        maximumHp: Hp(14),
-        currentHp: Hp(14),
         tempHp: Hp(0),
         unitLibrary,
         spellSlots: [
@@ -128,8 +188,6 @@ describe("Character Sheet runtime / spell slots", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-no-slot"),
         build: sorcererBuild,
-        maximumHp: Hp(14),
-        currentHp: Hp(14),
         tempHp: Hp(0),
         unitLibrary,
         spellSlots: [
@@ -167,8 +225,6 @@ describe("Character Sheet runtime / spell slots", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-wizard"),
         build: wizardBuild({ wizardAdvancements: 1 }),
-        maximumHp: Hp(12),
-        currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
         spellSlots: [
@@ -209,8 +265,6 @@ describe("Character Sheet runtime / spell slots", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-create"),
         build: sorcererBuild,
-        maximumHp: Hp(24),
-        currentHp: Hp(24),
         tempHp: Hp(0),
         unitLibrary,
         spellSlots: [
@@ -236,26 +290,10 @@ describe("Character Sheet runtime / spell slots", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-aggregate"),
         build: sorcererBuild,
-        maximumHp: Hp(24),
-        currentHp: Hp(24),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(4),
-            expended: resourceCount(0),
-          },
-          {
-            spellLevel: spellSlotLevel(2),
-            count: resourceCount(3),
-            expended: resourceCount(0),
-          },
-          {
-            spellLevel: spellSlotLevel(3),
-            count: resourceCount(3),
-            expended: resourceCount(1),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(3), expended: resourceCount(3) },
         ],
       }),
     ).toMatchObject({
@@ -313,11 +351,7 @@ describe("Character Sheet runtime / spell slots", () => {
       }),
     );
     expect(characterSheetSpellSlotSourceState(createdSlotConverted)).toEqual({
-      ordinarySpellSlotExpenditures: [
-        { spellLevel: 1, expended: 0 },
-        { spellLevel: 2, expended: 0 },
-        { spellLevel: 3, expended: 0 },
-      ],
+      ordinarySpellSlotExpenditures: [],
       createdSpellSlots: [{ spellLevel: 3, count: 1, expended: 1 }],
     });
     expect(characterSheetSpellSlots(createdSlotConverted)).toEqual([
@@ -368,11 +402,7 @@ describe("Character Sheet runtime / spell slots", () => {
         "Expected parsed Font of Magic sheet to carry Spell Slot state.",
       );
     }
-    expect(
-      parsedWithExpendedCreatedSlot.spellSlotExpenditures.find(
-        (slot) => slot.spellLevel === spellSlotLevel(3),
-      ),
-    ).toEqual({ spellLevel: 3, expended: 0 });
+    expect(parsedWithExpendedCreatedSlot.spellSlotExpenditures).toEqual([]);
     expect(parsedWithExpendedCreatedSlot.createdSpellSlots).toEqual([
       { spellLevel: 3, count: 1, expended: 1 },
     ]);
@@ -409,8 +439,6 @@ describe("Character Sheet runtime / spell slots", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-create-level"),
         build: sorcererFontOfMagicBuild(),
-        maximumHp: Hp(14),
-        currentHp: Hp(14),
         tempHp: Hp(0),
         unitLibrary,
         spellSlots: [
@@ -447,8 +475,6 @@ describe("Character Sheet runtime / spell slots", () => {
             { spellLevel: 2, count: 2 },
           ],
         }),
-        maximumHp: Hp(18),
-        currentHp: Hp(18),
         tempHp: Hp(0),
         unitLibrary,
         spellSlots: [

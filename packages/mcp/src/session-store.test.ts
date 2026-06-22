@@ -37,8 +37,7 @@ describe("MCP character sessions", () => {
     const missingKnownForms = availableCharacterSession({
       characterId: characterSheetId("character:mcp-druid-wild-shape-missing"),
       build: druidWildShapeBuild(),
-      maximumHp: Hp(16),
-      currentHp: Hp(16),
+      currentHp: Hp(15),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],
@@ -56,8 +55,7 @@ describe("MCP character sessions", () => {
     const session = availableCharacterSession({
       characterId: characterSheetId("character:mcp-druid-wild-shape"),
       build: druidWildShapeBuild(),
-      maximumHp: Hp(16),
-      currentHp: Hp(16),
+      currentHp: Hp(15),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],

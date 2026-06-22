@@ -25,6 +25,12 @@ Owned boundary functions:
   same Character Sheet identity, then settles retained companion outcome from
   the same Battle State. Mixed ordinary Spell Slot plus Pact Slot state is
   rejected until battle Spell Slots carry source-distinct slot identity.
+- Character Sheet capacities are not stored by this package. Hit Point Maximum,
+  Hit Dice capacity, ordinary Spell Slot capacity, Pact Slot level/count, and
+  feature-resource capacity are derived from `CharacterBuild` and Surface Units;
+  battle handoff writes only current HP, Temporary Hit Points, maximum
+  reduction, conditions, spent Hit Dice, slot expenditures, resource
+  expenditures, rest-use state, and companion state.
 
 Battle handoff settlement has a fixed order:
 

@@ -319,7 +319,6 @@ describe("level 1 SDK RAW integration", () => {
           }),
           combatantId: fighterId,
           initiative: 20,
-          maximumHp: 12,
           currentHp: 4,
         }),
       ],
@@ -385,7 +384,6 @@ describe("level 1 SDK RAW integration", () => {
           }),
           combatantId: barbarianId,
           initiative: 20,
-          maximumHp: 14,
         }),
       ],
       monsters: [
@@ -467,7 +465,6 @@ describe("level 1 SDK RAW integration", () => {
           }),
           combatantId: rogueId,
           initiative: 20,
-          maximumHp: 10,
         }),
         characterSheet({
           characterIdText: "character:l1-sdk-sneak-attack-ally",
@@ -477,7 +474,6 @@ describe("level 1 SDK RAW integration", () => {
           }),
           combatantId: rogueAllyId,
           initiative: 15,
-          maximumHp: 12,
         }),
       ],
       monsters: [
@@ -572,7 +568,6 @@ describe("level 1 SDK RAW integration", () => {
           }),
           combatantId: bardId,
           initiative: 20,
-          maximumHp: 10,
         }),
         characterSheet({
           characterIdText: "character:l1-sdk-bardic-inspiration-ally",
@@ -582,7 +577,6 @@ describe("level 1 SDK RAW integration", () => {
           }),
           combatantId: inspiredAllyId,
           initiative: 15,
-          maximumHp: 12,
         }),
       ],
       monsters: [
@@ -714,7 +708,6 @@ describe("level 1 SDK RAW integration", () => {
           }),
           combatantId: sorcererId,
           initiative: 20,
-          maximumHp: 8,
         }),
       ],
       monsters: [
@@ -1559,7 +1552,6 @@ describe("level 1 SDK RAW integration", () => {
       build: warlockBuild,
       combatantId: hexWarlockId,
       initiative: 20,
-      maximumHp: 8,
     });
     const state = battleFromSheets({
       battleIdText: "battle:l1-sdk-hex-warlock",
@@ -2042,7 +2034,6 @@ describe("level 1 SDK RAW integration", () => {
           }),
           combatantId: monkId,
           initiative: 20,
-          maximumHp: 10,
         }),
       ],
       monsters: [
@@ -2091,7 +2082,6 @@ function assertLevelOneBurningHands(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -2178,7 +2168,6 @@ function assertLevelOneThunderwave(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -2327,7 +2316,6 @@ function assertLevelOneDissonantWhispers(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
     ],
     monsters: [
@@ -2520,7 +2508,6 @@ function assertLevelOneViciousMockery(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
     ],
     monsters: [
@@ -2716,7 +2703,6 @@ function assertLevelOneAcidSplash(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -2806,7 +2792,6 @@ function assertLevelOneSorcerousBurst(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -2942,7 +2927,6 @@ function assertLevelOnePoisonSpray(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -3062,7 +3046,6 @@ function assertLevelOneProduceFlame(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
     ],
     monsters: [
@@ -3246,7 +3229,6 @@ function assertLevelOneShillelagh(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
     ],
     monsters: [
@@ -3388,7 +3370,6 @@ function assertLevelOneSacredFlame(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
     ],
     monsters: [
@@ -3525,7 +3506,6 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
     ],
     monsters: [
@@ -3607,7 +3587,6 @@ function assertLevelOneInflictWounds(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
     ],
     monsters: [
@@ -3750,7 +3729,6 @@ function assertLevelOneSanctuary(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
       characterSheet({
         characterIdText: "character:l1-sdk-sanctuary-warded-ally",
@@ -3760,7 +3738,6 @@ function assertLevelOneSanctuary(input: {
         }),
         combatantId: input.wardedId,
         initiative: 15,
-        maximumHp: 12,
       }),
     ],
     monsters: [
@@ -3848,7 +3825,6 @@ function assertLevelOneBless(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
       characterSheet({
         characterIdText: "character:l1-sdk-bless-target",
@@ -3858,7 +3834,6 @@ function assertLevelOneBless(input: {
         }),
         combatantId: input.targetId,
         initiative: 15,
-        maximumHp: 12,
       }),
     ],
     monsters: [
@@ -3955,7 +3930,6 @@ function assertLevelOneShieldOfFaith(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
       characterSheet({
         characterIdText: "character:l1-sdk-shield-of-faith-target",
@@ -3965,7 +3939,6 @@ function assertLevelOneShieldOfFaith(input: {
         }),
         combatantId: input.targetId,
         initiative: 15,
-        maximumHp: 12,
       }),
     ],
     monsters: [],
@@ -4065,7 +4038,6 @@ function assertLevelOneHealingWord(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
       characterSheet({
         characterIdText: `${input.characterIdText}-target`,
@@ -4075,7 +4047,6 @@ function assertLevelOneHealingWord(input: {
         }),
         combatantId: input.targetId,
         initiative: 15,
-        maximumHp: 12,
         currentHp: 3,
       }),
     ],
@@ -4166,7 +4137,6 @@ function assertLevelOneCureWounds(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
       characterSheet({
         characterIdText: `${input.characterIdText}-target`,
@@ -4176,7 +4146,6 @@ function assertLevelOneCureWounds(input: {
         }),
         combatantId: input.targetId,
         initiative: 15,
-        maximumHp: 12,
         currentHp: input.targetCurrentHp,
       }),
     ],
@@ -4278,7 +4247,6 @@ function assertLevelOneAnimalFriendship(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
     ],
     monsters: [
@@ -4432,7 +4400,6 @@ function assertLevelOneHuntersMark(input: {
     build: input.build,
     combatantId: input.casterId,
     initiative: 20,
-    maximumHp: 12,
   });
   const state = battleFromSheets({
     battleIdText: input.battleIdText,
@@ -4597,7 +4564,6 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
     build: input.build,
     combatantId: input.casterId,
     initiative: 20,
-    maximumHp: 12,
     resourceExpenditures: [
       {
         tag: "favoredEnemyHuntersMarkFreeCasts",
@@ -4753,7 +4719,6 @@ function assertLevelOneGuidingBolt(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 10,
       }),
       characterSheet({
         characterIdText: "character:l1-sdk-guiding-bolt-ally",
@@ -4763,7 +4728,6 @@ function assertLevelOneGuidingBolt(input: {
         }),
         combatantId: input.allyId,
         initiative: 15,
-        maximumHp: 12,
       }),
     ],
     monsters: [
@@ -4951,7 +4915,6 @@ function assertLevelOneChillTouch(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -5097,7 +5060,6 @@ function assertLevelOneEldritchBlast(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -5218,7 +5180,6 @@ function assertLevelOneFireBolt(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -5326,7 +5287,6 @@ function assertLevelOneRayOfFrost(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -5461,7 +5421,6 @@ function assertLevelOneShockingGrasp(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -5599,7 +5558,6 @@ function assertLevelOneChromaticOrb(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -5806,7 +5764,6 @@ function assertLevelOneMageArmor(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -5880,7 +5837,6 @@ function assertLevelOneFalseLife(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -5944,7 +5900,6 @@ function assertLevelOneRayOfSickness(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [
@@ -6118,7 +6073,6 @@ function assertLevelOneMagicMissile(input: {
         build: input.build,
         combatantId: input.casterId,
         initiative: 20,
-        maximumHp: 8,
       }),
     ],
     monsters: [

@@ -66,8 +66,6 @@ describe("Character Sheet runtime / rests", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:rest-start"),
         build,
-        maximumHp: Hp(12),
-        currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
       }),
@@ -76,7 +74,6 @@ describe("Character Sheet runtime / rests", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:rest-start-zero"),
         build,
-        maximumHp: Hp(12),
         currentHp: Hp(0),
         tempHp: Hp(0),
         unitLibrary,
@@ -195,8 +192,7 @@ describe("Character Sheet runtime / rests", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:long-rest"),
         build: wizardWarlockBuild(),
-        maximumHp: Hp(12),
-        currentHp: Hp(4),
+        currentHp: Hp(1),
         tempHp: Hp(3),
         hitPointMaximumReduction: Hp(4),
         unitLibrary,
@@ -224,11 +220,10 @@ describe("Character Sheet runtime / rests", () => {
 
     expect(rested.hitPoints).toEqual({
       tag: "positive",
-      currentHp: 12,
+      currentHp: characterSheetHitPointMaximum(rested),
       tempHp: 0,
     });
     expect(rested.hitPointMaximumReduction).toBe(0);
-    expect(characterSheetHitPointMaximum(rested)).toBe(12);
     expect(requireRight(characterSheetHitDice(rested, unitLibrary))).toEqual([
       { classUnitId: "class_wizard", dieSize: 6, total: 1, spent: 0 },
     ]);
@@ -260,7 +255,6 @@ describe("Character Sheet runtime / rests", () => {
             `character:resourceful:${initialHeroicInspiration.tag}`,
           ),
           build: humanBuild,
-          maximumHp: Hp(12),
           currentHp: Hp(6),
           tempHp: Hp(0),
           unitLibrary,
@@ -287,7 +281,6 @@ describe("Character Sheet runtime / rests", () => {
             `character:no-resourceful:${initialHeroicInspiration.tag}`,
           ),
           build,
-          maximumHp: Hp(12),
           currentHp: Hp(6),
           tempHp: Hp(0),
           unitLibrary,
@@ -311,7 +304,6 @@ describe("Character Sheet runtime / rests", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:resourceful-missing-unit"),
         build: humanBuild,
-        maximumHp: Hp(12),
         currentHp: Hp(6),
         tempHp: Hp(0),
         unitLibrary,
@@ -387,7 +379,6 @@ describe("Character Sheet runtime / rests", () => {
             featureUnitId: testCase.featureUnitId,
             selectedWeaponUnitIds: testCase.before,
           }),
-          maximumHp: Hp(12),
           currentHp: Hp(6),
           tempHp: Hp(2),
           unitLibrary,
@@ -411,7 +402,7 @@ describe("Character Sheet runtime / rests", () => {
       ).toEqual(testCase.after);
       expect(rested.hitPoints).toEqual({
         tag: "positive",
-        currentHp: 12,
+        currentHp: characterSheetHitPointMaximum(rested),
         tempHp: 0,
       });
     }
@@ -430,8 +421,6 @@ describe("Character Sheet runtime / rests", () => {
             "weapon_spear",
           ],
         }),
-        maximumHp: Hp(12),
-        currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
       }),
@@ -476,7 +465,6 @@ describe("Character Sheet runtime / rests", () => {
             "weapon_shortbow",
           ],
         }),
-        maximumHp: Hp(12),
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -516,8 +504,6 @@ describe("Character Sheet runtime / rests", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:short-rest-pact"),
         build: wizardWarlockBuild(),
-        maximumHp: Hp(12),
-        currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
         spellSlots: [
@@ -548,7 +534,6 @@ describe("Character Sheet runtime / rests", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:short-rest-hit-dice"),
         build: wizardBuild({ wizardAdvancements: 1 }),
-        maximumHp: Hp(18),
         currentHp: Hp(7),
         tempHp: Hp(2),
         unitLibrary,
@@ -572,7 +557,7 @@ describe("Character Sheet runtime / rests", () => {
 
     expect(rested.hitPoints).toEqual({
       tag: "positive",
-      currentHp: 12,
+      currentHp: characterSheetHitPointMaximum(rested),
       tempHp: 2,
     });
     expect(requireRight(characterSheetHitDice(rested, unitLibrary))).toEqual([
@@ -588,7 +573,6 @@ describe("Character Sheet runtime / rests", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:rest-interruption"),
         build: wizardBuild({ wizardAdvancements: 1 }),
-        maximumHp: Hp(18),
         currentHp: Hp(7),
         tempHp: Hp(0),
         unitLibrary,
@@ -752,7 +736,6 @@ describe("Character Sheet runtime / rests", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:short-rest-minimum-hit-dice"),
         build: lowConWizardBuild,
-        maximumHp: Hp(18),
         currentHp: Hp(7),
         tempHp: Hp(0),
         unitLibrary,
@@ -779,7 +762,7 @@ describe("Character Sheet runtime / rests", () => {
 
     expect(rested.hitPoints).toEqual({
       tag: "positive",
-      currentHp: 9,
+      currentHp: characterSheetHitPointMaximum(rested),
       tempHp: 0,
     });
     expect(requireRight(characterSheetHitDice(rested, unitLibrary))).toEqual([
@@ -792,7 +775,6 @@ describe("Character Sheet runtime / rests", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:short-rest-spent-hit-dice"),
         build: wizardBuild({ wizardAdvancements: 0 }),
-        maximumHp: Hp(8),
         currentHp: Hp(4),
         tempHp: Hp(0),
         unitLibrary,
@@ -826,8 +808,6 @@ describe("Character Sheet runtime / rests", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:arcane-recovery"),
         build: wizardBuild({ wizardAdvancements: 3 }),
-        maximumHp: Hp(12),
-        currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
         spellSlots: [
@@ -887,8 +867,6 @@ describe("Character Sheet runtime / rests", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:arcane-recovery-budget"),
         build: wizardBuild({ wizardAdvancements: 1 }),
-        maximumHp: Hp(12),
-        currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
         spellSlots: [
@@ -923,8 +901,6 @@ describe("Character Sheet runtime / rests", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:arcane-recovery-non-owner"),
       build: armorClassBuild({ startingClass: "class_fighter" }),
-      maximumHp: Hp(12),
-      currentHp: Hp(12),
       tempHp: Hp(0),
       unitLibrary,
       restFeatureUses: [
@@ -953,8 +929,6 @@ describe("Character Sheet runtime / rests", () => {
           pactSlotCount: 2,
           pactSlotLevel: 1,
         }),
-        maximumHp: Hp(14),
-        currentHp: Hp(14),
         tempHp: Hp(0),
         unitLibrary,
         pactSlots: { expended: resourceCount(2) },
@@ -1003,8 +977,6 @@ describe("Character Sheet runtime / rests", () => {
           pactSlotCount: 3,
           pactSlotLevel: 5,
         }),
-        maximumHp: Hp(70),
-        currentHp: Hp(70),
         tempHp: Hp(0),
         unitLibrary,
         pactSlots: { expended: resourceCount(3) },
@@ -1031,8 +1003,6 @@ describe("Character Sheet runtime / rests", () => {
           pactSlotCount: 1,
           pactSlotLevel: 1,
         }),
-        maximumHp: Hp(10),
-        currentHp: Hp(10),
         tempHp: Hp(0),
         unitLibrary,
         pactSlots: { expended: resourceCount(1) },

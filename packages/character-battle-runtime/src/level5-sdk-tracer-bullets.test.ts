@@ -90,7 +90,6 @@ describe("level 5 SDK tracer bullets", () => {
           }),
           combatantId: extraAttackMonkId,
           initiative: 20,
-          maximumHp: 38,
         }),
       ],
       monsters: [
@@ -143,7 +142,6 @@ describe("level 5 SDK tracer bullets", () => {
           }),
           combatantId: monkId,
           initiative: 20,
-          maximumHp: 38,
         }),
       ],
       monsters: [
@@ -249,7 +247,6 @@ describe("level 5 SDK tracer bullets", () => {
           }),
           combatantId: rogueId,
           initiative: 20,
-          maximumHp: 38,
         }),
         characterSheet({
           characterIdText: "character:l5-tracer-cunning-strike-ally",
@@ -259,7 +256,6 @@ describe("level 5 SDK tracer bullets", () => {
           }),
           combatantId: rogueAllyId,
           initiative: 15,
-          maximumHp: 20,
         }),
       ],
       monsters: [
@@ -373,7 +369,6 @@ describe("level 5 SDK tracer bullets", () => {
           build: levelFiveWizardBuild({ preparedSpells: [hasteSpellId] }),
           combatantId: wizardId,
           initiative: 20,
-          maximumHp: 32,
         }),
       ],
       monsters: [
@@ -507,7 +502,6 @@ describe("level 5 SDK tracer bullets", () => {
           "character:l5-tracer-sorcerous-restoration",
         ),
         build: levelFiveSorcererBuild(),
-        maximumHp: Hp(32),
         hitPointMaximumReduction: Hp(0),
         currentHp: Hp(32),
         tempHp: Hp(0),
@@ -634,7 +628,6 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
         }),
         combatantId: wizardId,
         initiative: 20,
-        maximumHp: 32,
       }),
       characterSheet({
         characterIdText: `character:l5-tracer-protection-from-energy-warded-${damageType}`,
@@ -644,7 +637,6 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
         }),
         combatantId: wardedId,
         initiative: 5,
-        maximumHp: 30,
       }),
     ],
     monsters: [

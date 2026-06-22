@@ -35,6 +35,8 @@ import {
   createFreshCharacterSheet as createFreshCharacterSheetCore,
   type CharacterSheet,
   type CharacterSheetInput,
+  type CharacterSheetSpellSlotState,
+  type CharacterSpellSlotExpenditure,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
@@ -217,7 +219,6 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-sheet-state",
     build: wizardSpellcastingBuild(),
-    maximumHp: 7,
     currentHp: 7,
     spellSlots: [
       {
@@ -279,7 +280,6 @@ function settlePurePactMagicSlotExpenditure(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-pact-magic",
     build: warlockPactMagicBuild(),
-    maximumHp: 8,
     currentHp: 8,
   });
   const battle = startCharacterBattle({
@@ -327,7 +327,6 @@ function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
   const mixedSheet = sheetFixture({
     characterIdText,
     build: mixedSpellAndPactSlotBuild(),
-    maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
     spellSlots: [
       {
@@ -344,7 +343,6 @@ function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
     sheet: sheetFixture({
       characterIdText,
       build: wizardSpellcastingBuild(),
-      maximumHp: wizardBattleFixtureMaximumHp,
       currentHp: wizardBattleFixtureMaximumHp,
       spellSlots: [
         {
@@ -378,7 +376,6 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-feature-resource",
     build: sorcererMetamagicBuild(),
-    maximumHp: 24,
     currentHp: 24,
     resourceExpenditures: [
       {
@@ -440,7 +437,6 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-ambiguous-slot",
     build: sorcererMetamagicBuild(),
-    maximumHp: 24,
     currentHp: 24,
     spellSlots: [
       {
@@ -512,7 +508,6 @@ function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-sheet",
     build: wizardSpellcastingBuild(),
-    maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
   });
   const battle = startCharacterBattle({
@@ -549,7 +544,6 @@ function rejectMaximumHpDrift(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-maximum",
     build: wizardSpellcastingBuild(),
-    maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
   });
   const battle = startCharacterBattle({
@@ -583,7 +577,6 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:druid-wild-shape-active-handoff",
     build: druidWildShapeBuild(),
-    maximumHp: 15,
     currentHp: 15,
     statBlockCatalog,
     druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
@@ -639,7 +632,6 @@ function rejectActiveBattleStateHandoff(): BattleSettlementProjection {
   const sheet = sheetFixture({
     characterIdText: "character:battle-settlement-active-state",
     build: wizardSpellcastingBuild(),
-    maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
   });
   const battle = startCharacterBattle({
@@ -688,13 +680,11 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
   const startedSheet = sheetFixture({
     characterIdText: "character:stable-recovery-started",
     build: wizardSpellcastingBuild(),
-    maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
   });
   const stableSheet = sheetFixture({
     characterIdText: "character:stable-recovery-sheet",
     build: wizardSpellcastingBuild(),
-    maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: 0,
     zeroHpLifecycle: {
       tag: "stable",
@@ -751,13 +741,11 @@ function settleZeroHpStableLifecycle(): BattleSettlementProjection {
   const startedSheet = sheetFixture({
     characterIdText: "character:stable-recovery-started-accepted",
     build: wizardSpellcastingBuild(),
-    maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: wizardBattleFixtureMaximumHp,
   });
   const stableSheet = sheetFixture({
     characterIdText: "character:stable-recovery-sheet-accepted",
     build: wizardSpellcastingBuild(),
-    maximumHp: wizardBattleFixtureMaximumHp,
     currentHp: 0,
     zeroHpLifecycle: {
       tag: "stable",
@@ -995,9 +983,9 @@ function sheetFixture(
   input: {
     readonly characterIdText: string;
     readonly build: CharacterBuild;
-    readonly maximumHp: number;
     readonly currentHp: number;
     readonly tempHp?: number;
+    readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
   } & Partial<
     Pick<
       CharacterSheetInput,
@@ -1005,7 +993,7 @@ function sheetFixture(
       | "druidWildShapeKnownFormStatBlockIds"
       | "hitPointMaximumReduction"
       | "statBlockCatalog"
-      | "spellSlots"
+      | "spellSlotExpenditures"
       | "pactSlots"
       | "spentHitDice"
       | "restFeatureUses"
@@ -1014,11 +1002,16 @@ function sheetFixture(
     >
   >,
 ): CharacterSheet {
+  const ordinarySpellSlotExpenditures: readonly CharacterSpellSlotExpenditure[] =
+    input.spellSlotExpenditures ??
+    input.spellSlots
+      ?.filter((slot) => slot.expended > 0)
+      .map(({ spellLevel, expended }) => ({ spellLevel, expended })) ??
+    [];
   return requireRight(
     createFreshCharacterSheetCore({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
-      maximumHp: Hp(input.maximumHp),
       currentHp: Hp(input.currentHp),
       tempHp: Hp(input.tempHp ?? 0),
       hitPointMaximumReduction: Hp(input.hitPointMaximumReduction ?? 0),
@@ -1036,9 +1029,9 @@ function sheetFixture(
             druidWildShapeKnownFormStatBlockIds:
               input.druidWildShapeKnownFormStatBlockIds,
           }),
-      ...(input.spellSlots === undefined
+      ...(ordinarySpellSlotExpenditures.length === 0
         ? {}
-        : { spellSlots: input.spellSlots }),
+        : { spellSlotExpenditures: ordinarySpellSlotExpenditures }),
       ...(input.pactSlots === undefined ? {} : { pactSlots: input.pactSlots }),
       ...(input.spentHitDice === undefined
         ? {}
@@ -1122,6 +1115,18 @@ function mixedSpellAndPactSlotBuild(): CharacterBuild {
   }
   return {
     ...build,
+    // Keep this synthetic mixed-slot build at the same derived HP maximum as
+    // the wizard source sheet so this scenario isolates slot-source rejection.
+    abilityScores: requireRight(
+      abilityScoreAssignment({
+        str: 13,
+        dex: 14,
+        con: 8,
+        int: 16,
+        wis: 10,
+        cha: 16,
+      }),
+    ),
     spellcasting: {
       ...spellcasting,
       slotPools: {
@@ -1370,7 +1375,11 @@ function compareSettlementState(
   try {
     expect(runtime).toEqual(quint);
   } catch (error) {
-    if (error instanceof Error) throw new Error(error.message);
+    if (error instanceof Error) {
+      throw new Error(
+        `${error.message}\nruntime=${JSON.stringify(runtime)}\nquint=${JSON.stringify(quint)}`,
+      );
+    }
     throw error;
   }
   return true;

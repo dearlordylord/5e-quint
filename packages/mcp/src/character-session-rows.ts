@@ -34,6 +34,13 @@ function characterListRow(
 ): Either.Either<CharacterSessionRow, string> {
   if (session.tag === "available") {
     const spellSlots = characterBattleSpellSlots(session);
+    const hitPointMaximum = characterSheetHitPointMaximum({
+      sheet: session,
+      unitLibrary,
+    });
+    if (Either.isLeft(hitPointMaximum)) {
+      return Either.left(hitPointMaximum.left.message);
+    }
     return Either.right({
       characterId,
       status: session.tag,
@@ -41,7 +48,7 @@ function characterListRow(
       build: session.build,
       hitPoints: {
         current: characterSessionCurrentHp(session),
-        maximum: characterSheetHitPointMaximum(session),
+        maximum: hitPointMaximum.right,
         state: session.hitPoints,
       },
       ...(spellSlots === undefined ? {} : { spellSlots }),

@@ -26,6 +26,8 @@ import {
   createFreshCharacterSheet as createFreshCharacterSheetCore,
   type CharacterSheet,
   type CharacterSheetInput,
+  type CharacterSheetSpellSlotState,
+  type CharacterSpellSlotExpenditure,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -189,7 +191,6 @@ function sheetHitPointsArmorClassConditionsAndProfilesProjection(): BattleInitPr
     createFreshCharacterSheet({
       characterId: characterSheetId("character:battle-init-fighter"),
       build: defenseBuild({ wearingArmor: true }),
-      maximumHp: Hp(10),
       hitPointMaximumReduction: Hp(2),
       currentHp: Hp(6),
       tempHp: Hp(4),
@@ -214,7 +215,6 @@ function sheetSpellcastingAndMetamagicProjection(): BattleInitProjection {
     createFreshCharacterSheet({
       characterId: characterSheetId("character:battle-init-sorcerer"),
       build: sorcererMetamagicBuild(),
-      maximumHp: Hp(24),
       currentHp: Hp(24),
       tempHp: Hp(0),
       spellSlots: [
@@ -261,7 +261,6 @@ function purePactMagicSlotProjection(): BattleInitProjection {
     createFreshCharacterSheet({
       characterId: characterSheetId("character:battle-init-warlock"),
       build: warlockPactMagicBuild(),
-      maximumHp: Hp(8),
       currentHp: Hp(8),
       tempHp: Hp(0),
       unitLibrary,
@@ -285,7 +284,6 @@ function rejectMixedSpellAndPactSlotInitProjection(): BattleInitProjection {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:battle-init-mixed-slots"),
         build: mixedSpellAndPactSlotBuild(),
-        maximumHp: Hp(8),
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -341,7 +339,6 @@ function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjectio
       createFreshCharacterSheet({
         characterId: characterSheetId("character:stable-recovery-init"),
         build: defenseBuild({ wearingArmor: true }),
-        maximumHp: Hp(10),
         currentHp: Hp(0),
         tempHp: Hp(0),
         unitLibrary,
@@ -473,19 +470,34 @@ function supportProfileKind(profile: BattleUnitSupportProfile): string {
   return typeof profile === "string" ? profile : profile.kind;
 }
 
-function createFreshCharacterSheet(
-  input: Omit<CharacterSheetInput, "conditions" | "hitPointMaximumReduction"> &
-    Partial<
-      Pick<
-        CharacterSheetInput,
-        "conditions" | "hitPointMaximumReduction" | "zeroHpLifecycle"
-      >
-    >,
-) {
+type CharacterSheetTestInput = Omit<
+  CharacterSheetInput,
+  "conditions" | "hitPointMaximumReduction" | "spellSlotExpenditures"
+> &
+  Partial<
+    Pick<
+      CharacterSheetInput,
+      "conditions" | "hitPointMaximumReduction" | "zeroHpLifecycle"
+    >
+  > & {
+    readonly spellSlotExpenditures?: readonly CharacterSpellSlotExpenditure[];
+    readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
+  };
+
+function createFreshCharacterSheet(input: CharacterSheetTestInput) {
+  const { spellSlots, spellSlotExpenditures, ...rest } = input;
+  const ordinarySpellSlotExpenditures =
+    spellSlotExpenditures ??
+    spellSlots
+      ?.filter((slot) => slot.expended > 0)
+      .map(({ spellLevel, expended }) => ({ spellLevel, expended }));
   return createFreshCharacterSheetCore({
     conditions: [],
     hitPointMaximumReduction: Hp(0),
-    ...input,
+    ...rest,
+    ...(ordinarySpellSlotExpenditures === undefined
+      ? {}
+      : { spellSlotExpenditures: ordinarySpellSlotExpenditures }),
   });
 }
 

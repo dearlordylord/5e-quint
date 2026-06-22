@@ -249,6 +249,7 @@ export function useMonkUncannyMetabolismWhenRollingInitiative(
   const healing = useState.right.healing.monkLevelBonus + roll;
   const healed = recoverCharacterSheetHitPoints({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
     healing: Hp(healing),
     overflow: { tag: "capAtMaximum" },
     deadCharacterMessage:
@@ -722,7 +723,10 @@ export function recoverSorceryPointsWithSorcerousRestoration(
 export function sorcerousRestorationProfileForBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<CharacterSheetSorcerousRestorationProfile, CharacterSheetIssue> {
+): Either.Either<
+  CharacterSheetSorcerousRestorationProfile,
+  CharacterSheetIssue
+> {
   const profiles: CharacterSheetSorcerousRestorationProfile[] = [];
   for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, unitId);
@@ -732,7 +736,8 @@ export function sorcerousRestorationProfileForBuild(
       { build, unitLibrary },
       unit.right,
     );
-    if (Either.isLeft(ownerClassLevel)) return Either.left(ownerClassLevel.left);
+    if (Either.isLeft(ownerClassLevel))
+      return Either.left(ownerClassLevel.left);
     profiles.push({
       feature: unit.right,
       ownerClassLevel: ownerClassLevel.right,

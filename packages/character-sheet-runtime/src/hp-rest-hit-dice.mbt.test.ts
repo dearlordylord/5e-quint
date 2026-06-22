@@ -180,7 +180,6 @@ function rejectLongRestStartAtZeroHpProjection(): HpRestHitDiceProjection {
   const sheet = sheetFixture({
     characterId: "character:hp-rest-zero",
     build: baseBuild("class_fighter"),
-    maximumHp: 12,
     hitPointMaximumReduction: 0,
     currentHp: 0,
   });
@@ -200,7 +199,6 @@ function rejectShortRestStartAtZeroHpProjection(): HpRestHitDiceProjection {
   const sheet = sheetFixture({
     characterId: "character:hp-rest-short-zero",
     build: baseBuild("class_fighter"),
-    maximumHp: 12,
     hitPointMaximumReduction: 0,
     currentHp: 0,
   });
@@ -275,9 +273,8 @@ function rejectLongRestBeforeSixteenHourWaitProjection(): HpRestHitDiceProjectio
   const sheet = sheetFixture({
     characterId: "character:hp-rest-wait",
     build: baseBuild("class_fighter"),
-    maximumHp: 12,
     hitPointMaximumReduction: 0,
-    currentHp: 12,
+    currentHp: 11,
   });
   const elapsedTicks = elapsedTimeTicks(
     Number(CHARACTER_SHEET_LONG_REST_WAIT_TICKS) - 1,
@@ -373,8 +370,7 @@ function completeLongRestRestoresHpHitPointDiceAndMaximumProjection(): HpRestHit
   const sheet = sheetFixture({
     characterId: "character:hp-rest-long-rest",
     build: wizardBuild(),
-    maximumHp: 18,
-    currentHp: 7,
+    currentHp: 6,
     temporaryHitPoints: 2,
     hitPointMaximumReduction: 6,
     spentHitDice: 1,
@@ -528,7 +524,14 @@ function projectFromSheet(input: {
     accepted: input.accepted,
     message: input.message,
     currentHp: Number(characterSheetCurrentHp(input.sheet)),
-    hitPointMaximum: Number(characterSheetHitPointMaximum(input.sheet)),
+    hitPointMaximum: Number(
+      requireRight(
+        characterSheetHitPointMaximum({
+          sheet: input.sheet,
+          unitLibrary,
+        }),
+      ),
+    ),
     hitPointMaximumReduction: Number(input.sheet.hitPointMaximumReduction),
     temporaryHitPoints: Number(characterSheetTempHp(input.sheet)),
     spentHitDice: spentHitDiceTotal(input.sheet),
@@ -549,7 +552,6 @@ function woundedWizardSheet(characterIdText: string): CharacterSheet {
   return sheetFixture({
     characterId: characterIdText,
     build: wizardBuild(),
-    maximumHp: 18,
     hitPointMaximumReduction: 0,
     currentHp: 7,
   });
@@ -558,7 +560,6 @@ function woundedWizardSheet(characterIdText: string): CharacterSheet {
 function sheetFixture(input: {
   readonly characterId: string;
   readonly build: CharacterBuild;
-  readonly maximumHp: number;
   readonly hitPointMaximumReduction: number;
   readonly currentHp: number;
   readonly temporaryHitPoints?: number;
@@ -568,7 +569,6 @@ function sheetFixture(input: {
     createFreshCharacterSheet({
       characterId: characterSheetId(input.characterId),
       build: input.build,
-      maximumHp: Hp(input.maximumHp),
       currentHp: Hp(input.currentHp),
       tempHp: Hp(input.temporaryHitPoints ?? 0),
       hitPointMaximumReduction: Hp(input.hitPointMaximumReduction),

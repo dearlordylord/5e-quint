@@ -369,21 +369,18 @@ function arcaneRecoverySheet(input: {
     createFreshCharacterSheet({
       characterId: characterSheetId("character:arcane-recovery-selected"),
       build: wizard4BuildWithPactSlots(),
-      maximumHp: Hp(18),
       currentHp: Hp(18),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
-      spellSlots: [
+      spellSlotExpenditures: [
         {
           spellLevel: spellSlotLevel(1),
-          count: resourceCount(4),
           expended: resourceCount(input.firstLevelSpellSlotsExpended),
         },
         {
           spellLevel: spellSlotLevel(2),
-          count: resourceCount(3),
           expended: resourceCount(input.secondLevelSpellSlotsExpended),
         },
       ],

@@ -276,8 +276,8 @@ module characterSheetFeatureResourcesMbt {
   action doLongRestClearsLayOnHandsPool = all {
     qState.replayIndex == 2,
     legalFeatureResourceRestState(featureResourceRestState(emptyFeatureResourceFacts
-      .with("sourceCurrentHp", 12)
-      .with("targetCurrentHp", 12)
+      .with("sourceCurrentHp", 11)
+      .with("targetCurrentHp", 11)
       .with("layOnHandsCapacity", 5)
       .with("layOnHandsExpended", 4))),
     recordProjection(
@@ -285,8 +285,8 @@ module characterSheetFeatureResourcesMbt {
       true,
       "none",
       completeLongRestFeatureResources(emptyFeatureResourceFacts
-        .with("sourceCurrentHp", 12)
-        .with("targetCurrentHp", 12)
+        .with("sourceCurrentHp", 11)
+        .with("targetCurrentHp", 11)
         .with("layOnHandsCapacity", 5)
         .with("layOnHandsExpended", 4)),
       3,

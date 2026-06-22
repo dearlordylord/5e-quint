@@ -50,7 +50,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
           startingClass: "class_paladin",
           advancements: ["class_paladin"],
         }),
-        maximumHp: Hp(12),
         currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
@@ -60,7 +59,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:target"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
-        maximumHp: Hp(10),
         currentHp: Hp(3),
         tempHp: Hp(0),
         conditions: ["poisoned"],
@@ -101,7 +99,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:paladin-self"),
         build: armorClassBuild({ startingClass: "class_paladin" }),
-        maximumHp: Hp(12),
         currentHp: Hp(6),
         tempHp: Hp(0),
         conditions: ["poisoned"],
@@ -130,7 +127,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:paladin-rest"),
         build: armorClassBuild({ startingClass: "class_paladin" }),
-        maximumHp: Hp(12),
         currentHp: Hp(6),
         tempHp: Hp(0),
         unitLibrary,
@@ -168,7 +164,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:prayer-caster"),
         build: prayerOfHealingClericBuild(),
-        maximumHp: Hp(18),
         currentHp: Hp(10),
         tempHp: Hp(0),
         unitLibrary,
@@ -190,7 +185,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:prayer-wizard"),
         build: wizardWarlockBuild(),
-        maximumHp: Hp(18),
         currentHp: Hp(3),
         tempHp: Hp(2),
         unitLibrary,
@@ -208,7 +202,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:prayer-fighter"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
-        maximumHp: Hp(12),
         currentHp: Hp(0),
         tempHp: Hp(0),
         unitLibrary,
@@ -218,7 +211,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:prayer-sorcerer"),
         build: sorcererFontOfMagicBuild({ sorcererAdvancements: 4 }),
-        maximumHp: Hp(24),
         currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
@@ -373,7 +365,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:prayer-admission-caster"),
         build: prayerOfHealingClericBuild(),
-        maximumHp: Hp(18),
         currentHp: Hp(18),
         tempHp: Hp(0),
         unitLibrary,
@@ -395,7 +386,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:prayer-admission-target"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
-        maximumHp: Hp(12),
         currentHp: Hp(6),
         tempHp: Hp(0),
         unitLibrary,

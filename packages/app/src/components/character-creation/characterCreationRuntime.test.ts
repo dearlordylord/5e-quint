@@ -1,5 +1,4 @@
 import {
-  BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   type CharacterDraft,
   choiceCardinalityBounds,
@@ -9,7 +8,6 @@ import {
   creationChoiceOptionId,
   type CreationFill,
   fillCreationHoles,
-  PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID,
   PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID,
   progressionOptionId,
   SUPPORTED_LANGUAGE_OPTION_IDS
@@ -62,18 +60,24 @@ describe("character creation runtime", () => {
     })
     expect(Either.isRight(sheet)).toBe(true)
     if (Either.isLeft(sheet)) return
+    const summary = characterSheetSummary(sheet.right)
+    expect(Either.isRight(summary)).toBe(true)
+    if (Either.isLeft(summary)) return
 
     const reduced = {
       ...sheet.right,
       hitPointMaximumReduction: Hp(3),
       hitPoints: {
         tag: "positive",
-        currentHp: Hp(sheet.right.maximumHp - 3),
+        currentHp: Hp(summary.right.maximumHp - 3),
         tempHp: Hp(0)
       }
     } satisfies CharacterSheet
 
-    expect(characterSheetSummary(reduced).maximumHp).toBe(sheet.right.maximumHp - 3)
+    const reducedSummary = characterSheetSummary(reduced)
+    expect(Either.isRight(reducedSummary)).toBe(true)
+    if (Either.isLeft(reducedSummary)) return
+    expect(reducedSummary.right.maximumHp).toBe(summary.right.maximumHp - 3)
   })
 })
 
@@ -142,9 +146,6 @@ function druidTestChoiceOptionIds(
   if (hole.source.tag === "draft" && hole.source.path === "draft.languages") return SUPPORTED_LANGUAGE_OPTION_IDS
   if (hole.source.tag === "unitChoice" && hole.source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY) {
     return [creationChoiceOptionId("option_b")]
-  }
-  if (hole.source.tag === "unitChoice" && hole.source.choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY) {
-    return [PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID]
   }
   if (hole.source.tag === "unitChoice" && hole.source.choiceKey === BACKGROUND_EQUIPMENT_CHOICE_KEY) {
     return [PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID]

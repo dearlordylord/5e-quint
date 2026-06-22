@@ -13,12 +13,16 @@ projection and battle handoff settlement belong to
 
 Current executable state:
 
-- `maximumHp` stores the sheet's HP capacity at the session boundary; callers
-  derive it from `CharacterBuild` when creating the sheet, and later handoffs
-  must match it before changing current HP.
+- Hit Point Maximum is derived from `CharacterBuild` and the current
+  `hitPointMaximumReduction` through `characterSheetHitPointMaximum`. The sheet
+  does not store normal HP capacity; fresh sheets default current HP to the
+  derived effective maximum when no current HP state is supplied.
 - `hitPoints` owns current HP, Temporary Hit Points, the zero-HP Death Saving
   Throw lifecycle, Stable state, death, and Knock Out's positive-HP Unconscious
-  state. Current HP cannot exceed `maximumHp`.
+  state. Current HP cannot exceed the derived effective Hit Point Maximum.
+- `hitPointMaximumReduction` stores mutable play-state reductions to Hit Point
+  Maximum. It is retained separately from normal build-derived capacity and
+  cleared by Long Rest when the SRD says a reduced maximum returns to normal.
 - `conditions` owns active sheet-visible conditions outside the HP-owned
   Unconscious lifecycle. Battle handoff projects non-Unconscious battle
   conditions back into the sheet.
@@ -26,19 +30,20 @@ Current executable state:
   capacity and die size remain derived from `CharacterBuild` through
   `characterBuildHitPoints`, so rest state cannot duplicate build Hit Die
   facts.
-- `resourceExpenditures` stores spent Lay On Hands healing pool state. Resource
-  capacity remains derived from `CharacterBuild` and Surface Units, so sheet
-  state cannot diverge from the authored pool, and deferred non-spell feature
-  resources are not representable here.
+- `resourceExpenditures` stores spent resource state. Resource capacity remains
+  derived from `CharacterBuild` and Surface Units, so sheet state cannot diverge
+  from the authored pool, and unsupported non-spell feature resources are not
+  representable here.
 - `spellSlotExpenditures` is present only for spellcasting builds and stores
-  spent Spell Slots against build-derived capacity.
+  nonzero spent ordinary Spell Slots against build-derived capacity. Absence of
+  a spell level means zero ordinary Spell Slots are expended at that level.
 - `createdSpellSlots` stores only temporary Spell Slot delta state created by
   sheet features such as Font of Magic. Ordinary Spell Slot capacity still comes
   from `CharacterBuild`, and created Spell Slots vanish on Long Rest.
 - `pactSlotExpenditure` stores only spent Pact Slot state for builds that have
   Pact Magic. Pact Slot level and count remain derived from `CharacterBuild`,
   preserving the SRD distinction between Spell Slots and Pact Slots without
-  duplicating Pact Magic capacity.
+  duplicating Pact Magic capacity. Absence means zero Pact Slots are expended.
 - `completeShortRest` requires at least 1 current HP, can spend Hit Dice to
   restore HP, restores Pact Slots, and can apply one Wizard Arcane Recovery
   Spell Slot refund. Arcane Recovery uses Wizard level to enforce the
@@ -51,12 +56,13 @@ Current executable state:
   recipient lockout, and leaves range maintenance and interruption tracking to
   caller/table facts.
 - `completeLongRest` requires at least 1 current HP, restores HP to
-  `maximumHp`, clears Temporary Hit Points, restores spent Hit Dice, restores
-  ordinary Spell Slots and Pact Slots, and recharges tracked rest feature uses
-  such as Arcane Recovery and spent feature pools such as Lay On Hands. When
-  supplied with Weapon Mastery reselections, it replaces the existing
-  `CharacterBuild` selected class-choice refs using the installed Surface
-  feature's Long Rest change count and weapon eligibility facts.
+  the post-rest build-derived normal Hit Point Maximum, clears Temporary Hit
+  Points and `hitPointMaximumReduction`, restores spent Hit Dice, clears
+  ordinary Spell Slot and Pact Slot expenditures, and recharges tracked rest
+  feature uses such as Arcane Recovery and spent feature pools such as Lay On
+  Hands. When supplied with Weapon Mastery reselections, it replaces the
+  existing `CharacterBuild` selected class-choice refs using the installed
+  Surface feature's Long Rest change count and weapon eligibility facts.
 - `applyLayOnHands` spends the Paladin Lay On Hands healing pool as a
   character-sheet resource action. The same pool spend restores target HP and
   pays the SRD 5 HP cost to remove Poisoned, so those costs cannot drift into

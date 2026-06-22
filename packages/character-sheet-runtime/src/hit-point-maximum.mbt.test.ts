@@ -201,7 +201,6 @@ function projectHitPointMaximum(input: {
     createFreshCharacterSheet({
       characterId: characterSheetId(`character:hp-maximum:${input.outcome}`),
       build: input.build,
-      maximumHp: Hp(Number(hitPoints.maximum)),
       currentHp: Hp(Number(hitPoints.maximum) - hitPointMaximumReduction),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(hitPointMaximumReduction),
@@ -213,7 +212,9 @@ function projectHitPointMaximum(input: {
   return {
     outcome: input.outcome,
     normalHitPointMaximum: Number(hitPoints.maximum),
-    effectiveHitPointMaximum: Number(characterSheetHitPointMaximum(sheet)),
+    effectiveHitPointMaximum: Number(
+      requireRight(characterSheetHitPointMaximum({ sheet, unitLibrary })),
+    ),
     hitDiceTotal: hitPoints.hitDice.reduce(
       (total, pool) => total + Number(pool.total),
       0,

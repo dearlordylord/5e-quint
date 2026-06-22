@@ -3310,13 +3310,13 @@ describe("MCP server route", () => {
       tag: "available",
       characterId: testCharacterId(draftId),
       build: finalized.finalization.build,
-      maximumHp: 12,
       hitPointMaximumReduction: 0,
       hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
       conditions: [],
       spentHitDice: [],
       restFeatureUses: [],
       resourceExpenditures: [],
+      heroicInspiration: { tag: "none" },
       companion: { tag: "none" },
     });
     expect(finalized.session).toMatchObject({
@@ -3643,7 +3643,6 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: testCharacterId(draftId),
         build,
-        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(7),
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(5),
@@ -4056,7 +4055,6 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: testCharacterId(draftId),
         build,
-        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(1),
         tempHp: Hp(4),
         hitPointMaximumReduction: Hp(0),
@@ -4114,7 +4112,6 @@ describe("MCP server route", () => {
       availableCharacterSession({
         characterId: testCharacterId(draftId),
         build,
-        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(6),
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(0),
@@ -4139,7 +4136,6 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: testCharacterId(draftId),
         build,
-        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(0),
@@ -4207,7 +4203,6 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: testCharacterId(draftId),
         build,
-        maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
         currentHp: Hp(0),
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(0),
@@ -4278,7 +4273,6 @@ describe("MCP server route", () => {
     const sessionInput = {
       characterId: characterId("character:zero-hp-boundary"),
       build,
-      maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(0),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
@@ -5243,7 +5237,6 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: characterId("spare-the-dying-caster-character"),
         build: casterBuild,
-        maximumHp: Hp(characterBuildMaximumHp(casterBuild, root.unitLibrary)),
         currentHp: Hp(characterBuildMaximumHp(casterBuild, root.unitLibrary)),
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(0),
@@ -5254,7 +5247,6 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: characterId("spare-the-dying-target-character"),
         build: targetBuild,
-        maximumHp: Hp(characterBuildMaximumHp(targetBuild, root.unitLibrary)),
         currentHp: Hp(characterBuildMaximumHp(targetBuild, root.unitLibrary)),
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(0),
@@ -5706,29 +5698,21 @@ describe("MCP server route", () => {
       availableCharacterSessionRight({
         characterId: characterId("character:spell-slot-duplicate-levels"),
         build: spellcastingBuild,
-        maximumHp: Hp(
-          characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
-        ),
-        currentHp: Hp(
-          characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
-        ),
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(0),
         unitLibrary: root.unitLibrary,
-        spellSlots: [
+        spellSlotExpenditures: [
           {
             spellLevel: spellSlotLevel(1),
-            count: resourceCount(2),
             expended: resourceCount(0),
           },
           {
             spellLevel: spellSlotLevel(1),
-            count: resourceCount(2),
             expended: resourceCount(0),
           },
         ],
       }),
-    ).toThrow("Spell Slot state must match build capacity exactly.");
+    ).toThrow("Spell Slot state must not duplicate spell levels.");
     expect(() =>
       availableCharacterSessionRight({
         characterId: characterId("character:spell-slot-mismatched-capacity"),
@@ -5747,29 +5731,17 @@ describe("MCP server route", () => {
             },
           },
         },
-        maximumHp: Hp(
-          characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
-        ),
-        currentHp: Hp(
-          characterBuildMaximumHp(spellcastingBuild, root.unitLibrary),
-        ),
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(0),
         unitLibrary: root.unitLibrary,
-        spellSlots: [
+        spellSlotExpenditures: [
           {
             spellLevel: spellSlotLevel(1),
-            count: resourceCount(2),
-            expended: resourceCount(0),
-          },
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(2),
-            expended: resourceCount(0),
+            expended: resourceCount(3),
           },
         ],
       }),
-    ).toThrow("Spell Slot state must not duplicate spell levels.");
+    ).toThrow("Spell Slot state does not match build capacity for level 1.");
   });
 
   test("rejects character battle init when current HP exceeds build max HP", () => {
@@ -5935,7 +5907,6 @@ function createFinalizedFighterSheet(
     availableCharacterSessionRight({
       characterId: testCharacterId(draftId),
       build,
-      maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
@@ -5981,7 +5952,6 @@ function createFinalizedWizardWithFindFamiliar(
     availableCharacterSessionRight({
       characterId: testCharacterId(draftId),
       build,
-      maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),

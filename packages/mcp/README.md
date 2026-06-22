@@ -50,7 +50,10 @@ The character-creation tool boundary exposes these user-facing tools:
   discovered from current creation holes rather than duplicated in MCP docs. A ready result returns
   `build`, stores an available in-play record by characterId, and removes
   the draft from `drafts`. The Character Build remains build-only; the
-  session owns current HP while the character is outside battle.
+  session owns current HP while the character is outside battle. Hit Point
+  Maximum, Hit Dice capacity, ordinary Spell Slot capacity, Pact Slot
+  level/count, and feature-resource capacity are derived from the stored build
+  when MCP needs display rows or battle handoff projections.
 - `list_characters` lists durable character-session rows. It reads only the
   character-session store, so selected or battled Stat Blocks do not appear as
   characters.

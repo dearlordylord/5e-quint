@@ -38,7 +38,7 @@ import {
   uncannyMetabolismLongRestUseStateTestName,
   uncannyMetabolismRejectsUnownedUseStateTestName,
   unitLibrary,
-  useMonkUncannyMetabolismWhenRollingInitiative
+  useMonkUncannyMetabolismWhenRollingInitiative,
 } from "./test-support.ts";
 
 const monksFocusShortRestRecoveryTestName =
@@ -50,7 +50,6 @@ describe("Character Sheet runtime / resources", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:ranger-rest"),
         build: armorClassBuild({ startingClass: "class_ranger" }),
-        maximumHp: Hp(12),
         currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
@@ -99,7 +98,6 @@ describe("Character Sheet runtime / resources", () => {
           startingClass: "class_paladin",
           advancements: ["class_paladin"],
         }),
-        maximumHp: Hp(20),
         currentHp: Hp(20),
         tempHp: Hp(0),
         unitLibrary,
@@ -158,7 +156,6 @@ describe("Character Sheet runtime / resources", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:monk-focus-rest"),
         build: monkBuild,
-        maximumHp: Hp(15),
         currentHp: Hp(15),
         tempHp: Hp(0),
         unitLibrary,
@@ -241,7 +238,6 @@ describe("Character Sheet runtime / resources", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-rest"),
         build: sorcererBuild,
-        maximumHp: Hp(14),
         currentHp: Hp(14),
         tempHp: Hp(0),
         unitLibrary,
@@ -300,7 +296,6 @@ describe("Character Sheet runtime / resources", () => {
           "character:sorcerer-sorcerous-restoration",
         ),
         build: sorcererBuild,
-        maximumHp: Hp(28),
         currentHp: Hp(28),
         tempHp: Hp(0),
         unitLibrary,
@@ -396,7 +391,6 @@ describe("Character Sheet runtime / resources", () => {
           "character:sorcerer-no-sorcerous-restoration",
         ),
         build: sorcererFontOfMagicBuild({ sorcererAdvancements: 3 }),
-        maximumHp: Hp(24),
         currentHp: Hp(24),
         tempHp: Hp(0),
         unitLibrary,
@@ -453,7 +447,6 @@ describe("Character Sheet runtime / resources", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:monk-uncanny-used"),
         build: monkBuild,
-        maximumHp: Hp(15),
         currentHp: Hp(15),
         tempHp: Hp(0),
         unitLibrary,
@@ -555,7 +548,6 @@ describe("Character Sheet runtime / resources", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:monk-uncanny-initiative"),
         build: monkBuild,
-        maximumHp: Hp(30),
         currentHp: Hp(10),
         tempHp: Hp(3),
         unitLibrary,
@@ -611,7 +603,6 @@ describe("Character Sheet runtime / resources", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:monk-uncanny-cap"),
         build: monkBuild,
-        maximumHp: Hp(30),
         currentHp: Hp(28),
         tempHp: Hp(0),
         unitLibrary,
@@ -649,7 +640,6 @@ describe("Character Sheet runtime / resources", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:monk-uncanny-gates"),
         build: monkBuild,
-        maximumHp: Hp(30),
         currentHp: Hp(20),
         tempHp: Hp(0),
         unitLibrary,
@@ -694,7 +684,6 @@ describe("Character Sheet runtime / resources", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:unowned-uncanny-metabolism"),
       build: armorClassBuild({ startingClass: "class_fighter" }),
-      maximumHp: Hp(12),
       currentHp: Hp(12),
       tempHp: Hp(0),
       unitLibrary,

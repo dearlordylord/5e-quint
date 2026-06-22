@@ -27,7 +27,7 @@ import {
   requireRight,
   resourceCount,
   storedAvailableSheetInput,
-  unitLibrary
+  unitLibrary,
 } from "./test-support.ts";
 
 describe("Character Sheet runtime / druid features", () => {
@@ -36,7 +36,6 @@ describe("Character Sheet runtime / druid features", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:druid-land-temperate"),
         build: druidCircleLandBuild({ druidLevel: 5 }),
-        maximumHp: Hp(24),
         currentHp: Hp(24),
         tempHp: Hp(0),
         unitLibrary,
@@ -91,7 +90,6 @@ describe("Character Sheet runtime / druid features", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:druid-land-missing"),
       build: druidCircleLandBuild({ druidLevel: 3 }),
-      maximumHp: Hp(18),
       currentHp: Hp(18),
       tempHp: Hp(0),
       unitLibrary,
@@ -123,7 +121,6 @@ describe("Character Sheet runtime / druid features", () => {
           },
         ],
       },
-      maximumHp: Hp(18),
       currentHp: Hp(18),
       tempHp: Hp(0),
       unitLibrary,
@@ -219,7 +216,6 @@ describe("Character Sheet runtime / druid features", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:druid-wild-shape-rest"),
         build: druidBuild,
-        maximumHp: Hp(16),
         currentHp: Hp(16),
         tempHp: Hp(0),
         unitLibrary,
@@ -242,7 +238,6 @@ describe("Character Sheet runtime / druid features", () => {
             "character:druid-wild-shape-missing-forms",
           ),
           build: druidBuild,
-          maximumHp: Hp(16),
           currentHp: Hp(16),
           tempHp: Hp(0),
           unitLibrary,
