@@ -276,23 +276,26 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
-          "route": "substrate-first",
-          "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-          "subjectFamily": "battle attack/rider bundle requiring split durable route owners",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
+          "subjectFamily": "after-hit spell damage rider owner split",
           "branchObligations": 26,
           "currentOutOfScopeBranchObligations": 4,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt is present in source-branch-inventory.json with 26 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt is present in source-branch-inventory.json with 26 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt records generic AfterHitDamageRiderRouteSubject evidence as separate owner-shaped surfaces for direct interrupt decisions, save-gated interrupt frontiers, direct spell-slot/action-economy spends, save-outcome spell-slot/action-economy spends, feature free-cast spends, Concentration, condition lifecycle, turn-start damage/save cleanup, escape checks, illumination active-effect boundaries, and Hit Point damage."
             ],
             "rawDomainFacts": [
-              "SRD 5.2.1 Playing-the-Game attack and damage rules define target choice, attack roll, hit damage, and HP updates as generic creature combat facts.",
-              "SRD 5.2.1 Rules-Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, and Recharge text define stat-block action shape without authored stat-block identity dispatch.",
-              "UBIQUITOUS_LANGUAGE.md defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners."
+              ".references/srd-5.2.1/Playing-the-Game.md#Bonus Actions defines the Bonus Action spend used by after-hit smite-style spells.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack allows attacks to cause special effects in addition to damage; #Damage Rolls and #Hit Points define damage rolls and Hit Point loss.",
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots and #Casting without Slots define slot and slotless spell spends.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Concentration and #Restrained [Condition] define Concentration and condition lifecycle ownership.",
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Divine Smite, Descriptions-E-L.md#Ensnaring Strike, and Descriptions-S-Z.md#Searing Smite / #Shining Smite define the after-hit spell shapes represented by the generic route subject.",
+              "UBIQUITOUS_LANGUAGE.md defines Rider, Attack Damage Rider, Spell Invocation, Spell Effect, Spend, Concentration, Condition, Hit Points, and Ability Check."
             ],
-            "blockers": [
-              "Split after-hit riders by durable owner before routing: interrupt decision, spell slot/free-cast spend, concentration, condition lifecycle, turn-start damage/save, escape checks, illumination, and HP damage do not belong in one whole-battle accumulator connector."
-            ]
+            "blockers": []
           }
         },
         {
@@ -2416,19 +2419,20 @@
           "currentScopeReason": "Shining Smite is a level-2 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doBreakShiningConcentration under branch family step."
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doBreakShiningConcentration under branch family step.",
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt records Shining Smite concentration break and illumination cleanup through separate Concentration and active-effect owner surfaces."
             ],
             "rawDomainFacts": [
               "Shining Smite is a level-2 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shining Smite defines the after-hit Radiant damage, Concentration duration, Bright Light, Advantage, and Invisible-condition boundary facts."
             ],
-            "blockers": [
-              "Task 11 left this level-2 after-hit spell branch out of branch scope because after-hit rider owners still need split route connectors; L15-RR15 owns that substrate split."
-            ]
+            "blockers": []
           }
         },
         {
@@ -2438,19 +2442,20 @@
           "currentScopeReason": "Shining Smite is a level-2 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doChooseShiningSmite under branch family step."
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doChooseShiningSmite under branch family step.",
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt records after-hit interrupt choice, slot/action-economy spend, Concentration, and illumination active-effect admission as separate owner surfaces."
             ],
             "rawDomainFacts": [
               "Shining Smite is a level-2 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shining Smite defines the Bonus Action after-hit trigger, Concentration duration, and illumination boundary facts."
             ],
-            "blockers": [
-              "Task 11 left this level-2 after-hit spell branch out of branch scope because after-hit rider owners still need split route connectors; L15-RR15 owns that substrate split."
-            ]
+            "blockers": []
           }
         },
         {
@@ -2460,19 +2465,20 @@
           "currentScopeReason": "Shining Smite is a level-2 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doFillShiningSmiteDamage under branch family step."
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doFillShiningSmiteDamage under branch family step.",
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt records after-hit damage rolls through the Hit Point owner separately from Concentration and illumination active-effect surfaces."
             ],
             "rawDomainFacts": [
               "Shining Smite is a level-2 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls and #Hit Points define the damage-roll and Hit Point owner surface."
             ],
-            "blockers": [
-              "Task 11 left this level-2 after-hit spell branch out of branch scope because after-hit rider owners still need split route connectors; L15-RR15 owns that substrate split."
-            ]
+            "blockers": []
           }
         },
         {
@@ -2482,19 +2488,20 @@
           "currentScopeReason": "Shining Smite is a level-2 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doStartShiningSmite under branch family step."
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doStartShiningSmite under branch family step.",
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt records the Shining Smite split owner surfaces without retaining a whole-battle rider accumulator."
             ],
             "rawDomainFacts": [
               "Shining Smite is a level-2 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shining Smite defines the source after-hit spell branch represented by the generic route subject."
             ],
-            "blockers": [
-              "Task 11 left this level-2 after-hit spell branch out of branch scope because after-hit rider owners still need split route connectors; L15-RR15 owns that substrate split."
-            ]
+            "blockers": []
           }
         },
         {
