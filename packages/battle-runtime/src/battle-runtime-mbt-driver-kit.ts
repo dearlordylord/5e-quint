@@ -853,6 +853,11 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "companionTouchDelivery",
   "companionReactionAttack",
   "objectTargetSpellAttack",
+  "passiveDamageAdjustment",
+  "passiveSavingThrowRollMode",
+  "passiveAbilityCheckRollMode",
+  "creatureSpaceMovementPermission",
+  "creatureStatProjection",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -878,6 +883,11 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleTurnBoundary",
   "battleCompanion",
   "battleObjectTargetBoundary",
+  "battleDamageAdjustment",
+  "battleSavingThrowRollMode",
+  "battleAbilityCheckRollMode",
+  "battleCreatureSpaceMovement",
+  "battleCreatureState",
 ] as const;
 type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
 const REDUCER_ROUTE_HOLES = [
@@ -5846,6 +5856,12 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   CompanionTouchDeliveryRouteSubject: "companionTouchDelivery",
   CompanionReactionAttackRouteSubject: "companionReactionAttack",
   ObjectTargetSpellAttackRouteSubject: "objectTargetSpellAttack",
+  PassiveDamageAdjustmentRouteSubject: "passiveDamageAdjustment",
+  PassiveSavingThrowRollModeRouteSubject: "passiveSavingThrowRollMode",
+  PassiveAbilityCheckRollModeRouteSubject: "passiveAbilityCheckRollMode",
+  CreatureSpaceMovementPermissionRouteSubject:
+    "creatureSpaceMovementPermission",
+  CreatureStatProjectionRouteSubject: "creatureStatProjection",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -5870,6 +5886,11 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleTurnBoundaryOwner: "battleTurnBoundary",
   BattleCompanionOwner: "battleCompanion",
   BattleObjectTargetBoundaryOwner: "battleObjectTargetBoundary",
+  BattleDamageAdjustmentOwner: "battleDamageAdjustment",
+  BattleSavingThrowRollModeOwner: "battleSavingThrowRollMode",
+  BattleAbilityCheckRollModeOwner: "battleAbilityCheckRollMode",
+  BattleCreatureSpaceMovementOwner: "battleCreatureSpaceMovement",
+  BattleCreatureStateOwner: "battleCreatureState",
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {

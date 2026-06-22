@@ -41,6 +41,11 @@ module battleRuntimeReducerRoute {
     | CompanionTouchDeliveryRouteSubject
     | CompanionReactionAttackRouteSubject
     | ObjectTargetSpellAttackRouteSubject
+    | PassiveDamageAdjustmentRouteSubject
+    | PassiveSavingThrowRollModeRouteSubject
+    | PassiveAbilityCheckRollModeRouteSubject
+    | CreatureSpaceMovementPermissionRouteSubject
+    | CreatureStatProjectionRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner
@@ -64,6 +69,11 @@ module battleRuntimeReducerRoute {
     | BattleTurnBoundaryOwner
     | BattleCompanionOwner
     | BattleObjectTargetBoundaryOwner
+    | BattleDamageAdjustmentOwner
+    | BattleSavingThrowRollModeOwner
+    | BattleAbilityCheckRollModeOwner
+    | BattleCreatureSpaceMovementOwner
+    | BattleCreatureStateOwner
 
   type ReducerRouteEvent =
     | RouteStartBattle({ owner: ReducerRouteOwnerGroup })
