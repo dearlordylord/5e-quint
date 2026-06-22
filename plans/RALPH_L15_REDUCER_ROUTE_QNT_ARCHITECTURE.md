@@ -181,7 +181,7 @@
     {
       "number": 30,
       "id": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Route metamagic governor and option substrates"
     },
     {
@@ -351,7 +351,7 @@ The route classes are deliberately not all `reducer-routed`:
 |  27 | L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES - Route feature movement and form lifecycle substrates     | done               | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Splits movement-resource, active-form, speed, and forced-movement owners; keeps teleport destination legality table-owned. |
 |  28 | L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES - Route weapon mastery property substrates                   | done               | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes mastery properties by property facts, attack/save holes, and durable rider owners.      |
 |  29 | L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE - Route attack-action area save damage replacement feature substrate | done | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                         | Adds area save damage replacement route owners before selected species replay counts.          |
-|  30 | L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES - Route metamagic governor and option substrates       | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes metamagic by typed option facts, Sorcery Point spend, and spell procedure owners.       |
+|  30 | L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES - Route metamagic governor and option substrates       | done | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes metamagic by typed option facts, Sorcery Point spend, and spell procedure owners.       |
 |  31 | L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE - Route active feature spell benefit substrates          | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes active feature spell-save and spell-attack benefits by typed active-effect facts.       |
 
 ## Shared Verification
@@ -1039,7 +1039,7 @@ Plan Impact:
 
 ### Task 30 - L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
