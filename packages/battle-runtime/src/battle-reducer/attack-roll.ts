@@ -42,7 +42,6 @@ import {
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
-  ongoingFeatureSpellModifierSourceClassName,
   type BattleUnitSupportProfile,
 } from "../unit-feature-support.ts";
 import {
@@ -662,10 +661,11 @@ function ongoingFeatureGrantsSpellAttackRollMode(
       const profile = ongoingFeatureProfileForSourceKey(attacker, key);
       return (
         profile !== null &&
-        ongoingFeatureSpellModifierSourceClassName(profile) ===
-          attacker.origin.spellcasting?.sourceClassName &&
         profile.spellModifiers.some(
-          (modifier) => modifier.attackRollMode === mode,
+          (modifier) =>
+            modifier.attackRollMode === mode &&
+            modifier.sourceClassName ===
+              attacker.origin.spellcasting?.sourceClassName,
         )
       );
     })

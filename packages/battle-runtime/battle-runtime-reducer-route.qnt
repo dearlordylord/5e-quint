@@ -40,6 +40,8 @@ module battleRuntimeReducerRoute {
     | TurnBoundaryEffectLifecycleRouteSubject
     | ZeroHitPointSpellEffectTeardownRouteSubject
     | UnitFeatureBonusActionRouteSubject
+    | ActiveFeatureSpellSaveDcRouteSubject
+    | ActiveFeatureSpellAttackRollModeRouteSubject
     | CompanionLifecycleRouteSubject
     | CompanionSharedSensesRouteSubject
     | CompanionTouchDeliveryRouteSubject

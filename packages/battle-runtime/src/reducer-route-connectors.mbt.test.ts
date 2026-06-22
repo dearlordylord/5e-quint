@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   MBT_TEST_TIMEOUT_MS,
   createAdrenalineRushRouteDriver,
+  createActiveFeatureSpellBenefitRouteDriver,
   createAttackActionAreaSaveDamageReplacementRouteDriver,
   createChainedAttackProcedureRouteDriver,
   createConcentrationBreakTeardownRouteDriver,
@@ -27,6 +28,7 @@ import {
   reducerRoutedConcentrationBreakTeardownStateCheck,
   reducerRoutedDeathSavingThrowStateCheck,
   reducerRoutedHitPointRestorationOrderingStateCheck,
+  reducerRoutedActiveFeatureSpellBenefitStateCheck,
   reducerRoutedAdrenalineRushStateCheck,
   reducerRoutedAttackActionAreaSaveDamageReplacementStateCheck,
   reducerRoutedChainedAttackProcedureStateCheck,
@@ -120,6 +122,22 @@ describe("battle reducer route connector MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(4),
       stateCheck: reducerRoutedAttackActionAreaSaveDamageReplacementStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes active feature spell benefits through active-effect facts", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-feature-selected-identity.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createActiveFeatureSpellBenefitRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedActiveFeatureSpellBenefitStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 

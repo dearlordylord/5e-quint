@@ -187,7 +187,7 @@
     {
       "number": 31,
       "id": "L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Route active feature spell benefit substrates"
     }
   ]
@@ -352,7 +352,7 @@ The route classes are deliberately not all `reducer-routed`:
 |  28 | L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES - Route weapon mastery property substrates                   | done               | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes mastery properties by property facts, attack/save holes, and durable rider owners.      |
 |  29 | L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE - Route attack-action area save damage replacement feature substrate | done | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                         | Adds area save damage replacement route owners before selected species replay counts.          |
 |  30 | L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES - Route metamagic governor and option substrates       | done | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes metamagic by typed option facts, Sorcery Point spend, and spell procedure owners.       |
-|  31 | L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE - Route active feature spell benefit substrates          | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes active feature spell-save and spell-attack benefits by typed active-effect facts.       |
+|  31 | L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE - Route active feature spell benefit substrates          | done | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes active feature spell-save and spell-attack benefits by typed active-effect facts.       |
 
 ## Shared Verification
 
@@ -1092,7 +1092,7 @@ Plan Impact:
 
 ### Task 31 - L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

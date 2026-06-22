@@ -58,6 +58,8 @@ import {
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   chromaticOrbUnitId,
+  rayOfFrostUnitId,
+  sorcererInnateSorceryUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog-support.ts";
@@ -81,6 +83,7 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
+  spellSaveDcForCaster,
   spellSlotInvocationRef,
   startBattle,
   type BattleCreatureInit,
@@ -852,6 +855,8 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "turnBoundaryEffectLifecycle",
   "zeroHitPointSpellEffectTeardown",
   "unitFeatureBonusAction",
+  "activeFeatureSpellSaveDc",
+  "activeFeatureSpellAttackRollMode",
   "companionLifecycle",
   "companionSharedSenses",
   "companionTouchDelivery",
@@ -1189,6 +1194,18 @@ export type AdrenalineRushMbtProjection = {
 type ReducerRoutedAdrenalineRushProjection = AdrenalineRushMbtProjection & {
   readonly route: readonly ReducerRouteEvent[];
 };
+const ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODES = [
+  "none",
+  "advantage",
+] as const;
+type ActiveFeatureSpellAttackRollMode =
+  (typeof ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODES)[number];
+type ActiveFeatureSpellBenefitRouteProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly spellSaveDc: number;
+  readonly spellAttackRollMode: ActiveFeatureSpellAttackRollMode;
+};
+type ActiveFeatureSpellBenefitSourceClassName = "sorcerer" | "wizard";
 
 export type RogueSteadyAimMbtProjection = {
   readonly bonusActionAvailable: boolean;
@@ -1540,6 +1557,13 @@ const adrenalineRushDriverSchema = {
   init: {},
   doAdrenalineRushDash: {},
   doRejectSecondDash: {},
+  step: {},
+} as const;
+const activeFeatureSpellBenefitRouteDriverSchema = {
+  init: {},
+  doRouteActiveFeatureSpellSaveDcBenefit: {},
+  doRouteActiveFeatureSpellAttackBenefit: {},
+  doRouteNonSourceSpellExcluded: {},
   step: {},
 } as const;
 
@@ -6577,7 +6601,7 @@ export function createAdrenalineRushRouteDriver(
   return createAdrenalineRushDriverWithRoute(true, schema);
 }
 
-const FEATURE_DASH_TEMPORARY_HIT_POINT_ROUTE_SUBJECT =
+const UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT =
   "unitFeatureBonusAction" satisfies ReducerRouteSubjectFamily;
 const FEATURE_DASH_TEMPORARY_HIT_POINT_RESOLVED_OWNERS = [
   "battleActionEconomy",
@@ -6612,7 +6636,7 @@ function createAdrenalineRushDriverWithRoute<const IncludeRoute extends boolean>
         reducerRouteStartBattle("battleActionEconomy"),
         {
           kind: "discoverBattleActs",
-          subject: FEATURE_DASH_TEMPORARY_HIT_POINT_ROUTE_SUBJECT,
+          subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
           holes: [],
           owner: "battleFeatureResource",
         },
@@ -6624,7 +6648,7 @@ function createAdrenalineRushDriverWithRoute<const IncludeRoute extends boolean>
     ): readonly ReducerRouteEvent[] {
       return owners.map((owner) =>
         reducerRouteResolveBattleSubjectWithoutFill({
-          subject: FEATURE_DASH_TEMPORARY_HIT_POINT_ROUTE_SUBJECT,
+          subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
           holes: [],
           owner,
         }),
@@ -6696,6 +6720,237 @@ function createAdrenalineRushDriverWithRoute<const IncludeRoute extends boolean>
           ? ReducerRoutedAdrenalineRushProjection
           : AdrenalineRushMbtProjection;
       },
+    };
+  });
+}
+
+const ACTIVE_FEATURE_SPELL_SAVE_DC_ROUTE_SUBJECT =
+  "activeFeatureSpellSaveDc" satisfies ReducerRouteSubjectFamily;
+const ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODE_ROUTE_SUBJECT =
+  "activeFeatureSpellAttackRollMode" satisfies ReducerRouteSubjectFamily;
+const ACTIVE_FEATURE_SPELL_BENEFIT_TARGET_CHOICE_HOLES = [
+  { kind: "targetChoice" },
+] as const satisfies readonly Pick<BattleHole, "kind">[];
+const ACTIVE_FEATURE_SPELL_BENEFIT_ATTACK_ROLL_HOLES = [
+  { kind: "attackRoll" },
+] as const satisfies readonly Pick<BattleHole, "kind">[];
+
+function activeFeatureActivationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    reducerRouteStartBattle("battleActionEconomy"),
+    reducerRouteDiscoverBattleActs({
+      subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleFeatureResource",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleActionEconomy",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleFeatureResource",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function activeFeatureSpellSaveDcRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...activeFeatureActivationRoute(),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: ACTIVE_FEATURE_SPELL_SAVE_DC_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleActiveEffect",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: ACTIVE_FEATURE_SPELL_SAVE_DC_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+  ];
+}
+
+function activeFeatureSpellAttackRollModeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...activeFeatureSpellSaveDcRoute(),
+    reducerRouteDiscoverBattleActs({
+      subject: ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: ACTIVE_FEATURE_SPELL_BENEFIT_TARGET_CHOICE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: ACTIVE_FEATURE_SPELL_BENEFIT_ATTACK_ROLL_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: ACTIVE_FEATURE_SPELL_BENEFIT_ATTACK_ROLL_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: ACTIVE_FEATURE_SPELL_BENEFIT_ATTACK_ROLL_HOLES,
+      owner: "battleSpellAttackProcedure",
+    }),
+  ];
+}
+
+function projectActiveFeatureSpellBenefit(
+  sourceClassName: ActiveFeatureSpellBenefitSourceClassName,
+): Omit<ActiveFeatureSpellBenefitRouteProjection, "route"> {
+  const state = activeFeatureSpellBenefitActivatedBattle(sourceClassName);
+  return {
+    spellSaveDc: requireActiveFeatureSpellBenefitSaveDc(state),
+    spellAttackRollMode: activeFeatureSpellAttackRollMode(state),
+  };
+}
+
+function activeFeatureSpellBenefitActivatedBattle(
+  sourceClassName: ActiveFeatureSpellBenefitSourceClassName,
+): BattleState {
+  const state = activeFeatureSpellBenefitBattle(sourceClassName);
+  const subject = activeFeatureSpellBenefitSubject(state);
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [],
+    }),
+  ).state;
+}
+
+function activeFeatureSpellBenefitBattle(
+  sourceClassName: ActiveFeatureSpellBenefitSourceClassName,
+): BattleState {
+  return startBattleRight({
+    battleId: battleId(`active-feature-spell-benefit-route-${sourceClassName}`),
+    combatants: [
+      activeFeatureSpellBenefitCasterCreatureInit({
+        initiative: 20,
+        sourceClassName,
+      }),
+      activeFeatureSpellBenefitTargetCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function activeFeatureSpellBenefitSubject(
+  state: BattleState,
+): Extract<BattleSubject, { readonly tag: "unitFeature" }> {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "unitFeature" &&
+      candidate.subject.actorId === fighterId,
+  );
+  if (act === undefined || act.subject.tag !== "unitFeature") {
+    throw new Error("Expected active feature spell benefit Unit feature act.");
+  }
+  return act.subject;
+}
+
+function requireActiveFeatureSpellBenefitSaveDc(state: BattleState): number {
+  const spellSaveDc = spellSaveDcForCaster(state, fighterId);
+  if (spellSaveDc === null) {
+    throw new Error(
+      "Expected active feature spell benefit caster to have a Spell Save DC.",
+    );
+  }
+  return Number(spellSaveDc);
+}
+
+function activeFeatureSpellAttackRollMode(
+  state: BattleState,
+): ActiveFeatureSpellBenefitRouteProjection["spellAttackRollMode"] {
+  const subject = activeFeatureSpellBenefitSpellAttackSubject();
+  const target = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const attackRoll = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [spellTargetChoiceFill(target, skeletonId, rayOfFrostUnitId)],
+    }),
+    "attackRoll",
+  );
+  return attackRoll.rollMode === "advantage" ? "advantage" : "none";
+}
+
+function activeFeatureSpellBenefitSpellAttackSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+> {
+  return {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: cantripSpellInvocationRef(
+      rayOfFrostUnitId,
+      "spellAttackDamage",
+    ),
+    mode: { tag: "cast" },
+  };
+}
+
+export function createActiveFeatureSpellBenefitRouteDriver() {
+  return defineDriver(activeFeatureSpellBenefitRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [
+      reducerRouteStartBattle("battleActionEconomy"),
+    ];
+    let spellSaveDc = 13;
+    let spellAttackRollMode: ActiveFeatureSpellBenefitRouteProjection["spellAttackRollMode"] =
+      "none";
+
+    function reset(): void {
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+      spellSaveDc = 13;
+      spellAttackRollMode = "none";
+    }
+
+    function project(
+      sourceClassName: ActiveFeatureSpellBenefitSourceClassName,
+    ): void {
+      const projection = projectActiveFeatureSpellBenefit(sourceClassName);
+      spellSaveDc = projection.spellSaveDc;
+      spellAttackRollMode = projection.spellAttackRollMode;
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteActiveFeatureSpellSaveDcBenefit: () => {
+        project("sorcerer");
+        route = activeFeatureSpellSaveDcRoute();
+        spellAttackRollMode = "none";
+      },
+      doRouteActiveFeatureSpellAttackBenefit: () => {
+        project("sorcerer");
+        route = activeFeatureSpellAttackRollModeRoute();
+      },
+      doRouteNonSourceSpellExcluded: () => {
+        project("wizard");
+        route = activeFeatureSpellAttackRollModeRoute();
+      },
+      step: () => {},
+      getState: (): ActiveFeatureSpellBenefitRouteProjection => ({
+        route,
+        spellSaveDc,
+        spellAttackRollMode,
+      }),
     };
   });
 }
@@ -6854,6 +7109,9 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   ZeroHitPointSpellEffectTeardownRouteSubject:
     "zeroHitPointSpellEffectTeardown",
   UnitFeatureBonusActionRouteSubject: "unitFeatureBonusAction",
+  ActiveFeatureSpellSaveDcRouteSubject: "activeFeatureSpellSaveDc",
+  ActiveFeatureSpellAttackRollModeRouteSubject:
+    "activeFeatureSpellAttackRollMode",
   CompanionLifecycleRouteSubject: "companionLifecycle",
   CompanionSharedSensesRouteSubject: "companionSharedSenses",
   CompanionTouchDeliveryRouteSubject: "companionTouchDelivery",
@@ -7213,6 +7471,24 @@ function normalizeReducerRoutedAttackActionAreaSaveDamageReplacementQuintState(
   const state = quintStateRecord(raw);
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeActiveFeatureSpellBenefitRouteQuintState(
+  raw: unknown,
+): ActiveFeatureSpellBenefitRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    spellSaveDc: numberFromQuintInt(
+      quintField(state, "qSpellSaveDc"),
+      "qSpellSaveDc",
+    ),
+    spellAttackRollMode: stringLiteralField(
+      state,
+      "qSpellAttackRollMode",
+      ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODES,
+    ),
   };
 }
 
@@ -7793,6 +8069,16 @@ export const reducerRoutedAttackActionAreaSaveDamageReplacementStateCheck =
       return true;
     },
   );
+export const reducerRoutedActiveFeatureSpellBenefitStateCheck = stateCheck(
+  normalizeActiveFeatureSpellBenefitRouteQuintState,
+  (
+    spec: ActiveFeatureSpellBenefitRouteProjection,
+    impl: ActiveFeatureSpellBenefitRouteProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
 export const reducerRoutedMetamagicStateCheck = stateCheck(
   normalizeReducerRoutedMetamagicQuintState,
   (
@@ -9769,6 +10055,83 @@ function adrenalineRushCreatureInit(input: {
   };
 }
 
+function activeFeatureSpellBenefitCasterCreatureInit(input: {
+  readonly initiative: number;
+  readonly sourceClassName: ActiveFeatureSpellBenefitSourceClassName;
+}): BattleCreatureInit {
+  const classLevels =
+    input.sourceClassName === "sorcerer"
+      ? [{ className: "sorcerer" as const, level: classLevel(1) }]
+      : [
+          { className: "sorcerer" as const, level: classLevel(1) },
+          { className: "wizard" as const, level: classLevel(1) },
+        ];
+  return {
+    combatantId: fighterId,
+    displayName: "Active Feature Spell Benefit Caster",
+    initiative: initiativeScore(input.initiative),
+    side: partySide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("active-feature-spell-benefit-caster"),
+      characterUnitRefs: [],
+      classLevels,
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics(),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      resources: [activeFeatureSpellBenefitResource()],
+      spellcasting: {
+        sourceClassName: input.sourceClassName,
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [spellRecord(rayOfFrostUnitId)],
+        preparedSpells: [],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [],
+      },
+    },
+  };
+}
+
+function activeFeatureSpellBenefitTargetCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  return {
+    combatantId: skeletonId,
+    displayName: "Active Feature Spell Benefit Target",
+    initiative: initiativeScore(input.initiative),
+    side: oppositionSide,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("active-feature-spell-benefit-target"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: classLevel(1) }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics(),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+    },
+  };
+}
+
 function scalarBuffCasterCreatureInit(input: {
   readonly initiative: number;
 }): BattleCreatureInit {
@@ -10216,6 +10579,23 @@ function adrenalineRushUnitRef(
     throw new Error(unitRef.left.message);
   }
   return unitRef.right;
+}
+
+function activeFeatureSpellBenefitResource(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"]
+>[number] {
+  const unit = unitLibrary.requireUnit(sorcererInnateSorceryUnitId);
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "activation" ||
+    !("resource" in unit.mechanics)
+  ) {
+    throw new Error("Expected active feature spell benefit resource Unit.");
+  }
+  return { unit };
 }
 
 function rogueSteadyAimUnitRef(

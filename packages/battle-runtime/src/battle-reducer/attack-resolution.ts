@@ -76,7 +76,6 @@ import { CombatantId } from "../identity.ts";
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
-  ongoingFeatureSpellModifierSourceClassName,
   type BattleAttackActionAdditionalAttacks,
 } from "../unit-feature-support.ts";
 
@@ -1881,17 +1880,16 @@ function activeOngoingFeatureSpellSaveDcBonus(
   return [...activeOngoingFeatureOccurrencesForCombatant(caster)].reduce(
     (total, [key]) => {
       const profile = ongoingFeatureProfileForSourceKey(caster, key);
-      if (
-        profile === null ||
-        ongoingFeatureSpellModifierSourceClassName(profile) !==
-          spellcasting.sourceClassName
-      ) {
+      if (profile === null) {
         return total;
       }
       return (
         total +
         profile.spellModifiers.reduce(
-          (modifierTotal, modifier) => modifierTotal + modifier.saveDcBonus,
+          (modifierTotal, modifier) =>
+            modifier.sourceClassName === spellcasting.sourceClassName
+              ? modifierTotal + modifier.saveDcBonus
+              : modifierTotal,
           0,
         )
       );

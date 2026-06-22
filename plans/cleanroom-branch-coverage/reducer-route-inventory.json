@@ -580,26 +580,25 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE",
           "subjectFamily": "active feature spell-save and spell-attack benefit substrate",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
-              "No copied source qRoute connector currently extracts active feature spell-save and spell-attack benefit substrate from packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt exposes qRoute for UnitFeatureBonusActionRouteSubject, ActiveFeatureSpellSaveDcRouteSubject, and ActiveFeatureSpellAttackRollModeRouteSubject through action-economy, feature-resource, active-effect, spell-slot/action-economy, target-selection, and spell-attack procedure owners.",
+              "The route connector compares Spell Save DC and spell attack roll-mode projections after active feature activation and after a non-source spell exclusion case, so selected identity remains fixture/admission input rather than production dispatch."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is active feature spell-save and spell-attack benefit substrate."
+              ".references/srd-5.2.1/Classes/Sorcerer.md#Level 1: Innate Sorcery defines a Bonus Action active feature that increases the Spell Save DC of Sorcerer spells and grants Advantage on attack rolls of Sorcerer spells.",
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws and #Attack Rolls define Spell Save DC and spell attack roll calculations.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Save DC, Spell Invocation, Spell Effect, Attack Roll, Advantage, Bonus Action, and active feature lifecycle terms used by the route owner."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE before cleanroom target replay may infer this selected-identity behavior.",
-              "Route active feature benefits to spell save DC and spell attack roll mode by typed active-effect facts, not feature identity."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
@@ -3419,7 +3418,7 @@
           "taskId": "L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE",
           "subjectFamily": "active feature spell-save and spell-attack benefit substrate",
           "requiredSourceWork": [
-            "Route active feature benefits to spell save DC and spell attack roll mode by typed active-effect facts, not feature identity."
+            "Task 31 supplied packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt as generic active-feature spell benefit evidence through feature-resource, active-effect, spell-slot/action-economy, target-selection, and spell-attack procedure owners, with Spell Save DC and spell attack roll-mode projections routed by typed active-effect source facts rather than selected feature identity."
           ]
         }
       ]
