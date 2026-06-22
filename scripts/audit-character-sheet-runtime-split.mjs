@@ -13,9 +13,11 @@ const indexFile = path.join(repoRoot, indexPath);
 const baseRef = process.argv[2] ?? null;
 
 const EXPECTED_EXPORTS = [
+  "CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE",
   "CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS",
   "CHARACTER_SHEET_LONG_REST_BASE_TICKS",
   "CHARACTER_SHEET_LONG_REST_WAIT_TICKS",
+  "CHARACTER_SHEET_NO_HEROIC_INSPIRATION",
   "CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS",
   "CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES",
   "CHARACTER_SHEET_SHORT_REST_TICKS",
@@ -51,6 +53,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetHitDieState",
   "CharacterSheetHitPoints",
   "CharacterSheetHitPointsInput",
+  "CharacterSheetHeroicInspiration",
   "CharacterSheetId",
   "CharacterSheetInput",
   "CharacterSheetIssue",
@@ -258,7 +261,10 @@ function exportedFunctionImplementations(source, file) {
       implementations.push({
         name: statement.name.text,
         file: path.relative(repoRoot, file),
-        hash: createHash("sha256").update(normalized).digest("hex").slice(0, 16),
+        hash: createHash("sha256")
+          .update(normalized)
+          .digest("hex")
+          .slice(0, 16),
       });
     }
   }
@@ -300,7 +306,8 @@ function inspectBarrel(source, file) {
     }
 
     invalidStatements.push({
-      line: sourceFile.getLineAndCharacterOfPosition(statement.getStart()).line + 1,
+      line:
+        sourceFile.getLineAndCharacterOfPosition(statement.getStart()).line + 1,
       kind: ts.SyntaxKind[statement.kind],
     });
   }
@@ -343,7 +350,9 @@ function resolveRelativeModule(moduleSpecifier) {
 }
 
 function moduleExportNames(moduleFile) {
-  return new Set(extractExportNames(readFileSync(moduleFile, "utf8"), moduleFile));
+  return new Set(
+    extractExportNames(readFileSync(moduleFile, "utf8"), moduleFile),
+  );
 }
 
 const currentSource = readFileSync(indexFile, "utf8");
@@ -377,7 +386,9 @@ for (const reexport of currentBarrel.reexports) {
   reexportedModuleFiles.add(moduleFile);
   const moduleNames =
     moduleExportCache.get(moduleFile) ??
-    moduleExportCache.set(moduleFile, moduleExportNames(moduleFile)).get(moduleFile);
+    moduleExportCache
+      .set(moduleFile, moduleExportNames(moduleFile))
+      .get(moduleFile);
   if (!moduleNames.has(reexport.imported)) {
     missingModuleExports.push(reexport);
   }
@@ -387,10 +398,12 @@ const expectedMovedFunctions =
   baseRef === null
     ? EXPECTED_MOVED_FUNCTIONS
     : exportedFunctionImplementations(readBaseIndex(baseRef), indexFile);
-const currentFunctionImplementations = [...reexportedModuleFiles].flatMap((file) =>
-  exportedFunctionImplementations(readFileSync(file, "utf8"), file),
+const currentFunctionImplementations = [...reexportedModuleFiles].flatMap(
+  (file) => exportedFunctionImplementations(readFileSync(file, "utf8"), file),
 );
-const currentFunctionsByName = implementationsByName(currentFunctionImplementations);
+const currentFunctionsByName = implementationsByName(
+  currentFunctionImplementations,
+);
 const missingMovedFunctions = [];
 const changedMovedFunctions = [];
 
@@ -400,7 +413,9 @@ for (const expected of expectedMovedFunctions) {
     missingMovedFunctions.push(expected);
     continue;
   }
-  if (!current.some((implementation) => implementation.hash === expected.hash)) {
+  if (
+    !current.some((implementation) => implementation.hash === expected.hash)
+  ) {
     changedMovedFunctions.push({
       expected,
       current,
