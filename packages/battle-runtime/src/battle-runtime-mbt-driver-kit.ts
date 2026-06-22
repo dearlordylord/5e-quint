@@ -1012,6 +1012,9 @@ type ReducerRoutedSpellAttackOrderingProjection =
 type ReducerRoutedChainedAttackProcedureProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
+type ReducerRoutedIndependentSpellAttackSequenceProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
 type ActionSpellSubject = Extract<
   BattleSubject,
   { readonly tag: "actionSpell" }
@@ -1025,6 +1028,16 @@ type ChainedAttackProcedureAct = ReturnType<typeof discoverBattleActs>[number] &
   readonly subject: ChainedAttackProcedureSubject;
 };
 type ChainedAttackProcedureSlotLevel = 1 | 2;
+type IndependentSpellAttackSequenceSubject = ActionSpellSubject & {
+  readonly invocation: ActionSpellSubject["invocation"] & {
+    readonly procedure: "spellAttackSequence";
+  };
+};
+type IndependentSpellAttackSequenceAct = ReturnType<
+  typeof discoverBattleActs
+>[number] & {
+  readonly subject: IndependentSpellAttackSequenceSubject;
+};
 type ReducerRoutedHitPointRestorationOrderingProjection =
   HitPointRestorationOrderingProjection & {
     readonly route: readonly ReducerRouteEvent[];
@@ -1325,6 +1338,19 @@ const chainedAttackProcedureRouteDriverSchema = {
   doResolveStep1AttackHit: {},
   doResolveStep1DuplicateDamageSlot1Limit: {},
   doResolveStep1DuplicateDamageSlot2AllowsLeap: {},
+  step: {},
+} as const;
+
+const independentSpellAttackSequenceRouteDriverSchema = {
+  init: {},
+  doFillTwoCreatureTargets: {},
+  doFillFirstAttackMiss: {},
+  doFillFirstAttackHit: {},
+  doFillFirstDamageLow: {},
+  doFillSecondAttackMiss: {},
+  doFillSecondAttackHit: {},
+  doFillSecondDamageLow: {},
+  doRejectStaleAfterResolved: {},
   step: {},
 } as const;
 
@@ -3417,6 +3443,11 @@ const CHAINED_ATTACK_PROCEDURE_STEP1_SLOT2_LEAP_FACES = [
   1,
   1,
 ] as const;
+const INDEPENDENT_SPELL_ATTACK_SEQUENCE_ROUTE_SUBJECT =
+  "spellAttackProcedure" satisfies ReducerRouteSubjectFamily;
+const INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID = "eldritch_blast";
+const INDEPENDENT_SPELL_ATTACK_SEQUENCE_INITIAL_TARGET_HP = 13;
+const INDEPENDENT_SPELL_ATTACK_SEQUENCE_LOW_DAMAGE = 4;
 
 export function createChainedAttackProcedureRouteDriver() {
   return defineDriver(chainedAttackProcedureRouteDriverSchema, () => {
@@ -3590,6 +3621,199 @@ export function createChainedAttackProcedureRouteDriver() {
           routeFill: "rolledDice",
           owners: ["battleHitPoint", "battleSpellAttackProcedure"],
         });
+      },
+      step: () => {},
+      getState: () => ({ route }),
+    };
+  });
+}
+
+export function createIndependentSpellAttackSequenceRouteDriver() {
+  return defineDriver(independentSpellAttackSequenceRouteDriverSchema, () => {
+    let replayBaseState = independentSpellAttackSequenceBattle();
+    const subject = independentSpellAttackSequenceSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      replayBaseState = independentSpellAttackSequenceBattle();
+      const act = independentSpellAttackSequenceAct(replayBaseState);
+      fills = [];
+      holes = act.initialHoles;
+      route = [
+        reducerRouteStartBattle("battleActionEconomy"),
+        reducerRouteDiscoverBattleActs({
+          subject: INDEPENDENT_SPELL_ATTACK_SEQUENCE_ROUTE_SUBJECT,
+          holes,
+          owner: "battleActionEconomy",
+        }),
+        reducerRouteDiscoverBattleActs({
+          subject: INDEPENDENT_SPELL_ATTACK_SEQUENCE_ROUTE_SUBJECT,
+          holes: holes.filter((hole) => hole.kind === "objectTargetChoice"),
+          owner: "battleObjectTargetBoundary",
+        }),
+      ];
+    }
+
+    function recordResolvedFill(input: {
+      readonly nextFills: readonly BattleFill[];
+      readonly expectedTag: "needsHoles" | "resolved";
+      readonly routeFill: ReducerRouteFill;
+      readonly owners: readonly ReducerRouteOwnerGroup[];
+    }): void {
+      fills = fillsWithMbtSpellCastReactionFacts(holes, input.nextFills);
+      const result = resolveBattleSubject({
+        state: replayBaseState,
+        subject,
+        fills,
+      });
+      if (result.tag !== input.expectedTag) {
+        throw new Error(
+          `Expected independent spell attack sequence ${input.expectedTag}, got ${
+            result.tag
+          }: ${"message" in result ? result.message : ""}`,
+        );
+      }
+      if (input.routeFill === "rolledDice") {
+        assertIndependentSpellAttackSequenceTargetHp(
+          result.state,
+          independentSpellAttackSequenceExpectedTargetHp(fills),
+        );
+      }
+      if (result.tag === "resolved") {
+        replayBaseState = result.state;
+      }
+      holes = result.tag === "needsHoles" ? result.holes : [];
+      route = [
+        ...route,
+        ...input.owners.map((owner) =>
+          reducerRouteResolveBattleSubject({
+            subject: INDEPENDENT_SPELL_ATTACK_SEQUENCE_ROUTE_SUBJECT,
+            fill: input.routeFill,
+            holes,
+            owner,
+          }),
+        ),
+      ];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doFillTwoCreatureTargets: () => {
+        const [firstTarget, secondTarget] =
+          twoIndependentSpellAttackSequenceTargetHoles(holes);
+        recordResolvedFill({
+          nextFills: [
+            independentSpellAttackSequenceTargetFill(firstTarget),
+            independentSpellAttackSequenceTargetFill(secondTarget),
+          ],
+          expectedTag: "needsHoles",
+          routeFill: "targetChoice",
+          owners: ["battleTargetSelection", "battleSpellAttackProcedure"],
+        });
+      },
+      doFillFirstAttackMiss: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            attackRollFill(requireTypedHole(holes, "attackRoll"), {
+              total: 1,
+              naturalD20: 1,
+            }),
+          ],
+          expectedTag: "needsHoles",
+          routeFill: "attackRoll",
+          owners: ["battleAttackRoll", "battleSpellAttackProcedure"],
+        });
+      },
+      doFillFirstAttackHit: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            attackRollFill(requireTypedHole(holes, "attackRoll"), {
+              total: 18,
+              naturalD20: 12,
+            }),
+          ],
+          expectedTag: "needsHoles",
+          routeFill: "attackRoll",
+          owners: ["battleAttackRoll", "battleSpellAttackProcedure"],
+        });
+      },
+      doFillFirstDamageLow: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            damageRollFillWithGroups(requireTypedHole(holes, "rolledDice"), [
+              [INDEPENDENT_SPELL_ATTACK_SEQUENCE_LOW_DAMAGE],
+            ]),
+          ],
+          expectedTag: "needsHoles",
+          routeFill: "rolledDice",
+          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
+        });
+      },
+      doFillSecondAttackMiss: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            attackRollFill(requireTypedHole(holes, "attackRoll"), {
+              total: 1,
+              naturalD20: 1,
+            }),
+          ],
+          expectedTag: "resolved",
+          routeFill: "attackRoll",
+          owners: ["battleAttackRoll", "battleSpellAttackProcedure"],
+        });
+      },
+      doFillSecondAttackHit: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            attackRollFill(requireTypedHole(holes, "attackRoll"), {
+              total: 18,
+              naturalD20: 12,
+            }),
+          ],
+          expectedTag: "needsHoles",
+          routeFill: "attackRoll",
+          owners: ["battleAttackRoll", "battleSpellAttackProcedure"],
+        });
+      },
+      doFillSecondDamageLow: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            damageRollFillWithGroups(requireTypedHole(holes, "rolledDice"), [
+              [INDEPENDENT_SPELL_ATTACK_SEQUENCE_LOW_DAMAGE],
+            ]),
+          ],
+          expectedTag: "resolved",
+          routeFill: "rolledDice",
+          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
+        });
+      },
+      doRejectStaleAfterResolved: () => {
+        const result = resolveBattleSubject({
+          state: replayBaseState,
+          subject,
+          fills,
+        });
+        if (result.tag !== "invalid" || result.reason !== "staleSubject") {
+          throw new Error("Expected stale independent spell attack sequence.");
+        }
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubjectWithoutFill({
+            subject: INDEPENDENT_SPELL_ATTACK_SEQUENCE_ROUTE_SUBJECT,
+            holes: [],
+            owner: "battleHoleFrontier",
+          }),
+        ];
       },
       step: () => {},
       getState: () => ({ route }),
@@ -5990,6 +6214,15 @@ function normalizeReducerRoutedChainedAttackProcedureQuintState(
   };
 }
 
+function normalizeReducerRoutedIndependentSpellAttackSequenceQuintState(
+  raw: unknown,
+): ReducerRoutedIndependentSpellAttackSequenceProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
 function normalizeHitPointRestorationOrderingQuintState(
   raw: unknown,
 ): HitPointRestorationOrderingProjection {
@@ -6504,6 +6737,16 @@ export const reducerRoutedChainedAttackProcedureStateCheck = stateCheck(
   (
     spec: ReducerRoutedChainedAttackProcedureProjection,
     impl: ReducerRoutedChainedAttackProcedureProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedIndependentSpellAttackSequenceStateCheck = stateCheck(
+  normalizeReducerRoutedIndependentSpellAttackSequenceQuintState,
+  (
+    spec: ReducerRoutedIndependentSpellAttackSequenceProjection,
+    impl: ReducerRoutedIndependentSpellAttackSequenceProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;
@@ -7577,6 +7820,21 @@ function spellAttackSubject(
   };
 }
 
+function independentSpellAttackSequenceSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+> {
+  return {
+    tag: "actionSpell",
+    actorId: spellCasterId,
+    invocation: cantripSpellInvocationRef(
+      INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID,
+      "spellAttackSequence",
+    ),
+    mode: { tag: "cast" },
+  };
+}
+
 function chainedAttackProcedureAct(
   state: BattleState,
   slotLevel: ChainedAttackProcedureSlotLevel,
@@ -7594,6 +7852,45 @@ function chainedAttackProcedureAct(
     );
   }
   return act;
+}
+
+function independentSpellAttackSequenceAct(
+  state: BattleState,
+): IndependentSpellAttackSequenceAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is IndependentSpellAttackSequenceAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === spellCasterId &&
+      candidate.subject.invocation.spellId ===
+        INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID &&
+      candidate.subject.invocation.procedure === "spellAttackSequence",
+  );
+  if (act === undefined) {
+    throw new Error("Expected independent spell attack sequence act.");
+  }
+  return act;
+}
+
+function twoIndependentSpellAttackSequenceTargetHoles(
+  holes: readonly BattleHole[],
+): readonly [
+  Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  Extract<BattleHole, { readonly kind: "targetChoice" }>,
+] {
+  const targetHoles = holes.filter(
+    (
+      hole,
+    ): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+      hole.kind === "targetChoice",
+  );
+  const first = targetHoles[0];
+  const second = targetHoles[1];
+  if (first === undefined || second === undefined || targetHoles.length !== 2) {
+    throw new Error(
+      "Expected exactly two independent spell attack sequence target holes.",
+    );
+  }
+  return [first, second];
 }
 
 function chainedAttackProcedureSlotLevel(
@@ -7631,6 +7928,47 @@ function requireChainedAttackProcedureSubject(
 ): ChainedAttackProcedureSubject {
   if (subject !== null) return subject;
   throw new Error("Expected chained attack procedure subject.");
+}
+
+function independentSpellAttackSequenceTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: spellTargetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: spellCasterId,
+        targetId: spellTargetId,
+        spellId: INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID,
+      },
+    ],
+  };
+}
+
+function independentSpellAttackSequenceExpectedTargetHp(
+  fills: readonly BattleFill[],
+): number {
+  const damageFillCount = fills.filter((fill) => fill.kind === "rolledDice")
+    .length;
+  return (
+    INDEPENDENT_SPELL_ATTACK_SEQUENCE_INITIAL_TARGET_HP -
+    damageFillCount * INDEPENDENT_SPELL_ATTACK_SEQUENCE_LOW_DAMAGE
+  );
+}
+
+function assertIndependentSpellAttackSequenceTargetHp(
+  state: BattleState,
+  expectedTargetHp: number,
+): void {
+  const target = snapshotCombatant(state, spellTargetId);
+  if (target.hp !== expectedTargetHp) {
+    throw new Error(
+      `Expected independent spell attack target Hit Points ${expectedTargetHp}, got ${target.hp}.`,
+    );
+  }
 }
 
 function healingWordSubject(): Extract<
@@ -7861,6 +8199,16 @@ function chainedAttackProcedureBattle(): BattleState {
       chainedAttackProcedureSecondTargetId,
       chainedAttackProcedureThirdTargetId,
     ],
+  });
+}
+
+function independentSpellAttackSequenceBattle(): BattleState {
+  return spellBattle({
+    cantrips: [spellRecord(INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID)],
+    spellSlots: [],
+    casterClassLevels: [{ className: "warlock", level: 5 }],
+    targetHp: INDEPENDENT_SPELL_ATTACK_SEQUENCE_INITIAL_TARGET_HP,
+    targetMaxHp: INDEPENDENT_SPELL_ATTACK_SEQUENCE_INITIAL_TARGET_HP,
   });
 }
 
@@ -9361,7 +9709,7 @@ function rolledDiceGroup(
 function reducerRouteHolesFromRuntime(
   holes: readonly Pick<BattleHole, "kind">[],
 ): readonly ReducerRouteHole[] {
-  return holes.flatMap(reducerRouteHolesFromRuntimeHole).sort();
+  return [...new Set(holes.flatMap(reducerRouteHolesFromRuntimeHole))].sort();
 }
 
 function reducerRouteHolesFromRuntimeHole(

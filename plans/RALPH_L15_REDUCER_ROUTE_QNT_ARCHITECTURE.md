@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Route independent multi-beam spell attack sequence drivers"
     },
     {
@@ -343,7 +343,7 @@ The route classes are deliberately not all `reducer-routed`:
 |  19 | L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES - Route reaction spell and interrupt-stack resume drivers           | done | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                      | Routes reaction spending, interrupt-stack continuation, and spell-cast resume without replay islands. |
 |  20 | L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES - Route companion lifecycle and object-target boundary drivers | done | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                    | Keeps companion state in battle owners and table-owned object facts as boundary fills.        |
 |  21 | L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES - Route ability-check, Search, and choice spell-effect drivers   | done | L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                                                                      | Routes Search, skill, and ability-choice holes through reducer subjects and table-supplied facts. |
-|  22 | L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES - Route independent multi-beam spell attack sequence drivers | ready-for-research | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES                                                                                                                 | Reuses the generic multi-step spell/attack procedure owner before routing independent beam sequences. |
+|  22 | L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES - Route independent multi-beam spell attack sequence drivers | done | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES                                                                                                                 | Reuses the generic multi-step spell/attack procedure owner before routing independent beam sequences. |
 |  23 | L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES - Split level-1 selected spell identity bundles into generic substrates | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Fixes source QNT/guidance before grouped level-1 selected spell identity replay counts.       |
 |  24 | L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES - Route species passive trait battle substrates                | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Splits passive trait damage, save, movement, and size/speed owners.                           |
 |  25 | L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES - Route condition and d20 roll modifier feature substrates | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                         | Routes feature-hosted roll modes and condition suppression without feature identity dispatch.  |
@@ -1672,7 +1672,7 @@ Plan Impact:
 
 ### Task 22 - L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 

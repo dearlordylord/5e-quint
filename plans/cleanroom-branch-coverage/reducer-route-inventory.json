@@ -564,21 +564,31 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES",
           "subjectFamily": "independent multi-beam spell attack sequence route",
+          "requiredReducerEntrypoints": [
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns independent spell-attack sequence progress through the typed spell procedure subject: per-beam target admission, Attack Roll resolution, Hit Point damage, and sequence continuation. Object target identity, Armor Class, range, and Hit Point facts remain table-supplied boundary fills at the object-target boundary.",
+          "acceptanceCondition": "Target replay evidence routes independent multi-beam spell attack fills through SpellAttackProcedureRouteSubject and BattleSpellAttackProcedureOwner, with object-target alternatives documented as BattleObjectTargetBoundaryOwner evidence and no selected spell identity dispatch.",
           "branchObligations": 8,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt exposes qRoute for SpellAttackProcedureRouteSubject through action-economy, object-target boundary, target-selection, attack-roll, Hit Point, spell-attack procedure, and stale-replay hole-frontier owners."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast defines one creature or object target per beam, two beams at level 5, same-or-different target choice, separate attack rolls per beam, and 1d10 Force damage on a hit.",
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets and #Attack Rolls define spell target choice and spell attack modifiers.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack and #Damage Rolls define target, attack roll, hit, and damage order.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Breaking Objects defines object AC and Hit Point facts as object/table facts.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Attack, Table Decision, Attack Roll, Damage, Resolve, Apply, and Advance terms used by the route owner."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {

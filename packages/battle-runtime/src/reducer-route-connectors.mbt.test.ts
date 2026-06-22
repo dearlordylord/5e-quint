@@ -11,6 +11,7 @@ import {
   createCommandOrderingRouteDriver,
   createDeathSavingThrowRouteDriver,
   createHitPointRestorationOrderingRouteDriver,
+  createIndependentSpellAttackSequenceRouteDriver,
   createMagicMissileRouteDriver,
   createScalarBuffRouteDriver,
   createSaveGatedSpellOrderingRouteDriver,
@@ -25,6 +26,7 @@ import {
   reducerRoutedHitPointRestorationOrderingStateCheck,
   reducerRoutedAdrenalineRushStateCheck,
   reducerRoutedChainedAttackProcedureStateCheck,
+  reducerRoutedIndependentSpellAttackSequenceStateCheck,
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedCommandOrderingStateCheck,
   reducerRoutedScalarBuffStateCheck,
@@ -128,6 +130,22 @@ describe("battle reducer route connector MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(8),
       stateCheck: reducerRoutedChainedAttackProcedureStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes independent spell Attack sequences through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-eldritch-blast.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createIndependentSpellAttackSequenceRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(4),
+      stateCheck: reducerRoutedIndependentSpellAttackSequenceStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 
