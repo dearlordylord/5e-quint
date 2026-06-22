@@ -860,6 +860,10 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "passiveAbilityCheckRollMode",
   "creatureSpaceMovementPermission",
   "creatureStatProjection",
+  "movementResource",
+  "specialSpeedProjection",
+  "forcedMovement",
+  "activeFormLifecycle",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -5866,6 +5870,10 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   CreatureSpaceMovementPermissionRouteSubject:
     "creatureSpaceMovementPermission",
   CreatureStatProjectionRouteSubject: "creatureStatProjection",
+  MovementResourceRouteSubject: "movementResource",
+  SpecialSpeedProjectionRouteSubject: "specialSpeedProjection",
+  ForcedMovementRouteSubject: "forcedMovement",
+  ActiveFormLifecycleRouteSubject: "activeFormLifecycle",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {

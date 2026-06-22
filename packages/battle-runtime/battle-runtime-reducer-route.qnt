@@ -48,6 +48,10 @@ module battleRuntimeReducerRoute {
     | PassiveAbilityCheckRollModeRouteSubject
     | CreatureSpaceMovementPermissionRouteSubject
     | CreatureStatProjectionRouteSubject
+    | MovementResourceRouteSubject
+    | SpecialSpeedProjectionRouteSubject
+    | ForcedMovementRouteSubject
+    | ActiveFormLifecycleRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner

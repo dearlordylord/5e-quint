@@ -532,26 +532,24 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "feature movement, Dash, teleport, and form lifecycle substrates",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
+          "subjectFamily": "active-form lifecycle, form stat projection, and movement-resource substrates",
           "branchObligations": 7,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s).",
-              "No copied source qRoute connector currently extracts feature movement, Dash, teleport, and form lifecycle substrates from packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.route.mbt.qnt records ActiveFormLifecycleRouteSubject evidence for form assumption, reuse, turn-boundary action reset, dismissal, Incapacitated reversion, death reversion, and terminal no-op stutter through action-economy, feature-resource, Temporary Hit Point, active-effect, creature-state, movement-resource, condition-lifecycle, Hit Point/zero-HP lifecycle, and turn-boundary owners.",
+              "Selected Wild Shape form identity remains a catalog, known-form roster, admission, caller-selection, and SRD fixture boundary; reducer evidence flows through active-form lifecycle state, typed form stat projection, equipment-disposition fills, and movement-resource owners."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is feature movement, Dash, teleport, and form lifecycle substrates."
+              ".references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape defines Bonus Action shape-shifting into a learned Beast form, use spending, Temporary Hit Points, Beast stat projection, no spellcasting, reuse replacement, Bonus Action dismissal, and ending on Incapacitated or death.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Shape-Shifting and #Speed plus UBIQUITOUS_LANGUAGE.md define form lifecycle, creature stat projection, Speed, Movement, and active-effect ownership."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split movement-resource, active-form, climb/swim/fly speed, forced movement, and teleport route owners before selected movement or form identity replay counts."
-            ]
+            "blockers": []
           },
-          "followUpTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES"
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
@@ -876,26 +874,25 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-          "subjectFamily": "feature movement, Dash, teleport, and form lifecycle substrates",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
+          "subjectFamily": "movement-resource, special-speed, Dash, and forced-movement substrates",
           "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 2,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
-              "No copied source qRoute connector currently extracts feature movement, Dash, teleport, and form lifecycle substrates from packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt records MovementResourceRouteSubject, SpecialSpeedProjectionRouteSubject, and ForcedMovementRouteSubject evidence for spell-granted Dash, passive-speed Dash, climb/swim special-speed movement, Dissonant Whispers forced Reaction movement, and Command Flee target-turn movement through spell-slot/action-economy, action-economy, active-effect, creature-state, movement-resource, interrupt-stack, and turn-boundary owners.",
+              "Selected spell and feature identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through movement mode, Speed facts, movement fills, active effects, and movement-resource owners."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is feature movement, Dash, teleport, and form lifecycle substrates."
+              ".references/srd-5.2.1/Playing-the-Game.md#Dash and .references/srd-5.2.1/Rules-Glossary.md#Dash [Action] define Dash as extra Movement equal to the chosen Speed.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Speed, #Climb Speed, #Swim Speed, and #Fly Speed plus UBIQUITOUS_LANGUAGE.md define Speed facts, special-speed movement modes, and Movement as budget consumption.",
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Command and #Dissonant Whispers define spell effects requiring target movement, while .references/srd-5.2.1/Spells/Descriptions-E-L.md#Expeditious Retreat defines a spell-granted Dash action."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Split movement-resource, active-form, climb/swim/fly speed, forced movement, and teleport route owners before selected movement or form identity replay counts."
-            ]
+            "blockers": []
           },
-          "followUpTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES"
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
@@ -2738,9 +2735,11 @@
           "levelDenominatorScope": "in-denominator",
           "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt exposes doBarbarianFastMovementDash under branch family step."
+              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt exposes doBarbarianFastMovementDash under branch family step.",
+              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt records MovementResourceRouteSubject evidence for passive-speed Dash through action-economy, creature-state, and movement-resource owners."
             ],
             "rawDomainFacts": [
               "Barbarian Fast Movement is a level-5 feature.",
@@ -2758,9 +2757,11 @@
           "levelDenominatorScope": "out-of-denominator",
           "route": "catalog-after-substrate",
           "routeTaskId": "out-of-level-1-5-denominator",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt exposes doRangerRovingClimbSwimMovement under branch family step."
+              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt exposes doRangerRovingClimbSwimMovement under branch family step.",
+              "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt records SpecialSpeedProjectionRouteSubject and MovementResourceRouteSubject evidence for climb/swim special-speed movement through creature-state and movement-resource owners."
             ],
             "rawDomainFacts": [
               "Ranger Roving is a level-6 feature.",
@@ -3290,7 +3291,9 @@
           "taskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
           "subjectFamily": "feature movement, Dash, teleport, and form lifecycle substrates",
           "requiredSourceWork": [
-            "Split movement-resource, active-form, climb/swim/fly speed, forced movement, and teleport route owners before selected movement or form identity replay counts."
+            "Task 27 supplied packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.route.mbt.qnt as generic active-form lifecycle evidence through action-economy, feature-resource, Temporary Hit Point, active-effect, creature-state, movement-resource, condition-lifecycle, Hit Point/zero-HP lifecycle, turn-boundary owners, and terminal no-op stutter coverage.",
+            "Task 27 supplied packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt as generic movement-resource, special-speed projection, Dash, and forced-movement evidence through spell-slot/action-economy, action-economy, active-effect, creature-state, movement-resource, interrupt-stack, and turn-boundary owners.",
+            "Teleport destination legality remains a table-owned boundary fill; self-teleport replay should use the existing self-teleport QNT owner or a future route connector rather than inferred selected identity."
           ]
         },
         {
