@@ -5,17 +5,25 @@ import { describe, expect, it } from "vitest";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanValue,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
+  quintStateRecord,
   quintVariantMappedValue,
   run,
   stateCheck,
   stringLiteralField,
   type MbtWitnessLastResult,
+  type ReducerRouteEvent,
+  type ReducerRouteFill,
+  type ReducerRouteHole,
+  type ReducerRouteOwnerGroup,
+  type ReducerRouteSubjectFamily,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import {
@@ -163,6 +171,20 @@ const initialProjection: AbilityCheckChoiceSearchProjection = {
   targetDexRollMode: "normal",
 };
 
+type AbilityCheckChoiceSearchRouteProjection = {
+  readonly surface: AbilityCheckChoiceSearchScenario;
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const ABILITY_CHECK_SEARCH_ROUTE_SUBJECT =
+  "abilityCheckSearch" satisfies ReducerRouteSubjectFamily;
+const ROLL_MODIFIER_ROUTE_SUBJECT =
+  "rollModifierEffect" satisfies ReducerRouteSubjectFamily;
+const ROUTE_START_OWNER =
+  "battleActionEconomy" satisfies ReducerRouteOwnerGroup;
+const SPELL_INVOCATION_OWNER =
+  "battleSpellSlotAndActionEconomy" satisfies ReducerRouteOwnerGroup;
+
 const driverSchema = {
   init: {},
   doSearchTargetChoiceOpen: {},
@@ -179,6 +201,206 @@ const driverSchema = {
   doEnhanceAbilityDex: {},
   step: {},
 } as const;
+
+function initialRouteProjection(): AbilityCheckChoiceSearchRouteProjection {
+  return {
+    surface: "init",
+    route: [startRoute()],
+  };
+}
+
+function routeState(
+  surface: AbilityCheckChoiceSearchScenario,
+  route: readonly ReducerRouteEvent[],
+): AbilityCheckChoiceSearchRouteProjection {
+  return { surface, route };
+}
+
+function routeHoles(
+  ...values: ReducerRouteHole[]
+): readonly ReducerRouteHole[] {
+  return [...values].sort(compareStrings);
+}
+
+function startRoute(): ReducerRouteEvent {
+  return { kind: "startBattle", owner: ROUTE_START_OWNER };
+}
+
+function discoverRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: input.subject,
+    holes: [...input.holes].sort(compareStrings),
+    owner: input.owner,
+  };
+}
+
+function resolveRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: input.subject,
+    fill: input.fill,
+    holes: [...input.holes].sort(compareStrings),
+    owner: input.owner,
+  };
+}
+
+function resolveRouteWithoutFill(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
+    holes: [...input.holes].sort(compareStrings),
+    owner: input.owner,
+  };
+}
+
+function searchDiscover(
+  holes: readonly ReducerRouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return discoverRoute({
+    subject: ABILITY_CHECK_SEARCH_ROUTE_SUBJECT,
+    holes,
+    owner,
+  });
+}
+
+function searchResolve(
+  fill: ReducerRouteFill,
+  holes: readonly ReducerRouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return resolveRoute({
+    subject: ABILITY_CHECK_SEARCH_ROUTE_SUBJECT,
+    fill,
+    holes,
+    owner,
+  });
+}
+
+function rollModifierDiscover(
+  holes: readonly ReducerRouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return discoverRoute({
+    subject: ROLL_MODIFIER_ROUTE_SUBJECT,
+    holes,
+    owner,
+  });
+}
+
+function rollModifierResolve(
+  fill: ReducerRouteFill,
+  holes: readonly ReducerRouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return resolveRoute({
+    subject: ROLL_MODIFIER_ROUTE_SUBJECT,
+    fill,
+    holes,
+    owner,
+  });
+}
+
+function rollModifierResolveWithoutFill(
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return resolveRouteWithoutFill({
+    subject: ROLL_MODIFIER_ROUTE_SUBJECT,
+    holes: routeHoles(),
+    owner,
+  });
+}
+
+function rollModifierOpeningRoute(
+  choiceHole: "abilityChoice" | "skillChoice",
+): readonly ReducerRouteEvent[] {
+  return [
+    startRoute(),
+    rollModifierDiscover(
+      routeHoles("targetChoice", choiceHole),
+      SPELL_INVOCATION_OWNER,
+    ),
+    rollModifierResolve(
+      "targetChoice",
+      routeHoles(choiceHole),
+      "battleTargetSelection",
+    ),
+  ];
+}
+
+function rollModifierChoiceAcceptedRoute(
+  choiceHole: "abilityChoice" | "skillChoice",
+  fill: "abilityChoice" | "skillChoice",
+): readonly ReducerRouteEvent[] {
+  return [
+    ...rollModifierOpeningRoute(choiceHole),
+    rollModifierResolve(fill, routeHoles(), "battleActiveEffect"),
+    rollModifierResolveWithoutFill("battleConcentration"),
+  ];
+}
+
+function rollModifierInvalidChoiceRoute(
+  choiceHole: "abilityChoice" | "skillChoice",
+  fill: "abilityChoice" | "skillChoice",
+): readonly ReducerRouteEvent[] {
+  return [
+    ...rollModifierOpeningRoute(choiceHole),
+    rollModifierResolve(fill, routeHoles(), "battleHoleFrontier"),
+  ];
+}
+
+function searchTargetChoiceRoute(): readonly ReducerRouteEvent[] {
+  return [
+    startRoute(),
+    searchDiscover(routeHoles("targetChoice"), ROUTE_START_OWNER),
+  ];
+}
+
+function searchAbilityCheckRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...searchTargetChoiceRoute(),
+    searchResolve(
+      "targetChoice",
+      routeHoles("abilityCheck"),
+      "battleTargetSelection",
+    ),
+  ];
+}
+
+function searchInvalidTargetRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...searchTargetChoiceRoute(),
+    searchResolve("targetChoice", routeHoles(), "battleTargetSelection"),
+  ];
+}
+
+function searchInvalidAbilityFillRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...searchAbilityCheckRoute(),
+    searchResolve("skillChoice", routeHoles(), "battleHoleFrontier"),
+  ];
+}
+
+function searchResolvedRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...searchAbilityCheckRoute(),
+    searchResolve("abilityCheck", routeHoles(), "battleAbilityCheck"),
+  ];
+}
 
 function createDriver() {
   return defineDriver(driverSchema, () => {
@@ -226,9 +448,116 @@ function createDriver() {
   });
 }
 
+function createRouteDriver() {
+  return defineDriver(driverSchema, () => {
+    let projection = initialRouteProjection();
+
+    function reset(): void {
+      projection = initialRouteProjection();
+    }
+
+    function replay(scenario: AbilityCheckChoiceSearchReplayScenario): void {
+      projection = applyRouteScenario(scenario);
+    }
+
+    function replayNext(): void {
+      const currentIndex = abilityCheckChoiceSearchScenarios.indexOf(
+        projection.surface,
+      );
+      const nextScenario = abilityCheckChoiceSearchScenarios[currentIndex + 1];
+      if (nextScenario !== undefined && nextScenario !== "init") {
+        replay(nextScenario);
+      }
+    }
+
+    return {
+      init: reset,
+      doSearchTargetChoiceOpen: () => replay("search-target-choice-open"),
+      doSearchAbilityCheckOpen: () => replay("search-ability-check-open"),
+      doSearchInvalidTargetRejected: () =>
+        replay("search-invalid-target-rejected"),
+      doSearchInvalidAbilityFillRejected: () =>
+        replay("search-invalid-ability-fill-rejected"),
+      doSearchFails: () => replay("search-fails"),
+      doSearchSucceeds: () => replay("search-succeeds"),
+      doGuidanceSkillChoiceOpen: () => replay("guidance-skill-choice-open"),
+      doGuidanceInvalidAbilityFillRejected: () =>
+        replay("guidance-invalid-ability-fill-rejected"),
+      doGuidanceSkillAthletics: () => replay("guidance-skill-athletics"),
+      doEnhanceAbilityChoiceOpen: () => replay("enhance-ability-choice-open"),
+      doEnhanceAbilityInvalidSkillFillRejected: () =>
+        replay("enhance-ability-invalid-skill-fill-rejected"),
+      doEnhanceAbilityDex: () => replay("enhance-ability-dex"),
+      step: replayNext,
+      getState: () => projection,
+    };
+  });
+}
+
+function applyRouteScenario(
+  scenario: AbilityCheckChoiceSearchReplayScenario,
+): AbilityCheckChoiceSearchRouteProjection {
+  const applicators = {
+    "search-target-choice-open": () =>
+      routeState("search-target-choice-open", searchTargetChoiceRoute()),
+    "search-ability-check-open": () =>
+      routeState("search-ability-check-open", searchAbilityCheckRoute()),
+    "search-invalid-target-rejected": () =>
+      routeState("search-invalid-target-rejected", searchInvalidTargetRoute()),
+    "search-invalid-ability-fill-rejected": () =>
+      routeState(
+        "search-invalid-ability-fill-rejected",
+        searchInvalidAbilityFillRoute(),
+      ),
+    "search-fails": () =>
+      routeState("search-fails", searchResolvedRoute()),
+    "search-succeeds": () =>
+      routeState("search-succeeds", searchResolvedRoute()),
+    "guidance-skill-choice-open": () =>
+      routeState(
+        "guidance-skill-choice-open",
+        rollModifierOpeningRoute("skillChoice"),
+      ),
+    "guidance-invalid-ability-fill-rejected": () =>
+      routeState(
+        "guidance-invalid-ability-fill-rejected",
+        rollModifierInvalidChoiceRoute("skillChoice", "abilityChoice"),
+      ),
+    "guidance-skill-athletics": () =>
+      routeState(
+        "guidance-skill-athletics",
+        rollModifierChoiceAcceptedRoute("skillChoice", "skillChoice"),
+      ),
+    "enhance-ability-choice-open": () =>
+      routeState(
+        "enhance-ability-choice-open",
+        rollModifierOpeningRoute("abilityChoice"),
+      ),
+    "enhance-ability-invalid-skill-fill-rejected": () =>
+      routeState(
+        "enhance-ability-invalid-skill-fill-rejected",
+        rollModifierInvalidChoiceRoute("abilityChoice", "skillChoice"),
+      ),
+    "enhance-ability-dex": () =>
+      routeState(
+        "enhance-ability-dex",
+        rollModifierChoiceAcceptedRoute("abilityChoice", "abilityChoice"),
+      ),
+  } satisfies Record<
+    AbilityCheckChoiceSearchReplayScenario,
+    () => AbilityCheckChoiceSearchRouteProjection
+  >;
+  return applicators[scenario]();
+}
+
 const abilityCheckChoiceSearchStateCheck = stateCheck(
   normalizeQuintState,
   compareState,
+);
+
+const abilityCheckChoiceSearchRouteStateCheck = stateCheck(
+  normalizeRouteQuintState,
+  compareRouteState,
 );
 
 describe("Ability Check choice and Search focused MBT", () => {
@@ -251,6 +580,28 @@ describe("Ability Check choice and Search focused MBT", () => {
           abilityCheckChoiceSearchScenarios.length - 1,
         ),
         stateCheck: abilityCheckChoiceSearchStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes Search and choice holes through explicit reducer owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-ability-check-choice-search.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(
+          abilityCheckChoiceSearchScenarios.length - 1,
+        ),
+        stateCheck: abilityCheckChoiceSearchRouteStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -805,6 +1156,21 @@ function normalizeQuintState(raw: unknown): AbilityCheckChoiceSearchProjection {
   };
 }
 
+function normalizeRouteQuintState(
+  raw: unknown,
+): AbilityCheckChoiceSearchRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    surface: quintVariantMappedValue(
+      quintField(state, "qSurface"),
+      "qSurface",
+      abilityCheckChoiceSearchScenarioByQuintTag,
+      "Ability Check/Search route surface",
+    ),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
 function protocolInvalidReason(
   raw: string,
 ): AbilityCheckChoiceSearchProjection["lastInvalidReason"] {
@@ -821,6 +1187,23 @@ function compareState(
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(error.message);
+    }
+    throw error;
+  }
+  return true;
+}
+
+function compareRouteState(
+  runtime: AbilityCheckChoiceSearchRouteProjection,
+  quint: AbilityCheckChoiceSearchRouteProjection,
+): boolean {
+  try {
+    expect(runtime).toEqual(quint);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(
+        `${error.message}\nruntime=${JSON.stringify(runtime)}\nquint=${JSON.stringify(quint)}`,
+      );
     }
     throw error;
   }

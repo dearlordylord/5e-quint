@@ -236,21 +236,32 @@
       "driverRouteAssignments": [
         {
           "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
           "subjectFamily": "ability-check, Search, and choice spell-effect route",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns Search action resources, target admission progress, hidden-target reveal state, roll-modifier active effects, and Concentration; hidden candidate discovery, vicinity, target admission facts, and roll totals remain table/caller boundary fills.",
+          "acceptanceCondition": "Target replay evidence routes Search target choice and Ability Check fills through ability/search owners, and routes Guidance/Enhance Ability skill and ability choices through roll-modifier active-effect and Concentration owners without spell or fixture identity dispatch.",
           "branchObligations": 12,
           "currentOutOfScopeBranchObligations": 3,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt exposes qRoute for AbilityCheckSearchRouteSubject and RollModifierEffectRouteSubject through action-economy, target-selection, hole-frontier, ability-check, active-effect, and Concentration owners."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Playing-the-Game.md#Ability Checks defines Ability Check totals against a Difficulty Class.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Actions and .references/srd-5.2.1/Rules-Glossary.md#Search [Action] define Search as a Wisdom check to discern non-obvious facts.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Hide [Action] defines a hidden creature's Hide total as the DC to find it with Wisdom (Perception).",
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Guidance and #Enhance Ability define skill-choice and ability-choice Ability Check modifier effects.",
+              "UBIQUITOUS_LANGUAGE.md defines Ability Check, Skill, Action, Search, Spell Invocation, Spell Effect, and Concentration."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {
@@ -2452,19 +2463,20 @@
           "currentScopeReason": "Enhance Ability is a level-2 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityChoiceOpen under branch family step."
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityChoiceOpen under branch family step.",
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt records the ability-choice frontier through RollModifierEffectRouteSubject with spell invocation and target-selection owner evidence."
             ],
             "rawDomainFacts": [
               "Enhance Ability is a level-2 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enhance Ability defines choosing an ability and applying Advantage on Ability Checks using that ability."
             ],
-            "blockers": [
-              "Task 11 left this level-2 spell branch out of branch scope because the battle ability/search/choice route is still substrate-first; L15-RR21 owns the generic route connector."
-            ]
+            "blockers": []
           }
         },
         {
@@ -2474,19 +2486,20 @@
           "currentScopeReason": "Enhance Ability is a level-2 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityDex under branch family step."
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityDex under branch family step.",
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt records accepted ability-choice fills through RollModifierEffectRouteSubject, BattleActiveEffectOwner, and BattleConcentrationOwner."
             ],
             "rawDomainFacts": [
               "Enhance Ability is a level-2 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enhance Ability defines Dexterity as one allowed chosen ability for an Ability Check Advantage effect."
             ],
-            "blockers": [
-              "Task 11 left this level-2 spell branch out of branch scope because the battle ability/search/choice route is still substrate-first; L15-RR21 owns the generic route connector."
-            ]
+            "blockers": []
           }
         },
         {
@@ -2496,19 +2509,20 @@
           "currentScopeReason": "Enhance Ability is a level-2 spell.",
           "currentReplay": "observable-from-step",
           "levelDenominatorScope": "in-denominator",
-          "route": "substrate-first",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityInvalidSkillFillRejected under branch family step."
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityInvalidSkillFillRejected under branch family step.",
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt records wrong-kind skill-choice rejection on an ability-choice frontier through BattleHoleFrontierOwner."
             ],
             "rawDomainFacts": [
               "Enhance Ability is a level-2 spell.",
-              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane."
+              "The L1-5 denominator means character levels 1 through 5 and spell levels 0 through 3 reachable by those characters; spell levels 4 and 5, character levels 6 and 7, and Epic Boons stay outside this lane.",
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enhance Ability defines an ability choice, not a skill choice, for this effect."
             ],
-            "blockers": [
-              "Task 11 left this level-2 spell branch out of branch scope because the battle ability/search/choice route is still substrate-first; L15-RR21 owns the generic route connector."
-            ]
+            "blockers": []
           }
         },
         {

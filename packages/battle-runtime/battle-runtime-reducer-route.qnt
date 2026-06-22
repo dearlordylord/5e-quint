@@ -10,6 +10,7 @@ module battleRuntimeReducerRoute {
 
   type ReducerRouteSubjectFamily =
     | BattleActionRouteSubject
+    | AbilityCheckSearchRouteSubject
     | SlotSpellRouteSubject
     | SaveGatedSpellRouteSubject
     | HitPointRestorationRouteSubject

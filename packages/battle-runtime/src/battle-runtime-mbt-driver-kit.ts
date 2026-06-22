@@ -822,6 +822,7 @@ type BattleCombatantState =
     : never;
 const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "battleAction",
+  "abilityCheckSearch",
   "slotSpell",
   "saveGatedSpell",
   "hitPointRestoration",
@@ -5588,6 +5589,7 @@ export function createRogueSteadyAimDriver(
 
 const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   BattleActionRouteSubject: "battleAction",
+  AbilityCheckSearchRouteSubject: "abilityCheckSearch",
   SlotSpellRouteSubject: "slotSpell",
   SaveGatedSpellRouteSubject: "saveGatedSpell",
   HitPointRestorationRouteSubject: "hitPointRestoration",
