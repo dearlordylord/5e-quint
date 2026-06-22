@@ -839,7 +839,11 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "deathSavingThrow",
   "concentrationTeardown",
   "commandEffect",
+  "rollModifierEffect",
   "scalarBuffEffect",
+  "repeatSaveConditionEffect",
+  "turnBoundaryEffectLifecycle",
+  "zeroHitPointSpellEffectTeardown",
   "unitFeatureBonusAction",
 ] as const;
 type ReducerRouteSubjectFamily =
@@ -863,6 +867,7 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleInterruptStack",
   "battleFeatureResource",
   "battleTemporaryHitPoint",
+  "battleTurnBoundary",
 ] as const;
 type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
 const REDUCER_ROUTE_HOLES = [
@@ -5585,7 +5590,12 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   DeathSavingThrowRouteSubject: "deathSavingThrow",
   ConcentrationTeardownRouteSubject: "concentrationTeardown",
   CommandEffectRouteSubject: "commandEffect",
+  RollModifierEffectRouteSubject: "rollModifierEffect",
   ScalarBuffEffectRouteSubject: "scalarBuffEffect",
+  RepeatSaveConditionEffectRouteSubject: "repeatSaveConditionEffect",
+  TurnBoundaryEffectLifecycleRouteSubject: "turnBoundaryEffectLifecycle",
+  ZeroHitPointSpellEffectTeardownRouteSubject:
+    "zeroHitPointSpellEffectTeardown",
   UnitFeatureBonusActionRouteSubject: "unitFeatureBonusAction",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
@@ -5608,6 +5618,7 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleInterruptStackOwner: "battleInterruptStack",
   BattleFeatureResourceOwner: "battleFeatureResource",
   BattleTemporaryHitPointOwner: "battleTemporaryHitPoint",
+  BattleTurnBoundaryOwner: "battleTurnBoundary",
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {

@@ -27,7 +27,11 @@ module battleRuntimeReducerRoute {
     | DeathSavingThrowRouteSubject
     | ConcentrationTeardownRouteSubject
     | CommandEffectRouteSubject
+    | RollModifierEffectRouteSubject
     | ScalarBuffEffectRouteSubject
+    | RepeatSaveConditionEffectRouteSubject
+    | TurnBoundaryEffectLifecycleRouteSubject
+    | ZeroHitPointSpellEffectTeardownRouteSubject
     | UnitFeatureBonusActionRouteSubject
 
   type ReducerRouteOwnerGroup =
@@ -49,6 +53,7 @@ module battleRuntimeReducerRoute {
     | BattleInterruptStackOwner
     | BattleFeatureResourceOwner
     | BattleTemporaryHitPointOwner
+    | BattleTurnBoundaryOwner
 
   type ReducerRouteEvent =
     | RouteStartBattle({ owner: ReducerRouteOwnerGroup })

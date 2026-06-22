@@ -941,21 +941,31 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
-          "subjectFamily": "active spell-effect lifecycle route",
+          "subjectFamily": "roll-modifier active Spell Effect lifecycle route",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns roll-modifier active Spell Effects and Concentration teardown; table-supplied choice frontiers remain explicit fills, while the Thaumaturgy one-minute-effect count stays boundary evidence instead of a duplicate ledger.",
+          "acceptanceCondition": "Target replay evidence routes Bane/Bless/Guidance/Enhance Ability/Enthrall/Pass without Trace/Thaumaturgy roll-modifier lifecycles through spell invocation, active-effect, and Concentration owners.",
           "branchObligations": 16,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt is present in source-branch-inventory.json with 16 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt is present in source-branch-inventory.json with 16 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt exposes qRoute for RollModifierEffectRouteSubject through spell-slot/action-economy, active-effect, and Concentration owners; Thaumaturgy's one-minute-effect count remains table-owned boundary evidence and is not represented as a reducer-route hole."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bane and #Bless define roll-modifier active Spell Effects.",
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Enhance Ability, #Enthrall, and #Guidance define ability, skill, and save-gated modifier effects.",
+              ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Pass without Trace and .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Thaumaturgy define skill modifier and one-minute effect-count frontiers.",
+              "UBIQUITOUS_LANGUAGE.md defines D20 Rolls, Spell Invocation, Spell Effect, and Concentration."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {
@@ -1024,21 +1034,31 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
-          "subjectFamily": "active spell-effect lifecycle route",
+          "subjectFamily": "scalar-buff active Spell Effect lifecycle route",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns active Spell Effect projections, Hit Points, Hit Point maximum, Temporary Hit Points, Speed, Armor Class, and Concentration; no route-local buff ledger is introduced.",
+          "acceptanceCondition": "Target replay evidence routes Shield of Faith, Longstrider, Spider Climb, Aid, and False Life active-effect projections through active-effect, movement, HP, temporary-HP, and Concentration owners.",
           "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt exposes qRoute for ScalarBuffEffectRouteSubject through spell-slot/action-economy, active-effect, movement, HP, temporary-HP, and Concentration owners."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Aid defines Hit Point maximum and current Hit Point increases.",
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#False Life and #Longstrider define Temporary Hit Points and Speed increases.",
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield of Faith and #Spider Climb define Armor Class and special-Speed active effects.",
+              "UBIQUITOUS_LANGUAGE.md defines Armor Class, Speed, Hit Point Maximum, Temporary Hit Points, Spell Invocation, and Spell Effect."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {
@@ -1068,21 +1088,30 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
-          "subjectFamily": "active spell-effect lifecycle route",
+          "subjectFamily": "repeat-save condition Spell Effect lifecycle route",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns Sleep active-effect state, Concentration, condition lifecycle, and turn-boundary repeat-save frontier; no duplicate repeat-save or condition ledger is introduced.",
+          "acceptanceCondition": "Target replay evidence routes Sleep initial save, concentration break, turn-boundary repeat-save discovery, repeat-save cleanup, and Unconscious application through condition, active-effect, Concentration, and turn-boundary owners.",
           "branchObligations": 8,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt exposes qRoute for RepeatSaveConditionEffectRouteSubject through spell-slot/action-economy, condition, active-effect, Concentration, and turn-boundary owners."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleep defines initial save, pending repeat save, failed-repeat Unconscious condition, and cleanup when the spell ends.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Concentration defines effect end when the creator loses Concentration.",
+              "UBIQUITOUS_LANGUAGE.md defines Condition, Concentration, Boundary Crossing, Spell Effect, and Turn Structure."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {
@@ -1513,21 +1542,30 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
-          "subjectFamily": "active spell-effect lifecycle route",
+          "subjectFamily": "turn-boundary active Spell Effect lifecycle route",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState turn-boundary state owns initiative/round advancement while HP and active effects remain with their own owners; same-timing order stays at the table/boundary frontier.",
+          "acceptanceCondition": "Target replay evidence routes target-start and source-next-turn effect lifecycles through turn-boundary discovery and HP/active-effect resolution owners.",
           "branchObligations": 2,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt exposes qRoute for TurnBoundaryEffectLifecycleRouteSubject through turn-boundary, HP, and active-effect owners."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Playing-the-Game.md#The Order of Combat defines initiative-ordered turns and round advancement.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Simultaneous Effects defines table-chosen order for same-timing effects.",
+              "UBIQUITOUS_LANGUAGE.md defines Boundary Crossing, Spell Effect, Timer, and Turn Structure."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {
@@ -1635,21 +1673,31 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
-          "route": "substrate-first",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
-          "subjectFamily": "active spell-effect lifecycle route",
+          "subjectFamily": "zero-Hit-Point mid-resolution Spell Effect teardown route",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns spell-attack procedure progress, HP/zero-HP lifecycle, conditions, Concentration, and active-effect teardown; no local Shield or HP replay ledger is introduced.",
+          "acceptanceCondition": "Target replay evidence routes the Eldritch Blast sequence, concentration-save frontier, zero-HP condition transition, Concentration teardown, active-effect teardown, and second-beam continuation through their durable owners.",
           "branchObligations": 1,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s)."
+              "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt exposes qRoute for SpellAttackProcedureRouteSubject and ZeroHitPointSpellEffectTeardownRouteSubject through target-selection, attack-roll, HP/zero-HP lifecycle, Concentration, condition, active-effect, and spell-attack procedure owners."
             ],
             "rawDomainFacts": [
-              "Local SRD spellcasting, saving throw, condition, duration, and Hit Point rules define the generic spell/effect shape."
+              ".references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points and #Falling Unconscious define the zero-Hit-Point condition transition.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Concentration and #Incapacitated define Concentration teardown when Incapacitated applies.",
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast defines separate attack rolls for separate beams.",
+              "UBIQUITOUS_LANGUAGE.md defines Hit Points, Unconscious, Incapacitated, Concentration, Spell Effect, and Spell Attack."
             ],
-            "blockers": [
-              "Route only after the relevant spell/effect owner exists on BattleState or at a table-supplied boundary fill."
-            ]
+            "blockers": []
           }
         },
         {
