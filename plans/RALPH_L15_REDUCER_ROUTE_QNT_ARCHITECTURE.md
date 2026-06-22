@@ -151,7 +151,7 @@
     {
       "number": 25,
       "id": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Route condition and d20 roll modifier feature substrates"
     },
     {
@@ -346,7 +346,7 @@ The route classes are deliberately not all `reducer-routed`:
 |  22 | L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES - Route independent multi-beam spell attack sequence drivers | done | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES                                                                                                                 | Reuses the generic multi-step spell/attack procedure owner before routing independent beam sequences. |
 |  23 | L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES - Split level-1 selected spell identity bundles into generic substrates | done               | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Fixes source QNT/guidance before grouped level-1 selected spell identity replay counts.       |
 |  24 | L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES - Route species passive trait battle substrates                | done               | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Splits passive trait damage, save, movement, and size/speed owners.                           |
-|  25 | L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES - Route condition and d20 roll modifier feature substrates | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                         | Routes feature-hosted roll modes and condition suppression without feature identity dispatch.  |
+|  25 | L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES - Route condition and d20 roll modifier feature substrates | done | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                         | Routes feature-hosted roll modes and condition suppression without feature identity dispatch.  |
 |  26 | L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE - Route zero-Hit-Point stabilization substrates                 | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes stabilization through the BattleState zero-Hit-Point lifecycle owner.                  |
 |  27 | L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES - Route feature movement and form lifecycle substrates     | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Splits movement-resource, active-form, speed, forced movement, and teleport owners.            |
 |  28 | L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES - Route weapon mastery property substrates                   | ready-for-research | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                                                                                                                 | Routes mastery properties by property facts, attack/save holes, and durable rider owners.      |
@@ -826,7 +826,7 @@ Plan Impact:
 
 ### Task 25 - L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
