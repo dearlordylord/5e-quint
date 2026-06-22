@@ -1704,26 +1704,34 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
-          "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES",
           "subjectFamily": "weapon mastery property attack, save, condition, and rider substrates",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns the selected weapon attack, target Hit Points, Topple condition lifecycle, Sap active-effect rider, and Cleave once-per-turn rider use; selected mastery identity remains an admitted source reference, not the behavior dispatch key.",
+          "acceptanceCondition": "Target replay evidence routes Sap, Topple, and Cleave by weapon mastery property fact, attack/save holes, and durable owner groups rather than selected mastery identity.",
           "branchObligations": 3,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt is present in source-branch-inventory.json with 3 branch obligation(s).",
-              "No copied source qRoute connector currently extracts weapon mastery property attack, save, condition, and rider substrates from packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt; selected identity remains a fixture/admission fact until L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES supplies the generic substrate."
+              "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt exposes qRoute for WeaponMasteryPropertyRouteSubject through weapon attack, target-selection, attack-roll, Hit Point, active-effect, condition lifecycle, and feature-resource owners.",
+              "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt routes Sap as an active-effect rider, Topple as a save-gated condition rider, and Cleave as an optional once-per-turn nested weapon attack."
             ],
             "rawDomainFacts": [
-              "Task 7 keeps authored identity at catalog, selection, admission, and SRD fixture boundaries; executable battle behavior must route by generic substrate shape and typed facts.",
-              "The missing generic substrate family is weapon mastery property attack, save, condition, and rider substrates."
+              ".references/srd-5.2.1/Equipment.md#Mastery Properties defines mastery properties as weapon-carried properties unlocked by a feature.",
+              ".references/srd-5.2.1/Equipment.md#Sap defines the on-hit next attack-roll Disadvantage rider.",
+              ".references/srd-5.2.1/Equipment.md#Topple defines the on-hit Constitution Saving Throw and Prone condition rider.",
+              ".references/srd-5.2.1/Equipment.md#Cleave defines the on-hit optional once-per-turn second melee attack and weapon-damage rider.",
+              "UBIQUITOUS_LANGUAGE.md defines Mastery Property, Weapon Mastery, Attack Roll, Saving Throw, Condition, Rider, and Hit Points."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES before cleanroom target replay may infer this selected-identity behavior.",
-              "Route mastery properties by property fact, attack/save holes, and durable rider owners before selected mastery identity replay counts."
-            ]
-          },
-          "followUpTaskId": "L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES"
+            "blockers": []
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
@@ -3300,7 +3308,8 @@
           "taskId": "L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES",
           "subjectFamily": "weapon mastery property attack, save, condition, and rider substrates",
           "requiredSourceWork": [
-            "Route mastery properties by property fact, attack/save holes, and durable rider owners before selected mastery identity replay counts."
+            "Task 28 supplied packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt as generic WeaponMasteryPropertyRouteSubject evidence for Sap active-effect riders, Topple save-gated condition riders, and Cleave optional once-per-turn nested weapon attacks through target-selection, attack-roll, Hit Point, active-effect, condition-lifecycle, and feature-resource owners.",
+            "The current source selected-identity driver covers Sap, Topple, and Cleave only; Graze, Nick, Push, Slow, and Vex remain separate source/runtime expansion work if future scope requires them."
           ]
         },
         {

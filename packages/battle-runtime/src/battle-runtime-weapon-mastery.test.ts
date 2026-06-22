@@ -61,6 +61,7 @@ import type {
   CombatantId,
 } from "./battle-runtime-test-support.ts";
 import { wardingBondUnitId } from "./unit-profile-admission-catalog-support.ts";
+import { WEAPON_MASTERY_SAP_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import { describe, expect, test } from "vitest";
 
 function withWardingBondTargetAndConcentratingCaster(
@@ -356,6 +357,28 @@ describe("battle runtime: Weapon Mastery", () => {
       missed.state.combatants.get(goblinId)?.activeEffects,
     ).not.toContainEqual(
       expect.objectContaining({ sourceUnitId: "mastery_sap" }),
+    );
+  });
+
+  test("Weapon Mastery Sap dispatches by property support profile, not mastery unit identity", () => {
+    const syntheticSapSupportUnitId = "test_sap_property_support";
+    const hit = resolveLongswordHit(
+      fighterVsGoblinBattle({
+        characterUnitRefs: [
+          {
+            unitId: syntheticSapSupportUnitId,
+            supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
+          },
+        ],
+        weaponMasteries: longswordWeaponMasterySelections(),
+      }),
+    );
+
+    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "nextAttackRollBySelf",
+        sourceUnitId: syntheticSapSupportUnitId,
+      }),
     );
   });
 

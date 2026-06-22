@@ -827,6 +827,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "saveGatedSpell",
   "hitPointRestoration",
   "weaponAttack",
+  "weaponMasteryProperty",
   "spellAttack",
   "spellAttackProcedure",
   "spellHostedWeaponAttack",
@@ -1017,6 +1018,9 @@ type ReducerRoutedWeaponAttackOrderingProjection =
   WeaponAttackOrderingProjection & {
     readonly route: readonly ReducerRouteEvent[];
   };
+type ReducerRoutedWeaponMasteryPropertyProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
 type ReducerRoutedSaveGatedSpellOrderingProjection =
   SaveGatedSpellOrderingProjection & {
     readonly route: readonly ReducerRouteEvent[];
@@ -1307,6 +1311,18 @@ const weaponAttackOrderingDriverSchema = {
   doFillAttackRollMiss: {},
   doFillAttackRollHit: {},
   doFillDamageDice: {},
+  step: {},
+} as const;
+
+const weaponMasteryPropertyRouteDriverSchema = {
+  init: {},
+  doRouteSapPropertyActiveEffectRider: {},
+  doRouteTopplePropertySaveGate: {},
+  doRouteTopplePropertyConditionRider: {},
+  doRouteCleavePropertyDecision: {},
+  doRouteCleavePropertySecondTarget: {},
+  doRouteCleavePropertySecondAttack: {},
+  doRouteCleavePropertySecondDamage: {},
   step: {},
 } as const;
 
@@ -2664,6 +2680,251 @@ export function createWeaponAttackOrderingRouteDriver() {
         }),
         route,
       }),
+    };
+  });
+}
+
+const WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT =
+  "weaponMasteryProperty" satisfies ReducerRouteSubjectFamily;
+const WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT =
+  "weaponAttack" satisfies ReducerRouteSubjectFamily;
+const NO_WEAPON_MASTERY_PROPERTY_ROUTE_HOLES =
+  [] as const satisfies readonly ReducerRouteHole[];
+const WEAPON_MASTERY_PROPERTY_TARGET_HOLES = [
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const WEAPON_MASTERY_PROPERTY_ATTACK_ROLL_HOLES = [
+  "attackRoll",
+] as const satisfies readonly ReducerRouteHole[];
+const WEAPON_MASTERY_PROPERTY_DAMAGE_HOLES = [
+  "rolledDice",
+] as const satisfies readonly ReducerRouteHole[];
+const WEAPON_MASTERY_PROPERTY_SAVE_HOLES = [
+  "savingThrowOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+const WEAPON_MASTERY_PROPERTY_DECISION_HOLES = [
+  "unitFeatureDecision",
+] as const satisfies readonly ReducerRouteHole[];
+
+function weaponMasteryPropertyDiscoverRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function weaponMasteryPropertyResolveRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: input.subject,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function weaponMasteryPropertyResolveWithoutFillRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function weaponMasteryPropertyWeaponAttackRollRoute(): readonly ReducerRouteEvent[] {
+  return [
+    reducerRouteStartBattle("battleActionEconomy"),
+    weaponMasteryPropertyDiscoverRoute({
+      subject: WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT,
+      holes: WEAPON_MASTERY_PROPERTY_TARGET_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT,
+      fill: "targetChoice",
+      holes: WEAPON_MASTERY_PROPERTY_ATTACK_ROLL_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyWeaponHitDamageRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...weaponMasteryPropertyWeaponAttackRollRoute(),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT,
+      fill: "attackRoll",
+      holes: WEAPON_MASTERY_PROPERTY_DAMAGE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+  ];
+}
+
+function weaponMasteryPropertySapRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...weaponMasteryPropertyWeaponHitDamageRoute(),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_WEAPON_MASTERY_PROPERTY_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    weaponMasteryPropertyResolveWithoutFillRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      holes: NO_WEAPON_MASTERY_PROPERTY_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyToppleSaveGateRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...weaponMasteryPropertyWeaponAttackRollRoute(),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: WEAPON_MASTERY_PROPERTY_SAVE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyToppleConditionRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: WEAPON_MASTERY_PROPERTY_DAMAGE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyCleaveDecisionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...weaponMasteryPropertyWeaponHitDamageRoute(),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT,
+      fill: "rolledDice",
+      holes: WEAPON_MASTERY_PROPERTY_DECISION_HOLES,
+      owner: "battleHitPoint",
+    }),
+    weaponMasteryPropertyResolveWithoutFillRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      holes: WEAPON_MASTERY_PROPERTY_DECISION_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyCleaveSecondTargetRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "unitFeatureDecision",
+      holes: WEAPON_MASTERY_PROPERTY_TARGET_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyCleaveSecondAttackRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: WEAPON_MASTERY_PROPERTY_ATTACK_ROLL_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyCleaveSecondDamageRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: WEAPON_MASTERY_PROPERTY_DAMAGE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_WEAPON_MASTERY_PROPERTY_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    weaponMasteryPropertyResolveWithoutFillRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      holes: NO_WEAPON_MASTERY_PROPERTY_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+export function createWeaponMasteryPropertyRouteDriver() {
+  return defineDriver(weaponMasteryPropertyRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      weaponMasteryPropertyWeaponAttackRollRoute();
+
+    function reset(): void {
+      route = weaponMasteryPropertyWeaponAttackRollRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteSapPropertyActiveEffectRider: () => {
+        route = weaponMasteryPropertySapRoute();
+      },
+      doRouteTopplePropertySaveGate: () => {
+        route = weaponMasteryPropertyToppleSaveGateRoute();
+      },
+      doRouteTopplePropertyConditionRider: () => {
+        route = weaponMasteryPropertyToppleConditionRoute(route);
+      },
+      doRouteCleavePropertyDecision: () => {
+        route = weaponMasteryPropertyCleaveDecisionRoute();
+      },
+      doRouteCleavePropertySecondTarget: () => {
+        route = weaponMasteryPropertyCleaveSecondTargetRoute(route);
+      },
+      doRouteCleavePropertySecondAttack: () => {
+        route = weaponMasteryPropertyCleaveSecondAttackRoute(route);
+      },
+      doRouteCleavePropertySecondDamage: () => {
+        route = weaponMasteryPropertyCleaveSecondDamageRoute(route);
+      },
+      step: () => {},
+      getState: (): ReducerRoutedWeaponMasteryPropertyProjection => ({ route }),
     };
   });
 }
@@ -5834,6 +6095,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   SaveGatedSpellRouteSubject: "saveGatedSpell",
   HitPointRestorationRouteSubject: "hitPointRestoration",
   WeaponAttackRouteSubject: "weaponAttack",
+  WeaponMasteryPropertyRouteSubject: "weaponMasteryProperty",
   SpellAttackRouteSubject: "spellAttack",
   SpellAttackProcedureRouteSubject: "spellAttackProcedure",
   SpellHostedWeaponAttackRouteSubject: "spellHostedWeaponAttack",
@@ -6174,6 +6436,15 @@ function normalizeReducerRoutedWeaponAttackOrderingQuintState(
   const state = quintStateRecord(raw);
   return {
     ...normalizeWeaponAttackOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedWeaponMasteryPropertyQuintState(
+  raw: unknown,
+): ReducerRoutedWeaponMasteryPropertyProjection {
+  const state = quintStateRecord(raw);
+  return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
@@ -6720,6 +6991,16 @@ export const reducerRoutedWeaponAttackOrderingStateCheck = stateCheck(
   (
     spec: ReducerRoutedWeaponAttackOrderingProjection,
     impl: ReducerRoutedWeaponAttackOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedWeaponMasteryPropertyStateCheck = stateCheck(
+  normalizeReducerRoutedWeaponMasteryPropertyQuintState,
+  (
+    spec: ReducerRoutedWeaponMasteryPropertyProjection,
+    impl: ReducerRoutedWeaponMasteryPropertyProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;

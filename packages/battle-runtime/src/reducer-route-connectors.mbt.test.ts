@@ -17,6 +17,7 @@ import {
   createSaveGatedSpellOrderingRouteDriver,
   createSpellAttackOrderingRouteDriver,
   createWeaponAttackOrderingRouteDriver,
+  createWeaponMasteryPropertyRouteDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
@@ -33,6 +34,7 @@ import {
   reducerRoutedSaveGatedSpellOrderingStateCheck,
   reducerRoutedWeaponAttackOrderingStateCheck,
   reducerRoutedWeaponAttackSkeletonStateCheck,
+  reducerRoutedWeaponMasteryPropertyStateCheck,
   run,
 } from "./battle-runtime-mbt-driver-kit.ts";
 
@@ -82,6 +84,22 @@ describe("battle reducer route connector MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(4),
       stateCheck: reducerRoutedWeaponAttackOrderingStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes weapon mastery property substrates through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createWeaponMasteryPropertyRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(4),
+      stateCheck: reducerRoutedWeaponMasteryPropertyStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 

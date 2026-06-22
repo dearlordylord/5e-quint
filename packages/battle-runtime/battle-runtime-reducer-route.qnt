@@ -15,6 +15,7 @@ module battleRuntimeReducerRoute {
     | SaveGatedSpellRouteSubject
     | HitPointRestorationRouteSubject
     | WeaponAttackRouteSubject
+    | WeaponMasteryPropertyRouteSubject
     | SpellAttackRouteSubject
     | SpellAttackProcedureRouteSubject
     | SpellHostedWeaponAttackRouteSubject
