@@ -6,9 +6,10 @@ directory, or any prior cleanroom attempt.
 
 ## Goal
 
-Implement a {{targetLabel}} character-creation and battle rules engine for D&D
-SRD 5.2.1 character levels 1-2, derived exclusively from the copied
-RAW/QNT/domain corpus in `cleanroom-input/`.
+Implement a {{targetLabel}} D&D SRD 5.2.1 rules engine for the selected
+cleanroom assignment, including the level-1 through level-5 reducer-route
+package when `tasks/ACTIVE_WORK.json` selects it. Derive behavior exclusively
+from the copied RAW/QNT/domain corpus in `cleanroom-input/`.
 
 Target profile: `{{targetProfileId}}`. Target package/tooling:
 {{packageManager}}. Target source extensions: {{sourceFileExtensionsMarkdown}}.
@@ -147,9 +148,14 @@ The corpus is the backlog: each in-scope branch obligation from
 conformance work. `cleanroom-input/branch-coverage/reducer-route-inventory.json`
 selects the focused reducer-spine diagnostic route when `tasks/ACTIVE_WORK.json`
 uses that assignment. It does not prove routing; `reducer-routed` work must
-match the copied route connector's `qRoute`. `tasks/ACTIVE_WORK.json` selects
-the assignment and lane order for this run. `tasks/LEVEL_1_2_SCOPE.md` records
-which drivers are in scope for character levels 1-2.
+match the copied route connector's `qRoute`, and `component-first` work must
+match `qComponentRoute`. The
+`level-1-5-cleanroom-route-v1.freshCleanroomPackageGate` record defines the
+fresh package acceptance slice and rejects dirty cleanroom historical evidence.
+`tasks/ACTIVE_WORK.json` selects the assignment and lane order for this run.
+`tasks/LEVEL_1_2_SCOPE.md` is the source-owned scope snapshot filename for the
+generated queue; the reducer-route inventory owns the level-1 through level-5
+route denominator.
 `tasks/LEVEL_1_2_SCOPE.md` is source-owned; do not reorder it in the target
 repo.
 

@@ -216,6 +216,71 @@
         "Use source-qnt-corpus-blocker when the copied QNT/RAW/domain corpus does not establish the generic route fact.",
         "Keep selected identity at catalog, selection, fixture, or support-profile admission boundaries; production reducer routing must use runtime shape and typed facts."
       ],
+      "freshCleanroomPackageGate": {
+        "gateId": "fresh-cleanroom-level-1-5-route-package-v1",
+        "copiedInputs": [
+          "cleanroom-input/MANIFEST.md",
+          "cleanroom-input/raw/srd-5.2.1/**",
+          "cleanroom-input/qnt/**",
+          "cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md",
+          "cleanroom-input/domain/CLEANROOM_ASSUMPTIONS.md",
+          "cleanroom-input/branch-coverage/source-branch-inventory.json",
+          "cleanroom-input/branch-coverage/reducer-route-inventory.json",
+          "cleanroom-input/guidance/**"
+        ],
+        "acceptanceSlice": [
+          "The fresh cleanroom agent may implement only from copied RAW/domain inputs, copied QNT, source branch inventory, reducer-route inventory, guidance, scaffold tasks, and target-profile tooling.",
+          "Every driver in driverRouteAssignments has one of: an executable route connector, an executable component connector, a referenced connector substrate, or an explicit source-qnt-corpus blocker.",
+          "A reducer-routed target replay is accepted only when the target harness executes the copied driver and observes the copied qRoute projection from the selected route connector.",
+          "A component-first target replay is accepted only when the target harness executes the copied qComponentRoute projection and records the dependent route task that consumes the component owner.",
+          "Catalog-after-substrate and substrate-first rows are not permission for authored-identity dispatch; replay counts only through the referenced generic connector substrate or remains blocked.",
+          "The target replay evidence file must match tasks/TARGET_REPLAY_EVIDENCE.example.json and be keyed to the manifest source SHA, source branch inventory SHA, QNT file hash, branch action, observed mbt::actionTaken, target profile, and stateCheck projection hashes.",
+          "Dirty cleanroom implementation ledgers, reports, adapters, and target code are not acceptance evidence for this package."
+        ],
+        "routeClassEvidence": [
+          {
+            "route": "reducer-routed",
+            "acceptedEvidence": [
+              "routeConnectorPath or the default sibling .route.mbt.qnt exists in the copied QNT corpus",
+              "target replay evidence observes the connector qRoute projection"
+            ]
+          },
+          {
+            "route": "component-first",
+            "acceptedEvidence": [
+              "componentConnectorPath exists in the copied QNT corpus and exposes qComponentRoute",
+              "target replay evidence observes qComponentRoute and names the component owner"
+            ]
+          },
+          {
+            "route": "substrate-first",
+            "acceptedEvidence": [
+              "an executable generic connector substrate is referenced by routeConnectorPath or componentConnectorPath",
+              "otherwise the row must carry an explicit derivability blocker"
+            ]
+          },
+          {
+            "route": "catalog-after-substrate",
+            "acceptedEvidence": [
+              "an executable generic connector substrate is referenced by routeConnectorPath or componentConnectorPath",
+              "authored catalog identity remains only a catalog, selection, fixture, or support-profile admission boundary"
+            ]
+          },
+          {
+            "route": "replay-refresh-only",
+            "acceptedEvidence": [
+              "referenced connector evidence supplies the route already exercised by another driver",
+              "or explicit derivability blocker explains why the driver is a baseline or stale-replay refresh rather than a fresh implementation route"
+            ]
+          },
+          {
+            "route": "source-qnt-corpus-blocker",
+            "acceptedEvidence": [
+              "derivability.blockers names the missing copied QNT, RAW, or domain source fact"
+            ]
+          }
+        ]
+      },
       "driverRouteAssignments": [
         {
           "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
@@ -351,6 +416,7 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
           "route": "replay-refresh-only",
           "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
           "subjectFamily": "Command option next-turn active-effect replay",

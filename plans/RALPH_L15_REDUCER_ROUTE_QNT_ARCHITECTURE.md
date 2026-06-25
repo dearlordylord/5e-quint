@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Package a fresh cleanroom-ready level 1-5 route evidence gate"
     },
     {
@@ -335,7 +335,7 @@ The route classes are deliberately not all `reducer-routed`:
 |  11 | L15-RR11-LEVEL3-4-SCOPE-PROMOTION - Promote level 3-4 branch scope into route connector tasks                 | done | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES | Widen current level-1/2 branch-scope rows only after generic route shapes exist.              |
 |  12 | L15-RR12-LEVEL5-SCOPE-PROMOTION - Promote level 5 class and spell-level-3 route connector tasks               | done | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES, L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES, L15-RR11-LEVEL3-4-SCOPE-PROMOTION                                    | Handles level-5 features and spell-level-3 pressure; does not promote spell level 4/5.        |
 |  13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom              | done               | L15-RR12-LEVEL5-SCOPE-PROMOTION, L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT, L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES, L15-RR17-WEAPON-HOSTED-RIDER-ROUTES, L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES, L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES, L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES, L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES, L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES | Dirty target proved the five-driver reducer-spine diagnostic route surface; stale dirty artifacts remain non-evidence. |
-|  14 | L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE - Package a fresh cleanroom-ready level 1-5 route evidence gate         | ready-for-research | L15-RR13-DIRTY-CLEANROOM-REHEARSAL                                                                                                                       | Produces the fresh-run package and acceptance gate; does not depend on stale dirty artifacts. |
+|  14 | L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE - Package a fresh cleanroom-ready level 1-5 route evidence gate         | done               | L15-RR13-DIRTY-CLEANROOM-REHEARSAL                                                                                                                       | Fresh package gate is executable; copied inputs, route evidence, and replay schema reject dirty artifacts. |
 |  15 | L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT - Split after-hit rider routes by durable battle owner                   | done               | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Prevents one route connector from accumulating interrupt, condition, Concentration, and HP owners. |
 |  16 | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES - Route chained attack sequences through procedure owners            | done | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Requires the generic multi-step spell/attack procedure route owner before routing chain continuation. |
 |  17 | L15-RR17-WEAPON-HOSTED-RIDER-ROUTES - Split weapon-hosted attack and rider routes                             | done               | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES                            | Splits hosted attacks, damage riders, active effects, item-target effects, and cleanup owners. |
@@ -1768,7 +1768,7 @@ Plan Impact:
 
 ### Task 14 - L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -1803,4 +1803,6 @@ Verification:
 
 Plan Impact:
 
-- Close this lane only when the fresh cleanroom package gate is executable.
+- Applied. The fresh cleanroom package gate is executable from copied inputs,
+  route-class evidence, and route/component replay schema checks without dirty
+  cleanroom historical ledger state.

@@ -343,6 +343,13 @@ function validateCleanroomInputIntegrity({
       "cleanroom-input/MANIFEST.md must include branch-coverage/source-branch-inventory.json.",
     );
   }
+  const routeInventoryManifestPath =
+    "branch-coverage/reducer-route-inventory.json";
+  if (!cleanroomManifest.fileHashes.has(routeInventoryManifestPath)) {
+    issues.push(
+      "cleanroom-input/MANIFEST.md must include branch-coverage/reducer-route-inventory.json.",
+    );
+  }
   const checkedDrivers = new Set();
   for (const obligation of inventory.branchObligations ?? []) {
     if (!isRecord(obligation) || typeof obligation.driverPath !== "string") continue;
@@ -721,6 +728,7 @@ function validateEvidenceDocs({
   rootPath,
   profile,
   inventory,
+  routeInventory,
   selected,
   declaredEvidencePaths,
   expectedCleanroomManifestSourceCommitSha,
@@ -780,6 +788,7 @@ function validateEvidenceDocs({
         expectedCleanroomManifestSourceCommitSha,
         expectedTargetProfileSha256,
         requireAllObligations: false,
+        routeInventory,
       },
     );
     issues.push(
@@ -828,6 +837,7 @@ function validateEvidenceDocs({
     {
       expectedCleanroomManifestSourceCommitSha,
       expectedTargetProfileSha256,
+      routeInventory,
     },
   );
   issues.push(...targetEvidenceResult.issues);
@@ -856,6 +866,7 @@ function validateEvidenceDocs({
           expectedCleanroomManifestSourceCommitSha,
           expectedTargetProfileSha256,
           requireAllObligations: false,
+          routeInventory,
         },
       );
       if (!singleRunResult.covered.includes(obligationId)) continue;
@@ -928,6 +939,7 @@ function validateLedgerEntry({
   entry,
   entryIndex,
   inventory,
+  routeInventory,
   inventorySha,
   cleanroomManifest,
   activeAssignments,
@@ -1094,6 +1106,7 @@ function validateLedgerEntry({
     rootPath,
     profile,
     inventory,
+    routeInventory,
     selected,
     declaredEvidencePaths,
     evidencePaths: ledgerEvidencePaths,
@@ -1162,6 +1175,7 @@ function validateRunLedger({
   rootPath,
   ledger,
   inventory,
+  routeInventory,
   activeAssignments,
   profile,
   cleanroomManifest,
@@ -1197,6 +1211,7 @@ function validateRunLedger({
       entry,
       entryIndex,
       inventory,
+      routeInventory,
       inventorySha,
       cleanroomManifest,
       activeAssignments,
@@ -2097,6 +2112,11 @@ function validateTaskArtifacts({ taskRoot, profile }) {
     "cleanroom-input/branch-coverage/source-branch-inventory.json",
     issues,
   );
+  const routeInventory = readRequiredArtifact(
+    taskRoot,
+    "cleanroom-input/branch-coverage/reducer-route-inventory.json",
+    issues,
+  );
   const activeWork = readRequiredArtifact(taskRoot, "tasks/ACTIVE_WORK.json", issues);
   const runLedger = readRequiredArtifact(taskRoot, "tasks/RUN_LEDGER.json", issues);
   const startGate = readRequiredArtifact(taskRoot, "tasks/START_GATE.json", issues);
@@ -2118,7 +2138,12 @@ function validateTaskArtifacts({ taskRoot, profile }) {
   );
   const cleanroomManifest = readCleanroomManifest(taskRoot, issues);
   validateStartGate(startGate, taskRoot, issues);
-  if (!isRecord(inventory) || !isRecord(startGate) || !isUsableHarnessProfile(profile)) {
+  if (
+    !isRecord(inventory) ||
+    !isRecord(routeInventory) ||
+    !isRecord(startGate) ||
+    !isUsableHarnessProfile(profile)
+  ) {
     return issues;
   }
   validateCleanroomInputIntegrity({
@@ -2134,6 +2159,7 @@ function validateTaskArtifacts({ taskRoot, profile }) {
       rootPath: taskRoot,
       ledger: runLedger,
       inventory,
+      routeInventory,
       activeAssignments,
       profile,
       cleanroomManifest,
@@ -2187,6 +2213,7 @@ function validateTaskArtifacts({ taskRoot, profile }) {
     rootPath: taskRoot,
     profile,
     inventory,
+    routeInventory,
     selected,
     declaredEvidencePaths,
     expectedCleanroomManifestSourceCommitSha: cleanroomManifest?.sourceCommitSha,
@@ -2433,10 +2460,38 @@ function validFixture(rootPath) {
     ),
     inventory,
   );
+  const routeInventory = {
+    schemaVersion: 1,
+    levelDenominators: [
+      {
+        denominatorId: "fixture-level-1-5-route",
+        driverRouteAssignments: [
+          {
+            driverPath,
+            route: "reducer-routed",
+          },
+        ],
+        branchDecisionClasses: [],
+      },
+    ],
+  };
+  writeJson(
+    path.join(
+      rootPath,
+      "cleanroom-input/branch-coverage/reducer-route-inventory.json",
+    ),
+    routeInventory,
+  );
   const inventoryFileSha = sha256File(
     path.join(
       rootPath,
       "cleanroom-input/branch-coverage/source-branch-inventory.json",
+    ),
+  );
+  const routeInventoryFileSha = sha256File(
+    path.join(
+      rootPath,
+      "cleanroom-input/branch-coverage/reducer-route-inventory.json",
     ),
   );
   fs.mkdirSync(path.join(rootPath, "cleanroom-input"), { recursive: true });
@@ -2452,6 +2507,7 @@ function validFixture(rootPath) {
       "| File | sha256 | Source path |",
       "| --- | --- | --- |",
       `| \`branch-coverage/source-branch-inventory.json\` | \`${inventoryFileSha}\` | \`plans/cleanroom-branch-coverage/source-branch-inventory.json\` |`,
+      `| \`branch-coverage/reducer-route-inventory.json\` | \`${routeInventoryFileSha}\` | \`plans/cleanroom-branch-coverage/reducer-route-inventory.json\` |`,
       `| \`${driverPath.slice("cleanroom-input/".length)}\` | \`${qntSha}\` | \`packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt\` |`,
       "",
     ].join("\n"),
@@ -2506,8 +2562,8 @@ function validFixture(rootPath) {
         traceId: `seed=1 action=${obligation.branchAction}`,
       stateCheck: {
         tag: "state-match",
-        projection: "Magic missile allocation and damage projection",
-        comparator: "fixture-magic-missile-projection-v1",
+        projection: "qRoute",
+        comparator: "route-event-list",
         expectedProjectionSha256: sha256Text(
           `projection ${obligation.branchAction}`,
         ),

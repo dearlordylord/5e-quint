@@ -1,16 +1,21 @@
 # Cleanroom {{targetLabel}} Engine
 
 Cleanroom experiment: implement a {{targetLabel}} D&D SRD 5.2.1
-{{implementationKind}} for character levels 1-2 from the copied
+{{implementationKind}} for the selected cleanroom assignment from the copied
 formal/domain corpus only (`cleanroom-input/`), without reading the production
-implementation. Success means the corpus is sufficient implementation
-guidance; failures and blockers are research data.
+implementation. The reducer-route package covers character levels 1 through 5
+and spell levels 0 through 3 through
+`cleanroom-input/branch-coverage/reducer-route-inventory.json`. Success means
+the corpus is sufficient implementation guidance; failures and blockers are
+research data.
 
 All agent rules live in `AGENTS.md`. The corpus snapshot and its source commit
 SHA live in `cleanroom-input/MANIFEST.md`. The source branch inventory lives in
 `cleanroom-input/branch-coverage/source-branch-inventory.json`. Reducer-spine
 diagnostic route selection lives in
 `cleanroom-input/branch-coverage/reducer-route-inventory.json`.
+The `level-1-5-cleanroom-route-v1.freshCleanroomPackageGate` record in that
+inventory is the fresh package acceptance slice.
 
 Cleanroom boundary rule: production reducers route by runtime shape and typed
 facts, not authored or fixture identity. Using fixture identity to choose
@@ -56,6 +61,8 @@ The target test suite is also the conformance lane: tasks with applicable
 `.mbt.qnt` drivers must wire them through {{quintBindingName}} and emit
 target replay evidence. Target-language tests may supplement diagnosis, but
 they do not close source branch coverage.
+Dirty cleanroom ledgers, previous target adapters, prior validation reports,
+and implementation history are not acceptance evidence.
 
 {{verificationCommandsMarkdown}}
 

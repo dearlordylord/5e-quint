@@ -25,12 +25,12 @@
       ],
       "stateCheck": {
         "tag": "state-match",
-        "projection": "<projection name>",
-        "comparator": "<comparator id>",
+        "projection": "<qRoute, qComponentRoute, or source-driver projection name>",
+        "comparator": "<route-event-list, component-route-event-list, or projection comparator id>",
         "expectedProjectionSha256": "<sha256 hex>",
         "observedProjectionSha256": "<same sha256 hex on pass>",
         "checkedTargetStateFields": [
-          "<TargetState.field>"
+          "<TargetState.field or harness projection field>"
         ]
       },
       "result": {

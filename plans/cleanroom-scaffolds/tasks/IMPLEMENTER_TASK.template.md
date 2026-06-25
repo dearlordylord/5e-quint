@@ -35,7 +35,13 @@ and record a bootstrap blocker in `tasks/BLOCKERS.md`.
   reducer surface and match the copied route connector's `qRoute`; the
   inventory selects and orders work but is not route evidence. `substrate-first`
   tasks must introduce or identify the durable owner before replay evidence is
-  accepted.
+  accepted. `component-first` tasks must match the copied `qComponentRoute`
+  connector before a later battle route consumes that component owner.
+- For the level-1 through level-5 route package, follow the
+  `level-1-5-cleanroom-route-v1.freshCleanroomPackageGate` record in
+  `cleanroom-input/branch-coverage/reducer-route-inventory.json`. Dirty
+  cleanroom ledgers, prior reports, previous adapters, and target code are not
+  acceptance evidence.
 - Generate target replay evidence under `tasks/target-replay-evidence/`.
   Match `tasks/TARGET_REPLAY_EVIDENCE.example.json` exactly. Diagnostic
   target-language tests are allowed, but they do not close branch coverage.

@@ -8,6 +8,13 @@ inventory, domain language, and assumptions. Those files are the cleanroom
 authority; production TypeScript code and previous cleanroom attempts are not
 inputs.
 
+For the level-1 through level-5 reducer-route package, the acceptance slice is
+the `freshCleanroomPackageGate` record in
+`cleanroom-input/branch-coverage/reducer-route-inventory.json`. A target task
+is acceptable only from copied corpus evidence and harness-generated replay
+evidence; dirty cleanroom ledgers, prior validation reports, adapters, and
+target code are not evidence.
+
 Core rules:
 
 - Treat copied `.qnt` files as formal rule statements and `.mbt.qnt` files as
@@ -17,6 +24,12 @@ Core rules:
   assignment. For a `reducer-routed` row, target replay evidence must match the
   connector's `qRoute`; the reducer-route inventory selects and orders tasks
   and is never a substitute for route evidence.
+- Use copied rule-core component connectors as the executable contract for
+  `component-first` rows. Target replay evidence must match `qComponentRoute`
+  rather than a driver-local helper.
+- Treat `catalog-after-substrate` and `substrate-first` rows as blocked until
+  their generic route substrate is executable. Selected authored identity never
+  becomes production reducer dispatch.
 - Keep QNT/MBT replay adapters quarantined from production modules.
 - Treat forbidden source-code reads and production reducer dispatch on
   authored or fixture identity as the same cleanroom-boundary violation class.

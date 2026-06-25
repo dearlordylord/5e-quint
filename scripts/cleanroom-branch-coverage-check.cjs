@@ -762,6 +762,263 @@ function hasExecutableComponentConnectorEvidence(assignment) {
   );
 }
 
+function defaultRouteConnectorPath(driverPath) {
+  if (typeof driverPath !== "string" || !driverPath.endsWith(".mbt.qnt")) {
+    return undefined;
+  }
+  return driverPath.replace(/\.mbt\.qnt$/, ".route.mbt.qnt");
+}
+
+function repoFileExists(repoRelativePath) {
+  return (
+    typeof repoRelativePath === "string" &&
+    repoRelativePath.trim() !== "" &&
+    fs.existsSync(path.join(root, repoRelativePath))
+  );
+}
+
+function nonEmptyString(value) {
+  return typeof value === "string" && value.trim() !== "";
+}
+
+function collectRouteConnectorPaths(row) {
+  if (!isRecord(row)) return [];
+  const found = new Set();
+  if (nonEmptyString(row.routeConnectorPath)) {
+    found.add(row.routeConnectorPath);
+  }
+  if (Array.isArray(row.routeConnectorPaths)) {
+    for (const routeConnectorPath of row.routeConnectorPaths) {
+      if (nonEmptyString(routeConnectorPath)) {
+        found.add(routeConnectorPath);
+      }
+    }
+  }
+  return Array.from(found).sort();
+}
+
+function hasExplicitSourceBlocker(row) {
+  return (
+    isRecord(row?.derivability) &&
+    Array.isArray(row.derivability.blockers) &&
+    row.derivability.blockers.some(
+      (blocker) => typeof blocker === "string" && blocker.trim() !== "",
+    )
+  );
+}
+
+function hasComponentConnectorAtPath(repoRelativePath) {
+  if (!repoFileExists(repoRelativePath)) return false;
+  const text = fs.readFileSync(path.join(root, repoRelativePath), "utf8");
+  return (
+    /\bvar\s+qComponentRoute\s*:\s*List\[RuleCoreComponentRouteEvent\]/.test(
+      text,
+    ) &&
+    /\bqComponentRoute'\s*=/.test(text) &&
+    /\bruleCoreComponentRoute\s*\(/.test(text)
+  );
+}
+
+function routeRowHasPackageGateEvidence(row) {
+  if (!isRecord(row) || typeof row.route !== "string") return false;
+  if (hasExplicitSourceBlocker(row)) return true;
+  if (row.route === "source-qnt-corpus-blocker") {
+    return false;
+  }
+  if (row.route === "component-first") {
+    const connectorPath =
+      typeof row.componentConnectorPath === "string" &&
+      row.componentConnectorPath.trim() !== ""
+        ? row.componentConnectorPath
+        : row.driverPath;
+    return (
+      hasExecutableComponentConnectorEvidence(row) ||
+      hasComponentConnectorAtPath(connectorPath)
+    );
+  }
+  if (row.route === "reducer-routed") {
+    const connectorPaths = collectRouteConnectorPaths(row);
+    return connectorPaths.length > 0
+      ? connectorPaths.some(repoFileExists)
+      : repoFileExists(defaultRouteConnectorPath(row.driverPath));
+  }
+  if (collectRouteConnectorPaths(row).some(repoFileExists)) return true;
+  if (repoFileExists(row.componentConnectorPath)) return true;
+  return false;
+}
+
+function validateFreshCleanroomPackageGate(denominator, context, issues) {
+  const gate = denominator.freshCleanroomPackageGate;
+  if (!isRecord(gate)) {
+    issues.push(`${context}: freshCleanroomPackageGate must be an object.`);
+    return;
+  }
+  for (const field of ["gateId", "acceptanceSlice"]) {
+    if (field === "gateId") {
+      if (typeof gate[field] !== "string" || gate[field].trim() === "") {
+        issues.push(`${context}: freshCleanroomPackageGate.gateId must be a non-empty string.`);
+      }
+      continue;
+    }
+    if (
+      !Array.isArray(gate[field]) ||
+      gate[field].length === 0 ||
+      gate[field].some((item) => typeof item !== "string" || item.trim() === "")
+    ) {
+      issues.push(`${context}: freshCleanroomPackageGate.${field} must be a non-empty string array.`);
+    }
+  }
+  const requiredCopiedInputs = [
+    "cleanroom-input/MANIFEST.md",
+    "cleanroom-input/raw/srd-5.2.1/**",
+    "cleanroom-input/qnt/**",
+    "cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md",
+    "cleanroom-input/domain/CLEANROOM_ASSUMPTIONS.md",
+    "cleanroom-input/branch-coverage/source-branch-inventory.json",
+    "cleanroom-input/branch-coverage/reducer-route-inventory.json",
+    "cleanroom-input/guidance/**",
+  ];
+  if (!Array.isArray(gate.copiedInputs)) {
+    issues.push(`${context}: freshCleanroomPackageGate.copiedInputs must be an array.`);
+  } else {
+    for (const required of requiredCopiedInputs) {
+      if (!gate.copiedInputs.includes(required)) {
+        issues.push(
+          `${context}: freshCleanroomPackageGate.copiedInputs must include ${required}.`,
+        );
+      }
+    }
+  }
+  if (!Array.isArray(gate.routeClassEvidence)) {
+    issues.push(`${context}: freshCleanroomPackageGate.routeClassEvidence must be an array.`);
+  } else {
+    const coveredRoutes = new Set();
+    for (const [index, entry] of gate.routeClassEvidence.entries()) {
+      const entryContext = `${context}: freshCleanroomPackageGate.routeClassEvidence[${index}]`;
+      if (!isRecord(entry)) {
+        issues.push(`${entryContext}: entry must be an object.`);
+        continue;
+      }
+      if (!reducerRouteTags.has(entry.route)) {
+        issues.push(
+          `${entryContext}: route must be one of ${Array.from(reducerRouteTags).join(", ")}.`,
+        );
+      } else {
+        coveredRoutes.add(entry.route);
+      }
+      if (
+        !Array.isArray(entry.acceptedEvidence) ||
+        entry.acceptedEvidence.length === 0 ||
+        entry.acceptedEvidence.some(
+          (item) => typeof item !== "string" || item.trim() === "",
+        )
+      ) {
+        issues.push(`${entryContext}: acceptedEvidence must be a non-empty string array.`);
+      }
+    }
+    for (const route of reducerRouteTags) {
+      if (!coveredRoutes.has(route)) {
+        issues.push(
+          `${context}: freshCleanroomPackageGate.routeClassEvidence is missing ${route}.`,
+        );
+      }
+    }
+  }
+  if (!Array.isArray(denominator.driverRouteAssignments)) return;
+  for (const [index, assignment] of denominator.driverRouteAssignments.entries()) {
+    if (!routeRowHasPackageGateEvidence(assignment)) {
+      issues.push(
+        `${context}: driverRouteAssignments[${index}] ${assignment.driverPath ?? "<unknown>"} lacks fresh cleanroom package evidence.`,
+      );
+    }
+  }
+  if (!Array.isArray(denominator.branchDecisionClasses)) return;
+  for (const [index, decision] of denominator.branchDecisionClasses.entries()) {
+    if (!routeRowHasPackageGateEvidence(decision)) {
+      issues.push(
+        `${context}: branchDecisionClasses[${index}] ${decision.driverPath ?? "<unknown>"}#${decision.branchAction ?? "<unknown>"} lacks fresh cleanroom package evidence.`,
+      );
+    }
+  }
+}
+
+function routeRowsForReplay(routeInventory) {
+  if (!isRecord(routeInventory) || !Array.isArray(routeInventory.levelDenominators)) {
+    return { branchRows: [], driverRows: [] };
+  }
+  return routeInventory.levelDenominators.reduce(
+    (acc, denominator) => {
+      if (!isRecord(denominator)) return acc;
+      if (Array.isArray(denominator.branchDecisionClasses)) {
+        acc.branchRows.push(...denominator.branchDecisionClasses.filter(isRecord));
+      }
+      if (Array.isArray(denominator.driverRouteAssignments)) {
+        acc.driverRows.push(...denominator.driverRouteAssignments.filter(isRecord));
+      }
+      return acc;
+    },
+    { branchRows: [], driverRows: [] },
+  );
+}
+
+function routeRowForReplay(routeInventory, run) {
+  const { branchRows, driverRows } = routeRowsForReplay(routeInventory);
+  return (
+    branchRows.find(
+      (row) =>
+        row.driverPath === run.driverPath &&
+        row.branchFamily === run.branchFamily &&
+        row.branchAction === run.branchAction,
+    ) ??
+    driverRows.find((row) => row.driverPath === run.driverPath)
+  );
+}
+
+function expectedReplayStateCheck(routeRow) {
+  if (!isRecord(routeRow)) return undefined;
+  if (routeRow.route === "component-first") {
+    return {
+      projection: "qComponentRoute",
+      comparator: "component-route-event-list",
+    };
+  }
+  if (routeRow.route === "reducer-routed") {
+    return { projection: "qRoute", comparator: "route-event-list" };
+  }
+  if (
+    typeof routeRow.componentConnectorPath === "string" &&
+    routeRow.componentConnectorPath.trim() !== ""
+  ) {
+    return {
+      projection: "qComponentRoute",
+      comparator: "component-route-event-list",
+    };
+  }
+  if (
+    collectRouteConnectorPaths(routeRow).length > 0
+  ) {
+    return { projection: "qRoute", comparator: "route-event-list" };
+  }
+  return undefined;
+}
+
+function validateRouteReplayProjection(run, routeInventory, context, issues) {
+  const expectedStateCheck = expectedReplayStateCheck(
+    routeRowForReplay(routeInventory, run),
+  );
+  if (expectedStateCheck === undefined) return;
+  if (run.stateCheck?.projection !== expectedStateCheck.projection) {
+    issues.push(
+      `${context}: ${run.driverPath} route evidence requires stateCheck.projection ${expectedStateCheck.projection}.`,
+    );
+  }
+  if (run.stateCheck?.comparator !== expectedStateCheck.comparator) {
+    issues.push(
+      `${context}: ${run.driverPath} route evidence requires stateCheck.comparator ${expectedStateCheck.comparator}.`,
+    );
+  }
+}
+
 function validateLevelDenominator(denominator, context, inventory) {
   const issues = [];
   if (!isRecord(denominator)) {
@@ -1060,6 +1317,7 @@ function validateLevelDenominator(denominator, context, inventory) {
       }
     }
   }
+  validateFreshCleanroomPackageGate(denominator, context, issues);
   return issues;
 }
 
@@ -1367,6 +1625,7 @@ function validateTargetReplayEvidence(
   const expectedCleanroomManifestSourceCommitSha =
     options.expectedCleanroomManifestSourceCommitSha;
   const expectedTargetProfileSha256 = options.expectedTargetProfileSha256;
+  const routeInventory = options.routeInventory;
   const issues = [];
   if (!isRecord(evidence)) {
     return {
@@ -1532,6 +1791,7 @@ function validateTargetReplayEvidence(
     }
     if (run.result?.tag === "pass") {
       validatePassingStateCheck(run.stateCheck, context, issues);
+      validateRouteReplayProjection(run, routeInventory, context, issues);
     }
     if (run.result?.tag === "pass" && issues.length === issueCountBeforeRun) {
       covered.add(obligationId);
@@ -1808,6 +2068,184 @@ function runSelfTest() {
     if (targetResult.issues.length > 0) {
       throw new Error(
         `expected target evidence to pass: ${targetResult.issues.join("; ")}`,
+      );
+    }
+    const routeProjectionInventory = {
+      levelDenominators: [
+        {
+          driverRouteAssignments: [
+            {
+              driverPath: "packages/fixture/fixture.mbt.qnt",
+              route: "reducer-routed",
+            },
+          ],
+          branchDecisionClasses: [],
+        },
+      ],
+    };
+    const routeProjectionEvidence = stable(targetEvidence);
+    for (const run of routeProjectionEvidence.runs) {
+      run.stateCheck.projection = "qRoute";
+      run.stateCheck.comparator = "route-event-list";
+    }
+    const routeProjectionResult = validateTargetReplayEvidence(
+      routeProjectionEvidence,
+      inventory,
+      inventorySha,
+      { routeInventory: routeProjectionInventory },
+    );
+    if (routeProjectionResult.issues.length > 0) {
+      throw new Error(
+        `expected route projection evidence to pass: ${routeProjectionResult.issues.join("; ")}`,
+      );
+    }
+    const badRouteProjectionEvidence = stable(routeProjectionEvidence);
+    badRouteProjectionEvidence.runs[0].stateCheck.projection = "driver-local";
+    const badRouteProjectionResult = validateTargetReplayEvidence(
+      badRouteProjectionEvidence,
+      inventory,
+      inventorySha,
+      { routeInventory: routeProjectionInventory },
+    );
+    if (
+      !badRouteProjectionResult.issues.some((issue) =>
+        issue.includes("requires stateCheck.projection qRoute"),
+      )
+    ) {
+      throw new Error(
+        `expected driver-local route projection to fail, got ${JSON.stringify(badRouteProjectionResult.issues)}`,
+      );
+    }
+    const badRouteComparatorEvidence = stable(routeProjectionEvidence);
+    badRouteComparatorEvidence.runs[0].stateCheck.comparator =
+      "component-route-event-list";
+    const badRouteComparatorResult = validateTargetReplayEvidence(
+      badRouteComparatorEvidence,
+      inventory,
+      inventorySha,
+      { routeInventory: routeProjectionInventory },
+    );
+    if (
+      !badRouteComparatorResult.issues.some((issue) =>
+        issue.includes("requires stateCheck.comparator route-event-list"),
+      )
+    ) {
+      throw new Error(
+        `expected component comparator on reducer route evidence to fail, got ${JSON.stringify(badRouteComparatorResult.issues)}`,
+      );
+    }
+    const componentProjectionInventory = {
+      levelDenominators: [
+        {
+          driverRouteAssignments: [
+            {
+              driverPath: "packages/fixture/fixture.mbt.qnt",
+              route: "component-first",
+            },
+          ],
+          branchDecisionClasses: [],
+        },
+      ],
+    };
+    const componentProjectionEvidence = stable(targetEvidence);
+    for (const run of componentProjectionEvidence.runs) {
+      run.stateCheck.projection = "qComponentRoute";
+      run.stateCheck.comparator = "component-route-event-list";
+    }
+    const componentProjectionResult = validateTargetReplayEvidence(
+      componentProjectionEvidence,
+      inventory,
+      inventorySha,
+      { routeInventory: componentProjectionInventory },
+    );
+    if (componentProjectionResult.issues.length > 0) {
+      throw new Error(
+        `expected component route projection evidence to pass: ${componentProjectionResult.issues.join("; ")}`,
+      );
+    }
+    const badComponentComparatorEvidence = stable(componentProjectionEvidence);
+    badComponentComparatorEvidence.runs[0].stateCheck.comparator =
+      "route-event-list";
+    const badComponentComparatorResult = validateTargetReplayEvidence(
+      badComponentComparatorEvidence,
+      inventory,
+      inventorySha,
+      { routeInventory: componentProjectionInventory },
+    );
+    if (
+      !badComponentComparatorResult.issues.some((issue) =>
+        issue.includes(
+          "requires stateCheck.comparator component-route-event-list",
+        ),
+      )
+    ) {
+      throw new Error(
+        `expected reducer comparator on component route evidence to fail, got ${JSON.stringify(badComponentComparatorResult.issues)}`,
+      );
+    }
+    const pluralOnlyRouteConnectorRow = {
+      driverPath: "packages/fixture/fixture.mbt.qnt",
+      route: "catalog-after-substrate",
+      routeConnectorPaths: [
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+      ],
+      derivability: {
+        qntFacts: ["fixture prose intentionally omits the route connector path."],
+        rawDomainFacts: [],
+        blockers: [],
+      },
+    };
+    if (!routeRowHasPackageGateEvidence(pluralOnlyRouteConnectorRow)) {
+      throw new Error(
+        "expected plural routeConnectorPaths to satisfy package gate evidence",
+      );
+    }
+    const pluralRouteProjectionInventory = {
+      levelDenominators: [
+        {
+          driverRouteAssignments: [pluralOnlyRouteConnectorRow],
+          branchDecisionClasses: [],
+        },
+      ],
+    };
+    const pluralRouteProjectionResult = validateTargetReplayEvidence(
+      routeProjectionEvidence,
+      inventory,
+      inventorySha,
+      { routeInventory: pluralRouteProjectionInventory },
+    );
+    if (pluralRouteProjectionResult.issues.length > 0) {
+      throw new Error(
+        `expected plural routeConnectorPaths replay evidence to pass: ${pluralRouteProjectionResult.issues.join("; ")}`,
+      );
+    }
+    const cleanroomPathRouteInventory = {
+      levelDenominators: [
+        {
+          driverRouteAssignments: [
+            {
+              driverPath: "packages/fixture/fixture.mbt.qnt",
+              route: "catalog-after-substrate",
+              derivability: {
+                qntFacts: [
+                  "cleanroom-input/qnt/fixture/fixture.route.mbt.qnt exposes qRoute.",
+                ],
+              },
+            },
+          ],
+          branchDecisionClasses: [],
+        },
+      ],
+    };
+    const cleanroomPathProjectionResult = validateTargetReplayEvidence(
+      routeProjectionEvidence,
+      inventory,
+      inventorySha,
+      { routeInventory: cleanroomPathRouteInventory },
+    );
+    if (cleanroomPathProjectionResult.issues.length > 0) {
+      throw new Error(
+        `expected cleanroom-input route derivability evidence to pass: ${cleanroomPathProjectionResult.issues.join("; ")}`,
       );
     }
     const badEvidence = stable(targetEvidence);
@@ -2106,6 +2544,7 @@ function main() {
       targetEvidence,
       inventory,
       inventorySha,
+      { routeInventory: reducerRouteInventory },
     );
     if (targetEvidenceSummary.issues.length > 0) {
       console.error("cleanroom branch coverage target evidence FAILED:");

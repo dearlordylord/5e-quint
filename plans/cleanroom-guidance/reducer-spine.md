@@ -138,6 +138,9 @@ For reducer-spine diagnostics, use
 `cleanroom-input/branch-coverage/reducer-route-inventory.json`:
 
 - The active diagnostic batch is the intended order.
+- The `level-1-5-cleanroom-route-v1.freshCleanroomPackageGate` record is the
+  fresh package acceptance slice. It names the copied inputs, route-class
+  evidence forms, and target replay evidence requirements.
 - `reducer-routed` means target replay must pass through the shared reducer
   surface and match the copied route connector's `qRoute`.
 - `substrate-first` means the substrate and durable owner must be introduced or
@@ -152,3 +155,5 @@ For reducer-spine diagnostics, use
 If the route needs a reducer fact not present in copied QNT, RAW, domain
 language, assumptions, or this guidance, record a `source-qnt-corpus` blocker.
 Do not infer the missing fact from TypeScript or from prior cleanroom code.
+Do not use dirty cleanroom reports, ledgers, adapters, or target implementation
+history as acceptance evidence for a fresh package run.

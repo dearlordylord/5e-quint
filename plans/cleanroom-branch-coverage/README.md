@@ -51,6 +51,13 @@ This denominator is not cleanroom replay evidence. It answers queue questions
 such as "how many drivers remain" and tells later tasks which branch decisions
 can be promoted only after the corresponding generic route substrate exists.
 
+The same denominator owns the fresh package gate in
+`freshCleanroomPackageGate`. That gate is the acceptance slice for a future
+fresh cleanroom run: copied RAW/domain/QNT/guidance inputs, route inventory,
+source branch inventory, target replay evidence schema, and explicit
+route-class evidence must be sufficient without production TypeScript reads or
+dirty cleanroom history.
+
 `*.route.mbt.qnt` connectors are the executable source of truth for reducer
 routing. A `reducer-routed` row is meaningful only when the connector projects
 `qRoute` through the reducer-route vocabulary. Rows should set
