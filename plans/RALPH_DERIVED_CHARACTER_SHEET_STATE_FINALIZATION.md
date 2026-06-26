@@ -13,13 +13,13 @@
     {
       "number": 2,
       "id": "DCSF-02-TEST-HELPER-CANONICAL-STATE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Remove capacity-bearing Character Sheet test helper inputs"
     },
     {
       "number": 3,
       "id": "DCSF-03-RESOURCE-CAPACITY-AUDIT",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Harden class-feature resource capacities as build-derived projections"
     },
     {
@@ -112,8 +112,8 @@ repair the branch in the task worktree.
 | Task | Status | Depends On | Blocks | Intent |
 | --- | --- | --- | --- | --- |
 | 1 / DCSF-01 | done | none | DCSF-02 | Stored sheet rejects stale capacity-bearing fields. |
-| 2 / DCSF-02 | ready-for-implementation | DCSF-01 | DCSF-03 | Tests stop accepting capacity-bearing sheet helper inputs. |
-| 3 / DCSF-03 | blocked | DCSF-02 | DCSF-04 | Resource capacities are projection-only and tested. |
+| 2 / DCSF-02 | done | DCSF-01 | DCSF-03 | Tests stop accepting capacity-bearing sheet helper inputs. |
+| 3 / DCSF-03 | ready-for-implementation | DCSF-02 | DCSF-04 | Resource capacities are projection-only and tested. |
 | 4 / DCSF-04 | blocked | DCSF-03 | DCSF-05 | Battle handoff rejects capacity drift and writes only sheet state. |
 | 5 / DCSF-05 | blocked | DCSF-04 | none | MCP/app/docs distinguish input/store state from output/display projections. |
 
@@ -179,7 +179,7 @@ Plan Impact:
 
 ### Task 2 - DCSF-02-TEST-HELPER-CANONICAL-STATE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Scope:
 
@@ -214,11 +214,7 @@ Plan Impact:
 
 ### Task 3 - DCSF-03-RESOURCE-CAPACITY-AUDIT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Wait for DCSF-02 so resource tests use canonical state inputs.
+Status: `ready-for-implementation`
 
 Scope:
 

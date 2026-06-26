@@ -26,8 +26,6 @@ import {
   createFreshCharacterSheet as createFreshCharacterSheetCore,
   type CharacterSheet,
   type CharacterSheetInput,
-  type CharacterSheetSpellSlotState,
-  type CharacterSpellSlotExpenditure,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -217,22 +215,8 @@ function sheetSpellcastingAndMetamagicProjection(): BattleInitProjection {
       build: sorcererMetamagicBuild(),
       currentHp: Hp(24),
       tempHp: Hp(0),
-      spellSlots: [
-        {
-          spellLevel: spellSlotLevel(1),
-          count: resourceCount(4),
-          expended: resourceCount(1),
-        },
-        {
-          spellLevel: spellSlotLevel(2),
-          count: resourceCount(3),
-          expended: resourceCount(0),
-        },
-        {
-          spellLevel: spellSlotLevel(3),
-          count: resourceCount(2),
-          expended: resourceCount(0),
-        },
+      spellSlotExpenditures: [
+        { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
       ],
       unitLibrary,
     }),
@@ -287,13 +271,6 @@ function rejectMixedSpellAndPactSlotInitProjection(): BattleInitProjection {
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(2),
-            expended: resourceCount(0),
-          },
-        ],
         pactSlots: { expended: resourceCount(0) },
       }),
     ),
@@ -477,27 +454,18 @@ type CharacterSheetTestInput = Omit<
   Partial<
     Pick<
       CharacterSheetInput,
-      "conditions" | "hitPointMaximumReduction" | "zeroHpLifecycle"
+      | "conditions"
+      | "hitPointMaximumReduction"
+      | "spellSlotExpenditures"
+      | "zeroHpLifecycle"
     >
-  > & {
-    readonly spellSlotExpenditures?: readonly CharacterSpellSlotExpenditure[];
-    readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
-  };
+  >;
 
 function createFreshCharacterSheet(input: CharacterSheetTestInput) {
-  const { spellSlots, spellSlotExpenditures, ...rest } = input;
-  const ordinarySpellSlotExpenditures =
-    spellSlotExpenditures ??
-    spellSlots
-      ?.filter((slot) => slot.expended > 0)
-      .map(({ spellLevel, expended }) => ({ spellLevel, expended }));
   return createFreshCharacterSheetCore({
     conditions: [],
     hitPointMaximumReduction: Hp(0),
-    ...rest,
-    ...(ordinarySpellSlotExpenditures === undefined
-      ? {}
-      : { spellSlotExpenditures: ordinarySpellSlotExpenditures }),
+    ...input,
   });
 }
 

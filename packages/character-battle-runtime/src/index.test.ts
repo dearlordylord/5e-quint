@@ -80,8 +80,6 @@ import {
   type CharacterSheetInput,
   type CharacterSheetRetainedCompanionCurrentHitPoints,
   type CharacterSheetRetainedCompanionManifestation,
-  type CharacterSheetSpellSlotState,
-  type CharacterSpellSlotExpenditure,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -147,26 +145,17 @@ type CharacterSheetTestInput = Omit<
   "conditions" | "hitPointMaximumReduction" | "spellSlotExpenditures"
 > &
   Partial<
-    Pick<CharacterSheetInput, "conditions" | "hitPointMaximumReduction">
-  > & {
-    readonly spellSlotExpenditures?: readonly CharacterSpellSlotExpenditure[];
-    readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
-  };
+    Pick<
+      CharacterSheetInput,
+      "conditions" | "hitPointMaximumReduction" | "spellSlotExpenditures"
+    >
+  >;
 
 function createFreshCharacterSheet(input: CharacterSheetTestInput) {
-  const { spellSlots, spellSlotExpenditures, ...rest } = input;
-  const ordinarySpellSlotExpenditures =
-    spellSlotExpenditures ??
-    spellSlots
-      ?.filter((slot) => slot.expended > 0)
-      .map(({ spellLevel, expended }) => ({ spellLevel, expended }));
   return createFreshCharacterSheetCore({
     conditions: [],
     hitPointMaximumReduction: Hp(0),
-    ...rest,
-    ...(ordinarySpellSlotExpenditures === undefined
-      ? {}
-      : { spellSlotExpenditures: ordinarySpellSlotExpenditures }),
+    ...input,
   });
 }
 
@@ -1672,12 +1661,8 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
       spentHitDice: [{ classUnitId: "class_wizard", spent: resourceCount(1) }],
-      spellSlots: [
-        {
-          spellLevel: spellSlotLevel(1),
-          count: resourceCount(2),
-          expended: resourceCount(1),
-        },
+      spellSlotExpenditures: [
+        { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
       ],
       restFeatureUses: [{ tag: "arcaneRecovery", usedSinceLongRest: true }],
     });
@@ -1991,12 +1976,8 @@ describe("Character Sheet battle handoff", () => {
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(2),
-            expended: resourceCount(1),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
         ],
         pactSlots: { expended: resourceCount(0) },
       }),
