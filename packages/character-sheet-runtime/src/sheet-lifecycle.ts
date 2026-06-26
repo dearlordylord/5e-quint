@@ -622,6 +622,11 @@ function parseStoredRestFeatureUses(
       return characterSheetIssue("Expected supported rest feature use state.");
     }
     if (use.tag === SPELL_RECIPIENT_REST_LOCKOUT_TAG) {
+      if (!recordHasExactKeys(use, ["tag", "spellId", "usedSinceLongRest"])) {
+        return characterSheetIssue(
+          "Spell recipient rest lockout state must contain exactly tag, spell Unit id, and Long Rest use flag.",
+        );
+      }
       if (typeof use.spellId !== "string") {
         return characterSheetIssue(
           "Spell recipient rest lockout requires a spell Unit id.",
@@ -633,6 +638,11 @@ function parseStoredRestFeatureUses(
         usedSinceLongRest: true,
       });
       continue;
+    }
+    if (!recordHasExactKeys(use, ["tag", "usedSinceLongRest"])) {
+      return characterSheetIssue(
+        "Character Sheet rest feature use state must contain exactly tag and Long Rest use flag.",
+      );
     }
     uses.push({ tag: use.tag, usedSinceLongRest: true });
   }

@@ -19,13 +19,13 @@
     {
       "number": 3,
       "id": "DCSF-03-RESOURCE-CAPACITY-AUDIT",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Harden class-feature resource capacities as build-derived projections"
     },
     {
       "number": 4,
       "id": "DCSF-04-BATTLE-HANDOFF-HARDENING",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Harden Character Sheet battle handoff capacity drift checks"
     },
     {
@@ -113,8 +113,8 @@ repair the branch in the task worktree.
 | --- | --- | --- | --- | --- |
 | 1 / DCSF-01 | done | none | DCSF-02 | Stored sheet rejects stale capacity-bearing fields. |
 | 2 / DCSF-02 | done | DCSF-01 | DCSF-03 | Tests stop accepting capacity-bearing sheet helper inputs. |
-| 3 / DCSF-03 | ready-for-implementation | DCSF-02 | DCSF-04 | Resource capacities are projection-only and tested. |
-| 4 / DCSF-04 | blocked | DCSF-03 | DCSF-05 | Battle handoff rejects capacity drift and writes only sheet state. |
+| 3 / DCSF-03 | done | DCSF-02 | DCSF-04 | Resource capacities are projection-only and tested. |
+| 4 / DCSF-04 | ready-for-implementation | DCSF-03 | DCSF-05 | Battle handoff rejects capacity drift and writes only sheet state. |
 | 5 / DCSF-05 | blocked | DCSF-04 | none | MCP/app/docs distinguish input/store state from output/display projections. |
 
 ## Pre-Research Findings
@@ -214,7 +214,7 @@ Plan Impact:
 
 ### Task 3 - DCSF-03-RESOURCE-CAPACITY-AUDIT
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Scope:
 
@@ -255,12 +255,7 @@ Plan Impact:
 
 ### Task 4 - DCSF-04-BATTLE-HANDOFF-HARDENING
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Wait for DCSF-03 so battle handoff checks against final resource
-projection behavior.
+Status: `ready-for-implementation`
 
 Scope:
 

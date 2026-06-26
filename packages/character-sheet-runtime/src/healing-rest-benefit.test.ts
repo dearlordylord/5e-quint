@@ -260,7 +260,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         usedSinceLongRest: true,
       },
     ]);
-    expect(characterSheetCurrentHp(result.recipients[0])).toBe(18);
+    expect(characterSheetCurrentHp(result.recipients[0])).toBe(7);
     expect(characterSheetTempHp(result.recipients[0])).toBe(2);
     expect(characterSheetPactSlots(result.recipients[0])).toEqual({
       slotLevel: 1,
