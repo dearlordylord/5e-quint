@@ -31,6 +31,14 @@ const reducerRouteInventoryPath = path.join(
   coverageRoot,
   "reducer-route-inventory.json",
 );
+const reducerConvergenceBacklogSchemaPath = path.join(
+  coverageRoot,
+  "reducer-convergence-backlog.schema.json",
+);
+const reducerConvergenceBacklogPath = path.join(
+  coverageRoot,
+  "reducer-convergence-backlog.json",
+);
 const reportPath = path.join(coverageRoot, "REPORT.md");
 const scaffoldTasksRoot = path.join(root, "plans/cleanroom-scaffolds/tasks");
 const activeWorkTemplatePath = path.join(
@@ -85,6 +93,38 @@ const reducerRouteTags = new Set([
   "replay-refresh-only",
   "source-qnt-corpus-blocker",
 ]);
+const reducerConvergenceRouteClasses = new Set([
+  "QNT-CONNECTOR",
+  "QNT-BLOCKER",
+  "RUST-SUBSTRATE",
+  "RUST-ROUTE-MIGRATION",
+  "HARNESS-GAP",
+  "CATALOG-DEFER",
+  "REPLAY-REFRESH",
+]);
+const reducerConvergenceStatuses = new Set([
+  "pending",
+  "blocked",
+  "ready",
+  "applied",
+  "deferred",
+]);
+const reducerConvergenceRowKeys = [
+  "driverPath",
+  "lane",
+  "routeClass",
+  "durableOwner",
+  "sourceTaskId",
+  "rustTaskId",
+  "status",
+  "blockerId",
+];
+const reducerConvergenceCitationPaths = [
+  "plans/cleanroom-scaffolds/tasks/ACTIVE_WORK.template.json",
+  "plans/cleanroom-branch-coverage/source-branch-inventory.json",
+  "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+  "plans/RALPH_L15_REDUCER_ROUTE_QNT_ARCHITECTURE.md",
+];
 
 const levelDenominatorBranchScopeTags = new Set([
   "in-denominator",
@@ -1455,6 +1495,401 @@ function validateReducerRouteInventory(routeInventory, scopeRows, inventory) {
   return issues;
 }
 
+function cleanroomPathToDriverPath(cleanroomPath) {
+  if (
+    typeof cleanroomPath !== "string" ||
+    !cleanroomPath.startsWith("cleanroom-input/qnt/")
+  ) {
+    return undefined;
+  }
+  return `packages/${cleanroomPath.slice("cleanroom-input/qnt/".length)}`;
+}
+
+function sortedSetDifference(left, right) {
+  return Array.from(left)
+    .filter((item) => !right.has(item))
+    .sort();
+}
+
+function activeWorkLaneDriverPaths(activeWork, assignmentId, laneId) {
+  if (!isRecord(activeWork) || !Array.isArray(activeWork.assignments)) {
+    return undefined;
+  }
+  const assignment = activeWork.assignments.find(
+    (candidate) => candidate.assignmentId === assignmentId,
+  );
+  if (!isRecord(assignment) || !Array.isArray(assignment.lanes)) {
+    return undefined;
+  }
+  const lane = assignment.lanes.find((candidate) => candidate.laneId === laneId);
+  if (!isRecord(lane) || !Array.isArray(lane.queue)) {
+    return undefined;
+  }
+  const driverPaths = lane.queue.map(cleanroomPathToDriverPath);
+  if (driverPaths.some((driverPath) => driverPath === undefined)) {
+    return undefined;
+  }
+  return new Set(driverPaths);
+}
+
+function collectReducerConvergenceDenominatorFacts({
+  activeWork,
+  inventory,
+  routeInventory,
+  context,
+  issues,
+}) {
+  const inventoryDrivers = new Set(
+    inventory.branchObligations.map((obligation) => obligation.driverPath),
+  );
+  const battleLaneDriverPaths = new Set(
+    Array.from(inventoryDrivers).filter(
+      (driverPath) =>
+        driverPath.startsWith("packages/battle-runtime/") &&
+        !driverPath.startsWith("packages/battle-runtime/rule-core-"),
+    ),
+  );
+  const ruleCoreComponentDriverPaths = new Set(
+    Array.from(inventoryDrivers).filter((driverPath) =>
+      driverPath.startsWith("packages/battle-runtime/rule-core-"),
+    ),
+  );
+  const activeBattleLaneDriverPaths = activeWorkLaneDriverPaths(
+    activeWork,
+    "level-1-2-full",
+    "battle",
+  );
+  const activeRuleCoreDriverPaths = activeWorkLaneDriverPaths(
+    activeWork,
+    "level-1-2-full",
+    "rules-core",
+  );
+  const diagnosticBattleDriverPaths = activeWorkLaneDriverPaths(
+    activeWork,
+    "reducer-spine-diagnostic-battle",
+    "battle",
+  );
+  if (activeBattleLaneDriverPaths === undefined) {
+    issues.push(
+      `${context}: cannot read level-1-2-full battle queue from active work template.`,
+    );
+  } else {
+    const missingFromInventory = sortedSetDifference(
+      activeBattleLaneDriverPaths,
+      battleLaneDriverPaths,
+    );
+    const missingFromActiveWork = sortedSetDifference(
+      battleLaneDriverPaths,
+      activeBattleLaneDriverPaths,
+    );
+    for (const driverPath of missingFromInventory) {
+      issues.push(
+        `${context}: active work battle queue contains ${driverPath}, but source inventory does not.`,
+      );
+    }
+    for (const driverPath of missingFromActiveWork) {
+      issues.push(
+        `${context}: source inventory battle driver ${driverPath} is missing from active work battle queue.`,
+      );
+    }
+  }
+  if (activeRuleCoreDriverPaths === undefined) {
+    issues.push(
+      `${context}: cannot read level-1-2-full rules-core queue from active work template.`,
+    );
+  } else {
+    const missingFromInventory = sortedSetDifference(
+      activeRuleCoreDriverPaths,
+      ruleCoreComponentDriverPaths,
+    );
+    const missingFromActiveWork = sortedSetDifference(
+      ruleCoreComponentDriverPaths,
+      activeRuleCoreDriverPaths,
+    );
+    for (const driverPath of missingFromInventory) {
+      issues.push(
+        `${context}: active work rules-core queue contains ${driverPath}, but source inventory does not.`,
+      );
+    }
+    for (const driverPath of missingFromActiveWork) {
+      issues.push(
+        `${context}: source inventory rule-core driver ${driverPath} is missing from active work rules-core queue.`,
+      );
+    }
+  }
+  const diagnosticBatch = reducerDiagnosticBatch(routeInventory);
+  const diagnosticReducerRoutedDriverPaths = new Set(
+    (diagnosticBatch?.entries ?? [])
+      .filter((entry) => entry.route === "reducer-routed")
+      .map((entry) => entry.driverPath),
+  );
+  if (diagnosticBattleDriverPaths === undefined) {
+    issues.push(
+      `${context}: cannot read reducer-spine-diagnostic-battle queue from active work template.`,
+    );
+  } else {
+    const missingFromRouteInventory = sortedSetDifference(
+      diagnosticBattleDriverPaths,
+      diagnosticReducerRoutedDriverPaths,
+    );
+    const missingFromActiveWork = sortedSetDifference(
+      diagnosticReducerRoutedDriverPaths,
+      diagnosticBattleDriverPaths,
+    );
+    for (const driverPath of missingFromRouteInventory) {
+      issues.push(
+        `${context}: diagnostic battle driver ${driverPath} is not reducer-routed in route inventory.`,
+      );
+    }
+    for (const driverPath of missingFromActiveWork) {
+      issues.push(
+        `${context}: reducer-routed diagnostic driver ${driverPath} is missing from active work diagnostic queue.`,
+      );
+    }
+  }
+  const battleLaneBranchObligations = inventory.branchObligations.filter(
+    (obligation) => battleLaneDriverPaths.has(obligation.driverPath),
+  ).length;
+  const ruleCoreComponentBranchObligations =
+    inventory.branchObligations.filter((obligation) =>
+      ruleCoreComponentDriverPaths.has(obligation.driverPath),
+    ).length;
+  return {
+    battleLaneDriverPaths,
+    ruleCoreComponentDriverPaths,
+    battleLaneDrivers: battleLaneDriverPaths.size,
+    ruleCoreComponentDrivers: ruleCoreComponentDriverPaths.size,
+    totalDrivers:
+      battleLaneDriverPaths.size + ruleCoreComponentDriverPaths.size,
+    battleLaneBranchObligations,
+    ruleCoreComponentBranchObligations,
+    battleRuntimeBranchObligations:
+      battleLaneBranchObligations + ruleCoreComponentBranchObligations,
+    diagnosticBattleDrivers: diagnosticBattleDriverPaths?.size,
+    diagnosticReducerRoutedDrivers: diagnosticReducerRoutedDriverPaths.size,
+  };
+}
+
+function validateReducerConvergenceBacklogSchema(schema, context) {
+  const issues = [];
+  if (!isRecord(schema)) {
+    return [`${context}: schema must be an object.`];
+  }
+  if (schema.$id !== "reducer-convergence-backlog.schema.json") {
+    issues.push(`${context}: $id must be reducer-convergence-backlog.schema.json.`);
+  }
+  const rowSchema = schema.$defs?.backlogRow;
+  if (!isRecord(rowSchema)) {
+    issues.push(`${context}: $defs.backlogRow must be an object.`);
+    return issues;
+  }
+  if (!Array.isArray(rowSchema.required)) {
+    issues.push(`${context}: $defs.backlogRow.required must be an array.`);
+  } else {
+    for (const key of reducerConvergenceRowKeys) {
+      if (!rowSchema.required.includes(key)) {
+        issues.push(`${context}: $defs.backlogRow.required is missing ${key}.`);
+      }
+    }
+  }
+  const rowProperties = rowSchema.properties;
+  if (!isRecord(rowProperties)) {
+    issues.push(`${context}: $defs.backlogRow.properties must be an object.`);
+    return issues;
+  }
+  const routeClassEnum = rowProperties.routeClass?.enum;
+  if (
+    !Array.isArray(routeClassEnum) ||
+    routeClassEnum.length !== reducerConvergenceRouteClasses.size ||
+    routeClassEnum.some(
+      (routeClass) => !reducerConvergenceRouteClasses.has(routeClass),
+    )
+  ) {
+    issues.push(
+      `${context}: routeClass enum must match ${Array.from(reducerConvergenceRouteClasses).join(", ")}.`,
+    );
+  }
+  const statusEnum = rowProperties.status?.enum;
+  if (
+    !Array.isArray(statusEnum) ||
+    statusEnum.length !== reducerConvergenceStatuses.size ||
+    statusEnum.some((status) => !reducerConvergenceStatuses.has(status))
+  ) {
+    issues.push(
+      `${context}: status enum must match ${Array.from(reducerConvergenceStatuses).join(", ")}.`,
+    );
+  }
+  return issues;
+}
+
+function validateNullableString(value, context, issues) {
+  if (value === null) return;
+  if (typeof value !== "string" || value.trim() === "") {
+    issues.push(`${context} must be null or a non-empty string.`);
+  }
+}
+
+function validateReducerConvergenceBacklogRows(backlog, facts, context, issues) {
+  if (!Array.isArray(backlog.rows)) {
+    issues.push(`${context}: rows must be an array.`);
+    return;
+  }
+  const seenDriverPaths = new Set();
+  const denominatorDrivers = new Set([
+    ...facts.battleLaneDriverPaths,
+    ...facts.ruleCoreComponentDriverPaths,
+  ]);
+  for (const [index, row] of backlog.rows.entries()) {
+    const rowContext = `${context}: rows[${index}]`;
+    if (!isRecord(row)) {
+      issues.push(`${rowContext}: row must be an object.`);
+      continue;
+    }
+    for (const key of reducerConvergenceRowKeys) {
+      if (!Object.prototype.hasOwnProperty.call(row, key)) {
+        issues.push(`${rowContext}: missing stable key ${key}.`);
+      }
+    }
+    if (nonEmptyString(row.driverPath)) {
+      if (!denominatorDrivers.has(row.driverPath)) {
+        issues.push(`${rowContext}: driverPath is not in the denominator.`);
+      }
+      if (seenDriverPaths.has(row.driverPath)) {
+        issues.push(`${rowContext}: duplicate driverPath ${row.driverPath}.`);
+      }
+      seenDriverPaths.add(row.driverPath);
+    } else {
+      issues.push(`${rowContext}: driverPath must be a non-empty string.`);
+    }
+    if (row.lane === "battle") {
+      if (!facts.battleLaneDriverPaths.has(row.driverPath)) {
+        issues.push(`${rowContext}: battle lane row does not name a battle driver.`);
+      }
+    } else if (row.lane === "rule-core") {
+      if (!facts.ruleCoreComponentDriverPaths.has(row.driverPath)) {
+        issues.push(
+          `${rowContext}: rule-core lane row does not name a rule-core driver.`,
+        );
+      }
+    } else {
+      issues.push(`${rowContext}: lane must be battle or rule-core.`);
+    }
+    if (!reducerConvergenceRouteClasses.has(row.routeClass)) {
+      issues.push(
+        `${rowContext}: routeClass must be one of ${Array.from(reducerConvergenceRouteClasses).join(", ")}.`,
+      );
+    }
+    if (!nonEmptyString(row.durableOwner)) {
+      issues.push(`${rowContext}: durableOwner must be a non-empty string.`);
+    }
+    validateNullableString(row.sourceTaskId, `${rowContext}: sourceTaskId`, issues);
+    validateNullableString(row.rustTaskId, `${rowContext}: rustTaskId`, issues);
+    if (!reducerConvergenceStatuses.has(row.status)) {
+      issues.push(
+        `${rowContext}: status must be one of ${Array.from(reducerConvergenceStatuses).join(", ")}.`,
+      );
+    }
+    validateNullableString(row.blockerId, `${rowContext}: blockerId`, issues);
+    if (row.status === "blocked" && !nonEmptyString(row.blockerId)) {
+      issues.push(`${rowContext}: blocked rows require blockerId.`);
+    }
+    if (row.status !== "blocked" && row.blockerId !== null) {
+      issues.push(`${rowContext}: non-blocked rows must use blockerId null.`);
+    }
+  }
+}
+
+function validateReducerConvergenceBacklogArtifacts({
+  activeWork,
+  inventory,
+  routeInventory,
+}) {
+  const issues = [];
+  const schemaContext = repoPath(root, reducerConvergenceBacklogSchemaPath);
+  const backlogContext = repoPath(root, reducerConvergenceBacklogPath);
+  if (!fs.existsSync(reducerConvergenceBacklogSchemaPath)) {
+    issues.push(`${schemaContext} is missing.`);
+  }
+  if (!fs.existsSync(reducerConvergenceBacklogPath)) {
+    issues.push(`${backlogContext} is missing.`);
+  }
+  if (issues.length > 0) return issues;
+  const schema = readJson(reducerConvergenceBacklogSchemaPath);
+  const backlog = readJson(reducerConvergenceBacklogPath);
+  issues.push(...validateReducerConvergenceBacklogSchema(schema, schemaContext));
+  if (!isRecord(backlog)) {
+    return [...issues, `${backlogContext}: backlog must be an object.`];
+  }
+  if (backlog.schemaVersion !== 1) {
+    issues.push(`${backlogContext}: schemaVersion must be 1.`);
+  }
+  if (backlog.schemaPath !== schemaContext) {
+    issues.push(`${backlogContext}: schemaPath must be ${schemaContext}.`);
+  }
+  if (!nonEmptyString(backlog.generatedBy)) {
+    issues.push(`${backlogContext}: generatedBy must be a non-empty string.`);
+  }
+  if (!isRecord(backlog.denominator)) {
+    issues.push(`${backlogContext}: denominator must be an object.`);
+    return issues;
+  }
+  const facts = collectReducerConvergenceDenominatorFacts({
+    activeWork,
+    inventory,
+    routeInventory,
+    context: backlogContext,
+    issues,
+  });
+  const expectedCounts = new Map([
+    ["totalDrivers", facts.totalDrivers],
+    ["battleLaneDrivers", facts.battleLaneDrivers],
+    ["ruleCoreComponentDrivers", facts.ruleCoreComponentDrivers],
+    ["battleRuntimeBranchObligations", facts.battleRuntimeBranchObligations],
+    ["battleLaneBranchObligations", facts.battleLaneBranchObligations],
+    [
+      "ruleCoreComponentBranchObligations",
+      facts.ruleCoreComponentBranchObligations,
+    ],
+    ["diagnosticBattleDrivers", facts.diagnosticBattleDrivers],
+    ["diagnosticReducerRoutedDrivers", facts.diagnosticReducerRoutedDrivers],
+  ]);
+  for (const [field, expected] of expectedCounts.entries()) {
+    if (backlog.denominator[field] !== expected) {
+      issues.push(`${backlogContext}: denominator.${field} must be ${expected}.`);
+    }
+  }
+  if (!Array.isArray(backlog.denominator.sourceCitations)) {
+    issues.push(`${backlogContext}: denominator.sourceCitations must be an array.`);
+  } else {
+    const citedPaths = new Set(
+      backlog.denominator.sourceCitations
+        .filter(isRecord)
+        .map((citation) => citation.artifactPath),
+    );
+    for (const requiredPath of reducerConvergenceCitationPaths) {
+      if (!citedPaths.has(requiredPath)) {
+        issues.push(
+          `${backlogContext}: denominator.sourceCitations must cite ${requiredPath}.`,
+        );
+      }
+    }
+    for (const [index, citation] of backlog.denominator.sourceCitations.entries()) {
+      const citationContext = `${backlogContext}: denominator.sourceCitations[${index}]`;
+      if (!isRecord(citation)) {
+        issues.push(`${citationContext}: citation must be an object.`);
+        continue;
+      }
+      for (const field of ["artifactPath", "fact"]) {
+        if (!nonEmptyString(citation[field])) {
+          issues.push(`${citationContext}: ${field} must be a non-empty string.`);
+        }
+      }
+    }
+  }
+  validateReducerConvergenceBacklogRows(backlog, facts, backlogContext, issues);
+  return issues;
+}
+
 function decisionForBranch(row, branchAction) {
   const decision = row.branchDecisions.find(
     (candidate) => candidate.branchAction === branchAction,
@@ -2524,6 +2959,9 @@ function main() {
   const reducerRouteInventory = fs.existsSync(reducerRouteInventoryPath)
     ? readJson(reducerRouteInventoryPath)
     : undefined;
+  const activeWorkTemplate = fs.existsSync(activeWorkTemplatePath)
+    ? readJson(activeWorkTemplatePath)
+    : undefined;
   const routeIssues = validateReducerRouteInventory(
     reducerRouteInventory,
     scopeRows,
@@ -2532,6 +2970,16 @@ function main() {
   if (routeIssues.length > 0) {
     console.error("cleanroom reducer route inventory FAILED:");
     for (const issue of routeIssues) console.error(`  - ${issue}`);
+    process.exit(1);
+  }
+  const convergenceBacklogIssues = validateReducerConvergenceBacklogArtifacts({
+    activeWork: activeWorkTemplate,
+    inventory,
+    routeInventory: reducerRouteInventory,
+  });
+  if (convergenceBacklogIssues.length > 0) {
+    console.error("cleanroom reducer convergence backlog FAILED:");
+    for (const issue of convergenceBacklogIssues) console.error(`  - ${issue}`);
     process.exit(1);
   }
 

@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "reducer-convergence-backlog.schema.json",
+  "title": "Reducer convergence backlog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "schemaPath",
+    "generatedBy",
+    "denominator",
+    "rows"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "schemaPath": {
+      "const": "plans/cleanroom-branch-coverage/reducer-convergence-backlog.schema.json"
+    },
+    "generatedBy": {
+      "type": "string",
+      "minLength": 1
+    },
+    "denominator": {
+      "$ref": "#/$defs/denominator"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/backlogRow"
+      }
+    }
+  },
+  "$defs": {
+    "denominator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tag",
+        "totalDrivers",
+        "battleLaneDrivers",
+        "ruleCoreComponentDrivers",
+        "battleRuntimeBranchObligations",
+        "battleLaneBranchObligations",
+        "ruleCoreComponentBranchObligations",
+        "diagnosticBattleDrivers",
+        "diagnosticReducerRoutedDrivers",
+        "sourceCitations"
+      ],
+      "properties": {
+        "tag": {
+          "const": "source-derived-driver-denominator"
+        },
+        "totalDrivers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "battleLaneDrivers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ruleCoreComponentDrivers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "battleRuntimeBranchObligations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "battleLaneBranchObligations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ruleCoreComponentBranchObligations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "diagnosticBattleDrivers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "diagnosticReducerRoutedDrivers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sourceCitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/sourceCitation"
+          }
+        }
+      }
+    },
+    "sourceCitation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactPath",
+        "fact"
+      ],
+      "properties": {
+        "artifactPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fact": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "backlogRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "driverPath",
+        "lane",
+        "routeClass",
+        "durableOwner",
+        "sourceTaskId",
+        "rustTaskId",
+        "status",
+        "blockerId"
+      ],
+      "properties": {
+        "driverPath": {
+          "type": "string",
+          "pattern": "^packages/battle-runtime/.+\\.mbt\\.qnt$"
+        },
+        "lane": {
+          "enum": [
+            "battle",
+            "rule-core"
+          ]
+        },
+        "routeClass": {
+          "enum": [
+            "QNT-CONNECTOR",
+            "QNT-BLOCKER",
+            "RUST-SUBSTRATE",
+            "RUST-ROUTE-MIGRATION",
+            "HARNESS-GAP",
+            "CATALOG-DEFER",
+            "REPLAY-REFRESH"
+          ]
+        },
+        "durableOwner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceTaskId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "rustTaskId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "blocked",
+            "ready",
+            "applied",
+            "deferred"
+          ]
+        },
+        "blockerId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

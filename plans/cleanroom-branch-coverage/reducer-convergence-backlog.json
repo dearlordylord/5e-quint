@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "schemaPath": "plans/cleanroom-branch-coverage/reducer-convergence-backlog.schema.json",
+  "generatedBy": "RRCONV-01-DENOMINATOR-BACKLOG-SCHEMA",
+  "denominator": {
+    "tag": "source-derived-driver-denominator",
+    "totalDrivers": 74,
+    "battleLaneDrivers": 65,
+    "ruleCoreComponentDrivers": 9,
+    "battleRuntimeBranchObligations": 544,
+    "battleLaneBranchObligations": 404,
+    "ruleCoreComponentBranchObligations": 140,
+    "diagnosticBattleDrivers": 5,
+    "diagnosticReducerRoutedDrivers": 5,
+    "sourceCitations": [
+      {
+        "artifactPath": "plans/cleanroom-scaffolds/tasks/ACTIVE_WORK.template.json",
+        "fact": "assignment level-1-2-full has 65 battle queue drivers and 9 rules-core queue drivers; assignment reducer-spine-diagnostic-battle has 5 battle queue drivers."
+      },
+      {
+        "artifactPath": "plans/cleanroom-branch-coverage/source-branch-inventory.json",
+        "fact": "unique packages/battle-runtime/*.mbt.qnt drivers split into 65 battle-lane drivers and 9 rule-core component drivers, carrying 404 and 140 branch obligations respectively."
+      },
+      {
+        "artifactPath": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+        "fact": "active reducer-spine diagnostic batch lists the 5 diagnostic battle drivers as reducer-routed."
+      },
+      {
+        "artifactPath": "plans/RALPH_L15_REDUCER_ROUTE_QNT_ARCHITECTURE.md",
+        "fact": "route architecture defines the prior reducer-route denominator and executable route/component connector expectations consumed by this backlog."
+      }
+    ]
+  },
+  "rows": []
+}

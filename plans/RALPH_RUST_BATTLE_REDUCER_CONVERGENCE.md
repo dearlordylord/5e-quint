@@ -7,19 +7,19 @@
     {
       "number": 1,
       "id": "RRCONV-01-DENOMINATOR-BACKLOG-SCHEMA",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Define the reducer-convergence denominator and backlog schema"
     },
     {
       "number": 2,
       "id": "RRCONV-02-DIRTY-CLEANROOM-BASELINE-AUDIT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Audit dirty cleanroom reducer evidence and trust boundaries"
     },
     {
       "number": 3,
       "id": "RRCONV-03-HARNESS-REAL-ROUTE-EVIDENCE-CONTRACT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Specify real reducer-route evidence requirements"
     },
     {
@@ -37,43 +37,43 @@
     {
       "number": 6,
       "id": "RRCONV-06-CLASSIFY-SLOT-SAVE-HP-CONCENTRATION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Classify slot spell, save-gated, HP, death, and concentration drivers"
     },
     {
       "number": 7,
       "id": "RRCONV-07-CLASSIFY-WEAPON-ATTACK-STATBLOCK",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Classify weapon, attack, rider, and stat-block drivers"
     },
     {
       "number": 8,
       "id": "RRCONV-08-CLASSIFY-REACTION-INTERRUPT-TURN",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Classify reaction, interrupt, and turn-boundary drivers"
     },
     {
       "number": 9,
       "id": "RRCONV-09-CLASSIFY-MOVEMENT-SPATIAL-CONTROL",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Classify movement, spatial, command, and control drivers"
     },
     {
       "number": 10,
       "id": "RRCONV-10-CLASSIFY-ACTIVE-EFFECTS-CONDITIONS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Classify active effect, condition, buff, and modifier drivers"
     },
     {
       "number": 11,
       "id": "RRCONV-11-CLASSIFY-IDENTITY-SUBSTRATES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Classify selected-identity drivers behind generic substrates"
     },
     {
       "number": 12,
       "id": "RRCONV-12-CLASSIFY-RULE-CORE-COMPONENTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Classify rule-core drivers as component-first substrate work"
     },
     {
@@ -309,12 +309,12 @@ Forbidden shortcuts:
 
 | Task | Status | Depends On | Output |
 | --- | --- | --- | --- |
-| `RRCONV-01` | `ready-for-research` | _none_ | Backlog schema and denominator gate |
-| `RRCONV-02` | `blocked` | `RRCONV-01` | Dirty cleanroom baseline audit |
-| `RRCONV-03` | `blocked` | `RRCONV-01` | Real route evidence contract |
+| `RRCONV-01` | `done` | _none_ | Backlog schema and denominator gate |
+| `RRCONV-02` | `ready-for-research` | _none_ | Dirty cleanroom baseline audit |
+| `RRCONV-03` | `ready-for-research` | _none_ | Real route evidence contract |
 | `RRCONV-04` | `blocked` | `RRCONV-03` | Narrow quarantine gate |
 | `RRCONV-05` | `blocked` | `RRCONV-03` | Evidence provenance split |
-| `RRCONV-06`-`RRCONV-12` | `blocked` | `RRCONV-01` | Classified fixed driver groups |
+| `RRCONV-06`-`RRCONV-12` | `ready-for-research` | _none_ | Classified fixed driver groups |
 | `RRCONV-13` | `blocked` | `RRCONV-06`-`RRCONV-12` | Machine-readable convergence backlog |
 | `RRCONV-14` | `blocked` | `RRCONV-13` | QNT connector task template |
 | `RRCONV-15`-`RRCONV-16` | `blocked` | `RRCONV-14` | Pilot source connector tasks |
@@ -378,7 +378,7 @@ No-rework rules:
 
 ### Task 1 - RRCONV-01-DENOMINATOR-BACKLOG-SCHEMA
 
-Status: `ready-for-research`
+Status: `done`
 
 Intent:
 
@@ -421,11 +421,7 @@ Plan Impact:
 
 ### Task 2 - RRCONV-02-DIRTY-CLEANROOM-BASELINE-AUDIT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `RRCONV-01`.
+Status: `ready-for-research`
 
 Intent:
 
@@ -463,11 +459,7 @@ Plan Impact:
 
 ### Task 3 - RRCONV-03-HARNESS-REAL-ROUTE-EVIDENCE-CONTRACT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `RRCONV-01`.
+Status: `ready-for-research`
 
 Intent:
 
@@ -587,11 +579,7 @@ Plan Impact:
 
 ### Task 6 - RRCONV-06-CLASSIFY-SLOT-SAVE-HP-CONCENTRATION
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `RRCONV-01`.
+Status: `ready-for-research`
 
 Intent:
 
@@ -632,11 +620,7 @@ not needed.
 
 ### Task 7 - RRCONV-07-CLASSIFY-WEAPON-ATTACK-STATBLOCK
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `RRCONV-01`.
+Status: `ready-for-research`
 
 Intent:
 
@@ -676,11 +660,7 @@ Plan Impact:
 
 ### Task 8 - RRCONV-08-CLASSIFY-REACTION-INTERRUPT-TURN
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `RRCONV-01`.
+Status: `ready-for-research`
 
 Intent:
 
@@ -717,11 +697,7 @@ Plan Impact:
 
 ### Task 9 - RRCONV-09-CLASSIFY-MOVEMENT-SPATIAL-CONTROL
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `RRCONV-01`.
+Status: `ready-for-research`
 
 Intent:
 
@@ -758,11 +734,7 @@ Plan Impact:
 
 ### Task 10 - RRCONV-10-CLASSIFY-ACTIVE-EFFECTS-CONDITIONS
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `RRCONV-01`.
+Status: `ready-for-research`
 
 Intent:
 
@@ -800,11 +772,7 @@ Plan Impact:
 
 ### Task 11 - RRCONV-11-CLASSIFY-IDENTITY-SUBSTRATES
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `RRCONV-01`.
+Status: `ready-for-research`
 
 Intent:
 
@@ -843,11 +811,7 @@ Plan Impact:
 
 ### Task 12 - RRCONV-12-CLASSIFY-RULE-CORE-COMPONENTS
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `RRCONV-01`.
+Status: `ready-for-research`
 
 Intent:
 
