@@ -104,6 +104,7 @@ import {
   srdStatBlockCollection,
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -248,6 +249,7 @@ describe("Character Sheet battle handoff", () => {
     });
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
+    const expectedMaximumHp = sheetMaximumHp(sheet.right);
 
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
@@ -258,7 +260,7 @@ describe("Character Sheet battle handoff", () => {
           characterId: characterId("character:sheet-reduced-maximum"),
         },
         hp: Hp(6),
-        maxHp: Hp(7),
+        maxHp: expectedMaximumHp,
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -274,7 +276,7 @@ describe("Character Sheet battle handoff", () => {
           unitLibrary,
         }),
       ),
-    ).toBe(7);
+    ).toBe(expectedMaximumHp);
     expect(characterSheetCurrentHp(handoff.right)).toBe(6);
   });
 
@@ -298,7 +300,7 @@ describe("Character Sheet battle handoff", () => {
           characterId: characterId("character:sheet"),
         },
         hp: Hp(8),
-        maxHp: Hp(10),
+        maxHp: sheetMaximumHp(sheet.right),
         tempHp: Hp(4),
         positiveHpUnconscious: null,
       }),
@@ -314,7 +316,7 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:druid-wild-shape-handoff"),
       build: druidWildShapeBuild(),
-      currentHp: Hp(16),
+      currentHp: Hp(15),
       tempHp: Hp(0),
       unitLibrary,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
@@ -331,7 +333,7 @@ describe("Character Sheet battle handoff", () => {
           characterId: characterId("character:druid-wild-shape-handoff"),
         },
         hp: Hp(12),
-        maxHp: Hp(16),
+        maxHp: sheetMaximumHp(sheet.right),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -424,7 +426,7 @@ describe("Character Sheet battle handoff", () => {
             },
           },
         },
-        currentHp: Hp(8),
+        currentHp: Hp(7),
         tempHp: Hp(0),
         unitLibrary,
       }),
@@ -647,7 +649,7 @@ describe("Character Sheet battle handoff", () => {
             },
           },
         },
-        currentHp: Hp(8),
+        currentHp: Hp(7),
         tempHp: Hp(0),
         unitLibrary,
       }),
@@ -749,7 +751,7 @@ describe("Character Sheet battle handoff", () => {
             },
           },
         },
-        currentHp: Hp(8),
+        currentHp: Hp(7),
         tempHp: Hp(0),
         unitLibrary,
       }),
@@ -951,7 +953,7 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:druid-wild-shape-catalog"),
       build: druidWildShapeBuild(),
-      currentHp: Hp(16),
+      currentHp: Hp(15),
       tempHp: Hp(0),
       unitLibrary,
       statBlockCatalog,
@@ -971,7 +973,7 @@ describe("Character Sheet battle handoff", () => {
           characterId: characterId("character:druid-wild-shape-catalog"),
         },
         hp: Hp(12),
-        maxHp: Hp(16),
+        maxHp: sheetMaximumHp(sheet.right),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -1117,7 +1119,12 @@ describe("Character Sheet battle handoff", () => {
     if (init.creatureInit.kind !== "character") return;
     expect(
       init.creatureInit.druidWildShapeAvailableForms?.map((form) => form.id),
-    ).toEqual(["stat_block_rat", "stat_block_riding_horse"]);
+    ).toEqual([
+      "stat_block_rat",
+      "stat_block_riding_horse",
+      "stat_block_spider",
+      "stat_block_wolf",
+    ]);
     expect(
       discoverBattleActs(state).flatMap((act) =>
         act.subject.tag === "druidWildShape" &&
@@ -1125,7 +1132,12 @@ describe("Character Sheet battle handoff", () => {
           ? [act.subject.formStatBlockId]
           : [],
       ),
-    ).toEqual(["stat_block_rat", "stat_block_riding_horse"]);
+    ).toEqual([
+      "stat_block_rat",
+      "stat_block_riding_horse",
+      "stat_block_spider",
+      "stat_block_wolf",
+    ]);
   });
 
   test("projects reduced Character Sheet Hit Point maximum into battle initialization", () => {
@@ -1152,7 +1164,7 @@ describe("Character Sheet battle handoff", () => {
       }),
     );
 
-    expect(init.creatureInit.maxHp).toBe(7);
+    expect(init.creatureInit.maxHp).toBe(sheetMaximumHp(sheet.right));
     expect(init.creatureInit.currentHp).toBe(7);
   });
 
@@ -1608,6 +1620,66 @@ describe("Character Sheet battle handoff", () => {
     });
   });
 
+  test("rejects Wild Shape handoff when battle resource capacity drifts", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:druid-wild-shape-drift"),
+      build: druidWildShapeBuild(),
+      currentHp: Hp(15),
+      tempHp: Hp(0),
+      unitLibrary,
+      statBlockCatalog,
+      druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const wildShapeUnit = unitLibrary.requireUnit("druid_wild_shape");
+    if (!isClassFeatureWithUseCountResource(wildShapeUnit)) {
+      throw new Error("Expected Wild Shape to carry a use-count resource.");
+    }
+    const driftedWildShapeUnit = unitWithUseCountCap(wildShapeUnit, {
+      kind: "fixed",
+      uses: resourceCount(3),
+    });
+    const driftedWildShapeResource =
+      characterBattleResourceForUnit(driftedWildShapeUnit);
+    if (!hasLimitedCharacterBattleResourceCap(driftedWildShapeResource)) {
+      throw new Error("Expected finite drifted Wild Shape resource.");
+    }
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:druid-wild-shape-drift"),
+          classLevels: [{ className: "druid", level: classLevel(2) }],
+          resources: [
+            {
+              unit: driftedWildShapeUnit,
+              resource: driftedWildShapeResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(1),
+            },
+          ],
+        },
+        hp: Hp(15),
+        maxHp: Hp(15),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Class feature use-count battle capacity must match Character Sheet resource capacity.",
+      },
+    });
+  });
+
   test("rejects stable battle handoff when the sheet has in-progress Stable recovery time", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:stable"),
@@ -1657,7 +1729,7 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:rest-state"),
       build: wizardSpellcastingBuild(),
-      currentHp: Hp(10),
+      currentHp: Hp(7),
       tempHp: Hp(0),
       unitLibrary,
       spentHitDice: [{ classUnitId: "class_wizard", spent: resourceCount(1) }],
@@ -1679,7 +1751,7 @@ describe("Character Sheet battle handoff", () => {
           spellcasting: handoffSpellcastingState(),
         },
         hp: Hp(6),
-        maxHp: Hp(10),
+        maxHp: sheetMaximumHp(sheet.right),
         tempHp: Hp(3),
         positiveHpUnconscious: null,
       }),
@@ -1696,6 +1768,125 @@ describe("Character Sheet battle handoff", () => {
       { spellLevel: 1, count: 2, expended: 2 },
     ]);
     expect(characterSheetTempHp(settled)).toBe(3);
+  });
+
+  test("rejects ordinary Spell Slot handoff when count capacity drifts", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:ordinary-slot-count-drift"),
+        build: wizardSpellcastingBuild(),
+        currentHp: Hp(7),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:ordinary-slot-count-drift"),
+          spellcasting: handoffSpellcastingState({
+            spellSlots: [
+              {
+                spellLevel: spellSlotLevel(1),
+                count: resourceCount(3),
+                expended: resourceCount(2),
+              },
+            ],
+          }),
+        },
+        hp: Hp(7),
+        maxHp: sheetMaximumHp(sheet),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff Spell Slot capacity must match Character Sheet Spell Slot capacity.",
+      },
+    });
+  });
+
+  test("rejects ordinary Spell Slot handoff when levels drift", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:ordinary-slot-level-drift"),
+        build: wizardSpellcastingBuild(),
+        currentHp: Hp(7),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const missingSheetLevel = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:ordinary-slot-level-drift"),
+          spellcasting: handoffSpellcastingState({
+            spellSlots: [],
+          }),
+        },
+        hp: Hp(7),
+        maxHp: sheetMaximumHp(sheet),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(missingSheetLevel).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff Spell Slot capacity must match Character Sheet Spell Slot capacity.",
+      },
+    });
+
+    const extraBattleLevel = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:ordinary-slot-level-drift"),
+          spellcasting: handoffSpellcastingState({
+            spellSlots: [
+              {
+                spellLevel: spellSlotLevel(1),
+                count: resourceCount(2),
+                expended: resourceCount(2),
+              },
+              {
+                spellLevel: spellSlotLevel(2),
+                count: resourceCount(1),
+                expended: resourceCount(0),
+              },
+            ],
+          }),
+        },
+        hp: Hp(7),
+        maxHp: sheetMaximumHp(sheet),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(extraBattleLevel).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff Spell Slot state must match Character Sheet Spell Slot levels.",
+      },
+    });
   });
 
   test("projects pure Pact Magic slot state from a Character Sheet into battle Spell Slots", () => {
@@ -1763,7 +1954,7 @@ describe("Character Sheet battle handoff", () => {
             }),
           },
           hp: Hp(8),
-          maxHp: Hp(8),
+          maxHp: sheetMaximumHp(sheet),
           tempHp: Hp(0),
           positiveHpUnconscious: null,
         }),
@@ -1802,7 +1993,7 @@ describe("Character Sheet battle handoff", () => {
           }),
         },
         hp: Hp(8),
-        maxHp: Hp(8),
+        maxHp: sheetMaximumHp(sheet),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -1852,7 +2043,7 @@ describe("Character Sheet battle handoff", () => {
             spellcasting,
           },
           hp: Hp(8),
-          maxHp: Hp(8),
+          maxHp: sheetMaximumHp(sheet),
           tempHp: Hp(0),
           positiveHpUnconscious: null,
         }),
@@ -1892,7 +2083,7 @@ describe("Character Sheet battle handoff", () => {
           }),
         },
         hp: Hp(8),
-        maxHp: Hp(8),
+        maxHp: sheetMaximumHp(sheet),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -1930,7 +2121,7 @@ describe("Character Sheet battle handoff", () => {
           }),
         },
         hp: Hp(8),
-        maxHp: Hp(8),
+        maxHp: sheetMaximumHp(sheet),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -2011,7 +2202,7 @@ describe("Character Sheet battle handoff", () => {
           spellcasting: handoffSpellcastingState(),
         },
         hp: Hp(8),
-        maxHp: Hp(8),
+        maxHp: sheetMaximumHp(sheet),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -2105,18 +2296,14 @@ describe("Character Sheet battle handoff", () => {
             },
           },
           hp: Hp(22),
-          maxHp: Hp(24),
+          maxHp: sheetMaximumHp(created),
           tempHp: Hp(0),
           positiveHpUnconscious: null,
         }),
       }),
     );
     expect(characterSheetSpellSlotSourceState(unchangedHandoff)).toEqual({
-      ordinarySpellSlotExpenditures: [
-        { spellLevel: 1, expended: 0 },
-        { spellLevel: 2, expended: 0 },
-        { spellLevel: 3, expended: 0 },
-      ],
+      ordinarySpellSlotExpenditures: [],
       createdSpellSlots: [{ spellLevel: 3, count: 1, expended: 0 }],
     });
 
@@ -2157,7 +2344,7 @@ describe("Character Sheet battle handoff", () => {
           },
         },
         hp: Hp(22),
-        maxHp: Hp(24),
+        maxHp: sheetMaximumHp(created),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -2369,7 +2556,7 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:paladin-handoff"),
       build: paladinBuild(),
-      currentHp: Hp(12),
+      currentHp: Hp(9),
       tempHp: Hp(0),
       unitLibrary,
       resourceExpenditures: [
@@ -2388,7 +2575,7 @@ describe("Character Sheet battle handoff", () => {
           characterId: characterId("character:paladin-handoff"),
         },
         hp: Hp(9),
-        maxHp: Hp(12),
+        maxHp: sheetMaximumHp(sheet.right),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -2404,7 +2591,7 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:ranger-handoff"),
       build: favoredEnemyRangerResourceBuild(),
-      currentHp: Hp(12),
+      currentHp: Hp(1),
       tempHp: Hp(0),
       unitLibrary,
     });
@@ -2431,8 +2618,8 @@ describe("Character Sheet battle handoff", () => {
             },
           ],
         },
-        hp: Hp(12),
-        maxHp: Hp(12),
+        hp: Hp(1),
+        maxHp: sheetMaximumHp(sheet.right),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -2459,11 +2646,64 @@ describe("Character Sheet battle handoff", () => {
     );
   });
 
+  test("rejects Favored Enemy battle handoff when free-cast capacity drifts", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:ranger-free-cast-drift"),
+      build: favoredEnemyRangerResourceBuild(),
+      currentHp: Hp(1),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
+    const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
+    expect(hasFixedCharacterBattleResourceCap(favoredEnemyResource)).toBe(true);
+    if (!hasFixedCharacterBattleResourceCap(favoredEnemyResource)) return;
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:ranger-free-cast-drift"),
+          resources: [
+            {
+              unit: favoredEnemy,
+              resource: {
+                ...favoredEnemyResource,
+                cap: {
+                  ...favoredEnemyResource.cap,
+                  uses: resourceCount(favoredEnemyResource.cap.uses + 1),
+                },
+              },
+              usedThisTurn: false,
+              usesRemaining: resourceCount(1),
+            },
+          ],
+        },
+        hp: Hp(1),
+        maxHp: sheetMaximumHp(sheet.right),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Class feature spell free-cast battle capacity must match Character Sheet resource capacity.",
+      },
+    });
+  });
+
   test("hands shared Monk Focus use-count expenditures into and out of battle", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:monk-focus-handoff"),
       build: monkBuild({ level: 2, str: 12, dex: 16 }),
-      currentHp: Hp(16),
+      currentHp: Hp(15),
       tempHp: Hp(0),
       unitLibrary,
       resourceExpenditures: [
@@ -2513,8 +2753,8 @@ describe("Character Sheet battle handoff", () => {
             },
           ],
         },
-        hp: Hp(16),
-        maxHp: Hp(16),
+        hp: Hp(15),
+        maxHp: sheetMaximumHp(sheet.right),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -2529,11 +2769,69 @@ describe("Character Sheet battle handoff", () => {
     ]);
   });
 
+  test("rejects Monk Focus battle handoff when use-count capacity drifts", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:monk-focus-capacity-drift"),
+      build: monkBuild({ level: 2, str: 12, dex: 16 }),
+      currentHp: Hp(15),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const focusUnit = unitLibrary.requireUnit(MONK_MONKS_FOCUS_UNIT_ID);
+    if (!isClassFeatureWithUseCountResource(focusUnit)) {
+      throw new Error("Expected Monk Focus to carry a use-count resource.");
+    }
+    const driftedFocusUnit = unitWithUseCountCap(focusUnit, {
+      kind: "fixed",
+      uses: resourceCount(3),
+    });
+    const driftedFocusResource =
+      characterBattleResourceForUnit(driftedFocusUnit);
+    if (!hasLimitedCharacterBattleResourceCap(driftedFocusResource)) {
+      throw new Error("Expected finite drifted Monk Focus resource.");
+    }
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:monk-focus-capacity-drift"),
+          classLevels: [{ className: "monk", level: classLevel(2) }],
+          resources: [
+            {
+              unit: driftedFocusUnit,
+              resource: driftedFocusResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(1),
+            },
+          ],
+        },
+        hp: Hp(15),
+        maxHp: sheetMaximumHp(sheet.right),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Class feature use-count battle capacity must match Character Sheet resource capacity.",
+      },
+    });
+  });
+
   test("hands Uncanny Metabolism Focus recovery and HP restoration into battle", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:monk-uncanny-handoff"),
       build: monkBuild({ level: 2, str: 12, dex: 16 }),
-      currentHp: Hp(8),
+      currentHp: Hp(7),
       tempHp: Hp(0),
       unitLibrary,
       resourceExpenditures: [
@@ -2554,7 +2852,7 @@ describe("Character Sheet battle handoff", () => {
         martialArtsRoll: DieRollResult(4),
       }),
     );
-    expect(characterSheetCurrentHp(recovered)).toBe(14);
+    expect(characterSheetCurrentHp(recovered)).toBe(13);
     expect(recovered.resourceExpenditures).toEqual([]);
     expect(recovered.restFeatureUses).toEqual([
       { tag: "uncannyMetabolism", usedSinceLongRest: true },
@@ -2582,7 +2880,7 @@ describe("Character Sheet battle handoff", () => {
     const initFocusResource = init.creatureInit.resources?.find(
       (resource) => resource.unit.id === MONK_MONKS_FOCUS_UNIT_ID,
     );
-    expect(init.creatureInit.currentHp).toBe(14);
+    expect(init.creatureInit.currentHp).toBe(13);
     expect(initFocusResource).toEqual(
       expect.objectContaining({ unit: focusUnit }),
     );
@@ -2605,8 +2903,8 @@ describe("Character Sheet battle handoff", () => {
             },
           ],
         },
-        hp: Hp(14),
-        maxHp: Hp(15),
+        hp: Hp(13),
+        maxHp: sheetMaximumHp(recovered),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -2625,11 +2923,69 @@ describe("Character Sheet battle handoff", () => {
     ]);
   });
 
+  test("rejects Sorcery Point handoff when point-pool capacity drifts", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:sorcery-point-capacity-drift"),
+      build: sorcererMetamagicBuild(),
+      currentHp: Hp(24),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const fontOfMagicUnit = unitLibrary.requireUnit("sorcerer_font_of_magic");
+    if (!isClassFeatureWithPointPoolResource(fontOfMagicUnit)) {
+      throw new Error("Expected Font of Magic to carry a point-pool resource.");
+    }
+    const driftedFontOfMagicUnit = unitWithPointPoolCap(fontOfMagicUnit, {
+      kind: "fixed",
+      uses: resourceCount(7),
+    });
+    const driftedFontOfMagicResource = characterBattleResourceForUnit(
+      driftedFontOfMagicUnit,
+    );
+    if (driftedFontOfMagicResource.kind !== "point_pool") {
+      throw new Error("Expected drifted Font of Magic point-pool resource.");
+    }
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:sorcery-point-capacity-drift"),
+          classLevels: [{ className: "sorcerer", level: classLevel(5) }],
+          resources: [
+            {
+              unit: driftedFontOfMagicUnit,
+              resource: driftedFontOfMagicResource,
+              pointsRemaining: resourceCount(5),
+            },
+          ],
+        },
+        hp: Hp(24),
+        maxHp: sheetMaximumHp(sheet.right),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
+      },
+    });
+  });
+
   test("persists Paladin's Smite free-cast spends for the next battle before Long Rest", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:paladin-smite-handoff"),
       build: paladinsSmitePaladinBuild(),
-      currentHp: Hp(20),
+      currentHp: Hp(1),
       tempHp: Hp(0),
       unitLibrary,
     });
@@ -2658,8 +3014,8 @@ describe("Character Sheet battle handoff", () => {
             },
           ],
         },
-        hp: Hp(20),
-        maxHp: Hp(20),
+        hp: Hp(1),
+        maxHp: sheetMaximumHp(sheet.right),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -2690,7 +3046,7 @@ describe("Character Sheet battle handoff", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:ranger-handoff-scaling"),
       build: favoredEnemyRangerResourceBuild(),
-      currentHp: Hp(12),
+      currentHp: Hp(1),
       tempHp: Hp(0),
       unitLibrary,
     });
@@ -2727,8 +3083,8 @@ describe("Character Sheet battle handoff", () => {
             },
           ],
         },
-        hp: Hp(12),
-        maxHp: Hp(12),
+        hp: Hp(1),
+        maxHp: sheetMaximumHp(sheet.right),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -4932,6 +5288,24 @@ type LimitedCharacterBattleResource = Extract<
   CharacterBattleResourceState,
   { readonly usesRemaining: ResourceCount }
 >["resource"];
+type PointPoolCharacterBattleResource = Extract<
+  CharacterBattleResourceState,
+  { readonly pointsRemaining: ResourceCount }
+>["resource"];
+type UnitWithUseCountResource = UnitRecord & {
+  readonly mechanics: {
+    readonly resource: {
+      readonly kind: "use_count";
+    };
+  };
+};
+type UnitWithPointPoolResource = UnitRecord & {
+  readonly mechanics: {
+    readonly resource: {
+      readonly kind: "point_pool";
+    };
+  };
+};
 
 function hasFixedCharacterBattleResourceCap(
   resource: ReturnType<typeof characterBattleResourceForUnit>,
@@ -4945,6 +5319,64 @@ function hasLimitedCharacterBattleResourceCap(
   resource: ReturnType<typeof characterBattleResourceForUnit>,
 ): resource is LimitedCharacterBattleResource {
   return resource.kind === "use_count" && resource.cap.kind !== "unlimited";
+}
+
+function isClassFeatureWithUseCountResource(
+  unit: UnitRecord,
+): unit is UnitWithUseCountResource {
+  return (
+    unit.kind === "class_feature" &&
+    "resource" in unit.mechanics &&
+    unit.mechanics.resource?.kind === "use_count"
+  );
+}
+
+function isClassFeatureWithPointPoolResource(
+  unit: UnitRecord,
+): unit is UnitWithPointPoolResource {
+  return (
+    unit.kind === "class_feature" &&
+    "resource" in unit.mechanics &&
+    unit.mechanics.resource?.kind === "point_pool"
+  );
+}
+
+function unitWithUseCountCap(
+  unit: UnitWithUseCountResource,
+  cap: LimitedCharacterBattleResource["cap"],
+): UnitRecord {
+  // Cast evidence: the input guard has already narrowed this to a class feature
+  // UnitRecord with a use-count resource; replacing only the typed cap preserves
+  // that UnitRecord shape, but object spread widens the mechanics union.
+  return {
+    ...unit,
+    mechanics: {
+      ...unit.mechanics,
+      resource: {
+        ...unit.mechanics.resource,
+        cap,
+      },
+    },
+  } as UnitRecord;
+}
+
+function unitWithPointPoolCap(
+  unit: UnitWithPointPoolResource,
+  cap: PointPoolCharacterBattleResource["cap"],
+): UnitRecord {
+  // Cast evidence: the input guard has already narrowed this to a class feature
+  // UnitRecord with a point-pool resource; replacing only the typed cap preserves
+  // that UnitRecord shape, but object spread widens the mechanics union.
+  return {
+    ...unit,
+    mechanics: {
+      ...unit.mechanics,
+      resource: {
+        ...unit.mechanics.resource,
+        cap,
+      },
+    },
+  } as UnitRecord;
 }
 
 function armorOfShadowsWarlockBuild(
@@ -5202,7 +5634,11 @@ function trueStrikeDaggerItemId() {
   });
 }
 
-function handoffSpellcastingState(): CharacterBattleSpellcastingState {
+function handoffSpellcastingState(
+  input: {
+    readonly spellSlots?: CharacterBattleSpellcastingState["spellSlots"];
+  } = {},
+): CharacterBattleSpellcastingState {
   return {
     sourceClassName: "wizard",
     spellcastingAbilityModifier: abilityModifier(3),
@@ -5213,7 +5649,7 @@ function handoffSpellcastingState(): CharacterBattleSpellcastingState {
     spellbookRitualSpellAccesses: [],
     bookOfShadowsSpellAccesses: [],
     invocationSpellAccesses: [],
-    spellSlots: [
+    spellSlots: input.spellSlots ?? [
       {
         spellLevel: spellSlotLevel(1),
         count: resourceCount(2),
@@ -5460,6 +5896,10 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   return result.right;
 }
 
+function sheetMaximumHp(sheet: CharacterSheet) {
+  return expectRight(characterSheetHitPointMaximum({ sheet, unitLibrary }));
+}
+
 function retainedCompanionId(value: string) {
   return expectRight(parseCharacterSheetRetainedCompanionId(value));
 }
@@ -5495,7 +5935,7 @@ function retainedOrdinaryCompanionSheet(input: {
           },
         },
       },
-      currentHp: Hp(8),
+      currentHp: Hp(7),
       tempHp: Hp(0),
       unitLibrary,
     }),
