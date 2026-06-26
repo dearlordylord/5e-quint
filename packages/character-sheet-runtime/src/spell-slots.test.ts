@@ -22,6 +22,7 @@ import {
   sorcererFontOfMagicSlotCreationGateTestName,
   sorcererFontOfMagicSlotCreationTestName,
   spellSlotLevel,
+  storedAvailableSheetInput,
   unitLibrary,
   warlockMagicalCunningBuild,
   wizardBuild,
@@ -86,6 +87,50 @@ describe("Character Sheet runtime / spell slots", () => {
       _tag: "Left",
       left: {
         message: "Spell Slot state does not match build capacity for level 1.",
+      },
+    });
+  });
+
+  test("rejects stored ordinary Spell Slot expenditure records with stale capacity keys", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:stale-spell-slot-expenditure",
+          build: wizardBuild({ wizardAdvancements: 1 }),
+        }),
+        spellSlotExpenditures: [{ spellLevel: 1, count: 3, expended: 0 }],
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Spell Slot expenditure state must contain exactly spell level and expended count.",
+      },
+    });
+  });
+
+  test("rejects stored created Spell Slot records with unsupported extra keys", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:stale-created-spell-slot",
+          build: wizardBuild({ wizardAdvancements: 1 }),
+        }),
+        createdSpellSlots: [
+          { spellLevel: 2, count: 1, expended: 0, restoredBy: "longRest" },
+        ],
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Created Spell Slot state must contain exactly spell level, count, and expended count.",
       },
     });
   });

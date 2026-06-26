@@ -72,6 +72,7 @@ import {
   parseStoredPactSlots,
   parseStoredResourceExpenditures,
   parseStoredSpellSlots,
+  recordHasExactKeys,
 } from "./stored-sheet-parser.ts";
 
 export function createFreshCharacterSheet(
@@ -556,6 +557,11 @@ function parseStoredSpentHitDice(
   for (const spent of value) {
     if (!isRecord(spent) || typeof spent.classUnitId !== "string") {
       return characterSheetIssue("Expected spent Hit Dice state.");
+    }
+    if (!recordHasExactKeys(spent, ["classUnitId", "spent"])) {
+      return characterSheetIssue(
+        "Spent Hit Dice state must contain exactly class Unit id and spent count.",
+      );
     }
     const spentCount = parseResourceCount(spent.spent);
     if (Either.isLeft(spentCount)) return Either.left(spentCount.left);

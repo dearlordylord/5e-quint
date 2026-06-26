@@ -7,13 +7,13 @@
     {
       "number": 1,
       "id": "DCSF-01-STORED-SHEET-STRICTNESS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Reject stale capacity fields at the stored Character Sheet boundary"
     },
     {
       "number": 2,
       "id": "DCSF-02-TEST-HELPER-CANONICAL-STATE",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Remove capacity-bearing Character Sheet test helper inputs"
     },
     {
@@ -111,8 +111,8 @@ repair the branch in the task worktree.
 
 | Task | Status | Depends On | Blocks | Intent |
 | --- | --- | --- | --- | --- |
-| 1 / DCSF-01 | ready-for-implementation-after-light-research | none | DCSF-02 | Stored sheet rejects stale capacity-bearing fields. |
-| 2 / DCSF-02 | blocked | DCSF-01 | DCSF-03 | Tests stop accepting capacity-bearing sheet helper inputs. |
+| 1 / DCSF-01 | done | none | DCSF-02 | Stored sheet rejects stale capacity-bearing fields. |
+| 2 / DCSF-02 | ready-for-implementation | DCSF-01 | DCSF-03 | Tests stop accepting capacity-bearing sheet helper inputs. |
 | 3 / DCSF-03 | blocked | DCSF-02 | DCSF-04 | Resource capacities are projection-only and tested. |
 | 4 / DCSF-04 | blocked | DCSF-03 | DCSF-05 | Battle handoff rejects capacity drift and writes only sheet state. |
 | 5 / DCSF-05 | blocked | DCSF-04 | none | MCP/app/docs distinguish input/store state from output/display projections. |
@@ -139,7 +139,7 @@ repair the branch in the task worktree.
 
 ### Task 1 - DCSF-01-STORED-SHEET-STRICTNESS
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Scope:
 
@@ -179,12 +179,7 @@ Plan Impact:
 
 ### Task 2 - DCSF-02-TEST-HELPER-CANONICAL-STATE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Wait for DCSF-01 so helper cleanup follows the final stored
-boundary shape.
+Status: `ready-for-implementation`
 
 Scope:
 

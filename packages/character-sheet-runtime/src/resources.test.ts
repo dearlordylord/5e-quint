@@ -28,11 +28,13 @@ import {
   completeLongRest,
   completeShortRest,
   createFreshCharacterSheet,
+  parseCharacterSheet,
   requireRight,
   resourceCount,
   sorcererFontOfMagicBuild,
   sorcererFontOfMagicLongRestRecoveryTestName,
   sorcererSorcerousRestorationShortRestRecoveryTestName,
+  storedAvailableSheetInput,
   uncannyMetabolismInitiativeGatesTestName,
   uncannyMetabolismInitiativeRecoveryTestName,
   uncannyMetabolismLongRestUseStateTestName,
@@ -45,6 +47,60 @@ const monksFocusShortRestRecoveryTestName =
   "Short Rest restores the Monk Focus Point use pool";
 
 describe("Character Sheet runtime / resources", () => {
+  test.each([
+    {
+      name: "tagged",
+      expenditure: {
+        tag: "layOnHandsHealingPool",
+        count: 5,
+        expended: 0,
+      },
+      message:
+        "Character Sheet tagged resource expenditure must contain exactly tag and expended count.",
+    },
+    {
+      name: "use-count",
+      expenditure: {
+        tag: "useCountResource",
+        unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
+        count: 1,
+        expended: 0,
+      },
+      message:
+        "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
+    },
+    {
+      name: "point-pool",
+      expenditure: {
+        tag: "pointPoolResource",
+        unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+        count: 2,
+        expended: 0,
+      },
+      message:
+        "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
+    },
+  ])("rejects stored $name resource expenditure records with extra keys", ({
+    expenditure,
+    message,
+  }) => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: `character:stale-${expenditure.tag}`,
+          build: armorClassBuild({ startingClass: "class_paladin" }),
+        }),
+        resourceExpenditures: [expenditure],
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: { message },
+    });
+  });
+
   test("Long Rest restores the Favored Enemy Hunter's Mark free-cast pool", () => {
     const spent = requireRight(
       createFreshCharacterSheet({
