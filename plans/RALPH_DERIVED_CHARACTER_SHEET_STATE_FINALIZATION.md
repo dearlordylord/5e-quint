@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "DCSF-05-MCP-APP-SCHEMA-DOCS",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Split input/store and output/display capacity schemas in MCP and app docs"
     }
   ]
@@ -115,7 +115,7 @@ repair the branch in the task worktree.
 | 2 / DCSF-02 | done | DCSF-01 | DCSF-03 | Tests stop accepting capacity-bearing sheet helper inputs. |
 | 3 / DCSF-03 | done | DCSF-02 | DCSF-04 | Resource capacities are projection-only and tested. |
 | 4 / DCSF-04 | done | DCSF-03 | DCSF-05 | Battle handoff rejects capacity drift and writes only sheet state. |
-| 5 / DCSF-05 | ready-for-implementation | DCSF-04 | none | MCP/app/docs distinguish input/store state from output/display projections. |
+| 5 / DCSF-05 | done | DCSF-04 | none | MCP/app/docs distinguish input/store state from output/display projections. |
 
 ## Pre-Research Findings
 
@@ -294,7 +294,7 @@ Plan Impact:
 
 ### Task 5 - DCSF-05-MCP-APP-SCHEMA-DOCS
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Scope:
 

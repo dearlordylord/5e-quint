@@ -78,6 +78,17 @@ describe("character creation runtime", () => {
     expect(Either.isRight(reducedSummary)).toBe(true)
     if (Either.isLeft(reducedSummary)) return
     expect(reducedSummary.right.maximumHp).toBe(summary.right.maximumHp - 3)
+    expect(reducedSummary.right.hitDice).toEqual([{ classUnitId: "class_druid", dieSize: 8, total: 2, spent: 0 }])
+    expect(reducedSummary.right.spellSlots).toEqual([{ spellLevel: 1, count: 3, expended: 0 }])
+    expect(reducedSummary.right.pactSlots).toBeUndefined()
+    expect(reducedSummary.right.resources).toEqual([
+      expect.objectContaining({
+        tag: "useCountResource",
+        unitId: "druid_wild_shape",
+        count: 2,
+        expended: 0
+      })
+    ])
   })
 })
 

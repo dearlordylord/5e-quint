@@ -6,6 +6,13 @@ This package owns Character Sheet to battle creature initialization and battle
 handoff settlement back onto an existing Character Sheet. `@dnd/battle-runtime`
 must not import Character Sheet types directly.
 
+Character Sheet inputs to this package are stored sheet state: mutable play
+state and selected identities. Battle initialization and settlement may observe
+capacity-rich snapshots, but Hit Point Maximum, Hit Dice capacity, ordinary
+Spell Slot capacity, Pact Slot level/count, and class-feature resource capacity
+must be derived from Character Build and Unit facts or checked against those
+projections before any sheet state is written.
+
 Owned boundary functions:
 
 - `characterSheetBattleInit` projects an existing Character Sheet plus caller

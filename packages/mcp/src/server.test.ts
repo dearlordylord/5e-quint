@@ -228,6 +228,40 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   return result.right;
 }
 
+type JsonSchemaObject = {
+  readonly properties?: Readonly<Record<string, unknown>>;
+  readonly required?: readonly string[];
+  readonly items?: unknown;
+  readonly anyOf?: readonly unknown[];
+};
+
+function jsonSchemaObject(value: unknown): JsonSchemaObject | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  // Cast evidence: generated JSON Schema nodes are object records; this helper
+  // only exposes optional schema metadata after the non-null object check.
+  return value as JsonSchemaObject;
+}
+
+function findSchemaWithProperty(
+  value: unknown,
+  property: string,
+): JsonSchemaObject | undefined {
+  const schema = jsonSchemaObject(value);
+  if (schema === undefined) return undefined;
+  if (schema.properties?.[property] !== undefined) return schema;
+  for (const child of [
+    ...(schema.anyOf ?? []),
+    ...(schema.properties === undefined
+      ? []
+      : Object.values(schema.properties)),
+    ...(schema.items === undefined ? [] : [schema.items]),
+  ]) {
+    const found = findSchemaWithProperty(child, property);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}
+
 function retainedCompanionId(value: string) {
   return expectRight(parseCharacterSheetRetainedCompanionId(value));
 }
@@ -1030,6 +1064,31 @@ describe("MCP server route", () => {
       "apply_character_session_operation",
       "list_characters",
     ]);
+  });
+
+  test("declares capacity-bearing resource display rows in list_characters output schema", () => {
+    const listCharactersTool = characterToolDefinitions.find(
+      (tool) => tool.name === "list_characters",
+    );
+    const availableRowSchema = findSchemaWithProperty(
+      listCharactersTool?.outputSchema,
+      "resources",
+    );
+    const resourcesSchema = jsonSchemaObject(
+      availableRowSchema?.properties?.resources,
+    );
+    const resourceRowSchema = jsonSchemaObject(resourcesSchema?.items);
+
+    expect(availableRowSchema?.required).toContain("resources");
+    expect(resourceRowSchema?.required).toEqual(
+      expect.arrayContaining(["tag", "unitId", "count", "expended"]),
+    );
+    expect(resourceRowSchema?.properties).toMatchObject({
+      tag: { type: "string" },
+      unitId: { type: "string" },
+      count: { type: "integer", minimum: 0 },
+      expended: { type: "integer", minimum: 0 },
+    });
   });
 
   test("does not expose retained companion creation HP inputs in the MCP schema", () => {
@@ -3658,8 +3717,14 @@ describe("MCP server route", () => {
       expect.objectContaining({
         characterId: testCharacterId(draftId),
         hitPoints: expect.objectContaining({ current: 7, maximum: 7 }),
+        hitDice: [
+          { classUnitId: "class_fighter", dieSize: 10, total: 1, spent: 0 },
+        ],
+        resources: [],
       }),
     ]);
+    expect(characterList.characters[0]).not.toHaveProperty("spellSlots");
+    expect(characterList.characters[0]).not.toHaveProperty("pactSlots");
   });
 
   test("returns Shove push outcomes through MCP battle resolution output", () => {

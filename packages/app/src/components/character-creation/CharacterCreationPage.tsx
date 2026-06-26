@@ -280,9 +280,37 @@ export function CharacterCreationPage() {
                       <div className="rounded-md border border-gray-800 bg-black/20 p-3">
                         <dt className="text-gray-400">Spell Slot State</dt>
                         <dd className="mt-1 text-gray-100">
-                          {summary.right.spellSlotLevels.length === 0
+                          {summary.right.spellSlots.length === 0
                             ? "No spell slot expenditures"
-                            : summary.right.spellSlotLevels.map((level) => `Level ${level}`).join(", ")}
+                            : summary.right.spellSlots
+                                .map((slot) => `Level ${slot.spellLevel}: ${slot.expended}/${slot.count}`)
+                                .join(", ")}
+                        </dd>
+                      </div>
+                      <div className="rounded-md border border-gray-800 bg-black/20 p-3">
+                        <dt className="text-gray-400">Pact Slot State</dt>
+                        <dd className="mt-1 text-gray-100">
+                          {summary.right.pactSlots === undefined
+                            ? "No Pact Slots"
+                            : `Level ${summary.right.pactSlots.slotLevel}: ${summary.right.pactSlots.expended}/${summary.right.pactSlots.count}`}
+                        </dd>
+                      </div>
+                      <div className="rounded-md border border-gray-800 bg-black/20 p-3">
+                        <dt className="text-gray-400">Hit Dice</dt>
+                        <dd className="mt-1 text-gray-100">
+                          {summary.right.hitDice
+                            .map((pool) => `${pool.classUnitId}: ${pool.spent}/${pool.total} d${pool.dieSize}`)
+                            .join(", ")}
+                        </dd>
+                      </div>
+                      <div className="rounded-md border border-gray-800 bg-black/20 p-3">
+                        <dt className="text-gray-400">Resources</dt>
+                        <dd className="mt-1 text-gray-100">
+                          {summary.right.resources.length === 0
+                            ? "No tracked resources"
+                            : summary.right.resources
+                                .map((resource) => `${resource.unitId}: ${resource.expended}/${resource.count}`)
+                                .join(", ")}
                         </dd>
                       </div>
                     </dl>
