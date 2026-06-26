@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 module ruleCoreSpellsMbt {
+  import ruleCoreComponentRoute.* from "./rule-core-component-route"
   import spellDefinitionProfiles.* from "../shared-algebras/proofs/rule-core/spell-definition-profiles"
   import spellInvocationResourceCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-resource-core"
   import spellInvocationActionSlotCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-action-slot-core"
@@ -32,8 +33,12 @@ module ruleCoreSpellsMbt {
   var qReadiedReleased: bool
   var qConcentrationActive: bool
   var qProtocol: WitnessProtocol[str]
+  var qComponentRoute: List[RuleCoreComponentRouteEvent]
 
   pure def openHoles: Set[str] = qProtocol.holes
+
+  pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
+    ruleCoreComponentRoute(RuleCoreSpellProcedureProfileOwner)
 
   pure def witnessProtocolForProjection(
     holes: Set[str],
@@ -84,6 +89,7 @@ module ruleCoreSpellsMbt {
     qReadiedReleased' = readiedReleased,
     qConcentrationActive' = concentrationActive,
     qProtocol' = witnessProtocolForProjection(holes, result),
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action init = recordProjection(

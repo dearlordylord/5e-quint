@@ -9,6 +9,7 @@ import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
@@ -16,12 +17,21 @@ import {
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintRecordField,
   quintStateRecord,
   quintVariantMappedValue,
   quintVariantTag,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteResolveBattleSubjectWithoutFill,
+  reducerRouteStartBattle,
   run,
   stateCheck,
+  type ReducerRouteEvent,
+  type ReducerRouteFill,
+  type ReducerRouteOwnerGroup,
+  type ReducerRouteSubjectFamily,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   abilityCheckFill,
@@ -210,6 +220,398 @@ type AfterHitRuntimeState = {
   readonly pending: PendingInvocation;
   readonly lastResult: "init" | "needsHoles" | "resolved";
 };
+
+const AFTER_HIT_ROUTE_SURFACES = [
+  "fresh",
+  "interruptDecision",
+  "saveGatedInterruptDecision",
+  "slotSpend",
+  "freeCastSpend",
+  "saveGatedSlotAndActionEconomySpend",
+  "attackDamage",
+  "saveGatedCondition",
+  "saveGatedConcentration",
+  "turnStartDamage",
+  "turnStartSaveCleanup",
+  "escapeCheck",
+  "escapeConditionCleanup",
+  "escapeConcentrationCleanup",
+  "illuminationEffect",
+  "illuminationConcentration",
+  "illuminationConcentrationBreak",
+  "illuminationEffectCleanup",
+] as const;
+type AfterHitRouteSurface = (typeof AFTER_HIT_ROUTE_SURFACES)[number];
+
+type AfterHitRouteState = {
+  readonly surface: AfterHitRouteSurface;
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const AFTER_HIT_ROUTE_SURFACE_BY_TAG = {
+  FreshRouteSurface: "fresh",
+  InterruptDecisionRouteSurface: "interruptDecision",
+  SaveGatedInterruptDecisionRouteSurface: "saveGatedInterruptDecision",
+  SlotSpendRouteSurface: "slotSpend",
+  FreeCastSpendRouteSurface: "freeCastSpend",
+  SaveGatedSlotAndActionEconomySpendRouteSurface:
+    "saveGatedSlotAndActionEconomySpend",
+  AttackDamageRouteSurface: "attackDamage",
+  SaveGatedConditionRouteSurface: "saveGatedCondition",
+  SaveGatedConcentrationRouteSurface: "saveGatedConcentration",
+  TurnStartDamageRouteSurface: "turnStartDamage",
+  TurnStartSaveCleanupRouteSurface: "turnStartSaveCleanup",
+  EscapeCheckRouteSurface: "escapeCheck",
+  EscapeConditionCleanupRouteSurface: "escapeConditionCleanup",
+  EscapeConcentrationCleanupRouteSurface: "escapeConcentrationCleanup",
+  IlluminationEffectRouteSurface: "illuminationEffect",
+  IlluminationConcentrationRouteSurface: "illuminationConcentration",
+  IlluminationConcentrationBreakRouteSurface: "illuminationConcentrationBreak",
+  IlluminationEffectCleanupRouteSurface: "illuminationEffectCleanup",
+} as const satisfies Readonly<Record<string, AfterHitRouteSurface>>;
+
+const afterHitRouteDriverSchema = {
+  init: {},
+  doRouteInterruptDecision: {},
+  doRouteSaveGatedInterruptDecision: {},
+  doRouteSlotSpend: {},
+  doRouteFreeCastSpend: {},
+  doRouteSaveGatedSlotAndActionEconomySpend: {},
+  doRouteAttackDamage: {},
+  doRouteSaveGatedCondition: {},
+  doRouteSaveGatedConcentration: {},
+  doRouteTurnStartDamage: {},
+  doRouteTurnStartSaveCleanup: {},
+  doRouteEscapeCheck: {},
+  doRouteEscapeConditionCleanup: {},
+  doRouteEscapeConcentrationCleanup: {},
+  doRouteIlluminationEffect: {},
+  doRouteIlluminationConcentration: {},
+  doRouteIlluminationConcentrationBreak: {},
+  doRouteIlluminationEffectCleanup: {},
+  step: {},
+} as const;
+type AfterHitRouteAction = keyof typeof afterHitRouteDriverSchema;
+type AfterHitRouteStepAction = Exclude<AfterHitRouteAction, "init" | "step">;
+
+const AFTER_HIT_ROUTE_STEP_ACTIONS = [
+  "doRouteInterruptDecision",
+  "doRouteSaveGatedInterruptDecision",
+  "doRouteSlotSpend",
+  "doRouteFreeCastSpend",
+  "doRouteSaveGatedSlotAndActionEconomySpend",
+  "doRouteAttackDamage",
+  "doRouteSaveGatedCondition",
+  "doRouteSaveGatedConcentration",
+  "doRouteTurnStartDamage",
+  "doRouteTurnStartSaveCleanup",
+  "doRouteEscapeCheck",
+  "doRouteEscapeConditionCleanup",
+  "doRouteEscapeConcentrationCleanup",
+  "doRouteIlluminationEffect",
+  "doRouteIlluminationConcentration",
+  "doRouteIlluminationConcentrationBreak",
+  "doRouteIlluminationEffectCleanup",
+] as const satisfies ReadonlyArray<AfterHitRouteStepAction>;
+
+const AFTER_HIT_ROUTE_HOLES = [
+  "abilityCheck",
+  "interruptDecision",
+  "rolledDice",
+  "savingThrowOutcome",
+] as const satisfies ReadonlyArray<BattleHole["kind"]>;
+type AfterHitRouteHole = (typeof AFTER_HIT_ROUTE_HOLES)[number];
+type RouteHole = { readonly kind: AfterHitRouteHole };
+
+function routeHoles(
+  ...kinds: readonly AfterHitRouteHole[]
+): readonly RouteHole[] {
+  return kinds.map((kind) => ({ kind }));
+}
+
+const AFTER_HIT_ROUTE_SUBJECT =
+  "afterHitDamageRider" satisfies ReducerRouteSubjectFamily;
+
+function afterHitStartRoute(): ReducerRouteEvent {
+  return reducerRouteStartBattle("battleActionEconomy");
+}
+
+function afterHitDiscoverRoute(
+  holes: readonly RouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return reducerRouteDiscoverBattleActs({
+    subject: AFTER_HIT_ROUTE_SUBJECT,
+    holes,
+    owner,
+  });
+}
+
+function afterHitResolveRoute(
+  fill: ReducerRouteFill,
+  holes: readonly RouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return reducerRouteResolveBattleSubject({
+    subject: AFTER_HIT_ROUTE_SUBJECT,
+    fill,
+    holes,
+    owner,
+  });
+}
+
+function afterHitResolveRouteWithoutFill(
+  holes: readonly RouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return reducerRouteResolveBattleSubjectWithoutFill({
+    subject: AFTER_HIT_ROUTE_SUBJECT,
+    holes,
+    owner,
+  });
+}
+
+function routeState(
+  surface: AfterHitRouteSurface,
+  route: readonly ReducerRouteEvent[],
+): AfterHitRouteState {
+  return { surface, route };
+}
+
+function afterHitRouteForAction(
+  action: AfterHitRouteStepAction,
+): AfterHitRouteState {
+  const interruptDecision = routeHoles("interruptDecision");
+  const rolledDice = routeHoles("rolledDice");
+  const savingThrowOutcome = routeHoles("savingThrowOutcome");
+  const abilityCheck = routeHoles("abilityCheck");
+  const noHoles = routeHoles();
+
+  const states = {
+    doRouteInterruptDecision: routeState("interruptDecision", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(interruptDecision, "battleInterruptStack"),
+      afterHitResolveRoute(
+        "interruptDecision",
+        rolledDice,
+        "battleInterruptStack",
+      ),
+    ]),
+    doRouteSaveGatedInterruptDecision: routeState(
+      "saveGatedInterruptDecision",
+      [
+        afterHitStartRoute(),
+        afterHitDiscoverRoute(interruptDecision, "battleInterruptStack"),
+        afterHitResolveRoute(
+          "interruptDecision",
+          savingThrowOutcome,
+          "battleInterruptStack",
+        ),
+      ],
+    ),
+    doRouteSlotSpend: routeState("slotSpend", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(
+        interruptDecision,
+        "battleSpellSlotAndActionEconomy",
+      ),
+      afterHitResolveRoute(
+        "interruptDecision",
+        rolledDice,
+        "battleSpellSlotAndActionEconomy",
+      ),
+    ]),
+    doRouteFreeCastSpend: routeState("freeCastSpend", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(interruptDecision, "battleFeatureResource"),
+      afterHitResolveRoute(
+        "interruptDecision",
+        rolledDice,
+        "battleFeatureResource",
+      ),
+    ]),
+    doRouteSaveGatedSlotAndActionEconomySpend: routeState(
+      "saveGatedSlotAndActionEconomySpend",
+      [
+        afterHitStartRoute(),
+        afterHitDiscoverRoute(
+          savingThrowOutcome,
+          "battleSpellSlotAndActionEconomy",
+        ),
+        afterHitResolveRoute(
+          "savingThrowOutcome",
+          rolledDice,
+          "battleSpellSlotAndActionEconomy",
+        ),
+      ],
+    ),
+    doRouteAttackDamage: routeState("attackDamage", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(rolledDice, "battleHitPoint"),
+      afterHitResolveRoute("rolledDice", noHoles, "battleHitPoint"),
+    ]),
+    doRouteSaveGatedCondition: routeState("saveGatedCondition", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(
+        savingThrowOutcome,
+        "battleConditionLifecycle",
+      ),
+      afterHitResolveRoute(
+        "savingThrowOutcome",
+        rolledDice,
+        "battleConditionLifecycle",
+      ),
+    ]),
+    doRouteSaveGatedConcentration: routeState("saveGatedConcentration", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(savingThrowOutcome, "battleConcentration"),
+      afterHitResolveRoute(
+        "savingThrowOutcome",
+        rolledDice,
+        "battleConcentration",
+      ),
+    ]),
+    doRouteTurnStartDamage: routeState("turnStartDamage", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(rolledDice, "battleActiveEffect"),
+      afterHitResolveRoute(
+        "rolledDice",
+        abilityCheck,
+        "battleHitPoint",
+      ),
+    ]),
+    doRouteTurnStartSaveCleanup: routeState("turnStartSaveCleanup", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(
+        routeHoles("rolledDice", "savingThrowOutcome"),
+        "battleActiveEffect",
+      ),
+      afterHitResolveRoute(
+        "rolledDice",
+        savingThrowOutcome,
+        "battleHitPoint",
+      ),
+      afterHitResolveRoute(
+        "savingThrowOutcome",
+        noHoles,
+        "battleActiveEffect",
+      ),
+    ]),
+    doRouteEscapeCheck: routeState("escapeCheck", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(abilityCheck, "battleAbilityCheck"),
+      afterHitResolveRoute("abilityCheck", noHoles, "battleAbilityCheck"),
+    ]),
+    doRouteEscapeConditionCleanup: routeState("escapeConditionCleanup", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(abilityCheck, "battleConditionLifecycle"),
+      afterHitResolveRoute(
+        "abilityCheck",
+        noHoles,
+        "battleConditionLifecycle",
+      ),
+    ]),
+    doRouteEscapeConcentrationCleanup: routeState(
+      "escapeConcentrationCleanup",
+      [
+        afterHitStartRoute(),
+        afterHitDiscoverRoute(abilityCheck, "battleConcentration"),
+        afterHitResolveRoute("abilityCheck", noHoles, "battleConcentration"),
+      ],
+    ),
+    doRouteIlluminationEffect: routeState("illuminationEffect", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(interruptDecision, "battleActiveEffect"),
+      afterHitResolveRoute(
+        "interruptDecision",
+        rolledDice,
+        "battleActiveEffect",
+      ),
+    ]),
+    doRouteIlluminationConcentration: routeState(
+      "illuminationConcentration",
+      [
+        afterHitStartRoute(),
+        afterHitDiscoverRoute(interruptDecision, "battleConcentration"),
+        afterHitResolveRoute(
+          "interruptDecision",
+          rolledDice,
+          "battleConcentration",
+        ),
+      ],
+    ),
+    doRouteIlluminationConcentrationBreak: routeState(
+      "illuminationConcentrationBreak",
+      [
+        afterHitStartRoute(),
+        afterHitDiscoverRoute(noHoles, "battleConcentration"),
+        afterHitResolveRouteWithoutFill(noHoles, "battleConcentration"),
+      ],
+    ),
+    doRouteIlluminationEffectCleanup: routeState(
+      "illuminationEffectCleanup",
+      [
+        afterHitStartRoute(),
+        afterHitDiscoverRoute(noHoles, "battleActiveEffect"),
+        afterHitResolveRouteWithoutFill(noHoles, "battleActiveEffect"),
+      ],
+    ),
+  } as const satisfies Readonly<
+    Record<AfterHitRouteStepAction, AfterHitRouteState>
+  >;
+
+  return states[action];
+}
+
+function createAfterHitDamageRidersRouteDriver() {
+  return defineDriver(afterHitRouteDriverSchema, () => {
+    let state = routeState("fresh", [afterHitStartRoute()]);
+    const transition = (action: AfterHitRouteStepAction): void => {
+      state = afterHitRouteForAction(action);
+    };
+
+    return {
+      init: () => {
+        state = routeState("fresh", [afterHitStartRoute()]);
+      },
+      doRouteInterruptDecision: () => transition("doRouteInterruptDecision"),
+      doRouteSaveGatedInterruptDecision: () =>
+        transition("doRouteSaveGatedInterruptDecision"),
+      doRouteSlotSpend: () => transition("doRouteSlotSpend"),
+      doRouteFreeCastSpend: () => transition("doRouteFreeCastSpend"),
+      doRouteSaveGatedSlotAndActionEconomySpend: () =>
+        transition("doRouteSaveGatedSlotAndActionEconomySpend"),
+      doRouteAttackDamage: () => transition("doRouteAttackDamage"),
+      doRouteSaveGatedCondition: () =>
+        transition("doRouteSaveGatedCondition"),
+      doRouteSaveGatedConcentration: () =>
+        transition("doRouteSaveGatedConcentration"),
+      doRouteTurnStartDamage: () => transition("doRouteTurnStartDamage"),
+      doRouteTurnStartSaveCleanup: () =>
+        transition("doRouteTurnStartSaveCleanup"),
+      doRouteEscapeCheck: () => transition("doRouteEscapeCheck"),
+      doRouteEscapeConditionCleanup: () =>
+        transition("doRouteEscapeConditionCleanup"),
+      doRouteEscapeConcentrationCleanup: () =>
+        transition("doRouteEscapeConcentrationCleanup"),
+      doRouteIlluminationEffect: () =>
+        transition("doRouteIlluminationEffect"),
+      doRouteIlluminationConcentration: () =>
+        transition("doRouteIlluminationConcentration"),
+      doRouteIlluminationConcentrationBreak: () =>
+        transition("doRouteIlluminationConcentrationBreak"),
+      doRouteIlluminationEffectCleanup: () =>
+        transition("doRouteIlluminationEffectCleanup"),
+      step: () => {},
+      getState: () => state,
+    };
+  });
+}
+
+const afterHitRouteStateCheck = stateCheck(
+  normalizeAfterHitRouteQuintState,
+  compareAfterHitRouteStates,
+);
 
 const AFTER_HIT_SCENARIO_BY_TAG = {
   DivineSmiteSlot: "divineSmiteSlot",
@@ -513,6 +915,26 @@ describe("After-hit damage riders MBT parity", () => {
       for (const action of REQUIRED_AFTER_HIT_ACTIONS) {
         expect(actionLog).toContain(action);
       }
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes after-hit rider owner surfaces without a whole-battle accumulator",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createAfterHitDamageRidersRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(AFTER_HIT_ROUTE_STEP_ACTIONS.length),
+        stateCheck: afterHitRouteStateCheck,
+      });
     },
     MBT_TEST_TIMEOUT_MS,
   );
@@ -1067,6 +1489,36 @@ function battleHolesToAfterHitHoles(
     }
     throw new Error(`Unexpected after-hit damage rider hole ${hole.kind}.`);
   });
+}
+
+function normalizeAfterHitRouteQuintState(raw: unknown): AfterHitRouteState {
+  const state = quintStateRecord(raw);
+  return {
+    surface: quintVariantMappedValue(
+      state["qSurface"],
+      "qSurface",
+      AFTER_HIT_ROUTE_SURFACE_BY_TAG,
+      "after-hit route surface",
+    ),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function compareAfterHitRouteStates(
+  spec: AfterHitRouteState,
+  impl: AfterHitRouteState,
+): boolean {
+  try {
+    expect(impl).toEqual(spec);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(
+        `${error.message}\nspec=${JSON.stringify(spec)}\nimpl=${JSON.stringify(impl)}`,
+      );
+    }
+    throw error;
+  }
+  return true;
 }
 
 function normalizeAfterHitQuintState(raw: unknown): AfterHitDamageRidersState {

@@ -36,6 +36,9 @@ the target repo.
   filter snapshot. The renderer writes it to `tasks/LEVEL_1_2_SCOPE.md`; target
   runs must not reorder it by hand. Its reducer-spine diagnostic queue is
   generated from `plans/cleanroom-branch-coverage/reducer-route-inventory.json`.
+  The filename is historical; the route inventory's
+  `level-1-5-cleanroom-route-v1.freshCleanroomPackageGate` record owns the
+  fresh level-1 through level-5 route package acceptance slice.
 - `tasks/VALIDATION_REPORT.example.md` — example readable validation report
   and cursor. Use as a starting format; reset or revalidate task entries for
   the cleanroom repo's current manifest source commit SHA.
@@ -126,6 +129,9 @@ the scaffold with the target profile, writes a `.sha256` file next to the
 archive, validates required archive entries, and deletes the temporary
 directory. It refuses to run when scaffold packaging inputs have uncommitted
 changes, so the package is tied to a committed source snapshot.
+The package is fresh-cleanroom input only: dirty cleanroom reports, ledgers,
+adapters, target code, and implementation history must not be copied into the
+archive or used as acceptance evidence.
 
 ## Disposable Harness Shakedown
 

@@ -10,18 +10,26 @@ import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintStateRecord,
   quintVariantMappedValue,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteStartBattle,
   run,
   stateCheck,
   type MbtWitnessLastInvalidReason,
   type MbtWitnessLastResult,
+  type ReducerRouteEvent,
+  type ReducerRouteFill,
+  type ReducerRouteOwnerGroup,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   battleCombatantSide,
@@ -56,6 +64,9 @@ type StatBlockMultiDamageProjection = {
   readonly lastResult: MbtWitnessLastResult;
   readonly lastInvalidReason: MbtWitnessLastInvalidReason<"none">;
 };
+type StatBlockMultiDamageRouteProjection = StatBlockMultiDamageProjection & {
+  readonly route: readonly ReducerRouteEvent[];
+};
 
 type StatBlockAttack = NonNullable<
   NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
@@ -88,10 +99,28 @@ const driverSchema = {
 } as const;
 
 function createStatBlockMultiDamageDriver() {
-  return defineDriver(driverSchema, () => {
+  return createStatBlockMultiDamageDriverWithProjection(
+    (projection) => projection,
+  );
+}
+
+function createStatBlockMultiDamageRouteDriver() {
+  return createStatBlockMultiDamageDriverWithProjection(
+    (projection, route) => ({ ...projection, route }),
+  );
+}
+
+function createStatBlockMultiDamageDriverWithProjection<State>(
+  projectState: (
+    projection: StatBlockMultiDamageProjection,
+    route: readonly ReducerRouteEvent[],
+  ) => State,
+) {
+  return defineDriver<typeof driverSchema, State>(driverSchema, () => {
     let state = statBlockMultiDamageBattle();
     let damageMode: StatBlockMultiDamageMode = "rolled";
     let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
     let targetChoice: Extract<
       BattleFill,
       { readonly kind: "targetChoice" }
@@ -117,19 +146,55 @@ function createStatBlockMultiDamageDriver() {
       }
       state = result.state;
       holes = result.holes;
+      route = [
+        reducerRouteStartBattle("battleActionEconomy"),
+        reducerRouteDiscoverBattleActs({
+          subject: "statBlockAction",
+          holes,
+          owner: "battleStatBlockAction",
+        }),
+      ];
       lastResult = "init";
     }
 
-    function recordResult(result: BattleResolutionResult): void {
+    function recordResult(
+      result: BattleResolutionResult,
+      routeFill: ReducerRouteFill,
+      routeOwner: ReducerRouteOwnerGroup,
+    ): void {
+      const routeHoles =
+        result.tag === "needsHoles"
+          ? result.holes
+          : result.tag === "resolved"
+            ? []
+            : holes;
       if (result.tag === "resolved") {
         state = result.state;
         holes = [];
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "statBlockAction",
+            fill: routeFill,
+            holes: routeHoles,
+            owner: routeOwner,
+          }),
+        ];
         lastResult = "resolved";
         return;
       }
       if (result.tag === "needsHoles") {
         state = result.state;
         holes = result.holes;
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "statBlockAction",
+            fill: routeFill,
+            holes: routeHoles,
+            owner: routeOwner,
+          }),
+        ];
         lastResult = "needsHoles";
         return;
       }
@@ -138,13 +203,19 @@ function createStatBlockMultiDamageDriver() {
       );
     }
 
-    function resolveCurrentSubject(fills: readonly BattleFill[]): void {
+    function resolveCurrentSubject(input: {
+      readonly fills: readonly BattleFill[];
+      readonly routeFill: ReducerRouteFill;
+      readonly routeOwner: ReducerRouteOwnerGroup;
+    }): void {
       recordResult(
         resolveBattleSubject({
           state,
           subject: attackSubject(damageMode),
-          fills,
+          fills: input.fills,
         }),
+        input.routeFill,
+        input.routeOwner,
       );
     }
 
@@ -153,7 +224,11 @@ function createStatBlockMultiDamageDriver() {
       initStatic: () => reset("static"),
       doFillTargetChoice: () => {
         targetChoice = targetChoiceFill(requireHole(holes, "targetChoice"));
-        resolveCurrentSubject([targetChoice]);
+        resolveCurrentSubject({
+          fills: [targetChoice],
+          routeFill: "targetChoice",
+          routeOwner: "battleTargetSelection",
+        });
       },
       doFillHitAttackRoll: () => {
         const selectedTargetChoice = requireTargetChoice(targetChoice);
@@ -161,34 +236,49 @@ function createStatBlockMultiDamageDriver() {
           total: 20,
           naturalD20: 12,
         });
-        resolveCurrentSubject([selectedTargetChoice, attackRoll]);
+        resolveCurrentSubject({
+          fills: [selectedTargetChoice, attackRoll],
+          routeFill: "attackRoll",
+          routeOwner:
+            damageMode === "rolled" ? "battleAttackRoll" : "battleHitPoint",
+        });
       },
       doResolveRolledDamage: () => {
         const selectedTargetChoice = requireTargetChoice(targetChoice);
         const selectedAttackRoll = requireAttackRoll(attackRoll);
-        resolveCurrentSubject([
-          selectedTargetChoice,
-          selectedAttackRoll,
-          damageRollFillWithGroups(requireHole(holes, "rolledDice"), [
-            [1],
-            [2],
-          ]),
-        ]);
+        resolveCurrentSubject({
+          fills: [
+            selectedTargetChoice,
+            selectedAttackRoll,
+            damageRollFillWithGroups(requireHole(holes, "rolledDice"), [
+              [1],
+              [2],
+            ]),
+          ],
+          routeFill: "rolledDice",
+          routeOwner: "battleHitPoint",
+        });
       },
       step: () => {},
-      getState: () =>
-        projectStatBlockMultiDamageState({
+      getState: () => {
+        const projection = projectStatBlockMultiDamageState({
           state,
           damageMode,
           holes,
           lastResult,
-        }),
+        });
+        return projectState(projection, route);
+      },
     };
   });
 }
 
 const statBlockMultiDamageStateCheck = stateCheck(
   normalizeStatBlockMultiDamageQuintState,
+  compareStatBlockMultiDamageStates,
+);
+const statBlockMultiDamageRouteStateCheck = stateCheck(
+  normalizeStatBlockMultiDamageRouteQuintState,
   compareStatBlockMultiDamageStates,
 );
 
@@ -232,6 +322,48 @@ describe("Stat Block multi-component damage focused MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(statBlockMultiDamageDefaultMbtSteps),
         stateCheck: statBlockMultiDamageStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes rolled multi-component Stat Block damage through the shared reducer surface",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+        ),
+        init: "initRolled",
+        step: "step",
+        driver: createStatBlockMultiDamageRouteDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(statBlockMultiDamageDefaultMbtSteps),
+        stateCheck: statBlockMultiDamageRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes static multi-component Stat Block damage through the shared reducer surface",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+        ),
+        init: "initStatic",
+        step: "step",
+        driver: createStatBlockMultiDamageRouteDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(statBlockMultiDamageDefaultMbtSteps),
+        stateCheck: statBlockMultiDamageRouteStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -564,6 +696,16 @@ function normalizeStatBlockMultiDamageQuintState(
     holes: protocol.holes,
     lastResult: protocol.lastResult,
     lastInvalidReason: protocol.lastInvalidReason,
+  };
+}
+
+function normalizeStatBlockMultiDamageRouteQuintState(
+  raw: unknown,
+): StatBlockMultiDamageRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeStatBlockMultiDamageQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 

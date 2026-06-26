@@ -14,6 +14,11 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  decodeRuleCoreComponentRoute,
+  type RuleCoreComponentRoutedProjection,
+  withRuleCoreComponentRoute,
+} from "./rule-core-component-route.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -66,7 +71,7 @@ const ruleCoreMovementInvalidReasons = [
 type RuleCoreMovementInvalidReason =
   (typeof ruleCoreMovementInvalidReasons)[number];
 
-type RuleCoreMovementProjection = {
+type RuleCoreMovementProjection = RuleCoreComponentRoutedProjection & {
   readonly currentActor: "Fighter" | "GrappledTarget";
   readonly movementSpentFeet: number;
   readonly movementRemainingFeet: number;
@@ -93,6 +98,7 @@ const movementShortCostFeet = 5;
 const movementFillCostFeet = 10;
 const movementFullCostFeet = 30;
 const movementOverspendCostFeet = 35;
+const componentOwner = "RuleCoreMovementGrappleOwner";
 
 const driverSchema = {
   init: {},
@@ -449,7 +455,7 @@ function projectRuleCoreMovementState(input: {
     (candidate) =>
       candidate.grapplerId === actorId && candidate.targetId === observerId,
   );
-  return {
+  return withRuleCoreComponentRoute(componentOwner, {
     currentActor: input.currentActor,
     movementSpentFeet: actor.movement.spentFeet,
     movementRemainingFeet: actor.movement.remainingFeet,
@@ -464,7 +470,7 @@ function projectRuleCoreMovementState(input: {
       snapshot.pendingInterrupt?.trigger === "opportunityAttack",
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
-  };
+  });
 }
 
 function movementFill(
@@ -596,6 +602,7 @@ function normalizeRuleCoreMovementQuintState(
     "qDashBonusFeet",
   );
   return {
+    componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
     currentActor: currentActorName(state["qCurrentActor"]),
     movementSpentFeet,
     movementRemainingFeet: Math.max(

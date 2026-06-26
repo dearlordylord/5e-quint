@@ -1,6 +1,8 @@
 // -*- mode: Bluespec; -*-
 
 module ruleCoreAbilitySkillCommandMbt {
+  import ruleCoreComponentRoute.* from "./rule-core-component-route"
+
   // Self-contained literal projection witness for deterministic ability, skill,
   // Search, and Command replay scenarios. The TS test discovers the runtime
   // projection independently; this QNT side records the fixed expected facts
@@ -22,6 +24,10 @@ module ruleCoreAbilitySkillCommandMbt {
   var qD20ModifierSkill: str
   var qAbilityCheckModeAbility: str
   var qReplayIndex: int
+  var qComponentRoute: List[RuleCoreComponentRouteEvent]
+
+  pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
+    ruleCoreComponentRoute(RuleCoreAbilitySkillCommandOwner)
 
   pure def searchFails: str = "search-fails"
   pure def searchSucceeds: str = "search-succeeds"
@@ -90,6 +96,7 @@ module ruleCoreAbilitySkillCommandMbt {
     qD20ModifierSkill' = d20ModifierSkill,
     qAbilityCheckModeAbility' = abilityCheckModeAbility,
     qReplayIndex' = nextReplayIndex,
+    qComponentRoute' = componentRouteEvidence,
   }
 
   action init = recordProjection(

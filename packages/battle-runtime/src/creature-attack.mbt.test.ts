@@ -3,15 +3,21 @@ import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
+  decodeReducerRoute,
   defineDriver,
   focusedMbtMaxSteps,
   mbtPickSchemas,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintStateRecord,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteStartBattle,
   run,
   stateCheck,
+  type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   resolveCreatureAttack,
@@ -23,6 +29,9 @@ const INITIAL_HP = 20;
 const initialState: CreatureAttackState = {
   creatureAHp: INITIAL_HP,
   creatureBHp: INITIAL_HP,
+};
+type CreatureAttackRouteState = CreatureAttackState & {
+  readonly route: readonly ReducerRouteEvent[];
 };
 
 const driverSchema = {
@@ -39,26 +48,80 @@ const driverSchema = {
 } as const;
 
 function createCreatureAttackDriver() {
-  return defineDriver(driverSchema, () => {
+  return createCreatureAttackDriverWithProjection((state) => state);
+}
+
+function createCreatureAttackRouteDriver() {
+  return createCreatureAttackDriverWithProjection((state, route) => ({
+    ...state,
+    route,
+  }));
+}
+
+function createCreatureAttackDriverWithProjection<State>(
+  projectState: (
+    state: CreatureAttackState,
+    route: readonly ReducerRouteEvent[],
+  ) => State,
+) {
+  return defineDriver<typeof driverSchema, State>(driverSchema, () => {
     let state: CreatureAttackState = initialState;
+    let route: readonly ReducerRouteEvent[] = [];
+    function recordAttackRoute(hit: boolean): void {
+      const discoveredRoute = [
+        ...route,
+        reducerRouteDiscoverBattleActs({
+          subject: "creatureAttack",
+          holes: [{ kind: "attackRoll" }],
+          owner: "battleAttackRoll",
+        }),
+      ];
+      const attackRoute = [
+        ...discoveredRoute,
+        reducerRouteResolveBattleSubject({
+          subject: "creatureAttack",
+          fill: "attackRoll",
+          holes: hit ? [{ kind: "rolledDice" }] : [],
+          owner: "battleAttackRoll",
+        }),
+      ];
+      route = hit
+        ? [
+            ...attackRoute,
+            reducerRouteResolveBattleSubject({
+              subject: "creatureAttack",
+              fill: "rolledDice",
+              holes: [],
+              owner: "battleHitPoint",
+            }),
+          ]
+        : attackRoute;
+    }
     return {
       init: () => {
         state = initialState;
+        route = [reducerRouteStartBattle("battleActionEconomy")];
       },
       doAttackerAAttacks: ({ damage, hit }) => {
         state = resolveCreatureAttack(state, "attackerA", { damage, hit });
+        recordAttackRoute(hit);
       },
       doAttackerBAttacks: ({ damage, hit }) => {
         state = resolveCreatureAttack(state, "attackerB", { damage, hit });
+        recordAttackRoute(hit);
       },
       step: () => {},
-      getState: () => state,
+      getState: () => projectState(state, route),
     };
   });
 }
 
 const creatureAttackStateCheck = stateCheck(
   normalizeCreatureAttackQuintState,
+  compareCreatureAttackState,
+);
+const creatureAttackRouteStateCheck = stateCheck(
+  normalizeCreatureAttackRouteQuintState,
   compareCreatureAttackState,
 );
 
@@ -79,6 +142,23 @@ describe("creature-attack minimal MBT parity", () => {
     },
     MBT_TEST_TIMEOUT_MS,
   );
+
+  it(
+    "routes minimal creature attacks through the shared reducer-route vocabulary",
+    async () => {
+      await run({
+        spec: mbtSpecPath(import.meta.dirname, "creature-attack.route.mbt.qnt"),
+        init: "init",
+        step: "step",
+        driver: createCreatureAttackRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: creatureAttackRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function normalizeCreatureAttackQuintState(raw: unknown): CreatureAttackState {
@@ -86,6 +166,16 @@ function normalizeCreatureAttackQuintState(raw: unknown): CreatureAttackState {
   return {
     creatureAHp: numberFromQuintInt(state["qCreatureAHp"], "qCreatureAHp"),
     creatureBHp: numberFromQuintInt(state["qCreatureBHp"], "qCreatureBHp"),
+  };
+}
+
+function normalizeCreatureAttackRouteQuintState(
+  raw: unknown,
+): CreatureAttackRouteState {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeCreatureAttackQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 

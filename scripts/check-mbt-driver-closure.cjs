@@ -36,6 +36,7 @@ const BUDGET_FILES = 8;
 
 const PURE_VOCABULARY_LEAF_MODULES = new Set([
   "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt",
+  "packages/battle-runtime/rule-core-component-route.qnt",
 ]);
 
 const forbiddenName = (...parts) => parts.join("");
@@ -148,8 +149,10 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-hole-kinds.qnt",
   "battle-runtime-command-ordering.qnt",
   "battle-runtime-hit-point-restoration-ordering.qnt",
+  "battle-runtime-magic-missile-facts.qnt",
   "battle-runtime-mirror-image-constants.qnt",
   "battle-runtime-reaction-kinds.qnt",
+  "battle-runtime-reducer-route.qnt",
   "battle-runtime-replay-equivalence.qnt",
   "battle-runtime-save-gated-spell-ordering.qnt",
   "battle-runtime-see-invisibility-constants.qnt",
@@ -159,6 +162,8 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-sorcerous-burst-damage-choice.qnt",
   "battle-runtime-witness-protocol.qnt",
   "battle-runtime-weapon-attack-ordering.qnt",
+  "creature-attack.qnt",
+  "rule-core-component-route.qnt",
 ]);
 
 // Grandfathered heavy drivers (basename -> reason). These import a behavioural
@@ -185,8 +190,6 @@ const ALLOWLIST = {
     "computed oracle: zone lifecycle, saved-this-turn, reposition, vitals, and shapeshift projection depend on mutable reducer state",
   "battle-runtime-warding-bond-damage-sharing.mbt.qnt":
     "computed oracle: shared damage and cleanup outcomes depend on mutable source/ward hit points and bond presence",
-  "creature-attack.mbt.qnt":
-    "computed oracle: attacker choice and hit result mutate the two-creature hit point state",
   "rule-core-stat-block-controls.mbt.qnt":
     "computed oracle: dispatch resolution depends on mutable remaining-dispatch counts",
   "battle-runtime-starry-wisp-object.mbt.qnt":

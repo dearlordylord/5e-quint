@@ -36,6 +36,8 @@ function requireCleanScaffold() {
     "scripts/sync-cleanroom-input.cjs",
     "scripts/render-cleanroom-scaffold.cjs",
     "scripts/package-cleanroom-refresh.cjs",
+    "scripts/check-cleanroom-harness.cjs",
+    "scripts/cleanroom-branch-coverage-check.cjs",
   ];
   const status = git("status", "--porcelain", "--", ...checked);
   if (status !== "") {
@@ -68,7 +70,11 @@ function validateArchive(archivePath) {
     "./target-profile.json",
     "./tasks/WORK_LOOP.md",
     "./tasks/LEVEL_1_2_SCOPE.md",
+    "./tasks/IMPLEMENTER_TASK.md",
+    "./tasks/TARGET_REPLAY_EVIDENCE.example.json",
     "./tasks/VALIDATION_REPORT.md",
+    "./scripts/check-cleanroom-harness.cjs",
+    "./scripts/cleanroom-branch-coverage-check.cjs",
     "./cleanroom-input/MANIFEST.md",
     "./cleanroom-input/branch-coverage/source-branch-inventory.json",
     "./cleanroom-input/branch-coverage/reducer-route-inventory.json",

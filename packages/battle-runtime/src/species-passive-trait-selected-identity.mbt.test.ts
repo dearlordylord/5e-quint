@@ -7,7 +7,25 @@
 // UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT dwarf_dwarven_resilience doDwarvenResilience
 // UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_goliath_powerful_build doGoliathPowerfulBuild
 // UNIT-IDENTITY-MBT-REPLAY: L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave doHalflingBrave
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { describe, expect, it } from "vitest";
+
+import {
+  MBT_TEST_TIMEOUT_MS,
+  decodeReducerRoute,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  quintField,
+  quintStateRecord,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteResolveBattleSubjectWithoutFill,
+  reducerRouteStartBattle,
+  run,
+  stateCheck,
+  type ReducerRouteEvent,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
 import * as Either from "effect/Either";
 
@@ -484,4 +502,204 @@ function escapeGrappleRollMode(input: {
     throw new Error("Expected Escape Grapple outcome hole.");
   }
   return escape.rollMode ?? "normal";
+}
+
+type SpeciesPassiveTraitSubstrateRouteProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const speciesPassiveTraitSubstrateRouteDriverSchema = {
+  init: {},
+  doProjectSpeciesBaseSizeSpeed: {},
+  doRoutePassiveDamageAdjustment: {},
+  doRoutePassiveSavingThrowRollMode: {},
+  doRoutePassiveAbilityCheckRollMode: {},
+  doMoveThroughLargerCreatureSpace: {},
+  doRejectOccupiedStop: {},
+  doRejectMissingMovementPermission: {},
+  doRejectSameSizeTraversal: {},
+  step: {},
+} as const;
+
+describe("Species passive trait substrate route MBT", () => {
+  it("routes passive trait substrates through generic battle owners", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createSpeciesPassiveTraitSubstrateRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(8),
+      stateCheck: speciesPassiveTraitSubstrateRouteStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+});
+
+function createSpeciesPassiveTraitSubstrateRouteDriver() {
+  return defineDriver<
+    typeof speciesPassiveTraitSubstrateRouteDriverSchema,
+    SpeciesPassiveTraitSubstrateRouteProjection
+  >(speciesPassiveTraitSubstrateRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      route = [reducerRouteStartBattle("battleCreatureState")];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doProjectSpeciesBaseSizeSpeed: () => {
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: "creatureStatProjection",
+            holes: [],
+            owner: "battleCreatureState",
+          }),
+          reducerRouteResolveBattleSubjectWithoutFill({
+            subject: "creatureStatProjection",
+            holes: [],
+            owner: "battleCreatureState",
+          }),
+          reducerRouteResolveBattleSubjectWithoutFill({
+            subject: "creatureStatProjection",
+            holes: [],
+            owner: "battleMovementResource",
+          }),
+        ];
+      },
+      doRoutePassiveDamageAdjustment: () => {
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: "passiveDamageAdjustment",
+            holes: [],
+            owner: "battleDamageAdjustment",
+          }),
+          reducerRouteResolveBattleSubjectWithoutFill({
+            subject: "passiveDamageAdjustment",
+            holes: [],
+            owner: "battleDamageAdjustment",
+          }),
+        ];
+      },
+      doRoutePassiveSavingThrowRollMode: () => {
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: "passiveSavingThrowRollMode",
+            holes: [{ kind: "savingThrowOutcome" }],
+            owner: "battleSavingThrowRollMode",
+          }),
+          reducerRouteResolveBattleSubject({
+            subject: "passiveSavingThrowRollMode",
+            fill: "savingThrowOutcome",
+            holes: [],
+            owner: "battleSavingThrowRollMode",
+          }),
+        ];
+      },
+      doRoutePassiveAbilityCheckRollMode: () => {
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: "passiveAbilityCheckRollMode",
+            holes: [{ kind: "grappleOutcome" }],
+            owner: "battleAbilityCheckRollMode",
+          }),
+          reducerRouteResolveBattleSubject({
+            subject: "passiveAbilityCheckRollMode",
+            fill: "grappleOutcome",
+            holes: [],
+            owner: "battleAbilityCheckRollMode",
+          }),
+        ];
+      },
+      doMoveThroughLargerCreatureSpace: () => {
+        route = appendAcceptedCreatureSpaceMovementRoute(route);
+      },
+      doRejectOccupiedStop: () => {
+        route = appendRejectedCreatureSpaceMovementRoute(route);
+      },
+      doRejectMissingMovementPermission: () => {
+        route = appendRejectedCreatureSpaceMovementRoute(route);
+      },
+      doRejectSameSizeTraversal: () => {
+        route = appendRejectedCreatureSpaceMovementRoute(route);
+      },
+      step: () => {},
+      getState: () => ({ route }),
+    };
+  });
+}
+
+function appendAcceptedCreatureSpaceMovementRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "creatureSpaceMovementPermission",
+      holes: [{ kind: "movement" }],
+      owner: "battleCreatureSpaceMovement",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "creatureSpaceMovementPermission",
+      fill: "movement",
+      holes: [],
+      owner: "battleCreatureSpaceMovement",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "creatureSpaceMovementPermission",
+      holes: [],
+      owner: "battleMovementResource",
+    }),
+  ];
+}
+
+function appendRejectedCreatureSpaceMovementRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "creatureSpaceMovementPermission",
+      holes: [{ kind: "movement" }],
+      owner: "battleCreatureSpaceMovement",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "creatureSpaceMovementPermission",
+      fill: "movement",
+      holes: [{ kind: "movement" }],
+      owner: "battleCreatureSpaceMovement",
+    }),
+  ];
+}
+
+const speciesPassiveTraitSubstrateRouteStateCheck = stateCheck(
+  normalizeSpeciesPassiveTraitSubstrateRouteQuintState,
+  compareSpeciesPassiveTraitSubstrateRouteStates,
+);
+
+function normalizeSpeciesPassiveTraitSubstrateRouteQuintState(
+  raw: unknown,
+): SpeciesPassiveTraitSubstrateRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function compareSpeciesPassiveTraitSubstrateRouteStates(
+  spec: SpeciesPassiveTraitSubstrateRouteProjection,
+  impl: SpeciesPassiveTraitSubstrateRouteProjection,
+): boolean {
+  expect(impl).toEqual(spec);
+  return true;
 }

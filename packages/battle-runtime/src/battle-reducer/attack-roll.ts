@@ -42,7 +42,7 @@ import {
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
-  ongoingFeatureSpellModifierSourceClassName,
+  type BattleUnitSupportProfile,
 } from "../unit-feature-support.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
@@ -72,7 +72,6 @@ import {
   isCharacterBattleCreatureState,
   ongoingFeatureProfileForSourceKey,
   ongoingFeatureSourceKeyForUnit,
-  unitRefSupportsProfile,
 } from "./creature-state.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
 import {
@@ -137,11 +136,18 @@ import {
 } from "./spells-damage-fills.ts";
 import { weaponAttackDamageExpression } from "./statblock-attacks.ts";
 
-const WEAPON_MASTERY_SAP_UNIT_ID = "mastery_sap" satisfies UnitRecord["id"];
-const WEAPON_MASTERY_TOPPLE_UNIT_ID =
-  "mastery_topple" satisfies UnitRecord["id"];
-const WEAPON_MASTERY_CLEAVE_UNIT_ID =
-  "mastery_cleave" satisfies UnitRecord["id"];
+const WEAPON_MASTERY_PROPERTY_SUPPORT_PROFILES = [
+  WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+  WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
+type WeaponMasteryPropertySupportProfile =
+  (typeof WEAPON_MASTERY_PROPERTY_SUPPORT_PROFILES)[number];
+
+type SelectedWeaponMasteryProperty = {
+  readonly attack: CharacterWeaponAttackActionOption;
+  readonly unitId: UnitRecord["id"];
+};
 
 export function attackRollHole(
   attacker: BattleCreatureState | undefined,
@@ -655,10 +661,11 @@ function ongoingFeatureGrantsSpellAttackRollMode(
       const profile = ongoingFeatureProfileForSourceKey(attacker, key);
       return (
         profile !== null &&
-        ongoingFeatureSpellModifierSourceClassName(profile) ===
-          attacker.origin.spellcasting?.sourceClassName &&
         profile.spellModifiers.some(
-          (modifier) => modifier.attackRollMode === mode,
+          (modifier) =>
+            modifier.attackRollMode === mode &&
+            modifier.sourceClassName ===
+              attacker.origin.spellcasting?.sourceClassName,
         )
       );
     })
@@ -848,27 +855,15 @@ export function applyWeaponMasterySapOnHit(
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
 ): BattleState {
-  if (attack.kind !== "weapon") {
-    return state;
-  }
-  const attacker = state.combatants.get(attackerId);
+  const selection = selectedWeaponMasteryProperty({
+    state,
+    attackerId,
+    attack,
+    property: "sap",
+    supportProfile: WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+  });
   const target = state.combatants.get(targetId);
-  const hasSelectedWeaponMastery = isCharacterBattleCreatureState(attacker)
-    ? attacker.origin.weaponMasteries.find(
-        (mastery) => mastery.weaponUnitId === attack.weapon.id,
-      )
-    : undefined;
-  if (
-    !isCharacterBattleCreatureState(attacker) ||
-    target === undefined ||
-    attack.weapon.mastery !== "sap" ||
-    hasSelectedWeaponMastery === undefined ||
-    !unitRefSupportsProfile(
-      attacker.origin.characterUnitRefs,
-      WEAPON_MASTERY_SAP_UNIT_ID,
-      WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
-    )
-  ) {
+  if (selection === null || target === undefined) {
     return state;
   }
   const activeEffects = [
@@ -882,7 +877,7 @@ export function applyWeaponMasterySapOnHit(
     ),
     {
       kind: "nextAttackRollBySelf",
-      sourceUnitId: WEAPON_MASTERY_SAP_UNIT_ID,
+      sourceUnitId: selection.unitId,
       sourceCombatantId: attackerId,
       mode: "disadvantage",
       expiresAt: { kind: "startOfTurn", combatantId: attackerId },
@@ -903,7 +898,13 @@ export function weaponMasteryToppleSavingThrowHole(
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
 ): BattleUnitFeatureSavingThrowOutcomeHole | null {
-  if (!weaponMasteryToppleApplies(state, attackerId, targetId, attack)) {
+  const selection = weaponMasteryToppleSelection(
+    state,
+    attackerId,
+    targetId,
+    attack,
+  );
+  if (selection === null) {
     return null;
   }
   const attacker = state.combatants.get(attackerId);
@@ -916,7 +917,7 @@ export function weaponMasteryToppleSavingThrowHole(
     holeInstanceKey: WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE,
     label: "Topple Constitution saving throw",
     unitFeature: {
-      unitId: WEAPON_MASTERY_TOPPLE_UNIT_ID,
+      unitId: selection.unitId,
       label: "Topple",
     },
     ability: "con",
@@ -924,7 +925,7 @@ export function weaponMasteryToppleSavingThrowHole(
       kind: "fixed",
       dc: difficultyClass(
         8 +
-          Number(attack.abilityModifier) +
+          Number(selection.attack.abilityModifier) +
           combatantProficiencyBonus(attacker),
       ),
     },
@@ -981,30 +982,21 @@ export function applyWeaponMasteryToppleSavingThrow(
   };
 }
 
-function weaponMasteryToppleApplies(
+function weaponMasteryToppleSelection(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
-): attack is CharacterWeaponAttackActionOption {
-  if (attack.kind !== "weapon" || attack.weapon.mastery !== "topple") {
-    return false;
-  }
-  const attacker = state.combatants.get(attackerId);
-  if (!isCharacterBattleCreatureState(attacker)) {
-    return false;
-  }
-  return (
-    state.combatants.has(targetId) &&
-    attacker.origin.weaponMasteries.some(
-      (mastery) => mastery.weaponUnitId === attack.weapon.id,
-    ) &&
-    unitRefSupportsProfile(
-      attacker.origin.characterUnitRefs,
-      WEAPON_MASTERY_TOPPLE_UNIT_ID,
-      WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-    )
-  );
+): SelectedWeaponMasteryProperty | null {
+  return state.combatants.has(targetId)
+    ? selectedWeaponMasteryProperty({
+        state,
+        attackerId,
+        attack,
+        property: "topple",
+        supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+      })
+    : null;
 }
 
 export function weaponMasteryCleaveDecisionHole(
@@ -1013,14 +1005,20 @@ export function weaponMasteryCleaveDecisionHole(
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
 ): BattleUnitFeatureDecisionHole | null {
-  return weaponMasteryCleaveApplies(state, attackerId, targetId, attack)
+  const selection = weaponMasteryCleaveSelection(
+    state,
+    attackerId,
+    targetId,
+    attack,
+  );
+  return selection !== null
     ? {
         kind: "unitFeatureDecision",
         holeId: WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
         holeInstanceKey: WEAPON_MASTERY_CLEAVE_DECISION_HOLE_INSTANCE,
         label: "Use Cleave",
         unitFeature: {
-          unitId: WEAPON_MASTERY_CLEAVE_UNIT_ID,
+          unitId: selection.unitId,
           label: "Cleave",
         },
         choices: ["use", "decline"],
@@ -1381,36 +1379,78 @@ export function recordWeaponMasteryCleaveUsed(
       };
 }
 
-function weaponMasteryCleaveApplies(
+function weaponMasteryCleaveSelection(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
   attack: SupportedAttackActionOption,
-): attack is CharacterWeaponAttackActionOption {
+): SelectedWeaponMasteryProperty | null {
   if (
     attack.kind !== "weapon" ||
-    attack.weapon.mastery !== "cleave" ||
     attackTargetConstraint(attack).kind !== "meleeReach"
   ) {
-    return false;
+    return null;
   }
-  const attacker = state.combatants.get(attackerId);
-  if (!isCharacterBattleCreatureState(attacker)) {
-    return false;
-  }
-  return (
-    state.combatants.has(targetId) &&
-    !state.currentTurnResources.weaponMasteryCleaveAttackersUsedThisTurn.includes(
+  if (
+    !state.combatants.has(targetId) ||
+    state.currentTurnResources.weaponMasteryCleaveAttackersUsedThisTurn.includes(
       attackerId,
-    ) &&
-    attacker.origin.weaponMasteries.some(
-      (mastery) => mastery.weaponUnitId === attack.weapon.id,
-    ) &&
-    unitRefSupportsProfile(
-      attacker.origin.characterUnitRefs,
-      WEAPON_MASTERY_CLEAVE_UNIT_ID,
-      WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
     )
+  ) {
+    return null;
+  }
+  return selectedWeaponMasteryProperty({
+    state,
+    attackerId,
+    attack,
+    property: "cleave",
+    supportProfile: WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+  });
+}
+
+function selectedWeaponMasteryProperty(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly property: CharacterWeaponAttackActionOption["weapon"]["mastery"];
+  readonly supportProfile: WeaponMasteryPropertySupportProfile;
+}): SelectedWeaponMasteryProperty | null {
+  const attack = input.attack;
+  if (attack.kind !== "weapon" || attack.weapon.mastery !== input.property) {
+    return null;
+  }
+  const attacker = input.state.combatants.get(input.attackerId);
+  if (!isCharacterBattleCreatureState(attacker)) {
+    return null;
+  }
+  if (
+    !attacker.origin.weaponMasteries.some(
+      (mastery) => mastery.weaponUnitId === attack.weapon.id,
+    )
+  ) {
+    return null;
+  }
+  const unitRef = attacker.origin.characterUnitRefs.find((candidate) =>
+    weaponMasteryPropertySupportProfiles(candidate.supportProfiles).includes(
+      input.supportProfile,
+    ),
+  );
+  return unitRef === undefined
+    ? null
+    : { attack, unitId: unitRef.unitId };
+}
+
+function weaponMasteryPropertySupportProfiles(
+  supportProfiles: readonly BattleUnitSupportProfile[],
+): readonly WeaponMasteryPropertySupportProfile[] {
+  return supportProfiles.filter(isWeaponMasteryPropertySupportProfile);
+}
+
+function isWeaponMasteryPropertySupportProfile(
+  supportProfile: BattleUnitSupportProfile,
+): supportProfile is WeaponMasteryPropertySupportProfile {
+  return WEAPON_MASTERY_PROPERTY_SUPPORT_PROFILES.some(
+    (profile) => profile === supportProfile,
   );
 }
 

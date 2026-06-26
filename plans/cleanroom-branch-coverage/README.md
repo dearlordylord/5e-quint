@@ -28,11 +28,50 @@ pnpm cleanroom-branch-coverage:check -- --write
 
 ## Reducer Route Inventory
 
-`reducer-route-inventory.json` is curated source-side task-selection guidance.
-It does not duplicate branch obligations. It selects focused battle/rule-core
-drivers for reducer-spine diagnostics and records the route class,
-derivability facts, durable state owner expectations, and blockers for each
-selected driver.
+`reducer-route-inventory.json` is source-side task-selection guidance and an
+index into executable route or component connectors. It does not duplicate
+branch obligations. It selects focused battle/rule-core drivers for
+reducer-spine diagnostics and records the route class, derivability facts,
+durable state owner expectations, blockers, and connector paths when the route
+or reusable component is already expressed in QNT.
+
+`levelDenominators[]` records broader route-readiness denominators without
+changing the active branch-scope harness. The `level-1-5-cleanroom-route-v1`
+denominator assigns every current driver a route class and classifies each
+current out-of-scope branch decision as:
+
+- `in-denominator` for character level 1-5 work that should later be promoted
+  by a route task;
+- `out-of-denominator` for level 6/7, Epic Boon, spell-level-4, or
+  spell-level-5 work outside the lane;
+- `source-qnt-corpus-blocker` when copied QNT/RAW/domain guidance is
+  insufficient.
+
+This denominator is not cleanroom replay evidence. It answers queue questions
+such as "how many drivers remain" and tells later tasks which branch decisions
+can be promoted only after the corresponding generic route substrate exists.
+
+The same denominator owns the fresh package gate in
+`freshCleanroomPackageGate`. That gate is the acceptance slice for a future
+fresh cleanroom run: copied RAW/domain/QNT/guidance inputs, route inventory,
+source branch inventory, target replay evidence schema, and explicit
+route-class evidence must be sufficient without production TypeScript reads or
+dirty cleanroom history.
+
+`*.route.mbt.qnt` connectors are the executable source of truth for reducer
+routing. A `reducer-routed` row is meaningful only when the connector projects
+`qRoute` through the reducer-route vocabulary. Rows should set
+`routeConnectorPath` when the connector is not the default sibling of the
+driver; otherwise the gate derives `<driver>.route.mbt.qnt`. Guidance prose may
+select the task, but it cannot by itself prove the target implementation routed
+through the shared reducer surface.
+
+Rule-core `component-first` rows are meaningful only when the component
+connector projects `qComponentRoute` through
+`packages/battle-runtime/rule-core-component-route.qnt`. Rows set
+`componentConnectorPath`, `componentOwners`, and `dependentRouteTaskIds` so a
+target can prove parse/admit/call/project through the reusable rule-core
+component before a later battle route consumes that owner.
 
 The checker renders the active diagnostic batch into:
 
@@ -41,7 +80,8 @@ The checker renders the active diagnostic batch into:
 
 Unlisted battle/rule-core drivers are deliberately unclassified until they are
 selected for a cleanroom diagnostic task. Do not infer a reducer route from the
-full branch queue alone.
+full branch queue alone, and do not treat a target replay as routed unless it
+matches the copied route connector.
 
 ## Target Replay Evidence
 

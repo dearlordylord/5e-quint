@@ -45,6 +45,11 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  decodeRuleCoreComponentRoute,
+  type RuleCoreComponentRoutedProjection,
+  withRuleCoreComponentRoute,
+} from "./rule-core-component-route.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -130,7 +135,7 @@ const actionSurgeGrants = [
 ] as const;
 type ActionSurgeGrant = (typeof actionSurgeGrants)[number];
 
-type RuleCoreFeatureProjection = {
+type RuleCoreFeatureProjection = RuleCoreComponentRoutedProjection & {
   readonly actionAvailable: boolean;
   readonly bonusActionAvailable: boolean;
   readonly reactionAvailable: boolean;
@@ -169,6 +174,7 @@ const targetId = combatantId("rule-core-feature-target");
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 const featureMbtBaselineArmorClass = 10;
+const componentOwner = "RuleCoreFeatureProfileSemanticsOwner";
 const cunningActionSupportProfile = {
   kind: "alternateActionCost",
   from: { kind: "standardAction", actions: ["dash", "disengage", "hide"] },
@@ -656,9 +662,9 @@ const selectedUnitIdentityReplays = [
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 function expectedProjection(
-  overrides: Partial<RuleCoreFeatureProjection> = {},
+  overrides: Partial<Omit<RuleCoreFeatureProjection, "componentRoute">> = {},
 ): RuleCoreFeatureProjection {
-  return {
+  return withRuleCoreComponentRoute(componentOwner, {
     actionAvailable: true,
     bonusActionAvailable: true,
     reactionAvailable: true,
@@ -683,7 +689,7 @@ function expectedProjection(
     lastResult: "init",
     lastInvalidReason: "none",
     ...overrides,
-  };
+  });
 }
 
 function resetSelectedUnitRuntimeBoundaryIds(): void {
@@ -2453,7 +2459,7 @@ function projectRuleCoreFeatureState(input: {
   if (actor === undefined) {
     throw new Error("Expected rule-core Feature actor.");
   }
-  return {
+  return withRuleCoreComponentRoute(componentOwner, {
     actionAvailable: snapshot.turn.actionResources.length > 0,
     bonusActionAvailable: snapshot.turn.bonusActionAvailable,
     reactionAvailable: actor.reactionAvailable,
@@ -2489,7 +2495,7 @@ function projectRuleCoreFeatureState(input: {
     pendingInterrupt: snapshot.pendingInterrupt !== null,
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
-  };
+  });
 }
 
 function actionSurgeGrant(state: BattleState): ActionSurgeGrant {
@@ -2565,6 +2571,7 @@ function normalizeRuleCoreFeatureQuintState(
     decodeHole: featureHoleName,
   });
   return {
+    componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
     actionAvailable: booleanField(state, "qActionAvailable"),
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
     reactionAvailable: booleanField(state, "qReactionAvailable"),

@@ -9,18 +9,26 @@ import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintStateRecord,
   quintVariantMappedValue,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteStartBattle,
   run,
   stateCheck,
   type MbtWitnessLastInvalidReason,
   type MbtWitnessLastResult,
+  type ReducerRouteEvent,
+  type ReducerRouteFill,
+  type ReducerRouteOwnerGroup,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   battleId,
@@ -62,6 +70,10 @@ type SizeGatedConditionRiderProjection = {
   readonly lastResult: MbtWitnessLastResult;
   readonly lastInvalidReason: MbtWitnessLastInvalidReason<"none">;
 };
+type SizeGatedConditionRiderRouteProjection =
+  SizeGatedConditionRiderProjection & {
+    readonly route: readonly ReducerRouteEvent[];
+  };
 
 type StatBlockAttack = NonNullable<
   NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
@@ -94,10 +106,28 @@ const driverSchema = {
 } as const;
 
 function createSizeGatedConditionRiderDriver() {
-  return defineDriver(driverSchema, () => {
+  return createSizeGatedConditionRiderDriverWithProjection(
+    (projection) => projection,
+  );
+}
+
+function createSizeGatedConditionRiderRouteDriver() {
+  return createSizeGatedConditionRiderDriverWithProjection(
+    (projection, route) => ({ ...projection, route }),
+  );
+}
+
+function createSizeGatedConditionRiderDriverWithProjection<State>(
+  projectState: (
+    projection: SizeGatedConditionRiderProjection,
+    route: readonly ReducerRouteEvent[],
+  ) => State,
+) {
+  return defineDriver<typeof driverSchema, State>(driverSchema, () => {
     let state = sizeGatedConditionRiderBattle("mediumOrSmaller");
     let targetSizeGate: TargetSizeGate = "mediumOrSmaller";
     let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
     let targetChoice: Extract<
       BattleFill,
       { readonly kind: "targetChoice" }
@@ -123,19 +153,55 @@ function createSizeGatedConditionRiderDriver() {
       }
       state = result.state;
       holes = result.holes;
+      route = [
+        reducerRouteStartBattle("battleActionEconomy"),
+        reducerRouteDiscoverBattleActs({
+          subject: "statBlockAction",
+          holes,
+          owner: "battleStatBlockAction",
+        }),
+      ];
       lastResult = "init";
     }
 
-    function recordResult(result: BattleResolutionResult): void {
+    function recordResult(
+      result: BattleResolutionResult,
+      routeFill: ReducerRouteFill,
+      routeOwner: ReducerRouteOwnerGroup,
+    ): void {
+      const routeHoles =
+        result.tag === "needsHoles"
+          ? result.holes
+          : result.tag === "resolved"
+            ? []
+            : holes;
       if (result.tag === "resolved") {
         state = result.state;
         holes = [];
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "statBlockAction",
+            fill: routeFill,
+            holes: routeHoles,
+            owner: routeOwner,
+          }),
+        ];
         lastResult = "resolved";
         return;
       }
       if (result.tag === "needsHoles") {
         state = result.state;
         holes = result.holes;
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "statBlockAction",
+            fill: routeFill,
+            holes: routeHoles,
+            owner: routeOwner,
+          }),
+        ];
         lastResult = "needsHoles";
         return;
       }
@@ -144,13 +210,19 @@ function createSizeGatedConditionRiderDriver() {
       );
     }
 
-    function resolveCurrentSubject(fills: readonly BattleFill[]): void {
+    function resolveCurrentSubject(input: {
+      readonly fills: readonly BattleFill[];
+      readonly routeFill: ReducerRouteFill;
+      readonly routeOwner: ReducerRouteOwnerGroup;
+    }): void {
       recordResult(
         resolveBattleSubject({
           state,
           subject: attackSubject(),
-          fills,
+          fills: input.fills,
         }),
+        input.routeFill,
+        input.routeOwner,
       );
     }
 
@@ -163,32 +235,46 @@ function createSizeGatedConditionRiderDriver() {
         targetChoice = targetChoiceFill(
           requireHole(holes, "targetChoice"),
         );
-        resolveCurrentSubject([targetChoice]);
+        resolveCurrentSubject({
+          fills: [targetChoice],
+          routeFill: "targetChoice",
+          routeOwner: "battleTargetSelection",
+        });
       },
       doFillHitAttackRoll: () => {
         const selectedTargetChoice = requireTargetChoice(targetChoice);
         attackRoll = attackRollFillForHit(
           requireHole(holes, "attackRoll"),
         );
-        resolveCurrentSubject([selectedTargetChoice, attackRoll]);
+        resolveCurrentSubject({
+          fills: [selectedTargetChoice, attackRoll],
+          routeFill: "attackRoll",
+          routeOwner: "battleConditionLifecycle",
+        });
       },
       doResolveDamage: () => {
         const selectedTargetChoice = requireTargetChoice(targetChoice);
         const selectedAttackRoll = requireAttackRoll(attackRoll);
-        resolveCurrentSubject([
-          selectedTargetChoice,
-          selectedAttackRoll,
-          damageRollFill(requireHole(holes, "rolledDice"), 1),
-        ]);
+        resolveCurrentSubject({
+          fills: [
+            selectedTargetChoice,
+            selectedAttackRoll,
+            damageRollFill(requireHole(holes, "rolledDice"), 1),
+          ],
+          routeFill: "rolledDice",
+          routeOwner: "battleHitPoint",
+        });
       },
       step: () => {},
-      getState: () =>
-        projectSizeGatedConditionRiderState({
+      getState: () => {
+        const projection = projectSizeGatedConditionRiderState({
           state,
           targetSizeGate,
           holes,
           lastResult,
-        }),
+        });
+        return projectState(projection, route);
+      },
     };
   });
 }
@@ -208,6 +294,10 @@ function attackRollFillForHit(
 
 const sizeGatedConditionRiderStateCheck = stateCheck(
   normalizeSizeGatedConditionRiderQuintState,
+  compareSizeGatedConditionRiderStates,
+);
+const sizeGatedConditionRiderRouteStateCheck = stateCheck(
+  normalizeSizeGatedConditionRiderRouteQuintState,
   compareSizeGatedConditionRiderStates,
 );
 
@@ -278,6 +368,75 @@ describe("Stat Block size-gated condition rider focused MBT", () => {
           sizeGatedConditionRiderDefaultMbtSteps,
         ),
         stateCheck: sizeGatedConditionRiderStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes a hit applying Prone to a Medium-or-smaller target",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt",
+        ),
+        init: "initMediumOrSmallerTarget",
+        step: "step",
+        driver: createSizeGatedConditionRiderRouteDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(
+          sizeGatedConditionRiderDefaultMbtSteps,
+        ),
+        stateCheck: sizeGatedConditionRiderRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes a hit withholding Prone from a larger target",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt",
+        ),
+        init: "initLargerTarget",
+        step: "step",
+        driver: createSizeGatedConditionRiderRouteDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(
+          sizeGatedConditionRiderDefaultMbtSteps,
+        ),
+        stateCheck: sizeGatedConditionRiderRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes a hit withholding Prone from an immune Medium-or-smaller target",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt",
+        ),
+        init: "initMediumOrSmallerProneImmuneTarget",
+        step: "step",
+        driver: createSizeGatedConditionRiderRouteDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(
+          sizeGatedConditionRiderDefaultMbtSteps,
+        ),
+        stateCheck: sizeGatedConditionRiderRouteStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -532,6 +691,16 @@ function normalizeSizeGatedConditionRiderQuintState(
     holes: protocol.holes,
     lastResult: protocol.lastResult,
     lastInvalidReason: protocol.lastInvalidReason,
+  };
+}
+
+function normalizeSizeGatedConditionRiderRouteQuintState(
+  raw: unknown,
+): SizeGatedConditionRiderRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeSizeGatedConditionRiderQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 

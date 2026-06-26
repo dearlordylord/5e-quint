@@ -152,9 +152,9 @@ It is a focused battle diagnostic assignment, not a replacement for the full lev
 | --- | --- | --- | --- |
 | 1 | `cleanroom-input/qnt/battle-runtime/battle-runtime-magic-missile.mbt.qnt` | reducer-routed | Target replay evidence shows Magic Missile allocation and damage actions resolved through the shared reducer entrypoints and battle-owned state fields. |
 | 2 | `cleanroom-input/qnt/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt` | reducer-routed | Target replay evidence reuses the existing Magic-action and spell-slot ownership instead of introducing a local save-gated ordering island. |
-| 3 | `cleanroom-input/qnt/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt` | substrate-first | Target replay evidence adds HP restoration through the battle-owned HP lifecycle and keeps spell target/distribution fills as reducer subject progress. |
-| 4 | `cleanroom-input/qnt/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt` | substrate-first | Target replay evidence routes Death Saving Throw discovery/fill through turn advancement or subject resolution using the same HP lifecycle owner as damage and healing. |
-| 5 | `cleanroom-input/qnt/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt` | substrate-first | Target replay evidence proves failed damage save, voluntary end, and replacement Concentration teardown through one durable Concentration owner. |
+| 3 | `cleanroom-input/qnt/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt` | reducer-routed | Target replay evidence adds HP restoration through the battle-owned HP lifecycle and keeps spell target/distribution fills as reducer subject progress through the shared reducer surface. |
+| 4 | `cleanroom-input/qnt/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt` | reducer-routed | Target replay evidence routes Death Saving Throw discovery/fill through turn advancement or subject resolution using the same HP lifecycle owner as damage and healing. |
+| 5 | `cleanroom-input/qnt/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt` | reducer-routed | Target replay evidence proves failed damage save, voluntary end, and replacement Concentration teardown through one durable Concentration owner. |
 
 ## Future Level 1-2 Queue
 

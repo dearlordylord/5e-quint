@@ -7,6 +7,7 @@ import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
@@ -14,12 +15,21 @@ import {
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintRecordField,
   quintStateRecord,
   quintVariantMappedValue,
   quintVariantTag,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteResolveBattleSubjectWithoutFill,
+  reducerRouteStartBattle,
   run,
   stateCheck,
+  type ReducerRouteEvent,
+  type ReducerRouteFill,
+  type ReducerRouteOwnerGroup,
+  type ReducerRouteSubjectFamily,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   attackRollFill,
@@ -105,6 +115,10 @@ type WeaponHostedState = {
   readonly weaponEnhancementBonus: number;
   readonly holes: readonly WeaponHostedHole[];
   readonly lastResult: "init" | "needsHoles" | "resolved" | "invalid";
+};
+
+type WeaponHostedRouteState = {
+  readonly route: readonly ReducerRouteEvent[];
 };
 
 type PendingInvocation =
@@ -232,6 +246,58 @@ const weaponHostedDriverSchema = {
   step: {},
 } as const;
 
+const weaponHostedRouteDriverSchema = {
+  init: {},
+  doRouteSpellHostedDamageTypeChoice: {},
+  doRouteSpellHostedTargetChoice: {},
+  doRouteSpellHostedAttackRoll: {},
+  doRouteSpellHostedDamage: {},
+  doRouteHeldWeaponActiveEffect: {},
+  doRouteHeldWeaponAttackRoll: {},
+  doRouteHeldWeaponDamage: {},
+  doRouteWeaponDamageRiderActiveEffect: {},
+  doRouteWeaponDamageRiderDamage: {},
+  doRouteWeaponEnhancementItemTarget: {},
+  doRouteHeldWeaponReleaseCleanup: {},
+  doRouteWeaponDamageRiderDurationCleanup: {},
+  doRouteWeaponEnhancementDurationCleanup: {},
+  step: {},
+} as const;
+
+const WEAPON_HOSTED_ROUTE_SPEC_FILES = {
+  spellHostedWeaponAttack:
+    "battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+  heldWeaponActiveEffect:
+    "battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+  weaponDamageRider: "battle-runtime-weapon-damage-rider.route.mbt.qnt",
+  weaponEnhancementItemTarget:
+    "battle-runtime-weapon-enhancement-item-target.route.mbt.qnt",
+  heldWeaponReleaseCleanup:
+    "battle-runtime-held-weapon-release-cleanup.route.mbt.qnt",
+  weaponDamageRiderCleanup:
+    "battle-runtime-weapon-damage-rider-cleanup.route.mbt.qnt",
+  weaponEnhancementCleanup:
+    "battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt",
+} as const;
+type WeaponHostedRouteSpecFile =
+  (typeof WEAPON_HOSTED_ROUTE_SPEC_FILES)[
+    keyof typeof WEAPON_HOSTED_ROUTE_SPEC_FILES
+  ];
+
+const SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT =
+  "spellHostedWeaponAttack" satisfies ReducerRouteSubjectFamily;
+const HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT =
+  "heldWeaponActiveEffect" satisfies ReducerRouteSubjectFamily;
+const WEAPON_DAMAGE_RIDER_ROUTE_SUBJECT =
+  "weaponDamageRider" satisfies ReducerRouteSubjectFamily;
+const WEAPON_ENHANCEMENT_ITEM_TARGET_ROUTE_SUBJECT =
+  "weaponEnhancementItemTarget" satisfies ReducerRouteSubjectFamily;
+const WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT =
+  "weaponHostedSpellEffectCleanup" satisfies ReducerRouteSubjectFamily;
+const WEAPON_HOSTED_ROUTE_START = reducerRouteStartBattle(
+  "battleActionEconomy",
+);
+
 function createWeaponHostedDriver() {
   return defineDriver(weaponHostedDriverSchema, () => {
     let state = initialRuntimeState("trueStrikeRadiantHit", "init");
@@ -334,6 +400,63 @@ const weaponHostedStateCheck = stateCheck(
   compareWeaponHostedStates,
 );
 
+function createWeaponHostedRouteDriver() {
+  return defineDriver(weaponHostedRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [WEAPON_HOSTED_ROUTE_START];
+    return {
+      init: () => {
+        route = [WEAPON_HOSTED_ROUTE_START];
+      },
+      doRouteSpellHostedDamageTypeChoice: () => {
+        route = routeSpellHostedDamageTypeChoice();
+      },
+      doRouteSpellHostedTargetChoice: () => {
+        route = routeSpellHostedTargetChoice();
+      },
+      doRouteSpellHostedAttackRoll: () => {
+        route = routeSpellHostedAttackRoll();
+      },
+      doRouteSpellHostedDamage: () => {
+        route = routeSpellHostedDamage();
+      },
+      doRouteHeldWeaponActiveEffect: () => {
+        route = routeHeldWeaponActiveEffect();
+      },
+      doRouteHeldWeaponAttackRoll: () => {
+        route = routeHeldWeaponAttackRoll();
+      },
+      doRouteHeldWeaponDamage: () => {
+        route = routeHeldWeaponDamage();
+      },
+      doRouteWeaponDamageRiderActiveEffect: () => {
+        route = routeWeaponDamageRiderActiveEffect();
+      },
+      doRouteWeaponDamageRiderDamage: () => {
+        route = routeWeaponDamageRiderDamage();
+      },
+      doRouteWeaponEnhancementItemTarget: () => {
+        route = routeWeaponEnhancementItemTarget();
+      },
+      doRouteHeldWeaponReleaseCleanup: () => {
+        route = routeHeldWeaponReleaseCleanup();
+      },
+      doRouteWeaponDamageRiderDurationCleanup: () => {
+        route = routeWeaponDamageRiderDurationCleanup();
+      },
+      doRouteWeaponEnhancementDurationCleanup: () => {
+        route = routeWeaponEnhancementDurationCleanup();
+      },
+      step: () => {},
+      getState: (): WeaponHostedRouteState => ({ route }),
+    };
+  });
+}
+
+const weaponHostedRouteStateCheck = stateCheck(
+  normalizeWeaponHostedRouteQuintState,
+  compareWeaponHostedRouteStates,
+);
+
 describe("Weapon-hosted attack and riders MBT parity", () => {
   it(
     "matches hosted weapon attacks, held-weapon effects, weapon-hit riders, and cleanup",
@@ -354,7 +477,100 @@ describe("Weapon-hosted attack and riders MBT parity", () => {
     },
     MBT_TEST_TIMEOUT_MS,
   );
+
+  it(
+    "routes spell-hosted weapon attack surfaces",
+    async () => {
+      await runWeaponHostedRouteMbt(
+        WEAPON_HOSTED_ROUTE_SPEC_FILES.spellHostedWeaponAttack,
+        5,
+      );
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes held-weapon active-effect surfaces",
+    async () => {
+      await runWeaponHostedRouteMbt(
+        WEAPON_HOSTED_ROUTE_SPEC_FILES.heldWeaponActiveEffect,
+        4,
+      );
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes weapon damage-rider surfaces",
+    async () => {
+      await runWeaponHostedRouteMbt(
+        WEAPON_HOSTED_ROUTE_SPEC_FILES.weaponDamageRider,
+        3,
+      );
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes weapon-enhancement item-target surface",
+    async () => {
+      await runWeaponHostedRouteMbt(
+        WEAPON_HOSTED_ROUTE_SPEC_FILES.weaponEnhancementItemTarget,
+        2,
+      );
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes held-weapon release cleanup surface",
+    async () => {
+      await runWeaponHostedRouteMbt(
+        WEAPON_HOSTED_ROUTE_SPEC_FILES.heldWeaponReleaseCleanup,
+        2,
+      );
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes weapon damage-rider cleanup surface",
+    async () => {
+      await runWeaponHostedRouteMbt(
+        WEAPON_HOSTED_ROUTE_SPEC_FILES.weaponDamageRiderCleanup,
+        2,
+      );
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes weapon-enhancement cleanup surface",
+    async () => {
+      await runWeaponHostedRouteMbt(
+        WEAPON_HOSTED_ROUTE_SPEC_FILES.weaponEnhancementCleanup,
+        2,
+      );
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
+
+async function runWeaponHostedRouteMbt(
+  specFile: WeaponHostedRouteSpecFile,
+  maxSteps: number,
+): Promise<void> {
+  await run({
+    spec: mbtSpecPath(import.meta.dirname, specFile),
+    init: "init",
+    step: "step",
+    driver: createWeaponHostedRouteDriver(),
+    backend: "typescript",
+    nTraces: mbtTraceCount(),
+    maxSteps: focusedMbtMaxSteps(maxSteps),
+    stateCheck: weaponHostedRouteStateCheck,
+  });
+}
 
 function initialRuntimeState(
   scenario: Exclude<WeaponHostedScenario, "done">,
@@ -411,6 +627,333 @@ function battleForScenario(
     targetHp: 20,
     targetMaxHp: 20,
   });
+}
+
+function routeSpellHostedDamageTypeChoice(): readonly ReducerRouteEvent[] {
+  const discovered = discoverTrueStrike(
+    initialRuntimeState("trueStrikeRadiantHit", "init"),
+  );
+  if (discovered.pending.tag !== "trueStrikeChoices") {
+    throw new Error("Expected pending True Strike choices.");
+  }
+  const damageTypeFill = radiantDamageTypeChoiceFill(
+    requireHole(discovered.holes, "damageTypeChoice"),
+  );
+  const result = requireNeedsHoles(
+    resolveBattleSubject({
+      state: discovered.battle,
+      subject: discovered.pending.subject,
+      fills: [damageTypeFill],
+    }),
+    "Expected True Strike damage type choice to leave target choice open.",
+  );
+  requireHole(result.holes, "targetChoice");
+  return weaponHostedRouteWithResolve({
+    subject: SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
+    holes: discovered.holes,
+    discoverOwner: "battleActionEconomy",
+    fill: "damageTypeChoice",
+    nextHoles: result.holes,
+    resolveOwner: "battleHoleFrontier",
+  });
+}
+
+function routeSpellHostedTargetChoice(): readonly ReducerRouteEvent[] {
+  const discovered = discoverTrueStrike(
+    initialRuntimeState("trueStrikeRadiantHit", "init"),
+  );
+  if (discovered.pending.tag !== "trueStrikeChoices") {
+    throw new Error("Expected pending True Strike choices.");
+  }
+  const damageTypeFill = radiantDamageTypeChoiceFill(
+    requireHole(discovered.holes, "damageTypeChoice"),
+  );
+  const damageTypeResult = requireNeedsHoles(
+    resolveBattleSubject({
+      state: discovered.battle,
+      subject: discovered.pending.subject,
+      fills: [damageTypeFill],
+    }),
+    "Expected True Strike target choice after damage type choice.",
+  );
+  const targetFill = attackTargetFill(
+    requireHole(damageTypeResult.holes, "targetChoice"),
+    spellCasterId,
+    spellTargetId,
+    "Dagger",
+  );
+  const result = requireNeedsHoles(
+    resolveBattleSubject({
+      state: discovered.battle,
+      subject: discovered.pending.subject,
+      fills: [damageTypeFill, targetFill],
+    }),
+    "Expected True Strike target choice to leave attack roll open.",
+  );
+  requireHole(result.holes, "attackRoll");
+  return weaponHostedRouteWithResolve({
+    subject: SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
+    holes: damageTypeResult.holes,
+    discoverOwner: "battleTargetSelection",
+    fill: "targetChoice",
+    nextHoles: result.holes,
+    resolveOwner: "battleTargetSelection",
+  });
+}
+
+function routeSpellHostedAttackRoll(): readonly ReducerRouteEvent[] {
+  const targetChosen = fillTrueStrikeRadiantTarget(
+    discoverTrueStrike(initialRuntimeState("trueStrikeRadiantHit", "init")),
+  );
+  const damaged = fillTrueStrikeHit(targetChosen);
+  return weaponHostedRouteWithResolve({
+    subject: SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
+    holes: targetChosen.holes,
+    discoverOwner: "battleAttackRoll",
+    fill: "attackRoll",
+    nextHoles: damaged.holes,
+    resolveOwner: "battleAttackRoll",
+  });
+}
+
+function routeSpellHostedDamage(): readonly ReducerRouteEvent[] {
+  const hit = fillTrueStrikeHit(
+    fillTrueStrikeRadiantTarget(
+      discoverTrueStrike(initialRuntimeState("trueStrikeRadiantHit", "init")),
+    ),
+  );
+  fillTrueStrikeDamage(hit, 2, 3);
+  return weaponHostedRouteWithResolve({
+    subject: SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
+    holes: hit.holes,
+    discoverOwner: "battleHitPoint",
+    fill: "rolledDice",
+    nextHoles: [],
+    resolveOwner: "battleHitPoint",
+  });
+}
+
+function routeHeldWeaponActiveEffect(): readonly ReducerRouteEvent[] {
+  castShillelagh(initialRuntimeState("shillelaghHeldWeaponOverride"));
+  return weaponHostedRouteWithResolveWithoutFill({
+    subject: HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT,
+    holes: [],
+    discoverOwner: "battleActionEconomy",
+    nextHoles: [],
+    resolveOwner: "battleActiveEffect",
+  });
+}
+
+function routeHeldWeaponAttackRoll(): readonly ReducerRouteEvent[] {
+  const targetChosen = fillWeaponTarget(
+    discoverWeaponAttack(
+      castShillelagh(initialRuntimeState("shillelaghHeldWeaponOverride")),
+      "Quarterstaff (force)",
+    ),
+  );
+  const hit = fillWeaponHit(targetChosen, { expectedAttackBonus: 5 });
+  return weaponHostedRouteWithResolve({
+    subject: HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT,
+    holes: targetChosen.holes,
+    discoverOwner: "battleActiveEffect",
+    fill: "attackRoll",
+    nextHoles: hit.holes,
+    resolveOwner: "battleAttackRoll",
+  });
+}
+
+function routeHeldWeaponDamage(): readonly ReducerRouteEvent[] {
+  const hit = fillWeaponHit(
+    fillWeaponTarget(
+      discoverWeaponAttack(
+        castShillelagh(initialRuntimeState("shillelaghHeldWeaponOverride")),
+        "Quarterstaff (force)",
+      ),
+    ),
+    { expectedAttackBonus: 5 },
+  );
+  fillWeaponDamage(hit, [[2, 2]]);
+  return weaponHostedRouteWithResolve({
+    subject: HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT,
+    holes: hit.holes,
+    discoverOwner: "battleActiveEffect",
+    fill: "rolledDice",
+    nextHoles: [],
+    resolveOwner: "battleHitPoint",
+  });
+}
+
+function routeWeaponDamageRiderActiveEffect(): readonly ReducerRouteEvent[] {
+  castDivineFavor(initialRuntimeState("divineFavorWeaponDamageRider"));
+  return weaponHostedRouteWithResolveWithoutFill({
+    subject: WEAPON_DAMAGE_RIDER_ROUTE_SUBJECT,
+    holes: [],
+    discoverOwner: "battleSpellSlotAndActionEconomy",
+    nextHoles: [],
+    resolveOwner: "battleActiveEffect",
+  });
+}
+
+function routeWeaponDamageRiderDamage(): readonly ReducerRouteEvent[] {
+  const hit = fillWeaponHit(
+    fillWeaponTarget(
+      discoverWeaponAttack(
+        castDivineFavor(initialRuntimeState("divineFavorWeaponDamageRider")),
+        "Longsword",
+      ),
+    ),
+    { expectDamageRider: true },
+  );
+  fillWeaponDamage(hit, [[2], [3]]);
+  return weaponHostedRouteWithResolve({
+    subject: WEAPON_DAMAGE_RIDER_ROUTE_SUBJECT,
+    holes: hit.holes,
+    discoverOwner: "battleActiveEffect",
+    fill: "rolledDice",
+    nextHoles: [],
+    resolveOwner: "battleHitPoint",
+  });
+}
+
+function routeWeaponEnhancementItemTarget(): readonly ReducerRouteEvent[] {
+  const discovered = discoverMagicWeapon(
+    initialRuntimeState("magicWeaponEnhancement"),
+  );
+  fillMagicWeaponTarget(discovered);
+  return weaponHostedRouteWithResolveWithoutFill({
+    subject: WEAPON_ENHANCEMENT_ITEM_TARGET_ROUTE_SUBJECT,
+    holes: discovered.holes,
+    discoverOwner: "battleItemTargetBoundary",
+    nextHoles: [],
+    resolveOwner: "battleActiveEffect",
+  });
+}
+
+function routeHeldWeaponReleaseCleanup(): readonly ReducerRouteEvent[] {
+  const damaged = fillWeaponDamage(
+    fillWeaponHit(
+      fillWeaponTarget(
+        discoverWeaponAttack(
+          castShillelagh(initialRuntimeState("shillelaghHeldWeaponOverride")),
+          "Quarterstaff (force)",
+        ),
+      ),
+      { expectedAttackBonus: 5 },
+    ),
+    [[2, 2]],
+  );
+  cleanShillelaghLetGo(damaged);
+  return weaponHostedRouteWithResolveWithoutFill({
+    subject: WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT,
+    holes: [],
+    discoverOwner: "battleActiveEffect",
+    nextHoles: [],
+    resolveOwner: "battleActiveEffect",
+  });
+}
+
+function routeWeaponDamageRiderDurationCleanup(): readonly ReducerRouteEvent[] {
+  const damaged = fillWeaponDamage(
+    fillWeaponHit(
+      fillWeaponTarget(
+        discoverWeaponAttack(
+          castDivineFavor(initialRuntimeState("divineFavorWeaponDamageRider")),
+          "Longsword",
+        ),
+      ),
+      { expectDamageRider: true },
+    ),
+    [[2], [3]],
+  );
+  cleanDivineFavorDuration(damaged);
+  return weaponHostedRouteWithResolveWithoutFill({
+    subject: WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT,
+    holes: [],
+    discoverOwner: "battleActiveEffect",
+    nextHoles: [],
+    resolveOwner: "battleActiveEffect",
+  });
+}
+
+function routeWeaponEnhancementDurationCleanup(): readonly ReducerRouteEvent[] {
+  const enhanced = fillMagicWeaponTarget(
+    discoverMagicWeapon(initialRuntimeState("magicWeaponEnhancement")),
+  );
+  cleanMagicWeaponDuration(enhanced);
+  return weaponHostedRouteWithResolveWithoutFill({
+    subject: WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT,
+    holes: [],
+    discoverOwner: "battleActiveEffect",
+    nextHoles: [],
+    resolveOwner: "battleActiveEffect",
+  });
+}
+
+function weaponHostedRouteWithResolve(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly Pick<BattleHole, "kind">[];
+  readonly discoverOwner: ReducerRouteOwnerGroup;
+  readonly fill: ReducerRouteFill;
+  readonly nextHoles: readonly Pick<BattleHole, "kind">[];
+  readonly resolveOwner: ReducerRouteOwnerGroup;
+}): readonly ReducerRouteEvent[] {
+  return [
+    WEAPON_HOSTED_ROUTE_START,
+    reducerRouteDiscoverBattleActs({
+      subject: input.subject,
+      holes: input.holes,
+      owner: input.discoverOwner,
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: input.subject,
+      fill: input.fill,
+      holes: input.nextHoles,
+      owner: input.resolveOwner,
+    }),
+  ];
+}
+
+function weaponHostedRouteWithResolveWithoutFill(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly Pick<BattleHole, "kind">[];
+  readonly discoverOwner: ReducerRouteOwnerGroup;
+  readonly nextHoles: readonly Pick<BattleHole, "kind">[];
+  readonly resolveOwner: ReducerRouteOwnerGroup;
+}): readonly ReducerRouteEvent[] {
+  return [
+    WEAPON_HOSTED_ROUTE_START,
+    reducerRouteDiscoverBattleActs({
+      subject: input.subject,
+      holes: input.holes,
+      owner: input.discoverOwner,
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: input.subject,
+      holes: input.nextHoles,
+      owner: input.resolveOwner,
+    }),
+  ];
+}
+
+function radiantDamageTypeChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
+): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
+  return {
+    kind: "damageTypeChoice",
+    holeId: hole.holeId,
+    value: "radiant",
+  };
+}
+
+function requireNeedsHoles(
+  result: BattleResolutionResult,
+  message: string,
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  expect(result).toMatchObject({ tag: "needsHoles" });
+  if (result.tag !== "needsHoles") {
+    throw new Error(message);
+  }
+  return result;
 }
 
 function discoverTrueStrike(
@@ -1081,9 +1624,35 @@ function normalizeWeaponHostedQuintState(raw: unknown): WeaponHostedState {
   };
 }
 
+function normalizeWeaponHostedRouteQuintState(
+  raw: unknown,
+): WeaponHostedRouteState {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
 function compareWeaponHostedStates(
   runtime: WeaponHostedState,
   quint: WeaponHostedState,
+): boolean {
+  try {
+    expect(runtime).toEqual(quint);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(
+        `${error.message}\nruntime=${JSON.stringify(runtime)}\nquint=${JSON.stringify(quint)}`,
+      );
+    }
+    throw error;
+  }
+  return true;
+}
+
+function compareWeaponHostedRouteStates(
+  runtime: WeaponHostedRouteState,
+  quint: WeaponHostedRouteState,
 ): boolean {
   try {
     expect(runtime).toEqual(quint);

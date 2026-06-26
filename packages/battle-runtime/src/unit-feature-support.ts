@@ -7,6 +7,7 @@ import {
   elapsedTimeTicksFromTimeSpanDuration,
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { CLASS_NAMES } from "@dnd/shared/game-facts";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
 import {
@@ -1665,18 +1666,10 @@ export type OngoingFeatureRollModifier = {
 };
 
 export type OngoingFeatureSpellModifier = {
+  readonly sourceClassName: ClassName;
   readonly saveDcBonus: number;
   readonly attackRollMode: AttackRollMode;
 };
-
-export function ongoingFeatureSpellModifierSourceClassName(
-  profile: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "ongoingFeature" }
-  >,
-): ClassName | null {
-  return profile.unit.kind === "class_feature" ? profile.unit.className : null;
-}
 
 export type OngoingFeatureDamageModifier = {
   readonly amount: number;
@@ -6579,8 +6572,8 @@ function parseOngoingFeatureUnitFeatureProfile(
   const parsedEffects =
     effects.length === phase.effects.length
       ? (parseOngoingFeatureEffects(effects, classLevels, unit) ??
-        parseInnateSorceryActivationProjectionEffects(unit, phase.effects))
-      : parseInnateSorceryActivationProjectionEffects(unit, phase.effects);
+        parseSpellBenefitActivationProjectionEffects(phase.effects))
+      : parseSpellBenefitActivationProjectionEffects(phase.effects);
   if (parsedEffects === null) {
     return null;
   }
@@ -7245,31 +7238,30 @@ function parseOngoingFeatureEffects(
   return rollModifiers.length === 0 &&
     damageModifiers.length === 0 &&
     resistances.length === 0
-    ? parseInnateSorceryActivationProjectionEffects(unit, effects)
+    ? parseSpellBenefitActivationProjectionEffects(effects)
     : { rollModifiers, spellModifiers, damageModifiers, resistances };
 }
 
-function parseInnateSorceryActivationProjectionEffects(
-  unit: UnitRecord,
+function parseSpellBenefitActivationProjectionEffects(
   effects: readonly { readonly kind: string }[],
 ): Pick<
   Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>,
   "rollModifiers" | "spellModifiers" | "damageModifiers" | "resistances"
 > | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "sorcerer" ||
-    effects.length !== 2
-  ) {
+  if (effects.length !== 2) {
     return null;
   }
   const saveDc = effects.find((effect) => effect.kind === "modify_save_dc");
   const attackRollAdvantage = effects.find(
     (effect) => effect.kind === "modify_roll_advantage",
   );
+  const saveDcModifier = spellSaveDcModifierBenefit(saveDc);
+  const attackRollModifier =
+    spellAttackRollModeModifierBenefit(attackRollAdvantage);
   if (
-    !isInnateSorcerySaveDcEffect(saveDc) ||
-    !isInnateSorcerySpellAttackAdvantageEffect(attackRollAdvantage)
+    saveDcModifier === null ||
+    attackRollModifier === null ||
+    saveDcModifier.sourceClassName !== attackRollModifier.sourceClassName
   ) {
     return null;
   }
@@ -7277,8 +7269,9 @@ function parseInnateSorceryActivationProjectionEffects(
     rollModifiers: [],
     spellModifiers: [
       {
-        saveDcBonus: 1,
-        attackRollMode: "advantage",
+        sourceClassName: saveDcModifier.sourceClassName,
+        saveDcBonus: saveDcModifier.saveDcBonus,
+        attackRollMode: attackRollModifier.attackRollMode,
       },
     ],
     damageModifiers: [],
@@ -7286,18 +7279,10 @@ function parseInnateSorceryActivationProjectionEffects(
   };
 }
 
-function isInnateSorcerySaveDcEffect(
+function spellSaveDcModifierBenefit(
   effect: { readonly kind: string } | undefined,
-): effect is {
-  readonly kind: "modify_save_dc";
-  readonly delta: {
-    readonly kind: "fixed_number";
-    readonly amount: 1;
-    readonly sign: "+";
-  };
-  readonly spellSourceFilter: { readonly className: "sorcerer" };
-} {
-  return (
+): { readonly sourceClassName: ClassName; readonly saveDcBonus: 1 } | null {
+  if (
     effect?.kind === "modify_save_dc" &&
     "delta" in effect &&
     typeof effect.delta === "object" &&
@@ -7308,36 +7293,77 @@ function isInnateSorcerySaveDcEffect(
     effect.delta.amount === 1 &&
     "sign" in effect.delta &&
     effect.delta.sign === "+" &&
-    "spellSourceFilter" in effect &&
-    typeof effect.spellSourceFilter === "object" &&
-    effect.spellSourceFilter !== null &&
-    "className" in effect.spellSourceFilter &&
-    effect.spellSourceFilter.className === "sorcerer"
-  );
+    "spellSourceFilter" in effect
+  ) {
+    const sourceClassName = spellSourceFilterClassName(effect.spellSourceFilter);
+    return sourceClassName === null
+      ? null
+      : { sourceClassName, saveDcBonus: 1 };
+  }
+  return null;
 }
 
-function isInnateSorcerySpellAttackAdvantageEffect(
+function spellAttackRollModeModifierBenefit(
   effect: { readonly kind: string } | undefined,
-): effect is {
-  readonly kind: "modify_roll_advantage";
-  readonly mode: "advantage";
-  readonly on: readonly ["spell_attack_roll"];
-  readonly spellSourceFilter: { readonly className: "sorcerer" };
-} {
-  return (
+): {
+  readonly sourceClassName: ClassName;
+  readonly attackRollMode: "advantage";
+} | null {
+  if (
     effect?.kind === "modify_roll_advantage" &&
+    hasOnlySpellAttackRollModeModifierBenefitFields(effect) &&
     "mode" in effect &&
     effect.mode === "advantage" &&
     "on" in effect &&
     Array.isArray(effect.on) &&
     effect.on.length === 1 &&
     effect.on[0] === "spell_attack_roll" &&
-    "spellSourceFilter" in effect &&
-    typeof effect.spellSourceFilter === "object" &&
-    effect.spellSourceFilter !== null &&
-    "className" in effect.spellSourceFilter &&
-    effect.spellSourceFilter.className === "sorcerer"
+    "spellSourceFilter" in effect
+  ) {
+    const sourceClassName = spellSourceFilterClassName(effect.spellSourceFilter);
+    return sourceClassName === null
+      ? null
+      : { sourceClassName, attackRollMode: "advantage" };
+  }
+  return null;
+}
+
+const SPELL_ATTACK_ROLL_MODE_MODIFIER_BENEFIT_FIELDS = [
+  "kind",
+  "mode",
+  "on",
+  "spellSourceFilter",
+] as const satisfies ReadonlyArray<string>;
+const SPELL_ATTACK_ROLL_MODE_MODIFIER_BENEFIT_FIELD_SET: ReadonlySet<string> =
+  new Set(SPELL_ATTACK_ROLL_MODE_MODIFIER_BENEFIT_FIELDS);
+
+function hasOnlySpellAttackRollModeModifierBenefitFields(
+  effect: { readonly kind: string },
+): boolean {
+  return Object.keys(effect).every((field) =>
+    SPELL_ATTACK_ROLL_MODE_MODIFIER_BENEFIT_FIELD_SET.has(field),
   );
+}
+
+function spellSourceFilterClassName(
+  spellSourceFilter: unknown,
+): ClassName | null {
+  if (
+    typeof spellSourceFilter !== "object" ||
+    spellSourceFilter === null ||
+    !("className" in spellSourceFilter) ||
+    typeof spellSourceFilter.className !== "string" ||
+    !isClassName(spellSourceFilter.className)
+  ) {
+    return null;
+  }
+  return spellSourceFilter.className;
+}
+
+const CLASS_NAME_SET: ReadonlySet<string> = new Set(CLASS_NAMES);
+
+function isClassName(value: string): value is ClassName {
+  return CLASS_NAME_SET.has(value);
 }
 
 function numericDeltaForClassLevel(

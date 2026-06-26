@@ -23,17 +23,24 @@ import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintRecordField,
   quintStateRecord,
   quintVariantTag,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteResolveBattleSubjectWithoutFill,
+  reducerRouteStartBattle,
   run,
   stateCheck,
+  type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   activeDruidWildShapeEffect,
@@ -265,6 +272,214 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
     });
   }, MBT_TEST_TIMEOUT_MS);
 });
+
+type DruidWildShapeFormLifecycleRouteProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const druidWildShapeFormLifecycleRouteDriverSchema = {
+  init: {},
+  doAssumeForm: {},
+  doBeginNextTurn: {},
+  doReuseForm: {},
+  doDismissForm: {},
+  doIncapacitatedReversion: {},
+  doDeathReversion: {},
+  doStutter: {},
+  step: {},
+} as const;
+
+describe("Druid Wild Shape form lifecycle route MBT", () => {
+  it("routes active form lifecycle through durable battle owners", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-druid-wild-shape-form-lifecycle.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createDruidWildShapeFormLifecycleRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(6),
+      stateCheck: druidWildShapeFormLifecycleRouteStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+});
+
+function createDruidWildShapeFormLifecycleRouteDriver() {
+  return defineDriver<
+    typeof druidWildShapeFormLifecycleRouteDriverSchema,
+    DruidWildShapeFormLifecycleRouteProjection
+  >(druidWildShapeFormLifecycleRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAssumeForm: () => {
+        route = appendAssumeOrReuseFormRoute(route);
+      },
+      doBeginNextTurn: () => {
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: "activeFormLifecycle",
+            holes: [],
+            owner: "battleTurnBoundary",
+          }),
+          reducerRouteResolveBattleSubjectWithoutFill({
+            subject: "activeFormLifecycle",
+            holes: [],
+            owner: "battleTurnBoundary",
+          }),
+          reducerRouteResolveBattleSubjectWithoutFill({
+            subject: "activeFormLifecycle",
+            holes: [],
+            owner: "battleActionEconomy",
+          }),
+        ];
+      },
+      doReuseForm: () => {
+        route = appendAssumeOrReuseFormRoute(route);
+      },
+      doDismissForm: () => {
+        route = appendDismissalRoute(route);
+      },
+      doIncapacitatedReversion: () => {
+        route = appendIncapacitatedReversionRoute(route);
+      },
+      doDeathReversion: () => {
+        route = appendDeathReversionRoute(route);
+      },
+      doStutter: () => {},
+      step: () => {},
+      getState: () => ({ route }),
+    };
+  });
+}
+
+function appendAssumeOrReuseFormRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "activeFormLifecycle",
+      holes: [{ kind: "wildShapeEquipmentDisposition" }],
+      owner: "battleActionEconomy",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "activeFormLifecycle",
+      fill: "wildShapeEquipmentDisposition",
+      holes: [],
+      owner: "battleActionEconomy",
+    }),
+    ...activeFormLifecycleOwners(
+      "battleFeatureResource",
+      "battleTemporaryHitPoint",
+      "battleActiveEffect",
+      "battleCreatureState",
+      "battleMovementResource",
+    ),
+  ];
+}
+
+function appendDismissalRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "activeFormLifecycle",
+      holes: [],
+      owner: "battleActionEconomy",
+    }),
+    ...activeFormLifecycleOwners(
+      "battleActionEconomy",
+      "battleActiveEffect",
+      "battleCreatureState",
+      "battleMovementResource",
+    ),
+  ];
+}
+
+function appendIncapacitatedReversionRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "activeFormLifecycle",
+      holes: [],
+      owner: "battleConditionLifecycle",
+    }),
+    ...activeFormLifecycleOwners(
+      "battleConditionLifecycle",
+      "battleActiveEffect",
+      "battleCreatureState",
+      "battleMovementResource",
+    ),
+  ];
+}
+
+function appendDeathReversionRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "activeFormLifecycle",
+      holes: [],
+      owner: "battleHitPointAndZeroHpLifecycle",
+    }),
+    ...activeFormLifecycleOwners(
+      "battleHitPointAndZeroHpLifecycle",
+      "battleActiveEffect",
+      "battleCreatureState",
+      "battleMovementResource",
+    ),
+  ];
+}
+
+function activeFormLifecycleOwners(
+  ...owners: readonly ReducerRouteEvent["owner"][]
+): readonly ReducerRouteEvent[] {
+  return owners.map((owner) =>
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "activeFormLifecycle",
+      holes: [],
+      owner,
+    }),
+  );
+}
+
+const druidWildShapeFormLifecycleRouteStateCheck = stateCheck(
+  normalizeDruidWildShapeFormLifecycleRouteQuintState,
+  compareDruidWildShapeFormLifecycleRouteStates,
+);
+
+function normalizeDruidWildShapeFormLifecycleRouteQuintState(
+  raw: unknown,
+): DruidWildShapeFormLifecycleRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function compareDruidWildShapeFormLifecycleRouteStates(
+  spec: DruidWildShapeFormLifecycleRouteProjection,
+  impl: DruidWildShapeFormLifecycleRouteProjection,
+): boolean {
+  expect(impl).toEqual(spec);
+  return true;
+}
 
 defineSelectedIdentityWitness({
   describeLabel: "Druid Wild Shape selected identity MBT",

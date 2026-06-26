@@ -592,6 +592,7 @@ describe("SRDINV75A Innate Sorcery deterministic Unit profile admission", () => 
         rollModifiers: [],
         spellModifiers: [
           {
+            sourceClassName: "sorcerer",
             saveDcBonus: 1,
             attackRollMode: "advantage",
           },
@@ -600,5 +601,45 @@ describe("SRDINV75A Innate Sorcery deterministic Unit profile admission", () => 
         resistances: [],
       }),
     );
+  });
+
+  test("spell attack benefit admission rejects unsupported roll filters", () => {
+    const unit = unitLibrary.requireUnit(sorcererInnateSorceryUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "activation"
+    ) {
+      throw new Error("Expected Innate Sorcery activation feature Unit.");
+    }
+    const [phase] = unit.mechanics.phases;
+    if (
+      phase === undefined ||
+      phase.kind !== "direct" ||
+      phase.effects === undefined
+    ) {
+      throw new Error("Expected Innate Sorcery direct activation phase.");
+    }
+    const filteredUnit = unitMechanicsVariant(unit, {
+      id: "sorcerer_innate_sorcery_spell_attack_affects_filter",
+      mechanics: {
+        ...unit.mechanics,
+        phases: [
+          {
+            ...phase,
+            effects: phase.effects.map((effect) =>
+              effect.kind === "modify_roll_advantage"
+                ? { ...effect, affects: "rolls_against_self" }
+                : effect,
+            ),
+          },
+        ],
+      },
+    });
+
+    expect(
+      parseSupportedUnitFeatureProfile(filteredUnit, [
+        { className: "sorcerer", level: classLevel(1) },
+      ]),
+    ).toBeNull();
   });
 });

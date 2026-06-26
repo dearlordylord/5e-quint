@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 130
-- Covered obligations: 124
+- Total obligations: 131
+- Covered obligations: 125
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 124 |
+| covered | 125 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 99 |
+| battle | 100 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 4 |
@@ -146,6 +146,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | battle | covered | `spell.invocation-dragons-breath-initial` |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | battle | covered | `spell.invocation-dragons-breath-granted-action` |
 | `BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT` | battle | covered | _direct reducer entrypoint_ |
+| `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` | battle | covered | `unit-feature.metamagic-missed-spell-attack-reroll` |
 | `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | battle | covered | `unit-feature.metamagic-damage-dice-reroll` |
@@ -588,6 +589,10 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt` | semantic-core | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` |
 | `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt` | proof-only | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` |
 | `packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt` | proof-only | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE`, `BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE`, `BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION`, `BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE` |
+| `packages/battle-runtime/battle-runtime-reducer-route.qnt` | bridge | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
+| `packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
+| `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
 
 ## QNT Registry
 
@@ -643,6 +648,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-legendary-actions.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-levitate-creature.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-light.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-magic-missile-facts.qnt` | exempt | proof-only-example: Literal Magic Missile fixture facts shared by the focused witness and the reducer-route connector; the active route contract is owned by battle-runtime-magic-missile.route.mbt.qnt. |
 | `packages/battle-runtime/battle-runtime-marked-riders.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-marked-spells.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-metamagic.qnt` | qnt-owner-role | semantic-core |
@@ -665,6 +671,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-reaction-kinds.qnt` | exempt | leaf-type-vocabulary: Reaction kind vocabulary leaf shared by the model and interrupt bridge. |
 | `packages/battle-runtime/battle-runtime-reaction-resolution.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-reaction-window.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-reducer-route.qnt` | qnt-owner-role | bridge |
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-replay-equivalence.qnt` | qnt-owner-role | semantic-core |
@@ -703,7 +710,12 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-witness-protocol.qnt` | exempt | witness-protocol-leaf: Typed witness protocol vocabulary leaf for lightweight battle-runtime MBT witnesses. |
 | `packages/battle-runtime/creature-attack.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/rule-core-component-route.qnt` | exempt | leaf-type-vocabulary: Rule-core component route vocabulary leaf shared by component-first MBT drivers; executable component evidence is registered on the rule-core driver witnesses. |
+| `packages/character-battle-runtime/character-battle-reducer-route.qnt` | exempt | leaf-type-vocabulary: Character-battle handoff reducer-route vocabulary leaf for future route connectors; executable handoff route coverage will be registered by connector owners. |
+| `packages/character-creation-runtime/character-creation-reducer-route.qnt` | exempt | leaf-type-vocabulary: Character-creation reducer-route vocabulary leaf for future route connectors; executable creation route coverage will be registered by connector owners. |
+| `packages/character-creation-runtime/character-creation-route-fixtures.qnt` | exempt | witness-protocol-leaf: Character-creation reducer-route fixture leaf shared by route connector MBT drivers; semantic creation owners remain the focused QNT slices. |
 | `packages/character-creation-runtime/character-creation-runtime-slice.qnt` | qnt-owner-role | semantic-core |
+| `packages/character-sheet-runtime/character-sheet-reducer-route.qnt` | exempt | leaf-type-vocabulary: Character-sheet reducer-route vocabulary leaf for future route connectors; executable sheet route coverage will be registered by connector owners. |
 | `packages/shared-algebras/proofs/action-economy-algebra-inductive.qnt` | exempt | retired-test-companion: Retained shared-algebra inductive proof companion outside the active rules-kernel owner rows. |
 | `packages/shared-algebras/proofs/conditions-algebra-inductive.qnt` | exempt | retired-test-companion: Retained shared-algebra inductive proof companion outside the active rules-kernel owner rows. |
 | `packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt` | qnt-owner-role | proof-only |

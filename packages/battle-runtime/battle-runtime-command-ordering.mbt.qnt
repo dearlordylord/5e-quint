@@ -67,7 +67,8 @@ module battleRuntimeCommandOrderingMbt {
       | CommandFillNotOrderingError(_) => ""
     }
 
-  action recordProjection(
+  action recordProjectionWithHoles(
+    holes: Set[BattleHoleFamilyKind],
     stage: CommandFrontierStage,
     result: WitnessResult,
     lastOrderingError: str,
@@ -80,10 +81,7 @@ module battleRuntimeCommandOrderingMbt {
     reactionWindowOpen: bool,
   ): bool = all {
     qStage' = stage,
-    qProtocol' = witnessProtocolForProjection(
-      commandHoleFrontier(stage),
-      result,
-    ),
+    qProtocol' = witnessProtocolForProjection(holes, result),
     qTableFactFrontierOpen' = commandHoleFrontierIncludesTableFacts(stage),
     qLastOrderingError' = lastOrderingError,
     qPendingCommandOption' = pendingCommandOption,
@@ -94,6 +92,31 @@ module battleRuntimeCommandOrderingMbt {
     qCurrentActor' = currentActor,
     qReactionWindowOpen' = reactionWindowOpen,
   }
+
+  action recordProjection(
+    stage: CommandFrontierStage,
+    result: WitnessResult,
+    lastOrderingError: str,
+    pendingCommandOption: str,
+    targetProne: bool,
+    droppedObjectCount: int,
+    haltSuppressed: bool,
+    movementSpentFeet: int,
+    currentActor: str,
+    reactionWindowOpen: bool,
+  ): bool = recordProjectionWithHoles(
+    commandHoleFrontier(stage),
+    stage,
+    result,
+    lastOrderingError,
+    pendingCommandOption,
+    targetProne,
+    droppedObjectCount,
+    haltSuppressed,
+    movementSpentFeet,
+    currentActor,
+    reactionWindowOpen,
+  )
 
   action init = recordProjection(
     CommandActSelectionStage,
@@ -490,7 +513,8 @@ module battleRuntimeCommandOrderingMbt {
       false,
       true,
     )
-    recordProjection(
+    recordProjectionWithHoles(
+      Set(InterruptDecisionHoleKind),
       acceptedStage(result, qStage),
       WNeedsHoles,
       "",

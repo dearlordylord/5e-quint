@@ -8,6 +8,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement doMonkUnarmoredMovementDash
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE
 import { Either } from "effect";
+import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -49,7 +50,23 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  decodeReducerRoute,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  quintField,
+  quintStateRecord,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteResolveBattleSubjectWithoutFill,
+  reducerRouteStartBattle,
+  run,
+  stateCheck,
+  type ReducerRouteEvent,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 
 const movementForcedMovementSpellIds = [
@@ -279,6 +296,234 @@ defineSelectedIdentityWitness({
     },
   ],
 });
+
+type MovementForcedMovementRouteProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const movementForcedMovementRouteDriverSchema = {
+  init: {},
+  doDissonantWhispersForcedReactionMovement: {},
+  doCommandFleeTargetTurn: {},
+  doExpeditiousRetreatImmediateDash: {},
+  doRangerRovingClimbSwimMovement: {},
+  doBarbarianFastMovementDash: {},
+  doMonkUnarmoredMovementDash: {},
+  step: {},
+} as const;
+
+describe("Movement and forced movement substrate route MBT", () => {
+  it("routes movement, forced movement, and special-speed substrates", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createMovementForcedMovementRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: movementForcedMovementRouteStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+});
+
+function createMovementForcedMovementRouteDriver() {
+  return defineDriver<
+    typeof movementForcedMovementRouteDriverSchema,
+    MovementForcedMovementRouteProjection
+  >(movementForcedMovementRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDissonantWhispersForcedReactionMovement: () => {
+        route = appendForcedMovementRoute(route, [
+          { kind: "targetChoice" },
+          { kind: "savingThrowOutcome" },
+          { kind: "rolledDice" },
+          { kind: "movement" },
+        ]);
+      },
+      doCommandFleeTargetTurn: () => {
+        route = [
+          ...appendForcedMovementRoute(route, [
+            { kind: "spellTargetList" },
+            { kind: "commandOptionChoice" },
+            { kind: "savingThrowOutcome" },
+            { kind: "movement" },
+          ]),
+          ...forcedMovementOwners("battleActiveEffect", "battleTurnBoundary"),
+        ];
+      },
+      doExpeditiousRetreatImmediateDash: () => {
+        route = appendSpellGrantedDashRoute(route);
+      },
+      doRangerRovingClimbSwimMovement: () => {
+        route = appendSpecialSpeedMovementRoute(route);
+      },
+      doBarbarianFastMovementDash: () => {
+        route = appendPassiveSpeedDashRoute(route);
+      },
+      doMonkUnarmoredMovementDash: () => {
+        route = appendPassiveSpeedDashRoute(route);
+      },
+      step: () => {},
+      getState: () => ({ route }),
+    };
+  });
+}
+
+function appendForcedMovementRoute(
+  route: readonly ReducerRouteEvent[],
+  holes: readonly Pick<BattleHole, "kind">[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "forcedMovement",
+      holes,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "forcedMovement",
+      fill: "movement",
+      holes: [],
+      owner: "battleMovementResource",
+    }),
+    ...forcedMovementOwners("battleActionEconomy", "battleInterruptStack"),
+  ];
+}
+
+function forcedMovementOwners(
+  ...owners: readonly ReducerRouteEvent["owner"][]
+): readonly ReducerRouteEvent[] {
+  return owners.map((owner) =>
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "forcedMovement",
+      holes: [],
+      owner,
+    }),
+  );
+}
+
+function appendSpellGrantedDashRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "movementResource",
+      holes: [],
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    ...movementResourceOwners(
+      "battleSpellSlotAndActionEconomy",
+      "battleActiveEffect",
+      "battleMovementResource",
+    ),
+  ];
+}
+
+function appendPassiveSpeedDashRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "movementResource",
+      holes: [],
+      owner: "battleActionEconomy",
+    }),
+    ...movementResourceOwners(
+      "battleActionEconomy",
+      "battleCreatureState",
+      "battleMovementResource",
+    ),
+  ];
+}
+
+function movementResourceOwners(
+  ...owners: readonly ReducerRouteEvent["owner"][]
+): readonly ReducerRouteEvent[] {
+  return owners.map((owner) =>
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "movementResource",
+      holes: [],
+      owner,
+    }),
+  );
+}
+
+function appendSpecialSpeedMovementRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "specialSpeedProjection",
+      holes: [],
+      owner: "battleCreatureState",
+    }),
+    ...specialSpeedProjectionOwners(
+      "battleCreatureState",
+      "battleMovementResource",
+    ),
+    reducerRouteDiscoverBattleActs({
+      subject: "movementResource",
+      holes: [{ kind: "movement" }],
+      owner: "battleMovementResource",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "movementResource",
+      fill: "movement",
+      holes: [],
+      owner: "battleMovementResource",
+    }),
+  ];
+}
+
+function specialSpeedProjectionOwners(
+  ...owners: readonly ReducerRouteEvent["owner"][]
+): readonly ReducerRouteEvent[] {
+  return owners.map((owner) =>
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "specialSpeedProjection",
+      holes: [],
+      owner,
+    }),
+  );
+}
+
+const movementForcedMovementRouteStateCheck = stateCheck(
+  normalizeMovementForcedMovementRouteQuintState,
+  compareMovementForcedMovementRouteStates,
+);
+
+function normalizeMovementForcedMovementRouteQuintState(
+  raw: unknown,
+): MovementForcedMovementRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function compareMovementForcedMovementRouteStates(
+  spec: MovementForcedMovementRouteProjection,
+  impl: MovementForcedMovementRouteProjection,
+): boolean {
+  expect(impl).toEqual(spec);
+  return true;
+}
 
 function resolvedProjection(
   result: BattleResolutionResult,

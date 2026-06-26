@@ -15,6 +15,11 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  decodeRuleCoreComponentRoute,
+  type RuleCoreComponentRoutedProjection,
+  withRuleCoreComponentRoute,
+} from "./rule-core-component-route.ts";
 import { Either } from "effect";
 import { describe, it } from "vitest";
 
@@ -60,7 +65,7 @@ const ruleCoreStatBlockControlInvalidReasons = [
 type RuleCoreStatBlockControlInvalidReason =
   (typeof ruleCoreStatBlockControlInvalidReasons)[number];
 
-type RuleCoreStatBlockControlProjection = {
+type RuleCoreStatBlockControlProjection = RuleCoreComponentRoutedProjection & {
   readonly attackActionAvailable: boolean;
   readonly bonusActionAvailable: boolean;
   readonly pendingPrimaryDispatches: number;
@@ -88,6 +93,7 @@ const oppositionSide = battleCombatantSide("opposition");
 const primaryAttackName = "Claw";
 const secondaryAttackName = "Spine";
 const multiattackName = "Multiattack";
+const componentOwner = "RuleCoreStatBlockControlOwner";
 const driverSchema = {
   init: {},
   doStartMultiattack: {},
@@ -386,7 +392,7 @@ function projectRuleCoreStatBlockControlState(input: {
       resource.sourceOwnerId === actorId,
   );
 
-  return {
+  return withRuleCoreComponentRoute(componentOwner, {
     attackActionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
@@ -403,7 +409,7 @@ function projectRuleCoreStatBlockControlState(input: {
     holes: input.holes.map(projectStatBlockControlHole).sort(),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
-  };
+  });
 }
 
 function pendingStatBlockMultiattackDispatches(
@@ -521,6 +527,7 @@ function normalizeRuleCoreStatBlockControlQuintState(
     compareHoles: (left, right) => left.localeCompare(right),
   });
   return {
+    componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
     attackActionAvailable: booleanField(state, "qAttackActionAvailable"),
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
     pendingPrimaryDispatches: numberFromQuintInt(

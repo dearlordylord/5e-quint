@@ -32,6 +32,8 @@ For a selected driver:
 - discover first, then resolve through the same reducer.
 - expose typed subject variants only for that task's subject family.
 - expose typed fill variants only for holes the copied QNT driver needs.
+- represent commands with no table-supplied value as no-fill subject resolution;
+  do not invent a synthetic fill to stand in for an absent table choice.
 - keep ordering facts in reducer state or reducer results, not in driver-local
   maps.
 - reject or request earlier fills according to QNT; do not silently reorder by
@@ -42,6 +44,23 @@ The reducer-spine contract witness
 is a thin composition witness. It proves the shared route shape. It is not a
 rule owner for spell targeting, damage math, attack resolution, turn-boundary
 effects, or interrupt behavior.
+
+Focused route connectors named `*.route.mbt.qnt` are the executable routing
+obligations for diagnostic drivers. They project `qRoute` over the shared
+reducer-route vocabulary. A target replay proves reducer routing only when its
+observed route events match the copied connector; matching the focused
+non-route projection alone proves behavior parity, not reducer architecture.
+The reducer-route inventory is an ordering and derivability index. A
+`reducer-routed` row is accepted only with copied connector evidence from
+`routeConnectorPath` or the sibling `.route.mbt.qnt` driver.
+
+Rule-core `component-first` rows use component connector evidence instead of
+BattleState route evidence. The copied component connector projects
+`qComponentRoute` through `rule-core-component-route.qnt`, with events for
+parse input, admit input, call the reusable rule-core component, and project the
+result. A target replay for a component-first row must match that route and
+record the inventory's `componentOwners`; it must not satisfy the row by
+building a driver-local replay helper that bypasses the reusable component API.
 
 ## Durable State Ownership
 
@@ -119,12 +138,16 @@ For reducer-spine diagnostics, use
 `cleanroom-input/branch-coverage/reducer-route-inventory.json`:
 
 - The active diagnostic batch is the intended order.
+- The `level-1-5-cleanroom-route-v1.freshCleanroomPackageGate` record is the
+  fresh package acceptance slice. It names the copied inputs, route-class
+  evidence forms, and target replay evidence requirements.
 - `reducer-routed` means target replay must pass through the shared reducer
-  surface now.
+  surface and match the copied route connector's `qRoute`.
 - `substrate-first` means the substrate and durable owner must be introduced or
   identified before target replay evidence is meaningful.
 - `component-first` means deepen a reusable rule module before admitting it as
-  a battle subject.
+  a battle subject, and target evidence must match its copied `qComponentRoute`
+  component connector.
 - `catalog-after-substrate` means defer selected identity until the generic
   runtime substrate exists.
 - `replay-refresh-only` means rerun evidence without new production behavior.
@@ -132,3 +155,5 @@ For reducer-spine diagnostics, use
 If the route needs a reducer fact not present in copied QNT, RAW, domain
 language, assumptions, or this guidance, record a `source-qnt-corpus` blocker.
 Do not infer the missing fact from TypeScript or from prior cleanroom code.
+Do not use dirty cleanroom reports, ledgers, adapters, or target implementation
+history as acceptance evidence for a fresh package run.

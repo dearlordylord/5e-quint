@@ -15,16 +15,24 @@ import {
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintStateRecord,
   quintVariantTag,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteStartBattle,
   run,
   stateCheck,
+  type ReducerRouteEvent,
+  type ReducerRouteFill,
+  type ReducerRouteOwnerGroup,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { attackDamageByTypeEntries } from "./battle-reducer/damage-helpers.ts";
 import { supportedStatBlockAttackActionOption } from "./battle-reducer/statblock.ts";
@@ -83,6 +91,10 @@ type StatBlockActionOrderingProjection = {
   readonly rechargeActionAvailable: boolean;
   readonly usesRolledDamage: boolean;
 };
+type StatBlockActionOrderingRouteProjection =
+  StatBlockActionOrderingProjection & {
+    readonly route: readonly ReducerRouteEvent[];
+  };
 
 const rechargeAttackName = "Cinder Breath";
 const multiattackDispatchAttackName = "Scimitar";
@@ -107,11 +119,29 @@ const driverSchema = {
 } as const;
 
 function createStatBlockActionOrderingDriver() {
-  return defineDriver(driverSchema, () => {
+  return createStatBlockActionOrderingDriverWithProjection(
+    (projection) => projection,
+  );
+}
+
+function createStatBlockActionOrderingRouteDriver() {
+  return createStatBlockActionOrderingDriverWithProjection(
+    (projection, route) => ({ ...projection, route }),
+  );
+}
+
+function createStatBlockActionOrderingDriverWithProjection<State>(
+  projectState: (
+    projection: StatBlockActionOrderingProjection,
+    route: readonly ReducerRouteEvent[],
+  ) => State,
+) {
+  return defineDriver<typeof driverSchema, State>(driverSchema, () => {
     let state = statBlockActionOrderingBattle(monsterResourceStatBlock());
     let subject: BattleSubject = statBlockAttackSubject(rechargeAttackName);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
     let stage: StatBlockActionOrderingProjection["stage"] = "actSelection";
     let lastResult: StatBlockActionOrderingProjection["lastResult"] = "init";
     let orderingError: StatBlockActionOrderingProjection["orderingError"] = "";
@@ -124,6 +154,7 @@ function createStatBlockActionOrderingDriver() {
       subject = statBlockAttackSubject(rechargeAttackName);
       fills = [];
       holes = [];
+      route = [reducerRouteStartBattle("battleActionEconomy")];
       stage = "actSelection";
       lastResult = "init";
       orderingError = "";
@@ -144,6 +175,14 @@ function createStatBlockActionOrderingDriver() {
       holes = requireNeedsHoles(
         resolveBattleSubject({ state, subject, fills: [] }),
       ).holes;
+      route = [
+        ...route,
+        reducerRouteDiscoverBattleActs({
+          subject: "statBlockAction",
+          holes,
+          owner: "battleStatBlockAction",
+        }),
+      ];
       stage = "targetChoice";
       lastResult = "needsHoles";
       orderingError = "";
@@ -155,10 +194,27 @@ function createStatBlockActionOrderingDriver() {
     function recordAccepted(
       result: BattleResolutionResult,
       nextStage: StatBlockActionOrderingProjection["stage"],
+      routeFill: ReducerRouteFill,
+      routeOwner: ReducerRouteOwnerGroup,
     ): void {
+      const routeHoles =
+        result.tag === "needsHoles"
+          ? result.holes
+          : result.tag === "resolved"
+            ? []
+            : holes;
       if (result.tag === "needsHoles") {
         state = result.state;
         holes = result.holes;
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "statBlockAction",
+            fill: routeFill,
+            holes: routeHoles,
+            owner: routeOwner,
+          }),
+        ];
         stage = nextStage;
         lastResult = "needsHoles";
         orderingError = "";
@@ -167,6 +223,15 @@ function createStatBlockActionOrderingDriver() {
       if (result.tag === "resolved") {
         state = result.state;
         holes = [];
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "statBlockAction",
+            fill: routeFill,
+            holes: routeHoles,
+            owner: routeOwner,
+          }),
+        ];
         stage = nextStage;
         lastResult = "resolved";
         orderingError = "";
@@ -186,6 +251,7 @@ function createStatBlockActionOrderingDriver() {
         ""
       >,
       expectedMessage: string,
+      routeFill: ReducerRouteFill,
     ): void {
       if (
         result.tag !== "invalid" ||
@@ -196,6 +262,15 @@ function createStatBlockActionOrderingDriver() {
           `Expected Stat Block ordering rejection: ${expectedMessage}`,
         );
       }
+      route = [
+        ...route,
+        reducerRouteResolveBattleSubject({
+          subject: "statBlockAction",
+          fill: routeFill,
+          holes,
+          owner: "battleHoleFrontier",
+        }),
+      ];
       lastResult = "invalid";
       orderingError = expectedOrderingError;
     }
@@ -288,6 +363,7 @@ function createStatBlockActionOrderingDriver() {
           }),
           "statBlockTargetChoiceRequired",
           ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
+          "attackRoll",
         );
       },
       doFillTargetChoice: () => {
@@ -295,6 +371,8 @@ function createStatBlockActionOrderingDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "attackRoll",
+          "targetChoice",
+          "battleTargetSelection",
         );
       },
       doRejectDamageBeforeAttackRoll: () => {
@@ -318,6 +396,7 @@ function createStatBlockActionOrderingDriver() {
           }),
           "statBlockAttackRollRequired",
           ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
+          "rolledDice",
         );
       },
       doFillAttackRollMiss: () => {
@@ -328,6 +407,8 @@ function createStatBlockActionOrderingDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "resolved",
+          "attackRoll",
+          "battleAttackRoll",
         );
       },
       doFillRolledAttackRollHit: () => {
@@ -338,6 +419,8 @@ function createStatBlockActionOrderingDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "damageDice",
+          "attackRoll",
+          "battleAttackRoll",
         );
       },
       doFillStaticAttackRollHit: () => {
@@ -348,6 +431,8 @@ function createStatBlockActionOrderingDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "resolved",
+          "attackRoll",
+          "battleHitPoint",
         );
       },
       doFillDamageDice: () => {
@@ -360,6 +445,8 @@ function createStatBlockActionOrderingDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "resolved",
+          "rolledDice",
+          "battleHitPoint",
         );
       },
       doSpendRechargeGatedRolledAttack: () => {
@@ -378,6 +465,14 @@ function createStatBlockActionOrderingDriver() {
         };
         fills = [];
         holes = rechargeRequest.holes;
+        route = [
+          ...route,
+          reducerRouteDiscoverBattleActs({
+            subject: "statBlockAction",
+            holes,
+            owner: "battleStatBlockAction",
+          }),
+        ];
         stage = "rechargeRoll";
         lastResult = "needsHoles";
         orderingError = "";
@@ -408,11 +503,13 @@ function createStatBlockActionOrderingDriver() {
             ],
           }),
           "resolved",
+          "statBlockRechargeRoll",
+          "battleStatBlockAction",
         );
       },
       step: () => {},
-      getState: () =>
-        projectStatBlockActionOrderingState({
+      getState: () => {
+        const projection = projectStatBlockActionOrderingState({
           holes,
           stage,
           lastResult,
@@ -420,7 +517,9 @@ function createStatBlockActionOrderingDriver() {
           multiattackDispatchesAvailable,
           rechargeActionAvailable,
           usesRolledDamage,
-        }),
+        });
+        return projectState(projection, route);
+      },
     };
   });
 }
@@ -430,6 +529,14 @@ const statBlockActionOrderingStateCheck = stateCheck(
   (
     spec: StatBlockActionOrderingProjection,
     impl: StatBlockActionOrderingProjection,
+  ) => isDeepStrictEqual(impl, spec),
+);
+
+const statBlockActionOrderingRouteStateCheck = stateCheck(
+  normalizeStatBlockActionOrderingRouteQuintState,
+  (
+    spec: StatBlockActionOrderingRouteProjection,
+    impl: StatBlockActionOrderingRouteProjection,
   ) => isDeepStrictEqual(impl, spec),
 );
 
@@ -580,6 +687,23 @@ describe("Stat Block action ordering MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(4),
       stateCheck: statBlockActionOrderingStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes Stat Block action ordering through the shared reducer surface", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createStatBlockActionOrderingRouteDriver(),
+      backend: "typescript",
+      seed: process.env["QUINT_SEED"],
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(4),
+      stateCheck: statBlockActionOrderingRouteStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 });
@@ -791,6 +915,16 @@ function normalizeStatBlockActionOrderingQuintState(
     ),
     rechargeActionAvailable: booleanField(state, "qRechargeActionAvailable"),
     usesRolledDamage: booleanField(state, "qUsesRolledDamage"),
+  };
+}
+
+function normalizeStatBlockActionOrderingRouteQuintState(
+  raw: unknown,
+): StatBlockActionOrderingRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeStatBlockActionOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 

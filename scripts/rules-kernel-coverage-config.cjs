@@ -198,10 +198,45 @@ const qntRegistryExemptions = [
   },
   {
     ownerPath:
+      "packages/battle-runtime/battle-runtime-magic-missile-facts.qnt",
+    category: "proof-only-example",
+    evidence:
+      "Literal Magic Missile fixture facts shared by the focused witness and the reducer-route connector; the active route contract is owned by battle-runtime-magic-missile.route.mbt.qnt.",
+  },
+  {
+    ownerPath:
       "packages/battle-runtime/battle-runtime-movement-bridge-examples.qnt",
     category: "proof-only-example",
     evidence:
       "Run-block examples for the movement bridge; registered movement owners carry active coverage.",
+  },
+  {
+    ownerPath:
+      "packages/character-battle-runtime/character-battle-reducer-route.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Character-battle handoff reducer-route vocabulary leaf for future route connectors; executable handoff route coverage will be registered by connector owners.",
+  },
+  {
+    ownerPath:
+      "packages/character-creation-runtime/character-creation-reducer-route.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Character-creation reducer-route vocabulary leaf for future route connectors; executable creation route coverage will be registered by connector owners.",
+  },
+  {
+    ownerPath:
+      "packages/character-creation-runtime/character-creation-route-fixtures.qnt",
+    category: "witness-protocol-leaf",
+    evidence:
+      "Character-creation reducer-route fixture leaf shared by route connector MBT drivers; semantic creation owners remain the focused QNT slices.",
+  },
+  {
+    ownerPath:
+      "packages/character-sheet-runtime/character-sheet-reducer-route.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Character-sheet reducer-route vocabulary leaf for future route connectors; executable sheet route coverage will be registered by connector owners.",
   },
   {
     ownerPath:
@@ -243,6 +278,12 @@ const qntRegistryExemptions = [
     category: "proof-only-example",
     evidence:
       "Run-block examples for the stat-block bridge; registered stat-block owners carry active coverage.",
+  },
+  {
+    ownerPath: "packages/battle-runtime/rule-core-component-route.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Rule-core component route vocabulary leaf shared by component-first MBT drivers; executable component evidence is registered on the rule-core driver witnesses.",
   },
   {
     ownerPath: "packages/battle-runtime/battle-runtime-witness-protocol.qnt",

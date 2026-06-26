@@ -1,18 +1,26 @@
 import {
+  MBT_TEST_TIMEOUT_MS,
   booleanField,
   booleanValue,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintSet,
   quintStateRecord,
   quintVariantTag,
   quintVariantValue,
+  reducerRouteDiscoverBattleActs,
+  reducerRouteResolveBattleSubject,
+  reducerRouteResolveBattleSubjectWithoutFill,
+  reducerRouteStartBattle,
   run,
   stateCheck,
+  type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { Match } from "effect";
 import { describe, expect, it } from "vitest";
@@ -199,6 +207,17 @@ const starryWispObjectDriverSchema = {
   step: {},
 } as const;
 
+const starryWispObjectRouteDriverSchema = {
+  init: {},
+  doRouteObjectTargetBoundary: {},
+  doRouteRejectObjectWithoutBoundaryFact: {},
+  doRouteObjectAttackMiss: {},
+  doRouteObjectAttackHit: {},
+  doRouteObjectDamageAndLight: {},
+  doRouteRejectStaleAfterResolved: {},
+  step: {},
+} as const;
+
 function createStarryWispObjectDriver() {
   return defineDriver(starryWispObjectDriverSchema, () => {
     let state = starryWispObjectBattle();
@@ -298,12 +317,59 @@ function createStarryWispObjectDriver() {
   });
 }
 
+type StarryWispObjectRouteState = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const starryWispObjectRouteStart = reducerRouteStartBattle(
+  "battleActionEconomy",
+);
+
+function createStarryWispObjectRouteDriver() {
+  return defineDriver(starryWispObjectRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [starryWispObjectRouteStart];
+    return {
+      init: () => {
+        route = [starryWispObjectRouteStart];
+      },
+      doRouteObjectTargetBoundary: () => {
+        route = routeObjectTargetBoundary();
+      },
+      doRouteRejectObjectWithoutBoundaryFact: () => {
+        route = routeRejectObjectWithoutBoundaryFact();
+      },
+      doRouteObjectAttackMiss: () => {
+        route = routeObjectAttackMiss();
+      },
+      doRouteObjectAttackHit: () => {
+        route = routeObjectAttackHit();
+      },
+      doRouteObjectDamageAndLight: () => {
+        route = routeObjectDamageAndLight();
+      },
+      doRouteRejectStaleAfterResolved: () => {
+        route = routeRejectStaleAfterResolved();
+      },
+      step: () => {},
+      getState: (): StarryWispObjectRouteState => ({ route }),
+    };
+  });
+}
+
 const starryWispObjectStateCheck = stateCheck(
   normalizeStarryWispObjectQuintState,
   (
     spec: StarryWispObjectMbtProjection,
     impl: StarryWispObjectMbtProjection,
   ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+
+const starryWispObjectRouteStateCheck = stateCheck(
+  normalizeStarryWispObjectRouteQuintState,
+  (spec: StarryWispObjectRouteState, impl: StarryWispObjectRouteState) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -325,7 +391,122 @@ describe("Starry Wisp object MBT parity", () => {
       stateCheck: starryWispObjectStateCheck,
     });
   }, 120_000);
+
+  it("routes object-target boundary facts and hit light effects through battle owners", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-starry-wisp-object.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createStarryWispObjectRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: starryWispObjectRouteStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
 });
+
+function routeObjectTargetBoundary(): readonly ReducerRouteEvent[] {
+  return [
+    starryWispObjectRouteStart,
+    reducerRouteDiscoverBattleActs({
+      subject: "objectTargetSpellAttack",
+      holes: [],
+      owner: "battleObjectTargetBoundary",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "objectTargetSpellAttack",
+      holes: [{ kind: "attackRoll" }],
+      owner: "battleObjectTargetBoundary",
+    }),
+  ];
+}
+
+function routeRejectObjectWithoutBoundaryFact(): readonly ReducerRouteEvent[] {
+  return [
+    starryWispObjectRouteStart,
+    reducerRouteDiscoverBattleActs({
+      subject: "objectTargetSpellAttack",
+      holes: [],
+      owner: "battleObjectTargetBoundary",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "objectTargetSpellAttack",
+      holes: [],
+      owner: "battleObjectTargetBoundary",
+    }),
+  ];
+}
+
+function routeObjectAttackMiss(): readonly ReducerRouteEvent[] {
+  return [
+    starryWispObjectRouteStart,
+    reducerRouteDiscoverBattleActs({
+      subject: "objectTargetSpellAttack",
+      holes: [{ kind: "attackRoll" }],
+      owner: "battleAttackRoll",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "objectTargetSpellAttack",
+      fill: "attackRoll",
+      holes: [],
+      owner: "battleAttackRoll",
+    }),
+  ];
+}
+
+function routeObjectAttackHit(): readonly ReducerRouteEvent[] {
+  return [
+    starryWispObjectRouteStart,
+    reducerRouteDiscoverBattleActs({
+      subject: "objectTargetSpellAttack",
+      holes: [{ kind: "attackRoll" }],
+      owner: "battleAttackRoll",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "objectTargetSpellAttack",
+      fill: "attackRoll",
+      holes: [{ kind: "rolledDice" }],
+      owner: "battleAttackRoll",
+    }),
+  ];
+}
+
+function routeObjectDamageAndLight(): readonly ReducerRouteEvent[] {
+  return [
+    starryWispObjectRouteStart,
+    reducerRouteDiscoverBattleActs({
+      subject: "objectTargetSpellAttack",
+      holes: [{ kind: "rolledDice" }],
+      owner: "battleObjectTargetBoundary",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "objectTargetSpellAttack",
+      fill: "rolledDice",
+      holes: [],
+      owner: "battleObjectTargetBoundary",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "objectTargetSpellAttack",
+      holes: [],
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function routeRejectStaleAfterResolved(): readonly ReducerRouteEvent[] {
+  return [
+    starryWispObjectRouteStart,
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "objectTargetSpellAttack",
+      holes: [],
+      owner: "battleHoleFrontier",
+    }),
+  ];
+}
 
 function normalizeStarryWispObjectQuintState(
   raw: unknown,
@@ -351,6 +532,15 @@ function normalizeStarryWispObjectQuintState(
     lastInvalidReason: starryWispObjectMbtLastInvalidReason(
       protocol.lastInvalidReason,
     ),
+  };
+}
+
+function normalizeStarryWispObjectRouteQuintState(
+  raw: unknown,
+): StarryWispObjectRouteState {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 
