@@ -167,17 +167,8 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         currentHp: Hp(10),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(4),
-            expended: resourceCount(1),
-          },
-          {
-            spellLevel: spellSlotLevel(2),
-            count: resourceCount(2),
-            expended: resourceCount(0),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
         ],
       }),
     );
@@ -188,12 +179,8 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         currentHp: Hp(3),
         tempHp: Hp(2),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(2),
-            expended: resourceCount(1),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
         ],
         pactSlots: { expended: resourceCount(1) },
       }),
@@ -273,7 +260,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         usedSinceLongRest: true,
       },
     ]);
-    expect(characterSheetCurrentHp(result.recipients[0])).toBe(18);
+    expect(characterSheetCurrentHp(result.recipients[0])).toBe(7);
     expect(characterSheetTempHp(result.recipients[0])).toBe(2);
     expect(characterSheetPactSlots(result.recipients[0])).toEqual({
       slotLevel: 1,
@@ -368,18 +355,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         currentHp: Hp(18),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(4),
-            expended: resourceCount(0),
-          },
-          {
-            spellLevel: spellSlotLevel(2),
-            count: resourceCount(2),
-            expended: resourceCount(0),
-          },
-        ],
       }),
     );
     const recipient = requireRight(

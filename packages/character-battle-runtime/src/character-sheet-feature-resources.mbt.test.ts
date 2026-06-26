@@ -42,8 +42,6 @@ import {
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
   type CharacterSheetInput,
-  type CharacterSheetSpellSlotState,
-  type CharacterSpellSlotExpenditure,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
@@ -426,17 +424,8 @@ function fontOfMagicSlotToPointsProjection(): FeatureResourceProjection {
       ],
     }),
     currentHp: 17,
-    spellSlots: [
-      {
-        spellLevel: spellSlotLevel(1),
-        count: resourceCount(4),
-        expended: resourceCount(0),
-      },
-      {
-        spellLevel: spellSlotLevel(2),
-        count: resourceCount(2),
-        expended: resourceCount(1),
-      },
+    spellSlotExpenditures: [
+      { spellLevel: spellSlotLevel(2), expended: resourceCount(1) },
     ],
     resourceExpenditures: [
       {
@@ -535,18 +524,6 @@ function rejectFontOfMagicInsufficientPointsProjection(): FeatureResourceProject
       ],
     }),
     currentHp: 17,
-    spellSlots: [
-      {
-        spellLevel: spellSlotLevel(1),
-        count: resourceCount(4),
-        expended: resourceCount(0),
-      },
-      {
-        spellLevel: spellSlotLevel(2),
-        count: resourceCount(2),
-        expended: resourceCount(0),
-      },
-    ],
     resourceExpenditures: [
       {
         tag: "pointPoolResource",
@@ -858,23 +835,6 @@ function fontOfMagicCreatedLevel3Sheet(): CharacterSheet {
       ],
     }),
     currentHp: 24,
-    spellSlots: [
-      {
-        spellLevel: spellSlotLevel(1),
-        count: resourceCount(4),
-        expended: resourceCount(0),
-      },
-      {
-        spellLevel: spellSlotLevel(2),
-        count: resourceCount(3),
-        expended: resourceCount(0),
-      },
-      {
-        spellLevel: spellSlotLevel(3),
-        count: resourceCount(2),
-        expended: resourceCount(0),
-      },
-    ],
   });
   return requireRight(
     convertFontOfMagicSorceryPointsToSpellSlot({
@@ -915,7 +875,6 @@ function sheetFixture(
     readonly build: CharacterBuild;
     readonly currentHp: number;
     readonly tempHp?: number;
-    readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
   } & Partial<
     Pick<
       CharacterSheetInput,
@@ -927,12 +886,6 @@ function sheetFixture(
     >
   >,
 ): CharacterSheet {
-  const ordinarySpellSlotExpenditures: readonly CharacterSpellSlotExpenditure[] =
-    input.spellSlotExpenditures ??
-    input.spellSlots
-      ?.filter((slot) => slot.expended > 0)
-      .map(({ spellLevel, expended }) => ({ spellLevel, expended })) ??
-    [];
   return requireRight(
     createFreshCharacterSheetCore({
       characterId: characterSheetId(input.characterIdText),
@@ -942,9 +895,9 @@ function sheetFixture(
       hitPointMaximumReduction: Hp(0),
       conditions: input.conditions ?? [],
       unitLibrary,
-      ...(ordinarySpellSlotExpenditures.length === 0
+      ...(input.spellSlotExpenditures === undefined
         ? {}
-        : { spellSlotExpenditures: ordinarySpellSlotExpenditures }),
+        : { spellSlotExpenditures: input.spellSlotExpenditures }),
       ...(input.resourceExpenditures === undefined
         ? {}
         : { resourceExpenditures: input.resourceExpenditures }),

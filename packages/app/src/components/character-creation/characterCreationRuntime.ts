@@ -19,9 +19,16 @@ import {
 import {
   type CharacterSheet,
   characterSheetCurrentHp,
+  characterSheetHitDice,
+  type CharacterSheetHitDieState,
   characterSheetHitPointMaximum,
   characterSheetId,
+  characterSheetPactSlots,
+  type CharacterSheetPactSlotState,
+  characterSheetResources,
+  type CharacterSheetResourceState,
   characterSheetSpellSlots,
+  type CharacterSheetSpellSlotState,
   characterSheetTempHp,
   createFreshCharacterSheet
 } from "@dnd/character-sheet-runtime"
@@ -128,7 +135,10 @@ export type CharacterSheetSummary = {
   readonly tempHp: number
   readonly maximumHp: number
   readonly hitPointState: CharacterSheet["hitPoints"]["tag"]
-  readonly spellSlotLevels: ReadonlyArray<number>
+  readonly hitDice: ReadonlyArray<CharacterSheetHitDieState>
+  readonly spellSlots: ReadonlyArray<CharacterSheetSpellSlotState>
+  readonly pactSlots?: CharacterSheetPactSlotState
+  readonly resources: ReadonlyArray<CharacterSheetResourceState>
 }
 
 export function characterSheetSummary(
@@ -138,13 +148,25 @@ export function characterSheetSummary(
   if (Either.isLeft(maximumHp)) {
     return characterSheetFromDraftIssue("characterSheetInvalid", maximumHp.left.message)
   }
+  const hitDice = characterSheetHitDice(sheet, characterCreationUnitLibrary)
+  if (Either.isLeft(hitDice)) {
+    return characterSheetFromDraftIssue("characterSheetInvalid", hitDice.left.message)
+  }
+  const resources = characterSheetResources(sheet, characterCreationUnitLibrary)
+  if (Either.isLeft(resources)) {
+    return characterSheetFromDraftIssue("characterSheetInvalid", resources.left.message)
+  }
+  const pactSlots = characterSheetPactSlots(sheet)
   return Either.right({
     characterId: sheet.characterId,
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
     maximumHp: maximumHp.right,
     hitPointState: sheet.hitPoints.tag,
-    spellSlotLevels: characterSheetSpellSlots(sheet)?.map((slot) => slot.spellLevel) ?? []
+    hitDice: hitDice.right,
+    spellSlots: characterSheetSpellSlots(sheet) ?? [],
+    ...(pactSlots === undefined ? {} : { pactSlots }),
+    resources: resources.right
   })
 }
 

@@ -7,6 +7,12 @@ Local Character Sheet runtime for player-character in-play state.
 state that can change through adventuring, rests, battle handoff, or future
 equipment/resource workflows.
 
+The stored sheet schema is mutable state and selections only. Hit Point
+Maximum, Hit Dice capacity, ordinary Spell Slot capacity, Pact Slot capacity,
+and class-feature resource capacity are output/display projections derived from
+`CharacterBuild` and installed Unit facts. Display callers should project them
+with this package's helpers instead of storing them beside their source facts.
+
 This package intentionally does not depend on `@dnd/battle-runtime`. Battle
 projection and battle handoff settlement belong to
 `@dnd/character-battle-runtime`.

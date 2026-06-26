@@ -56,7 +56,11 @@ The character-creation tool boundary exposes these user-facing tools:
   when MCP needs display rows or battle handoff projections.
 - `list_characters` lists durable character-session rows. It reads only the
   character-session store, so selected or battled Stat Blocks do not appear as
-  characters.
+  characters. Its rows are display projections: Hit Point Maximum, Hit Dice
+  capacity, ordinary Spell Slot count, Pact Slot level/count, and resource
+  count are derived from the stored Character Build and installed Unit facts,
+  then paired with mutable sheet state such as current HP, spent Hit Dice, and
+  expenditures.
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
@@ -181,6 +185,21 @@ to MCP as generated JSON Schema. Boundary handlers decode tool arguments through
 those schemas before converting to branded runtime ids. Tool responses include
 JSON text content plus `structuredContent`; success responses are encoded
 through their output schemas.
+
+Character-session input/store schemas are mutable state and selections only.
+They may carry current HP, Temporary Hit Points, Hit Point Maximum reduction,
+zero-HP lifecycle, conditions, spent Hit Dice, ordinary Spell Slot
+expenditures, Pact Slot expenditure, class-feature resource expenditures,
+retained companion state, and creation selections such as Wild Shape known-form
+ids. They must not accept normal HP capacity, Hit Dice capacity, ordinary Spell
+Slot capacity, Pact Slot capacity, or feature-resource capacity as stored
+session facts.
+
+Character-session output/display schemas are allowed to be capacity-rich read
+models. Those capacities must come from projections such as
+`characterSheetHitPointMaximum`, `characterSheetHitDice`,
+`characterSheetSpellSlots`, `characterSheetPactSlots`, and
+`characterSheetResources`; MCP must not maintain a parallel capacity table.
 
 This package also owns cross-runtime composition helpers. Character Build to
 creature-init mapping lives in `src/battle-creature-init.ts`, where finalized

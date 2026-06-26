@@ -35,8 +35,6 @@ import {
   createFreshCharacterSheet as createFreshCharacterSheetCore,
   type CharacterSheet,
   type CharacterSheetInput,
-  type CharacterSheetSpellSlotState,
-  type CharacterSpellSlotExpenditure,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
@@ -220,12 +218,8 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
     characterIdText: "character:battle-settlement-sheet-state",
     build: wizardSpellcastingBuild(),
     currentHp: 7,
-    spellSlots: [
-      {
-        spellLevel: spellSlotLevel(1),
-        count: resourceCount(2),
-        expended: resourceCount(1),
-      },
+    spellSlotExpenditures: [
+      { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
     ],
     spentHitDice: [{ classUnitId: "class_wizard", spent: resourceCount(1) }],
     restFeatureUses: [{ tag: "arcaneRecovery", usedSinceLongRest: true }],
@@ -328,13 +322,6 @@ function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
     characterIdText,
     build: mixedSpellAndPactSlotBuild(),
     currentHp: wizardBattleFixtureMaximumHp,
-    spellSlots: [
-      {
-        spellLevel: spellSlotLevel(1),
-        count: resourceCount(2),
-        expended: resourceCount(0),
-      },
-    ],
     pactSlots: { expended: resourceCount(0) },
   });
   const battle = startCharacterBattle({
@@ -344,13 +331,6 @@ function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
       characterIdText,
       build: wizardSpellcastingBuild(),
       currentHp: wizardBattleFixtureMaximumHp,
-      spellSlots: [
-        {
-          spellLevel: spellSlotLevel(1),
-          count: resourceCount(2),
-          expended: resourceCount(0),
-        },
-      ],
     }),
   });
   const result = settleCharacterSheetFromBattle({
@@ -438,23 +418,6 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
     characterIdText: "character:battle-settlement-ambiguous-slot",
     build: sorcererMetamagicBuild(),
     currentHp: 24,
-    spellSlots: [
-      {
-        spellLevel: spellSlotLevel(1),
-        count: resourceCount(4),
-        expended: resourceCount(0),
-      },
-      {
-        spellLevel: spellSlotLevel(2),
-        count: resourceCount(3),
-        expended: resourceCount(0),
-      },
-      {
-        spellLevel: spellSlotLevel(3),
-        count: resourceCount(2),
-        expended: resourceCount(0),
-      },
-    ],
   });
   const withCreatedSlot = requireRight(
     convertFontOfMagicSorceryPointsToSpellSlot({
@@ -985,7 +948,6 @@ function sheetFixture(
     readonly build: CharacterBuild;
     readonly currentHp: number;
     readonly tempHp?: number;
-    readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
   } & Partial<
     Pick<
       CharacterSheetInput,
@@ -1002,12 +964,6 @@ function sheetFixture(
     >
   >,
 ): CharacterSheet {
-  const ordinarySpellSlotExpenditures: readonly CharacterSpellSlotExpenditure[] =
-    input.spellSlotExpenditures ??
-    input.spellSlots
-      ?.filter((slot) => slot.expended > 0)
-      .map(({ spellLevel, expended }) => ({ spellLevel, expended })) ??
-    [];
   return requireRight(
     createFreshCharacterSheetCore({
       characterId: characterSheetId(input.characterIdText),
@@ -1029,9 +985,9 @@ function sheetFixture(
             druidWildShapeKnownFormStatBlockIds:
               input.druidWildShapeKnownFormStatBlockIds,
           }),
-      ...(ordinarySpellSlotExpenditures.length === 0
+      ...(input.spellSlotExpenditures === undefined
         ? {}
-        : { spellSlotExpenditures: ordinarySpellSlotExpenditures }),
+        : { spellSlotExpenditures: input.spellSlotExpenditures }),
       ...(input.pactSlots === undefined ? {} : { pactSlots: input.pactSlots }),
       ...(input.spentHitDice === undefined
         ? {}

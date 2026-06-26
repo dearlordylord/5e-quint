@@ -79,7 +79,7 @@ export const characterToolDefinitions = [
   {
     name: characterToolNames.listCharacters,
     description:
-      "List durable character-session records. Monster Stat Blocks and live battle combatants are not character-list rows.",
+      "List durable character-session display rows. Rows include build-derived HP, Hit Dice, Spell Slot, Pact Slot, and resource capacities plus mutable sheet state.",
     inputSchema: emptyInputSchema,
     outputSchema: mcpOutputJsonSchema(ListCharactersOutputSchema),
   },

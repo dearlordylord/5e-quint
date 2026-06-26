@@ -9,8 +9,11 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A10-SORCERER-SORCEROUS-RESTORATION sorcerer_sorcerous_restoration
 import { describe, expect, test } from "vitest";
+import type { CharacterSheetResourceExpenditure } from "./index.ts";
+import type { CharacterBuild } from "./test-support.ts";
 import {
   DieRollResult,
+  DRUID_WILD_SHAPE_UNIT_ID,
   Hp,
   MONK_MARTIAL_ARTS_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
@@ -28,29 +31,405 @@ import {
   completeLongRest,
   completeShortRest,
   createFreshCharacterSheet,
+  parseCharacterSheet,
+  prayerOfHealingClericBuild,
   requireRight,
   resourceCount,
   sorcererFontOfMagicBuild,
   sorcererFontOfMagicLongRestRecoveryTestName,
   sorcererSorcerousRestorationShortRestRecoveryTestName,
+  storedAvailableSheetInput,
   uncannyMetabolismInitiativeGatesTestName,
   uncannyMetabolismInitiativeRecoveryTestName,
   uncannyMetabolismLongRestUseStateTestName,
   uncannyMetabolismRejectsUnownedUseStateTestName,
   unitLibrary,
   useMonkUncannyMetabolismWhenRollingInitiative,
+  warlockMagicalCunningBuild,
+  wizardBuild,
 } from "./test-support.ts";
 
 const monksFocusShortRestRecoveryTestName =
   "Short Rest restores the Monk Focus Point use pool";
 
+type OverCapacityResourceCase = {
+  readonly name: string;
+  readonly build: CharacterBuild;
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly string[];
+  readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
+};
+
 describe("Character Sheet runtime / resources", () => {
+  test("projects omitted class-feature resource expenditures as zero from build-derived capacity", () => {
+    const cases = [
+      {
+        sheet: requireRight(
+          createFreshCharacterSheet({
+            characterId: characterSheetId("character:resource-zero-paladin"),
+            build: armorClassBuild({ startingClass: "class_paladin" }),
+            currentHp: Hp(6),
+            tempHp: Hp(0),
+            unitLibrary,
+          }),
+        ),
+        resource: {
+          unitId: "paladin_lay_on_hands",
+          count: 5,
+          expended: 0,
+        },
+      },
+      {
+        sheet: requireRight(
+          createFreshCharacterSheet({
+            characterId: characterSheetId("character:resource-zero-ranger"),
+            build: armorClassBuild({ startingClass: "class_ranger" }),
+            currentHp: Hp(8),
+            tempHp: Hp(0),
+            unitLibrary,
+          }),
+        ),
+        resource: {
+          unitId: "ranger_favored_enemy",
+          count: 2,
+          expended: 0,
+        },
+      },
+      {
+        sheet: requireRight(
+          createFreshCharacterSheet({
+            characterId: characterSheetId("character:resource-zero-druid"),
+            build: armorClassBuild({
+              startingClass: "class_druid",
+              advancements: ["class_druid"],
+            }),
+            currentHp: Hp(12),
+            tempHp: Hp(0),
+            unitLibrary,
+            druidWildShapeKnownFormStatBlockIds: [
+              "stat_block_rat",
+              "stat_block_riding_horse",
+              "stat_block_spider",
+              "stat_block_wolf",
+            ],
+          }),
+        ),
+        resource: {
+          tag: "useCountResource",
+          unitId: DRUID_WILD_SHAPE_UNIT_ID,
+          count: 2,
+          expended: 0,
+        },
+      },
+      {
+        sheet: requireRight(
+          createFreshCharacterSheet({
+            characterId: characterSheetId("character:resource-zero-monk"),
+            build: armorClassBuild({
+              startingClass: "class_monk",
+              advancements: ["class_monk"],
+            }),
+            currentHp: Hp(12),
+            tempHp: Hp(0),
+            unitLibrary,
+          }),
+        ),
+        resource: {
+          tag: "useCountResource",
+          unitId: MONK_MONKS_FOCUS_UNIT_ID,
+          count: 2,
+          expended: 0,
+        },
+      },
+      {
+        sheet: requireRight(
+          createFreshCharacterSheet({
+            characterId: characterSheetId("character:resource-zero-sorcerer"),
+            build: sorcererFontOfMagicBuild(),
+            currentHp: Hp(10),
+            tempHp: Hp(0),
+            unitLibrary,
+          }),
+        ),
+        resource: {
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          count: 2,
+          expended: 0,
+        },
+      },
+    ];
+
+    for (const { sheet, resource } of cases) {
+      expect(characterSheetResources(sheet, unitLibrary)).toMatchObject({
+        _tag: "Right",
+        right: expect.arrayContaining([expect.objectContaining(resource)]),
+      });
+      expect(sheet.resourceExpenditures).toEqual([]);
+    }
+  });
+
+  const overCapacityResourceCases = [
+    {
+      name: "Lay On Hands healing pool",
+      build: armorClassBuild({ startingClass: "class_paladin" }),
+      resourceExpenditures: [
+        { tag: "layOnHandsHealingPool", expended: resourceCount(6) },
+      ],
+    },
+    {
+      name: "Favored Enemy free cast pool",
+      build: armorClassBuild({ startingClass: "class_ranger" }),
+      resourceExpenditures: [
+        {
+          tag: "favoredEnemyHuntersMarkFreeCasts",
+          expended: resourceCount(3),
+        },
+      ],
+    },
+    {
+      name: "Paladin's Smite free cast pool",
+      build: armorClassBuild({
+        startingClass: "class_paladin",
+        advancements: ["class_paladin"],
+      }),
+      resourceExpenditures: [
+        {
+          tag: "paladinsSmiteDivineSmiteFreeCast",
+          expended: resourceCount(2),
+        },
+      ],
+    },
+    {
+      name: "Wild Shape use-count pool",
+      build: armorClassBuild({
+        startingClass: "class_druid",
+        advancements: ["class_druid"],
+      }),
+      druidWildShapeKnownFormStatBlockIds: [
+        "stat_block_rat",
+        "stat_block_riding_horse",
+        "stat_block_spider",
+        "stat_block_wolf",
+      ],
+      resourceExpenditures: [
+        {
+          tag: "useCountResource",
+          unitId: DRUID_WILD_SHAPE_UNIT_ID,
+          expended: resourceCount(3),
+        },
+      ],
+    },
+    {
+      name: "Monk Focus use-count pool",
+      build: armorClassBuild({
+        startingClass: "class_monk",
+        advancements: ["class_monk"],
+      }),
+      resourceExpenditures: [
+        {
+          tag: "useCountResource",
+          unitId: MONK_MONKS_FOCUS_UNIT_ID,
+          expended: resourceCount(3),
+        },
+      ],
+    },
+    {
+      name: "Font of Magic Sorcery Point pool",
+      build: sorcererFontOfMagicBuild(),
+      resourceExpenditures: [
+        {
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          expended: resourceCount(3),
+        },
+      ],
+    },
+  ] satisfies readonly OverCapacityResourceCase[];
+
+  test.each(overCapacityResourceCases)(
+    "rejects over-capacity $name expenditure",
+    (input) => {
+      const sheet = createFreshCharacterSheet({
+        characterId: characterSheetId(`character:over-capacity-${input.name}`),
+        build: input.build,
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+        ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+          ? {}
+          : {
+              druidWildShapeKnownFormStatBlockIds:
+                input.druidWildShapeKnownFormStatBlockIds,
+            }),
+        resourceExpenditures: input.resourceExpenditures,
+      });
+
+      expect(sheet).toMatchObject({
+        _tag: "Left",
+        left: {
+          message:
+            "Character Sheet resource expenditure cannot exceed build resource capacity.",
+        },
+      });
+    },
+  );
+
+  test.each([
+    {
+      name: "Arcane Recovery",
+      build: wizardBuild({ wizardAdvancements: 0 }),
+      extraStoredFields: {
+        spellSlotExpenditures: [{ spellLevel: 1, expended: 0 }],
+      },
+      use: {
+        tag: "arcaneRecovery",
+        usedSinceLongRest: true,
+        count: 1,
+      },
+      message:
+        "Character Sheet rest feature use state must contain exactly tag and Long Rest use flag.",
+    },
+    {
+      name: "Magical Cunning",
+      build: warlockMagicalCunningBuild({
+        warlockAdvancements: 1,
+        pactSlotCount: 1,
+        pactSlotLevel: 1,
+      }),
+      extraStoredFields: {
+        pactSlotExpenditure: { expended: 0 },
+      },
+      use: {
+        tag: "magicalCunning",
+        usedSinceLongRest: true,
+        count: 1,
+      },
+      message:
+        "Character Sheet rest feature use state must contain exactly tag and Long Rest use flag.",
+    },
+    {
+      name: "Uncanny Metabolism",
+      build: armorClassBuild({
+        startingClass: "class_monk",
+        advancements: ["class_monk"],
+      }),
+      extraStoredFields: {},
+      use: {
+        tag: "uncannyMetabolism",
+        usedSinceLongRest: true,
+        count: 1,
+      },
+      message:
+        "Character Sheet rest feature use state must contain exactly tag and Long Rest use flag.",
+    },
+    {
+      name: "Sorcerous Restoration",
+      build: sorcererFontOfMagicBuild({ sorcererAdvancements: 4 }),
+      extraStoredFields: {
+        spellSlotExpenditures: [{ spellLevel: 1, expended: 0 }],
+      },
+      use: {
+        tag: "sorcerousRestoration",
+        usedSinceLongRest: true,
+        count: 1,
+      },
+      message:
+        "Character Sheet rest feature use state must contain exactly tag and Long Rest use flag.",
+    },
+    {
+      name: "spell recipient rest lockout",
+      build: prayerOfHealingClericBuild(),
+      extraStoredFields: {
+        spellSlotExpenditures: [{ spellLevel: 1, expended: 0 }],
+      },
+      use: {
+        tag: "spellRecipientRestLockout",
+        spellId: "prayer_of_healing",
+        usedSinceLongRest: true,
+        count: 1,
+      },
+      message:
+        "Spell recipient rest lockout state must contain exactly tag, spell Unit id, and Long Rest use flag.",
+    },
+  ])("rejects stored $name rest use records with extra keys", (input) => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: `character:stale-rest-${input.name}`,
+          build: input.build,
+        }),
+        ...input.extraStoredFields,
+        restFeatureUses: [input.use],
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: { message: input.message },
+    });
+  });
+
+  test.each([
+    {
+      name: "tagged",
+      expenditure: {
+        tag: "layOnHandsHealingPool",
+        count: 5,
+        expended: 0,
+      },
+      message:
+        "Character Sheet tagged resource expenditure must contain exactly tag and expended count.",
+    },
+    {
+      name: "use-count",
+      expenditure: {
+        tag: "useCountResource",
+        unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
+        count: 1,
+        expended: 0,
+      },
+      message:
+        "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
+    },
+    {
+      name: "point-pool",
+      expenditure: {
+        tag: "pointPoolResource",
+        unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+        count: 2,
+        expended: 0,
+      },
+      message:
+        "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
+    },
+  ])("rejects stored $name resource expenditure records with extra keys", ({
+    expenditure,
+    message,
+  }) => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: `character:stale-${expenditure.tag}`,
+          build: armorClassBuild({ startingClass: "class_paladin" }),
+        }),
+        resourceExpenditures: [expenditure],
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: { message },
+    });
+  });
+
   test("Long Rest restores the Favored Enemy Hunter's Mark free-cast pool", () => {
     const spent = requireRight(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:ranger-rest"),
         build: armorClassBuild({ startingClass: "class_ranger" }),
-        currentHp: Hp(12),
+        currentHp: Hp(10),
         tempHp: Hp(0),
         unitLibrary,
         resourceExpenditures: [
@@ -98,7 +477,7 @@ describe("Character Sheet runtime / resources", () => {
           startingClass: "class_paladin",
           advancements: ["class_paladin"],
         }),
-        currentHp: Hp(20),
+        currentHp: Hp(17),
         tempHp: Hp(0),
         unitLibrary,
         resourceExpenditures: [
@@ -238,7 +617,7 @@ describe("Character Sheet runtime / resources", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:sorcerer-font-rest"),
         build: sorcererBuild,
-        currentHp: Hp(14),
+        currentHp: Hp(12),
         tempHp: Hp(0),
         unitLibrary,
         resourceExpenditures: [
@@ -296,7 +675,7 @@ describe("Character Sheet runtime / resources", () => {
           "character:sorcerer-sorcerous-restoration",
         ),
         build: sorcererBuild,
-        currentHp: Hp(28),
+        currentHp: Hp(27),
         tempHp: Hp(0),
         unitLibrary,
         resourceExpenditures: [
@@ -391,7 +770,7 @@ describe("Character Sheet runtime / resources", () => {
           "character:sorcerer-no-sorcerous-restoration",
         ),
         build: sorcererFontOfMagicBuild({ sorcererAdvancements: 3 }),
-        currentHp: Hp(24),
+        currentHp: Hp(22),
         tempHp: Hp(0),
         unitLibrary,
         resourceExpenditures: [
@@ -624,7 +1003,7 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetCurrentHp(capped)).toBe(30);
+    expect(characterSheetCurrentHp(capped)).toBe(33);
     expect(capped.resourceExpenditures).toEqual([]);
     expect(capped.restFeatureUses).toEqual([
       { tag: "uncannyMetabolism", usedSinceLongRest: true },
@@ -684,7 +1063,7 @@ describe("Character Sheet runtime / resources", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:unowned-uncanny-metabolism"),
       build: armorClassBuild({ startingClass: "class_fighter" }),
-      currentHp: Hp(12),
+      currentHp: Hp(10),
       tempHp: Hp(0),
       unitLibrary,
       restFeatureUses: [

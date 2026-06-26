@@ -136,6 +136,93 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     });
   });
 
+  test("rejects stale stored sheets with ordinary Spell Slot capacity", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:stale-ordinary-spell-slots",
+          build,
+        }),
+        spellSlots: [{ spellLevel: 1, count: 2, expended: 0 }],
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Stored Character Sheet must not carry build-derived ordinary Spell Slot capacity.",
+      },
+    });
+  });
+
+  test("rejects stale stored sheets with Pact Slot capacity", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:stale-pact-slots",
+          build,
+        }),
+        pactSlots: { slotLevel: 1, count: 1, expended: 0 },
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Stored Character Sheet must not carry build-derived Pact Slot capacity.",
+      },
+    });
+  });
+
+  test("rejects stored Pact Slot expenditure records with stale capacity keys", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:stale-pact-slot-expenditure",
+          build: {
+            ...armorClassBuild({ startingClass: "class_warlock" }),
+            spellcasting: warlockSpellcastingWithCantrips(["eldritch_blast"]),
+          },
+        }),
+        pactSlotExpenditure: { slotLevel: 1, count: 1, expended: 0 },
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Pact Slot expenditure state must contain exactly expended count.",
+      },
+    });
+  });
+
+  test("rejects stored spent Hit Dice records with extra keys", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:stale-hit-dice",
+          build,
+        }),
+        spentHitDice: [{ classUnitId: "class_fighter", spent: 0, count: 1 }],
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Spent Hit Dice state must contain exactly class Unit id and spent count.",
+      },
+    });
+  });
+
   test("rejects stored sheets with malformed Character Build shape", () => {
     const sheet = parseCharacterSheet(
       {

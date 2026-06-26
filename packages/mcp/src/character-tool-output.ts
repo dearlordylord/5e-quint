@@ -22,6 +22,28 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
 );
+const CharacterSheetSpellSlotDisplayRowSchema = Schema.Struct({
+  spellLevel: PositiveIntegerSchema,
+  count: NonNegativeIntegerSchema,
+  expended: NonNegativeIntegerSchema,
+});
+const CharacterSheetPactSlotDisplayRowSchema = Schema.Struct({
+  slotLevel: PositiveIntegerSchema,
+  count: NonNegativeIntegerSchema,
+  expended: NonNegativeIntegerSchema,
+});
+const CharacterSheetHitDieDisplayRowSchema = Schema.Struct({
+  classUnitId: Schema.String,
+  dieSize: PositiveIntegerSchema,
+  total: PositiveIntegerSchema,
+  spent: NonNegativeIntegerSchema,
+});
+const CharacterSheetResourceDisplayRowSchema = Schema.Struct({
+  tag: Schema.String,
+  unitId: Schema.String,
+  count: NonNegativeIntegerSchema,
+  expended: NonNegativeIntegerSchema,
+});
 const DraftChoiceCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("draft"),
   path: Schema.Literal(...CHARACTER_DRAFT_CHOICE_PATHS),
@@ -108,9 +130,17 @@ export const CharacterSessionRowSchema = Schema.Union(
       maximum: Schema.Number,
       state: JsonObjectSchema,
     }),
-    spellSlots: Schema.optionalWith(Schema.Array(JsonObjectSchema), {
+    hitDice: Schema.Array(CharacterSheetHitDieDisplayRowSchema),
+    spellSlots: Schema.optionalWith(
+      Schema.Array(CharacterSheetSpellSlotDisplayRowSchema),
+      {
+        exact: true,
+      },
+    ),
+    pactSlots: Schema.optionalWith(CharacterSheetPactSlotDisplayRowSchema, {
       exact: true,
     }),
+    resources: Schema.Array(CharacterSheetResourceDisplayRowSchema),
     companion: JsonObjectSchema,
   }),
   Schema.Struct({

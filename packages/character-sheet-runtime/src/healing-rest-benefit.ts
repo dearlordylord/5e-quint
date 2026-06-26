@@ -43,6 +43,7 @@ import {
 import {
   isCharacterSheetWithSpellSlots,
   ordinarySpellSlotStates,
+  replaceOrdinarySpellSlotExpenditure,
 } from "./spell-slots.ts";
 import {
   ARCANE_RECOVERY_REST_FEATURE_TAG,
@@ -543,12 +544,11 @@ function spendCharacterSheetSpellSlotSource(input: {
   if (Either.isLeft(source)) return Either.left(source.left);
   return source.right === "ordinary"
     ? Either.right({
-        ordinarySpellSlotExpenditures: input.sheet.spellSlotExpenditures.map(
-          (slot) =>
-            slot.spellLevel === input.spellLevel
-              ? { ...slot, expended: resourceCount(slot.expended + 1) }
-              : slot,
-        ),
+        ordinarySpellSlotExpenditures: replaceOrdinarySpellSlotExpenditure({
+          expenditures: input.sheet.spellSlotExpenditures,
+          spellLevel: input.spellLevel,
+          expended: resourceCount((ordinarySlot?.expended ?? 0) + 1),
+        }),
         createdSpellSlots: input.sheet.createdSpellSlots,
       })
     : Either.right({

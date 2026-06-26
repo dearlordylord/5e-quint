@@ -199,12 +199,8 @@ describe("Character Sheet runtime / rests", () => {
         spentHitDice: [
           { classUnitId: "class_wizard", spent: resourceCount(1) },
         ],
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(2),
-            expended: resourceCount(2),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(2) },
         ],
         pactSlots: { expended: resourceCount(1) },
         restFeatureUses: [
@@ -506,12 +502,8 @@ describe("Character Sheet runtime / rests", () => {
         build: wizardWarlockBuild(),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(2),
-            expended: resourceCount(1),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
         ],
         pactSlots: { expended: resourceCount(1) },
       }),
@@ -537,12 +529,8 @@ describe("Character Sheet runtime / rests", () => {
         currentHp: Hp(7),
         tempHp: Hp(2),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(3),
-            expended: resourceCount(1),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
         ],
       }),
     );
@@ -576,12 +564,8 @@ describe("Character Sheet runtime / rests", () => {
         currentHp: Hp(7),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(3),
-            expended: resourceCount(1),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
         ],
       }),
     );
@@ -739,13 +723,6 @@ describe("Character Sheet runtime / rests", () => {
         currentHp: Hp(7),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(3),
-            expended: resourceCount(0),
-          },
-        ],
       }),
     );
 
@@ -781,13 +758,6 @@ describe("Character Sheet runtime / rests", () => {
         spentHitDice: [
           { classUnitId: "class_wizard", spent: resourceCount(1) },
         ],
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(3),
-            expended: resourceCount(0),
-          },
-        ],
       }),
     );
 
@@ -810,17 +780,9 @@ describe("Character Sheet runtime / rests", () => {
         build: wizardBuild({ wizardAdvancements: 3 }),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(4),
-            expended: resourceCount(2),
-          },
-          {
-            spellLevel: spellSlotLevel(2),
-            count: resourceCount(3),
-            expended: resourceCount(1),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(2) },
+          { spellLevel: spellSlotLevel(2), expended: resourceCount(1) },
         ],
       }),
     );
@@ -869,12 +831,8 @@ describe("Character Sheet runtime / rests", () => {
         build: wizardBuild({ wizardAdvancements: 1 }),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(3),
-            expended: resourceCount(2),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(2) },
         ],
       }),
     );

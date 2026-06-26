@@ -22,6 +22,7 @@ import {
   sorcererFontOfMagicSlotCreationGateTestName,
   sorcererFontOfMagicSlotCreationTestName,
   spellSlotLevel,
+  storedAvailableSheetInput,
   unitLibrary,
   warlockMagicalCunningBuild,
   wizardBuild,
@@ -90,6 +91,50 @@ describe("Character Sheet runtime / spell slots", () => {
     });
   });
 
+  test("rejects stored ordinary Spell Slot expenditure records with stale capacity keys", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:stale-spell-slot-expenditure",
+          build: wizardBuild({ wizardAdvancements: 1 }),
+        }),
+        spellSlotExpenditures: [{ spellLevel: 1, count: 3, expended: 0 }],
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Spell Slot expenditure state must contain exactly spell level and expended count.",
+      },
+    });
+  });
+
+  test("rejects stored created Spell Slot records with unsupported extra keys", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:stale-created-spell-slot",
+          build: wizardBuild({ wizardAdvancements: 1 }),
+        }),
+        createdSpellSlots: [
+          { spellLevel: 2, count: 1, expended: 0, restoredBy: "longRest" },
+        ],
+      },
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Created Spell Slot state must contain exactly spell level, count, and expended count.",
+      },
+    });
+  });
+
   test(sorcererFontOfMagicSlotConversionTestName, () => {
     const sorcererBuild = sorcererFontOfMagicBuild({
       sorcererAdvancements: 2,
@@ -104,17 +149,8 @@ describe("Character Sheet runtime / spell slots", () => {
         build: sorcererBuild,
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(4),
-            expended: resourceCount(0),
-          },
-          {
-            spellLevel: spellSlotLevel(2),
-            count: resourceCount(2),
-            expended: resourceCount(1),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(2), expended: resourceCount(1) },
         ],
         resourceExpenditures: [
           {
@@ -159,13 +195,6 @@ describe("Character Sheet runtime / spell slots", () => {
         build: sorcererBuild,
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(3),
-            expended: resourceCount(0),
-          },
-        ],
         resourceExpenditures: [],
       }),
     );
@@ -190,12 +219,8 @@ describe("Character Sheet runtime / spell slots", () => {
         build: sorcererBuild,
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(3),
-            expended: resourceCount(3),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(3) },
         ],
         resourceExpenditures: [
           {
@@ -227,12 +252,8 @@ describe("Character Sheet runtime / spell slots", () => {
         build: wizardBuild({ wizardAdvancements: 1 }),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(3),
-            expended: resourceCount(1),
-          },
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
         ],
       }),
     );
@@ -267,23 +288,6 @@ describe("Character Sheet runtime / spell slots", () => {
         build: sorcererBuild,
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(4),
-            expended: resourceCount(0),
-          },
-          {
-            spellLevel: spellSlotLevel(2),
-            count: resourceCount(3),
-            expended: resourceCount(0),
-          },
-          {
-            spellLevel: spellSlotLevel(3),
-            count: resourceCount(2),
-            expended: resourceCount(0),
-          },
-        ],
       }),
     );
     expect(
@@ -441,13 +445,6 @@ describe("Character Sheet runtime / spell slots", () => {
         build: sorcererFontOfMagicBuild(),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(3),
-            expended: resourceCount(0),
-          },
-        ],
       }),
     );
 
@@ -477,18 +474,6 @@ describe("Character Sheet runtime / spell slots", () => {
         }),
         tempHp: Hp(0),
         unitLibrary,
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(4),
-            expended: resourceCount(0),
-          },
-          {
-            spellLevel: spellSlotLevel(2),
-            count: resourceCount(2),
-            expended: resourceCount(0),
-          },
-        ],
         resourceExpenditures: [
           {
             tag: "pointPoolResource",

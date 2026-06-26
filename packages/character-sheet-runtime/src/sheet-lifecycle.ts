@@ -72,6 +72,7 @@ import {
   parseStoredPactSlots,
   parseStoredResourceExpenditures,
   parseStoredSpellSlots,
+  recordHasExactKeys,
 } from "./stored-sheet-parser.ts";
 
 export function createFreshCharacterSheet(
@@ -557,6 +558,11 @@ function parseStoredSpentHitDice(
     if (!isRecord(spent) || typeof spent.classUnitId !== "string") {
       return characterSheetIssue("Expected spent Hit Dice state.");
     }
+    if (!recordHasExactKeys(spent, ["classUnitId", "spent"])) {
+      return characterSheetIssue(
+        "Spent Hit Dice state must contain exactly class Unit id and spent count.",
+      );
+    }
     const spentCount = parseResourceCount(spent.spent);
     if (Either.isLeft(spentCount)) return Either.left(spentCount.left);
     spentHitDice.push({
@@ -616,6 +622,11 @@ function parseStoredRestFeatureUses(
       return characterSheetIssue("Expected supported rest feature use state.");
     }
     if (use.tag === SPELL_RECIPIENT_REST_LOCKOUT_TAG) {
+      if (!recordHasExactKeys(use, ["tag", "spellId", "usedSinceLongRest"])) {
+        return characterSheetIssue(
+          "Spell recipient rest lockout state must contain exactly tag, spell Unit id, and Long Rest use flag.",
+        );
+      }
       if (typeof use.spellId !== "string") {
         return characterSheetIssue(
           "Spell recipient rest lockout requires a spell Unit id.",
@@ -627,6 +638,11 @@ function parseStoredRestFeatureUses(
         usedSinceLongRest: true,
       });
       continue;
+    }
+    if (!recordHasExactKeys(use, ["tag", "usedSinceLongRest"])) {
+      return characterSheetIssue(
+        "Character Sheet rest feature use state must contain exactly tag and Long Rest use flag.",
+      );
     }
     uses.push({ tag: use.tag, usedSinceLongRest: true });
   }

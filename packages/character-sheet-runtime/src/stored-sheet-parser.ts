@@ -231,6 +231,11 @@ export function parseStoredSpellSlots(
   CharacterSheetSpellSlotSourceState | undefined,
   CharacterSheetIssue
 > {
+  if (Object.hasOwn(value, "spellSlots")) {
+    return characterSheetIssue(
+      "Stored Character Sheet must not carry build-derived ordinary Spell Slot capacity.",
+    );
+  }
   if (!isSpellcastingBuild(build)) {
     return value.spellSlotExpenditures === undefined &&
       value.createdSpellSlots === undefined
@@ -251,6 +256,11 @@ export function parseStoredSpellSlots(
   for (const expenditure of value.spellSlotExpenditures ?? []) {
     if (!isRecord(expenditure)) {
       return characterSheetIssue("Expected Spell Slot expenditure.");
+    }
+    if (!recordHasExactKeys(expenditure, ["spellLevel", "expended"])) {
+      return characterSheetIssue(
+        "Spell Slot expenditure state must contain exactly spell level and expended count.",
+      );
     }
     const spellLevel = parseSpellSlotLevel(expenditure.spellLevel);
     const expended = parseResourceCount(expenditure.expended);
@@ -312,6 +322,11 @@ function parseStoredCreatedSpellSlots(
     if (!isRecord(slot)) {
       return characterSheetIssue("Expected Created Spell Slot state.");
     }
+    if (!recordHasExactKeys(slot, ["spellLevel", "count", "expended"])) {
+      return characterSheetIssue(
+        "Created Spell Slot state must contain exactly spell level, count, and expended count.",
+      );
+    }
     const spellLevel = parseSpellSlotLevel(slot.spellLevel);
     const count = parsePositiveResourceCount(slot.count);
     const expended = parseResourceCount(slot.expended);
@@ -345,6 +360,11 @@ export function parseStoredPactSlots(
   CharacterPactSlotExpenditure | undefined,
   CharacterSheetIssue
 > {
+  if (Object.hasOwn(value, "pactSlots")) {
+    return characterSheetIssue(
+      "Stored Character Sheet must not carry build-derived Pact Slot capacity.",
+    );
+  }
   const pactMagic = characterBuildPactSlotCapacity(build);
   if (pactMagic === undefined) {
     return value.pactSlotExpenditure === undefined
@@ -359,6 +379,11 @@ export function parseStoredPactSlots(
   if (!isRecord(value.pactSlotExpenditure)) {
     return characterSheetIssue(
       "Pact Slot expenditure state must be an object.",
+    );
+  }
+  if (!recordHasExactKeys(value.pactSlotExpenditure, ["expended"])) {
+    return characterSheetIssue(
+      "Pact Slot expenditure state must contain exactly expended count.",
     );
   }
   const expended = parseResourceCount(value.pactSlotExpenditure.expended);
@@ -397,6 +422,20 @@ export function parseStoredResourceExpenditures(
     ) {
       return characterSheetIssue(
         "Expected Character Sheet resource expenditure.",
+      );
+    }
+    if (
+      expenditure.tag === "useCountResource" ||
+      expenditure.tag === "pointPoolResource"
+    ) {
+      if (!recordHasExactKeys(expenditure, ["tag", "unitId", "expended"])) {
+        return characterSheetIssue(
+          "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
+        );
+      }
+    } else if (!recordHasExactKeys(expenditure, ["tag", "expended"])) {
+      return characterSheetIssue(
+        "Character Sheet tagged resource expenditure must contain exactly tag and expended count.",
       );
     }
     const expended = parseResourceCount(expenditure.expended);
@@ -1879,6 +1918,17 @@ export function isRecord(
   value: unknown,
 ): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null;
+}
+
+export function recordHasExactKeys(
+  value: Readonly<Record<string, unknown>>,
+  keys: readonly string[],
+): boolean {
+  const allowed = new Set(keys);
+  const actual = Object.keys(value);
+  return (
+    actual.length === keys.length && actual.every((key) => allowed.has(key))
+  );
 }
 
 export function isSpellcastingBuild(

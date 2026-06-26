@@ -19,6 +19,7 @@ import {
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitPointMaximum,
   characterSheetPactSlots,
+  characterSheetResources,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
   characterSheetTempHp,
@@ -34,6 +35,7 @@ import {
   type CharacterSheetPositiveHpUnconscious,
   type CharacterSheetPointPoolResourceUnitId,
   type CharacterSheetResourceExpenditure,
+  type CharacterSheetResourceState,
   type CharacterSheetSpellSlotSourceState,
   type CharacterSheetSpellSlotState,
   type CharacterSheetStableRecovery,
@@ -52,7 +54,10 @@ import {
   EMPTY_CONDITION_STATE,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-import { isSupportedClassFeatureSpellFreeCastResourceTag } from "@dnd/surface/surface/types";
+import {
+  isSupportedClassFeatureSpellFreeCastResourceTag,
+  type SupportedClassFeatureSpellFreeCastResourceTag,
+} from "@dnd/surface/surface/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
@@ -478,6 +483,10 @@ function characterResourceExpendituresFromBattle(input: {
   if (input.combatant.origin.kind !== "character") {
     return Either.right(input.sheet.resourceExpenditures);
   }
+  const sheetResources = characterSheetResources(input.sheet, input.unitLibrary);
+  if (Either.isLeft(sheetResources)) {
+    return characterSheetBattleHandoffIssue(sheetResources.left.message);
+  }
   const origin = input.combatant.origin;
   const wildShapeUnitId = characterSheetDruidWildShapeResourceUnitId(input);
   if (Either.isLeft(wildShapeUnitId)) {
@@ -518,7 +527,10 @@ function characterResourceExpendituresFromBattle(input: {
   const nextUseCountExpenditures: CharacterSheetResourceExpenditure[] = [];
   const nextPointPoolExpenditures: CharacterSheetResourceExpenditure[] = [];
   const druidWildShapeExpenditure =
-    druidWildShapeResourceExpenditureFromBattle(input);
+    druidWildShapeResourceExpenditureFromBattle({
+      ...input,
+      sheetResources: sheetResources.right,
+    });
   if (Either.isLeft(druidWildShapeExpenditure)) {
     return Either.left(druidWildShapeExpenditure.left);
   }
@@ -536,6 +548,16 @@ function characterResourceExpendituresFromBattle(input: {
       if (maxPoints === undefined) {
         return characterSheetBattleHandoffIssue(
           "Class feature point-pool resources must carry finite remaining points during battle handoff.",
+        );
+      }
+      const sheetCount = sheetPointPoolResourceCapacity({
+        sheetResources: sheetResources.right,
+        unitId: pointPoolUnitId,
+      });
+      if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
+      if (maxPoints !== sheetCount.right) {
+        return characterSheetBattleHandoffIssue(
+          "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
         );
       }
       const expended = Number(maxPoints) - Number(resource.pointsRemaining);
@@ -563,6 +585,16 @@ function characterResourceExpendituresFromBattle(input: {
       if (resource.usesRemaining === undefined) {
         return characterSheetBattleHandoffIssue(
           "Class feature spell free casts must carry remaining uses during battle handoff.",
+        );
+      }
+      const sheetCount = sheetFreeCastResourceCapacity({
+        sheetResources: sheetResources.right,
+        tag: profile.resourceTag,
+      });
+      if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
+      if (resource.resource.cap.uses !== sheetCount.right) {
+        return characterSheetBattleHandoffIssue(
+          "Class feature spell free-cast battle capacity must match Character Sheet resource capacity.",
         );
       }
       const expended = resource.resource.cap.uses - resource.usesRemaining;
@@ -598,6 +630,16 @@ function characterResourceExpendituresFromBattle(input: {
       if (maxUses === undefined || resource.usesRemaining === undefined) {
         return characterSheetBattleHandoffIssue(
           "Class feature use-count resources must carry finite remaining uses during battle handoff.",
+        );
+      }
+      const sheetCount = sheetUseCountResourceCapacity({
+        sheetResources: sheetResources.right,
+        unitId: useCountUnitId,
+      });
+      if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
+      if (maxUses !== sheetCount.right) {
+        return characterSheetBattleHandoffIssue(
+          "Class feature use-count battle capacity must match Character Sheet resource capacity.",
         );
       }
       const expended = Number(maxUses) - Number(resource.usesRemaining);
@@ -654,6 +696,51 @@ function characterSheetUseCountResourceUnitIdForBattleResource(
     : null;
 }
 
+function sheetPointPoolResourceCapacity(input: {
+  readonly sheetResources: readonly CharacterSheetResourceState[];
+  readonly unitId: CharacterSheetPointPoolResourceUnitId;
+}): Either.Either<ResourceCount, CharacterSheetBattleHandoffIssue> {
+  const resource = input.sheetResources.find(
+    (candidate) =>
+      candidate.tag === "pointPoolResource" &&
+      candidate.unitId === input.unitId,
+  );
+  return resource === undefined
+    ? characterSheetBattleHandoffIssue(
+        "Class feature point-pool battle resource requires matching Character Sheet resource capacity.",
+      )
+    : Either.right(resource.count);
+}
+
+function sheetUseCountResourceCapacity(input: {
+  readonly sheetResources: readonly CharacterSheetResourceState[];
+  readonly unitId: CharacterSheetUseCountResourceUnitId;
+}): Either.Either<ResourceCount, CharacterSheetBattleHandoffIssue> {
+  const resource = input.sheetResources.find(
+    (candidate) =>
+      candidate.tag === "useCountResource" && candidate.unitId === input.unitId,
+  );
+  return resource === undefined
+    ? characterSheetBattleHandoffIssue(
+        "Class feature use-count battle resource requires matching Character Sheet resource capacity.",
+      )
+    : Either.right(resource.count);
+}
+
+function sheetFreeCastResourceCapacity(input: {
+  readonly sheetResources: readonly CharacterSheetResourceState[];
+  readonly tag: SupportedClassFeatureSpellFreeCastResourceTag;
+}): Either.Either<ResourceCount, CharacterSheetBattleHandoffIssue> {
+  const resource = input.sheetResources.find(
+    (candidate) => candidate.tag === input.tag,
+  );
+  return resource === undefined
+    ? characterSheetBattleHandoffIssue(
+        "Class feature spell free-cast battle resource requires matching Character Sheet resource capacity.",
+      )
+    : Either.right(resource.count);
+}
+
 function characterSheetDruidWildShapeResourceUnitId(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
@@ -703,6 +790,7 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: BattleCreatureState;
   readonly unitLibrary: UnitCatalog;
+  readonly sheetResources: readonly CharacterSheetResourceState[];
 }): Either.Either<
   CharacterSheetResourceExpenditure | undefined,
   CharacterSheetBattleHandoffIssue
@@ -742,8 +830,26 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
       "Druid Wild Shape must carry remaining uses during battle handoff.",
     );
   }
-  const expended =
-    Number(facts.right.useCount.maximum) - Number(resource.usesRemaining);
+  const maxUses = characterBattleResourceMaxUses({
+    unit: resource.unit,
+    classLevels: input.combatant.origin.classLevels,
+  });
+  if (!isCharacterSheetUseCountResourceUnitId(facts.right.unitId)) {
+    return characterSheetBattleHandoffIssue(
+      "Druid Wild Shape must use a Character Sheet use-count resource during battle handoff.",
+    );
+  }
+  const sheetCount = sheetUseCountResourceCapacity({
+    sheetResources: input.sheetResources,
+    unitId: facts.right.unitId,
+  });
+  if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
+  if (maxUses === undefined || maxUses !== sheetCount.right) {
+    return characterSheetBattleHandoffIssue(
+      "Druid Wild Shape battle capacity must match Character Sheet resource capacity.",
+    );
+  }
+  const expended = Number(maxUses) - Number(resource.usesRemaining);
   if (expended < 0) {
     return characterSheetBattleHandoffIssue(
       "Druid Wild Shape remaining uses exceed the character resource cap during battle handoff.",

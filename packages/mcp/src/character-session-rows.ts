@@ -1,7 +1,11 @@
 import type { CharacterId } from "@dnd/battle-runtime";
 import {
   characterSheetCompanion,
+  characterSheetHitDice,
   characterSheetHitPointMaximum,
+  characterSheetPactSlots,
+  characterSheetResources,
+  type CharacterSheetResourceState,
 } from "@dnd/character-sheet-runtime";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
@@ -34,6 +38,7 @@ function characterListRow(
 ): Either.Either<CharacterSessionRow, string> {
   if (session.tag === "available") {
     const spellSlots = characterBattleSpellSlots(session);
+    const pactSlots = characterSheetPactSlots(session);
     const hitPointMaximum = characterSheetHitPointMaximum({
       sheet: session,
       unitLibrary,
@@ -41,6 +46,10 @@ function characterListRow(
     if (Either.isLeft(hitPointMaximum)) {
       return Either.left(hitPointMaximum.left.message);
     }
+    const hitDice = characterSheetHitDice(session, unitLibrary);
+    if (Either.isLeft(hitDice)) return Either.left(hitDice.left.message);
+    const resources = characterSheetResources(session, unitLibrary);
+    if (Either.isLeft(resources)) return Either.left(resources.left.message);
     return Either.right({
       characterId,
       status: session.tag,
@@ -51,7 +60,10 @@ function characterListRow(
         maximum: hitPointMaximum.right,
         state: session.hitPoints,
       },
+      hitDice: hitDice.right,
       ...(spellSlots === undefined ? {} : { spellSlots }),
+      ...(pactSlots === undefined ? {} : { pactSlots }),
+      resources: resources.right.map(characterSheetResourceDisplayRow),
       companion: characterSheetCompanion(session),
     });
   }
@@ -64,4 +76,15 @@ function characterListRow(
     battleId: session.battleId,
     companion: characterSheetCompanion(session.sheet),
   });
+}
+
+function characterSheetResourceDisplayRow(
+  resource: CharacterSheetResourceState,
+) {
+  return {
+    tag: resource.tag,
+    unitId: resource.unitId,
+    count: resource.count,
+    expended: resource.expended,
+  };
 }
