@@ -40,6 +40,11 @@ module characterBattleEncounterCompositionRouteMbt {
     route.append(
       routeComposeBattleEncounter(
         HandoffParticipantMembershipRouteSubject,
+        Set(
+          SheetDerivedParticipantCandidateRouteFact,
+          NonSheetParticipantMembershipRouteFact,
+          EncounterSideRelationshipOwnershipRouteFact,
+        ),
         CharacterBattleEncounterSetupOwner,
       )
     )
@@ -50,6 +55,7 @@ module characterBattleEncounterCompositionRouteMbt {
     route.append(
       routeComposeBattleEncounter(
         HandoffSubjectProfileAvailabilityRouteSubject,
+        Set(SubjectProfileAvailabilityOwnershipRouteFact),
         CharacterBattleSubjectProfileOwner,
       )
     )
@@ -60,6 +66,11 @@ module characterBattleEncounterCompositionRouteMbt {
     route.append(
       routeComposeBattleEncounter(
         HandoffInitiativeCurrentActorRouteSubject,
+        Set(
+          InitiativeCountOwnershipRouteFact,
+          StableInitiativeOrderOwnershipRouteFact,
+          CurrentActorOwnershipRouteFact,
+        ),
         CharacterBattleInitiativeOwner,
       )
     )

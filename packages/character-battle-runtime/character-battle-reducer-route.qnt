@@ -28,6 +28,15 @@ module characterBattleReducerRoute {
     | HandoffResourceDeltaFill
     | HandoffSettlementRejectionFill
 
+  type CharacterBattleRouteCompositionFactFamily =
+    | SheetDerivedParticipantCandidateRouteFact
+    | NonSheetParticipantMembershipRouteFact
+    | EncounterSideRelationshipOwnershipRouteFact
+    | SubjectProfileAvailabilityOwnershipRouteFact
+    | InitiativeCountOwnershipRouteFact
+    | StableInitiativeOrderOwnershipRouteFact
+    | CurrentActorOwnershipRouteFact
+
   type CharacterBattleRouteOwnerGroup =
     | CharacterBattleSheetOwner
     | CharacterBattleBuildProjectionOwner
@@ -50,6 +59,7 @@ module characterBattleReducerRoute {
       })
     | RouteComposeBattleEncounter({
         subject: CharacterBattleRouteSubjectFamily,
+        facts: Set[CharacterBattleRouteCompositionFactFamily],
         owner: CharacterBattleRouteOwnerGroup,
       })
     | RouteSettleBattleToCharacterSheet({
@@ -85,10 +95,12 @@ module characterBattleReducerRoute {
 
   pure def routeComposeBattleEncounter(
     subject: CharacterBattleRouteSubjectFamily,
+    facts: Set[CharacterBattleRouteCompositionFactFamily],
     owner: CharacterBattleRouteOwnerGroup,
   ): CharacterBattleRouteEvent =
     RouteComposeBattleEncounter({
       subject: subject,
+      facts: facts,
       owner: owner,
     })
 

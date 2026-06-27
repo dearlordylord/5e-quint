@@ -74,9 +74,13 @@ subject profile, Initiative, or current actor facts.
 
 Focused route connectors named `*.route.mbt.qnt` are the executable routing
 obligations for diagnostic drivers. They project `qRoute` over the shared
-reducer-route vocabulary. A target replay proves reducer routing only when its
-observed route events match the copied connector; matching the focused
-non-route projection alone proves behavior parity, not reducer architecture.
+reducer-route vocabulary. For encounter composition, the connector records both
+the marker sequence and the owned composition fact families. A target replay
+proves reducer routing only when its observed route events match the copied
+connector, including those fact-family sets, while production state owns the
+corresponding participant, Encounter Side, subject-profile, Initiative, and
+current-actor facts. Matching marker order or the focused non-route projection
+alone proves behavior parity, not reducer architecture.
 The reducer-route inventory is an ordering and derivability index. A
 `reducer-routed` row is accepted only with copied connector evidence from
 `routeConnectorPath` or the sibling `.route.mbt.qnt` driver.

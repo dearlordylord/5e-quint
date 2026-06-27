@@ -37,6 +37,26 @@
       "qntFacts": [
         "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt models the reducer lifecycle from battle start through act discovery, subject hole/fill resolution, turn advancement, and reducer-owned resource/vital projections."
       ]
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt",
+      "route": "reducer-routed",
+      "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+      "subjectFamily": "character-battle encounter composition handoff",
+      "branchObligations": 5,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivability": {
+        "qntFacts": [
+          "packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt exposes qRoute for projecting a sheet-derived participant candidate, composing participant membership and Encounter Side ownership, composing subject-profile availability, composing Initiative count/stable-order/current-actor ownership, and entering battle runtime.",
+          "RouteComposeBattleEncounter carries CharacterBattleRouteCompositionFactFamily sets for sheet-derived participant candidate, non-sheet participant membership, Encounter Side relationship ownership, subject-profile availability ownership, Initiative count ownership, stable Initiative order ownership, and current actor ownership."
+        ],
+        "rawDomainFacts": [
+          ".references/srd-5.2.1/Playing-the-Game.md#The Order of Combat defines battle participants, two-sided combat, Initiative order, and turns before combat rounds proceed.",
+          ".references/srd-5.2.1/Playing-the-Game.md#Initiative and .references/srd-5.2.1/Rules-Glossary.md#Initiative define Initiative count and turn order; UBIQUITOUS_LANGUAGE.md names Encounter Side, Initiative, Round, Turn, Creature, and Stat Block."
+        ],
+        "blockers": []
+      },
+      "routeConnectorPath": "packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt"
     }
   ],
   "diagnosticBatches": [

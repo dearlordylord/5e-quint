@@ -42,6 +42,22 @@ const FILL_BY_TAG = {
 type CharacterBattleRouteFill =
   (typeof FILL_BY_TAG)[keyof typeof FILL_BY_TAG];
 
+const COMPOSITION_FACT_BY_TAG = {
+  SheetDerivedParticipantCandidateRouteFact:
+    "sheetDerivedParticipantCandidate",
+  NonSheetParticipantMembershipRouteFact: "nonSheetParticipantMembership",
+  EncounterSideRelationshipOwnershipRouteFact:
+    "encounterSideRelationshipOwnership",
+  SubjectProfileAvailabilityOwnershipRouteFact:
+    "subjectProfileAvailabilityOwnership",
+  InitiativeCountOwnershipRouteFact: "initiativeCountOwnership",
+  StableInitiativeOrderOwnershipRouteFact:
+    "stableInitiativeOrderOwnership",
+  CurrentActorOwnershipRouteFact: "currentActorOwnership",
+} as const;
+type CharacterBattleRouteCompositionFact =
+  (typeof COMPOSITION_FACT_BY_TAG)[keyof typeof COMPOSITION_FACT_BY_TAG];
+
 const OWNER_BY_TAG = {
   CharacterBattleSheetOwner: "characterBattleSheet",
   CharacterBattleBuildProjectionOwner: "characterBattleBuildProjection",
@@ -70,6 +86,7 @@ type CharacterBattleRouteEvent =
   | {
       readonly kind: "composeBattleEncounter";
       readonly subject: CharacterBattleRouteSubject;
+      readonly facts: readonly CharacterBattleRouteCompositionFact[];
       readonly owner: CharacterBattleRouteOwner;
     }
   | {
@@ -516,6 +533,11 @@ function composeParticipantMembershipRoute(
     ...route,
     composeBattleEncounter({
       subject: "handoffParticipantMembership",
+      facts: [
+        "encounterSideRelationshipOwnership",
+        "nonSheetParticipantMembership",
+        "sheetDerivedParticipantCandidate",
+      ],
       owner: "characterBattleEncounterSetup",
     }),
   ];
@@ -528,6 +550,7 @@ function composeSubjectProfilesRoute(
     ...route,
     composeBattleEncounter({
       subject: "handoffSubjectProfileAvailability",
+      facts: ["subjectProfileAvailabilityOwnership"],
       owner: "characterBattleSubjectProfile",
     }),
   ];
@@ -540,6 +563,11 @@ function composeInitiativeCurrentActorRoute(
     ...route,
     composeBattleEncounter({
       subject: "handoffInitiativeCurrentActor",
+      facts: [
+        "currentActorOwnership",
+        "initiativeCountOwnership",
+        "stableInitiativeOrderOwnership",
+      ],
       owner: "characterBattleInitiative",
     }),
   ];
@@ -831,11 +859,13 @@ function enterBattleRuntime(input: {
 
 function composeBattleEncounter(input: {
   readonly subject: CharacterBattleRouteSubject;
+  readonly facts: readonly CharacterBattleRouteCompositionFact[];
   readonly owner: CharacterBattleRouteOwner;
 }): CharacterBattleRouteEvent {
   return {
     kind: "composeBattleEncounter",
     subject: input.subject,
+    facts: uniqueSorted(input.facts),
     owner: input.owner,
   };
 }
@@ -994,6 +1024,7 @@ function decodeCharacterBattleRouteEvent(
     const payload = routePayload(raw, tag);
     return composeBattleEncounter({
       subject: routeSubject(quintField(payload, "subject")),
+      facts: routeCompositionFacts(quintField(payload, "facts")),
       owner: routeOwner(quintField(payload, "owner")),
     });
   }
@@ -1041,6 +1072,22 @@ function routeHole(raw: unknown): CharacterBattleRouteHole {
 
 function routeHoles(raw: unknown): readonly CharacterBattleRouteHole[] {
   return uniqueSorted(quintSet(raw, "qRoute[].holes").map(routeHole));
+}
+
+function routeCompositionFact(raw: unknown): CharacterBattleRouteCompositionFact {
+  return mappedVariant(
+    raw,
+    COMPOSITION_FACT_BY_TAG,
+    "character-battle route composition fact",
+  );
+}
+
+function routeCompositionFacts(
+  raw: unknown,
+): readonly CharacterBattleRouteCompositionFact[] {
+  return uniqueSorted(
+    quintSet(raw, "qRoute[].facts").map(routeCompositionFact),
+  );
 }
 
 function routeFill(raw: unknown): CharacterBattleRouteFill {
