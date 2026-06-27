@@ -71,6 +71,7 @@ module battleRuntimeReducerRoute {
     | MetamagicSpellComponentProjectionRouteSubject
     | MetamagicMissedSpellAttackRerollRouteSubject
     | MetamagicDamageDiceRerollRouteSubject
+    | SpellBaseArmorClassEffectRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner
@@ -104,6 +105,7 @@ module battleRuntimeReducerRoute {
     | BattleAbilityCheckRollModeOwner
     | BattleCreatureSpaceMovementOwner
     | BattleCreatureStateOwner
+    | BattleArmorClassOwner
 
   type ReducerRouteEvent =
     | RouteStartBattle({ owner: ReducerRouteOwnerGroup })

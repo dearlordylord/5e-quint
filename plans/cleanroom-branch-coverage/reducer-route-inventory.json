@@ -184,22 +184,39 @@
     {
       "denominatorId": "level-1-5-cleanroom-route-v1",
       "purpose": "Defines the driver and branch denominator for routing current cleanroom branch coverage through reducer-route QNT architecture up to character level 5.",
-      "characterLevels": [1, 2, 3, 4, 5],
-      "includedSpellLevels": [0, 1, 2, 3],
-      "excludedCharacterLevels": [6, 7],
-      "excludedSpellLevels": [4, 5],
+      "characterLevels": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "includedSpellLevels": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "excludedCharacterLevels": [
+        6,
+        7
+      ],
+      "excludedSpellLevels": [
+        4,
+        5
+      ],
       "sourceBranchInventory": {
         "driverFiles": 97,
         "branchObligations": 704,
-        "currentInScopeBranchObligations": 668,
-        "currentOutOfScopeBranchObligations": 36,
+        "currentInScopeBranchObligations": 659,
+        "currentOutOfScopeBranchObligations": 45,
         "sampledInputs": 24,
         "baselineWitnessDriverFiles": 1,
         "alreadyReducerRoutedDriverFiles": 3,
         "currentNonBaselineRemainingDriverFiles": 93,
         "currentDriverFilesWithoutRouteOrComponentConnector": 84,
         "currentOutOfScopeBranchDecisionsInLevelDenominator": 27,
-        "currentOutOfScopeBranchDecisionsOutsideLevelDenominator": 8,
+        "currentOutOfScopeBranchDecisionsOutsideLevelDenominator": 17,
         "currentOutOfScopeBranchDecisionSourceBlockers": 1
       },
       "baselineWitnessDriverPaths": [
@@ -340,10 +357,10 @@
           "routeTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
           "subjectFamily": "after-hit spell damage rider owner split",
           "branchObligations": 26,
-          "currentOutOfScopeBranchObligations": 4,
+          "currentOutOfScopeBranchObligations": 9,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt is present in source-branch-inventory.json with 26 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt is present in source-branch-inventory.json with 26 branch obligation(s), including nine out-of-scope fixture sequencing rows.",
               "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt records generic AfterHitDamageRiderRouteSubject evidence as separate owner-shaped surfaces for direct interrupt decisions, save-gated interrupt frontiers, direct spell-slot/action-economy spends, save-outcome spell-slot/action-economy spends, feature free-cast spends, Concentration, condition lifecycle, turn-start damage/save cleanup, escape checks, illumination active-effect boundaries, and Hit Point damage."
             ],
             "rawDomainFacts": [
@@ -895,26 +912,25 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-          "subjectFamily": "selected armor-class base active-effect and target-admission substrate",
+          "subjectFamily": "generic spell base Armor Class active-effect and target-admission substrate",
           "branchObligations": 4,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s).",
-              "No copied source qRoute connector currently exposes a generic armor-class base active-effect route for unarmored target admission, armored target rejection, base Armor Class projection, and duration expiry.",
-              "Selected spell identity must remain at catalog, selection, admission, and SRD fixture boundaries until that generic armor-class substrate exists."
+              "packages/battle-runtime/battle-runtime-spell-base-armor-class-effect.route.mbt.qnt records generic SpellBaseArmorClassEffectRouteSubject evidence for target admission, invalid armored-target rejection, base Armor Class active-effect projection, and duration expiry cleanup.",
+              "Selected spell identity remains at catalog, selection, admission, and SRD fixture boundaries; the executable route connector uses generic target, active-effect, turn-boundary, and Armor Class owner surfaces."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets and #Duration define target admission and duration boundaries.",
-              ".references/srd-5.2.1/Rules-Glossary.md#Armor Class defines Armor Class as the defensive projection affected by the spell effect.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Armor Class defines Armor Class as a defensive projection.",
               "UBIQUITOUS_LANGUAGE.md defines Armor Class, Spell Effect, Target, Duration, and Boundary Crossing."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add a generic armor-class base active-effect route subject covering unarmored target admission, armored target rejection, base Armor Class projection, and duration expiry before any branch in this witness may count for target replay."
-            ]
-          }
+            "blockers": []
+          },
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-base-armor-class-effect.route.mbt.qnt"
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
@@ -1193,7 +1209,9 @@
           "route": "reducer-routed",
           "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
           "subjectFamily": "scalar buff spell-effect target route",
-          "requiredReducerEntrypoints": ["resolve_battle_subject"],
+          "requiredReducerEntrypoints": [
+            "resolve_battle_subject"
+          ],
           "durableStateOwner": "BattleState owns the target Speed projection and active Spell Effect instance; the route connector does not introduce a duplicate speed/effect ledger.",
           "acceptanceCondition": "Target replay evidence routes target selection through the shared reducer subject resolution path and observes the resulting active-effect-owned Speed change.",
           "branchObligations": 2,
@@ -1823,10 +1841,10 @@
           "routeTaskId": "L15-RR17-WEAPON-HOSTED-RIDER-ROUTES",
           "subjectFamily": "weapon-hosted attack, rider, active-effect, item-target, and cleanup owner split",
           "branchObligations": 23,
-          "currentOutOfScopeBranchObligations": 0,
+          "currentOutOfScopeBranchObligations": 4,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt is present in source-branch-inventory.json with 23 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt is present in source-branch-inventory.json with 23 branch obligation(s), including four out-of-scope fixture sequencing rows.",
               "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt records SpellHostedWeaponAttackRouteSubject evidence through action-economy, target-selection, attack-roll, and Hit Point owners.",
               "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt records HeldWeaponActiveEffectRouteSubject evidence through action-economy, active-effect, attack-roll, and Hit Point owners.",
               "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt records WeaponDamageRiderRouteSubject evidence through spell-slot/action-economy, active-effect, and Hit Point owners.",
@@ -1941,7 +1959,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
-          "componentOwners": ["RuleCoreAbilitySkillCommandOwner"],
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR11-LEVEL3-4-SCOPE-PROMOTION"
@@ -1965,7 +1985,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
-          "componentOwners": ["RuleCoreAttackDamageDispositionOwner"],
+          "componentOwners": [
+            "RuleCoreAttackDamageDispositionOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES"
           ],
@@ -1988,7 +2010,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-          "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
+          "componentOwners": [
+            "RuleCoreFeatureProfileSemanticsOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
             "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
@@ -2013,7 +2037,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
-          "componentOwners": ["RuleCoreHitPointDamageOwner"],
+          "componentOwners": [
+            "RuleCoreHitPointDamageOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES"
@@ -2037,7 +2063,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
-          "componentOwners": ["RuleCoreMovementGrappleOwner"],
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
@@ -2062,7 +2090,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
-          "componentOwners": ["RuleCoreReactionContinuationConcentrationOwner"],
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES"
@@ -2086,7 +2116,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
-          "componentOwners": ["RuleCoreShoveOutcomeOwner"],
+          "componentOwners": [
+            "RuleCoreShoveOutcomeOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES"
@@ -2110,7 +2142,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-          "componentOwners": ["RuleCoreSpellProcedureProfileOwner"],
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR12-LEVEL5-SCOPE-PROMOTION"
@@ -2134,7 +2168,9 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
-          "componentOwners": ["RuleCoreStatBlockControlOwner"],
+          "componentOwners": [
+            "RuleCoreStatBlockControlOwner"
+          ],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES"
           ],
@@ -2755,6 +2791,111 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
           "branchFamily": "step",
+          "branchAction": "doFinish",
+          "currentScopeReason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "replay-refresh-only",
+          "routeTaskId": "fixture-scenario-sequencing",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doFinish only as fixture scenario sequencing for the focused witness."
+            ],
+            "rawDomainFacts": [
+              "No copied RAW/domain fact establishes fixture scenario setup or finish actions as reducer-route subjects."
+            ],
+            "blockers": [
+              "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doStartDivineSmiteFreeCast",
+          "currentScopeReason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "replay-refresh-only",
+          "routeTaskId": "fixture-scenario-sequencing",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doStartDivineSmiteFreeCast only as fixture scenario sequencing for the focused witness."
+            ],
+            "rawDomainFacts": [
+              "No copied RAW/domain fact establishes fixture scenario setup or finish actions as reducer-route subjects."
+            ],
+            "blockers": [
+              "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doStartEnsnaringFailedSave",
+          "currentScopeReason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "replay-refresh-only",
+          "routeTaskId": "fixture-scenario-sequencing",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doStartEnsnaringFailedSave only as fixture scenario sequencing for the focused witness."
+            ],
+            "rawDomainFacts": [
+              "No copied RAW/domain fact establishes fixture scenario setup or finish actions as reducer-route subjects."
+            ],
+            "blockers": [
+              "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doStartEnsnaringSuccessfulSave",
+          "currentScopeReason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "replay-refresh-only",
+          "routeTaskId": "fixture-scenario-sequencing",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doStartEnsnaringSuccessfulSave only as fixture scenario sequencing for the focused witness."
+            ],
+            "rawDomainFacts": [
+              "No copied RAW/domain fact establishes fixture scenario setup or finish actions as reducer-route subjects."
+            ],
+            "blockers": [
+              "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doStartSearingSmite",
+          "currentScopeReason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "replay-refresh-only",
+          "routeTaskId": "fixture-scenario-sequencing",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt exposes doStartSearingSmite only as fixture scenario sequencing for the focused witness."
+            ],
+            "rawDomainFacts": [
+              "No copied RAW/domain fact establishes fixture scenario setup or finish actions as reducer-route subjects."
+            ],
+            "blockers": [
+              "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "branchFamily": "step",
           "branchAction": "doStartShiningSmite",
           "currentScopeReason": "Shining Smite is a level-2 spell.",
           "currentReplay": "observable-from-step",
@@ -3003,6 +3144,90 @@
               ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell defines the Reaction trigger, Constitution Saving Throw, spell interruption, and non-expenditure of the countered spell slot."
             ],
             "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doFinish",
+          "currentScopeReason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "replay-refresh-only",
+          "routeTaskId": "fixture-scenario-sequencing",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt exposes doFinish only as fixture scenario sequencing for the focused witness."
+            ],
+            "rawDomainFacts": [
+              "No copied RAW/domain fact establishes fixture scenario setup or finish actions as reducer-route subjects."
+            ],
+            "blockers": [
+              "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doStartDivineFavor",
+          "currentScopeReason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "replay-refresh-only",
+          "routeTaskId": "fixture-scenario-sequencing",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt exposes doStartDivineFavor only as fixture scenario sequencing for the focused witness."
+            ],
+            "rawDomainFacts": [
+              "No copied RAW/domain fact establishes fixture scenario setup or finish actions as reducer-route subjects."
+            ],
+            "blockers": [
+              "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doStartMagicWeapon",
+          "currentScopeReason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "replay-refresh-only",
+          "routeTaskId": "fixture-scenario-sequencing",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt exposes doStartMagicWeapon only as fixture scenario sequencing for the focused witness."
+            ],
+            "rawDomainFacts": [
+              "No copied RAW/domain fact establishes fixture scenario setup or finish actions as reducer-route subjects."
+            ],
+            "blockers": [
+              "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doStartShillelagh",
+          "currentScopeReason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+          "currentReplay": "transit-only",
+          "levelDenominatorScope": "out-of-denominator",
+          "route": "replay-refresh-only",
+          "routeTaskId": "fixture-scenario-sequencing",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt exposes doStartShillelagh only as fixture scenario sequencing for the focused witness."
+            ],
+            "rawDomainFacts": [
+              "No copied RAW/domain fact establishes fixture scenario setup or finish actions as reducer-route subjects."
+            ],
+            "blockers": [
+              "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation."
+            ]
           }
         },
         {

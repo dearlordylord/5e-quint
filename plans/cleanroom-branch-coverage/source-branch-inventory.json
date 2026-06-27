@@ -665,16 +665,19 @@
         "step",
         "doFinish"
       ],
-      "decisionSource": "default",
+      "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFinish",
       "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
       "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "transit-only"
       },
       "scope": {
-        "tag": "in-scope"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "out-of-scope"
       }
     },
     {
@@ -684,16 +687,19 @@
         "step",
         "doStartDivineSmiteFreeCast"
       ],
-      "decisionSource": "default",
+      "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doStartDivineSmiteFreeCast",
       "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
       "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "transit-only"
       },
       "scope": {
-        "tag": "in-scope"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "out-of-scope"
       }
     },
     {
@@ -703,16 +709,19 @@
         "step",
         "doStartEnsnaringFailedSave"
       ],
-      "decisionSource": "default",
+      "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doStartEnsnaringFailedSave",
       "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
       "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "transit-only"
       },
       "scope": {
-        "tag": "in-scope"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "out-of-scope"
       }
     },
     {
@@ -722,16 +731,19 @@
         "step",
         "doStartEnsnaringSuccessfulSave"
       ],
-      "decisionSource": "default",
+      "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doStartEnsnaringSuccessfulSave",
       "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
       "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "transit-only"
       },
       "scope": {
-        "tag": "in-scope"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "out-of-scope"
       }
     },
     {
@@ -741,16 +753,19 @@
         "step",
         "doStartSearingSmite"
       ],
-      "decisionSource": "default",
+      "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doStartSearingSmite",
       "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
       "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "transit-only"
       },
       "scope": {
-        "tag": "in-scope"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "out-of-scope"
       }
     },
     {
@@ -7527,16 +7542,19 @@
         "step",
         "doFinish"
       ],
-      "decisionSource": "default",
+      "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFinish",
       "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
       "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "transit-only"
       },
       "scope": {
-        "tag": "in-scope"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "out-of-scope"
       }
     },
     {
@@ -7546,16 +7564,19 @@
         "step",
         "doStartDivineFavor"
       ],
-      "decisionSource": "default",
+      "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doStartDivineFavor",
       "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
       "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "transit-only"
       },
       "scope": {
-        "tag": "in-scope"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "out-of-scope"
       }
     },
     {
@@ -7565,16 +7586,19 @@
         "step",
         "doStartMagicWeapon"
       ],
-      "decisionSource": "default",
+      "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doStartMagicWeapon",
       "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
       "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "transit-only"
       },
       "scope": {
-        "tag": "in-scope"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "out-of-scope"
       }
     },
     {
@@ -7584,16 +7608,19 @@
         "step",
         "doStartShillelagh"
       ],
-      "decisionSource": "default",
+      "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doStartShillelagh",
       "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
       "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "transit-only"
       },
       "scope": {
-        "tag": "in-scope"
+        "reason": "Fixture scenario sequencing row used to enter or finish a focused witness scenario; it is not a reducer-route obligation.",
+        "reviewedBy": "codex-2026-06-27",
+        "tag": "out-of-scope"
       }
     },
     {

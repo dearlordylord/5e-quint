@@ -19,6 +19,7 @@ import {
   createProtectionCharmRouteDriver,
   createScalarBuffRouteDriver,
   createSaveGatedSpellOrderingRouteDriver,
+  createSpellBaseArmorClassEffectRouteDriver,
   createSpellAttackOrderingRouteDriver,
   createWeaponAttackOrderingRouteDriver,
   createWeaponMasteryPropertyRouteDriver,
@@ -41,6 +42,7 @@ import {
   reducerRoutedProtectionCharmStateCheck,
   reducerRoutedScalarBuffStateCheck,
   reducerRoutedSaveGatedSpellOrderingStateCheck,
+  reducerRoutedSpellBaseArmorClassEffectStateCheck,
   reducerRoutedWeaponAttackOrderingStateCheck,
   reducerRoutedWeaponAttackSkeletonStateCheck,
   reducerRoutedWeaponMasteryPropertyStateCheck,
@@ -225,6 +227,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(1),
         stateCheck: reducerRoutedWardedTargetInterdictionStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes spell base Armor Class effects through the shared reducer surface",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-spell-base-armor-class-effect.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createSpellBaseArmorClassEffectRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: reducerRoutedSpellBaseArmorClassEffectStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,

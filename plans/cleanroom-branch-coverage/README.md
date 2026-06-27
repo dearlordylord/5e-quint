@@ -43,7 +43,9 @@ current out-of-scope branch decision as:
 - `in-denominator` for character level 1-5 work that should later be promoted
   by a route task;
 - `out-of-denominator` for level 6/7, Epic Boon, spell-level-4, or
-  spell-level-5 work outside the lane;
+  spell-level-5 work outside the lane, and for fixture-only scenario
+  sequencing rows that exist only to enter or finish a focused witness scenario
+  rather than to model a reducer route surface;
 - `source-qnt-corpus-blocker` when copied QNT/RAW/domain guidance is
   insufficient.
 

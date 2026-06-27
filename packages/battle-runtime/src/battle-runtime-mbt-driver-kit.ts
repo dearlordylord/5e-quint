@@ -885,6 +885,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "metamagicSpellComponentProjection",
   "metamagicMissedSpellAttackReroll",
   "metamagicDamageDiceReroll",
+  "spellBaseArmorClassEffect",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -920,6 +921,7 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleAbilityCheckRollMode",
   "battleCreatureSpaceMovement",
   "battleCreatureState",
+  "battleArmorClass",
 ] as const;
 type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
 const REDUCER_ROUTE_HOLES = [
@@ -1056,6 +1058,9 @@ type ReducerRoutedProtectionCharmProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
 type ReducerRoutedWardedTargetInterdictionProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedSpellBaseArmorClassEffectProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
 type ReducerRoutedSaveGatedSpellOrderingProjection =
@@ -1598,6 +1603,15 @@ const wardedTargetInterdictionRouteDriverSchema = {
   doEndWardOnWardedAttackRoll: {},
   doEndWardOnWardedSpellCast: {},
   doEndWardOnWardedDamageDealt: {},
+  step: {},
+} as const;
+
+const spellBaseArmorClassEffectRouteDriverSchema = {
+  init: {},
+  doRouteUnarmoredTargetAdmission: {},
+  doRouteArmoredTargetRejection: {},
+  doRouteBaseArmorClassProjection: {},
+  doRouteDurationExpiry: {},
   step: {},
 } as const;
 
@@ -3724,6 +3738,8 @@ const CHARM_SOURCE_DAMAGE_BREAK_ROUTE_SUBJECT =
   "charmSourceDamageBreak" satisfies ReducerRouteSubjectFamily;
 const WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT =
   "wardedTargetInterdiction" satisfies ReducerRouteSubjectFamily;
+const SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT =
+  "spellBaseArmorClassEffect" satisfies ReducerRouteSubjectFamily;
 const NO_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
 const TARGET_CHOICE_ROUTE_HOLES = [
   "targetChoice",
@@ -4166,6 +4182,124 @@ export function createWardedTargetInterdictionRouteDriver() {
       },
       step: () => {},
       getState: (): ReducerRoutedWardedTargetInterdictionProjection => ({
+        route,
+      }),
+    };
+  });
+}
+
+function spellBaseArmorClassInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function spellBaseArmorClassDiscovery(
+  holes: readonly ReducerRouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+    holes,
+    owner,
+  });
+}
+
+function spellBaseArmorClassTargetAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    spellBaseArmorClassDiscovery(
+      TARGET_CHOICE_ROUTE_HOLES,
+      "battleSpellSlotAndActionEconomy",
+    ),
+    routeResolveSubject({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function spellBaseArmorClassTargetRejectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    spellBaseArmorClassDiscovery(
+      TARGET_CHOICE_ROUTE_HOLES,
+      "battleSpellSlotAndActionEconomy",
+    ),
+    routeResolveSubject({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function spellBaseArmorClassProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...spellBaseArmorClassTargetAdmissionRoute(),
+    routeResolveSubjectWithoutFill({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleArmorClass",
+    }),
+  ];
+}
+
+function spellBaseArmorClassDurationExpiryRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    spellBaseArmorClassDiscovery(NO_ROUTE_HOLES, "battleActiveEffect"),
+    routeResolveSubjectWithoutFill({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleArmorClass",
+    }),
+  ];
+}
+
+export function createSpellBaseArmorClassEffectRouteDriver() {
+  return defineDriver(spellBaseArmorClassEffectRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      spellBaseArmorClassInitialRoute();
+
+    function reset(): void {
+      route = spellBaseArmorClassInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteUnarmoredTargetAdmission: () => {
+        route = spellBaseArmorClassTargetAdmissionRoute();
+      },
+      doRouteArmoredTargetRejection: () => {
+        route = spellBaseArmorClassTargetRejectionRoute();
+      },
+      doRouteBaseArmorClassProjection: () => {
+        route = spellBaseArmorClassProjectionRoute();
+      },
+      doRouteDurationExpiry: () => {
+        route = spellBaseArmorClassDurationExpiryRoute();
+      },
+      step: () => {},
+      getState: (): ReducerRoutedSpellBaseArmorClassEffectProjection => ({
         route,
       }),
     };
@@ -7606,6 +7740,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   MetamagicMissedSpellAttackRerollRouteSubject:
     "metamagicMissedSpellAttackReroll",
   MetamagicDamageDiceRerollRouteSubject: "metamagicDamageDiceReroll",
+  SpellBaseArmorClassEffectRouteSubject: "spellBaseArmorClassEffect",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -7640,6 +7775,7 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleAbilityCheckRollModeOwner: "battleAbilityCheckRollMode",
   BattleCreatureSpaceMovementOwner: "battleCreatureSpaceMovement",
   BattleCreatureStateOwner: "battleCreatureState",
+  BattleArmorClassOwner: "battleArmorClass",
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
@@ -7972,6 +8108,15 @@ function normalizeReducerRoutedProtectionCharmQuintState(
 function normalizeReducerRoutedWardedTargetInterdictionQuintState(
   raw: unknown,
 ): ReducerRoutedWardedTargetInterdictionProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedSpellBaseArmorClassEffectQuintState(
+  raw: unknown,
+): ReducerRoutedSpellBaseArmorClassEffectProjection {
   const state = quintStateRecord(raw);
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
@@ -8575,6 +8720,16 @@ export const reducerRoutedWardedTargetInterdictionStateCheck = stateCheck(
   (
     spec: ReducerRoutedWardedTargetInterdictionProjection,
     impl: ReducerRoutedWardedTargetInterdictionProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedSpellBaseArmorClassEffectStateCheck = stateCheck(
+  normalizeReducerRoutedSpellBaseArmorClassEffectQuintState,
+  (
+    spec: ReducerRoutedSpellBaseArmorClassEffectProjection,
+    impl: ReducerRoutedSpellBaseArmorClassEffectProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;
