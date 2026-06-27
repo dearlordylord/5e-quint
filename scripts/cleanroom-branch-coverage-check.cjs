@@ -316,6 +316,13 @@ function reducerDiagnosticBatch(routeInventory) {
   );
 }
 
+function reducerDiagnosticPrerequisites(routeInventory) {
+  if (!isRecord(routeInventory) || !Array.isArray(routeInventory.prerequisites)) {
+    return [];
+  }
+  return routeInventory.prerequisites;
+}
+
 function reducerDiagnosticAssignment(routeInventory) {
   const batch = reducerDiagnosticBatch(routeInventory);
   if (batch === undefined) return undefined;
@@ -403,6 +410,7 @@ function renderCurrentQueueSection(scopeRows) {
 
 function renderReducerDiagnosticQueueSection(routeInventory) {
   const batch = reducerDiagnosticBatch(routeInventory);
+  const prerequisites = reducerDiagnosticPrerequisites(routeInventory);
   if (batch === undefined) {
     return [
       "## Reducer-Spine Diagnostic Queue",
@@ -420,6 +428,23 @@ function renderReducerDiagnosticQueueSection(routeInventory) {
     "",
     `- Assignment: \`${batch.assignmentId}\``,
     `- Batch: \`${batch.batchId}\``,
+    "",
+    ...(prerequisites.length === 0
+      ? []
+      : [
+          "### Prerequisites",
+          "",
+          "These prerequisite route connectors are copied with the cleanroom package and must be satisfied before the batch queue can prove an integrated reducer route.",
+          "",
+          "| Driver | Route | Connector | Evidence |",
+          "| --- | --- | --- | --- |",
+          ...prerequisites.map(
+            (entry) =>
+              `| \`${cleanroomDriverPath(entry.driverPath)}\` | ${entry.route} | \`${cleanroomDriverPath(entry.routeConnectorPath ?? entry.driverPath)}\` | ${md(entry.derivability?.qntFacts?.[0] ?? entry.qntFacts?.[0] ?? entry.subjectFamily ?? entry.role)} |`,
+          ),
+          "",
+        ]),
+    "### Batch Entries",
     "",
     "| Order | Driver | Route | Acceptance condition |",
     "| --- | --- | --- | --- |",
@@ -1392,6 +1417,67 @@ function validateReducerRouteInventory(routeInventory, scopeRows, inventory) {
   if (!Array.isArray(routeInventory.diagnosticBatches)) {
     issues.push(`${context}: diagnosticBatches must be an array.`);
     return issues;
+  }
+  if (routeInventory.prerequisites !== undefined) {
+    if (!Array.isArray(routeInventory.prerequisites)) {
+      issues.push(`${context}: prerequisites must be an array when present.`);
+    } else {
+      for (const [
+        prerequisiteIndex,
+        prerequisite,
+      ] of routeInventory.prerequisites.entries()) {
+        const prerequisiteContext = `${context}: prerequisites[${prerequisiteIndex}]`;
+        if (!isRecord(prerequisite)) {
+          issues.push(`${prerequisiteContext}: prerequisite must be an object.`);
+          continue;
+        }
+        for (const field of ["driverPath", "route"]) {
+          if (
+            typeof prerequisite[field] !== "string" ||
+            prerequisite[field].trim() === ""
+          ) {
+            issues.push(
+              `${prerequisiteContext}: ${field} must be a non-empty string.`,
+            );
+          }
+        }
+        if (prerequisite.route === "reducer-routed") {
+          for (const field of ["subjectFamily", "routeConnectorPath"]) {
+            if (
+              typeof prerequisite[field] !== "string" ||
+              prerequisite[field].trim() === ""
+            ) {
+              issues.push(
+                `${prerequisiteContext}: ${field} must be a non-empty string for reducer-routed prerequisites.`,
+              );
+            }
+          }
+          if (
+            typeof prerequisite.routeConnectorPath === "string" &&
+            !prerequisite.routeConnectorPath.endsWith(".route.mbt.qnt")
+          ) {
+            issues.push(
+              `${prerequisiteContext}: routeConnectorPath must point at a .route.mbt.qnt driver.`,
+            );
+          }
+          issues.push(
+            ...validateDerivability(
+              prerequisite.derivability,
+              prerequisiteContext,
+            ),
+          );
+        } else if (!Array.isArray(prerequisite.qntFacts)) {
+          issues.push(
+            `${prerequisiteContext}: qntFacts must be an array for non-routed prerequisites.`,
+          );
+        }
+        if (!reducerRouteTags.has(prerequisite.route)) {
+          issues.push(
+            `${prerequisiteContext}: route must be one of ${Array.from(reducerRouteTags).join(", ")}.`,
+          );
+        }
+      }
+    }
   }
   const batchIds = new Set();
   for (const [

@@ -148,6 +148,17 @@ It is a focused battle diagnostic assignment, not a replacement for the full lev
 - Assignment: `reducer-spine-diagnostic-battle`
 - Batch: `reducer-spine-diagnostic-v1`
 
+### Prerequisites
+
+These prerequisite route connectors are copied with the cleanroom package and must be satisfied before the batch queue can prove an integrated reducer route.
+
+| Driver | Route | Connector | Evidence |
+| --- | --- | --- | --- |
+| `cleanroom-input/qnt/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt` | replay-refresh-only | `cleanroom-input/qnt/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt` | packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt models the reducer lifecycle from battle start through act discovery, subject hole/fill resolution, turn advancement, and reducer-owned resource/vital projections. |
+| `cleanroom-input/qnt/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt` | reducer-routed | `cleanroom-input/qnt/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt` | packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt exposes qRoute for projecting a sheet-derived participant candidate, composing participant membership and Encounter Side ownership, composing subject-profile availability, composing Initiative count/stable-order/current-actor ownership, and entering battle runtime. |
+
+### Batch Entries
+
 | Order | Driver | Route | Acceptance condition |
 | --- | --- | --- | --- |
 | 1 | `cleanroom-input/qnt/battle-runtime/battle-runtime-magic-missile.mbt.qnt` | reducer-routed | Target replay evidence shows Magic Missile allocation and damage actions resolved through the shared reducer entrypoints and battle-owned state fields. |
