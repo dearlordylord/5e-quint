@@ -7,8 +7,11 @@
 //   Points define the combat vitality facts projected from a character sheet.
 // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots defines
 //   Spell Slot capacity and expenditure.
+// - .references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic defines
+//   Pact Magic slot capacity, same-level Pact Slots, and Short or Long Rest
+//   recovery.
 // - UBIQUITOUS_LANGUAGE.md: Hit Points, Temporary Hit Points, Spell Slot,
-//   Pool, Spend, Initiative, and Spell Effect.
+//   Pact Slot, Pool, Spend, Initiative, and Spell Effect.
 module characterBattleInitProjectionRouteMbt {
   import characterBattleReducerRoute.* from "./character-battle-reducer-route"
 
@@ -70,6 +73,35 @@ module characterBattleInitProjectionRouteMbt {
         )
       )
 
+  pure def purePactMagicSlotRoute(
+    route: List[CharacterBattleRouteEvent],
+  ): List[CharacterBattleRouteEvent] =
+    route
+      .append(
+        routeProjectCharacterSheetToBattle(
+          HandoffResourceProjectionRouteSubject,
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
+      .append(
+        routeEnterBattleRuntime(
+          HandoffResourceProjectionRouteSubject,
+          CharacterBattleInitProjectionOwner,
+        )
+      )
+
+  pure def rejectMixedSpellAndPactSlotRoute(
+    route: List[CharacterBattleRouteEvent],
+  ): List[CharacterBattleRouteEvent] =
+    route.append(
+      routeRejectCharacterBattleHandoff(
+        HandoffResourceProjectionRouteSubject,
+        HandoffResourceDeltaFill,
+        Set(HandoffSpellResourceProjectionHoleFamily),
+        CharacterBattleResourceProjectionOwner,
+      )
+    )
+
   pure def rejectMaximumRoute(
     route: List[CharacterBattleRouteEvent],
   ): List[CharacterBattleRouteEvent] =
@@ -119,19 +151,31 @@ module characterBattleInitProjectionRouteMbt {
     recordRoute(sheetSpellcastingAndMetamagicRoute(qRoute), 2),
   }
 
-  action doRejectBuildMaximumAboveBuildMaximum = all {
+  action doProjectPurePactMagicSlot = all {
     qState.replayIndex == 2,
-    recordRoute(rejectMaximumRoute(qRoute), 3),
+    recordRoute(purePactMagicSlotRoute(qRoute), 3),
+  }
+
+  action doRejectMixedSpellAndPactSlotInit = all {
+    qState.replayIndex == 3,
+    recordRoute(rejectMixedSpellAndPactSlotRoute(qRoute), 4),
+  }
+
+  action doRejectBuildMaximumAboveBuildMaximum = all {
+    qState.replayIndex == 4,
+    recordRoute(rejectMaximumRoute(qRoute), 5),
   }
 
   action doRejectStableRecoveryProgressDuringInit = all {
-    qState.replayIndex == 3,
-    recordRoute(rejectStableRecoveryRoute(qRoute), 4),
+    qState.replayIndex == 5,
+    recordRoute(rejectStableRecoveryRoute(qRoute), 6),
   }
 
   action step = any {
     doProjectSheetHitPointsArmorClassConditionsAndProfiles,
     doProjectSheetSpellcastingAndMetamagic,
+    doProjectPurePactMagicSlot,
+    doRejectMixedSpellAndPactSlotInit,
     doRejectBuildMaximumAboveBuildMaximum,
     doRejectStableRecoveryProgressDuringInit,
   }

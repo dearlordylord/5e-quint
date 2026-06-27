@@ -126,6 +126,8 @@ const battleInitRouteDriverSchema = {
   init: {},
   doProjectSheetHitPointsArmorClassConditionsAndProfiles: {},
   doProjectSheetSpellcastingAndMetamagic: {},
+  doProjectPurePactMagicSlot: {},
+  doRejectMixedSpellAndPactSlotInit: {},
   doRejectBuildMaximumAboveBuildMaximum: {},
   doRejectStableRecoveryProgressDuringInit: {},
   step: {},
@@ -207,7 +209,7 @@ describe("character battle reducer route connector MBT", () => {
         battleInitRouteActions,
         initialBattleInitRoute,
       ),
-      maxSteps: 4,
+      maxSteps: 6,
     });
   }, MBT_TEST_TIMEOUT_MS);
 
@@ -283,6 +285,11 @@ const battleInitRouteActions = indexedActionEntries(
     [
       "doProjectSheetSpellcastingAndMetamagic",
       sheetSpellcastingAndMetamagicRoute,
+    ],
+    ["doProjectPurePactMagicSlot", purePactMagicSlotRoute],
+    [
+      "doRejectMixedSpellAndPactSlotInit",
+      rejectMixedSpellAndPactSlotRoute,
     ],
     ["doRejectBuildMaximumAboveBuildMaximum", rejectMaximumRoute],
     [
@@ -454,6 +461,36 @@ function sheetSpellcastingAndMetamagicRoute(
     enterBattleRuntime({
       subject: "handoffResourceProjection",
       owner: "characterBattleInitProjection",
+    }),
+  ];
+}
+
+function purePactMagicSlotRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    projectCharacterSheetToBattle({
+      subject: "handoffResourceProjection",
+      owner: "characterBattleResourceProjection",
+    }),
+    enterBattleRuntime({
+      subject: "handoffResourceProjection",
+      owner: "characterBattleInitProjection",
+    }),
+  ];
+}
+
+function rejectMixedSpellAndPactSlotRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    rejectCharacterBattleHandoff({
+      subject: "handoffResourceProjection",
+      fill: "resourceDelta",
+      holes: ["spellResourceProjection"],
+      owner: "characterBattleResourceProjection",
     }),
   ];
 }

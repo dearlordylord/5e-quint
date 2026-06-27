@@ -2213,15 +2213,15 @@
           "route": "reducer-routed",
           "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
           "subjectFamily": "character sheet to battle init projection",
-          "branchObligations": 4,
+          "branchObligations": 6,
           "currentOutOfScopeBranchObligations": 1,
           "derivability": {
             "qntFacts": [
-              "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt is present in source-branch-inventory.json with 4 branch obligation(s).",
-              "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt exposes qRoute for sheet/build fact projection, resource projection, battle init entry, and init rejection holes through character-battle handoff owners."
+              "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
+              "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt exposes qRoute for sheet/build fact projection, ordinary spellcasting and feature-resource projection, pure Pact Slot resource projection, battle init entry, mixed Spell Slot/Pact Slot handoff rejection, and init rejection holes through character-battle handoff owners."
             ],
             "rawDomainFacts": [
-              "Combat setup rolls Initiative and orders battle participants; Hit Points, Temporary Hit Points, conditions, Armor Class, Spell Slots, and feature resources are projected from existing sheet/build facts into battle init.",
+              "Combat setup rolls Initiative and orders battle participants; Hit Points, Temporary Hit Points, conditions, Armor Class, ordinary Spell Slots, Pact Slots, and feature resources are projected from existing sheet/build facts into battle init.",
               "Route events are shape/domain evidence over sheet-owned persistent facts, build projections, init projection, battle runtime entry, and source-exact resource projection; authored identity remains at catalog/selection boundaries."
             ],
             "blockers": []
