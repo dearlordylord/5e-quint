@@ -56,6 +56,10 @@ module battleRuntimeReducerRoute {
     | SpecialSpeedProjectionRouteSubject
     | ForcedMovementRouteSubject
     | ActiveFormLifecycleRouteSubject
+    | CreatureTypeTargetAdmissionRouteSubject
+    | ProtectionCharmActiveEffectRouteSubject
+    | CharmSourceDamageBreakRouteSubject
+    | WardedTargetInterdictionRouteSubject
     | MetamagicSpellGovernorRouteSubject
     | MetamagicBonusActionCastingTimeRouteSubject
     | MetamagicSavingThrowProtectionRouteSubject

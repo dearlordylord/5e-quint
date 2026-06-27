@@ -1769,11 +1769,13 @@ Plan Impact:
 - CP6 found `627 / 668` accepted in-scope obligations, `41` explicit blockers,
   `36` out-of-scope rows, and `0` unresolved in-scope obligations in the dirty
   cleanroom rehearsal.
-- The `41` blockers remain non-accepted coverage. The source-side carry-forward
-  blocker is the generic protection/charm/ward connector substrate for
+- The `41` blockers remain non-accepted coverage for the historical dirty CP6
+  run. Source now carries generic protection/charm/ward connector substrates for
   `battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
   and `battle-runtime-sanctuary-selected-identity.mbt.qnt`; the source route
-  inventory already records those rows as `source-qnt-corpus-blocker`.
+  inventory records those rows as `catalog-after-substrate`. The next dirty
+  cleanroom evidence refresh should consume those copied QNT connectors before
+  changing CP6 acceptance counts.
 - CP6 exposed an ambiguous legacy target evidence ref shape when multiple
   drivers share a branch action. Future cleanroom scaffolds and harness checks
   use refs that include `driver:<driverPath>` before the branch family/action.

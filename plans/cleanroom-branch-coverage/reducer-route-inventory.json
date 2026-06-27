@@ -509,8 +509,10 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
-          "routeConnectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
+          "routeConnectorPaths": [
+            "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt"
+          ],
+          "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "subjectFamily": "creature-type target admission, charm, and protection active-effect substrates",
           "branchObligations": 7,
@@ -518,19 +520,15 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s).",
-              "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt supplies the generic Saving Throw frontier for the failed-save charm branch.",
-              "The remaining branches require generic creature-type target admission, scoped protection/charm active-effect, roll-mode projection, and charm-break lifecycle substrates instead of authored spell identity dispatch."
+              "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt exposes generic CreatureTypeTargetAdmissionRouteSubject, ProtectionCharmActiveEffectRouteSubject, and CharmSourceDamageBreakRouteSubject evidence.",
+              "The route connector covers target-choice and saving-throw frontiers, scoped active-effect projection, attack-roll and saving-throw roll-mode projection, condition/possession prevention, concentration ownership, and source-damage charm break without authored spell identity dispatch."
             ],
             "rawDomainFacts": [
-              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets and #Saving Throws define target admission and save outcome boundaries.",
-              ".references/srd-5.2.1/Rules-Glossary.md condition entries and #Concentration define Charm, protection, roll-mode, and effect cleanup boundaries.",
-              "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Target, Saving Throw, Condition, Damage, and D20 Rolls vocabulary."
+              ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Animal Friendship defines Beast target admission, Wisdom save charm, and source/allied damage ending the spell.",
+              ".references/srd-5.2.1/Spells/Descriptions-M-P.md#Protection from Evil and Good defines willing touched target admission, scoped creature-type protection, attack-roll Disadvantage, possession/charm/fright prevention, relevant saving-throw Advantage, and Concentration.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Charmed [Condition], #Possession, and #Concentration plus UBIQUITOUS_LANGUAGE.md define condition, possession, active-effect, saving-throw, and D20 roll vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add a generic creature-type target admission route subject before doDiscoverAnimalFriendshipBeastTargetAdmission may count for target replay.",
-              "source-qnt-corpus-blocker: add a generic scoped protection/charm active-effect route subject before doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection, doPreventProtectionFromEvilAndGoodScopedCharmAndPossession, doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage, and doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage may count for target replay.",
-              "source-qnt-corpus-blocker: add a generic charm-break-on-source-damage lifecycle route subject before doResolveAnimalFriendshipCasterDamageBreak may count for target replay."
-            ]
+            "blockers": []
           }
         },
         {
@@ -1121,7 +1119,10 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
-          "route": "source-qnt-corpus-blocker",
+          "routeConnectorPaths": [
+            "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+          ],
+          "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "subjectFamily": "selected warded-target interdiction and early-end active-effect substrate",
           "branchObligations": 9,
@@ -1129,17 +1130,15 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s).",
-              "No copied source qRoute connector currently exposes a generic warded-target interdiction route for ward creation, direct attack/spell target interdiction, Saving Throw outcome, replacement target legality, area-effect exclusion, or early ward end.",
-              "Selected spell identity must remain at catalog, selection, admission, and SRD fixture boundaries until that generic ward active-effect substrate exists."
+              "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt exposes generic WardedTargetInterdictionRouteSubject evidence.",
+              "The route connector covers ward creation, direct attack/spell interdiction, saving-throw outcome, replacement target legality, area-effect exclusion, and early ward end through action/spell/damage owners without authored spell identity dispatch."
             ],
             "rawDomainFacts": [
-              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets, #Areas of Effect, and #Saving Throws define direct target, area exclusion, and save outcome boundaries.",
-              ".references/srd-5.2.1/Rules-Glossary.md#Attack Roll and condition/effect entries define attack targeting and active-effect cleanup vocabulary.",
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sanctuary defines ward creation, direct attack/damaging-spell interdiction, Wisdom save outcome, replacement target choice, area-effect exclusion, and early ward end.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Target and #Area of Effect define target and area-effect boundaries.",
               "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Target, Area of Effect, Saving Throw, Attack Roll, Damage, and Boundary Crossing."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add a generic warded-target interdiction active-effect route subject covering ward creation, direct attack/spell interdiction, Saving Throw outcome, replacement-target legality, area-effect exclusion, and early-end cleanup before any branch in this witness may count for target replay."
-            ]
+            "blockers": []
           }
         },
         {

@@ -761,8 +761,7 @@ type HitPointRestorationOrderingProjection = {
   readonly featureTargetZeroHpLifecycleCleared: boolean;
 };
 const DEATH_SAVING_THROW_MBT_HOLES = ["DeathSavingThrow"] as const;
-type DeathSavingThrowMbtHole =
-  (typeof DEATH_SAVING_THROW_MBT_HOLES)[number];
+type DeathSavingThrowMbtHole = (typeof DEATH_SAVING_THROW_MBT_HOLES)[number];
 const DEATH_SAVING_THROW_MBT_TURN_ROLES = ["actor", "target"] as const;
 type DeathSavingThrowMbtTurnRole =
   (typeof DEATH_SAVING_THROW_MBT_TURN_ROLES)[number];
@@ -871,6 +870,10 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "specialSpeedProjection",
   "forcedMovement",
   "activeFormLifecycle",
+  "creatureTypeTargetAdmission",
+  "protectionCharmActiveEffect",
+  "charmSourceDamageBreak",
+  "wardedTargetInterdiction",
   "metamagicSpellGovernor",
   "metamagicBonusActionCastingTime",
   "metamagicSavingThrowProtection",
@@ -1049,6 +1052,12 @@ type ReducerRoutedAttackActionAreaSaveDamageReplacementProjection = {
 type ReducerRoutedMetamagicProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
+type ReducerRoutedProtectionCharmProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedWardedTargetInterdictionProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
 type ReducerRoutedSaveGatedSpellOrderingProjection =
   SaveGatedSpellOrderingProjection & {
     readonly route: readonly ReducerRouteEvent[];
@@ -1072,7 +1081,9 @@ type ChainedAttackProcedureSubject = ActionSpellSubject & {
     readonly procedure: "chainedSpellAttackDamage";
   };
 };
-type ChainedAttackProcedureAct = ReturnType<typeof discoverBattleActs>[number] & {
+type ChainedAttackProcedureAct = ReturnType<
+  typeof discoverBattleActs
+>[number] & {
   readonly subject: ChainedAttackProcedureSubject;
 };
 type ChainedAttackProcedureSlotLevel = 1 | 2;
@@ -1194,10 +1205,7 @@ export type AdrenalineRushMbtProjection = {
 type ReducerRoutedAdrenalineRushProjection = AdrenalineRushMbtProjection & {
   readonly route: readonly ReducerRouteEvent[];
 };
-const ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODES = [
-  "none",
-  "advantage",
-] as const;
+const ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODES = ["none", "advantage"] as const;
 type ActiveFeatureSpellAttackRollMode =
   (typeof ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODES)[number];
 type ActiveFeatureSpellBenefitRouteProjection = {
@@ -1564,6 +1572,32 @@ const activeFeatureSpellBenefitRouteDriverSchema = {
   doRouteActiveFeatureSpellSaveDcBenefit: {},
   doRouteActiveFeatureSpellAttackBenefit: {},
   doRouteNonSourceSpellExcluded: {},
+  step: {},
+} as const;
+
+const protectionCharmRouteDriverSchema = {
+  init: {},
+  doDiscoverAnimalFriendshipBeastTargetAdmission: {},
+  doResolveAnimalFriendshipFailedSaveCharmed: {},
+  doResolveAnimalFriendshipCasterDamageBreak: {},
+  doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection: {},
+  doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage: {},
+  doPreventProtectionFromEvilAndGoodScopedCharmAndPossession: {},
+  doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage: {},
+  step: {},
+} as const;
+
+const wardedTargetInterdictionRouteDriverSchema = {
+  init: {},
+  doCastSanctuaryWardCreation: {},
+  doInterdictDirectAttackFailedSaveLoss: {},
+  doInterdictDirectSpellSuccessfulSavePassThrough: {},
+  doRetargetDirectAttackToLegalReplacement: {},
+  doRejectIllegalReplacementTarget: {},
+  doExcludeAreaEffectFromInterdiction: {},
+  doEndWardOnWardedAttackRoll: {},
+  doEndWardOnWardedSpellCast: {},
+  doEndWardOnWardedDamageDealt: {},
   step: {},
 } as const;
 
@@ -3227,19 +3261,16 @@ export function createAttackActionAreaSaveDamageReplacementRouteDriver() {
           route = attackActionAreaSaveDamageReplacementExtraAttackRoute(route);
         },
         doRejectMissingResource: () => {
-          route = attackActionAreaSaveDamageReplacementMissingResourceRoute(
-            route,
-          );
+          route =
+            attackActionAreaSaveDamageReplacementMissingResourceRoute(route);
         },
         doRejectMismatchedArea: () => {
-          route = attackActionAreaSaveDamageReplacementMismatchedAreaRoute(
-            route,
-          );
+          route =
+            attackActionAreaSaveDamageReplacementMismatchedAreaRoute(route);
         },
         doRejectInvalidDamageRoll: () => {
-          route = attackActionAreaSaveDamageReplacementInvalidDamageRollRoute(
-            route,
-          );
+          route =
+            attackActionAreaSaveDamageReplacementInvalidDamageRollRoute(route);
         },
         step: () => {},
         getState:
@@ -3273,7 +3304,8 @@ const METAMAGIC_MISSED_SPELL_ATTACK_REROLL_ROUTE_SUBJECT =
   "metamagicMissedSpellAttackReroll" satisfies ReducerRouteSubjectFamily;
 const METAMAGIC_DAMAGE_DICE_REROLL_ROUTE_SUBJECT =
   "metamagicDamageDiceReroll" satisfies ReducerRouteSubjectFamily;
-const NO_METAMAGIC_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
+const NO_METAMAGIC_ROUTE_HOLES =
+  [] as const satisfies readonly ReducerRouteHole[];
 const METAMAGIC_ATTACK_ROLL_HOLES = [
   "attackRoll",
 ] as const satisfies readonly ReducerRouteHole[];
@@ -3680,6 +3712,462 @@ export function createMetamagicRouteDriver() {
       },
       step: () => {},
       getState: (): ReducerRoutedMetamagicProjection => ({ route }),
+    };
+  });
+}
+
+const CREATURE_TYPE_TARGET_ADMISSION_ROUTE_SUBJECT =
+  "creatureTypeTargetAdmission" satisfies ReducerRouteSubjectFamily;
+const PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT =
+  "protectionCharmActiveEffect" satisfies ReducerRouteSubjectFamily;
+const CHARM_SOURCE_DAMAGE_BREAK_ROUTE_SUBJECT =
+  "charmSourceDamageBreak" satisfies ReducerRouteSubjectFamily;
+const WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT =
+  "wardedTargetInterdiction" satisfies ReducerRouteSubjectFamily;
+const NO_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
+const TARGET_CHOICE_ROUTE_HOLES = [
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const SAVING_THROW_OUTCOME_ROUTE_HOLES = [
+  "savingThrowOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+const TARGET_AND_SAVE_ROUTE_HOLES = [
+  "savingThrowOutcome",
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const SANCTUARY_OUTCOME_ROUTE_HOLES = [
+  "sanctuaryInterdictionOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+const SANCTUARY_OUTCOME_AND_TARGET_ROUTE_HOLES = [
+  "sanctuaryInterdictionOutcome",
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+
+function routeDiscoverSubject(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function routeResolveSubject(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: input.subject,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function routeResolveSubjectWithoutFill(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function routeStart(): ReducerRouteEvent {
+  return reducerRouteStartBattle("battleActionEconomy");
+}
+
+function protectionCharmInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function protectionCharmActiveEffectDiscovery(
+  holes: readonly ReducerRouteHole[],
+): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+    holes,
+    owner: "battleSpellSlotAndActionEconomy",
+  });
+}
+
+function animalFriendshipSaveCharmedRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    protectionCharmActiveEffectDiscovery(TARGET_AND_SAVE_ROUTE_HOLES),
+    routeResolveSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function animalFriendshipTargetAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: CREATURE_TYPE_TARGET_ADMISSION_ROUTE_SUBJECT,
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+  ];
+}
+
+function animalFriendshipSourceDamageBreakRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...animalFriendshipSaveCharmedRoute(),
+    routeResolveSubjectWithoutFill({
+      subject: CHARM_SOURCE_DAMAGE_BREAK_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: CHARM_SOURCE_DAMAGE_BREAK_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: CHARM_SOURCE_DAMAGE_BREAK_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function protectionCharmTargetActiveEffectRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    protectionCharmActiveEffectDiscovery(TARGET_CHOICE_ROUTE_HOLES),
+    routeResolveSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConcentration",
+    }),
+  ];
+}
+
+function protectionCharmAttackRollModeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+  ];
+}
+
+function protectionCharmPossessionPreventionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleCreatureState",
+    }),
+  ];
+}
+
+function protectionCharmSavingThrowRollModeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowRollMode",
+    }),
+  ];
+}
+
+export function createProtectionCharmRouteDriver() {
+  return defineDriver(protectionCharmRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = protectionCharmInitialRoute();
+
+    function reset(): void {
+      route = protectionCharmInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverAnimalFriendshipBeastTargetAdmission: () => {
+        route = animalFriendshipTargetAdmissionRoute();
+      },
+      doResolveAnimalFriendshipFailedSaveCharmed: () => {
+        route = animalFriendshipSaveCharmedRoute();
+      },
+      doResolveAnimalFriendshipCasterDamageBreak: () => {
+        route = animalFriendshipSourceDamageBreakRoute();
+      },
+      doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection: () => {
+        route = protectionCharmTargetActiveEffectRoute();
+      },
+      doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage: () => {
+        route = protectionCharmAttackRollModeRoute();
+      },
+      doPreventProtectionFromEvilAndGoodScopedCharmAndPossession: () => {
+        route = protectionCharmPossessionPreventionRoute();
+      },
+      doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage: () => {
+        route = protectionCharmSavingThrowRollModeRoute();
+      },
+      step: () => {},
+      getState: (): ReducerRoutedProtectionCharmProjection => ({ route }),
+    };
+  });
+}
+
+function wardedTargetInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function wardedTargetDiscovery(
+  holes: readonly ReducerRouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+    holes,
+    owner,
+  });
+}
+
+function wardedTargetWardCreationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(
+      TARGET_CHOICE_ROUTE_HOLES,
+      "battleSpellSlotAndActionEconomy",
+    ),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function wardedTargetFailedSaveLossRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(SANCTUARY_OUTCOME_ROUTE_HOLES, "battleActiveEffect"),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "sanctuaryInterdictionOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+  ];
+}
+
+function wardedTargetSuccessfulSavePassThroughRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(SANCTUARY_OUTCOME_ROUTE_HOLES, "battleActiveEffect"),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "sanctuaryInterdictionOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHoleFrontier",
+    }),
+  ];
+}
+
+function wardedTargetLegalReplacementRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(
+      SANCTUARY_OUTCOME_AND_TARGET_ROUTE_HOLES,
+      "battleActiveEffect",
+    ),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "sanctuaryInterdictionOutcome",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function wardedTargetIllegalReplacementRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(
+      SANCTUARY_OUTCOME_AND_TARGET_ROUTE_HOLES,
+      "battleActiveEffect",
+    ),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "sanctuaryInterdictionOutcome",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function wardedTargetAreaEffectExcludedRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(NO_ROUTE_HOLES, "battleAreaShape"),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaShape",
+    }),
+  ];
+}
+
+function wardedTargetEarlyEndRoute(
+  owner: ReducerRouteOwnerGroup,
+): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(NO_ROUTE_HOLES, "battleActiveEffect"),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner,
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+export function createWardedTargetInterdictionRouteDriver() {
+  return defineDriver(wardedTargetInterdictionRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = wardedTargetInitialRoute();
+
+    function reset(): void {
+      route = wardedTargetInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doCastSanctuaryWardCreation: () => {
+        route = wardedTargetWardCreationRoute();
+      },
+      doInterdictDirectAttackFailedSaveLoss: () => {
+        route = wardedTargetFailedSaveLossRoute();
+      },
+      doInterdictDirectSpellSuccessfulSavePassThrough: () => {
+        route = wardedTargetSuccessfulSavePassThroughRoute();
+      },
+      doRetargetDirectAttackToLegalReplacement: () => {
+        route = wardedTargetLegalReplacementRoute();
+      },
+      doRejectIllegalReplacementTarget: () => {
+        route = wardedTargetIllegalReplacementRoute();
+      },
+      doExcludeAreaEffectFromInterdiction: () => {
+        route = wardedTargetAreaEffectExcludedRoute();
+      },
+      doEndWardOnWardedAttackRoll: () => {
+        route = wardedTargetEarlyEndRoute("battleAttackRoll");
+      },
+      doEndWardOnWardedSpellCast: () => {
+        route = wardedTargetEarlyEndRoute("battleSpellSlotAndActionEconomy");
+      },
+      doEndWardOnWardedDamageDealt: () => {
+        route = wardedTargetEarlyEndRoute("battleHitPoint");
+      },
+      step: () => {},
+      getState: (): ReducerRoutedWardedTargetInterdictionProjection => ({
+        route,
+      }),
     };
   });
 }
@@ -4442,39 +4930,16 @@ export function createSpellAttackOrderingRouteDriver() {
 const CHAINED_ATTACK_PROCEDURE_ROUTE_SUBJECT =
   "spellAttackProcedure" satisfies ReducerRouteSubjectFamily;
 const CHAINED_ATTACK_PROCEDURE_DAMAGE_TYPE = "fire" satisfies DamageType;
-const CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_FACES = [
-  1,
-  2,
-  3,
-] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_FACES = [1, 2, 3] as const;
 const CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_SLOT2_FACES = [
-  1,
-  2,
-  3,
-  4,
+  1, 2, 3, 4,
 ] as const;
-const CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_FACES = [
-  2,
-  2,
-  5,
-] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_FACES = [2, 2, 5] as const;
 const CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_SLOT2_FACES = [
-  2,
-  2,
-  5,
-  1,
+  2, 2, 5, 1,
 ] as const;
-const CHAINED_ATTACK_PROCEDURE_STEP1_SLOT1_LIMIT_FACES = [
-  1,
-  1,
-  1,
-] as const;
-const CHAINED_ATTACK_PROCEDURE_STEP1_SLOT2_LEAP_FACES = [
-  1,
-  1,
-  1,
-  1,
-] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP1_SLOT1_LIMIT_FACES = [1, 1, 1] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP1_SLOT2_LEAP_FACES = [1, 1, 1, 1] as const;
 const INDEPENDENT_SPELL_ATTACK_SEQUENCE_ROUTE_SUBJECT =
   "spellAttackProcedure" satisfies ReducerRouteSubjectFamily;
 const INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID = "eldritch_blast";
@@ -5516,9 +5981,9 @@ export function createCommandOrderingRouteDriver() {
   return createCommandOrderingDriverWithRoute(true);
 }
 
-function createCommandOrderingDriverWithRoute<const IncludeRoute extends boolean>(
-  includeRoute: IncludeRoute,
-) {
+function createCommandOrderingDriverWithRoute<
+  const IncludeRoute extends boolean,
+>(includeRoute: IncludeRoute) {
   return defineDriver(commandOrderingDriverSchema, () => {
     let state = commandOrderingBattle();
     let subject: BattleSubject = commandOrderingCastSubject();
@@ -5699,7 +6164,11 @@ function createCommandOrderingDriverWithRoute<const IncludeRoute extends boolean
           subject,
           fills: [commandOptionFill(commandOption, "grovel")],
         });
-        recordNeedsEarlierHole(result, "commandTargetListRequired", "targetList");
+        recordNeedsEarlierHole(
+          result,
+          "commandTargetListRequired",
+          "targetList",
+        );
         recordRouteResolve({
           result,
           fill: "commandOptionChoice",
@@ -5938,10 +6407,9 @@ function createCommandOrderingDriverWithRoute<const IncludeRoute extends boolean
         });
       },
       step: () => {},
-      getState: ():
-        IncludeRoute extends true
-          ? ReducerRoutedCommandOrderingProjection
-          : CommandOrderingProjection => {
+      getState: (): IncludeRoute extends true
+        ? ReducerRoutedCommandOrderingProjection
+        : CommandOrderingProjection => {
         const projection = projectCommandOrderingState({
           state,
           holes,
@@ -6212,24 +6680,18 @@ export function createMagicMissileRouteDriver() {
       init: reset,
       doFillMagicMissileAllocation: () => {
         const allocation = requireHole(holes, "spellTargetAllocation");
-        submit(
-          "spellTargetAllocation",
-          "battleHoleFrontier",
-          [spellTargetAllocationFill(allocation, skeletonId, 3)],
-        );
+        submit("spellTargetAllocation", "battleHoleFrontier", [
+          spellTargetAllocationFill(allocation, skeletonId, 3),
+        ]);
       },
       doFillMagicMissileDamage: ({ dartRollTotal }) => {
         const damage = requireHole(holes, "rolledDice");
-        submit(
-          "rolledDice",
-          "battleHitPoint",
-          [
-            ...fills,
-            damageRollFillWithGroups(damage, [
-              magicMissileDamageRollGroup(dartRollTotal),
-            ]),
-          ],
-        );
+        submit("rolledDice", "battleHitPoint", [
+          ...fills,
+          damageRollFillWithGroups(damage, [
+            magicMissileDamageRollGroup(dartRollTotal),
+          ]),
+        ]);
       },
       step: () => {},
       getState: () => ({
@@ -6558,10 +7020,9 @@ function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
         );
       },
       step: () => {},
-      getState: ():
-        IncludeRoute extends true
-          ? ReducerRoutedScalarBuffProjection
-          : ScalarBuffMbtProjection => {
+      getState: (): IncludeRoute extends true
+        ? ReducerRoutedScalarBuffProjection
+        : ScalarBuffMbtProjection => {
         const projection = projectScalarBuffMbtState({
           state,
           holes,
@@ -6613,10 +7074,9 @@ const FEATURE_DASH_TEMPORARY_HIT_POINT_STALE_OWNERS = [
   "battleActionEconomy",
 ] as const satisfies readonly ReducerRouteOwnerGroup[];
 
-function createAdrenalineRushDriverWithRoute<const IncludeRoute extends boolean>(
-  includeRoute: IncludeRoute,
-  schema: typeof adrenalineRushDriverSchema,
-) {
+function createAdrenalineRushDriverWithRoute<
+  const IncludeRoute extends boolean,
+>(includeRoute: IncludeRoute, schema: typeof adrenalineRushDriverSchema) {
   return defineDriver(schema, () => {
     let state = adrenalineRushBattle();
     let lastResult: AdrenalineRushMbtProjection["lastResult"] = "init";
@@ -7090,8 +7550,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   WeaponDamageRiderRouteSubject: "weaponDamageRider",
   HeldWeaponActiveEffectRouteSubject: "heldWeaponActiveEffect",
   WeaponEnhancementItemTargetRouteSubject: "weaponEnhancementItemTarget",
-  WeaponHostedSpellEffectCleanupRouteSubject:
-    "weaponHostedSpellEffectCleanup",
+  WeaponHostedSpellEffectCleanupRouteSubject: "weaponHostedSpellEffectCleanup",
   AfterHitDamageRiderRouteSubject: "afterHitDamageRider",
   StatBlockActionRouteSubject: "statBlockAction",
   CreatureAttackRouteSubject: "creatureAttack",
@@ -7127,19 +7586,19 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   SpecialSpeedProjectionRouteSubject: "specialSpeedProjection",
   ForcedMovementRouteSubject: "forcedMovement",
   ActiveFormLifecycleRouteSubject: "activeFormLifecycle",
+  CreatureTypeTargetAdmissionRouteSubject: "creatureTypeTargetAdmission",
+  ProtectionCharmActiveEffectRouteSubject: "protectionCharmActiveEffect",
+  CharmSourceDamageBreakRouteSubject: "charmSourceDamageBreak",
+  WardedTargetInterdictionRouteSubject: "wardedTargetInterdiction",
   MetamagicSpellGovernorRouteSubject: "metamagicSpellGovernor",
   MetamagicBonusActionCastingTimeRouteSubject:
     "metamagicBonusActionCastingTime",
-  MetamagicSavingThrowProtectionRouteSubject:
-    "metamagicSavingThrowProtection",
-  MetamagicSavingThrowRollModeRouteSubject:
-    "metamagicSavingThrowRollMode",
+  MetamagicSavingThrowProtectionRouteSubject: "metamagicSavingThrowProtection",
+  MetamagicSavingThrowRollModeRouteSubject: "metamagicSavingThrowRollMode",
   MetamagicDamageTypeSubstitutionRouteSubject:
     "metamagicDamageTypeSubstitution",
-  MetamagicEffectiveSpellLevelRouteSubject:
-    "metamagicEffectiveSpellLevel",
-  MetamagicSpellRangeProjectionRouteSubject:
-    "metamagicSpellRangeProjection",
+  MetamagicEffectiveSpellLevelRouteSubject: "metamagicEffectiveSpellLevel",
+  MetamagicSpellRangeProjectionRouteSubject: "metamagicSpellRangeProjection",
   MetamagicSpellDurationProjectionRouteSubject:
     "metamagicSpellDurationProjection",
   MetamagicSpellComponentProjectionRouteSubject:
@@ -7495,6 +7954,24 @@ function normalizeActiveFeatureSpellBenefitRouteQuintState(
 function normalizeReducerRoutedMetamagicQuintState(
   raw: unknown,
 ): ReducerRoutedMetamagicProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedProtectionCharmQuintState(
+  raw: unknown,
+): ReducerRoutedProtectionCharmProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedWardedTargetInterdictionQuintState(
+  raw: unknown,
+): ReducerRoutedWardedTargetInterdictionProjection {
   const state = quintStateRecord(raw);
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
@@ -7966,14 +8443,8 @@ function normalizeReducerRoutedScalarBuffQuintState(
   });
 
   return {
-    casterSpeed: numberFromQuintInt(
-      state["casterSpeed"],
-      "qState.casterSpeed",
-    ),
-    targetSpeed: numberFromQuintInt(
-      state["targetSpeed"],
-      "qState.targetSpeed",
-    ),
+    casterSpeed: numberFromQuintInt(state["casterSpeed"], "qState.casterSpeed"),
+    targetSpeed: numberFromQuintInt(state["targetSpeed"], "qState.targetSpeed"),
     actionAvailable: booleanField(state, "actionAvailable"),
     holes: protocol.holes,
     lastResult: mbtLastResult(protocol.lastResult),
@@ -8084,6 +8555,26 @@ export const reducerRoutedMetamagicStateCheck = stateCheck(
   (
     spec: ReducerRoutedMetamagicProjection,
     impl: ReducerRoutedMetamagicProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedProtectionCharmStateCheck = stateCheck(
+  normalizeReducerRoutedProtectionCharmQuintState,
+  (
+    spec: ReducerRoutedProtectionCharmProjection,
+    impl: ReducerRoutedProtectionCharmProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedWardedTargetInterdictionStateCheck = stateCheck(
+  normalizeReducerRoutedWardedTargetInterdictionQuintState,
+  (
+    spec: ReducerRoutedWardedTargetInterdictionProjection,
+    impl: ReducerRoutedWardedTargetInterdictionProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;
@@ -8726,7 +9217,9 @@ function castReplacementConcentrationSpell(
   };
 }
 
-function stateWithPreexistingBlurConcentration(state: BattleState): BattleState {
+function stateWithPreexistingBlurConcentration(
+  state: BattleState,
+): BattleState {
   const caster = requireBattleCombatant(state, fighterId);
   return {
     ...state,
@@ -9176,7 +9669,10 @@ function longstriderSubject(): Extract<
   };
 }
 
-function blurSubject(): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+function blurSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+> {
   return {
     tag: "actionSpell",
     actorId: fighterId,
@@ -9276,9 +9772,7 @@ function twoIndependentSpellAttackSequenceTargetHoles(
   Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ] {
   const targetHoles = holes.filter(
-    (
-      hole,
-    ): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+    (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
       hole.kind === "targetChoice",
   );
   const first = targetHoles[0];
@@ -9349,8 +9843,9 @@ function independentSpellAttackSequenceTargetFill(
 function independentSpellAttackSequenceExpectedTargetHp(
   fills: readonly BattleFill[],
 ): number {
-  const damageFillCount = fills.filter((fill) => fill.kind === "rolledDice")
-    .length;
+  const damageFillCount = fills.filter(
+    (fill) => fill.kind === "rolledDice",
+  ).length;
   return (
     INDEPENDENT_SPELL_ATTACK_SEQUENCE_INITIAL_TARGET_HP -
     damageFillCount * INDEPENDENT_SPELL_ATTACK_SEQUENCE_LOW_DAMAGE
@@ -11786,7 +12281,9 @@ const CONCENTRATION_BREAK_TEARDOWN_SCENARIO_BY_TAG = {
     "damageFailedTeardownBeforeNextCommand",
   VoluntaryEndTeardown: "voluntaryEndTeardown",
   ReplacementTeardownBeforeNewEffect: "replacementTeardownBeforeNewEffect",
-} as const satisfies Readonly<Record<string, ConcentrationBreakTeardownScenario>>;
+} as const satisfies Readonly<
+  Record<string, ConcentrationBreakTeardownScenario>
+>;
 
 function concentrationBreakTeardownScenario(
   raw: unknown,
