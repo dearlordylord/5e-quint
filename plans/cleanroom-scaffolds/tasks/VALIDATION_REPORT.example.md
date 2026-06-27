@@ -51,7 +51,7 @@ Target replay evidence:
 - Target profile SHA-256: `{{targetProfileSha256}}`
 - Quint binding: {{quintBindingName}}
 - Reproduction seed or trace id: `<seed or trace id>`
-- Accepted evidence refs use `tasks/target-replay-evidence/<file>.json#<trace id>#<branch family>:<branch action>`.
+- Accepted evidence refs use `tasks/target-replay-evidence/<file>.json#driver:<driver path>#<branch family>:<branch action>#trace:<trace id>`.
 
 Harness artifacts:
 

@@ -334,7 +334,7 @@ The route classes are deliberately not all `reducer-routed`:
 |  10 | L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES - Add QNT route connectors for character-battle handoff drivers      | done               | L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES; L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE                                            | Handoff routes use existing sheet, build projection, battle runtime, resource projection, and settlement owners. |
 |  11 | L15-RR11-LEVEL3-4-SCOPE-PROMOTION - Promote level 3-4 branch scope into route connector tasks                 | done | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES; L15-RR08-CHARACTER-CREATION-ROUTES; L15-RR09-CHARACTER-SHEET-ROUTES | Widen current level-1/2 branch-scope rows only after generic route shapes exist.              |
 |  12 | L15-RR12-LEVEL5-SCOPE-PROMOTION - Promote level 5 class and spell-level-3 route connector tasks               | done | L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES, L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES, L15-RR11-LEVEL3-4-SCOPE-PROMOTION                                    | Handles level-5 features and spell-level-3 pressure; does not promote spell level 4/5.        |
-|  13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom              | done               | L15-RR12-LEVEL5-SCOPE-PROMOTION, L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT, L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES, L15-RR17-WEAPON-HOSTED-RIDER-ROUTES, L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES, L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES, L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES, L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES, L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES | Dirty target proved the five-driver reducer-spine diagnostic route surface; stale dirty artifacts remain non-evidence. |
+|  13 | L15-RR13-DIRTY-CLEANROOM-REHEARSAL - Run the level 1-5 route architecture on the dirty cleanroom              | done               | L15-RR12-LEVEL5-SCOPE-PROMOTION, L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT, L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES, L15-RR17-WEAPON-HOSTED-RIDER-ROUTES, L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES, L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES, L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES, L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES, L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES | Dirty target rehearsal closed with 627 accepted obligations, 41 explicit blockers, and 0 unresolved in-scope obligations; stale dirty artifacts remain non-evidence. |
 |  14 | L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE - Package a fresh cleanroom-ready level 1-5 route evidence gate         | done               | L15-RR13-DIRTY-CLEANROOM-REHEARSAL                                                                                                                       | Fresh package gate is executable; copied inputs, route evidence, and replay schema reject dirty artifacts. |
 |  15 | L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT - Split after-hit rider routes by durable battle owner                   | done               | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Prevents one route connector from accumulating interrupt, condition, Concentration, and HP owners. |
 |  16 | L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES - Route chained attack sequences through procedure owners            | done | L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES; L15-RR06-BATTLE-SPELL-EFFECT-ROUTES                                                                      | Requires the generic multi-step spell/attack procedure route owner before routing chain continuation. |
@@ -1763,8 +1763,20 @@ Verification:
 
 Plan Impact:
 
-- Feed every source-QNT or guidance gap found in dirty rehearsal back into this
-  source plan before claiming fresh cleanroom readiness.
+- Dirty rehearsal closure is recorded in
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-rrconv-19/tasks/campaigns/level-1-2-runtime-reducer-route/CP6_CLOSURE_REPORT.md`
+  and `CP6_AUDIT.json`.
+- CP6 found `627 / 668` accepted in-scope obligations, `41` explicit blockers,
+  `36` out-of-scope rows, and `0` unresolved in-scope obligations in the dirty
+  cleanroom rehearsal.
+- The `41` blockers remain non-accepted coverage. The source-side carry-forward
+  blocker is the generic protection/charm/ward connector substrate for
+  `battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
+  and `battle-runtime-sanctuary-selected-identity.mbt.qnt`; the source route
+  inventory already records those rows as `source-qnt-corpus-blocker`.
+- CP6 exposed an ambiguous legacy target evidence ref shape when multiple
+  drivers share a branch action. Future cleanroom scaffolds and harness checks
+  use refs that include `driver:<driverPath>` before the branch family/action.
 
 ### Task 14 - L15-RR14-FRESH-CLEANROOM-PACKAGE-GATE
 

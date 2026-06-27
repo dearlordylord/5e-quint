@@ -890,7 +890,20 @@ function validateEvidenceDocs({
 }
 
 function targetReplayEvidenceRef(context, run) {
-  return `${context}#${run.traceId}#${run.branchFamily}:${run.branchAction}`;
+  return `${context}#driver:${run.driverPath}#${run.branchFamily}:${run.branchAction}#trace:${run.traceId}`;
+}
+
+function fixtureEvidenceRef(
+  evidencePath,
+  obligation,
+  traceId = `seed=1 action=${obligation.branchAction}`,
+) {
+  return targetReplayEvidenceRef(evidencePath, {
+    driverPath: obligation.driverPath,
+    branchFamily: obligation.branchFamily,
+    branchAction: obligation.branchAction,
+    traceId,
+  });
 }
 
 function artifactPathForTask(taskId, fileName) {
@@ -2658,8 +2671,8 @@ function validFixture(rootPath) {
   fs.writeFileSync(
     path.join(rootPath, "tasks/VALIDATION_REPORT.md"),
     fixtureValidationReport(inventory, [
-      `| \`${inventory.branchObligations[0].obligationId}\` | \`tasks/target-replay-evidence/mm.json#seed=1 action=${inventory.branchObligations[0].branchAction}#step:${inventory.branchObligations[0].branchAction}\` | \`_none_\` | \`covered\` |`,
-      `| \`${inventory.branchObligations[1].obligationId}\` | \`tasks/target-replay-evidence/mm.json#seed=1 action=${inventory.branchObligations[1].branchAction}#step:${inventory.branchObligations[1].branchAction}\` | \`_none_\` | \`covered\` |`,
+      `| \`${inventory.branchObligations[0].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[0])}\` | \`_none_\` | \`covered\` |`,
+      `| \`${inventory.branchObligations[1].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[1])}\` | \`_none_\` | \`covered\` |`,
     ]),
   );
   writeFixtureHistoryAndLedger({
@@ -2670,7 +2683,7 @@ function validFixture(rootPath) {
     evidencePath: "tasks/target-replay-evidence/mm.json",
     evidenceRefs: inventory.branchObligations.map(
       (obligation) =>
-        `tasks/target-replay-evidence/mm.json#seed=1 action=${obligation.branchAction}#${obligation.branchFamily}:${obligation.branchAction}`,
+        fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", obligation),
     ),
   });
   fs.mkdirSync(path.join(rootPath, "engine/rules"), { recursive: true });
@@ -3205,8 +3218,8 @@ function runSelfTest() {
 	            "",
 	            "| Obligation | Target replay evidence | Diagnostic tests | Status |",
 	            "| --- | --- | --- | --- |",
-	            `| \`${inventory.branchObligations[0].obligationId}\` | \`tasks/target-replay-evidence/mm.json#seed=1 action=${inventory.branchObligations[0].branchAction}#step:${inventory.branchObligations[0].branchAction}\` | \`_none_\` | \`covered\` |`,
-	            `| \`${inventory.branchObligations[1].obligationId}\` | \`tasks/target-replay-evidence/mm.json#seed=1 action=${inventory.branchObligations[1].branchAction}#step:${inventory.branchObligations[1].branchAction}\` | \`_none_\` | \`covered\` |`,
+	            `| \`${inventory.branchObligations[0].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[0])}\` | \`_none_\` | \`covered\` |`,
+	            `| \`${inventory.branchObligations[1].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[1])}\` | \`_none_\` | \`covered\` |`,
 	            "",
 	          ].join("\n"),
 	        );
@@ -3250,7 +3263,7 @@ function runSelfTest() {
 	          path.join(rootPath, "tasks/VALIDATION_REPORT.md"),
 	          fixtureValidationReport(inventory, [
 	            `| \`${inventory.branchObligations[0].obligationId}\` | \`tasks/target-replay-evidence/missing.json#bogus\` | \`_none_\` | \`covered\` |`,
-	            `| \`${inventory.branchObligations[1].obligationId}\` | \`tasks/target-replay-evidence/mm.json#seed=1 action=${inventory.branchObligations[1].branchAction}#step:${inventory.branchObligations[1].branchAction}\` | \`_none_\` | \`covered\` |`,
+	            `| \`${inventory.branchObligations[1].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[1])}\` | \`_none_\` | \`covered\` |`,
 	          ]),
 	        );
 	      },
@@ -3278,8 +3291,8 @@ function runSelfTest() {
 	        fs.writeFileSync(
 	          path.join(rootPath, "tasks/VALIDATION_REPORT.md"),
 	          fixtureValidationReport(inventory, [
-	            `| \`${inventory.branchObligations[0].obligationId}\` | \`tasks/target-replay-evidence/mm.json#failed-trace#step:${inventory.branchObligations[0].branchAction}\` | \`_none_\` | \`covered\` |`,
-	            `| \`${inventory.branchObligations[1].obligationId}\` | \`tasks/target-replay-evidence/mm.json#seed=1 action=${inventory.branchObligations[1].branchAction}#step:${inventory.branchObligations[1].branchAction}\` | \`_none_\` | \`covered\` |`,
+	            `| \`${inventory.branchObligations[0].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[0], "failed-trace")}\` | \`_none_\` | \`covered\` |`,
+	            `| \`${inventory.branchObligations[1].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[1])}\` | \`_none_\` | \`covered\` |`,
 	          ]),
 	        );
 	      },

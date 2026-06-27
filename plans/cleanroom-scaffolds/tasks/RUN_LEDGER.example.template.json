@@ -39,7 +39,7 @@
           "path": "tasks/target-replay-evidence/T001-<driver>.json",
           "sha256": "<sha256>",
           "evidenceRefs": [
-            "tasks/target-replay-evidence/T001-<driver>.json#<trace id>#<branch family>:<branch action>"
+            "tasks/target-replay-evidence/T001-<driver>.json#driver:<driver path>#<branch family>:<branch action>#trace:<trace id>"
           ]
         }
       ],

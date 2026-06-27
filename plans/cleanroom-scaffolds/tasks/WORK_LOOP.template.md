@@ -165,7 +165,7 @@ Generated branch coverage:
 
 | Obligation | Target replay evidence | Diagnostic tests | Status |
 | --- | --- | --- | --- |
-| `<driver path>#<branch family>:<branch action>` | `tasks/target-replay-evidence/<file>.json#<trace id>#<branch family>:<branch action>` | `<diagnostic test path or none>` | `<covered|blocked>` |
+| `<driver path>#<branch family>:<branch action>` | `tasks/target-replay-evidence/<file>.json#driver:<driver path>#<branch family>:<branch action>#trace:<trace id>` | `<diagnostic test path or none>` | `<covered|blocked>` |
 
 Target replay evidence:
 
