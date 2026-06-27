@@ -14,6 +14,11 @@ const SUBJECT_BY_TAG = {
     "handoffFeatureResourceProjection",
   HandoffSelectedReferenceRouteSubject: "handoffSelectedReference",
   HandoffBattleMutationRouteSubject: "handoffBattleMutation",
+  HandoffEncounterCompositionRouteSubject: "handoffEncounterComposition",
+  HandoffParticipantMembershipRouteSubject: "handoffParticipantMembership",
+  HandoffSubjectProfileAvailabilityRouteSubject:
+    "handoffSubjectProfileAvailability",
+  HandoffInitiativeCurrentActorRouteSubject: "handoffInitiativeCurrentActor",
 } as const;
 type CharacterBattleRouteSubject =
   (typeof SUBJECT_BY_TAG)[keyof typeof SUBJECT_BY_TAG];
@@ -44,6 +49,9 @@ const OWNER_BY_TAG = {
   CharacterBattleRuntimeOwner: "characterBattleRuntime",
   CharacterBattleSettlementOwner: "characterBattleSettlement",
   CharacterBattleResourceProjectionOwner: "characterBattleResourceProjection",
+  CharacterBattleEncounterSetupOwner: "characterBattleEncounterSetup",
+  CharacterBattleSubjectProfileOwner: "characterBattleSubjectProfile",
+  CharacterBattleInitiativeOwner: "characterBattleInitiative",
 } as const;
 type CharacterBattleRouteOwner =
   (typeof OWNER_BY_TAG)[keyof typeof OWNER_BY_TAG];
@@ -56,6 +64,11 @@ type CharacterBattleRouteEvent =
     }
   | {
       readonly kind: "enterBattleRuntime";
+      readonly subject: CharacterBattleRouteSubject;
+      readonly owner: CharacterBattleRouteOwner;
+    }
+  | {
+      readonly kind: "composeBattleEncounter";
       readonly subject: CharacterBattleRouteSubject;
       readonly owner: CharacterBattleRouteOwner;
     }
@@ -105,6 +118,16 @@ const originFeatRouteDriverSchema = {
   init: {},
   doFinalizeCriminalAlertOriginFeat: {},
   doProjectAlertInitiativeHandoff: {},
+  step: {},
+} as const;
+
+const encounterCompositionRouteDriverSchema = {
+  init: {},
+  doProjectSheetCombatantForEncounter: {},
+  doComposeParticipantMembership: {},
+  doComposeSubjectProfiles: {},
+  doComposeInitiativeCurrentActor: {},
+  doEnterComposedBattleRuntime: {},
   step: {},
 } as const;
 
@@ -184,6 +207,18 @@ describe("character battle reducer route connector MBT", () => {
     });
   }, MBT_TEST_TIMEOUT_MS);
 
+  it("routes sheet-derived encounter composition before battle entry", async () => {
+    await runRouteMbt({
+      specFileName: "character-battle-encounter-composition.route.mbt.qnt",
+      driver: createIndexedRouteDriver(
+        encounterCompositionRouteDriverSchema,
+        encounterCompositionRouteActions,
+        initialEncounterCompositionRoute,
+      ),
+      maxSteps: 5,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
   it("routes battle settlement back to sheet-owned resource state", async () => {
     await runRouteMbt({
       specFileName: "character-battle-settlement.route.mbt.qnt",
@@ -244,6 +279,23 @@ const originFeatRouteActions = indexedActionEntries(originFeatRouteDriverSchema,
   ["doFinalizeCriminalAlertOriginFeat", retainOriginFeatRoute],
   ["doProjectAlertInitiativeHandoff", projectInitiativeHandoffRoute],
 ]);
+
+const encounterCompositionRouteActions = indexedActionEntries(
+  encounterCompositionRouteDriverSchema,
+  [
+    [
+      "doProjectSheetCombatantForEncounter",
+      projectSheetCombatantForEncounterRoute,
+    ],
+    ["doComposeParticipantMembership", composeParticipantMembershipRoute],
+    ["doComposeSubjectProfiles", composeSubjectProfilesRoute],
+    [
+      "doComposeInitiativeCurrentActor",
+      composeInitiativeCurrentActorRoute,
+    ],
+    ["doEnterComposedBattleRuntime", enterComposedBattleRuntimeRoute],
+  ],
+);
 
 const settlementRouteActions = indexedActionEntries(settlementRouteDriverSchema, [
   [
@@ -316,6 +368,10 @@ function initialBattleInitRoute(): readonly CharacterBattleRouteEvent[] {
 }
 
 function initialOriginFeatRoute(): readonly CharacterBattleRouteEvent[] {
+  return [];
+}
+
+function initialEncounterCompositionRoute(): readonly CharacterBattleRouteEvent[] {
   return [];
 }
 
@@ -436,6 +492,66 @@ function projectInitiativeHandoffRoute(
     }),
     enterBattleRuntime({
       subject: "handoffSelectedReference",
+      owner: "characterBattleRuntime",
+    }),
+  ];
+}
+
+function projectSheetCombatantForEncounterRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    projectCharacterSheetToBattle({
+      subject: "sheetToBattleInit",
+      owner: "characterBattleInitProjection",
+    }),
+  ];
+}
+
+function composeParticipantMembershipRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    composeBattleEncounter({
+      subject: "handoffParticipantMembership",
+      owner: "characterBattleEncounterSetup",
+    }),
+  ];
+}
+
+function composeSubjectProfilesRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    composeBattleEncounter({
+      subject: "handoffSubjectProfileAvailability",
+      owner: "characterBattleSubjectProfile",
+    }),
+  ];
+}
+
+function composeInitiativeCurrentActorRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    composeBattleEncounter({
+      subject: "handoffInitiativeCurrentActor",
+      owner: "characterBattleInitiative",
+    }),
+  ];
+}
+
+function enterComposedBattleRuntimeRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    enterBattleRuntime({
+      subject: "handoffEncounterComposition",
       owner: "characterBattleRuntime",
     }),
   ];
@@ -713,6 +829,17 @@ function enterBattleRuntime(input: {
   };
 }
 
+function composeBattleEncounter(input: {
+  readonly subject: CharacterBattleRouteSubject;
+  readonly owner: CharacterBattleRouteOwner;
+}): CharacterBattleRouteEvent {
+  return {
+    kind: "composeBattleEncounter",
+    subject: input.subject,
+    owner: input.owner,
+  };
+}
+
 function settleBattleToCharacterSheet(input: {
   readonly subject: CharacterBattleRouteSubject;
   readonly fill: CharacterBattleRouteFill;
@@ -859,6 +986,13 @@ function decodeCharacterBattleRouteEvent(
   if (tag === "RouteEnterBattleRuntime") {
     const payload = routePayload(raw, tag);
     return enterBattleRuntime({
+      subject: routeSubject(quintField(payload, "subject")),
+      owner: routeOwner(quintField(payload, "owner")),
+    });
+  }
+  if (tag === "RouteComposeBattleEncounter") {
+    const payload = routePayload(raw, tag);
+    return composeBattleEncounter({
       subject: routeSubject(quintField(payload, "subject")),
       owner: routeOwner(quintField(payload, "owner")),
     });

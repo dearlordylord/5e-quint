@@ -10,6 +10,10 @@ module characterBattleReducerRoute {
     | HandoffFeatureResourceProjectionRouteSubject
     | HandoffSelectedReferenceRouteSubject
     | HandoffBattleMutationRouteSubject
+    | HandoffEncounterCompositionRouteSubject
+    | HandoffParticipantMembershipRouteSubject
+    | HandoffSubjectProfileAvailabilityRouteSubject
+    | HandoffInitiativeCurrentActorRouteSubject
 
   type CharacterBattleRouteHoleFamily =
     | HandoffIdentityMatchHoleFamily
@@ -31,6 +35,9 @@ module characterBattleReducerRoute {
     | CharacterBattleRuntimeOwner
     | CharacterBattleSettlementOwner
     | CharacterBattleResourceProjectionOwner
+    | CharacterBattleEncounterSetupOwner
+    | CharacterBattleSubjectProfileOwner
+    | CharacterBattleInitiativeOwner
 
   type CharacterBattleRouteEvent =
     | RouteProjectCharacterSheetToBattle({
@@ -38,6 +45,10 @@ module characterBattleReducerRoute {
         owner: CharacterBattleRouteOwnerGroup,
       })
     | RouteEnterBattleRuntime({
+        subject: CharacterBattleRouteSubjectFamily,
+        owner: CharacterBattleRouteOwnerGroup,
+      })
+    | RouteComposeBattleEncounter({
         subject: CharacterBattleRouteSubjectFamily,
         owner: CharacterBattleRouteOwnerGroup,
       })
@@ -68,6 +79,15 @@ module characterBattleReducerRoute {
     owner: CharacterBattleRouteOwnerGroup,
   ): CharacterBattleRouteEvent =
     RouteEnterBattleRuntime({
+      subject: subject,
+      owner: owner,
+    })
+
+  pure def routeComposeBattleEncounter(
+    subject: CharacterBattleRouteSubjectFamily,
+    owner: CharacterBattleRouteOwnerGroup,
+  ): CharacterBattleRouteEvent =
+    RouteComposeBattleEncounter({
       subject: subject,
       owner: owner,
     })
