@@ -1998,10 +1998,12 @@ const spatialEffectRouteDriverSchema = {
   doAdmitOutlineSightEffect: {},
   doProjectOutlineSightAttackAdvantage: {},
   doAdmitAreaObscurement: {},
-  doCleanupAreaObscurement: {},
+  doCleanupAreaObscurementByDuration: {},
+  doDisperseAreaObscurementByStrongWind: {},
   doAdmitAreaHazard: {},
   doResolveAreaHazardSavingThrowTrigger: {},
-  doResolveAreaHazardMovementTrigger: {},
+  doResolveAreaHazardDifficultTerrainMovement: {},
+  doResolveAreaHazardMovementDamageTrigger: {},
   doCleanupAreaHazard: {},
   doRecordTableOwnedSpatialWitnesses: {},
   doStutterAfterTerminalSurface: {},
@@ -6155,6 +6157,10 @@ const SPATIAL_EFFECT_MOVABLE_MULTI_EMITTER_LIGHT_FACTS = [
     effect: "movableMultiEmitterEffectAdmitted",
   },
   {
+    kind: "battleEffect",
+    effect: "concentrationBackedEffect",
+  },
+  {
     kind: "light",
     light: "multiEmitterDimLightProjection",
   },
@@ -6183,6 +6189,14 @@ const SPATIAL_EFFECT_OUTLINE_ADMISSION_FACTS = [
   {
     kind: "battleEffect",
     effect: "concentrationBackedEffect",
+  },
+  {
+    kind: "geometry",
+    geometry: "areaShapeWitness",
+  },
+  {
+    kind: "geometry",
+    geometry: "areaMembershipWitness",
   },
   {
     kind: "light",
@@ -6278,7 +6292,18 @@ const SPATIAL_EFFECT_HAZARD_SAVE_FACTS = [
   },
 ] as const satisfies readonly SpatialEffectRouteFact[];
 
-const SPATIAL_EFFECT_HAZARD_MOVEMENT_FACTS = [
+const SPATIAL_EFFECT_HAZARD_DIFFICULT_TERRAIN_MOVEMENT_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "movementPathWitness",
+  },
+  {
+    kind: "hazard",
+    hazard: "difficultTerrainProjection",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_HAZARD_MOVEMENT_DAMAGE_FACTS = [
   {
     kind: "geometry",
     geometry: "movementPathWitness",
@@ -6287,13 +6312,27 @@ const SPATIAL_EFFECT_HAZARD_MOVEMENT_FACTS = [
     kind: "hazard",
     hazard: "movementDamageTrigger",
   },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_OBSCUREMENT_DURATION_CLEANUP_FACTS = [
   {
-    kind: "hazard",
-    hazard: "difficultTerrainProjection",
+    kind: "cleanedUpBy",
+    cleanup: "durationCleanup",
+    owner: "battleObscurementProjection",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "durationCleanup",
+    owner: "battleActiveEffect",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "durationCleanup",
+    owner: "battleConcentration",
   },
 ] as const satisfies readonly SpatialEffectRouteFact[];
 
-const SPATIAL_EFFECT_OBSCUREMENT_CLEANUP_FACTS = [
+const SPATIAL_EFFECT_OBSCUREMENT_DISPERSAL_CLEANUP_FACTS = [
   {
     kind: "geometry",
     geometry: "strongWindWitness",
@@ -6305,12 +6344,12 @@ const SPATIAL_EFFECT_OBSCUREMENT_CLEANUP_FACTS = [
   },
   {
     kind: "cleanedUpBy",
-    cleanup: "durationCleanup",
+    cleanup: "dispersalCleanup",
     owner: "battleActiveEffect",
   },
   {
     kind: "cleanedUpBy",
-    cleanup: "durationCleanup",
+    cleanup: "dispersalCleanup",
     owner: "battleConcentration",
   },
 ] as const satisfies readonly SpatialEffectRouteFact[];
@@ -6329,11 +6368,6 @@ const SPATIAL_EFFECT_HAZARD_CLEANUP_FACTS = [
     kind: "cleanedUpBy",
     cleanup: "durationCleanup",
     owner: "battleActiveEffect",
-  },
-  {
-    kind: "cleanedUpBy",
-    cleanup: "durationCleanup",
-    owner: "battleConcentration",
   },
 ] as const satisfies readonly SpatialEffectRouteFact[];
 
@@ -6440,12 +6474,12 @@ function spatialEffectOutlineAdmissionRoute(): readonly ReducerRouteEvent[] {
   return [
     routeDiscoverSubject({
       subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
-      holes: ["savingThrowOutcome", "spellTargetList"],
+      holes: TARGET_AND_SAVE_ROUTE_HOLES,
       owner: "battleSpellSlotAndActionEconomy",
     }),
     routeResolveSubject({
       subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
-      fill: "spellTargetList",
+      fill: "targetChoice",
       holes: SAVING_THROW_OUTCOME_ROUTE_HOLES,
       owner: "battleAreaShape",
     }),
@@ -6501,11 +6535,6 @@ function spatialEffectAreaAdmissionRoute(): readonly ReducerRouteEvent[] {
       holes: NO_ROUTE_HOLES,
       owner: "battleActiveEffect",
     }),
-    routeResolveSubjectWithoutFill({
-      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
-      holes: NO_ROUTE_HOLES,
-      owner: "battleConcentration",
-    }),
   ];
 }
 
@@ -6560,7 +6589,25 @@ function spatialEffectHazardSavingThrowRoute(): readonly ReducerRouteEvent[] {
   ];
 }
 
-function spatialEffectHazardMovementRoute(): readonly ReducerRouteEvent[] {
+function spatialEffectHazardDifficultTerrainMovementRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: MOVEMENT_ROUTE_HOLES,
+      owner: "battleAreaHazard",
+    }),
+    routeResolveSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      fill: "movement",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+  ];
+}
+
+function spatialEffectHazardMovementDamageRoute():
+  readonly ReducerRouteEvent[] {
   return [
     routeDiscoverSubject({
       subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
@@ -6582,13 +6629,35 @@ function spatialEffectHazardMovementRoute(): readonly ReducerRouteEvent[] {
   ];
 }
 
-function spatialEffectObscurementCleanupRoute(): readonly ReducerRouteEvent[] {
+function spatialEffectObscurementDurationCleanupRoute():
+  readonly ReducerRouteEvent[] {
   return [
     routeResolveSubjectWithoutFill({
       subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
       holes: NO_ROUTE_HOLES,
       owner: "battleTurnBoundary",
     }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleObscurementProjection",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConcentration",
+    }),
+  ];
+}
+
+function spatialEffectObscurementDispersalCleanupRoute():
+  readonly ReducerRouteEvent[] {
+  return [
     routeResolveSubjectWithoutFill({
       subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
       holes: NO_ROUTE_HOLES,
@@ -6623,11 +6692,6 @@ function spatialEffectHazardCleanupRoute(): readonly ReducerRouteEvent[] {
       subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
       holes: NO_ROUTE_HOLES,
       owner: "battleActiveEffect",
-    }),
-    routeResolveSubjectWithoutFill({
-      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
-      holes: NO_ROUTE_HOLES,
-      owner: "battleConcentration",
     }),
   ];
 }
@@ -6670,6 +6734,7 @@ export function createSpatialEffectRouteDriver() {
         route = [
           ...route,
           ...spatialEffectAdmissionRoute(),
+          ...spatialEffectConcentrationRoute(),
           ...spatialEffectLightProjectionRoute(),
         ];
         facts = SPATIAL_EFFECT_MOVABLE_MULTI_EMITTER_LIGHT_FACTS;
@@ -6694,13 +6759,24 @@ export function createSpatialEffectRouteDriver() {
         route = [
           ...route,
           ...spatialEffectAreaAdmissionRoute(),
+          ...spatialEffectConcentrationRoute(),
           ...spatialEffectObscurementProjectionRoute(),
         ];
         facts = SPATIAL_EFFECT_AREA_OBSCUREMENT_FACTS;
       },
-      doCleanupAreaObscurement: () => {
-        route = [...route, ...spatialEffectObscurementCleanupRoute()];
-        facts = [...facts, ...SPATIAL_EFFECT_OBSCUREMENT_CLEANUP_FACTS];
+      doCleanupAreaObscurementByDuration: () => {
+        route = [...route, ...spatialEffectObscurementDurationCleanupRoute()];
+        facts = [
+          ...facts,
+          ...SPATIAL_EFFECT_OBSCUREMENT_DURATION_CLEANUP_FACTS,
+        ];
+      },
+      doDisperseAreaObscurementByStrongWind: () => {
+        route = [...route, ...spatialEffectObscurementDispersalCleanupRoute()];
+        facts = [
+          ...facts,
+          ...SPATIAL_EFFECT_OBSCUREMENT_DISPERSAL_CLEANUP_FACTS,
+        ];
       },
       doAdmitAreaHazard: () => {
         route = [
@@ -6714,9 +6790,19 @@ export function createSpatialEffectRouteDriver() {
         route = [...route, ...spatialEffectHazardSavingThrowRoute()];
         facts = [...facts, ...SPATIAL_EFFECT_HAZARD_SAVE_FACTS];
       },
-      doResolveAreaHazardMovementTrigger: () => {
-        route = [...route, ...spatialEffectHazardMovementRoute()];
-        facts = [...facts, ...SPATIAL_EFFECT_HAZARD_MOVEMENT_FACTS];
+      doResolveAreaHazardDifficultTerrainMovement: () => {
+        route = [
+          ...route,
+          ...spatialEffectHazardDifficultTerrainMovementRoute(),
+        ];
+        facts = [
+          ...facts,
+          ...SPATIAL_EFFECT_HAZARD_DIFFICULT_TERRAIN_MOVEMENT_FACTS,
+        ];
+      },
+      doResolveAreaHazardMovementDamageTrigger: () => {
+        route = [...route, ...spatialEffectHazardMovementDamageRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_HAZARD_MOVEMENT_DAMAGE_FACTS];
       },
       doCleanupAreaHazard: () => {
         route = [...route, ...spatialEffectHazardCleanupRoute()];

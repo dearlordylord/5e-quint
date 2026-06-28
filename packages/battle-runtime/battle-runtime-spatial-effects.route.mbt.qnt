@@ -34,10 +34,12 @@ module battleRuntimeSpatialEffectsRouteMbt {
     | OutlineSightEffectActiveRouteSurface
     | OutlineSightEffectProjectedRouteSurface
     | AreaObscurementActiveRouteSurface
-    | AreaObscurementCleanedRouteSurface
+    | AreaObscurementDurationCleanedRouteSurface
+    | AreaObscurementDispersedRouteSurface
     | AreaHazardActiveRouteSurface
     | AreaHazardSaveResolvedRouteSurface
-    | AreaHazardMovementResolvedRouteSurface
+    | AreaHazardDifficultTerrainMovementResolvedRouteSurface
+    | AreaHazardMovementDamageResolvedRouteSurface
     | AreaHazardCleanedRouteSurface
     | TableSpatialWitnessRouteSurface
 
@@ -106,11 +108,11 @@ module battleRuntimeSpatialEffectsRouteMbt {
   pure def outlineAdmissionRoute: List[ReducerRouteEvent] =
     List(
       discoverRoute(
-        Set(SpellTargetListHoleKind, SavingThrowOutcomeHoleKind),
+        Set(TargetChoiceHoleKind, SavingThrowOutcomeHoleKind),
         BattleSpellSlotAndActionEconomyOwner,
       ),
       resolveRoute(
-        SpellTargetListFillKind,
+        TargetChoiceFillKind,
         savingThrowOutcomeHoles,
         BattleAreaShapeOwner,
       ),
@@ -134,7 +136,6 @@ module battleRuntimeSpatialEffectsRouteMbt {
       discoverRoute(targetChoiceHoles, BattleSpellSlotAndActionEconomyOwner),
       resolveRoute(TargetChoiceFillKind, noHoles, BattleAreaShapeOwner),
       resolveRouteWithoutFill(noHoles, BattleActiveEffectOwner),
-      resolveRouteWithoutFill(noHoles, BattleConcentrationOwner),
     )
 
   pure def obscurementProjectionRoute: List[ReducerRouteEvent] =
@@ -160,7 +161,17 @@ module battleRuntimeSpatialEffectsRouteMbt {
       resolveRouteWithoutFill(noHoles, BattleConditionLifecycleOwner),
     )
 
-  pure def hazardMovementRoute: List[ReducerRouteEvent] =
+  pure def hazardDifficultTerrainMovementRoute: List[ReducerRouteEvent] =
+    List(
+      discoverRoute(movementHoles, BattleAreaHazardOwner),
+      resolveRoute(
+        MovementFillKind,
+        noHoles,
+        BattleMovementResourceOwner,
+      ),
+    )
+
+  pure def hazardMovementDamageRoute: List[ReducerRouteEvent] =
     List(
       discoverRoute(movementHoles, BattleAreaHazardOwner),
       resolveRoute(
@@ -171,9 +182,16 @@ module battleRuntimeSpatialEffectsRouteMbt {
       resolveRoute(RolledDiceFillKind, noHoles, BattleHitPointOwner),
     )
 
-  pure def obscuredCleanupRoute: List[ReducerRouteEvent] =
+  pure def obscurementDurationCleanupRoute: List[ReducerRouteEvent] =
     List(
       resolveRouteWithoutFill(noHoles, BattleTurnBoundaryOwner),
+      resolveRouteWithoutFill(noHoles, BattleObscurementProjectionOwner),
+      resolveRouteWithoutFill(noHoles, BattleActiveEffectOwner),
+      resolveRouteWithoutFill(noHoles, BattleConcentrationOwner),
+    )
+
+  pure def obscurementDispersalCleanupRoute: List[ReducerRouteEvent] =
+    List(
       resolveRouteWithoutFill(noHoles, BattleObscurementProjectionOwner),
       resolveRouteWithoutFill(noHoles, BattleActiveEffectOwner),
       resolveRouteWithoutFill(noHoles, BattleConcentrationOwner),
@@ -184,7 +202,6 @@ module battleRuntimeSpatialEffectsRouteMbt {
       resolveRouteWithoutFill(noHoles, BattleTurnBoundaryOwner),
       resolveRouteWithoutFill(noHoles, BattleAreaHazardOwner),
       resolveRouteWithoutFill(noHoles, BattleActiveEffectOwner),
-      resolveRouteWithoutFill(noHoles, BattleConcentrationOwner),
     )
 
   pure def tableSpatialWitnessRoute: List[ReducerRouteEvent] =
@@ -199,6 +216,7 @@ module battleRuntimeSpatialEffectsRouteMbt {
       RouteSpatialEffectBattleEffect({
         effect: MovableMultiEmitterEffectAdmitted,
       }),
+      RouteSpatialEffectBattleEffect({ effect: ConcentrationBackedEffect }),
       RouteSpatialEffectLight({ light: MultiEmitterDimLightProjection }),
       RouteSpatialEffectPresentation({
         presentation: EmitterAppearancePresentation,
@@ -215,6 +233,8 @@ module battleRuntimeSpatialEffectsRouteMbt {
     List(
       RouteSpatialEffectBattleEffect({ effect: OutlineEffectAdmitted }),
       RouteSpatialEffectBattleEffect({ effect: ConcentrationBackedEffect }),
+      RouteSpatialEffectGeometry({ geometry: AreaShapeWitness }),
+      RouteSpatialEffectGeometry({ geometry: AreaMembershipWitness }),
       RouteSpatialEffectLight({ light: DimLightProjection }),
       RouteSpatialEffectPresentation({ presentation: ColorChoicePresentation }),
       RouteSpatialEffectPresentation({
@@ -259,18 +279,22 @@ module battleRuntimeSpatialEffectsRouteMbt {
       RouteSpatialEffectHazard({ hazard: PerTurnTriggerLimit }),
     )
 
-  pure def hazardMovementFacts: List[SpatialEffectRouteFact] =
+  pure def hazardDifficultTerrainMovementFacts: List[SpatialEffectRouteFact] =
     List(
       RouteSpatialEffectGeometry({ geometry: MovementPathWitness }),
-      RouteSpatialEffectHazard({ hazard: MovementDamageTrigger }),
       RouteSpatialEffectHazard({ hazard: DifficultTerrainProjection }),
     )
 
-  pure def obscurementCleanupFacts: List[SpatialEffectRouteFact] =
+  pure def hazardMovementDamageFacts: List[SpatialEffectRouteFact] =
     List(
-      RouteSpatialEffectGeometry({ geometry: StrongWindWitness }),
+      RouteSpatialEffectGeometry({ geometry: MovementPathWitness }),
+      RouteSpatialEffectHazard({ hazard: MovementDamageTrigger }),
+    )
+
+  pure def obscurementDurationCleanupFacts: List[SpatialEffectRouteFact] =
+    List(
       RouteSpatialEffectCleanedUpBy({
-        cleanup: DispersalCleanup,
+        cleanup: DurationCleanup,
         owner: BattleObscurementCleanupOwner,
       }),
       RouteSpatialEffectCleanedUpBy({
@@ -279,6 +303,23 @@ module battleRuntimeSpatialEffectsRouteMbt {
       }),
       RouteSpatialEffectCleanedUpBy({
         cleanup: DurationCleanup,
+        owner: BattleConcentrationCleanupOwner,
+      }),
+    )
+
+  pure def obscurementDispersalCleanupFacts: List[SpatialEffectRouteFact] =
+    List(
+      RouteSpatialEffectGeometry({ geometry: StrongWindWitness }),
+      RouteSpatialEffectCleanedUpBy({
+        cleanup: DispersalCleanup,
+        owner: BattleObscurementCleanupOwner,
+      }),
+      RouteSpatialEffectCleanedUpBy({
+        cleanup: DispersalCleanup,
+        owner: BattleActiveEffectCleanupOwner,
+      }),
+      RouteSpatialEffectCleanedUpBy({
+        cleanup: DispersalCleanup,
         owner: BattleConcentrationCleanupOwner,
       }),
     )
@@ -293,10 +334,6 @@ module battleRuntimeSpatialEffectsRouteMbt {
       RouteSpatialEffectCleanedUpBy({
         cleanup: DurationCleanup,
         owner: BattleActiveEffectCleanupOwner,
-      }),
-      RouteSpatialEffectCleanedUpBy({
-        cleanup: DurationCleanup,
-        owner: BattleConcentrationCleanupOwner,
       }),
     )
 
@@ -333,7 +370,10 @@ module battleRuntimeSpatialEffectsRouteMbt {
     qSurface == FreshSpatialEffectRouteSurface,
     recordSurface(
       MovableMultiEmitterLightActiveRouteSurface,
-      qRoute.concat(effectAdmissionRoute).concat(lightProjectionRoute),
+      qRoute
+        .concat(effectAdmissionRoute)
+        .concat(concentrationRoute)
+        .concat(lightProjectionRoute),
       movableMultiEmitterLightFacts,
     ),
   }
@@ -369,17 +409,29 @@ module battleRuntimeSpatialEffectsRouteMbt {
     qSurface == FreshSpatialEffectRouteSurface,
     recordSurface(
       AreaObscurementActiveRouteSurface,
-      qRoute.concat(areaAdmissionRoute).concat(obscurementProjectionRoute),
+      qRoute
+        .concat(areaAdmissionRoute)
+        .concat(concentrationRoute)
+        .concat(obscurementProjectionRoute),
       areaObscurementFacts,
     ),
   }
 
-  action doCleanupAreaObscurement = all {
+  action doCleanupAreaObscurementByDuration = all {
     qSurface == AreaObscurementActiveRouteSurface,
     recordSurface(
-      AreaObscurementCleanedRouteSurface,
-      qRoute.concat(obscuredCleanupRoute),
-      qFacts.concat(obscurementCleanupFacts),
+      AreaObscurementDurationCleanedRouteSurface,
+      qRoute.concat(obscurementDurationCleanupRoute),
+      qFacts.concat(obscurementDurationCleanupFacts),
+    ),
+  }
+
+  action doDisperseAreaObscurementByStrongWind = all {
+    qSurface == AreaObscurementActiveRouteSurface,
+    recordSurface(
+      AreaObscurementDispersedRouteSurface,
+      qRoute.concat(obscurementDispersalCleanupRoute),
+      qFacts.concat(obscurementDispersalCleanupFacts),
     ),
   }
 
@@ -401,12 +453,21 @@ module battleRuntimeSpatialEffectsRouteMbt {
     ),
   }
 
-  action doResolveAreaHazardMovementTrigger = all {
+  action doResolveAreaHazardDifficultTerrainMovement = all {
     qSurface == AreaHazardActiveRouteSurface,
     recordSurface(
-      AreaHazardMovementResolvedRouteSurface,
-      qRoute.concat(hazardMovementRoute),
-      qFacts.concat(hazardMovementFacts),
+      AreaHazardDifficultTerrainMovementResolvedRouteSurface,
+      qRoute.concat(hazardDifficultTerrainMovementRoute),
+      qFacts.concat(hazardDifficultTerrainMovementFacts),
+    ),
+  }
+
+  action doResolveAreaHazardMovementDamageTrigger = all {
+    qSurface == AreaHazardActiveRouteSurface,
+    recordSurface(
+      AreaHazardMovementDamageResolvedRouteSurface,
+      qRoute.concat(hazardMovementDamageRoute),
+      qFacts.concat(hazardMovementDamageFacts),
     ),
   }
 
@@ -414,7 +475,8 @@ module battleRuntimeSpatialEffectsRouteMbt {
     qSurface.in(Set(
       AreaHazardActiveRouteSurface,
       AreaHazardSaveResolvedRouteSurface,
-      AreaHazardMovementResolvedRouteSurface,
+      AreaHazardDifficultTerrainMovementResolvedRouteSurface,
+      AreaHazardMovementDamageResolvedRouteSurface,
     )),
     recordSurface(
       AreaHazardCleanedRouteSurface,
@@ -436,7 +498,8 @@ module battleRuntimeSpatialEffectsRouteMbt {
     qSurface.in(Set(
       MovableMultiEmitterLightMovedRouteSurface,
       OutlineSightEffectProjectedRouteSurface,
-      AreaObscurementCleanedRouteSurface,
+      AreaObscurementDurationCleanedRouteSurface,
+      AreaObscurementDispersedRouteSurface,
       AreaHazardCleanedRouteSurface,
       TableSpatialWitnessRouteSurface,
     )),
@@ -449,10 +512,12 @@ module battleRuntimeSpatialEffectsRouteMbt {
     doAdmitOutlineSightEffect,
     doProjectOutlineSightAttackAdvantage,
     doAdmitAreaObscurement,
-    doCleanupAreaObscurement,
+    doCleanupAreaObscurementByDuration,
+    doDisperseAreaObscurementByStrongWind,
     doAdmitAreaHazard,
     doResolveAreaHazardSavingThrowTrigger,
-    doResolveAreaHazardMovementTrigger,
+    doResolveAreaHazardDifficultTerrainMovement,
+    doResolveAreaHazardMovementDamageTrigger,
     doCleanupAreaHazard,
     doRecordTableOwnedSpatialWitnesses,
     doStutterAfterTerminalSurface,
