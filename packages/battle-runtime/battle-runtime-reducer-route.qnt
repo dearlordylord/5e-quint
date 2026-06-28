@@ -80,6 +80,7 @@ module battleRuntimeReducerRoute {
     | HitPointRegainPreventionRouteSubject
     | NextAttackRollModeRouteSubject
     | ReactionInterdictionRouteSubject
+    | ConditionRiderRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner
