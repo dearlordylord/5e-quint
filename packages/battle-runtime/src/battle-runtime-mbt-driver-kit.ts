@@ -893,6 +893,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "spellBaseArmorClassEffect",
   "hitPointRegainPrevention",
   "nextAttackRollMode",
+  "reactionInterdiction",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -1166,6 +1167,61 @@ type NextAttackRollModeRouteFact =
 type ReducerRoutedNextAttackRollModeProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly NextAttackRollModeRouteFact[];
+};
+const REACTION_INTERDICTION_SOURCES = [
+  "hostAttackHitDamageOutcome",
+] as const;
+type ReactionInterdictionSource =
+  (typeof REACTION_INTERDICTION_SOURCES)[number];
+const REACTION_INTERDICTION_CARRIERS = [
+  "hostOutcomeTargetCarrier",
+] as const;
+type ReactionInterdictionCarrier =
+  (typeof REACTION_INTERDICTION_CARRIERS)[number];
+const REACTION_INTERDICTION_SCOPES = [
+  "affectedTargetReactionsOnly",
+] as const;
+type ReactionInterdictionScope =
+  (typeof REACTION_INTERDICTION_SCOPES)[number];
+const REACTION_INTERDICTION_TRIGGER_FAMILIES = [
+  "opportunityAttackTriggerFamily",
+] as const;
+type ReactionInterdictionTriggerFamily =
+  (typeof REACTION_INTERDICTION_TRIGGER_FAMILIES)[number];
+const REACTION_INTERDICTION_EXPIRATION_BOUNDARIES = [
+  "untilAffectedTargetNextTurnStarts",
+] as const;
+type ReactionInterdictionExpirationBoundary =
+  (typeof REACTION_INTERDICTION_EXPIRATION_BOUNDARIES)[number];
+type ReactionInterdictionRouteFact =
+  | {
+      readonly kind: "source";
+      readonly source: ReactionInterdictionSource;
+    }
+  | {
+      readonly kind: "carrier";
+      readonly carrier: ReactionInterdictionCarrier;
+    }
+  | {
+      readonly kind: "scope";
+      readonly scope: ReactionInterdictionScope;
+    }
+  | {
+      readonly kind: "triggerFamily";
+      readonly triggerFamily: ReactionInterdictionTriggerFamily;
+    }
+  | {
+      readonly kind: "expirationBoundary";
+      readonly boundary: ReactionInterdictionExpirationBoundary;
+    }
+  | { readonly kind: "admitted" }
+  | { readonly kind: "projectedToMovementDiscovery" }
+  | { readonly kind: "projectedToReactionDiscovery" }
+  | { readonly kind: "expired" }
+  | { readonly kind: "cleanedUp" };
+type ReducerRoutedOpportunityAttackDenialProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly ReactionInterdictionRouteFact[];
 };
 type ReducerRoutedSaveGatedSpellOrderingProjection =
   SaveGatedSpellOrderingProjection & {
@@ -1531,6 +1587,16 @@ const nextAttackRollModeRouteDriverSchema = {
   doProjectDisadvantageOnAffectedTargetNextAttack: {},
   doExpireAdvantageAtBoundary: {},
   doExpireDisadvantageAtBoundary: {},
+  doStutterAfterCleanup: {},
+  step: {},
+} as const;
+
+const opportunityAttackDenialRouteDriverSchema = {
+  init: {},
+  doAdmitAttackHitOpportunityAttackDenialEffect: {},
+  doProjectOpportunityAttackDenialIntoMovementReactionDiscovery: {},
+  doExpireActiveDenialAtAffectedTargetTurnStart: {},
+  doExpireProjectedDenialAtAffectedTargetTurnStart: {},
   doStutterAfterCleanup: {},
   step: {},
 } as const;
@@ -3869,6 +3935,8 @@ const HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT =
   "hitPointRegainPrevention" satisfies ReducerRouteSubjectFamily;
 const NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT =
   "nextAttackRollMode" satisfies ReducerRouteSubjectFamily;
+const REACTION_INTERDICTION_ROUTE_SUBJECT =
+  "reactionInterdiction" satisfies ReducerRouteSubjectFamily;
 const NO_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
 const TARGET_CHOICE_ROUTE_HOLES = [
   "targetChoice",
@@ -4734,6 +4802,150 @@ export function createNextAttackRollModeRouteDriver() {
       doStutterAfterCleanup: () => {},
       step: () => {},
       getState: (): ReducerRoutedNextAttackRollModeProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+const OPPORTUNITY_ATTACK_DENIAL_ADMISSION_FACTS = [
+  {
+    kind: "source",
+    source: "hostAttackHitDamageOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "hostOutcomeTargetCarrier",
+  },
+  {
+    kind: "scope",
+    scope: "affectedTargetReactionsOnly",
+  },
+  {
+    kind: "triggerFamily",
+    triggerFamily: "opportunityAttackTriggerFamily",
+  },
+  {
+    kind: "expirationBoundary",
+    boundary: "untilAffectedTargetNextTurnStarts",
+  },
+  {
+    kind: "admitted",
+  },
+] as const satisfies readonly ReactionInterdictionRouteFact[];
+
+const OPPORTUNITY_ATTACK_DENIAL_PROJECTION_FACTS = [
+  { kind: "projectedToMovementDiscovery" },
+  { kind: "projectedToReactionDiscovery" },
+] as const satisfies readonly ReactionInterdictionRouteFact[];
+
+const OPPORTUNITY_ATTACK_DENIAL_EXPIRY_FACTS = [
+  { kind: "expired" },
+  { kind: "cleanedUp" },
+] as const satisfies readonly ReactionInterdictionRouteFact[];
+
+function opportunityAttackDenialInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function opportunityAttackDenialAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "spellAttack",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: REACTION_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function opportunityAttackDenialProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: REACTION_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: REACTION_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleInterruptStack",
+    }),
+  ];
+}
+
+function opportunityAttackDenialExpirationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: REACTION_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: REACTION_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+export function createOpportunityAttackDenialRouteDriver() {
+  return defineDriver(opportunityAttackDenialRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      opportunityAttackDenialInitialRoute();
+    let facts: readonly ReactionInterdictionRouteFact[] = [];
+
+    function reset(): void {
+      route = opportunityAttackDenialInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAdmitAttackHitOpportunityAttackDenialEffect: () => {
+        route = [...route, ...opportunityAttackDenialAdmissionRoute()];
+        facts = OPPORTUNITY_ATTACK_DENIAL_ADMISSION_FACTS;
+      },
+      doProjectOpportunityAttackDenialIntoMovementReactionDiscovery: () => {
+        route = [...route, ...opportunityAttackDenialProjectionRoute()];
+        facts = [...facts, ...OPPORTUNITY_ATTACK_DENIAL_PROJECTION_FACTS];
+      },
+      doExpireActiveDenialAtAffectedTargetTurnStart: () => {
+        route = [...route, ...opportunityAttackDenialExpirationRoute()];
+        facts = [...facts, ...OPPORTUNITY_ATTACK_DENIAL_EXPIRY_FACTS];
+      },
+      doExpireProjectedDenialAtAffectedTargetTurnStart: () => {
+        route = [...route, ...opportunityAttackDenialExpirationRoute()];
+        facts = [...facts, ...OPPORTUNITY_ATTACK_DENIAL_EXPIRY_FACTS];
+      },
+      doStutterAfterCleanup: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedOpportunityAttackDenialProjection => ({
         route,
         facts,
       }),
@@ -8198,6 +8410,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   SpellBaseArmorClassEffectRouteSubject: "spellBaseArmorClassEffect",
   HitPointRegainPreventionRouteSubject: "hitPointRegainPrevention",
   NextAttackRollModeRouteSubject: "nextAttackRollMode",
+  ReactionInterdictionRouteSubject: "reactionInterdiction",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -8273,6 +8486,30 @@ const NEXT_ATTACK_ROLL_MODE_DIRECTION_BY_VARIANT_TAG = {
   NextAttackRollAdvantage: "advantage",
   NextAttackRollDisadvantage: "disadvantage",
 } as const satisfies Readonly<Record<string, NextAttackRollModeDirection>>;
+
+const REACTION_INTERDICTION_SOURCE_BY_VARIANT_TAG = {
+  HostAttackHitDamageOutcome: "hostAttackHitDamageOutcome",
+} as const satisfies Readonly<Record<string, ReactionInterdictionSource>>;
+
+const REACTION_INTERDICTION_CARRIER_BY_VARIANT_TAG = {
+  HostOutcomeTargetCarrier: "hostOutcomeTargetCarrier",
+} as const satisfies Readonly<Record<string, ReactionInterdictionCarrier>>;
+
+const REACTION_INTERDICTION_SCOPE_BY_VARIANT_TAG = {
+  AffectedTargetReactionsOnly: "affectedTargetReactionsOnly",
+} as const satisfies Readonly<Record<string, ReactionInterdictionScope>>;
+
+const REACTION_INTERDICTION_TRIGGER_FAMILY_BY_VARIANT_TAG = {
+  OpportunityAttackTriggerFamily: "opportunityAttackTriggerFamily",
+} as const satisfies Readonly<
+  Record<string, ReactionInterdictionTriggerFamily>
+>;
+
+const REACTION_INTERDICTION_EXPIRATION_BOUNDARY_BY_VARIANT_TAG = {
+  UntilAffectedTargetNextTurnStarts: "untilAffectedTargetNextTurnStarts",
+} as const satisfies Readonly<
+  Record<string, ReactionInterdictionExpirationBoundary>
+>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
   AbilityCheckHoleKind: "abilityCheck",
@@ -8666,6 +8903,107 @@ function nextAttackRollModeFactPayload(
   throw new Error(`Expected next-Attack-Roll mode ${tag} payload record.`);
 }
 
+function decodeReactionInterdictionRouteFacts(
+  raw: unknown,
+): readonly ReactionInterdictionRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeReactionInterdictionRouteFact);
+}
+
+function decodeReactionInterdictionRouteFact(
+  raw: unknown,
+): ReactionInterdictionRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteReactionInterdictionSource") {
+    const payload = reactionInterdictionFactPayload(raw, tag);
+    return {
+      kind: "source",
+      source: quintVariantMappedValue(
+        quintField(payload, "source"),
+        "qFacts[].source",
+        REACTION_INTERDICTION_SOURCE_BY_VARIANT_TAG,
+        "reaction interdiction source",
+      ),
+    };
+  }
+  if (tag === "RouteReactionInterdictionCarrier") {
+    const payload = reactionInterdictionFactPayload(raw, tag);
+    return {
+      kind: "carrier",
+      carrier: quintVariantMappedValue(
+        quintField(payload, "carrier"),
+        "qFacts[].carrier",
+        REACTION_INTERDICTION_CARRIER_BY_VARIANT_TAG,
+        "reaction interdiction carrier",
+      ),
+    };
+  }
+  if (tag === "RouteReactionInterdictionScope") {
+    const payload = reactionInterdictionFactPayload(raw, tag);
+    return {
+      kind: "scope",
+      scope: quintVariantMappedValue(
+        quintField(payload, "scope"),
+        "qFacts[].scope",
+        REACTION_INTERDICTION_SCOPE_BY_VARIANT_TAG,
+        "reaction interdiction scope",
+      ),
+    };
+  }
+  if (tag === "RouteReactionInterdictionTriggerFamily") {
+    const payload = reactionInterdictionFactPayload(raw, tag);
+    return {
+      kind: "triggerFamily",
+      triggerFamily: quintVariantMappedValue(
+        quintField(payload, "triggerFamily"),
+        "qFacts[].triggerFamily",
+        REACTION_INTERDICTION_TRIGGER_FAMILY_BY_VARIANT_TAG,
+        "reaction interdiction trigger family",
+      ),
+    };
+  }
+  if (tag === "RouteReactionInterdictionExpirationBoundary") {
+    const payload = reactionInterdictionFactPayload(raw, tag);
+    return {
+      kind: "expirationBoundary",
+      boundary: quintVariantMappedValue(
+        quintField(payload, "boundary"),
+        "qFacts[].boundary",
+        REACTION_INTERDICTION_EXPIRATION_BOUNDARY_BY_VARIANT_TAG,
+        "reaction interdiction expiration boundary",
+      ),
+    };
+  }
+  if (tag === "RouteReactionInterdictionAdmitted") {
+    return { kind: "admitted" };
+  }
+  if (tag === "RouteReactionInterdictionProjectedToMovementDiscovery") {
+    return { kind: "projectedToMovementDiscovery" };
+  }
+  if (tag === "RouteReactionInterdictionProjectedToReactionDiscovery") {
+    return { kind: "projectedToReactionDiscovery" };
+  }
+  if (tag === "RouteReactionInterdictionExpired") {
+    return { kind: "expired" };
+  }
+  if (tag === "RouteReactionInterdictionCleanedUp") {
+    return { kind: "cleanedUp" };
+  }
+
+  throw new Error(`Unknown reaction interdiction route fact: ${tag}.`);
+}
+
+function reactionInterdictionFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected reaction interdiction ${tag} payload record.`);
+}
+
 function normalizeQuintState(raw: unknown): MbtProjection {
   const root = quintStateRecord(raw);
   const state = Object.hasOwn(root, "qState")
@@ -8847,6 +9185,16 @@ function normalizeReducerRoutedNextAttackRollModeQuintState(
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
     facts: decodeNextAttackRollModeRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedOpportunityAttackDenialQuintState(
+  raw: unknown,
+): ReducerRoutedOpportunityAttackDenialProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeReactionInterdictionRouteFacts(quintField(state, "qFacts")),
   };
 }
 
@@ -9477,6 +9825,16 @@ export const reducerRoutedNextAttackRollModeStateCheck = stateCheck(
   (
     spec: ReducerRoutedNextAttackRollModeProjection,
     impl: ReducerRoutedNextAttackRollModeProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedOpportunityAttackDenialStateCheck = stateCheck(
+  normalizeReducerRoutedOpportunityAttackDenialQuintState,
+  (
+    spec: ReducerRoutedOpportunityAttackDenialProjection,
+    impl: ReducerRoutedOpportunityAttackDenialProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;

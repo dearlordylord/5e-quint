@@ -665,6 +665,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-object-contact-damage.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-open-hand-technique.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-opportunity-attack-denial-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic reaction-interdiction route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-prone-movement.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | qnt-owner-role | semantic-core |

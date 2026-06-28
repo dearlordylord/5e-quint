@@ -79,6 +79,7 @@ module battleRuntimeReducerRoute {
     | SpellBaseArmorClassEffectRouteSubject
     | HitPointRegainPreventionRouteSubject
     | NextAttackRollModeRouteSubject
+    | ReactionInterdictionRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner

@@ -18,6 +18,7 @@ import {
   createMagicMissileRouteDriver,
   createMetamagicRouteDriver,
   createNextAttackRollModeRouteDriver,
+  createOpportunityAttackDenialRouteDriver,
   createProtectionCharmRouteDriver,
   createScalarBuffRouteDriver,
   createSaveGatedSpellOrderingRouteDriver,
@@ -43,6 +44,7 @@ import {
   reducerRoutedCommandOrderingStateCheck,
   reducerRoutedMetamagicStateCheck,
   reducerRoutedNextAttackRollModeStateCheck,
+  reducerRoutedOpportunityAttackDenialStateCheck,
   reducerRoutedProtectionCharmStateCheck,
   reducerRoutedScalarBuffStateCheck,
   reducerRoutedSaveGatedSpellOrderingStateCheck,
@@ -391,6 +393,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(3),
         stateCheck: reducerRoutedNextAttackRollModeStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes Opportunity Attack denial through active-effect and reaction-discovery owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-opportunity-attack-denial.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createOpportunityAttackDenialRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(3),
+        stateCheck: reducerRoutedOpportunityAttackDenialStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,

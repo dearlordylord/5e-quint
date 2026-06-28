@@ -142,6 +142,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-magic-missile-facts.qnt",
   "battle-runtime-mirror-image-constants.qnt",
   "battle-runtime-next-attack-roll-mode-route-facts.qnt",
+  "battle-runtime-opportunity-attack-denial-route-facts.qnt",
   "battle-runtime-reaction-kinds.qnt",
   "battle-runtime-reducer-route.qnt",
   "battle-runtime-replay-equivalence.qnt",
