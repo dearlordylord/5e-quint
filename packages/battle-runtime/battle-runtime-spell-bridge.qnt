@@ -122,6 +122,18 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect({ amount: int })
     | BattleRuntimeAidHitPointMaximumIncreaseEffect({ amount: int })
 
+  type BattleRuntimeScalarBuffActiveEffectProjection =
+    | BattleRuntimeScalarBuffPersistentEffectProjection({ effect: BattleRuntimeScalarBuffEffect })
+    | BattleRuntimeScalarBuffImmediateTemporaryHitPointProjection({ amount: int })
+
+  type BattleRuntimeScalarBuffProjectionDomain =
+    | BattleRuntimeScalarBuffArmorClassProjectionDomain
+    | BattleRuntimeScalarBuffSpeedProjectionDomain
+    | BattleRuntimeScalarBuffSpecialSpeedProjectionDomain
+    | BattleRuntimeScalarBuffHitPointMaximumProjectionDomain
+    | BattleRuntimeScalarBuffTemporaryHitPointProjectionDomain
+    | BattleRuntimeScalarBuffConditionImmunityProjectionDomain
+
   type BattleRuntimeDamageRiderSpellProfile =
     | BattleRuntimeDivineFavorWeaponDamageRider
     | BattleRuntimeDivineSmiteAfterHitDamage
@@ -442,6 +454,44 @@ module battleRuntimeSpellBridge {
   ): Set[BattleRuntimeScalarBuffEffect] =
     scalarBuffEffects(battleRuntimeScalarBuffProfile(profile), spellcastingAbilityModifier, slotLevel)
       .map(battleRuntimeScalarBuffEffect)
+
+  pure def battleRuntimeScalarBuffActiveEffectProjection(
+    projection: ScalarBuffActiveEffectProjection
+  ): BattleRuntimeScalarBuffActiveEffectProjection =
+    match projection {
+      | ScalarBuffPersistentEffectProjection(data) =>
+        BattleRuntimeScalarBuffPersistentEffectProjection({
+          effect: battleRuntimeScalarBuffEffect(data.effect),
+        })
+      | ScalarBuffImmediateTemporaryHitPointProjection(data) =>
+        BattleRuntimeScalarBuffImmediateTemporaryHitPointProjection(data)
+    }
+
+  pure def battleRuntimeScalarBuffActiveEffectProjections(
+    profile: BattleRuntimeScalarBuffProfile,
+    spellcastingAbilityModifier: int,
+    slotLevel: int,
+    rolledDice: int,
+  ): Set[BattleRuntimeScalarBuffActiveEffectProjection] =
+    scalarBuffActiveEffectProjections(
+      battleRuntimeScalarBuffProfile(profile),
+      spellcastingAbilityModifier,
+      slotLevel,
+      rolledDice,
+    )
+      .map(battleRuntimeScalarBuffActiveEffectProjection)
+
+  pure def battleRuntimeScalarBuffProjectionDomain(
+    domain: ScalarBuffProjectionDomain
+  ): BattleRuntimeScalarBuffProjectionDomain =
+    match domain {
+      | ScalarBuffArmorClassProjectionDomain => BattleRuntimeScalarBuffArmorClassProjectionDomain
+      | ScalarBuffSpeedProjectionDomain => BattleRuntimeScalarBuffSpeedProjectionDomain
+      | ScalarBuffSpecialSpeedProjectionDomain => BattleRuntimeScalarBuffSpecialSpeedProjectionDomain
+      | ScalarBuffHitPointMaximumProjectionDomain => BattleRuntimeScalarBuffHitPointMaximumProjectionDomain
+      | ScalarBuffTemporaryHitPointProjectionDomain => BattleRuntimeScalarBuffTemporaryHitPointProjectionDomain
+      | ScalarBuffConditionImmunityProjectionDomain => BattleRuntimeScalarBuffConditionImmunityProjectionDomain
+    }
 
   pure def battleRuntimeScalarBuffRequiresConcentration(profile: BattleRuntimeScalarBuffProfile): bool =
     scalarBuffRequiresConcentration(battleRuntimeScalarBuffProfile(profile))

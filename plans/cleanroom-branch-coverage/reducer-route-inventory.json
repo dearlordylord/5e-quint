@@ -1212,6 +1212,10 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
+              "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt exposes scalarBuffActiveEffectProjections, deriving persistent active-effect projections and immediate Temporary Hit Point projections from profile, slot level, spellcasting ability modifier, and rolled dice.",
+              "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt maps scalar-buff projections to generic domains with scalarBuffProjectionDomain and scalarBuffProfileProjectionDomains: Armor Class, Speed, special Speed, Hit Point maximum, Temporary Hit Points, and condition immunity.",
+              "packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt asserts the generic scalar-buff profile projection functions at the battle-runtime bridge, including False Life as an immediate Temporary Hit Point projection and Aid as a Hit Point maximum projection.",
+              "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt supplies representative active-effect branch witnesses; the Shield of Faith -> Longstrider -> Spider Climb -> Aid -> False Life order is branch-witness progression, not an accumulating multi-spell battle ledger.",
               "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt exposes qRoute for ScalarBuffEffectRouteSubject through spell-slot/action-economy, active-effect, movement, HP, temporary-HP, and Concentration owners."
             ],
             "rawDomainFacts": [

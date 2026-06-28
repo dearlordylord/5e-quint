@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "FCSF-02-SCALAR-ACTIVE-EFFECT-PROFILE-PROGRESSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Make cumulative scalar active-effect profile progression derivable"
     },
     {
@@ -200,6 +200,14 @@ Plan Impact:
 - Split this task if profile progression requires multiple unrelated owner
   families.
 
+Outcome:
+
+- Source QNT now exposes generic scalar-buff active-effect projections and
+  projection domains for persistent effects, immediate Temporary Hit Points,
+  Hit Point maximum changes, Armor Class, Speed, special Speed, and condition
+  immunity. Task 8 should refresh/replay this package input with the Task 1
+  concentration cleanup input.
+
 ### Task 3
 
 `FCSF-03-SELECTED-SPELL-RESIDUAL-SHAPES`
@@ -246,7 +254,8 @@ attack roll mode.
 
 `FCSF-08-PACKAGE-REFRESH-AND-FRESH-REPLAY-SEED`
 
-Unblocked by `FCSF-01-ACTIVE-EFFECT-CONCENTRATION-CLEANUP-SOURCE-INPUT`.
-Refresh the cleanroom package from the updated source commit and create a small
-fresh-target replay task that proves the Task 1 concentration teardown facts are
-consumed through public reducer entrypoints.
+Unblocked by `FCSF-01-ACTIVE-EFFECT-CONCENTRATION-CLEANUP-SOURCE-INPUT` and
+`FCSF-02-SCALAR-ACTIVE-EFFECT-PROFILE-PROGRESSION`. Refresh the cleanroom
+package from the updated source commit and create small fresh-target replay
+tasks that prove the Task 1 concentration teardown facts and Task 2 scalar-buff
+profile projection facts are consumed through public reducer/source entrypoints.

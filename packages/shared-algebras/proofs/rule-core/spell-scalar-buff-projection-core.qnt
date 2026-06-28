@@ -36,6 +36,18 @@ module spellScalarBuffProjectionCore {
     | HeroismTurnStartTemporaryHitPointsEffect({ amount: int })
     | AidHitPointMaximumIncreaseEffect({ amount: int })
 
+  type ScalarBuffActiveEffectProjection =
+    | ScalarBuffPersistentEffectProjection({ effect: ScalarBuffEffect })
+    | ScalarBuffImmediateTemporaryHitPointProjection({ amount: int })
+
+  type ScalarBuffProjectionDomain =
+    | ScalarBuffArmorClassProjectionDomain
+    | ScalarBuffSpeedProjectionDomain
+    | ScalarBuffSpecialSpeedProjectionDomain
+    | ScalarBuffHitPointMaximumProjectionDomain
+    | ScalarBuffTemporaryHitPointProjectionDomain
+    | ScalarBuffConditionImmunityProjectionDomain
+
   pure def scalarBuffSpellAction(profile: ScalarBuffSpellProfile): SpellInvocationAction =
     if (profile == ShieldOfFaithScalarBuffProfile or profile == BarkskinScalarBuffProfile) BonusActionSpellInvocation else ActionTimeSpellInvocation
 
@@ -72,6 +84,52 @@ module spellScalarBuffProjectionCore {
         )
       | AidScalarBuffProfile => Set(AidHitPointMaximumIncreaseEffect({ amount: scalarBuffAidHitPointMaximumIncrease(slotLevel) }))
     }
+
+  pure def scalarBuffActiveEffectProjections(
+    profile: ScalarBuffSpellProfile,
+    spellcastingAbilityModifier: int,
+    slotLevel: int,
+    rolledDice: int,
+  ): Set[ScalarBuffActiveEffectProjection] =
+    scalarBuffEffects(profile, spellcastingAbilityModifier, slotLevel)
+      .map(effect => ScalarBuffPersistentEffectProjection({ effect: effect }))
+      .union(
+        if (scalarBuffTemporaryHitPoints(profile, slotLevel, rolledDice) > 0)
+          Set(ScalarBuffImmediateTemporaryHitPointProjection({ amount: scalarBuffTemporaryHitPoints(profile, slotLevel, rolledDice) }))
+        else
+          Set()
+      )
+
+  pure def scalarBuffProjectionDomain(
+    projection: ScalarBuffActiveEffectProjection
+  ): ScalarBuffProjectionDomain =
+    match projection {
+      | ScalarBuffPersistentEffectProjection(data) =>
+        match data.effect {
+          | LongstriderSpeedIncreaseEffect => ScalarBuffSpeedProjectionDomain
+          | ShieldOfFaithArmorClassBonusEffect => ScalarBuffArmorClassProjectionDomain
+          | SpiderClimbClimbSpeedGrantEffect => ScalarBuffSpecialSpeedProjectionDomain
+          | FlySpeedHoverGrantEffect => ScalarBuffSpecialSpeedProjectionDomain
+          | BarkskinArmorClassFloorEffect => ScalarBuffArmorClassProjectionDomain
+          | HeroismFrightenedImmunityEffect => ScalarBuffConditionImmunityProjectionDomain
+          | HeroismTurnStartTemporaryHitPointsEffect(_) => ScalarBuffTemporaryHitPointProjectionDomain
+          | AidHitPointMaximumIncreaseEffect(_) => ScalarBuffHitPointMaximumProjectionDomain
+        }
+      | ScalarBuffImmediateTemporaryHitPointProjection(_) => ScalarBuffTemporaryHitPointProjectionDomain
+    }
+
+  pure def scalarBuffProfileProjectionDomains(
+    profile: ScalarBuffSpellProfile,
+    spellcastingAbilityModifier: int,
+    slotLevel: int,
+    rolledDice: int,
+  ): Set[ScalarBuffProjectionDomain] =
+    scalarBuffActiveEffectProjections(
+      profile,
+      spellcastingAbilityModifier,
+      slotLevel,
+      rolledDice,
+    ).map(scalarBuffProjectionDomain)
 
   pure def scalarBuffRequiresConcentration(profile: ScalarBuffSpellProfile): bool =
     profile == ShieldOfFaithScalarBuffProfile or profile == SpiderClimbScalarBuffProfile or profile == FlyScalarBuffProfile or profile == HeroismScalarBuffProfile

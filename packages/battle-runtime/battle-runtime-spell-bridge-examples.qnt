@@ -114,6 +114,10 @@ module battleRuntimeSpellBridgeExamples {
   }
 
   run test_scalar_buff_profile_projection = {
+    val falseLifeProjection = ScalarBuffImmediateTemporaryHitPointProjection({ amount: 9 })
+    val aidProjection = ScalarBuffPersistentEffectProjection({
+      effect: AidHitPointMaximumIncreaseEffect({ amount: 10 }),
+    })
     all {
       assert(battleRuntimeScalarBuffUsesBonusAction(BattleRuntimeShieldOfFaithScalarBuff)),
       assert(battleRuntimeScalarBuffUsesBonusAction(BattleRuntimeBarkskinScalarBuff)),
@@ -129,6 +133,13 @@ module battleRuntimeSpellBridgeExamples {
       assert(battleRuntimeScalarBuffEffects(BattleRuntimeSpiderClimbScalarBuff, 3, 1) == Set(BattleRuntimeSpiderClimbClimbSpeedGrantEffect)),
       assert(battleRuntimeScalarBuffEffects(BattleRuntimeFlyScalarBuff, 3, 1) == Set(BattleRuntimeFlySpeedHoverGrantEffect)),
       assert(battleRuntimeScalarBuffEffects(BattleRuntimeAidScalarBuff, 3, 3) == Set(BattleRuntimeAidHitPointMaximumIncreaseEffect({ amount: 10 }))),
+      assert(battleRuntimeScalarBuffActiveEffectProjections(BattleRuntimeFalseLifeScalarBuff, 3, 1, 5) == Set(BattleRuntimeScalarBuffImmediateTemporaryHitPointProjection({ amount: 9 }))),
+      assert(scalarBuffActiveEffectProjections(FalseLifeScalarBuffProfile, 3, 1, 5) == Set(falseLifeProjection)),
+      assert(scalarBuffActiveEffectProjections(AidScalarBuffProfile, 3, 3, 0) == Set(aidProjection)),
+      assert(scalarBuffProfileProjectionDomains(FalseLifeScalarBuffProfile, 3, 1, 5) == Set(ScalarBuffTemporaryHitPointProjectionDomain)),
+      assert(scalarBuffProfileProjectionDomains(AidScalarBuffProfile, 3, 3, 0) == Set(ScalarBuffHitPointMaximumProjectionDomain)),
+      assert(battleRuntimeScalarBuffProjectionDomain(scalarBuffProjectionDomain(falseLifeProjection)) == BattleRuntimeScalarBuffTemporaryHitPointProjectionDomain),
+      assert(battleRuntimeScalarBuffProjectionDomain(scalarBuffProjectionDomain(aidProjection)) == BattleRuntimeScalarBuffHitPointMaximumProjectionDomain),
       assert(battleRuntimeScalarBuffRequiresConcentration(BattleRuntimeSpiderClimbScalarBuff)),
       assert(battleRuntimeScalarBuffRequiresConcentration(BattleRuntimeFlyScalarBuff)),
       assert(battleRuntimeScalarBuffRequiresConcentration(BattleRuntimeHeroismScalarBuff)),
