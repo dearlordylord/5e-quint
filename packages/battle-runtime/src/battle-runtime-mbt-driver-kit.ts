@@ -874,6 +874,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "movementResource",
   "specialSpeedProjection",
   "forcedMovement",
+  "movementPresentation",
   "activeFormLifecycle",
   "creatureTypeTargetAdmission",
   "protectionCharmActiveEffect",
@@ -936,6 +937,7 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleArmorClass",
   "battleLightProjection",
   "battleSpellInvocation",
+  "battleTablePresentation",
 ] as const;
 type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
 const REDUCER_ROUTE_HOLES = [
@@ -9724,6 +9726,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   MovementResourceRouteSubject: "movementResource",
   SpecialSpeedProjectionRouteSubject: "specialSpeedProjection",
   ForcedMovementRouteSubject: "forcedMovement",
+  MovementPresentationRouteSubject: "movementPresentation",
   ActiveFormLifecycleRouteSubject: "activeFormLifecycle",
   CreatureTypeTargetAdmissionRouteSubject: "creatureTypeTargetAdmission",
   ProtectionCharmActiveEffectRouteSubject: "protectionCharmActiveEffect",
@@ -9790,6 +9793,7 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleArmorClassOwner: "battleArmorClass",
   BattleLightProjectionOwner: "battleLightProjection",
   BattleSpellInvocationOwner: "battleSpellInvocation",
+  BattleTablePresentationOwner: "battleTablePresentation",
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
 
 const NEXT_ATTACK_ROLL_MODE_SOURCE_BY_VARIANT_TAG = {
