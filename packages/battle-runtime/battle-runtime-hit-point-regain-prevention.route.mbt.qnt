@@ -73,11 +73,18 @@ module battleRuntimeHitPointRegainPreventionRouteMbt {
       BattleHitPointOwner,
     )
 
-  pure def cleanupPreventionEffect: ReducerRouteEvent =
+  pure def expirePreventionDurationBoundary: ReducerRouteEvent =
     routeResolveBattleSubjectWithoutFill(
       HitPointRegainPreventionRouteSubject,
       Set(),
       BattleTurnBoundaryOwner,
+    )
+
+  pure def cleanupPreventionActiveEffect: ReducerRouteEvent =
+    routeResolveBattleSubjectWithoutFill(
+      HitPointRegainPreventionRouteSubject,
+      Set(),
+      BattleActiveEffectOwner,
     )
 
   action recordSurface(
@@ -118,7 +125,9 @@ module battleRuntimeHitPointRegainPreventionRouteMbt {
     qSurface == LaterHealingInterdictedRouteSurface,
     recordSurface(
       PreventionEffectExpiredRouteSurface,
-      qRoute.append(cleanupPreventionEffect),
+      qRoute
+        .append(expirePreventionDurationBoundary)
+        .append(cleanupPreventionActiveEffect),
     ),
   }
 

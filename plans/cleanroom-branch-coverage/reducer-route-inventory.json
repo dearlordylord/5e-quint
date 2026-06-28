@@ -443,7 +443,7 @@
               "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
               "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt exposes SpellAttackRouteSubject evidence for the selected spell-attack branches' target, Attack Roll, damage dice, and damage-type fills.",
               "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for the selected save-gated damage branches' Saving Throw and damage frontiers.",
-              "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt exposes HitPointRegainPreventionRouteSubject evidence for attack-hit active-effect admission, later Hit Point healing interdiction, and turn-boundary cleanup through active-effect, Hit Point, and turn-boundary owners.",
+              "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt exposes HitPointRegainPreventionRouteSubject evidence for attack-hit active-effect admission, later Hit Point healing interdiction, turn-boundary duration expiry, and active-effect cleanup through active-effect, Hit Point, and turn-boundary owners.",
               "The post-hit active-effect branches in this grouped selected-identity witness split into separate generic active-effect substrates before target replay may count them."
             ],
             "rawDomainFacts": [
@@ -3751,7 +3751,7 @@
           ],
           "requiredRouteInput": "Add a generic active-effect route subject whose fills derive the attack-hit damage result, target, duration boundary, and later healing-interdiction projection from typed procedure facts rather than selected spell identity.",
           "existingSourceEvidence": [
-            "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt exposes a generic HitPointRegainPreventionRouteSubject route from attack-hit damage into active-effect admission, later Hit Point healing interdiction, and turn-boundary cleanup.",
+            "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt exposes a generic HitPointRegainPreventionRouteSubject route from attack-hit damage into active-effect admission, later Hit Point healing interdiction, turn-boundary duration expiry, and active-effect cleanup.",
             "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt already covers the spell Attack Roll and damage frontier.",
             "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt already names hit-point-regain prevention as an attack-hit projection fact."
           ],

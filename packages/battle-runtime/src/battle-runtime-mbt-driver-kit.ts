@@ -4398,12 +4398,19 @@ function hitPointRegainPreventionHealingInterdictionRoute(): ReducerRouteEvent {
   });
 }
 
-function hitPointRegainPreventionCleanupRoute(): ReducerRouteEvent {
-  return routeResolveSubjectWithoutFill({
-    subject: HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT,
-    holes: NO_ROUTE_HOLES,
-    owner: "battleTurnBoundary",
-  });
+function hitPointRegainPreventionCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
 }
 
 export function createHitPointRegainPreventionRouteDriver() {
@@ -4425,7 +4432,7 @@ export function createHitPointRegainPreventionRouteDriver() {
         ];
       },
       doExpireAtTurnBoundary: () => {
-        route = [...route, hitPointRegainPreventionCleanupRoute()];
+        route = [...route, ...hitPointRegainPreventionCleanupRoute()];
       },
       doStutterAfterExpiry: () => {},
       step: () => {},
