@@ -664,6 +664,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-movement.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-next-attack-roll-mode-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic next-Attack-Roll mode route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-object-contact-damage.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-object-light-rider-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic object/light route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-open-hand-technique.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-opportunity-attack-denial-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic reaction-interdiction route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |

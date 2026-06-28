@@ -81,6 +81,7 @@ module battleRuntimeReducerRoute {
     | NextAttackRollModeRouteSubject
     | ReactionInterdictionRouteSubject
     | ConditionRiderRouteSubject
+    | ObjectLightRiderRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner
@@ -116,6 +117,7 @@ module battleRuntimeReducerRoute {
     | BattleCreatureSpaceMovementOwner
     | BattleCreatureStateOwner
     | BattleArmorClassOwner
+    | BattleLightProjectionOwner
 
   type ReducerRouteFillEvidence =
     | RouteFillKind({ fill: BattleFillKind })
