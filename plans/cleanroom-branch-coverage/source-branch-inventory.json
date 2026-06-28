@@ -8384,6 +8384,82 @@
       }
     },
     {
+      "branchAction": "doAttackCriticalDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doAttackCriticalDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt#step:doAttackCriticalDamage",
+      "qntFileSha256": "14fb91e48eb46dd8045486faf75c6e8789bddc3677527d960a7bd3d92906482d",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDirectInstanceDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDirectInstanceDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt#step:doDirectInstanceDamage",
+      "qntFileSha256": "14fb91e48eb46dd8045486faf75c6e8789bddc3677527d960a7bd3d92906482d",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSaveSuccessHalfDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSaveSuccessHalfDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt#step:doSaveSuccessHalfDamage",
+      "qntFileSha256": "14fb91e48eb46dd8045486faf75c6e8789bddc3677527d960a7bd3d92906482d",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSaveSuccessNoDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSaveSuccessNoDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt#step:doSaveSuccessNoDamage",
+      "qntFileSha256": "14fb91e48eb46dd8045486faf75c6e8789bddc3677527d960a7bd3d92906482d",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doActionSurgeActivate",
       "branchFamily": "step",
       "branchPath": [

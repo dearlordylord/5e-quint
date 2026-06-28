@@ -133,6 +133,7 @@
           "queue": [
             "cleanroom-input/qnt/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-features.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt",
@@ -280,6 +281,7 @@
           "queue": [
             "cleanroom-input/qnt/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-features.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt",
