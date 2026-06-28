@@ -2334,12 +2334,11 @@
       "surfaceEvidence": [
         ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hex",
         ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hunter's Mark",
-        ".references/srd-5.2.1/Rules-Glossary.md#Ability Check",
         ".references/srd-5.2.1/Rules-Glossary.md#Attack Roll",
         ".references/srd-5.2.1/Rules-Glossary.md#Concentration",
         ".references/srd-5.2.1/Rules-Glossary.md#Damage Roll"
       ],
-      "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+      "title": "Battle marked-damage spell riders for attack-roll damage, Concentration duration, and zero-Hit-Point transfer timing"
     },
     {
       "id": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
@@ -5060,13 +5059,12 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
-        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
-        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER"
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"
       ],
       "followUpTaskIds": [],
       "holeKind": "abilityChoice",
       "id": "BattleSpellAbilityChoiceHole",
-      "reason": "Ability choice is generator-input semantics when it selects later Ability Check roll mode or marked-rider state. The chosen ability is stored as reducer-visible active-effect data.",
+      "reason": "Ability choice is generator-input semantics when it selects later Ability Check roll mode. The chosen ability is stored as reducer-visible active-effect data.",
       "subject": "battle-hole-family"
     },
     {
@@ -5554,13 +5552,12 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES",
-        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
-        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER"
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"
       ],
       "fillKind": "abilityChoice",
       "followUpTaskIds": [],
       "id": "abilityChoice",
-      "reason": "Ability-choice fills are generator-input semantics when they determine later Ability Check roll modifiers, checks, or marked-damage rider state.",
+      "reason": "Ability-choice fills are generator-input semantics when they determine later Ability Check roll modifiers or checks.",
       "subject": "battle-fill-kind"
     },
     {
