@@ -894,6 +894,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "hitPointRegainPrevention",
   "nextAttackRollMode",
   "reactionInterdiction",
+  "conditionRider",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -1222,6 +1223,71 @@ type ReactionInterdictionRouteFact =
 type ReducerRoutedOpportunityAttackDenialProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly ReactionInterdictionRouteFact[];
+};
+const CONDITION_RIDER_HOST_OUTCOMES = [
+  "hostAttackHitDamageOutcome",
+  "hostFailedSavingThrowOutcome",
+] as const;
+type ConditionRiderHostOutcome =
+  (typeof CONDITION_RIDER_HOST_OUTCOMES)[number];
+const CONDITION_RIDER_CARRIERS = [
+  "affectedTargetConditionCarrier",
+] as const;
+type ConditionRiderCarrier = (typeof CONDITION_RIDER_CARRIERS)[number];
+const CONDITION_RIDER_CONDITION_KINDS = [
+  "poisoned",
+  "restrained",
+] as const;
+type ConditionRiderConditionKind =
+  (typeof CONDITION_RIDER_CONDITION_KINDS)[number];
+const CONDITION_RIDER_ADMISSIONS = [
+  "conditionApplied",
+  "conditionRejectedByImmunity",
+] as const;
+type ConditionRiderAdmission = (typeof CONDITION_RIDER_ADMISSIONS)[number];
+const CONDITION_RIDER_BOUNDARIES = [
+  "untilDurationExpires",
+  "affectedTargetEndTurnRepeatSave",
+] as const;
+type ConditionRiderBoundary = (typeof CONDITION_RIDER_BOUNDARIES)[number];
+const CONDITION_RIDER_CLEANUP_OWNERS = [
+  "battleTurnBoundary",
+  "battleConditionLifecycle",
+  "battleActiveEffect",
+] as const;
+type ConditionRiderCleanupOwner =
+  (typeof CONDITION_RIDER_CLEANUP_OWNERS)[number];
+type ConditionRiderRouteFact =
+  | {
+      readonly kind: "hostOutcome";
+      readonly outcome: ConditionRiderHostOutcome;
+    }
+  | {
+      readonly kind: "carrier";
+      readonly carrier: ConditionRiderCarrier;
+    }
+  | {
+      readonly kind: "conditionKind";
+      readonly condition: ConditionRiderConditionKind;
+    }
+  | {
+      readonly kind: "admission";
+      readonly admission: ConditionRiderAdmission;
+    }
+  | {
+      readonly kind: "boundary";
+      readonly boundary: ConditionRiderBoundary;
+    }
+  | { readonly kind: "repeatSaveFrontierOpened" }
+  | { readonly kind: "repeatSaveSucceeded" }
+  | { readonly kind: "expired" }
+  | {
+      readonly kind: "cleanedUpBy";
+      readonly owner: ConditionRiderCleanupOwner;
+    };
+type ReducerRoutedConditionRiderProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly ConditionRiderRouteFact[];
 };
 type ReducerRoutedSaveGatedSpellOrderingProjection =
   SaveGatedSpellOrderingProjection & {
@@ -1598,6 +1664,18 @@ const opportunityAttackDenialRouteDriverSchema = {
   doExpireActiveDenialAtAffectedTargetTurnStart: {},
   doExpireProjectedDenialAtAffectedTargetTurnStart: {},
   doStutterAfterCleanup: {},
+  step: {},
+} as const;
+
+const conditionRiderRouteDriverSchema = {
+  init: {},
+  doAdmitAttackHitPoisonConditionRider: {},
+  doRejectAttackHitPoisonConditionRiderByImmunity: {},
+  doExpireAttackHitPoisonConditionRider: {},
+  doAdmitFailedSaveRepeatSaveConditionRider: {},
+  doOpenFailedSaveConditionRepeatSaveFrontier: {},
+  doResolveFailedSaveConditionRepeatSaveSuccessCleanup: {},
+  doStutterAfterTerminalSurface: {},
   step: {},
 } as const;
 
@@ -3937,6 +4015,8 @@ const NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT =
   "nextAttackRollMode" satisfies ReducerRouteSubjectFamily;
 const REACTION_INTERDICTION_ROUTE_SUBJECT =
   "reactionInterdiction" satisfies ReducerRouteSubjectFamily;
+const CONDITION_RIDER_ROUTE_SUBJECT =
+  "conditionRider" satisfies ReducerRouteSubjectFamily;
 const NO_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
 const TARGET_CHOICE_ROUTE_HOLES = [
   "targetChoice",
@@ -4845,6 +4925,84 @@ const OPPORTUNITY_ATTACK_DENIAL_EXPIRY_FACTS = [
   { kind: "cleanedUp" },
 ] as const satisfies readonly ReactionInterdictionRouteFact[];
 
+const CONDITION_RIDER_ATTACK_HIT_POISON_APPLIED_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostAttackHitDamageOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "poisoned",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "untilDurationExpires",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_ATTACK_HIT_POISON_REJECTED_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostAttackHitDamageOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "poisoned",
+  },
+  {
+    kind: "admission",
+    admission: "conditionRejectedByImmunity",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_FAILED_SAVE_APPLIED_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostFailedSavingThrowOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "restrained",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "affectedTargetEndTurnRepeatSave",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_DURATION_CLEANUP_FACTS = [
+  { kind: "expired" },
+  { kind: "cleanedUpBy", owner: "battleTurnBoundary" },
+  { kind: "cleanedUpBy", owner: "battleConditionLifecycle" },
+  { kind: "cleanedUpBy", owner: "battleActiveEffect" },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_REPEAT_SAVE_SUCCESS_CLEANUP_FACTS = [
+  { kind: "repeatSaveSucceeded" },
+  { kind: "cleanedUpBy", owner: "battleConditionLifecycle" },
+  { kind: "cleanedUpBy", owner: "battleActiveEffect" },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
 function opportunityAttackDenialInitialRoute(): readonly ReducerRouteEvent[] {
   return [routeStart()];
 }
@@ -4946,6 +5104,169 @@ export function createOpportunityAttackDenialRouteDriver() {
       doStutterAfterCleanup: () => {},
       step: () => {},
       getState: (): ReducerRoutedOpportunityAttackDenialProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+function conditionRiderInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function conditionRiderAttackHitHostOutcomeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "spellAttack",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function conditionRiderFailedSaveHostOutcomeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "saveGatedSpell",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "targetChoice",
+      holes: SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+  ];
+}
+
+function conditionRiderResolveWithoutFill(
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return routeResolveSubjectWithoutFill({
+    subject: CONDITION_RIDER_ROUTE_SUBJECT,
+    holes: NO_ROUTE_HOLES,
+    owner,
+  });
+}
+
+function conditionRiderAttackHitAdmissionRoute(
+  admitActiveEffect: boolean,
+): readonly ReducerRouteEvent[] {
+  const route = [
+    ...conditionRiderAttackHitHostOutcomeRoute(),
+    conditionRiderResolveWithoutFill("battleConditionLifecycle"),
+  ];
+  return admitActiveEffect
+    ? [...route, conditionRiderResolveWithoutFill("battleActiveEffect")]
+    : route;
+}
+
+function conditionRiderFailedSaveAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...conditionRiderFailedSaveHostOutcomeRoute(),
+    conditionRiderResolveWithoutFill("battleConditionLifecycle"),
+    conditionRiderResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function conditionRiderDurationCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    conditionRiderResolveWithoutFill("battleTurnBoundary"),
+    conditionRiderResolveWithoutFill("battleConditionLifecycle"),
+    conditionRiderResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function conditionRiderRepeatSaveFrontierRoute(): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: CONDITION_RIDER_ROUTE_SUBJECT,
+    holes: SAVING_THROW_OUTCOME_ROUTE_HOLES,
+    owner: "battleTurnBoundary",
+  });
+}
+
+function conditionRiderRepeatSaveSuccessCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubject({
+      subject: CONDITION_RIDER_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+    conditionRiderResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+export function createConditionRiderRouteDriver() {
+  return defineDriver(conditionRiderRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = conditionRiderInitialRoute();
+    let facts: readonly ConditionRiderRouteFact[] = [];
+
+    function reset(): void {
+      route = conditionRiderInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAdmitAttackHitPoisonConditionRider: () => {
+        route = [...route, ...conditionRiderAttackHitAdmissionRoute(true)];
+        facts = CONDITION_RIDER_ATTACK_HIT_POISON_APPLIED_FACTS;
+      },
+      doRejectAttackHitPoisonConditionRiderByImmunity: () => {
+        route = [...route, ...conditionRiderAttackHitAdmissionRoute(false)];
+        facts = CONDITION_RIDER_ATTACK_HIT_POISON_REJECTED_FACTS;
+      },
+      doExpireAttackHitPoisonConditionRider: () => {
+        route = [...route, ...conditionRiderDurationCleanupRoute()];
+        facts = [...facts, ...CONDITION_RIDER_DURATION_CLEANUP_FACTS];
+      },
+      doAdmitFailedSaveRepeatSaveConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = CONDITION_RIDER_FAILED_SAVE_APPLIED_FACTS;
+      },
+      doOpenFailedSaveConditionRepeatSaveFrontier: () => {
+        route = [...route, conditionRiderRepeatSaveFrontierRoute()];
+        facts = [...facts, { kind: "repeatSaveFrontierOpened" }];
+      },
+      doResolveFailedSaveConditionRepeatSaveSuccessCleanup: () => {
+        route = [...route, ...conditionRiderRepeatSaveSuccessCleanupRoute()];
+        facts = [
+          ...facts,
+          ...CONDITION_RIDER_REPEAT_SAVE_SUCCESS_CLEANUP_FACTS,
+        ];
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedConditionRiderProjection => ({
         route,
         facts,
       }),
@@ -8411,6 +8732,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   HitPointRegainPreventionRouteSubject: "hitPointRegainPrevention",
   NextAttackRollModeRouteSubject: "nextAttackRollMode",
   ReactionInterdictionRouteSubject: "reactionInterdiction",
+  ConditionRiderRouteSubject: "conditionRider",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -8510,6 +8832,36 @@ const REACTION_INTERDICTION_EXPIRATION_BOUNDARY_BY_VARIANT_TAG = {
 } as const satisfies Readonly<
   Record<string, ReactionInterdictionExpirationBoundary>
 >;
+
+const CONDITION_RIDER_HOST_OUTCOME_BY_VARIANT_TAG = {
+  HostAttackHitDamageOutcome: "hostAttackHitDamageOutcome",
+  HostFailedSavingThrowOutcome: "hostFailedSavingThrowOutcome",
+} as const satisfies Readonly<Record<string, ConditionRiderHostOutcome>>;
+
+const CONDITION_RIDER_CARRIER_BY_VARIANT_TAG = {
+  AffectedTargetConditionCarrier: "affectedTargetConditionCarrier",
+} as const satisfies Readonly<Record<string, ConditionRiderCarrier>>;
+
+const CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG = {
+  PoisonedCondition: "poisoned",
+  RestrainedCondition: "restrained",
+} as const satisfies Readonly<Record<string, ConditionRiderConditionKind>>;
+
+const CONDITION_RIDER_ADMISSION_BY_VARIANT_TAG = {
+  ConditionApplied: "conditionApplied",
+  ConditionRejectedByImmunity: "conditionRejectedByImmunity",
+} as const satisfies Readonly<Record<string, ConditionRiderAdmission>>;
+
+const CONDITION_RIDER_BOUNDARY_BY_VARIANT_TAG = {
+  UntilDurationExpires: "untilDurationExpires",
+  AffectedTargetEndTurnRepeatSave: "affectedTargetEndTurnRepeatSave",
+} as const satisfies Readonly<Record<string, ConditionRiderBoundary>>;
+
+const CONDITION_RIDER_CLEANUP_OWNER_BY_VARIANT_TAG = {
+  BattleTurnBoundaryCleanupOwner: "battleTurnBoundary",
+  BattleConditionLifecycleCleanupOwner: "battleConditionLifecycle",
+  BattleActiveEffectCleanupOwner: "battleActiveEffect",
+} as const satisfies Readonly<Record<string, ConditionRiderCleanupOwner>>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
   AbilityCheckHoleKind: "abilityCheck",
@@ -9004,6 +9356,113 @@ function reactionInterdictionFactPayload(
   throw new Error(`Expected reaction interdiction ${tag} payload record.`);
 }
 
+function decodeConditionRiderRouteFacts(
+  raw: unknown,
+): readonly ConditionRiderRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeConditionRiderRouteFact);
+}
+
+function decodeConditionRiderRouteFact(
+  raw: unknown,
+): ConditionRiderRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteConditionRiderHostOutcome") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "hostOutcome",
+      outcome: quintVariantMappedValue(
+        quintField(payload, "outcome"),
+        "qFacts[].outcome",
+        CONDITION_RIDER_HOST_OUTCOME_BY_VARIANT_TAG,
+        "condition rider host outcome",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderCarrier") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "carrier",
+      carrier: quintVariantMappedValue(
+        quintField(payload, "carrier"),
+        "qFacts[].carrier",
+        CONDITION_RIDER_CARRIER_BY_VARIANT_TAG,
+        "condition rider carrier",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderConditionKind") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "conditionKind",
+      condition: quintVariantMappedValue(
+        quintField(payload, "condition"),
+        "qFacts[].condition",
+        CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG,
+        "condition rider condition kind",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderAdmission") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "admission",
+      admission: quintVariantMappedValue(
+        quintField(payload, "admission"),
+        "qFacts[].admission",
+        CONDITION_RIDER_ADMISSION_BY_VARIANT_TAG,
+        "condition rider admission",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderBoundary") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "boundary",
+      boundary: quintVariantMappedValue(
+        quintField(payload, "boundary"),
+        "qFacts[].boundary",
+        CONDITION_RIDER_BOUNDARY_BY_VARIANT_TAG,
+        "condition rider boundary",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderRepeatSaveFrontierOpened") {
+    return { kind: "repeatSaveFrontierOpened" };
+  }
+  if (tag === "RouteConditionRiderRepeatSaveSucceeded") {
+    return { kind: "repeatSaveSucceeded" };
+  }
+  if (tag === "RouteConditionRiderExpired") {
+    return { kind: "expired" };
+  }
+  if (tag === "RouteConditionRiderCleanedUpBy") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "cleanedUpBy",
+      owner: quintVariantMappedValue(
+        quintField(payload, "owner"),
+        "qFacts[].owner",
+        CONDITION_RIDER_CLEANUP_OWNER_BY_VARIANT_TAG,
+        "condition rider cleanup owner",
+      ),
+    };
+  }
+
+  throw new Error(`Unknown condition rider route fact: ${tag}.`);
+}
+
+function conditionRiderFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected condition rider ${tag} payload record.`);
+}
+
 function normalizeQuintState(raw: unknown): MbtProjection {
   const root = quintStateRecord(raw);
   const state = Object.hasOwn(root, "qState")
@@ -9195,6 +9654,16 @@ function normalizeReducerRoutedOpportunityAttackDenialQuintState(
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
     facts: decodeReactionInterdictionRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedConditionRiderQuintState(
+  raw: unknown,
+): ReducerRoutedConditionRiderProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeConditionRiderRouteFacts(quintField(state, "qFacts")),
   };
 }
 
@@ -9835,6 +10304,16 @@ export const reducerRoutedOpportunityAttackDenialStateCheck = stateCheck(
   (
     spec: ReducerRoutedOpportunityAttackDenialProjection,
     impl: ReducerRoutedOpportunityAttackDenialProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedConditionRiderStateCheck = stateCheck(
+  normalizeReducerRoutedConditionRiderQuintState,
+  (
+    spec: ReducerRoutedConditionRiderProjection,
+    impl: ReducerRoutedConditionRiderProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;

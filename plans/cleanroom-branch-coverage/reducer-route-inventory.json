@@ -538,7 +538,8 @@
           "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
           "routeConnectorPaths": [
             "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
-            "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt"
+            "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt"
           ],
           "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
@@ -550,6 +551,7 @@
               "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s).",
               "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for selected initial condition-save branches that need target/list, condition-choice, and Saving Throw fills.",
               "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt exposes RepeatSaveConditionEffectRouteSubject evidence for selected repeat-save condition lifecycle branches.",
+              "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt exposes ConditionRiderRouteSubject evidence for failed-saving-throw condition admission, repeat-save frontier opening, repeat-save success cleanup, condition-immunity rejection, and cleanup owners without selected spell identity.",
               "The level-3 Hypnotic Pattern selected-identity branch has branch-specific connector evidence in the L15-RR12 branchDecisionClasses entry; this driver-level row remains catalog-after-substrate because selected spell identity is still a catalog/admission boundary."
             ],
             "rawDomainFacts": [
@@ -888,7 +890,8 @@
             "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt",
-            "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt"
+            "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt"
           ],
           "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
@@ -901,7 +904,8 @@
               "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for selected area and single-target save-gated damage branches.",
               "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt exposes SpellAttackRouteSubject evidence for selected spell attack damage branches.",
               "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt exposes SpellAttackProcedureRouteSubject evidence for selected chained spell-attack duplicate damage branches.",
-              "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt exposes ObjectTargetSpellAttackRouteSubject evidence for selected object-target spell attack, active-effect, and post-resolution stale-replay branches."
+              "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt exposes ObjectTargetSpellAttackRouteSubject evidence for selected object-target spell attack, active-effect, and post-resolution stale-replay branches.",
+              "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt exposes ConditionRiderRouteSubject evidence for post-attack-hit Poisoned condition rider admission, condition-immunity rejection, duration expiry, and cleanup through condition-lifecycle, active-effect, and turn-boundary owners."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Attack Rolls and #Saving Throws define spell attack and save-gated spell shapes.",
@@ -909,8 +913,7 @@
               "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Attack Roll, Saving Throw, Damage, Damage Type, Target, and Hit Points."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add a generic mixed spell-attack plus burst saving-throw route subject before doResolveIceKnifeHitAttackDamageAndBurstSavingThrows and doResolveIceKnifeMissBurstSavingThrows may count for target replay.",
-              "source-qnt-corpus-blocker: add a generic post-damage condition / next-attack roll-mode active-effect route subject before doResolveRayOfSicknessSpellAttackDamageAndPoisoned and doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage may count for target replay."
+              "source-qnt-corpus-blocker: add a generic mixed spell-attack plus burst saving-throw route subject before doResolveIceKnifeHitAttackDamageAndBurstSavingThrows and doResolveIceKnifeMissBurstSavingThrows may count for target replay."
             ]
           }
         },
@@ -3778,6 +3781,8 @@
         {
           "taskId": "FCSF-03D-CONDITION-AND-POISON-RIDERS",
           "subjectFamily": "post-damage or failed-save condition rider active effects",
+          "route": "reducer-routed",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt",
           "blockedDrivers": [
             "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
             "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt"
@@ -3785,11 +3790,14 @@
           "requiredRouteInput": "Add or identify generic condition-rider route subjects that carry host outcome, condition kind, immunity check, duration or repeat-save boundary, and cleanup owner facts.",
           "existingSourceEvidence": [
             "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt covers condition choice and Saving Throw frontiers.",
-            "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.mbt.qnt and packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt already model direct condition lifecycle behavior."
+            "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.mbt.qnt and packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt already model direct condition lifecycle behavior.",
+            "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt exposes qRoute for ConditionRiderRouteSubject through host SpellAttackRouteSubject and SaveGatedSpellRouteSubject outcome setup, BattleConditionLifecycleOwner admission/rejection/repeat-save cleanup, BattleActiveEffectOwner admission/cleanup, and BattleTurnBoundaryOwner expiration or repeat-save frontier opening.",
+            "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt exposes qFacts for host outcome, affected target carrier, condition kind, condition-immunity admission/rejection, duration or repeat-save boundary, repeat-save success, expiration, and cleanup owner facts."
           ],
           "rawDomainFacts": [
-            ".references/srd-5.2.1/Rules-Glossary.md condition entries define condition consequences, including Poisoned.",
+            ".references/srd-5.2.1/Rules-Glossary.md condition entries define condition consequences, including Poisoned and Restrained; #Immunity defines condition immunity rejection.",
             ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack allows special effects in addition to damage.",
+            ".references/srd-5.2.1/Rules-Glossary.md#Saving Throw and #Saving Throw Effect Notation define failed-save condition effect outcomes.",
             "UBIQUITOUS_LANGUAGE.md defines Rider, Condition, Poisoned, Saving Throw, and Spell Effect."
           ],
           "acceptanceGate": "Target replay may count residual condition or poison branches only after generic route evidence owns condition application, immunity rejection, and cleanup without selected spell identity dispatch."

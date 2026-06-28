@@ -8,6 +8,7 @@ import {
   createActiveFeatureSpellBenefitRouteDriver,
   createAttackActionAreaSaveDamageReplacementRouteDriver,
   createChainedAttackProcedureRouteDriver,
+  createConditionRiderRouteDriver,
   createConcentrationBreakTeardownRouteDriver,
   createBattleRuntimeRouteDriver,
   createCommandOrderingRouteDriver,
@@ -39,6 +40,7 @@ import {
   reducerRoutedAdrenalineRushStateCheck,
   reducerRoutedAttackActionAreaSaveDamageReplacementStateCheck,
   reducerRoutedChainedAttackProcedureStateCheck,
+  reducerRoutedConditionRiderStateCheck,
   reducerRoutedIndependentSpellAttackSequenceStateCheck,
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedCommandOrderingStateCheck,
@@ -413,6 +415,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(3),
         stateCheck: reducerRoutedOpportunityAttackDenialStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes condition and poison riders through condition lifecycle owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-condition-riders.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createConditionRiderRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(3),
+        stateCheck: reducerRoutedConditionRiderStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,

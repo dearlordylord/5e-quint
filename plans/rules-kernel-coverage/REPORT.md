@@ -617,6 +617,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-command-choice.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-command-ordering.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-concentration.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-condition-rider-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic condition-rider route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-creature-size-change.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | qnt-owner-role | semantic-core |
