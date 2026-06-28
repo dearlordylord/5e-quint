@@ -662,6 +662,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-movement-bridge-examples.qnt` | exempt | proof-only-example: Run-block examples for the movement bridge; registered movement owners carry active coverage. |
 | `packages/battle-runtime/battle-runtime-movement-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-movement-presentation-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic movement/presentation route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-movement.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-next-attack-roll-mode-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic next-Attack-Roll mode route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-object-contact-damage.qnt` | qnt-owner-role | semantic-core |

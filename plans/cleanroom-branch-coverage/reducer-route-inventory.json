@@ -928,7 +928,8 @@
           "routeConnectorPaths": [
             "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
-            "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
+            "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt"
           ],
           "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
@@ -943,8 +944,9 @@
               "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt records ReactionFallMitigationRouteSubject evidence for falling-trigger reaction mitigation through generic trigger/procedure/continuation facts, spell-slot/action-economy, active-effect, movement-resource, and Hit Point owners.",
               "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt supplies generic object-attached and held light-emitter route evidence for object admission, active-effect admission, Bright/Dim Light projection, replacement cleanup, hurl cleanup, duration cleanup, and table-owned object/geometry witnesses.",
               "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt defines typed route facts that separate battle-owned effect lifecycle from table-owned light, geometry, presentation, sight, object, and hazard witnesses without selected spell identity.",
-              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt exposes SpatialEffectRouteSubject evidence for movable multi-emitter Dim Light movement, outline/invisible-benefit denial/Attack Roll Advantage projections, area obscurement cleanup, and area hazard save/movement/cleanup lifecycle through action-economy, active-effect, Concentration, light, sight, obscurement, hazard, area-shape, Saving Throw, movement, Hit Point, and turn-boundary owners.",
-              "The grouped spatial witness still contains movement replacement and forced-movement/object-push behavior that must split into generic route substrates before those selected branches can count."
+              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt exposes SpatialEffectRouteSubject evidence for concentration-backed movable multi-emitter Dim Light movement, area-plus-Saving Throw outcome outline admission, invisible-benefit denial/Attack Roll Advantage projections, area obscurement admission plus separate duration and strong-wind dispersal cleanup, non-Concentration area hazard save/difficult-terrain movement/cleanup lifecycle, and a separate movement-damage trigger shape through action-economy, active-effect, Concentration, light, sight, obscurement, hazard, area-shape, Saving Throw, movement, Hit Point, and turn-boundary owners.",
+              "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt supplies generic MovementPresentationRouteSubject evidence for movement replacement budget/distance plus table-supplied landing presentation witnesses, forced creature movement presentation, and object push/audible presentation through movement-resource, table-presentation, and object-boundary facts.",
+              "The grouped spatial witness still contains concentration-backed area hazards plus landing legality/consequence behavior that must split into generic route substrates; movement replacement budget/distance and forced-movement/object-push presentation now route through the movement/presentation connector."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Areas of Effect, #Targets, and #Saving Throws define spell area, target, and save frontiers.",
@@ -955,8 +957,8 @@
               "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Area of Effect, Movement, Reaction, Target, Saving Throw, Boundary Crossing, Illumination, Obscurement, Attack Roll, and Table Decision."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add a generic movement replacement route subject before doJumpMovementReplacementLandingWitness may count for target replay; Feather Fall reaction mitigation now has generic ReactionFallMitigationRouteSubject source input.",
-              "source-qnt-corpus-blocker: add a generic forced-movement plus object-push/presentation-effect route subject before doThunderwaveSavePushObjectsBoom may count for target replay."
+              "source-qnt-corpus-blocker: add a concentration-backed area hazard route before selected Sleet Storm, Spike Growth, or Web-like Concentration hazard rows may count; the current area hazard connector only covers non-Concentration hazard lifecycle plus a separate movement-damage trigger shape.",
+              "source-qnt-corpus-blocker: add generic landing legality and failed-landing Prone consequence route facts before doJumpMovementReplacementLandingWitness may count beyond movement budget/distance and table-supplied landing presentation witness evidence."
             ]
           }
         },
@@ -3891,7 +3893,7 @@
               "UBIQUITOUS_LANGUAGE.md defines Table Decision, Illumination, Obscurement, Spell Effect, Spell Invocation, and Action Lifecycle."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: movement replacement and forced-movement/object-push presentation remain outside the object/held light and spatial-effect substrates.",
+              "source-qnt-corpus-blocker: movement replacement and forced-movement/object-push presentation route through packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt, not the object/held light substrate.",
               "source-qnt-corpus-blocker: packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt and packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt are not reclassified as accepted wholesale; only object-attached, held-light, or movable multi-emitter obligations with matching generic route facts may count through these connectors."
             ]
           },
@@ -3972,6 +3974,44 @@
             ]
           },
           "acceptanceGate": "Target replay may count exact-damage residual branches only after copied connector evidence makes the exact projection facts public enough that a fresh target need not infer them from TypeScript or selected spell identity."
+        },
+        {
+          "taskId": "FCSF-03H-MOVEMENT-PRESENTATION",
+          "subjectFamily": "movement replacement budget/distance, forced movement, object push, and presentation boundary substrates",
+          "route": "reducer-routed",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt",
+          "blockedDrivers": [
+            "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt"
+          ],
+          "requiredRouteInput": "Add generic movement/presentation route facts that separate movement-resource facts, table-owned presentation facts, and object-boundary facts for movement replacement budget/distance, forced movement, and object-push presentation effects.",
+          "existingSourceEvidence": [
+            "packages/battle-runtime/battle-runtime-movement-presentation-route-facts.qnt defines typed MovementPresentationRouteFact variants for movement-resource facts, table-presentation witnesses, and object-boundary facts without authored spell identity.",
+            "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt exposes MovementPresentationRouteSubject evidence through BattleMovementResourceOwner, BattleSavingThrowOutcomeOwner, BattleObjectTargetBoundaryOwner, and BattleTablePresentationOwner for Jump-style movement replacement budget/distance plus table-supplied landing presentation witness, failed-save forced creature movement presentation, and unsecured-object push/audible presentation."
+          ],
+          "rawDomainFacts": [
+            ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Jump defines spending 10 feet of movement to jump up to 30 feet.",
+            ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Thunderwave defines failed-save creature push, unsecured-object push, and audible presentation.",
+            ".references/srd-5.2.1/Playing-the-Game.md#Movement and Position and .references/srd-5.2.1/Rules-Glossary.md#Speed define movement budget and movement-cost accounting.",
+            ".references/srd-5.2.1/Playing-the-Game.md#What Is an Object and #Interacting with Objects define object boundaries as table-facing facts.",
+            "UBIQUITOUS_LANGUAGE.md defines Movement, Speed, Table Decision, Spell Effect, Shove/Push distinction, and Boundary Crossing."
+          ],
+          "derivability": {
+            "qntFacts": [
+              "RouteMovementPresentationResource facts expose movement replacement fixed-budget spend, movement replacement distance projection, forced movement with no target-owned movement-resource spend, and forced-movement distance projection.",
+              "RouteMovementPresentationTable facts expose table-supplied movement path, landing-space presentation, direction-away-from-source, area-geometry, and audible-presentation witnesses.",
+              "RouteMovementPresentationObjectBoundary facts expose unsecured-object, entirely-within-area, and object-push boundary projections separately from movement-resource facts."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Jump defines the replacement movement budget and maximum distance; the connector treats landing/path details only as table-supplied presentation witnesses.",
+              ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Thunderwave defines pushed creatures, pushed unsecured objects, and audible presentation.",
+              "UBIQUITOUS_LANGUAGE.md defines Table Decision and Movement, separating table route/placement choices from reducer movement-resource facts."
+            ],
+            "blockers": [
+              "source-qnt-corpus-blocker: landing legality and failed-landing Prone consequence facts remain outside this connector until explicit local RAW or ASSUMPTIONS.md traceability is added.",
+              "source-qnt-corpus-blocker: this connector does not accept movable multi-emitter light, outline/invisible-revealing/attack-advantage, or area hazard/obscurement branches."
+            ]
+          },
+          "acceptanceGate": "Target replay may count movement replacement only for budget/distance and table-supplied landing presentation witness evidence, and may count forced-movement/object-push presentation branches only after copied route evidence consumes generic movement-resource, table-presentation, and object-boundary facts rather than selected spell identity. Landing legality and failed-landing Prone behavior remain blocked."
         }
       ],
       "task7FollowUpTasks": [
