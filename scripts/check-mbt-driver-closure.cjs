@@ -48,11 +48,7 @@ const forbiddenProtocolInvalidReasonName = forbiddenName(
   "Reason",
 );
 const forbiddenProtocolHolesName = forbiddenName("q", "Holes");
-const forbiddenProtocolPreviousHolesName = forbiddenName(
-  "q",
-  "Last",
-  "Holes",
-);
+const forbiddenProtocolPreviousHolesName = forbiddenName("q", "Last", "Holes");
 const forbiddenScenarioResultName = forbiddenName("q", "Scenario", "Result");
 const forbiddenScenarioInvalidReasonName = forbiddenName(
   "q",
@@ -86,10 +82,7 @@ const FORBIDDEN_WITNESS_PROTOCOL_STORAGE = [
   },
   {
     label: "string reason var",
-    pattern: forbiddenVarPattern(
-      forbiddenProtocolInvalidReasonName,
-      "str\\b",
-    ),
+    pattern: forbiddenVarPattern(forbiddenProtocolInvalidReasonName, "str\\b"),
   },
   {
     label: "parallel holes var",
@@ -97,10 +90,7 @@ const FORBIDDEN_WITNESS_PROTOCOL_STORAGE = [
   },
   {
     label: "previous-holes var",
-    pattern: forbiddenVarPattern(
-      forbiddenProtocolPreviousHolesName,
-      "Set\\[",
-    ),
+    pattern: forbiddenVarPattern(forbiddenProtocolPreviousHolesName, "Set\\["),
   },
 ];
 
@@ -151,6 +141,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-hit-point-restoration-ordering.qnt",
   "battle-runtime-magic-missile-facts.qnt",
   "battle-runtime-mirror-image-constants.qnt",
+  "battle-runtime-next-attack-roll-mode-route-facts.qnt",
   "battle-runtime-reaction-kinds.qnt",
   "battle-runtime-reducer-route.qnt",
   "battle-runtime-replay-equivalence.qnt",
@@ -636,10 +627,6 @@ if (process.argv.includes("--self-test")) {
   console.log(
     `MBT driver closure gate passed (counted budget ${BUDGET_FILES} files; pure vocabulary leaves are validated and counted separately; ${Object.keys(ALLOWLIST).length} grandfathered drivers tracked for migration).`,
   );
-  console.log(
-    "MBT witness protocol storage gate passed.",
-  );
-  console.log(
-    "MBT scenario outcome storage gate passed.",
-  );
+  console.log("MBT witness protocol storage gate passed.");
+  console.log("MBT scenario outcome storage gate passed.");
 }

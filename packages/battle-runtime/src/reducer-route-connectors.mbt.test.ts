@@ -17,6 +17,7 @@ import {
   createIndependentSpellAttackSequenceRouteDriver,
   createMagicMissileRouteDriver,
   createMetamagicRouteDriver,
+  createNextAttackRollModeRouteDriver,
   createProtectionCharmRouteDriver,
   createScalarBuffRouteDriver,
   createSaveGatedSpellOrderingRouteDriver,
@@ -41,6 +42,7 @@ import {
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedCommandOrderingStateCheck,
   reducerRoutedMetamagicStateCheck,
+  reducerRoutedNextAttackRollModeStateCheck,
   reducerRoutedProtectionCharmStateCheck,
   reducerRoutedScalarBuffStateCheck,
   reducerRoutedSaveGatedSpellOrderingStateCheck,
@@ -369,6 +371,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(3),
         stateCheck: reducerRoutedHitPointRegainPreventionStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes next Attack Roll mode effects through active-effect and roll-mode owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-next-attack-roll-mode.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createNextAttackRollModeRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(3),
+        stateCheck: reducerRoutedNextAttackRollModeStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,

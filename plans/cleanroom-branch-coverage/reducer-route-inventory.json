@@ -233,27 +233,10 @@
     {
       "denominatorId": "level-1-5-cleanroom-route-v1",
       "purpose": "Defines the driver and branch denominator for routing current cleanroom branch coverage through reducer-route QNT architecture up to character level 5.",
-      "characterLevels": [
-        1,
-        2,
-        3,
-        4,
-        5
-      ],
-      "includedSpellLevels": [
-        0,
-        1,
-        2,
-        3
-      ],
-      "excludedCharacterLevels": [
-        6,
-        7
-      ],
-      "excludedSpellLevels": [
-        4,
-        5
-      ],
+      "characterLevels": [1, 2, 3, 4, 5],
+      "includedSpellLevels": [0, 1, 2, 3],
+      "excludedCharacterLevels": [6, 7],
+      "excludedSpellLevels": [4, 5],
       "sourceBranchInventory": {
         "driverFiles": 97,
         "branchObligations": 704,
@@ -1169,7 +1152,7 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
-            "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt records RollModifierEffectRouteSubject evidence for Bless, Bane, and Guidance through spell invocation, active-effect, and Concentration owners, including exact Guidance skill-choice route-fill payload evidence.",
+              "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt records RollModifierEffectRouteSubject evidence for Bless, Bane, and Guidance through spell invocation, active-effect, and Concentration owners, including exact Guidance skill-choice route-fill payload evidence.",
               "packages/battle-runtime/battle-runtime-spell-damage-reduction.route.mbt.qnt records SpellDamageReductionRouteSubject evidence for Resistance through target-choice, damage-type-choice, active-effect, Concentration, rolled-dice, and damage-adjustment owners.",
               "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt records ScalarBuffEffectRouteSubject evidence for Shield of Faith through active-effect and Concentration owners.",
               "Selected spell identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed procedure facts and active effect state."
@@ -1267,9 +1250,7 @@
           "route": "reducer-routed",
           "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
           "subjectFamily": "scalar buff spell-effect target route",
-          "requiredReducerEntrypoints": [
-            "resolve_battle_subject"
-          ],
+          "requiredReducerEntrypoints": ["resolve_battle_subject"],
           "durableStateOwner": "BattleState owns the target Speed projection and active Spell Effect instance; the route connector does not introduce a duplicate speed/effect ledger.",
           "acceptanceCondition": "Target replay evidence routes target selection through the shared reducer subject resolution path and observes the resulting active-effect-owned Speed change.",
           "branchObligations": 2,
@@ -2018,9 +1999,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreAbilitySkillCommandOwner"
-          ],
+          "componentOwners": ["RuleCoreAbilitySkillCommandOwner"],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR11-LEVEL3-4-SCOPE-PROMOTION"
@@ -2044,9 +2023,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreAttackDamageDispositionOwner"
-          ],
+          "componentOwners": ["RuleCoreAttackDamageDispositionOwner"],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES"
           ],
@@ -2069,9 +2046,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreFeatureProfileSemanticsOwner"
-          ],
+          "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
           "dependentRouteTaskIds": [
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
             "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
@@ -2096,9 +2071,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreHitPointDamageOwner"
-          ],
+          "componentOwners": ["RuleCoreHitPointDamageOwner"],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES"
@@ -2122,9 +2095,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreMovementGrappleOwner"
-          ],
+          "componentOwners": ["RuleCoreMovementGrappleOwner"],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
@@ -2149,9 +2120,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreReactionContinuationConcentrationOwner"
-          ],
+          "componentOwners": ["RuleCoreReactionContinuationConcentrationOwner"],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES"
@@ -2175,9 +2144,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreShoveOutcomeOwner"
-          ],
+          "componentOwners": ["RuleCoreShoveOutcomeOwner"],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES"
@@ -2201,9 +2168,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreSpellProcedureProfileOwner"
-          ],
+          "componentOwners": ["RuleCoreSpellProcedureProfileOwner"],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR12-LEVEL5-SCOPE-PROMOTION"
@@ -2227,9 +2192,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
-          "componentOwners": [
-            "RuleCoreStatBlockControlOwner"
-          ],
+          "componentOwners": ["RuleCoreStatBlockControlOwner"],
           "dependentRouteTaskIds": [
             "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES"
           ],
@@ -2733,7 +2696,7 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityChoiceOpen under branch family step.",
-            "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt records the ability-choice frontier through RollModifierEffectRouteSubject with spell invocation and target-selection owner evidence."
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt records the ability-choice frontier through RollModifierEffectRouteSubject with spell invocation and target-selection owner evidence."
             ],
             "rawDomainFacts": [
               "Enhance Ability is a level-2 spell.",
@@ -2756,7 +2719,7 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityDex under branch family step.",
-            "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt records accepted ability-choice fills with exact chosen-ability route-fill payloads through RollModifierEffectRouteSubject, BattleActiveEffectOwner, and BattleConcentrationOwner."
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt records accepted ability-choice fills with exact chosen-ability route-fill payloads through RollModifierEffectRouteSubject, BattleActiveEffectOwner, and BattleConcentrationOwner."
             ],
             "rawDomainFacts": [
               "Enhance Ability is a level-2 spell.",
@@ -3765,6 +3728,8 @@
         {
           "taskId": "FCSF-03B-NEXT-ATTACK-ROLL-MODE",
           "subjectFamily": "active Spell Effect that changes the next Attack Roll mode",
+          "route": "reducer-routed",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-next-attack-roll-mode.route.mbt.qnt",
           "blockedDrivers": [
             "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
             "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
@@ -3773,11 +3738,16 @@
           "requiredRouteInput": "Add a generic next-Attack-Roll roll-mode route subject with typed source, beneficiary, affected target, expiration boundary, and Advantage or Disadvantage mode facts.",
           "existingSourceEvidence": [
             "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt proves generic roll-modifier active-effect routing for other roll families.",
+            "packages/battle-runtime/battle-runtime-next-attack-roll-mode.route.mbt.qnt exposes qRoute for NextAttackRollModeRouteSubject through host attack/save outcome admission, BattleActiveEffectOwner admission and cleanup, BattleAttackRollModeOwner projection/consumption, and BattleTurnBoundaryOwner expiration.",
+            "packages/battle-runtime/battle-runtime-next-attack-roll-mode.route.mbt.qnt exposes qFacts for source outcome, effect carrier, later attack actor, target scope, expiration boundary, Advantage/Disadvantage direction, admission, projection, consumption, expiration, and cleanup.",
             "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt already distinguishes next-attack Advantage and Disadvantage projection facts."
           ],
           "rawDomainFacts": [
             ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage defines roll modes.",
             ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack defines Attack Roll modifier application.",
+            ".references/srd-5.2.1/Equipment.md#Sap and #Vex define on-hit next Attack Roll Disadvantage/Advantage riders with source-turn expiration boundaries.",
+            ".references/srd-5.2.1/Rules-Glossary.md#Help defines Assist an Attack Roll as next attack-roll Advantage with start-of-next-turn expiration.",
+            ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Guiding Bolt, Descriptions-Q-R.md#Ray of Enfeeblement, and Descriptions-S-Z.md#Vicious Mockery define spell-produced next Attack Roll Advantage/Disadvantage riders.",
             "UBIQUITOUS_LANGUAGE.md defines Attack Roll, Advantage, Disadvantage, Spell Effect, and Condition vocabulary."
           ],
           "acceptanceGate": "Target replay may count residual next-Attack-Roll branches only after route evidence consumes the active effect through shared roll-mode projection and expiration owners."

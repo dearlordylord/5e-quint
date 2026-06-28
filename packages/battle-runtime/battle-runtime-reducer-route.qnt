@@ -78,6 +78,7 @@ module battleRuntimeReducerRoute {
     | MetamagicDamageDiceRerollRouteSubject
     | SpellBaseArmorClassEffectRouteSubject
     | HitPointRegainPreventionRouteSubject
+    | NextAttackRollModeRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner
@@ -109,6 +110,7 @@ module battleRuntimeReducerRoute {
     | BattleDamageAdjustmentOwner
     | BattleSavingThrowRollModeOwner
     | BattleAbilityCheckRollModeOwner
+    | BattleAttackRollModeOwner
     | BattleCreatureSpaceMovementOwner
     | BattleCreatureStateOwner
     | BattleArmorClassOwner

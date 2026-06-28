@@ -892,6 +892,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "metamagicDamageDiceReroll",
   "spellBaseArmorClassEffect",
   "hitPointRegainPrevention",
+  "nextAttackRollMode",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -925,6 +926,7 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleDamageAdjustment",
   "battleSavingThrowRollMode",
   "battleAbilityCheckRollMode",
+  "battleAttackRollMode",
   "battleCreatureSpaceMovement",
   "battleCreatureState",
   "battleArmorClass",
@@ -1092,6 +1094,78 @@ type ReducerRoutedSpellBaseArmorClassEffectProjection = {
 };
 type ReducerRoutedHitPointRegainPreventionProjection = {
   readonly route: readonly ReducerRouteEvent[];
+};
+const NEXT_ATTACK_ROLL_MODE_SOURCES = [
+  "hostAttackHitDamageOutcome",
+  "hostSaveEffectOutcome",
+  "hostAssistActionOutcome",
+  "hostBonusActionFeatureOutcome",
+] as const;
+type NextAttackRollModeSource = (typeof NEXT_ATTACK_ROLL_MODE_SOURCES)[number];
+const NEXT_ATTACK_ROLL_MODE_CARRIERS = [
+  "hostOutcomeTargetCarrier",
+  "distractedEnemyCarrier",
+  "actingBeneficiaryCarrier",
+] as const;
+type NextAttackRollModeCarrier =
+  (typeof NEXT_ATTACK_ROLL_MODE_CARRIERS)[number];
+const NEXT_ATTACK_ROLL_MODE_ATTACKERS = [
+  "sourceAttacker",
+  "affectedTargetAttacker",
+  "sourceAllyAttacker",
+] as const;
+type NextAttackRollModeAttacker =
+  (typeof NEXT_ATTACK_ROLL_MODE_ATTACKERS)[number];
+const NEXT_ATTACK_ROLL_MODE_TARGET_SCOPES = [
+  "attackAgainstAffectedTargetOnly",
+  "attackAgainstAnyTarget",
+] as const;
+type NextAttackRollModeTargetScope =
+  (typeof NEXT_ATTACK_ROLL_MODE_TARGET_SCOPES)[number];
+const NEXT_ATTACK_ROLL_MODE_EXPIRATION_BOUNDARIES = [
+  "beforeSourceNextTurnStarts",
+  "beforeSourceNextTurnEnds",
+  "beforeBeneficiaryCurrentTurnEnds",
+  "beforeAffectedTargetNextTurnEnds",
+] as const;
+type NextAttackRollModeExpirationBoundary =
+  (typeof NEXT_ATTACK_ROLL_MODE_EXPIRATION_BOUNDARIES)[number];
+const NEXT_ATTACK_ROLL_MODE_DIRECTIONS = ["advantage", "disadvantage"] as const;
+type NextAttackRollModeDirection =
+  (typeof NEXT_ATTACK_ROLL_MODE_DIRECTIONS)[number];
+type NextAttackRollModeRouteFact =
+  | {
+      readonly kind: "source";
+      readonly source: NextAttackRollModeSource;
+    }
+  | {
+      readonly kind: "carrier";
+      readonly carrier: NextAttackRollModeCarrier;
+    }
+  | {
+      readonly kind: "attacker";
+      readonly attacker: NextAttackRollModeAttacker;
+    }
+  | {
+      readonly kind: "targetScope";
+      readonly targetScope: NextAttackRollModeTargetScope;
+    }
+  | {
+      readonly kind: "expirationBoundary";
+      readonly boundary: NextAttackRollModeExpirationBoundary;
+    }
+  | {
+      readonly kind: "direction";
+      readonly direction: NextAttackRollModeDirection;
+    }
+  | { readonly kind: "admitted" }
+  | { readonly kind: "projected" }
+  | { readonly kind: "consumed" }
+  | { readonly kind: "expired" }
+  | { readonly kind: "cleanedUp" };
+type ReducerRoutedNextAttackRollModeProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly NextAttackRollModeRouteFact[];
 };
 type ReducerRoutedSaveGatedSpellOrderingProjection =
   SaveGatedSpellOrderingProjection & {
@@ -1446,6 +1520,18 @@ const hitPointRegainPreventionRouteDriverSchema = {
   doInterdictLaterHitPointHealing: {},
   doExpireAtTurnBoundary: {},
   doStutterAfterExpiry: {},
+  step: {},
+} as const;
+
+const nextAttackRollModeRouteDriverSchema = {
+  init: {},
+  doAdmitHostAttackHitNextAttackAdvantageEffect: {},
+  doAdmitHostEffectNextAttackDisadvantageEffect: {},
+  doProjectAdvantageOnLaterAttackAgainstAffectedTarget: {},
+  doProjectDisadvantageOnAffectedTargetNextAttack: {},
+  doExpireAdvantageAtBoundary: {},
+  doExpireDisadvantageAtBoundary: {},
+  doStutterAfterCleanup: {},
   step: {},
 } as const;
 
@@ -3781,6 +3867,8 @@ const SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT =
   "spellBaseArmorClassEffect" satisfies ReducerRouteSubjectFamily;
 const HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT =
   "hitPointRegainPrevention" satisfies ReducerRouteSubjectFamily;
+const NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT =
+  "nextAttackRollMode" satisfies ReducerRouteSubjectFamily;
 const NO_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
 const TARGET_CHOICE_ROUTE_HOLES = [
   "targetChoice",
@@ -4426,10 +4514,7 @@ export function createHitPointRegainPreventionRouteDriver() {
         route = [...route, ...hitPointRegainPreventionAdmissionRoute()];
       },
       doInterdictLaterHitPointHealing: () => {
-        route = [
-          ...route,
-          hitPointRegainPreventionHealingInterdictionRoute(),
-        ];
+        route = [...route, hitPointRegainPreventionHealingInterdictionRoute()];
       },
       doExpireAtTurnBoundary: () => {
         route = [...route, ...hitPointRegainPreventionCleanupRoute()];
@@ -4438,6 +4523,219 @@ export function createHitPointRegainPreventionRouteDriver() {
       step: () => {},
       getState: (): ReducerRoutedHitPointRegainPreventionProjection => ({
         route,
+      }),
+    };
+  });
+}
+
+const NEXT_ATTACK_ROLL_MODE_ADVANTAGE_ADMISSION_FACTS = [
+  {
+    kind: "source",
+    source: "hostAttackHitDamageOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "hostOutcomeTargetCarrier",
+  },
+  {
+    kind: "attacker",
+    attacker: "sourceAttacker",
+  },
+  {
+    kind: "targetScope",
+    targetScope: "attackAgainstAffectedTargetOnly",
+  },
+  {
+    kind: "expirationBoundary",
+    boundary: "beforeSourceNextTurnEnds",
+  },
+  {
+    kind: "direction",
+    direction: "advantage",
+  },
+  {
+    kind: "admitted",
+  },
+] as const satisfies readonly NextAttackRollModeRouteFact[];
+
+const NEXT_ATTACK_ROLL_MODE_DISADVANTAGE_ADMISSION_FACTS = [
+  {
+    kind: "source",
+    source: "hostSaveEffectOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "hostOutcomeTargetCarrier",
+  },
+  {
+    kind: "attacker",
+    attacker: "affectedTargetAttacker",
+  },
+  {
+    kind: "targetScope",
+    targetScope: "attackAgainstAnyTarget",
+  },
+  {
+    kind: "expirationBoundary",
+    boundary: "beforeAffectedTargetNextTurnEnds",
+  },
+  {
+    kind: "direction",
+    direction: "disadvantage",
+  },
+  {
+    kind: "admitted",
+  },
+] as const satisfies readonly NextAttackRollModeRouteFact[];
+
+const NEXT_ATTACK_ROLL_MODE_CONSUMPTION_FACTS = [
+  { kind: "projected" },
+  { kind: "consumed" },
+  { kind: "cleanedUp" },
+] as const satisfies readonly NextAttackRollModeRouteFact[];
+
+const NEXT_ATTACK_ROLL_MODE_EXPIRY_FACTS = [
+  { kind: "expired" },
+  { kind: "cleanedUp" },
+] as const satisfies readonly NextAttackRollModeRouteFact[];
+
+function nextAttackRollModeInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function nextAttackRollModeAdvantageAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "spellAttack",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function nextAttackRollModeDisadvantageAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "saveGatedSpell",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "targetChoice",
+      holes: SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function nextAttackRollModeProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAttackRollMode",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function nextAttackRollModeExpirationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+export function createNextAttackRollModeRouteDriver() {
+  return defineDriver(nextAttackRollModeRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = nextAttackRollModeInitialRoute();
+    let facts: readonly NextAttackRollModeRouteFact[] = [];
+
+    function reset(): void {
+      route = nextAttackRollModeInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAdmitHostAttackHitNextAttackAdvantageEffect: () => {
+        route = [...route, ...nextAttackRollModeAdvantageAdmissionRoute()];
+        facts = NEXT_ATTACK_ROLL_MODE_ADVANTAGE_ADMISSION_FACTS;
+      },
+      doAdmitHostEffectNextAttackDisadvantageEffect: () => {
+        route = [...route, ...nextAttackRollModeDisadvantageAdmissionRoute()];
+        facts = NEXT_ATTACK_ROLL_MODE_DISADVANTAGE_ADMISSION_FACTS;
+      },
+      doProjectAdvantageOnLaterAttackAgainstAffectedTarget: () => {
+        route = [...route, ...nextAttackRollModeProjectionRoute()];
+        facts = [...facts, ...NEXT_ATTACK_ROLL_MODE_CONSUMPTION_FACTS];
+      },
+      doProjectDisadvantageOnAffectedTargetNextAttack: () => {
+        route = [...route, ...nextAttackRollModeProjectionRoute()];
+        facts = [...facts, ...NEXT_ATTACK_ROLL_MODE_CONSUMPTION_FACTS];
+      },
+      doExpireAdvantageAtBoundary: () => {
+        route = [...route, ...nextAttackRollModeExpirationRoute()];
+        facts = [...facts, ...NEXT_ATTACK_ROLL_MODE_EXPIRY_FACTS];
+      },
+      doExpireDisadvantageAtBoundary: () => {
+        route = [...route, ...nextAttackRollModeExpirationRoute()];
+        facts = [...facts, ...NEXT_ATTACK_ROLL_MODE_EXPIRY_FACTS];
+      },
+      doStutterAfterCleanup: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedNextAttackRollModeProjection => ({
+        route,
+        facts,
       }),
     };
   });
@@ -7899,6 +8197,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   MetamagicDamageDiceRerollRouteSubject: "metamagicDamageDiceReroll",
   SpellBaseArmorClassEffectRouteSubject: "spellBaseArmorClassEffect",
   HitPointRegainPreventionRouteSubject: "hitPointRegainPrevention",
+  NextAttackRollModeRouteSubject: "nextAttackRollMode",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -7931,10 +8230,49 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleDamageAdjustmentOwner: "battleDamageAdjustment",
   BattleSavingThrowRollModeOwner: "battleSavingThrowRollMode",
   BattleAbilityCheckRollModeOwner: "battleAbilityCheckRollMode",
+  BattleAttackRollModeOwner: "battleAttackRollMode",
   BattleCreatureSpaceMovementOwner: "battleCreatureSpaceMovement",
   BattleCreatureStateOwner: "battleCreatureState",
   BattleArmorClassOwner: "battleArmorClass",
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
+
+const NEXT_ATTACK_ROLL_MODE_SOURCE_BY_VARIANT_TAG = {
+  HostAttackHitDamageOutcome: "hostAttackHitDamageOutcome",
+  HostSaveEffectOutcome: "hostSaveEffectOutcome",
+  HostAssistActionOutcome: "hostAssistActionOutcome",
+  HostBonusActionFeatureOutcome: "hostBonusActionFeatureOutcome",
+} as const satisfies Readonly<Record<string, NextAttackRollModeSource>>;
+
+const NEXT_ATTACK_ROLL_MODE_CARRIER_BY_VARIANT_TAG = {
+  HostOutcomeTargetCarrier: "hostOutcomeTargetCarrier",
+  DistractedEnemyCarrier: "distractedEnemyCarrier",
+  ActingBeneficiaryCarrier: "actingBeneficiaryCarrier",
+} as const satisfies Readonly<Record<string, NextAttackRollModeCarrier>>;
+
+const NEXT_ATTACK_ROLL_MODE_ATTACKER_BY_VARIANT_TAG = {
+  SourceAttacker: "sourceAttacker",
+  AffectedTargetAttacker: "affectedTargetAttacker",
+  SourceAllyAttacker: "sourceAllyAttacker",
+} as const satisfies Readonly<Record<string, NextAttackRollModeAttacker>>;
+
+const NEXT_ATTACK_ROLL_MODE_TARGET_SCOPE_BY_VARIANT_TAG = {
+  AttackAgainstAffectedTargetOnly: "attackAgainstAffectedTargetOnly",
+  AttackAgainstAnyTarget: "attackAgainstAnyTarget",
+} as const satisfies Readonly<Record<string, NextAttackRollModeTargetScope>>;
+
+const NEXT_ATTACK_ROLL_MODE_EXPIRATION_BOUNDARY_BY_VARIANT_TAG = {
+  BeforeSourceNextTurnStarts: "beforeSourceNextTurnStarts",
+  BeforeSourceNextTurnEnds: "beforeSourceNextTurnEnds",
+  BeforeBeneficiaryCurrentTurnEnds: "beforeBeneficiaryCurrentTurnEnds",
+  BeforeAffectedTargetNextTurnEnds: "beforeAffectedTargetNextTurnEnds",
+} as const satisfies Readonly<
+  Record<string, NextAttackRollModeExpirationBoundary>
+>;
+
+const NEXT_ATTACK_ROLL_MODE_DIRECTION_BY_VARIANT_TAG = {
+  NextAttackRollAdvantage: "advantage",
+  NextAttackRollDisadvantage: "disadvantage",
+} as const satisfies Readonly<Record<string, NextAttackRollModeDirection>>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
   AbilityCheckHoleKind: "abilityCheck",
@@ -8215,6 +8553,119 @@ function reducerRouteTwoTargetAbilityChoices(raw: unknown): {
   };
 }
 
+function decodeNextAttackRollModeRouteFacts(
+  raw: unknown,
+): readonly NextAttackRollModeRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeNextAttackRollModeRouteFact);
+}
+
+function decodeNextAttackRollModeRouteFact(
+  raw: unknown,
+): NextAttackRollModeRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteNextAttackRollModeSource") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "source",
+      source: quintVariantMappedValue(
+        quintField(payload, "source"),
+        "qFacts[].source",
+        NEXT_ATTACK_ROLL_MODE_SOURCE_BY_VARIANT_TAG,
+        "next-Attack-Roll mode source",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeCarrier") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "carrier",
+      carrier: quintVariantMappedValue(
+        quintField(payload, "carrier"),
+        "qFacts[].carrier",
+        NEXT_ATTACK_ROLL_MODE_CARRIER_BY_VARIANT_TAG,
+        "next-Attack-Roll mode carrier",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeAttacker") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "attacker",
+      attacker: quintVariantMappedValue(
+        quintField(payload, "attacker"),
+        "qFacts[].attacker",
+        NEXT_ATTACK_ROLL_MODE_ATTACKER_BY_VARIANT_TAG,
+        "next-Attack-Roll mode attacker",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeTargetScope") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "targetScope",
+      targetScope: quintVariantMappedValue(
+        quintField(payload, "targetScope"),
+        "qFacts[].targetScope",
+        NEXT_ATTACK_ROLL_MODE_TARGET_SCOPE_BY_VARIANT_TAG,
+        "next-Attack-Roll mode target scope",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeExpirationBoundary") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "expirationBoundary",
+      boundary: quintVariantMappedValue(
+        quintField(payload, "boundary"),
+        "qFacts[].boundary",
+        NEXT_ATTACK_ROLL_MODE_EXPIRATION_BOUNDARY_BY_VARIANT_TAG,
+        "next-Attack-Roll mode expiration boundary",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeDirection") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "direction",
+      direction: quintVariantMappedValue(
+        quintField(payload, "direction"),
+        "qFacts[].direction",
+        NEXT_ATTACK_ROLL_MODE_DIRECTION_BY_VARIANT_TAG,
+        "next-Attack-Roll mode direction",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeAdmitted") {
+    return { kind: "admitted" };
+  }
+  if (tag === "RouteNextAttackRollModeProjected") {
+    return { kind: "projected" };
+  }
+  if (tag === "RouteNextAttackRollModeConsumed") {
+    return { kind: "consumed" };
+  }
+  if (tag === "RouteNextAttackRollModeExpired") {
+    return { kind: "expired" };
+  }
+  if (tag === "RouteNextAttackRollModeCleanedUp") {
+    return { kind: "cleanedUp" };
+  }
+
+  throw new Error(`Unknown next-Attack-Roll mode route fact: ${tag}.`);
+}
+
+function nextAttackRollModeFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected next-Attack-Roll mode ${tag} payload record.`);
+}
+
 function normalizeQuintState(raw: unknown): MbtProjection {
   const root = quintStateRecord(raw);
   const state = Object.hasOwn(root, "qState")
@@ -8386,6 +8837,16 @@ function normalizeReducerRoutedHitPointRegainPreventionQuintState(
   const state = quintStateRecord(raw);
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedNextAttackRollModeQuintState(
+  raw: unknown,
+): ReducerRoutedNextAttackRollModeProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeNextAttackRollModeRouteFacts(quintField(state, "qFacts")),
   };
 }
 
@@ -9006,6 +9467,16 @@ export const reducerRoutedHitPointRegainPreventionStateCheck = stateCheck(
   (
     spec: ReducerRoutedHitPointRegainPreventionProjection,
     impl: ReducerRoutedHitPointRegainPreventionProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedNextAttackRollModeStateCheck = stateCheck(
+  normalizeReducerRoutedNextAttackRollModeQuintState,
+  (
+    spec: ReducerRoutedNextAttackRollModeProjection,
+    impl: ReducerRoutedNextAttackRollModeProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;

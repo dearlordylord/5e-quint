@@ -205,7 +205,13 @@ const qntRegistryExemptions = [
   },
   {
     ownerPath:
-      "packages/battle-runtime/battle-runtime-magic-missile-facts.qnt",
+      "packages/battle-runtime/battle-runtime-next-attack-roll-mode-route-facts.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Generic next-Attack-Roll mode route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
+  },
+  {
+    ownerPath: "packages/battle-runtime/battle-runtime-magic-missile-facts.qnt",
     category: "proof-only-example",
     evidence:
       "Literal Magic Missile fixture facts shared by the focused witness and the reducer-route connector; the active route contract is owned by battle-runtime-magic-missile.route.mbt.qnt.",
@@ -249,8 +255,7 @@ const qntRegistryExemptions = [
     ownerPath:
       "packages/battle-runtime/battle-runtime-public-trace-contract.qnt",
     category: "witness-protocol-leaf",
-    evidence:
-      "Public trace protocol vocabulary leaf shared by witnesses.",
+    evidence: "Public trace protocol vocabulary leaf shared by witnesses.",
   },
   {
     ownerPath: "packages/battle-runtime/battle-runtime-reaction-kinds.qnt",
@@ -262,8 +267,7 @@ const qntRegistryExemptions = [
     ownerPath:
       "packages/battle-runtime/battle-runtime-see-invisibility-constants.qnt",
     category: "leaf-type-vocabulary",
-    evidence:
-      "See Invisibility constants and witness-plane vocabulary leaf.",
+    evidence: "See Invisibility constants and witness-plane vocabulary leaf.",
   },
   {
     ownerPath:
@@ -299,25 +303,29 @@ const qntRegistryExemptions = [
       "Typed witness protocol vocabulary leaf for lightweight battle-runtime MBT witnesses.",
   },
   {
-    ownerPath: "packages/shared-algebras/proofs/action-economy-algebra-inductive.qnt",
+    ownerPath:
+      "packages/shared-algebras/proofs/action-economy-algebra-inductive.qnt",
     category: "retired-test-companion",
     evidence:
       "Retained shared-algebra inductive proof companion outside the active rules-kernel owner rows.",
   },
   {
-    ownerPath: "packages/shared-algebras/proofs/conditions-algebra-inductive.qnt",
+    ownerPath:
+      "packages/shared-algebras/proofs/conditions-algebra-inductive.qnt",
     category: "retired-test-companion",
     evidence:
       "Retained shared-algebra inductive proof companion outside the active rules-kernel owner rows.",
   },
   {
-    ownerPath: "packages/shared-algebras/proofs/initiative-algebra-invariant.qnt",
+    ownerPath:
+      "packages/shared-algebras/proofs/initiative-algebra-invariant.qnt",
     category: "retired-test-companion",
     evidence:
       "Retained shared-algebra invariant companion outside the active rules-kernel owner rows.",
   },
   {
-    ownerPath: "packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt",
+    ownerPath:
+      "packages/shared-algebras/proofs/multiclass-prerequisite-algebra.qnt",
     category: "retired-test-companion",
     evidence:
       "Retained multiclass prerequisite proof companion outside the active rules-kernel owner rows.",
