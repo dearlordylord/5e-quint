@@ -15,6 +15,7 @@ module battleRuntimeReactionKinds {
     | BattleRuntimeAttackHit
     | BattleRuntimeAttackDamage
     | BattleRuntimeSpellCast
+    | BattleRuntimeCreatureFalls
     | BattleRuntimeSaveFailed
     | BattleRuntimeAfterDamage
     | BattleRuntimeOpportunityAttack
@@ -22,6 +23,10 @@ module battleRuntimeReactionKinds {
   type BattleRuntimeReactionProcedure =
     | BattleRuntimeShieldReactionProcedure
     | BattleRuntimeCounterspellReactionProcedure
+    | BattleRuntimeReactionArmorClassEffectProcedure
+    | BattleRuntimeSpellInterruptionReactionProcedure
+    | BattleRuntimeAfterDamageSpellReactionProcedure
+    | BattleRuntimeFallMitigationReactionProcedure
     | BattleRuntimeOpportunityAttackProcedure
     | BattleRuntimeReadiedSpellReleaseProcedure
     | BattleRuntimeDamageInterruptionProcedure
@@ -29,8 +34,10 @@ module battleRuntimeReactionKinds {
 
   type BattleRuntimeContinuationKind =
     | BattleRuntimeAttackDamageContinuation
+    | BattleRuntimeSpellCastContinuation
     | BattleRuntimeSpellAttackContinuation
     | BattleRuntimeSaveGateContinuation
     | BattleRuntimeMovementContinuation
+    | BattleRuntimeFallDamageContinuation
     | BattleRuntimeAfterDamageContinuation
 }

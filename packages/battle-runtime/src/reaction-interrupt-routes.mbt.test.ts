@@ -10,6 +10,7 @@ import {
   mbtSpecPath,
   mbtTraceCount,
   quintField,
+  quintRecordField,
   quintStateRecord,
   quintVariantMappedValue,
   run,
@@ -46,6 +47,65 @@ const INTERRUPT_STACK_RESUME_ROUTE_SURFACE_BY_TAG = {
 type InterruptStackResumeRouteSurface =
   (typeof INTERRUPT_STACK_RESUME_ROUTE_SURFACE_BY_TAG)[keyof typeof INTERRUPT_STACK_RESUME_ROUTE_SURFACE_BY_TAG];
 
+const REACTION_INTERRUPT_PAYLOAD_ROUTE_SURFACE_BY_TAG = {
+  FreshRouteSurface: "fresh",
+  ReactionArmorClassEffectRouteSurface: "reactionArmorClassEffect",
+  AfterDamageSaveDamageRouteSurface: "afterDamageSaveDamage",
+  SpellInterruptionEndedRouteSurface: "spellInterruptionEnded",
+  SpellInterruptionResumedRouteSurface: "spellInterruptionResumed",
+  FallMitigationRouteSurface: "fallMitigation",
+} as const satisfies Readonly<Record<string, string>>;
+type ReactionInterruptPayloadRouteSurface =
+  (typeof REACTION_INTERRUPT_PAYLOAD_ROUTE_SURFACE_BY_TAG)[keyof typeof REACTION_INTERRUPT_PAYLOAD_ROUTE_SURFACE_BY_TAG];
+
+const REACTION_TRIGGER_BY_TAG = {
+  BattleRuntimeAttackHit: "attackHit",
+  BattleRuntimeAttackDamage: "attackDamage",
+  BattleRuntimeSpellCast: "spellCast",
+  BattleRuntimeCreatureFalls: "creatureFalls",
+  BattleRuntimeSaveFailed: "saveFailed",
+  BattleRuntimeAfterDamage: "afterDamage",
+  BattleRuntimeOpportunityAttack: "opportunityAttack",
+} as const satisfies Readonly<Record<string, string>>;
+type ReactionTrigger =
+  (typeof REACTION_TRIGGER_BY_TAG)[keyof typeof REACTION_TRIGGER_BY_TAG];
+
+const REACTION_PROCEDURE_BY_TAG = {
+  BattleRuntimeReactionArmorClassEffectProcedure: "reactionArmorClassEffect",
+  BattleRuntimeSpellInterruptionReactionProcedure: "spellInterruptionReaction",
+  BattleRuntimeAfterDamageSpellReactionProcedure: "afterDamageSpellReaction",
+  BattleRuntimeFallMitigationReactionProcedure: "fallMitigationReaction",
+  BattleRuntimeOpportunityAttackProcedure: "opportunityAttack",
+  BattleRuntimeReadiedSpellReleaseProcedure: "readiedSpellRelease",
+  BattleRuntimeDamageInterruptionProcedure: "damageInterruption",
+  BattleRuntimeNoReactionProcedure: "noReaction",
+} as const satisfies Readonly<Record<string, string>>;
+type ReactionProcedure =
+  (typeof REACTION_PROCEDURE_BY_TAG)[keyof typeof REACTION_PROCEDURE_BY_TAG];
+
+const REACTION_CONTINUATION_BY_TAG = {
+  BattleRuntimeAttackDamageContinuation: "attackDamage",
+  BattleRuntimeSpellCastContinuation: "spellCast",
+  BattleRuntimeSpellAttackContinuation: "spellAttack",
+  BattleRuntimeSaveGateContinuation: "saveGate",
+  BattleRuntimeMovementContinuation: "movement",
+  BattleRuntimeFallDamageContinuation: "fallDamage",
+  BattleRuntimeAfterDamageContinuation: "afterDamage",
+} as const satisfies Readonly<Record<string, string>>;
+type ReactionContinuation =
+  (typeof REACTION_CONTINUATION_BY_TAG)[keyof typeof REACTION_CONTINUATION_BY_TAG];
+
+type ReactionInterruptPayloadFacts = {
+  readonly trigger: ReactionTrigger;
+  readonly procedure: ReactionProcedure;
+  readonly continuation: ReactionContinuation;
+};
+
+type ReactionInterruptPayloadRouteState =
+  RouteState<ReactionInterruptPayloadRouteSurface> & {
+    readonly facts: ReactionInterruptPayloadFacts;
+  };
+
 const reactionCastingTimeRouteDriverSchema = {
   init: {},
   doCounterspellEndsSpellCast: {},
@@ -62,12 +122,26 @@ const interruptStackResumeRouteDriverSchema = {
   step: {},
 } as const;
 
+const reactionInterruptPayloadRouteDriverSchema = {
+  init: {},
+  doRouteReactionArmorClassEffect: {},
+  doRouteAfterDamageSaveDamage: {},
+  doRouteSpellInterruptionEnded: {},
+  doRouteSpellInterruptionResumed: {},
+  doRouteFallMitigation: {},
+  step: {},
+} as const;
+
 type ReactionCastingTimeRouteDriverAction = Exclude<
   keyof typeof reactionCastingTimeRouteDriverSchema,
   "init" | "step"
 >;
 type InterruptStackResumeRouteDriverAction = Exclude<
   keyof typeof interruptStackResumeRouteDriverSchema,
+  "init" | "step"
+>;
+type ReactionInterruptPayloadRouteDriverAction = Exclude<
+  keyof typeof reactionInterruptPayloadRouteDriverSchema,
   "init" | "step"
 >;
 type RouteReplaySequence<Surface extends string, Action extends string> = {
@@ -80,6 +154,14 @@ const ROUTE_START_OWNER =
   "battleActionEconomy" satisfies ReducerRouteOwnerGroup;
 const REACTION_SPELL_ROUTE_SUBJECT =
   "reactionSpell" satisfies ReducerRouteSubjectFamily;
+const REACTION_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT =
+  "reactionArmorClassEffect" satisfies ReducerRouteSubjectFamily;
+const REACTION_AFTER_DAMAGE_EFFECT_ROUTE_SUBJECT =
+  "reactionAfterDamageEffect" satisfies ReducerRouteSubjectFamily;
+const REACTION_SPELL_INTERRUPTION_ROUTE_SUBJECT =
+  "reactionSpellInterruption" satisfies ReducerRouteSubjectFamily;
+const REACTION_FALL_MITIGATION_ROUTE_SUBJECT =
+  "reactionFallMitigation" satisfies ReducerRouteSubjectFamily;
 const INTERRUPT_STACK_RESUME_ROUTE_SUBJECT =
   "interruptStackResume" satisfies ReducerRouteSubjectFamily;
 const SLOT_SPELL_ROUTE_SUBJECT =
@@ -414,6 +496,277 @@ function createInterruptStackResumeRouteDriver() {
   });
 }
 
+function payloadRouteState(
+  surface: ReactionInterruptPayloadRouteSurface,
+  facts: ReactionInterruptPayloadFacts,
+  route: readonly ReducerRouteEvent[],
+): ReactionInterruptPayloadRouteState {
+  return { surface, facts, route };
+}
+
+const freshPayloadFacts = {
+  trigger: "attackHit",
+  procedure: "noReaction",
+  continuation: "attackDamage",
+} as const satisfies ReactionInterruptPayloadFacts;
+const armorClassPayloadFacts = {
+  trigger: "attackHit",
+  procedure: "reactionArmorClassEffect",
+  continuation: "attackDamage",
+} as const satisfies ReactionInterruptPayloadFacts;
+const afterDamagePayloadFacts = {
+  trigger: "afterDamage",
+  procedure: "afterDamageSpellReaction",
+  continuation: "afterDamage",
+} as const satisfies ReactionInterruptPayloadFacts;
+const spellInterruptionPayloadFacts = {
+  trigger: "spellCast",
+  procedure: "spellInterruptionReaction",
+  continuation: "spellCast",
+} as const satisfies ReactionInterruptPayloadFacts;
+const fallMitigationPayloadFacts = {
+  trigger: "creatureFalls",
+  procedure: "fallMitigationReaction",
+  continuation: "fallDamage",
+} as const satisfies ReactionInterruptPayloadFacts;
+
+function reactionPayloadDiscover(
+  subject: ReducerRouteSubjectFamily,
+  holes: readonly ReducerRouteHole[],
+): ReducerRouteEvent {
+  return discoverRoute({
+    subject,
+    holes,
+    owner: "battleInterruptStack",
+  });
+}
+
+function reactionPayloadInterrupt(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return resolveInterruptRoute(input);
+}
+
+function reactionPayloadResolve(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return resolveRoute(input);
+}
+
+function reactionPayloadResolveWithoutFill(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return resolveRouteWithoutFill(input);
+}
+
+function pendingReactionPayloadRoute(
+  subject: ReducerRouteSubjectFamily,
+  holes: readonly ReducerRouteHole[],
+): readonly ReducerRouteEvent[] {
+  return [startRoute(), reactionPayloadDiscover(subject, holes)];
+}
+
+function reactionArmorClassEffectRouteState(): ReactionInterruptPayloadRouteState {
+  return payloadRouteState("reactionArmorClassEffect", armorClassPayloadFacts, [
+    ...pendingReactionPayloadRoute(
+      REACTION_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      routeHoles("interruptDecision"),
+    ),
+    reactionPayloadInterrupt({
+      subject: REACTION_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      fill: "interruptDecision",
+      holes: routeHoles(),
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    reactionPayloadInterrupt({
+      subject: REACTION_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      fill: "interruptDecision",
+      holes: routeHoles(),
+      owner: "battleActiveEffect",
+    }),
+    reactionPayloadResolveWithoutFill({
+      subject: REACTION_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: routeHoles(),
+      owner: "battleArmorClass",
+    }),
+    reactionPayloadResolveWithoutFill({
+      subject: REACTION_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: routeHoles(),
+      owner: "battleInterruptStack",
+    }),
+  ]);
+}
+
+function afterDamageSaveDamageRouteState(): ReactionInterruptPayloadRouteState {
+  return payloadRouteState("afterDamageSaveDamage", afterDamagePayloadFacts, [
+    ...pendingReactionPayloadRoute(
+      REACTION_AFTER_DAMAGE_EFFECT_ROUTE_SUBJECT,
+      routeHoles("interruptDecision"),
+    ),
+    reactionPayloadInterrupt({
+      subject: REACTION_AFTER_DAMAGE_EFFECT_ROUTE_SUBJECT,
+      fill: "interruptDecision",
+      holes: routeHoles("rolledDice", "savingThrowOutcome"),
+      owner: "battleInterruptStack",
+    }),
+    reactionPayloadResolve({
+      subject: REACTION_AFTER_DAMAGE_EFFECT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: routeHoles("rolledDice"),
+      owner: "battleSavingThrowOutcome",
+    }),
+    reactionPayloadResolve({
+      subject: REACTION_AFTER_DAMAGE_EFFECT_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: routeHoles(),
+      owner: "battleHitPoint",
+    }),
+    reactionPayloadResolveWithoutFill({
+      subject: REACTION_AFTER_DAMAGE_EFFECT_ROUTE_SUBJECT,
+      holes: routeHoles(),
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+  ]);
+}
+
+function spellInterruptionEndedRouteState(): ReactionInterruptPayloadRouteState {
+  return payloadRouteState(
+    "spellInterruptionEnded",
+    spellInterruptionPayloadFacts,
+    [
+      ...pendingReactionPayloadRoute(
+        REACTION_SPELL_INTERRUPTION_ROUTE_SUBJECT,
+        routeHoles("interruptDecision"),
+      ),
+      reactionPayloadInterrupt({
+        subject: REACTION_SPELL_INTERRUPTION_ROUTE_SUBJECT,
+        fill: "interruptDecision",
+        holes: routeHoles("savingThrowOutcome"),
+        owner: "battleInterruptStack",
+      }),
+      reactionPayloadResolve({
+        subject: REACTION_SPELL_INTERRUPTION_ROUTE_SUBJECT,
+        fill: "savingThrowOutcome",
+        holes: routeHoles(),
+        owner: "battleSpellSlotAndActionEconomy",
+      }),
+      reactionPayloadResolveWithoutFill({
+        subject: REACTION_SPELL_INTERRUPTION_ROUTE_SUBJECT,
+        holes: routeHoles(),
+        owner: "battleInterruptStack",
+      }),
+    ],
+  );
+}
+
+function spellInterruptionResumedRouteState(): ReactionInterruptPayloadRouteState {
+  return payloadRouteState(
+    "spellInterruptionResumed",
+    spellInterruptionPayloadFacts,
+    [
+      ...pendingReactionPayloadRoute(
+        REACTION_SPELL_INTERRUPTION_ROUTE_SUBJECT,
+        routeHoles("interruptDecision"),
+      ),
+      reactionPayloadInterrupt({
+        subject: REACTION_SPELL_INTERRUPTION_ROUTE_SUBJECT,
+        fill: "interruptDecision",
+        holes: routeHoles("savingThrowOutcome"),
+        owner: "battleInterruptStack",
+      }),
+      reactionPayloadResolve({
+        subject: REACTION_SPELL_INTERRUPTION_ROUTE_SUBJECT,
+        fill: "savingThrowOutcome",
+        holes: routeHoles("rolledDice"),
+        owner: "battleSpellSlotAndActionEconomy",
+      }),
+      reactionPayloadResolve({
+        subject: SLOT_SPELL_ROUTE_SUBJECT,
+        fill: "rolledDice",
+        holes: routeHoles(),
+        owner: "battleHitPoint",
+      }),
+      reactionPayloadResolveWithoutFill({
+        subject: REACTION_SPELL_INTERRUPTION_ROUTE_SUBJECT,
+        holes: routeHoles(),
+        owner: "battleInterruptStack",
+      }),
+    ],
+  );
+}
+
+function fallMitigationRouteState(): ReactionInterruptPayloadRouteState {
+  return payloadRouteState("fallMitigation", fallMitigationPayloadFacts, [
+    ...pendingReactionPayloadRoute(
+      REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      routeHoles("interruptDecision"),
+    ),
+    reactionPayloadInterrupt({
+      subject: REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      fill: "interruptDecision",
+      holes: routeHoles(),
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    reactionPayloadResolveWithoutFill({
+      subject: REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      holes: routeHoles(),
+      owner: "battleActiveEffect",
+    }),
+    reactionPayloadResolveWithoutFill({
+      subject: REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      holes: routeHoles(),
+      owner: "battleMovementResource",
+    }),
+    reactionPayloadResolveWithoutFill({
+      subject: REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      holes: routeHoles(),
+      owner: "battleHitPoint",
+    }),
+  ]);
+}
+
+function createReactionInterruptPayloadRouteDriver() {
+  return defineDriver(reactionInterruptPayloadRouteDriverSchema, () => {
+    let state: ReactionInterruptPayloadRouteState = payloadRouteState(
+      "fresh",
+      freshPayloadFacts,
+      [startRoute()],
+    );
+    const reset = (): void => {
+      state = payloadRouteState("fresh", freshPayloadFacts, [startRoute()]);
+    };
+
+    return {
+      init: reset,
+      doRouteReactionArmorClassEffect: () => {
+        state = reactionArmorClassEffectRouteState();
+      },
+      doRouteAfterDamageSaveDamage: () => {
+        state = afterDamageSaveDamageRouteState();
+      },
+      doRouteSpellInterruptionEnded: () => {
+        state = spellInterruptionEndedRouteState();
+      },
+      doRouteSpellInterruptionResumed: () => {
+        state = spellInterruptionResumedRouteState();
+      },
+      doRouteFallMitigation: () => {
+        state = fallMitigationRouteState();
+      },
+      step: () => {},
+      getState: () => state,
+    };
+  });
+}
+
 const reactionCastingTimeRouteStateCheck = stateCheck(
   (raw: unknown) =>
     normalizeRouteQuintState(
@@ -431,6 +784,11 @@ const interruptStackResumeRouteStateCheck = stateCheck(
       INTERRUPT_STACK_RESUME_ROUTE_SURFACE_BY_TAG,
       "interrupt stack resume route surface",
     ),
+  compareRouteStates,
+);
+
+const reactionInterruptPayloadRouteStateCheck = stateCheck(
+  normalizeReactionInterruptPayloadRouteQuintState,
   compareRouteStates,
 );
 
@@ -479,6 +837,38 @@ const interruptRouteReplaySequences = [
     InterruptStackResumeRouteDriverAction
   >
 >;
+
+const reactionPayloadRouteReplaySequences = [
+  {
+    name: "reaction-armor-class-effect",
+    action: "doRouteReactionArmorClassEffect",
+    expected: reactionArmorClassEffectRouteState(),
+  },
+  {
+    name: "after-damage-save-damage",
+    action: "doRouteAfterDamageSaveDamage",
+    expected: afterDamageSaveDamageRouteState(),
+  },
+  {
+    name: "spell-interruption-ended",
+    action: "doRouteSpellInterruptionEnded",
+    expected: spellInterruptionEndedRouteState(),
+  },
+  {
+    name: "spell-interruption-resumed",
+    action: "doRouteSpellInterruptionResumed",
+    expected: spellInterruptionResumedRouteState(),
+  },
+  {
+    name: "fall-mitigation",
+    action: "doRouteFallMitigation",
+    expected: fallMitigationRouteState(),
+  },
+] as const satisfies ReadonlyArray<{
+  readonly name: string;
+  readonly action: ReactionInterruptPayloadRouteDriverAction;
+  readonly expected: ReactionInterruptPayloadRouteState;
+}>;
 
 describe("reaction and interrupt reducer route connectors", () => {
   it("replays every focused Reaction casting route path deterministically", async () => {
@@ -570,6 +960,52 @@ describe("reaction and interrupt reducer route connectors", () => {
     },
     MBT_TEST_TIMEOUT_MS,
   );
+
+  it("replays every focused reaction payload taxonomy path deterministically", async () => {
+    const replayedActions =
+      new Set<ReactionInterruptPayloadRouteDriverAction>();
+
+    for (const sequence of reactionPayloadRouteReplaySequences) {
+      const driver = createReactionInterruptPayloadRouteDriver()();
+      replayedActions.add(sequence.action);
+      const action = driver.actions[sequence.action];
+      if (action === undefined) {
+        throw new Error(
+          `Missing reaction payload route driver action ${sequence.action}.`,
+        );
+      }
+      await action.handler({});
+      const route = driver.getState?.();
+      if (route === undefined) {
+        throw new Error("Reaction payload route driver must expose getState.");
+      }
+      expect(route, sequence.name).toEqual(sequence.expected);
+    }
+
+    expect(replayedActions).toEqual(
+      routeDriverActionSet(reactionInterruptPayloadRouteDriverSchema),
+    );
+  });
+
+  it(
+    "routes reaction payload taxonomy through generic trigger families and owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createReactionInterruptPayloadRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: reactionInterruptPayloadRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function normalizeRouteQuintState<
@@ -606,4 +1042,40 @@ function compareRouteStates<Surface extends string>(
     throw error;
   }
   return true;
+}
+
+function normalizeReactionInterruptPayloadRouteQuintState(
+  raw: unknown,
+): ReactionInterruptPayloadRouteState {
+  const state = quintStateRecord(raw);
+  const facts = quintRecordField(state, "qFacts");
+  return {
+    surface: quintVariantMappedValue(
+      quintField(state, "qSurface"),
+      "qSurface",
+      REACTION_INTERRUPT_PAYLOAD_ROUTE_SURFACE_BY_TAG,
+      "reaction payload route surface",
+    ),
+    facts: {
+      trigger: quintVariantMappedValue(
+        quintField(facts, "trigger"),
+        "qFacts.trigger",
+        REACTION_TRIGGER_BY_TAG,
+        "reaction trigger",
+      ),
+      procedure: quintVariantMappedValue(
+        quintField(facts, "procedure"),
+        "qFacts.procedure",
+        REACTION_PROCEDURE_BY_TAG,
+        "reaction procedure",
+      ),
+      continuation: quintVariantMappedValue(
+        quintField(facts, "continuation"),
+        "qFacts.continuation",
+        REACTION_CONTINUATION_BY_TAG,
+        "reaction continuation",
+      ),
+    },
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
 }

@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "FCSF-05-REACTION-INTERRUPT-PAYLOAD-TAXONOMY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit generic reaction and interrupt payload taxonomy facts"
     },
     {
@@ -242,6 +242,12 @@ Produce either source QNT/guidance or a sharper blocker.
 Admit generic reaction active-effect, post-damage save/damage, slot
 expenditure, interrupted spell-slot preservation, and typed interrupt
 continuation payload vocabulary where RAW/domain facts justify it.
+
+Source outcome: `battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt`
+now records generic trigger/procedure/continuation facts and owner routes for
+reaction Armor Class effects, after-damage save/damage payloads, Counterspell
+interruption/resume, and Feather Fall-style falling mitigation. Target replay
+is still pending in a cleanroom package.
 
 ### Task 6
 

@@ -33,6 +33,10 @@ module battleRuntimeReducerRoute {
     | ConcentrationTeardownRouteSubject
     | CommandEffectRouteSubject
     | ReactionSpellRouteSubject
+    | ReactionArmorClassEffectRouteSubject
+    | ReactionAfterDamageEffectRouteSubject
+    | ReactionSpellInterruptionRouteSubject
+    | ReactionFallMitigationRouteSubject
     | InterruptStackResumeRouteSubject
     | RollModifierEffectRouteSubject
     | SpellDamageReductionRouteSubject

@@ -847,6 +847,10 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "concentrationTeardown",
   "commandEffect",
   "reactionSpell",
+  "reactionArmorClassEffect",
+  "reactionAfterDamageEffect",
+  "reactionSpellInterruption",
+  "reactionFallMitigation",
   "interruptStackResume",
   "rollModifierEffect",
   "spellDamageReduction",
@@ -4297,8 +4301,7 @@ function spellBaseArmorClassDurationExpiryRoute(): readonly ReducerRouteEvent[] 
 
 export function createSpellBaseArmorClassEffectRouteDriver() {
   return defineDriver(spellBaseArmorClassEffectRouteDriverSchema, () => {
-    let route: readonly ReducerRouteEvent[] =
-      spellBaseArmorClassInitialRoute();
+    let route: readonly ReducerRouteEvent[] = spellBaseArmorClassInitialRoute();
 
     function reset(): void {
       route = spellBaseArmorClassInitialRoute();
@@ -7731,6 +7734,10 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   ConcentrationTeardownRouteSubject: "concentrationTeardown",
   CommandEffectRouteSubject: "commandEffect",
   ReactionSpellRouteSubject: "reactionSpell",
+  ReactionArmorClassEffectRouteSubject: "reactionArmorClassEffect",
+  ReactionAfterDamageEffectRouteSubject: "reactionAfterDamageEffect",
+  ReactionSpellInterruptionRouteSubject: "reactionSpellInterruption",
+  ReactionFallMitigationRouteSubject: "reactionFallMitigation",
   InterruptStackResumeRouteSubject: "interruptStackResume",
   RollModifierEffectRouteSubject: "rollModifierEffect",
   SpellDamageReductionRouteSubject: "spellDamageReduction",
