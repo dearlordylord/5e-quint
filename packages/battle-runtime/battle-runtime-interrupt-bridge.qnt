@@ -24,6 +24,7 @@ module battleRuntimeInterruptBridge {
       | BattleRuntimeAfterDamage => DamageInterruptionReactionWindow
       | BattleRuntimeAttackHit => ReadiedSpellReactionWindow
       | BattleRuntimeSpellCast => ReadiedSpellReactionWindow
+      | BattleRuntimeCreatureFalls => ReadiedSpellReactionWindow
       | BattleRuntimeSaveFailed => DamageInterruptionReactionWindow
     }
 
@@ -34,6 +35,10 @@ module battleRuntimeInterruptBridge {
       | BattleRuntimeReadiedSpellReleaseProcedure => TakeReadiedSpellReaction
       | BattleRuntimeShieldReactionProcedure => TakeReadiedSpellReaction
       | BattleRuntimeCounterspellReactionProcedure => TakeReadiedSpellReaction
+      | BattleRuntimeReactionArmorClassEffectProcedure => TakeReadiedSpellReaction
+      | BattleRuntimeSpellInterruptionReactionProcedure => TakeReadiedSpellReaction
+      | BattleRuntimeAfterDamageSpellReactionProcedure => TakeDamageInterruptionReaction
+      | BattleRuntimeFallMitigationReactionProcedure => TakeReadiedSpellReaction
       | BattleRuntimeNoReactionProcedure => DeclineReaction
     }
 
