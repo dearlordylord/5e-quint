@@ -1480,11 +1480,6 @@ const MARKED_DAMAGE_RIDER_TRANSFERS = [
   "transferResetsAwaitingMarkedTargetDrop",
 ] as const;
 type MarkedDamageRiderTransfer = (typeof MARKED_DAMAGE_RIDER_TRANSFERS)[number];
-const MARKED_DAMAGE_RIDER_ABILITY_CHECKS = [
-  "markedTargetAbilityCheckModifier",
-] as const;
-type MarkedDamageRiderAbilityCheck =
-  (typeof MARKED_DAMAGE_RIDER_ABILITY_CHECKS)[number];
 type MarkedDamageRiderRouteFact =
   | {
       readonly kind: "markedHost";
@@ -1497,10 +1492,6 @@ type MarkedDamageRiderRouteFact =
   | {
       readonly kind: "markedTransfer";
       readonly transfer: MarkedDamageRiderTransfer;
-    }
-  | {
-      readonly kind: "markedAbilityCheck";
-      readonly abilityCheck: MarkedDamageRiderAbilityCheck;
     };
 const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECTS = [
   "conditionImmunityApplied",
@@ -6679,10 +6670,6 @@ const MARKED_RIDER_DAMAGE_PROJECTION_FACTS = [
     kind: "markedDamage",
     damage: "extraDamageOnMarkedTargetHit",
   },
-  {
-    kind: "markedAbilityCheck",
-    abilityCheck: "markedTargetAbilityCheckModifier",
-  },
 ] as const satisfies readonly MarkedDamageImmunityRouteFact[];
 
 const MARKED_RIDER_TRANSFER_AVAILABILITY_FACTS = [
@@ -10565,10 +10552,6 @@ const MARKED_DAMAGE_RIDER_TRANSFER_BY_VARIANT_TAG = {
     "transferResetsAwaitingMarkedTargetDrop",
 } as const satisfies Readonly<Record<string, MarkedDamageRiderTransfer>>;
 
-const MARKED_DAMAGE_RIDER_ABILITY_CHECK_BY_VARIANT_TAG = {
-  MarkedTargetAbilityCheckModifier: "markedTargetAbilityCheckModifier",
-} as const satisfies Readonly<Record<string, MarkedDamageRiderAbilityCheck>>;
-
 const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECT_BY_VARIANT_TAG = {
   ConditionImmunityApplied: "conditionImmunityApplied",
   ConditionApplicationRejectedByImmunity:
@@ -11538,19 +11521,6 @@ function decodeMarkedDamageRiderRouteFact(
       ),
     };
   }
-  if (tag === "RouteMarkedDamageRiderAbilityCheck") {
-    const payload = markedDamageRiderFactPayload(raw, tag);
-    return {
-      kind: "markedAbilityCheck",
-      abilityCheck: quintVariantMappedValue(
-        quintField(payload, "abilityCheck"),
-        "qFacts[].fact.abilityCheck",
-        MARKED_DAMAGE_RIDER_ABILITY_CHECK_BY_VARIANT_TAG,
-        "marked damage rider ability check",
-      ),
-    };
-  }
-
   throw new Error(`Unknown marked damage rider route fact: ${tag}.`);
 }
 

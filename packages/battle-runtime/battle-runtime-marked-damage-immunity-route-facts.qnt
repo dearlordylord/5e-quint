@@ -20,9 +20,6 @@ module battleRuntimeMarkedDamageImmunityRouteFacts {
     | TransferConsumesBonusAction
     | TransferResetsAwaitingMarkedTargetDrop
 
-  type MarkedDamageRiderAbilityCheckFact =
-    | MarkedTargetAbilityCheckModifier
-
   type MarkedDamageRiderRouteFact =
     | RouteMarkedDamageRiderHost({ host: MarkedDamageRiderHostFact })
     | RouteMarkedDamageRiderDamage({
@@ -30,9 +27,6 @@ module battleRuntimeMarkedDamageImmunityRouteFacts {
       })
     | RouteMarkedDamageRiderTransfer({
         transfer: MarkedDamageRiderTransferFact,
-      })
-    | RouteMarkedDamageRiderAbilityCheck({
-        abilityCheck: MarkedDamageRiderAbilityCheckFact,
       })
 
   type ConditionImmunityTemporaryHitPointEffectFact =

@@ -220,9 +220,6 @@ module battleRuntimeMarkedDamageImmunityActiveEffectsRouteMbt {
       markedFact(RouteMarkedDamageRiderDamage({
         damage: ExtraDamageOnMarkedTargetHit,
       })),
-      markedFact(RouteMarkedDamageRiderAbilityCheck({
-        abilityCheck: MarkedTargetAbilityCheckModifier,
-      })),
     )
 
   pure def markedRiderTransferAvailabilityFacts: List[MarkedDamageImmunityRouteFact] =

@@ -593,6 +593,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
 | `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
 | `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
+| `packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
 
 ## QNT Registry
 

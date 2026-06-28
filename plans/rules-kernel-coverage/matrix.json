@@ -4134,6 +4134,12 @@
           "ownerPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
@@ -4141,7 +4147,8 @@
         "packages/battle-runtime/battle-runtime-reducer-route.qnt",
         "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
-        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt"
       ],
       "reason": "This is executable cleanroom architecture evidence, not a new whole-battle rule owner. The generic route vocabulary defines reducer entrypoint events, subject families, fill families, hole-family frontier facts, and battle-owned durable owner groups without authored catalog identity. Each route connector driver composes an existing focused rule witness with qRoute, requiring the TS MBT driver and cleanroom rehearsal to prove that the same QNT-observed behavior is reachable through startBattle, discoverBattleActs, and resolveBattleSubject. Detailed spell targeting, save gating, healing, damage, and zero-Hit-Point semantics remain owned by their focused rule QNT rows.",
       "runtime": "battle",
@@ -9944,6 +9951,14 @@
         "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt is the reducer-route connector fixture for generic marked-target damage rider and transfer, condition-immunity rejection, turn-start Temporary Hit Point grants, and Concentration cleanup active-effect facts.",
+      "obligationIds": [
+        "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt",
       "role": "mbt-fixture"
     }
   ],
