@@ -545,7 +545,7 @@
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "subjectFamily": "selected save-gated condition spell and repeat-save substrates",
           "branchObligations": 9,
-          "currentOutOfScopeBranchObligations": 0,
+          "currentOutOfScopeBranchObligations": 5,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s).",
