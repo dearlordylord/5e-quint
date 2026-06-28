@@ -10341,6 +10341,12 @@
       "role": "semantic-core"
     },
     {
+      "category": "leaf-type-vocabulary",
+      "classification": "exempt",
+      "evidence": "Exact reducer-route choice payload vocabulary leaf imported by focused route connector MBT drivers without owning reducer semantics.",
+      "ownerPath": "packages/battle-runtime/battle-runtime-route-choice-payloads.qnt"
+    },
+    {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
       "role": "semantic-core"

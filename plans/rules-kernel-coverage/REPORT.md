@@ -677,6 +677,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-replay-equivalence.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-route-choice-payloads.qnt` | exempt | leaf-type-vocabulary: Exact reducer-route choice payload vocabulary leaf imported by focused route connector MBT drivers without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-sanctuary.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-save-gated-spell.qnt` | qnt-owner-role | semantic-core |

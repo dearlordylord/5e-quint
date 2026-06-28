@@ -340,7 +340,7 @@ function createRollModifierRouteDriver() {
         state = routeState("guidanceActiveEffect", [
           ...discovered,
           rollModifierResolve(
-            "skillChoice",
+            { kind: "skillChoice", skill: "stealth" },
             routeHoles(),
             "battleActiveEffect",
           ),
@@ -382,7 +382,7 @@ function createRollModifierRouteDriver() {
         state = routeState("enhanceAbilityActiveEffect", [
           ...discovered,
           rollModifierResolve(
-            "abilityChoice",
+            { kind: "abilityChoice", ability: "dex" },
             routeHoles(),
             "battleActiveEffect",
           ),
@@ -410,7 +410,13 @@ function createRollModifierRouteDriver() {
         state = routeState("enhancePerTargetActiveEffect", [
           ...discovered,
           rollModifierResolve(
-            "targetAbilityChoices",
+            {
+              kind: "targetAbilityChoices",
+              choices: {
+                primary: "dex",
+                secondary: "wis",
+              },
+            },
             routeHoles(),
             "battleActiveEffect",
           ),

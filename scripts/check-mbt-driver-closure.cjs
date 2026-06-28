@@ -154,6 +154,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-reaction-kinds.qnt",
   "battle-runtime-reducer-route.qnt",
   "battle-runtime-replay-equivalence.qnt",
+  "battle-runtime-route-choice-payloads.qnt",
   "battle-runtime-save-gated-spell-ordering.qnt",
   "battle-runtime-see-invisibility-constants.qnt",
   "battle-runtime-spell-attack-ordering.qnt",

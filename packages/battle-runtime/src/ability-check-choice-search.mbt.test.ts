@@ -344,7 +344,7 @@ function rollModifierOpeningRoute(
 
 function rollModifierChoiceAcceptedRoute(
   choiceHole: "abilityChoice" | "skillChoice",
-  fill: "abilityChoice" | "skillChoice",
+  fill: ReducerRouteFill,
 ): readonly ReducerRouteEvent[] {
   return [
     ...rollModifierOpeningRoute(choiceHole),
@@ -355,7 +355,7 @@ function rollModifierChoiceAcceptedRoute(
 
 function rollModifierInvalidChoiceRoute(
   choiceHole: "abilityChoice" | "skillChoice",
-  fill: "abilityChoice" | "skillChoice",
+  fill: ReducerRouteFill,
 ): readonly ReducerRouteEvent[] {
   return [
     ...rollModifierOpeningRoute(choiceHole),
@@ -391,7 +391,11 @@ function searchInvalidTargetRoute(): readonly ReducerRouteEvent[] {
 function searchInvalidAbilityFillRoute(): readonly ReducerRouteEvent[] {
   return [
     ...searchAbilityCheckRoute(),
-    searchResolve("skillChoice", routeHoles(), "battleHoleFrontier"),
+    searchResolve(
+      { kind: "skillChoice", skill: "athletics" },
+      routeHoles(),
+      "battleHoleFrontier",
+    ),
   ];
 }
 
@@ -521,12 +525,18 @@ function applyRouteScenario(
     "guidance-invalid-ability-fill-rejected": () =>
       routeState(
         "guidance-invalid-ability-fill-rejected",
-        rollModifierInvalidChoiceRoute("skillChoice", "abilityChoice"),
+        rollModifierInvalidChoiceRoute("skillChoice", {
+          kind: "abilityChoice",
+          ability: "dex",
+        }),
       ),
     "guidance-skill-athletics": () =>
       routeState(
         "guidance-skill-athletics",
-        rollModifierChoiceAcceptedRoute("skillChoice", "skillChoice"),
+        rollModifierChoiceAcceptedRoute("skillChoice", {
+          kind: "skillChoice",
+          skill: "athletics",
+        }),
       ),
     "enhance-ability-choice-open": () =>
       routeState(
@@ -536,12 +546,18 @@ function applyRouteScenario(
     "enhance-ability-invalid-skill-fill-rejected": () =>
       routeState(
         "enhance-ability-invalid-skill-fill-rejected",
-        rollModifierInvalidChoiceRoute("abilityChoice", "skillChoice"),
+        rollModifierInvalidChoiceRoute("abilityChoice", {
+          kind: "skillChoice",
+          skill: "athletics",
+        }),
       ),
     "enhance-ability-dex": () =>
       routeState(
         "enhance-ability-dex",
-        rollModifierChoiceAcceptedRoute("abilityChoice", "abilityChoice"),
+        rollModifierChoiceAcceptedRoute("abilityChoice", {
+          kind: "abilityChoice",
+          ability: "dex",
+        }),
       ),
   } satisfies Record<
     AbilityCheckChoiceSearchReplayScenario,

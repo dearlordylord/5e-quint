@@ -7,6 +7,7 @@
 module battleRuntimeReducerRoute {
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
+  import battleRuntimeRouteChoicePayloads.* from "./battle-runtime-route-choice-payloads"
 
   type ReducerRouteSubjectFamily =
     | BattleActionRouteSubject
@@ -107,6 +108,14 @@ module battleRuntimeReducerRoute {
     | BattleCreatureStateOwner
     | BattleArmorClassOwner
 
+  type ReducerRouteFillEvidence =
+    | RouteFillKind({ fill: BattleFillKind })
+    | RouteSkillChoiceFill({ skill: ReducerRouteSkillChoice })
+    | RouteAbilityChoiceFill({ ability: ReducerRouteAbilityChoice })
+    | RouteTargetAbilityChoicesFill({
+        choices: ReducerRouteTwoTargetAbilityChoices,
+      })
+
   type ReducerRouteEvent =
     | RouteStartBattle({ owner: ReducerRouteOwnerGroup })
     | RouteDiscoverBattleActs({
@@ -116,7 +125,7 @@ module battleRuntimeReducerRoute {
       })
     | RouteResolveBattleSubject({
         subject: ReducerRouteSubjectFamily,
-        fill: BattleFillKind,
+        fill: ReducerRouteFillEvidence,
         holes: Set[BattleHoleFamilyKind],
         owner: ReducerRouteOwnerGroup,
       })
@@ -127,7 +136,7 @@ module battleRuntimeReducerRoute {
       })
     | RouteResolveBattleInterrupt({
         subject: ReducerRouteSubjectFamily,
-        fill: BattleFillKind,
+        fill: ReducerRouteFillEvidence,
         holes: Set[BattleHoleFamilyKind],
         owner: ReducerRouteOwnerGroup,
       })
@@ -151,6 +160,19 @@ module battleRuntimeReducerRoute {
   pure def routeResolveBattleSubject(
     subject: ReducerRouteSubjectFamily,
     fill: BattleFillKind,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubjectWithFillEvidence(
+      subject,
+      RouteFillKind({ fill: fill }),
+      holes,
+      owner,
+    )
+
+  pure def routeResolveBattleSubjectWithFillEvidence(
+    subject: ReducerRouteSubjectFamily,
+    fill: ReducerRouteFillEvidence,
     holes: Set[BattleHoleFamilyKind],
     owner: ReducerRouteOwnerGroup,
   ): ReducerRouteEvent =
@@ -180,7 +202,7 @@ module battleRuntimeReducerRoute {
   ): ReducerRouteEvent =
     RouteResolveBattleInterrupt({
       subject: subject,
-      fill: fill,
+      fill: RouteFillKind({ fill: fill }),
       holes: holes,
       owner: owner,
     })

@@ -15,6 +15,7 @@
 module battleRuntimeRollModifierActiveEffectsRouteMbt {
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
+  import battleRuntimeRouteChoicePayloads.* from "./battle-runtime-route-choice-payloads"
   import battleRuntimeReducerRoute.* from "./battle-runtime-reducer-route"
 
   type RollModifierRouteSurface =
@@ -63,6 +64,18 @@ module battleRuntimeRollModifierActiveEffectsRouteMbt {
       owner,
     )
 
+  pure def resolveRollModifierWithFillEvidence(
+    fill: ReducerRouteFillEvidence,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubjectWithFillEvidence(
+      RollModifierEffectRouteSubject,
+      fill,
+      holes,
+      owner,
+    )
+
   pure def resolveRollModifierWithoutFill(
     holes: Set[BattleHoleFamilyKind],
     owner: ReducerRouteOwnerGroup,
@@ -85,6 +98,20 @@ module battleRuntimeRollModifierActiveEffectsRouteMbt {
     BattleSpellSlotAndActionEconomyOwner
 
   pure def noHoles: Set[BattleHoleFamilyKind] = Set()
+
+  pure def guidanceStealthFill: ReducerRouteFillEvidence =
+    RouteSkillChoiceFill({ skill: RouteSkillStealth })
+
+  pure def enhanceDexFill: ReducerRouteFillEvidence =
+    RouteAbilityChoiceFill({ ability: RouteAbilityDex })
+
+  pure def enhancePerTargetFill: ReducerRouteFillEvidence =
+    RouteTargetAbilityChoicesFill({
+      choices: {
+        primary: RouteAbilityDex,
+        secondary: RouteAbilityWis,
+      },
+    })
 
   action recordSurface(
     surface: RollModifierRouteSurface,
@@ -157,7 +184,11 @@ module battleRuntimeRollModifierActiveEffectsRouteMbt {
       GuidanceActiveEffectRouteSurface,
       discovered
         .append(
-          resolveRollModifier(SkillChoiceFillKind, noHoles, BattleActiveEffectOwner)
+          resolveRollModifierWithFillEvidence(
+            guidanceStealthFill,
+            noHoles,
+            BattleActiveEffectOwner,
+          )
         )
         .append(resolveRollModifierWithoutFill(noHoles, BattleConcentrationOwner)),
     ),
@@ -198,7 +229,11 @@ module battleRuntimeRollModifierActiveEffectsRouteMbt {
       EnhanceAbilityActiveEffectRouteSurface,
       discovered
         .append(
-          resolveRollModifier(AbilityChoiceFillKind, noHoles, BattleActiveEffectOwner)
+          resolveRollModifierWithFillEvidence(
+            enhanceDexFill,
+            noHoles,
+            BattleActiveEffectOwner,
+          )
         )
         .append(resolveRollModifierWithoutFill(noHoles, BattleConcentrationOwner)),
     ),
@@ -229,8 +264,8 @@ module battleRuntimeRollModifierActiveEffectsRouteMbt {
       EnhancePerTargetActiveEffectRouteSurface,
       discovered
         .append(
-          resolveRollModifier(
-            TargetAbilityChoicesFillKind,
+          resolveRollModifierWithFillEvidence(
+            enhancePerTargetFill,
             noHoles,
             BattleActiveEffectOwner,
           )

@@ -18,6 +18,7 @@ import { Either, Match, Schema } from "effect";
 
 import { expect } from "vitest";
 
+import { ABILITIES, SURFACE_SKILLS } from "@dnd/shared/game-facts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   DieRollResult,
@@ -996,7 +997,28 @@ const REDUCER_ROUTE_FILLS = [
   "unitFeatureDecision",
   "wildShapeEquipmentDisposition",
 ] as const;
-type ReducerRouteFill = (typeof REDUCER_ROUTE_FILLS)[number];
+type ReducerRouteFillKind = (typeof REDUCER_ROUTE_FILLS)[number];
+const REDUCER_ROUTE_ABILITIES = ABILITIES;
+type ReducerRouteAbilityChoice = (typeof REDUCER_ROUTE_ABILITIES)[number];
+const REDUCER_ROUTE_SKILLS = SURFACE_SKILLS;
+type ReducerRouteSkillChoice = (typeof REDUCER_ROUTE_SKILLS)[number];
+type ReducerRouteFill =
+  | ReducerRouteFillKind
+  | {
+      readonly kind: "skillChoice";
+      readonly skill: ReducerRouteSkillChoice;
+    }
+  | {
+      readonly kind: "abilityChoice";
+      readonly ability: ReducerRouteAbilityChoice;
+    }
+  | {
+      readonly kind: "targetAbilityChoices";
+      readonly choices: {
+        readonly primary: ReducerRouteAbilityChoice;
+        readonly secondary: ReducerRouteAbilityChoice;
+      };
+    };
 type ReducerRouteEvent =
   | {
       readonly kind: "startBattle";
@@ -7849,7 +7871,37 @@ const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = {
   TargetChoiceFillKind: "targetChoice",
   UnitFeatureDecisionFillKind: "unitFeatureDecision",
   WildShapeEquipmentDispositionFillKind: "wildShapeEquipmentDisposition",
-} as const satisfies Readonly<Record<string, ReducerRouteFill>>;
+} as const satisfies Readonly<Record<string, ReducerRouteFillKind>>;
+
+const REDUCER_ROUTE_ABILITY_CHOICE_BY_VARIANT_TAG = {
+  RouteAbilityStr: "str",
+  RouteAbilityDex: "dex",
+  RouteAbilityCon: "con",
+  RouteAbilityInt: "int",
+  RouteAbilityWis: "wis",
+  RouteAbilityCha: "cha",
+} as const satisfies Readonly<Record<string, ReducerRouteAbilityChoice>>;
+
+const REDUCER_ROUTE_SKILL_CHOICE_BY_VARIANT_TAG = {
+  RouteSkillAcrobatics: "acrobatics",
+  RouteSkillAnimalHandling: "animal_handling",
+  RouteSkillArcana: "arcana",
+  RouteSkillAthletics: "athletics",
+  RouteSkillDeception: "deception",
+  RouteSkillHistory: "history",
+  RouteSkillInsight: "insight",
+  RouteSkillIntimidation: "intimidation",
+  RouteSkillInvestigation: "investigation",
+  RouteSkillMedicine: "medicine",
+  RouteSkillNature: "nature",
+  RouteSkillPerception: "perception",
+  RouteSkillPerformance: "performance",
+  RouteSkillPersuasion: "persuasion",
+  RouteSkillReligion: "religion",
+  RouteSkillSleightOfHand: "sleight_of_hand",
+  RouteSkillStealth: "stealth",
+  RouteSkillSurvival: "survival",
+} as const satisfies Readonly<Record<string, ReducerRouteSkillChoice>>;
 
 export function decodeReducerRoute(raw: unknown): readonly ReducerRouteEvent[] {
   return quintList(raw, "qRoute").map(decodeReducerRouteEvent);
@@ -7949,13 +8001,82 @@ function reducerRouteHoles(raw: unknown): readonly ReducerRouteHole[] {
   return quintSet(raw, "qRoute[].holes").map(reducerRouteHole).sort();
 }
 
-function reducerRouteFill(raw: unknown): ReducerRouteFill {
+function reducerRouteFillKind(raw: unknown): ReducerRouteFillKind {
   return quintVariantMappedValue(
     raw,
     "qRoute[].fill",
     REDUCER_ROUTE_FILL_BY_VARIANT_TAG,
     "reducer-route fill",
   );
+}
+
+function reducerRouteFill(raw: unknown): ReducerRouteFill {
+  const tag = quintVariantTag(raw, "qRoute[].fill");
+  if (tag in REDUCER_ROUTE_FILL_BY_VARIANT_TAG) {
+    return reducerRouteFillKind(raw);
+  }
+  if (tag === "RouteFillKind") {
+    const payload = reducerRoutePayload(raw, tag);
+    return reducerRouteFillKind(quintField(payload, "fill"));
+  }
+  if (tag === "RouteSkillChoiceFill") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "skillChoice",
+      skill: reducerRouteSkillChoice(quintField(payload, "skill")),
+    };
+  }
+  if (tag === "RouteAbilityChoiceFill") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "abilityChoice",
+      ability: reducerRouteAbilityChoice(quintField(payload, "ability")),
+    };
+  }
+  if (tag === "RouteTargetAbilityChoicesFill") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "targetAbilityChoices",
+      choices: reducerRouteTwoTargetAbilityChoices(
+        quintField(payload, "choices"),
+      ),
+    };
+  }
+
+  throw new Error(`Unknown reducer-route fill evidence: ${tag}.`);
+}
+
+function reducerRouteSkillChoice(raw: unknown): ReducerRouteSkillChoice {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].fill.skill",
+    REDUCER_ROUTE_SKILL_CHOICE_BY_VARIANT_TAG,
+    "reducer-route skill choice",
+  );
+}
+
+function reducerRouteAbilityChoice(raw: unknown): ReducerRouteAbilityChoice {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].fill.ability",
+    REDUCER_ROUTE_ABILITY_CHOICE_BY_VARIANT_TAG,
+    "reducer-route ability choice",
+  );
+}
+
+function reducerRouteTwoTargetAbilityChoices(raw: unknown): {
+  readonly primary: ReducerRouteAbilityChoice;
+  readonly secondary: ReducerRouteAbilityChoice;
+} {
+  if (!isRecord(raw)) {
+    throw new Error(
+      "Expected reducer-route two-target ability choices record.",
+    );
+  }
+  return {
+    primary: reducerRouteAbilityChoice(quintField(raw, "primary")),
+    secondary: reducerRouteAbilityChoice(quintField(raw, "secondary")),
+  };
 }
 
 function normalizeQuintState(raw: unknown): MbtProjection {

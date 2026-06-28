@@ -19,6 +19,7 @@
 module battleRuntimeAbilityCheckChoiceSearchRouteMbt {
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
+  import battleRuntimeRouteChoicePayloads.* from "./battle-runtime-route-choice-payloads"
   import battleRuntimeReducerRoute.* from "./battle-runtime-reducer-route"
 
   type AbilityCheckChoiceSearchRouteSurface =
@@ -57,6 +58,18 @@ module battleRuntimeAbilityCheckChoiceSearchRouteMbt {
   ): ReducerRouteEvent =
     routeResolveBattleSubject(AbilityCheckSearchRouteSubject, fill, holes, owner)
 
+  pure def searchResolveWithFillEvidence(
+    fill: ReducerRouteFillEvidence,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubjectWithFillEvidence(
+      AbilityCheckSearchRouteSubject,
+      fill,
+      holes,
+      owner,
+    )
+
   pure def rollModifierDiscover(
     holes: Set[BattleHoleFamilyKind],
     owner: ReducerRouteOwnerGroup,
@@ -69,6 +82,18 @@ module battleRuntimeAbilityCheckChoiceSearchRouteMbt {
     owner: ReducerRouteOwnerGroup,
   ): ReducerRouteEvent =
     routeResolveBattleSubject(RollModifierEffectRouteSubject, fill, holes, owner)
+
+  pure def rollModifierResolveWithFillEvidence(
+    fill: ReducerRouteFillEvidence,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubjectWithFillEvidence(
+      RollModifierEffectRouteSubject,
+      fill,
+      holes,
+      owner,
+    )
 
   pure def rollModifierResolveWithoutFill(
     owner: ReducerRouteOwnerGroup,
@@ -103,7 +128,13 @@ module battleRuntimeAbilityCheckChoiceSearchRouteMbt {
 
   pure def searchInvalidAbilityFillRoute: List[ReducerRouteEvent] =
     searchAbilityCheckRoute
-      .append(searchResolve(SkillChoiceFillKind, noHoles, BattleHoleFrontierOwner))
+      .append(
+        searchResolveWithFillEvidence(
+          RouteSkillChoiceFill({ skill: RouteSkillAthletics }),
+          noHoles,
+          BattleHoleFrontierOwner,
+        )
+      )
 
   pure def searchResolvedRoute: List[ReducerRouteEvent] =
     searchAbilityCheckRoute
@@ -129,18 +160,18 @@ module battleRuntimeAbilityCheckChoiceSearchRouteMbt {
 
   pure def rollModifierChoiceAcceptedRoute(
     choiceHole: BattleHoleFamilyKind,
-    fill: BattleFillKind,
+    fill: ReducerRouteFillEvidence,
   ): List[ReducerRouteEvent] =
     rollModifierOpeningRoute(choiceHole)
-      .append(rollModifierResolve(fill, noHoles, BattleActiveEffectOwner))
+      .append(rollModifierResolveWithFillEvidence(fill, noHoles, BattleActiveEffectOwner))
       .append(rollModifierResolveWithoutFill(BattleConcentrationOwner))
 
   pure def rollModifierInvalidChoiceRoute(
     choiceHole: BattleHoleFamilyKind,
-    fill: BattleFillKind,
+    fill: ReducerRouteFillEvidence,
   ): List[ReducerRouteEvent] =
     rollModifierOpeningRoute(choiceHole)
-      .append(rollModifierResolve(fill, noHoles, BattleHoleFrontierOwner))
+      .append(rollModifierResolveWithFillEvidence(fill, noHoles, BattleHoleFrontierOwner))
 
   action recordSurface(
     surface: AbilityCheckChoiceSearchRouteSurface,
@@ -212,7 +243,10 @@ module battleRuntimeAbilityCheckChoiceSearchRouteMbt {
     qSurface == GuidanceSkillChoiceOpen,
     recordSurface(
       GuidanceInvalidAbilityFillRejected,
-      rollModifierInvalidChoiceRoute(SkillChoiceHoleKind, AbilityChoiceFillKind),
+      rollModifierInvalidChoiceRoute(
+        SkillChoiceHoleKind,
+        RouteAbilityChoiceFill({ ability: RouteAbilityDex }),
+      ),
     ),
   }
 
@@ -220,7 +254,10 @@ module battleRuntimeAbilityCheckChoiceSearchRouteMbt {
     qSurface == GuidanceInvalidAbilityFillRejected,
     recordSurface(
       GuidanceSkillAthletics,
-      rollModifierChoiceAcceptedRoute(SkillChoiceHoleKind, SkillChoiceFillKind),
+      rollModifierChoiceAcceptedRoute(
+        SkillChoiceHoleKind,
+        RouteSkillChoiceFill({ skill: RouteSkillAthletics }),
+      ),
     ),
   }
 
@@ -236,7 +273,10 @@ module battleRuntimeAbilityCheckChoiceSearchRouteMbt {
     qSurface == EnhanceAbilityChoiceOpen,
     recordSurface(
       EnhanceAbilityInvalidSkillFillRejected,
-      rollModifierInvalidChoiceRoute(AbilityChoiceHoleKind, SkillChoiceFillKind),
+      rollModifierInvalidChoiceRoute(
+        AbilityChoiceHoleKind,
+        RouteSkillChoiceFill({ skill: RouteSkillAthletics }),
+      ),
     ),
   }
 
@@ -246,7 +286,7 @@ module battleRuntimeAbilityCheckChoiceSearchRouteMbt {
       EnhanceAbilityDex,
       rollModifierChoiceAcceptedRoute(
         AbilityChoiceHoleKind,
-        AbilityChoiceFillKind,
+        RouteAbilityChoiceFill({ ability: RouteAbilityDex }),
       ),
     ),
   }

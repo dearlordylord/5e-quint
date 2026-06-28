@@ -337,7 +337,7 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s).",
-              "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt exposes qRoute for AbilityCheckSearchRouteSubject and RollModifierEffectRouteSubject through action-economy, target-selection, hole-frontier, ability-check, active-effect, and Concentration owners."
+              "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt exposes qRoute for AbilityCheckSearchRouteSubject and RollModifierEffectRouteSubject through action-economy, target-selection, hole-frontier, ability-check, active-effect, and Concentration owners, with exact skill-choice and ability-choice route-fill payload evidence for accepted and rejected choice fills."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Playing-the-Game.md#Ability Checks defines Ability Check totals against a Difficulty Class.",
@@ -1114,7 +1114,7 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt is present in source-branch-inventory.json with 16 branch obligation(s).",
-              "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt exposes qRoute for RollModifierEffectRouteSubject through spell-slot/action-economy, active-effect, and Concentration owners; Thaumaturgy's one-minute-effect count remains table-owned boundary evidence and is not represented as a reducer-route hole."
+              "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt exposes qRoute for RollModifierEffectRouteSubject through spell-slot/action-economy, active-effect, and Concentration owners, with exact skill-choice, ability-choice, and fixed two-target ability-choice route-fill payload evidence; Thaumaturgy's one-minute-effect count remains table-owned boundary evidence and is not represented as a reducer-route hole."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Bane and #Bless define roll-modifier active Spell Effects.",
@@ -1135,7 +1135,7 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
-              "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt records RollModifierEffectRouteSubject evidence for Bless, Bane, and Guidance through spell invocation, active-effect, and Concentration owners.",
+            "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt records RollModifierEffectRouteSubject evidence for Bless, Bane, and Guidance through spell invocation, active-effect, and Concentration owners, including exact Guidance skill-choice route-fill payload evidence.",
               "packages/battle-runtime/battle-runtime-spell-damage-reduction.route.mbt.qnt records SpellDamageReductionRouteSubject evidence for Resistance through target-choice, damage-type-choice, active-effect, Concentration, rolled-dice, and damage-adjustment owners.",
               "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt records ScalarBuffEffectRouteSubject evidence for Shield of Faith through active-effect and Concentration owners.",
               "Selected spell identity remains a catalog, selection, admission, and SRD fixture boundary; reducer evidence flows through typed procedure facts and active effect state."
@@ -2683,7 +2683,7 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityChoiceOpen under branch family step.",
-              "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt records the ability-choice frontier through RollModifierEffectRouteSubject with spell invocation and target-selection owner evidence."
+            "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt records the ability-choice frontier through RollModifierEffectRouteSubject with spell invocation and target-selection owner evidence."
             ],
             "rawDomainFacts": [
               "Enhance Ability is a level-2 spell.",
@@ -2706,7 +2706,7 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt exposes doEnhanceAbilityDex under branch family step.",
-              "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt records accepted ability-choice fills through RollModifierEffectRouteSubject, BattleActiveEffectOwner, and BattleConcentrationOwner."
+            "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt records accepted ability-choice fills with exact chosen-ability route-fill payloads through RollModifierEffectRouteSubject, BattleActiveEffectOwner, and BattleConcentrationOwner."
             ],
             "rawDomainFacts": [
               "Enhance Ability is a level-2 spell.",

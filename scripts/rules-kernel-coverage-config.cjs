@@ -198,6 +198,13 @@ const qntRegistryExemptions = [
   },
   {
     ownerPath:
+      "packages/battle-runtime/battle-runtime-route-choice-payloads.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Exact reducer-route choice payload vocabulary leaf imported by focused route connector MBT drivers without owning reducer semantics.",
+  },
+  {
+    ownerPath:
       "packages/battle-runtime/battle-runtime-magic-missile-facts.qnt",
     category: "proof-only-example",
     evidence:
