@@ -52,6 +52,10 @@ const OWNER_BY_TAG = {
 } as const;
 type CharacterSheetRouteOwner =
   (typeof OWNER_BY_TAG)[keyof typeof OWNER_BY_TAG];
+type CharacterSheetSpellResourceSlotOwner = Extract<
+  CharacterSheetRouteOwner,
+  "spellSlot" | "pactSlot"
+>;
 
 const FACT_BY_TAG = {
   SheetOrdinarySpellSlotDeltaFact: "ordinarySpellSlotDelta",
@@ -64,6 +68,14 @@ const FACT_BY_TAG = {
   SheetSpellResourceRejectionFact: "spellResourceRejection",
 } as const;
 type CharacterSheetRouteFact = (typeof FACT_BY_TAG)[keyof typeof FACT_BY_TAG];
+
+const SPELL_RESOURCE_DELTA_FACTS_BY_OWNER = {
+  spellSlot: ["ordinarySpellSlotDelta"],
+  pactSlot: ["pactSlotDelta"],
+} as const satisfies Record<
+  CharacterSheetSpellResourceSlotOwner,
+  readonly CharacterSheetRouteFact[]
+>;
 
 type CharacterSheetRouteEvent =
   | {
@@ -692,7 +704,9 @@ function completeLongRestHpAndHitDiceRoute(
   ];
 }
 
-function rejectSpellResourceRoute(owner: CharacterSheetRouteOwner): RouteAppender {
+function rejectSpellResourceRoute(
+  owner: CharacterSheetSpellResourceSlotOwner,
+): RouteAppender {
   return (route) => [
     ...route,
     resolveCharacterSheetSubject({
@@ -710,7 +724,7 @@ function rejectSpellResourceRoute(owner: CharacterSheetRouteOwner): RouteAppende
 }
 
 function completeRestoredSlotRoute(
-  owner: CharacterSheetRouteOwner,
+  owner: CharacterSheetSpellResourceSlotOwner,
 ): RouteAppender {
   return (route) => [
     ...route,
@@ -729,11 +743,9 @@ function completeRestoredSlotRoute(
 }
 
 function spellResourceDeltaFacts(
-  owner: CharacterSheetRouteOwner,
+  owner: CharacterSheetSpellResourceSlotOwner,
 ): readonly CharacterSheetRouteFact[] {
-  if (owner === "spellSlot") return ["ordinarySpellSlotDelta"];
-  if (owner === "pactSlot") return ["pactSlotDelta"];
-  return [];
+  return SPELL_RESOURCE_DELTA_FACTS_BY_OWNER[owner];
 }
 
 function completeLongRestSpellResourceRoute(
@@ -794,7 +806,7 @@ function pactSlotRecoveryRoute(
     }),
     recordCharacterSheetFacts({
       subject: "spellResource",
-      facts: ["spellResourceRejection"],
+      facts: ["pactSlotDelta"],
       owner: "pactSlot",
     }),
   ];
@@ -813,7 +825,7 @@ function rejectPactSlotRecoveryRoute(
     }),
     recordCharacterSheetFacts({
       subject: "spellResource",
-      facts: ["pactSlotDelta"],
+      facts: ["spellResourceRejection"],
       owner: "pactSlot",
     }),
   ];

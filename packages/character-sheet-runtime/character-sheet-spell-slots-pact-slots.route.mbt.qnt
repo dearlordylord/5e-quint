@@ -15,6 +15,10 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
     qRoute: List[CharacterSheetRouteEvent],
   }
 
+  type SpellResourceSlotOwner =
+    | OrdinarySpellSlotResourceOwner
+    | PactSlotResourceOwner
+
   var qState: SpellResourceRouteState
 
   pure def qRoute: List[CharacterSheetRouteEvent] = qState.qRoute
@@ -51,7 +55,7 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
 
   pure def completeRestoredSlotRoute(
     route: List[CharacterSheetRouteEvent],
-    owner: CharacterSheetRouteOwnerGroup,
+    owner: SpellResourceSlotOwner,
   ): List[CharacterSheetRouteEvent] =
     route
       .append(
@@ -59,31 +63,37 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
           SheetSpellResourceRouteSubject,
           SheetRestDurationFill,
           Set(),
-          owner,
+          sheetOwnerForSlotOwner(owner),
         )
       )
       .append(
         routeRecordCharacterSheetFacts(
           SheetSpellResourceRouteSubject,
           spellResourceDeltaFacts(owner),
-          owner,
+          sheetOwnerForSlotOwner(owner),
         )
       )
 
   pure def spellResourceDeltaFacts(
-    owner: CharacterSheetRouteOwnerGroup,
+    owner: SpellResourceSlotOwner,
   ): Set[CharacterSheetRouteFactFamily] = match owner {
-    | CharacterSheetSpellSlotOwner => Set(SheetOrdinarySpellSlotDeltaFact)
-    | CharacterSheetPactSlotOwner => Set(SheetPactSlotDeltaFact)
-    | _ => Set()
+    | OrdinarySpellSlotResourceOwner => Set(SheetOrdinarySpellSlotDeltaFact)
+    | PactSlotResourceOwner => Set(SheetPactSlotDeltaFact)
+  }
+
+  pure def sheetOwnerForSlotOwner(
+    owner: SpellResourceSlotOwner,
+  ): CharacterSheetRouteOwnerGroup = match owner {
+    | OrdinarySpellSlotResourceOwner => CharacterSheetSpellSlotOwner
+    | PactSlotResourceOwner => CharacterSheetPactSlotOwner
   }
 
   pure def completeLongRestSpellResourceRoute(
     route: List[CharacterSheetRouteEvent],
   ): List[CharacterSheetRouteEvent] =
     completeRestoredSlotRoute(
-      completeRestoredSlotRoute(route, CharacterSheetSpellSlotOwner),
-      CharacterSheetPactSlotOwner,
+      completeRestoredSlotRoute(route, OrdinarySpellSlotResourceOwner),
+      PactSlotResourceOwner,
     ).append(
       routeRecordCharacterSheetFacts(
         SheetSpellResourceRouteSubject,
@@ -142,7 +152,7 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
       .append(
         routeRecordCharacterSheetFacts(
           SheetSpellResourceRouteSubject,
-          Set(SheetSpellResourceRejectionFact),
+          Set(SheetPactSlotDeltaFact),
           CharacterSheetPactSlotOwner,
         )
       )
@@ -189,7 +199,7 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
       .append(
         routeRecordCharacterSheetFacts(
           SheetSpellResourceRouteSubject,
-          Set(SheetPactSlotDeltaFact),
+          Set(SheetSpellResourceRejectionFact),
           CharacterSheetPactSlotOwner,
         )
       )
@@ -220,7 +230,7 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
 
   action doShortRestRestoresPactSlotsOnly = all {
     qState.ready,
-    recordRoute(completeRestoredSlotRoute(qRoute, CharacterSheetPactSlotOwner)),
+    recordRoute(completeRestoredSlotRoute(qRoute, PactSlotResourceOwner)),
   }
 
   action doShortRestArcaneRecoveryRefundsOrdinarySpellSlot = all {
@@ -245,7 +255,7 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
 
   action doInterruptLongRestWithShortRestSlotBenefits = all {
     qState.ready,
-    recordRoute(completeRestoredSlotRoute(qRoute, CharacterSheetPactSlotOwner)),
+    recordRoute(completeRestoredSlotRoute(qRoute, PactSlotResourceOwner)),
   }
 
   action doMagicalCunningRecoversPactSlots = all {
