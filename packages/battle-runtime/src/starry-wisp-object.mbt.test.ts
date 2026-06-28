@@ -500,6 +500,43 @@ function routeObjectDamageAndLight(): readonly ReducerRouteEvent[] {
 function routeRejectStaleAfterResolved(): readonly ReducerRouteEvent[] {
   return [
     starryWispObjectRouteStart,
+    reducerRouteDiscoverBattleActs({
+      subject: "objectTargetSpellAttack",
+      holes: [],
+      owner: "battleObjectTargetBoundary",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "objectTargetSpellAttack",
+      holes: [{ kind: "attackRoll" }],
+      owner: "battleObjectTargetBoundary",
+    }),
+    reducerRouteDiscoverBattleActs({
+      subject: "objectTargetSpellAttack",
+      holes: [{ kind: "attackRoll" }],
+      owner: "battleAttackRoll",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "objectTargetSpellAttack",
+      fill: "attackRoll",
+      holes: [{ kind: "rolledDice" }],
+      owner: "battleAttackRoll",
+    }),
+    reducerRouteDiscoverBattleActs({
+      subject: "objectTargetSpellAttack",
+      holes: [{ kind: "rolledDice" }],
+      owner: "battleObjectTargetBoundary",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "objectTargetSpellAttack",
+      fill: "rolledDice",
+      holes: [],
+      owner: "battleObjectTargetBoundary",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "objectTargetSpellAttack",
+      holes: [],
+      owner: "battleActiveEffect",
+    }),
     reducerRouteResolveBattleSubjectWithoutFill({
       subject: "objectTargetSpellAttack",
       holes: [],

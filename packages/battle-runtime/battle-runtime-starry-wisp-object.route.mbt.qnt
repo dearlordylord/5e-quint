@@ -155,6 +155,43 @@ module battleRuntimeStarryWispObjectRouteMbt {
       ObjectStaleReplayRouteSurface,
       List(
         startRoute,
+        routeDiscoverBattleActs(
+          ObjectTargetSpellAttackRouteSubject,
+          Set(),
+          BattleObjectTargetBoundaryOwner,
+        ),
+        routeResolveBattleSubjectWithoutFill(
+          ObjectTargetSpellAttackRouteSubject,
+          Set(AttackRollHoleKind),
+          BattleObjectTargetBoundaryOwner,
+        ),
+        routeDiscoverBattleActs(
+          ObjectTargetSpellAttackRouteSubject,
+          Set(AttackRollHoleKind),
+          BattleAttackRollOwner,
+        ),
+        routeResolveBattleSubject(
+          ObjectTargetSpellAttackRouteSubject,
+          AttackRollFillKind,
+          Set(RolledDiceHoleKind),
+          BattleAttackRollOwner,
+        ),
+        routeDiscoverBattleActs(
+          ObjectTargetSpellAttackRouteSubject,
+          Set(RolledDiceHoleKind),
+          BattleObjectTargetBoundaryOwner,
+        ),
+        routeResolveBattleSubject(
+          ObjectTargetSpellAttackRouteSubject,
+          RolledDiceFillKind,
+          Set(),
+          BattleObjectTargetBoundaryOwner,
+        ),
+        routeResolveBattleSubjectWithoutFill(
+          ObjectTargetSpellAttackRouteSubject,
+          Set(),
+          BattleActiveEffectOwner,
+        ),
         routeResolveBattleSubjectWithoutFill(
           ObjectTargetSpellAttackRouteSubject,
           Set(),

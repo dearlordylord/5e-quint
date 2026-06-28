@@ -916,7 +916,7 @@
               "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for selected area and single-target save-gated damage branches.",
               "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt exposes SpellAttackRouteSubject evidence for selected spell attack damage branches.",
               "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt exposes SpellAttackProcedureRouteSubject evidence for selected chained spell-attack duplicate damage branches.",
-              "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt exposes ObjectTargetSpellAttackRouteSubject evidence for selected object-target spell attack and active-effect branches."
+              "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt exposes ObjectTargetSpellAttackRouteSubject evidence for selected object-target spell attack, active-effect, and post-resolution stale-replay branches."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Attack Rolls and #Saving Throws define spell attack and save-gated spell shapes.",
@@ -1724,6 +1724,7 @@
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt is present in source-branch-inventory.json with 7 branch obligation(s).",
               "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt records ObjectTargetSpellAttackRouteSubject evidence through the object-target boundary, attack-roll, active-effect, and stale-replay hole-frontier owners.",
+              "The stale-replay route branch is public-observable from the route history: it first records object-target discovery, target-boundary resolution, attack-roll discovery/resolution, damage-roll discovery/resolution, and active-effect resolution before the BattleHoleFrontierOwner rejects the already resolved object-target subject as stale.",
               "The connector intentionally has no reducer-route hole for object target identity, object Armor Class, object Hit Points, or spatial/range facts; those remain table-supplied boundary facts."
             ],
             "rawDomainFacts": [
