@@ -238,14 +238,14 @@
       "excludedCharacterLevels": [6, 7],
       "excludedSpellLevels": [4, 5],
       "sourceBranchInventory": {
-        "driverFiles": 97,
-        "branchObligations": 704,
-        "currentInScopeBranchObligations": 659,
+        "driverFiles": 98,
+        "branchObligations": 708,
+        "currentInScopeBranchObligations": 663,
         "currentOutOfScopeBranchObligations": 45,
         "sampledInputs": 24,
         "baselineWitnessDriverFiles": 1,
         "alreadyReducerRoutedDriverFiles": 3,
-        "currentNonBaselineRemainingDriverFiles": 93,
+        "currentNonBaselineRemainingDriverFiles": 94,
         "currentDriverFilesWithoutRouteOrComponentConnector": 84,
         "currentOutOfScopeBranchDecisionsInLevelDenominator": 27,
         "currentOutOfScopeBranchDecisionsOutsideLevelDenominator": 17,
@@ -2199,6 +2199,40 @@
           }
         },
         {
+          "driverPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "FCSF-03G-EXACT-DAMAGE-PROJECTION-FACTS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner",
+            "RuleCoreHitPointDamageOwner"
+          ],
+          "dependentRouteTaskIds": [
+            "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+            "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
+          ],
+          "subjectFamily": "rule-core exact spell damage projection component evidence",
+          "branchObligations": 4,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner and RuleCoreHitPointDamageOwner.",
+              "The component witness projects exact direct damage instance count and damage-per-instance facts, spell attack damage base dice, rolled dice count, critical doubling, damage die size, exact damage amount and damage type, save-gated success policy, saving-throw outcome, target initial Hit Points, applied target Hit Points, and damage-to-Hit-Points facts.",
+              "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt remains the semantic owner for direct, spell-attack, and save-gated exact damage projection; packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt remains the semantic owner for target Hit Point application."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines spell damage dice and damage application.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Critical Hits defines doubled damage dice for critical hits.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Saving Throws and Damage and #Half Damage define no-damage and half-damage successful-save policies.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Damage Types and UBIQUITOUS_LANGUAGE.md define Damage Type, Critical Hit, Attack Roll, Saving Throw, and Hit Points."
+            ],
+            "blockers": [
+              "source-qnt-corpus-blocker: this component evidence makes exact projection facts public, but it does not by itself route mixed-target outcome ordering or active-effect riders; selected-identity drivers remain blocked except for branches whose reducer route also consumes matching generic component or route facts.",
+              "source-qnt-corpus-blocker: selected spell identity remains a catalog/admission fixture boundary and must not be counted as generic exact-damage evidence."
+            ]
+          }
+        },
+        {
           "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
@@ -3903,7 +3937,8 @@
           "requiredRouteInput": "Promote exact damage amount, damage type, instance count, dice count, critical doubling, success policy, and target damage-application facts into route or component connector evidence consumed by the selected residual routes.",
           "existingSourceEvidence": [
             "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt already models exact direct, attack, and save damage projection facts.",
-            "packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt already maps attack damage profiles to damage types, hit effects, and object-target support."
+            "packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt already maps attack damage profiles to damage types, hit effects, and object-target support.",
+            "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt exposes component connector evidence for exact damage amount, damage type, direct instance count, spell-attack dice count, critical doubling, save success policy, saving-throw outcome, and target Hit Point application facts without dispatching on selected spell identity."
           ],
           "rawDomainFacts": [
             ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines spell damage dice and modifier rules.",
@@ -3911,6 +3946,23 @@
             ".references/srd-5.2.1/Playing-the-Game.md#Critical Hits defines attack critical damage dice behavior.",
             "UBIQUITOUS_LANGUAGE.md defines Damage, Damage Type, Critical Hit, Attack Roll, and Saving Throw."
           ],
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt is component-first evidence through RuleCoreSpellProcedureProfileOwner and RuleCoreHitPointDamageOwner.",
+              "The witness records qScenario, qDamageType, qDamageAmount, qInstanceCount, qDamagePerInstance, qBaseDamageDice, qRolledDamageDiceCount, qDamageDieSize, qCritical, qSuccessPolicy, qSavingThrowFailed, qTargetInitialHp, qTargetHp, and qDamageToHitPoints as public replay facts.",
+              "The reusable rule-core semantic owners remain packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt for exact spell damage projection and packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt for target damage application."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines damage dice and applying damage to Hit Points.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Critical Hits defines doubled damage dice for critical hits.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Saving Throws and Damage and #Half Damage define no-damage and half-damage successful-save policies.",
+              "UBIQUITOUS_LANGUAGE.md defines Damage, Damage Type, Critical Hit, Attack Roll, Saving Throw, and Hit Points."
+            ],
+            "blockers": [
+              "source-qnt-corpus-blocker: exact-damage component evidence does not over-accept packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt or packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt wholesale; those drivers still need their non-damage route/component blockers cleared branch by branch.",
+              "source-qnt-corpus-blocker: mixed-target outcome ordering remains under FCSF-03F, and active-effect rider routing remains under FCSF-03A through FCSF-03E."
+            ]
+          },
           "acceptanceGate": "Target replay may count exact-damage residual branches only after copied connector evidence makes the exact projection facts public enough that a fresh target need not infer them from TypeScript or selected spell identity."
         }
       ],

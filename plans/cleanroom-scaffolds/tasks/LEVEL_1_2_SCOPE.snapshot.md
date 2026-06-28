@@ -132,13 +132,14 @@ This queue is generated from `plans/cleanroom-branch-coverage/branch-scope.jsonl
 88. `cleanroom-input/qnt/battle-runtime/creature-attack.mbt.qnt`
 89. `cleanroom-input/qnt/battle-runtime/rule-core-ability-skill-command.mbt.qnt`
 90. `cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
-91. `cleanroom-input/qnt/battle-runtime/rule-core-features.mbt.qnt`
-92. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
-93. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
-94. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
-95. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
-96. `cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt`
-97. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+91. `cleanroom-input/qnt/battle-runtime/rule-core-exact-damage-projection.mbt.qnt`
+92. `cleanroom-input/qnt/battle-runtime/rule-core-features.mbt.qnt`
+93. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
+94. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
+95. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
+96. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
+97. `cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt`
+98. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
 
 ## Reducer-Spine Diagnostic Queue
 
@@ -277,13 +278,14 @@ Drivers are ordered by dependency lane, then by branch-scope row order.
 
 1. `cleanroom-input/qnt/battle-runtime/rule-core-ability-skill-command.mbt.qnt`
 2. `cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
-3. `cleanroom-input/qnt/battle-runtime/rule-core-features.mbt.qnt`
-4. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
-5. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
-6. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
-7. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
-8. `cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt`
-9. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+3. `cleanroom-input/qnt/battle-runtime/rule-core-exact-damage-projection.mbt.qnt`
+4. `cleanroom-input/qnt/battle-runtime/rule-core-features.mbt.qnt`
+5. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
+6. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
+7. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
+8. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
+9. `cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt`
+10. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
 
 ## Full Driver Decisions
 
