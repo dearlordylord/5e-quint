@@ -16,6 +16,13 @@
 //   defines failed-save Blinded or Deafened with end-turn repeat-save cleanup.
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Entangle defines
 //   failed-save Restrained until spell end plus action Athletics escape cleanup.
+// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hideous Laughter
+//   defines failed-save Prone and Incapacitated until spell end, a restriction
+//   against the target ending Prone itself, and repeat-save success cleanup.
+// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hold Person defines
+//   failed-save Paralyzed until spell end with end-turn repeat-save success
+//   cleanup; Rules Glossary #Paralyzed [Condition] defines the implied
+//   Incapacitated condition consequence.
 // - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleep defines failed-save
 //   Incapacitated until target next turn, then repeat-save failure transition
 //   to Unconscious until spell end.
@@ -48,6 +55,8 @@ module battleRuntimeConditionRidersRouteMbt {
     | FailedSaveSleepIncapacitatedAppliedRouteSurface
     | FailedSaveSleepRepeatSaveFrontierRouteSurface
     | FailedSaveSleepRepeatSaveFailureUnconsciousRouteSurface
+    | FailedSaveParalyzedRepeatSaveAppliedRouteSurface
+    | FailedSaveIncapacitatedProneSelfEndBlockedAppliedRouteSurface
     | FailedSaveConditionRejectedRouteSurface
 
   var qSurface: ConditionRiderRouteSurface
@@ -227,6 +236,36 @@ module battleRuntimeConditionRidersRouteMbt {
       }),
     )
 
+  pure def failedSaveParalyzedRepeatSaveFacts: List[ConditionRiderRouteFact] =
+    List(
+      RouteConditionRiderHostOutcome({ outcome: HostFailedSavingThrowOutcome }),
+      RouteConditionRiderCarrier({ carrier: AffectedTargetConditionCarrier }),
+      RouteConditionRiderConditionKind({ condition: ParalyzedCondition }),
+      RouteConditionRiderImpliedCondition({
+        condition: IncapacitatedCondition,
+      }),
+      RouteConditionRiderAdmission({ admission: ConditionApplied }),
+      RouteConditionRiderBoundary({ boundary: UntilSpellEnds }),
+      RouteConditionRiderBoundary({
+        boundary: AffectedTargetEndTurnRepeatSave,
+      }),
+    )
+
+  pure def failedSaveIncapacitatedProneSelfEndBlockedFacts:
+    List[ConditionRiderRouteFact] =
+    List(
+      RouteConditionRiderHostOutcome({ outcome: HostFailedSavingThrowOutcome }),
+      RouteConditionRiderCarrier({ carrier: AffectedTargetConditionCarrier }),
+      RouteConditionRiderConditionKind({ condition: IncapacitatedCondition }),
+      RouteConditionRiderConditionKind({ condition: ProneCondition }),
+      RouteConditionRiderSelfEndBlocked({ condition: ProneCondition }),
+      RouteConditionRiderAdmission({ admission: ConditionApplied }),
+      RouteConditionRiderBoundary({ boundary: UntilSpellEnds }),
+      RouteConditionRiderBoundary({
+        boundary: AffectedTargetEndTurnRepeatSave,
+      }),
+    )
+
   pure def durationCleanupFacts: List[ConditionRiderRouteFact] =
     List(
       RouteConditionRiderExpired,
@@ -356,6 +395,8 @@ module battleRuntimeConditionRidersRouteMbt {
     qSurface.in(Set(
       FailedSaveBlindedRepeatSaveAppliedRouteSurface,
       FailedSaveDeafenedRepeatSaveAppliedRouteSurface,
+      FailedSaveParalyzedRepeatSaveAppliedRouteSurface,
+      FailedSaveIncapacitatedProneSelfEndBlockedAppliedRouteSurface,
     )),
     recordSurface(
       FailedSaveRepeatSaveFrontierRouteSurface,
@@ -473,6 +514,24 @@ module battleRuntimeConditionRidersRouteMbt {
     ),
   }
 
+  action doAdmitFailedSaveParalyzedUntilSpellEndRepeatSaveConditionRider = all {
+    qSurface == FreshRouteSurface,
+    recordSurface(
+      FailedSaveParalyzedRepeatSaveAppliedRouteSurface,
+      qRoute.concat(failedSaveHostOutcomeRoute).concat(conditionAdmissionRoute),
+      failedSaveParalyzedRepeatSaveFacts,
+    ),
+  }
+
+  action doAdmitFailedSaveIncapacitatedProneSelfEndBlockedConditionRider = all {
+    qSurface == FreshRouteSurface,
+    recordSurface(
+      FailedSaveIncapacitatedProneSelfEndBlockedAppliedRouteSurface,
+      qRoute.concat(failedSaveHostOutcomeRoute).concat(conditionAdmissionRoute),
+      failedSaveIncapacitatedProneSelfEndBlockedFacts,
+    ),
+  }
+
   action doStutterAfterTerminalSurface = all {
     qSurface.in(Set(
       AttackHitPoisonRejectedRouteSurface,
@@ -503,6 +562,8 @@ module battleRuntimeConditionRidersRouteMbt {
     doAdmitFailedSaveSleepIncapacitatedConditionRider,
     doOpenSleepRepeatSaveFrontier,
     doResolveSleepRepeatSaveFailureTransitionToUnconscious,
+    doAdmitFailedSaveParalyzedUntilSpellEndRepeatSaveConditionRider,
+    doAdmitFailedSaveIncapacitatedProneSelfEndBlockedConditionRider,
     doStutterAfterTerminalSurface,
   }
 }
