@@ -3845,7 +3845,7 @@
               ".references/srd-5.2.1/Playing-the-Game.md#Light and .references/srd-5.2.1/Rules-Glossary.md#Dim Light define Bright Light and Dim Light illumination and Dim Light's Lightly Obscured consequence.",
               ".references/srd-5.2.1/Playing-the-Game.md#Cover and .references/srd-5.2.1/Rules-Glossary.md#Area of Effect define cover and obstruction geometry as table projection inputs.",
               ".references/srd-5.2.1/Rules-Glossary.md#Breaking Objects defines object durability facts as GM/table facts unless represented as boundary facts.",
-              "UBIQUITOUS_LANGUAGE.md defines Object, Table Decision, Illumination, Obscurement, Spell Effect, Spell Invocation, and Action Lifecycle."
+              "UBIQUITOUS_LANGUAGE.md defines Table Decision, Illumination, Obscurement, Spell Effect, Spell Invocation, and Action Lifecycle."
             ],
             "blockers": [
               "source-qnt-corpus-blocker: movable multi-emitter light routing is not covered by ObjectLightRiderRouteSubject, so doDancingLightsMovableDimLight remains blocked.",

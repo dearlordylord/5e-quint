@@ -14,8 +14,8 @@
 //   Total Cover/obstruction geometry as table-owned projection input.
 // - .references/srd-5.2.1/Equipment.md#Candle, #Lamp, #Lantern, and #Torch
 //   provide SRD examples of held/object light sources with Bright/Dim Light.
-// - UBIQUITOUS_LANGUAGE.md: Object, Table Decision, Illumination,
-//   Obscurement, Spell Effect, Spell Invocation, and Action Lifecycle.
+// - UBIQUITOUS_LANGUAGE.md: Table Decision, Illumination, Obscurement,
+//   Spell Effect, Spell Invocation, and Action Lifecycle.
 module battleRuntimeObjectLightRidersRouteMbt {
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
