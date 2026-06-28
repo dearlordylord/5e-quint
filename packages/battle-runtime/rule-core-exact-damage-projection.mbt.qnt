@@ -45,6 +45,7 @@ module ruleCoreExactDamageProjectionMbt {
 
   pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
     ruleCoreComponentRoute(RuleCoreSpellProcedureProfileOwner)
+      .concat(ruleCoreComponentRoute(RuleCoreHitPointDamageOwner))
 
   pure def targetInitialHp: int = 20
 

@@ -8393,7 +8393,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt#step:doAttackCriticalDamage",
-      "qntFileSha256": "14fb91e48eb46dd8045486faf75c6e8789bddc3677527d960a7bd3d92906482d",
+      "qntFileSha256": "c035aaad12be2f428d375027b44a2c4007d3536e951a37dc39b3f8c4365a9c47",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8412,7 +8412,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt#step:doDirectInstanceDamage",
-      "qntFileSha256": "14fb91e48eb46dd8045486faf75c6e8789bddc3677527d960a7bd3d92906482d",
+      "qntFileSha256": "c035aaad12be2f428d375027b44a2c4007d3536e951a37dc39b3f8c4365a9c47",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8431,7 +8431,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt#step:doSaveSuccessHalfDamage",
-      "qntFileSha256": "14fb91e48eb46dd8045486faf75c6e8789bddc3677527d960a7bd3d92906482d",
+      "qntFileSha256": "c035aaad12be2f428d375027b44a2c4007d3536e951a37dc39b3f8c4365a9c47",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8450,7 +8450,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt#step:doSaveSuccessNoDamage",
-      "qntFileSha256": "14fb91e48eb46dd8045486faf75c6e8789bddc3677527d960a7bd3d92906482d",
+      "qntFileSha256": "c035aaad12be2f428d375027b44a2c4007d3536e951a37dc39b3f8c4365a9c47",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"

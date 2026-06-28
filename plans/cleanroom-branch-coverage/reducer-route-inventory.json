@@ -2204,10 +2204,10 @@
           "routeTaskId": "FCSF-03G-EXACT-DAMAGE-PROJECTION-FACTS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
           "componentOwners": [
-            "RuleCoreSpellProcedureProfileOwner"
+            "RuleCoreSpellProcedureProfileOwner",
+            "RuleCoreHitPointDamageOwner"
           ],
           "dependentRouteTaskIds": [
-            "FCSF-03G-EXACT-DAMAGE-PROJECTION-FACTS",
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES"
           ],
@@ -2216,7 +2216,7 @@
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner.",
+              "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner and RuleCoreHitPointDamageOwner.",
               "The component witness projects exact direct damage instance count and damage-per-instance facts, spell attack damage base dice, rolled dice count, critical doubling, damage die size, exact damage amount and damage type, save-gated success policy, saving-throw outcome, target initial Hit Points, applied target Hit Points, and damage-to-Hit-Points facts.",
               "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt remains the semantic owner for direct, spell-attack, and save-gated exact damage projection; packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt remains the semantic owner for target Hit Point application."
             ],
@@ -3929,7 +3929,7 @@
           ],
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt is component-first evidence through RuleCoreSpellProcedureProfileOwner.",
+              "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt is component-first evidence through RuleCoreSpellProcedureProfileOwner and RuleCoreHitPointDamageOwner.",
               "The witness records qScenario, qDamageType, qDamageAmount, qInstanceCount, qDamagePerInstance, qBaseDamageDice, qRolledDamageDiceCount, qDamageDieSize, qCritical, qSuccessPolicy, qSavingThrowFailed, qTargetInitialHp, qTargetHp, and qDamageToHitPoints as public replay facts.",
               "The reusable rule-core semantic owners remain packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt for exact spell damage projection and packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt for target damage application."
             ],
