@@ -656,6 +656,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-mirror-image-constants.qnt` | exempt | leaf-type-vocabulary: Mirror Image constants leaf imported by registered Mirror Image owners. |
 | `packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-mixed-target-outcome-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic mixed-target outcome route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-model.qnt` | exempt | leaf-type-vocabulary: Battle runtime type vocabulary aggregate intentionally kept free of behavioral bridge imports. |
 | `packages/battle-runtime/battle-runtime-monk-focus.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt` | qnt-owner-role | semantic-core |

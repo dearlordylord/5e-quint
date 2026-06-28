@@ -18,6 +18,7 @@ import {
   createIndependentSpellAttackSequenceRouteDriver,
   createMagicMissileRouteDriver,
   createMetamagicRouteDriver,
+  createMixedTargetOutcomeRouteDriver,
   createNextAttackRollModeRouteDriver,
   createObjectLightRouteDriver,
   createOpportunityAttackDenialRouteDriver,
@@ -46,6 +47,7 @@ import {
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedCommandOrderingStateCheck,
   reducerRoutedMetamagicStateCheck,
+  reducerRoutedMixedTargetOutcomeStateCheck,
   reducerRoutedNextAttackRollModeStateCheck,
   reducerRoutedObjectLightStateCheck,
   reducerRoutedOpportunityAttackDenialStateCheck,
@@ -457,6 +459,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(3),
         stateCheck: reducerRoutedObjectLightStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes mixed target outcomes through one spell invocation owner",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-mixed-target-outcomes.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createMixedTargetOutcomeRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(2),
+        stateCheck: reducerRoutedMixedTargetOutcomeStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,

@@ -232,6 +232,13 @@ const qntRegistryExemptions = [
       "Generic object/light route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
   },
   {
+    ownerPath:
+      "packages/battle-runtime/battle-runtime-mixed-target-outcome-route-facts.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Generic mixed-target outcome route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
+  },
+  {
     ownerPath: "packages/battle-runtime/battle-runtime-magic-missile-facts.qnt",
     category: "proof-only-example",
     evidence:
