@@ -82,6 +82,15 @@ corresponding participant, Encounter Side, subject-profile, Initiative, and
 current-actor facts. Matching marker order or the focused non-route projection
 alone proves behavior parity, not reducer architecture.
 
+Reducer-route owner names are semantic domain boundaries. A target may encode
+them in its native type and module system, while preserving domain-shaped
+meaning: action economy, active-effect lifecycle, condition lifecycle, Hit
+Points, table geometry boundary, light projection, and similar rule/state
+ownership areas. Add or interpret an owner only when copied QNT, RAW, domain
+language, assumptions, or this guidance identifies the corresponding domain
+boundary. If the copied QNT appears to need an owner whose only justification is
+source-code layout, record a `source-qnt-corpus` blocker.
+
 The Concentration teardown connector is the public source for active-effect
 cleanup caused by losing Concentration. Failed damage saves, voluntary
 Concentration end, and replacement Concentration effects use
