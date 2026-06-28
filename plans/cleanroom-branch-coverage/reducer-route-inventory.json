@@ -551,7 +551,7 @@
               "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt is present in source-branch-inventory.json with 9 branch obligation(s).",
               "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for selected initial condition-save branches that need target/list, condition-choice, and Saving Throw fills.",
               "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt exposes RepeatSaveConditionEffectRouteSubject evidence for selected repeat-save condition lifecycle branches.",
-              "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt exposes ConditionRiderRouteSubject evidence for failed-saving-throw condition riders only for the modeled shape families: Blinded until source next turn ends, Blinded or Deafened with affected-target end-turn repeat-save success cleanup, Restrained until spell end with action Athletics escape cleanup, Incapacitated until affected-target next turn followed by repeat-save failure transition to Unconscious until spell end, and condition-immunity rejection without selected spell identity.",
+              "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt exposes ConditionRiderRouteSubject evidence for failed-saving-throw condition riders only for the modeled shape families: Blinded until source next turn ends, Blinded or Deafened with affected-target end-turn repeat-save success cleanup, Restrained until spell end with action Athletics escape cleanup, Incapacitated until affected-target next turn followed by repeat-save failure transition to Unconscious until spell end, Paralyzed with implied Incapacitated until spell end and affected-target end-turn repeat-save success cleanup, laughter-style Incapacitated plus Prone until spell end with affected-target end-turn repeat-save success cleanup and blocked self-ending of Prone, and condition-immunity rejection without selected spell identity.",
               "The level-3 Hypnotic Pattern selected-identity branch has branch-specific connector evidence in the L15-RR12 branchDecisionClasses entry; this driver-level row remains catalog-after-substrate because selected spell identity is still a catalog/admission boundary."
             ],
             "rawDomainFacts": [
@@ -559,13 +559,12 @@
               ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Color Spray defines failed-save Blinded until the source's next turn ends; #Blindness/Deafness defines failed-save Blinded or Deafened with affected-target end-turn repeat-save cleanup.",
               ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Entangle defines failed-save Restrained until spell end plus action Strength (Athletics) escape cleanup.",
               ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleep defines failed-save Incapacitated until the target's next turn, then repeat-save failure transition to Unconscious until spell end.",
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hold Person defines failed-save Paralyzed until spell end with affected-target end-turn repeat-save success cleanup; Rules Glossary #Paralyzed [Condition] defines the implied Incapacitated consequence.",
+              ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hideous Laughter defines failed-save Prone and Incapacitated until spell end, blocked self-ending of Prone while active, and repeat-save success cleanup.",
               ".references/srd-5.2.1/Rules-Glossary.md condition entries and #Concentration define the condition and active-effect cleanup shapes represented by the connector evidence.",
               "UBIQUITOUS_LANGUAGE.md defines Saving Throw, Condition, Spell Effect, Concentration, Boundary Crossing, and Turn Structure vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add generic Paralyzed plus Incapacitated until-spell-end repeat-save lifecycle route facts before Hold Person selected branches may count from condition-rider evidence.",
-              "source-qnt-corpus-blocker: add generic Incapacitated plus Prone laughter-style lifecycle and repeat-save success cleanup route facts before Hideous Laughter selected branches may count from condition-rider evidence."
-            ]
+            "blockers": []
           }
         },
         {
@@ -3832,16 +3831,18 @@
             "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt covers condition choice and Saving Throw frontiers.",
             "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.mbt.qnt and packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt already model direct condition lifecycle behavior.",
             "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt exposes qRoute for ConditionRiderRouteSubject through host SpellAttackRouteSubject and SaveGatedSpellRouteSubject outcome setup, BattleConditionLifecycleOwner admission/rejection/repeat-save cleanup/condition transition, BattleActiveEffectOwner admission/cleanup, BattleTurnBoundaryOwner expiration or repeat-save frontier opening, and BattleAbilityCheckOwner Athletics escape.",
-            "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt exposes qFacts for host outcome, affected target carrier, condition kind, condition-immunity admission/rejection, until-source-next-turn, until-affected-target-next-turn, until-spell-end, affected-target end-turn repeat-save, Athletics escape, repeat-save success/failure, Unconscious transition, expiration, and cleanup owner facts."
+            "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt exposes qFacts for host outcome, affected target carrier, condition kind, condition-immunity admission/rejection, until-source-next-turn, until-affected-target-next-turn, until-spell-end, affected-target end-turn repeat-save, Athletics escape, repeat-save success/failure, implied condition consequence, blocked self-ending of Prone, Unconscious transition, expiration, and cleanup owner facts."
           ],
           "rawDomainFacts": [
-            ".references/srd-5.2.1/Rules-Glossary.md condition entries define condition consequences, including Poisoned, Blinded, Deafened, Restrained, Incapacitated, and Unconscious; #Immunity defines condition immunity rejection.",
+            ".references/srd-5.2.1/Rules-Glossary.md condition entries define condition consequences, including Poisoned, Blinded, Deafened, Restrained, Incapacitated, Paralyzed, Prone, and Unconscious; #Immunity defines condition immunity rejection.",
             ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack allows special effects in addition to damage.",
             ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines failed-save spell-effect outcomes.",
             ".references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Sickness defines attack-hit Poisoned until the source's next turn ends.",
             ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Color Spray defines failed-save Blinded until the source's next turn ends; #Blindness/Deafness defines failed-save Blinded or Deafened with affected-target end-turn repeat-save cleanup.",
             ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Entangle defines failed-save Restrained until spell end plus action Strength (Athletics) escape cleanup.",
             ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleep defines failed-save Incapacitated until the target's next turn, then repeat-save failure transition to Unconscious until spell end.",
+            ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hold Person defines failed-save Paralyzed until spell end with affected-target end-turn repeat-save success cleanup.",
+            ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hideous Laughter defines failed-save Prone and Incapacitated until spell end, blocked self-ending of Prone while active, and repeat-save success cleanup.",
             "UBIQUITOUS_LANGUAGE.md defines Rider, Condition, Poisoned, Saving Throw, and Spell Effect."
           ],
           "acceptanceGate": "Target replay may count residual condition or poison branches only for the modeled condition/lifecycle shape families after generic route evidence owns condition application, immunity rejection, lifecycle boundary, transition, escape, and cleanup without selected spell identity dispatch."
