@@ -10,12 +10,12 @@
     "battleRuntimeBranchObligations": 544,
     "battleLaneBranchObligations": 404,
     "ruleCoreComponentBranchObligations": 140,
-    "diagnosticBattleDrivers": 5,
-    "diagnosticReducerRoutedDrivers": 5,
+    "diagnosticBattleDrivers": 6,
+    "diagnosticReducerRoutedDrivers": 6,
     "sourceCitations": [
       {
         "artifactPath": "plans/cleanroom-scaffolds/tasks/ACTIVE_WORK.template.json",
-        "fact": "assignment level-1-2-full has 65 battle queue drivers and 9 rules-core queue drivers; assignment reducer-spine-diagnostic-battle has 5 battle queue drivers."
+        "fact": "assignment level-1-2-full has 65 battle queue drivers and 9 rules-core queue drivers; assignment reducer-spine-diagnostic-battle has 6 battle queue drivers."
       },
       {
         "artifactPath": "plans/cleanroom-branch-coverage/source-branch-inventory.json",
@@ -23,7 +23,7 @@
       },
       {
         "artifactPath": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
-        "fact": "active reducer-spine diagnostic batch lists the 5 diagnostic battle drivers as reducer-routed."
+        "fact": "active reducer-spine diagnostic batch lists the 6 diagnostic battle drivers as reducer-routed."
       },
       {
         "artifactPath": "plans/RALPH_L15_REDUCER_ROUTE_QNT_ARCHITECTURE.md",

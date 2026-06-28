@@ -60,6 +60,13 @@ source branch inventory, target replay evidence schema, and explicit
 route-class evidence must be sufficient without production TypeScript reads or
 dirty cleanroom history.
 
+Task 8 refreshes that package from the current source commit by carrying the
+active reducer-spine diagnostic batch forward as the fresh replay seed. The
+seed includes Concentration teardown and scalar-buff active-effect profile
+projection drivers so a target must prove the Task 1 and Task 2 source facts
+through public reducer/source entrypoints before accepting any historical
+cleanroom evidence.
+
 `task3ResidualSelectedSpellRouteTasks[]` splits the selected-spell residual
 source blockers into generic route-input tasks. These records are planning
 guidance, not replay evidence: a fresh target may count a residual branch only

@@ -11,7 +11,8 @@
             "cleanroom-input/qnt/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
-            "cleanroom-input/qnt/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt"
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt"
           ]
         }
       ]

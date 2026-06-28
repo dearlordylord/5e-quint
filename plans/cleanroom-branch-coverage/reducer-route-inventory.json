@@ -196,6 +196,35 @@
             ],
             "blockers": []
           }
+        },
+        {
+          "order": 6,
+          "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+          "route": "reducer-routed",
+          "subjectFamily": "scalar-buff active Spell Effect profile projection",
+          "requiredReducerEntrypoints": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "BattleState owns active Spell Effect instances, Concentration ownership, movement/special-Speed projections, Hit Point maximum changes, Temporary Hit Points, and Armor Class modifiers; scalar profile facts stay source procedure facts rather than target adapter state.",
+          "acceptanceCondition": "Target replay evidence proves Armor Class, Speed, special Speed, Hit Point maximum, and immediate Temporary Hit Point scalar-buff projections through the copied scalar-buff route connector and public reducer/source entrypoints.",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt covers scalar-buff active-effect progression for Armor Class, Speed, special Speed, Hit Point maximum, immediate Temporary Hit Points, and terminal stutter behavior.",
+              "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt exposes qRoute for ScalarBuffEffectRouteSubject through spell-slot/action-economy, active-effect, movement, Hit Point, Temporary Hit Point, and Concentration owners.",
+              "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt exposes scalarBuffActiveEffectProjections and scalarBuffProfileProjectionDomains for Armor Class, Speed, special Speed, Hit Point maximum, Temporary Hit Points, and condition immunity; this Task 8 replay seed counts only the domains exposed by the copied active-effect route connector.",
+              "packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt asserts the battle-runtime bridge projection examples without requiring target code to read TypeScript implementation."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Rules-Glossary.md#Concentration defines active effect duration ownership for concentration spells.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Armor Class and #Speed define the creature statistics affected by scalar-buff projections.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Hit Points and #Temporary Hit Points define Hit Point maximum, current Hit Point, and Temporary Hit Point boundaries.",
+              "UBIQUITOUS_LANGUAGE.md defines Armor Class, Speed, Movement, Hit Points, Temporary Hit Points, Spell Effect, and Concentration."
+            ],
+            "blockers": []
+          }
         }
       ]
     }
@@ -272,6 +301,8 @@
           "A component-first target replay is accepted only when the target harness executes the copied qComponentRoute projection and records the dependent route task that consumes the component owner.",
           "Catalog-after-substrate and substrate-first rows are not permission for authored-identity dispatch; replay counts only through the referenced generic connector substrate or remains blocked.",
           "The target replay evidence file must match tasks/TARGET_REPLAY_EVIDENCE.example.json and be keyed to the manifest source SHA, source branch inventory SHA, QNT file hash, branch action, observed mbt::actionTaken, target profile, and stateCheck projection hashes.",
+          "The active reducer-spine diagnostic batch seeds fresh replay tasks for Task 1 Concentration teardown and Task 2 scalar-buff profile projection; target acceptance must prove those facts through public reducer/source entrypoints rather than dirty cleanroom history.",
+          "The package carries task3ResidualSelectedSpellRouteTasks[] forward as source guidance for selected spell residual blockers.",
           "Dirty cleanroom implementation ledgers, reports, adapters, and target code are not acceptance evidence for this package."
         ],
         "routeClassEvidence": [
@@ -1213,7 +1244,7 @@
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
               "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt exposes scalarBuffActiveEffectProjections, deriving persistent active-effect projections and immediate Temporary Hit Point projections from profile, slot level, spellcasting ability modifier, and rolled dice.",
-              "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt maps scalar-buff projections to generic domains with scalarBuffProjectionDomain and scalarBuffProfileProjectionDomains: Armor Class, Speed, special Speed, Hit Point maximum, Temporary Hit Points, and condition immunity.",
+              "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt maps scalar-buff projections to generic domains with scalarBuffProjectionDomain and scalarBuffProfileProjectionDomains; this active driver routes Armor Class, Speed, special Speed, Hit Point maximum, and Temporary Hit Point domains, while condition immunity remains with the selected-spell residual blocker until a generic active-effect substrate exists.",
               "packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt asserts the generic scalar-buff profile projection functions at the battle-runtime bridge, including False Life as an immediate Temporary Hit Point projection and Aid as a Hit Point maximum projection.",
               "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt supplies representative active-effect branch witnesses; the Shield of Faith -> Longstrider -> Spider Climb -> Aid -> False Life order is branch-witness progression, not an accumulating multi-spell battle ledger.",
               "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt exposes qRoute for ScalarBuffEffectRouteSubject through spell-slot/action-economy, active-effect, movement, HP, temporary-HP, and Concentration owners."

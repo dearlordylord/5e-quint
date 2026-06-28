@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "FCSF-08-PACKAGE-REFRESH-AND-FRESH-REPLAY-SEED",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Refresh cleanroom package and seed the next fresh replay campaign"
     }
   ]
@@ -272,3 +272,15 @@ Task 1 concentration teardown facts and Task 2 scalar-buff profile projection
 facts are consumed through public reducer/source entrypoints. The refreshed
 package must also carry the Task 3 `task3ResidualSelectedSpellRouteTasks[]`
 queue forward as source guidance for selected spell residual blocker handling.
+
+Outcome:
+
+- The active reducer-spine diagnostic batch now carries six reducer-routed
+  battle drivers: the prior five replay drivers plus
+  `battle-runtime-scalar-buff-active-effects.mbt.qnt`.
+- The cleanroom package guidance now requires fresh targets to replay Task 1
+  Concentration teardown and Task 2 scalar-buff active-effect profile
+  projection through public reducer/source entrypoints before accepting
+  historical cleanroom evidence.
+- `task3ResidualSelectedSpellRouteTasks[]` remains carried forward as source
+  guidance for selected spell residual blocker handling.

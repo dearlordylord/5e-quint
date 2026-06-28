@@ -166,6 +166,7 @@ These prerequisite route connectors are copied with the cleanroom package and mu
 | 3 | `cleanroom-input/qnt/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt` | reducer-routed | Target replay evidence adds HP restoration through the battle-owned HP lifecycle and keeps spell target/distribution fills as reducer subject progress through the shared reducer surface. |
 | 4 | `cleanroom-input/qnt/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt` | reducer-routed | Target replay evidence routes Death Saving Throw discovery/fill through turn advancement or subject resolution using the same HP lifecycle owner as damage and healing. |
 | 5 | `cleanroom-input/qnt/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt` | reducer-routed | Target replay evidence proves failed damage save, voluntary end, and replacement Concentration teardown through durable Concentration and active-effect owners. |
+| 6 | `cleanroom-input/qnt/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt` | reducer-routed | Target replay evidence proves Armor Class, Speed, special Speed, Hit Point maximum, and immediate Temporary Hit Point scalar-buff projections through the copied scalar-buff route connector and public reducer/source entrypoints. |
 
 ## Future Level 1-2 Queue
 
