@@ -15,15 +15,24 @@ module battleRuntimeConditionRiderRouteFacts {
 
   type ConditionRiderConditionKindFact =
     | PoisonedCondition
+    | BlindedCondition
+    | DeafenedCondition
     | RestrainedCondition
+    | IncapacitatedCondition
+    | UnconsciousCondition
 
   type ConditionRiderAdmissionFact =
     | ConditionApplied
     | ConditionRejectedByImmunity
 
   type ConditionRiderBoundaryFact =
-    | UntilDurationExpires
+    | UntilSourceNextTurnEnds
+    | UntilAffectedTargetNextTurnEnds
+    | UntilSpellEnds
     | AffectedTargetEndTurnRepeatSave
+
+  type ConditionRiderEscapeFact =
+    | AthleticsActionEscapeCheck
 
   type ConditionRiderCleanupOwnerFact =
     | BattleTurnBoundaryCleanupOwner
@@ -40,8 +49,15 @@ module battleRuntimeConditionRiderRouteFacts {
       })
     | RouteConditionRiderAdmission({ admission: ConditionRiderAdmissionFact })
     | RouteConditionRiderBoundary({ boundary: ConditionRiderBoundaryFact })
+    | RouteConditionRiderEscape({ escape: ConditionRiderEscapeFact })
     | RouteConditionRiderRepeatSaveFrontierOpened
     | RouteConditionRiderRepeatSaveSucceeded
+    | RouteConditionRiderRepeatSaveFailed
+    | RouteConditionRiderTransition({
+        condition: ConditionRiderConditionKindFact,
+      })
+    | RouteConditionRiderEscapeCheckFrontierOpened
+    | RouteConditionRiderEscapeCheckSucceeded
     | RouteConditionRiderExpired
     | RouteConditionRiderCleanedUpBy({
         owner: ConditionRiderCleanupOwnerFact,

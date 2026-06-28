@@ -1236,7 +1236,11 @@ const CONDITION_RIDER_CARRIERS = [
 type ConditionRiderCarrier = (typeof CONDITION_RIDER_CARRIERS)[number];
 const CONDITION_RIDER_CONDITION_KINDS = [
   "poisoned",
+  "blinded",
+  "deafened",
   "restrained",
+  "incapacitated",
+  "unconscious",
 ] as const;
 type ConditionRiderConditionKind =
   (typeof CONDITION_RIDER_CONDITION_KINDS)[number];
@@ -1246,10 +1250,14 @@ const CONDITION_RIDER_ADMISSIONS = [
 ] as const;
 type ConditionRiderAdmission = (typeof CONDITION_RIDER_ADMISSIONS)[number];
 const CONDITION_RIDER_BOUNDARIES = [
-  "untilDurationExpires",
+  "untilSourceNextTurnEnds",
+  "untilAffectedTargetNextTurnEnds",
+  "untilSpellEnds",
   "affectedTargetEndTurnRepeatSave",
 ] as const;
 type ConditionRiderBoundary = (typeof CONDITION_RIDER_BOUNDARIES)[number];
+const CONDITION_RIDER_ESCAPES = ["athleticsActionEscapeCheck"] as const;
+type ConditionRiderEscape = (typeof CONDITION_RIDER_ESCAPES)[number];
 const CONDITION_RIDER_CLEANUP_OWNERS = [
   "battleTurnBoundary",
   "battleConditionLifecycle",
@@ -1278,8 +1286,19 @@ type ConditionRiderRouteFact =
       readonly kind: "boundary";
       readonly boundary: ConditionRiderBoundary;
     }
+  | {
+      readonly kind: "escape";
+      readonly escape: ConditionRiderEscape;
+    }
   | { readonly kind: "repeatSaveFrontierOpened" }
   | { readonly kind: "repeatSaveSucceeded" }
+  | { readonly kind: "repeatSaveFailed" }
+  | {
+      readonly kind: "transition";
+      readonly condition: ConditionRiderConditionKind;
+    }
+  | { readonly kind: "escapeCheckFrontierOpened" }
+  | { readonly kind: "escapeCheckSucceeded" }
   | { readonly kind: "expired" }
   | {
       readonly kind: "cleanedUpBy";
@@ -1672,9 +1691,19 @@ const conditionRiderRouteDriverSchema = {
   doAdmitAttackHitPoisonConditionRider: {},
   doRejectAttackHitPoisonConditionRiderByImmunity: {},
   doExpireAttackHitPoisonConditionRider: {},
-  doAdmitFailedSaveRepeatSaveConditionRider: {},
+  doAdmitFailedSaveBlindedNextTurnConditionRider: {},
+  doExpireFailedSaveBlindedNextTurnConditionRider: {},
+  doRejectFailedSaveBlindedConditionRiderByImmunity: {},
+  doAdmitFailedSaveBlindedRepeatSaveConditionRider: {},
+  doAdmitFailedSaveDeafenedRepeatSaveConditionRider: {},
   doOpenFailedSaveConditionRepeatSaveFrontier: {},
   doResolveFailedSaveConditionRepeatSaveSuccessCleanup: {},
+  doAdmitFailedSaveRestrainedUntilSpellEndEscapeConditionRider: {},
+  doOpenRestrainedAthleticsEscapeFrontier: {},
+  doResolveRestrainedAthleticsEscapeSuccessCleanup: {},
+  doAdmitFailedSaveSleepIncapacitatedConditionRider: {},
+  doOpenSleepRepeatSaveFrontier: {},
+  doResolveSleepRepeatSaveFailureTransitionToUnconscious: {},
   doStutterAfterTerminalSurface: {},
   step: {},
 } as const;
@@ -4030,6 +4059,9 @@ const ROLLED_DICE_ROUTE_HOLES = [
 const SAVING_THROW_OUTCOME_ROUTE_HOLES = [
   "savingThrowOutcome",
 ] as const satisfies readonly ReducerRouteHole[];
+const ABILITY_CHECK_ROUTE_HOLES = [
+  "abilityCheck",
+] as const satisfies readonly ReducerRouteHole[];
 const TARGET_AND_SAVE_ROUTE_HOLES = [
   "savingThrowOutcome",
   "targetChoice",
@@ -4944,7 +4976,7 @@ const CONDITION_RIDER_ATTACK_HIT_POISON_APPLIED_FACTS = [
   },
   {
     kind: "boundary",
-    boundary: "untilDurationExpires",
+    boundary: "untilSourceNextTurnEnds",
   },
 ] as const satisfies readonly ConditionRiderRouteFact[];
 
@@ -4967,7 +4999,80 @@ const CONDITION_RIDER_ATTACK_HIT_POISON_REJECTED_FACTS = [
   },
 ] as const satisfies readonly ConditionRiderRouteFact[];
 
-const CONDITION_RIDER_FAILED_SAVE_APPLIED_FACTS = [
+const CONDITION_RIDER_FAILED_SAVE_BLINDED_NEXT_TURN_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostFailedSavingThrowOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "blinded",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "untilSourceNextTurnEnds",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+function conditionRiderFailedSaveRejectedFacts(
+  condition: ConditionRiderConditionKind,
+): readonly ConditionRiderRouteFact[] {
+  return [
+    {
+      kind: "hostOutcome",
+      outcome: "hostFailedSavingThrowOutcome",
+    },
+    {
+      kind: "carrier",
+      carrier: "affectedTargetConditionCarrier",
+    },
+    {
+      kind: "conditionKind",
+      condition,
+    },
+    {
+      kind: "admission",
+      admission: "conditionRejectedByImmunity",
+    },
+  ] as const satisfies readonly ConditionRiderRouteFact[];
+}
+
+function conditionRiderFailedSaveRepeatSaveFacts(
+  condition: "blinded" | "deafened",
+): readonly ConditionRiderRouteFact[] {
+  return [
+    {
+      kind: "hostOutcome",
+      outcome: "hostFailedSavingThrowOutcome",
+    },
+    {
+      kind: "carrier",
+      carrier: "affectedTargetConditionCarrier",
+    },
+    {
+      kind: "conditionKind",
+      condition,
+    },
+    {
+      kind: "admission",
+      admission: "conditionApplied",
+    },
+    {
+      kind: "boundary",
+      boundary: "affectedTargetEndTurnRepeatSave",
+    },
+  ] as const satisfies readonly ConditionRiderRouteFact[];
+}
+
+const CONDITION_RIDER_FAILED_SAVE_RESTRAINED_FACTS = [
   {
     kind: "hostOutcome",
     outcome: "hostFailedSavingThrowOutcome",
@@ -4986,7 +5091,34 @@ const CONDITION_RIDER_FAILED_SAVE_APPLIED_FACTS = [
   },
   {
     kind: "boundary",
-    boundary: "affectedTargetEndTurnRepeatSave",
+    boundary: "untilSpellEnds",
+  },
+  {
+    kind: "escape",
+    escape: "athleticsActionEscapeCheck",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_FAILED_SAVE_SLEEP_INCAPACITATED_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostFailedSavingThrowOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "incapacitated",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "untilAffectedTargetNextTurnEnds",
   },
 ] as const satisfies readonly ConditionRiderRouteFact[];
 
@@ -4995,6 +5127,18 @@ const CONDITION_RIDER_DURATION_CLEANUP_FACTS = [
   { kind: "cleanedUpBy", owner: "battleTurnBoundary" },
   { kind: "cleanedUpBy", owner: "battleConditionLifecycle" },
   { kind: "cleanedUpBy", owner: "battleActiveEffect" },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_RESTRAINED_ESCAPE_CLEANUP_FACTS = [
+  { kind: "escapeCheckSucceeded" },
+  { kind: "cleanedUpBy", owner: "battleConditionLifecycle" },
+  { kind: "cleanedUpBy", owner: "battleActiveEffect" },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_SLEEP_REPEAT_SAVE_FAILURE_FACTS = [
+  { kind: "repeatSaveFailed" },
+  { kind: "transition", condition: "unconscious" },
+  { kind: "boundary", boundary: "untilSpellEnds" },
 ] as const satisfies readonly ConditionRiderRouteFact[];
 
 const CONDITION_RIDER_REPEAT_SAVE_SUCCESS_CLEANUP_FACTS = [
@@ -5195,6 +5339,13 @@ function conditionRiderFailedSaveAdmissionRoute(): readonly ReducerRouteEvent[] 
   ];
 }
 
+function conditionRiderFailedSaveRejectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...conditionRiderFailedSaveHostOutcomeRoute(),
+    conditionRiderResolveWithoutFill("battleConditionLifecycle"),
+  ];
+}
+
 function conditionRiderDurationCleanupRoute(): readonly ReducerRouteEvent[] {
   return [
     conditionRiderResolveWithoutFill("battleTurnBoundary"),
@@ -5212,6 +5363,39 @@ function conditionRiderRepeatSaveFrontierRoute(): ReducerRouteEvent {
 }
 
 function conditionRiderRepeatSaveSuccessCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubject({
+      subject: CONDITION_RIDER_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+    conditionRiderResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function conditionRiderEscapeCheckFrontierRoute(): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: CONDITION_RIDER_ROUTE_SUBJECT,
+    holes: ABILITY_CHECK_ROUTE_HOLES,
+    owner: "battleAbilityCheck",
+  });
+}
+
+function conditionRiderEscapeCheckSuccessCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubject({
+      subject: CONDITION_RIDER_ROUTE_SUBJECT,
+      fill: "abilityCheck",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAbilityCheck",
+    }),
+    conditionRiderResolveWithoutFill("battleConditionLifecycle"),
+    conditionRiderResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function conditionRiderSleepRepeatSaveFailureRoute(): readonly ReducerRouteEvent[] {
   return [
     routeResolveSubject({
       subject: CONDITION_RIDER_ROUTE_SUBJECT,
@@ -5249,9 +5433,25 @@ export function createConditionRiderRouteDriver() {
         route = [...route, ...conditionRiderDurationCleanupRoute()];
         facts = [...facts, ...CONDITION_RIDER_DURATION_CLEANUP_FACTS];
       },
-      doAdmitFailedSaveRepeatSaveConditionRider: () => {
+      doAdmitFailedSaveBlindedNextTurnConditionRider: () => {
         route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
-        facts = CONDITION_RIDER_FAILED_SAVE_APPLIED_FACTS;
+        facts = CONDITION_RIDER_FAILED_SAVE_BLINDED_NEXT_TURN_FACTS;
+      },
+      doExpireFailedSaveBlindedNextTurnConditionRider: () => {
+        route = [...route, ...conditionRiderDurationCleanupRoute()];
+        facts = [...facts, ...CONDITION_RIDER_DURATION_CLEANUP_FACTS];
+      },
+      doRejectFailedSaveBlindedConditionRiderByImmunity: () => {
+        route = [...route, ...conditionRiderFailedSaveRejectionRoute()];
+        facts = conditionRiderFailedSaveRejectedFacts("blinded");
+      },
+      doAdmitFailedSaveBlindedRepeatSaveConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = conditionRiderFailedSaveRepeatSaveFacts("blinded");
+      },
+      doAdmitFailedSaveDeafenedRepeatSaveConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = conditionRiderFailedSaveRepeatSaveFacts("deafened");
       },
       doOpenFailedSaveConditionRepeatSaveFrontier: () => {
         route = [...route, conditionRiderRepeatSaveFrontierRoute()];
@@ -5262,6 +5462,33 @@ export function createConditionRiderRouteDriver() {
         facts = [
           ...facts,
           ...CONDITION_RIDER_REPEAT_SAVE_SUCCESS_CLEANUP_FACTS,
+        ];
+      },
+      doAdmitFailedSaveRestrainedUntilSpellEndEscapeConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = CONDITION_RIDER_FAILED_SAVE_RESTRAINED_FACTS;
+      },
+      doOpenRestrainedAthleticsEscapeFrontier: () => {
+        route = [...route, conditionRiderEscapeCheckFrontierRoute()];
+        facts = [...facts, { kind: "escapeCheckFrontierOpened" }];
+      },
+      doResolveRestrainedAthleticsEscapeSuccessCleanup: () => {
+        route = [...route, ...conditionRiderEscapeCheckSuccessCleanupRoute()];
+        facts = [...facts, ...CONDITION_RIDER_RESTRAINED_ESCAPE_CLEANUP_FACTS];
+      },
+      doAdmitFailedSaveSleepIncapacitatedConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = CONDITION_RIDER_FAILED_SAVE_SLEEP_INCAPACITATED_FACTS;
+      },
+      doOpenSleepRepeatSaveFrontier: () => {
+        route = [...route, conditionRiderRepeatSaveFrontierRoute()];
+        facts = [...facts, { kind: "repeatSaveFrontierOpened" }];
+      },
+      doResolveSleepRepeatSaveFailureTransitionToUnconscious: () => {
+        route = [...route, ...conditionRiderSleepRepeatSaveFailureRoute()];
+        facts = [
+          ...facts,
+          ...CONDITION_RIDER_SLEEP_REPEAT_SAVE_FAILURE_FACTS,
         ];
       },
       doStutterAfterTerminalSurface: () => {},
@@ -8844,7 +9071,11 @@ const CONDITION_RIDER_CARRIER_BY_VARIANT_TAG = {
 
 const CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG = {
   PoisonedCondition: "poisoned",
+  BlindedCondition: "blinded",
+  DeafenedCondition: "deafened",
   RestrainedCondition: "restrained",
+  IncapacitatedCondition: "incapacitated",
+  UnconsciousCondition: "unconscious",
 } as const satisfies Readonly<Record<string, ConditionRiderConditionKind>>;
 
 const CONDITION_RIDER_ADMISSION_BY_VARIANT_TAG = {
@@ -8853,9 +9084,15 @@ const CONDITION_RIDER_ADMISSION_BY_VARIANT_TAG = {
 } as const satisfies Readonly<Record<string, ConditionRiderAdmission>>;
 
 const CONDITION_RIDER_BOUNDARY_BY_VARIANT_TAG = {
-  UntilDurationExpires: "untilDurationExpires",
+  UntilSourceNextTurnEnds: "untilSourceNextTurnEnds",
+  UntilAffectedTargetNextTurnEnds: "untilAffectedTargetNextTurnEnds",
+  UntilSpellEnds: "untilSpellEnds",
   AffectedTargetEndTurnRepeatSave: "affectedTargetEndTurnRepeatSave",
 } as const satisfies Readonly<Record<string, ConditionRiderBoundary>>;
+
+const CONDITION_RIDER_ESCAPE_BY_VARIANT_TAG = {
+  AthleticsActionEscapeCheck: "athleticsActionEscapeCheck",
+} as const satisfies Readonly<Record<string, ConditionRiderEscape>>;
 
 const CONDITION_RIDER_CLEANUP_OWNER_BY_VARIANT_TAG = {
   BattleTurnBoundaryCleanupOwner: "battleTurnBoundary",
@@ -9426,11 +9663,44 @@ function decodeConditionRiderRouteFact(
       ),
     };
   }
+  if (tag === "RouteConditionRiderEscape") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "escape",
+      escape: quintVariantMappedValue(
+        quintField(payload, "escape"),
+        "qFacts[].escape",
+        CONDITION_RIDER_ESCAPE_BY_VARIANT_TAG,
+        "condition rider escape",
+      ),
+    };
+  }
   if (tag === "RouteConditionRiderRepeatSaveFrontierOpened") {
     return { kind: "repeatSaveFrontierOpened" };
   }
   if (tag === "RouteConditionRiderRepeatSaveSucceeded") {
     return { kind: "repeatSaveSucceeded" };
+  }
+  if (tag === "RouteConditionRiderRepeatSaveFailed") {
+    return { kind: "repeatSaveFailed" };
+  }
+  if (tag === "RouteConditionRiderTransition") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "transition",
+      condition: quintVariantMappedValue(
+        quintField(payload, "condition"),
+        "qFacts[].condition",
+        CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG,
+        "condition rider transition condition",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderEscapeCheckFrontierOpened") {
+    return { kind: "escapeCheckFrontierOpened" };
+  }
+  if (tag === "RouteConditionRiderEscapeCheckSucceeded") {
+    return { kind: "escapeCheckSucceeded" };
   }
   if (tag === "RouteConditionRiderExpired") {
     return { kind: "expired" };

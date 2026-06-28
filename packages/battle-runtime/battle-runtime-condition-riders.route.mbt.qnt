@@ -8,10 +8,21 @@
 //   to cause special effects in addition to or instead of damage.
 // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines
 //   spell save outcomes as effect facts.
-// - .references/srd-5.2.1/Rules-Glossary.md#Condition, #Immunity,
-//   #Poisoned [Condition], #Restrained [Condition], #Saving Throw, and
+// - .references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Sickness defines
+//   attack-hit Poisoned until the source's next turn ends.
+// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Color Spray defines
+//   failed-save Blinded until the source's next turn ends.
+// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Blindness/Deafness
+//   defines failed-save Blinded or Deafened with end-turn repeat-save cleanup.
+// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Entangle defines
+//   failed-save Restrained until spell end plus action Athletics escape cleanup.
+// - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleep defines failed-save
+//   Incapacitated until target next turn, then repeat-save failure transition
+//   to Unconscious until spell end.
+// - .references/srd-5.2.1/Rules-Glossary.md#Condition, #Immunity, #Poisoned
+//   [Condition], #Restrained [Condition], #Unconscious [Condition], and
 //   #Saving Throw Effect Notation define condition application, condition
-//   immunity rejection, Poisoned, Restrained, and repeat-save boundaries.
+//   immunity rejection, and condition consequences.
 // - UBIQUITOUS_LANGUAGE.md: Rider, Condition, Poisoned, Saving Throw, Spell
 //   Effect, and Action Lifecycle.
 module battleRuntimeConditionRidersRouteMbt {
@@ -25,9 +36,19 @@ module battleRuntimeConditionRidersRouteMbt {
     | AttackHitPoisonAppliedRouteSurface
     | AttackHitPoisonRejectedRouteSurface
     | AttackHitPoisonExpiredRouteSurface
-    | FailedSaveConditionAppliedRouteSurface
+    | FailedSaveBlindedNextTurnAppliedRouteSurface
+    | FailedSaveBlindedNextTurnExpiredRouteSurface
+    | FailedSaveBlindedRepeatSaveAppliedRouteSurface
+    | FailedSaveDeafenedRepeatSaveAppliedRouteSurface
     | FailedSaveRepeatSaveFrontierRouteSurface
     | FailedSaveRepeatSaveSuccessCleanupRouteSurface
+    | FailedSaveRestrainedAppliedRouteSurface
+    | FailedSaveRestrainedEscapeFrontierRouteSurface
+    | FailedSaveRestrainedEscapeCleanupRouteSurface
+    | FailedSaveSleepIncapacitatedAppliedRouteSurface
+    | FailedSaveSleepRepeatSaveFrontierRouteSurface
+    | FailedSaveSleepRepeatSaveFailureUnconsciousRouteSurface
+    | FailedSaveConditionRejectedRouteSurface
 
   var qSurface: ConditionRiderRouteSurface
   var qRoute: List[ReducerRouteEvent]
@@ -40,6 +61,8 @@ module battleRuntimeConditionRidersRouteMbt {
   pure val rolledDiceHoles: Set[BattleHoleFamilyKind] = Set(RolledDiceHoleKind)
   pure val savingThrowOutcomeHoles: Set[BattleHoleFamilyKind] =
     Set(SavingThrowOutcomeHoleKind)
+  pure val abilityCheckHoles: Set[BattleHoleFamilyKind] =
+    Set(AbilityCheckHoleKind)
 
   pure def startRoute: ReducerRouteEvent =
     routeStartBattle(BattleActionEconomyOwner)
@@ -70,7 +93,11 @@ module battleRuntimeConditionRidersRouteMbt {
 
   pure def attackHitHostOutcomeRoute: List[ReducerRouteEvent] =
     List(
-      discoverRoute(SpellAttackRouteSubject, targetChoiceHoles, BattleActionEconomyOwner),
+      discoverRoute(
+        SpellAttackRouteSubject,
+        targetChoiceHoles,
+        BattleActionEconomyOwner,
+      ),
       resolveRoute(
         SpellAttackRouteSubject,
         TargetChoiceFillKind,
@@ -112,13 +139,22 @@ module battleRuntimeConditionRidersRouteMbt {
       ),
     )
 
+  pure def conditionAdmissionRoute: List[ReducerRouteEvent] =
+    List(
+      resolveRouteWithoutFill(BattleConditionLifecycleOwner),
+      resolveRouteWithoutFill(BattleActiveEffectOwner),
+    )
+
+  pure def conditionRejectionRoute: List[ReducerRouteEvent] =
+    List(resolveRouteWithoutFill(BattleConditionLifecycleOwner))
+
   pure def attackHitPoisonAppliedFacts: List[ConditionRiderRouteFact] =
     List(
       RouteConditionRiderHostOutcome({ outcome: HostAttackHitDamageOutcome }),
       RouteConditionRiderCarrier({ carrier: AffectedTargetConditionCarrier }),
       RouteConditionRiderConditionKind({ condition: PoisonedCondition }),
       RouteConditionRiderAdmission({ admission: ConditionApplied }),
-      RouteConditionRiderBoundary({ boundary: UntilDurationExpires }),
+      RouteConditionRiderBoundary({ boundary: UntilSourceNextTurnEnds }),
     )
 
   pure def attackHitPoisonRejectedFacts: List[ConditionRiderRouteFact] =
@@ -129,14 +165,65 @@ module battleRuntimeConditionRidersRouteMbt {
       RouteConditionRiderAdmission({ admission: ConditionRejectedByImmunity }),
     )
 
-  pure def failedSaveConditionAppliedFacts: List[ConditionRiderRouteFact] =
+  pure def failedSaveRejectedFacts(
+    condition: ConditionRiderConditionKindFact,
+  ): List[ConditionRiderRouteFact] =
+    List(
+      RouteConditionRiderHostOutcome({ outcome: HostFailedSavingThrowOutcome }),
+      RouteConditionRiderCarrier({ carrier: AffectedTargetConditionCarrier }),
+      RouteConditionRiderConditionKind({ condition: condition }),
+      RouteConditionRiderAdmission({ admission: ConditionRejectedByImmunity }),
+    )
+
+  pure def failedSaveBlindedNextTurnFacts: List[ConditionRiderRouteFact] =
+    List(
+      RouteConditionRiderHostOutcome({ outcome: HostFailedSavingThrowOutcome }),
+      RouteConditionRiderCarrier({ carrier: AffectedTargetConditionCarrier }),
+      RouteConditionRiderConditionKind({ condition: BlindedCondition }),
+      RouteConditionRiderAdmission({ admission: ConditionApplied }),
+      RouteConditionRiderBoundary({ boundary: UntilSourceNextTurnEnds }),
+    )
+
+  pure def failedSaveBlindedRepeatSaveFacts: List[ConditionRiderRouteFact] =
+    List(
+      RouteConditionRiderHostOutcome({ outcome: HostFailedSavingThrowOutcome }),
+      RouteConditionRiderCarrier({ carrier: AffectedTargetConditionCarrier }),
+      RouteConditionRiderConditionKind({ condition: BlindedCondition }),
+      RouteConditionRiderAdmission({ admission: ConditionApplied }),
+      RouteConditionRiderBoundary({
+        boundary: AffectedTargetEndTurnRepeatSave,
+      }),
+    )
+
+  pure def failedSaveDeafenedRepeatSaveFacts: List[ConditionRiderRouteFact] =
+    List(
+      RouteConditionRiderHostOutcome({ outcome: HostFailedSavingThrowOutcome }),
+      RouteConditionRiderCarrier({ carrier: AffectedTargetConditionCarrier }),
+      RouteConditionRiderConditionKind({ condition: DeafenedCondition }),
+      RouteConditionRiderAdmission({ admission: ConditionApplied }),
+      RouteConditionRiderBoundary({
+        boundary: AffectedTargetEndTurnRepeatSave,
+      }),
+    )
+
+  pure def failedSaveRestrainedFacts: List[ConditionRiderRouteFact] =
     List(
       RouteConditionRiderHostOutcome({ outcome: HostFailedSavingThrowOutcome }),
       RouteConditionRiderCarrier({ carrier: AffectedTargetConditionCarrier }),
       RouteConditionRiderConditionKind({ condition: RestrainedCondition }),
       RouteConditionRiderAdmission({ admission: ConditionApplied }),
+      RouteConditionRiderBoundary({ boundary: UntilSpellEnds }),
+      RouteConditionRiderEscape({ escape: AthleticsActionEscapeCheck }),
+    )
+
+  pure def failedSaveSleepIncapacitatedFacts: List[ConditionRiderRouteFact] =
+    List(
+      RouteConditionRiderHostOutcome({ outcome: HostFailedSavingThrowOutcome }),
+      RouteConditionRiderCarrier({ carrier: AffectedTargetConditionCarrier }),
+      RouteConditionRiderConditionKind({ condition: IncapacitatedCondition }),
+      RouteConditionRiderAdmission({ admission: ConditionApplied }),
       RouteConditionRiderBoundary({
-        boundary: AffectedTargetEndTurnRepeatSave,
+        boundary: UntilAffectedTargetNextTurnEnds,
       }),
     )
 
@@ -159,6 +246,22 @@ module battleRuntimeConditionRidersRouteMbt {
       RouteConditionRiderCleanedUpBy({ owner: BattleActiveEffectCleanupOwner }),
     )
 
+  pure def restrainedEscapeCleanupFacts: List[ConditionRiderRouteFact] =
+    List(
+      RouteConditionRiderEscapeCheckSucceeded,
+      RouteConditionRiderCleanedUpBy({
+        owner: BattleConditionLifecycleCleanupOwner,
+      }),
+      RouteConditionRiderCleanedUpBy({ owner: BattleActiveEffectCleanupOwner }),
+    )
+
+  pure def sleepRepeatSaveFailureFacts: List[ConditionRiderRouteFact] =
+    List(
+      RouteConditionRiderRepeatSaveFailed,
+      RouteConditionRiderTransition({ condition: UnconsciousCondition }),
+      RouteConditionRiderBoundary({ boundary: UntilSpellEnds }),
+    )
+
   action recordSurface(
     surface: ConditionRiderRouteSurface,
     route: List[ReducerRouteEvent],
@@ -175,10 +278,7 @@ module battleRuntimeConditionRidersRouteMbt {
     qSurface == FreshRouteSurface,
     recordSurface(
       AttackHitPoisonAppliedRouteSurface,
-      qRoute
-        .concat(attackHitHostOutcomeRoute)
-        .append(resolveRouteWithoutFill(BattleConditionLifecycleOwner))
-        .append(resolveRouteWithoutFill(BattleActiveEffectOwner)),
+      qRoute.concat(attackHitHostOutcomeRoute).concat(conditionAdmissionRoute),
       attackHitPoisonAppliedFacts,
     ),
   }
@@ -187,9 +287,7 @@ module battleRuntimeConditionRidersRouteMbt {
     qSurface == FreshRouteSurface,
     recordSurface(
       AttackHitPoisonRejectedRouteSurface,
-      qRoute
-        .concat(attackHitHostOutcomeRoute)
-        .append(resolveRouteWithoutFill(BattleConditionLifecycleOwner)),
+      qRoute.concat(attackHitHostOutcomeRoute).concat(conditionRejectionRoute),
       attackHitPoisonRejectedFacts,
     ),
   }
@@ -206,20 +304,59 @@ module battleRuntimeConditionRidersRouteMbt {
     ),
   }
 
-  action doAdmitFailedSaveRepeatSaveConditionRider = all {
+  action doAdmitFailedSaveBlindedNextTurnConditionRider = all {
     qSurface == FreshRouteSurface,
     recordSurface(
-      FailedSaveConditionAppliedRouteSurface,
+      FailedSaveBlindedNextTurnAppliedRouteSurface,
+      qRoute.concat(failedSaveHostOutcomeRoute).concat(conditionAdmissionRoute),
+      failedSaveBlindedNextTurnFacts,
+    ),
+  }
+
+  action doExpireFailedSaveBlindedNextTurnConditionRider = all {
+    qSurface == FailedSaveBlindedNextTurnAppliedRouteSurface,
+    recordSurface(
+      FailedSaveBlindedNextTurnExpiredRouteSurface,
       qRoute
-        .concat(failedSaveHostOutcomeRoute)
+        .append(resolveRouteWithoutFill(BattleTurnBoundaryOwner))
         .append(resolveRouteWithoutFill(BattleConditionLifecycleOwner))
         .append(resolveRouteWithoutFill(BattleActiveEffectOwner)),
-      failedSaveConditionAppliedFacts,
+      qFacts.concat(durationCleanupFacts),
+    ),
+  }
+
+  action doRejectFailedSaveBlindedConditionRiderByImmunity = all {
+    qSurface == FreshRouteSurface,
+    recordSurface(
+      FailedSaveConditionRejectedRouteSurface,
+      qRoute.concat(failedSaveHostOutcomeRoute).concat(conditionRejectionRoute),
+      failedSaveRejectedFacts(BlindedCondition),
+    ),
+  }
+
+  action doAdmitFailedSaveBlindedRepeatSaveConditionRider = all {
+    qSurface == FreshRouteSurface,
+    recordSurface(
+      FailedSaveBlindedRepeatSaveAppliedRouteSurface,
+      qRoute.concat(failedSaveHostOutcomeRoute).concat(conditionAdmissionRoute),
+      failedSaveBlindedRepeatSaveFacts,
+    ),
+  }
+
+  action doAdmitFailedSaveDeafenedRepeatSaveConditionRider = all {
+    qSurface == FreshRouteSurface,
+    recordSurface(
+      FailedSaveDeafenedRepeatSaveAppliedRouteSurface,
+      qRoute.concat(failedSaveHostOutcomeRoute).concat(conditionAdmissionRoute),
+      failedSaveDeafenedRepeatSaveFacts,
     ),
   }
 
   action doOpenFailedSaveConditionRepeatSaveFrontier = all {
-    qSurface == FailedSaveConditionAppliedRouteSurface,
+    qSurface.in(Set(
+      FailedSaveBlindedRepeatSaveAppliedRouteSurface,
+      FailedSaveDeafenedRepeatSaveAppliedRouteSurface,
+    )),
     recordSurface(
       FailedSaveRepeatSaveFrontierRouteSurface,
       qRoute.append(
@@ -251,11 +388,100 @@ module battleRuntimeConditionRidersRouteMbt {
     ),
   }
 
+  action doAdmitFailedSaveRestrainedUntilSpellEndEscapeConditionRider = all {
+    qSurface == FreshRouteSurface,
+    recordSurface(
+      FailedSaveRestrainedAppliedRouteSurface,
+      qRoute.concat(failedSaveHostOutcomeRoute).concat(conditionAdmissionRoute),
+      failedSaveRestrainedFacts,
+    ),
+  }
+
+  action doOpenRestrainedAthleticsEscapeFrontier = all {
+    qSurface == FailedSaveRestrainedAppliedRouteSurface,
+    recordSurface(
+      FailedSaveRestrainedEscapeFrontierRouteSurface,
+      qRoute.append(
+        discoverRoute(
+          ConditionRiderRouteSubject,
+          abilityCheckHoles,
+          BattleAbilityCheckOwner,
+        )
+      ),
+      qFacts.append(RouteConditionRiderEscapeCheckFrontierOpened),
+    ),
+  }
+
+  action doResolveRestrainedAthleticsEscapeSuccessCleanup = all {
+    qSurface == FailedSaveRestrainedEscapeFrontierRouteSurface,
+    recordSurface(
+      FailedSaveRestrainedEscapeCleanupRouteSurface,
+      qRoute
+        .append(
+          resolveRoute(
+            ConditionRiderRouteSubject,
+            AbilityCheckFillKind,
+            noHoles,
+            BattleAbilityCheckOwner,
+          )
+        )
+        .append(resolveRouteWithoutFill(BattleConditionLifecycleOwner))
+        .append(resolveRouteWithoutFill(BattleActiveEffectOwner)),
+      qFacts.concat(restrainedEscapeCleanupFacts),
+    ),
+  }
+
+  action doAdmitFailedSaveSleepIncapacitatedConditionRider = all {
+    qSurface == FreshRouteSurface,
+    recordSurface(
+      FailedSaveSleepIncapacitatedAppliedRouteSurface,
+      qRoute.concat(failedSaveHostOutcomeRoute).concat(conditionAdmissionRoute),
+      failedSaveSleepIncapacitatedFacts,
+    ),
+  }
+
+  action doOpenSleepRepeatSaveFrontier = all {
+    qSurface == FailedSaveSleepIncapacitatedAppliedRouteSurface,
+    recordSurface(
+      FailedSaveSleepRepeatSaveFrontierRouteSurface,
+      qRoute.append(
+        discoverRoute(
+          ConditionRiderRouteSubject,
+          savingThrowOutcomeHoles,
+          BattleTurnBoundaryOwner,
+        )
+      ),
+      qFacts.append(RouteConditionRiderRepeatSaveFrontierOpened),
+    ),
+  }
+
+  action doResolveSleepRepeatSaveFailureTransitionToUnconscious = all {
+    qSurface == FailedSaveSleepRepeatSaveFrontierRouteSurface,
+    recordSurface(
+      FailedSaveSleepRepeatSaveFailureUnconsciousRouteSurface,
+      qRoute
+        .append(
+          resolveRoute(
+            ConditionRiderRouteSubject,
+            SavingThrowOutcomeFillKind,
+            noHoles,
+            BattleConditionLifecycleOwner,
+          )
+        )
+        .append(resolveRouteWithoutFill(BattleActiveEffectOwner)),
+      qFacts.concat(sleepRepeatSaveFailureFacts),
+    ),
+  }
+
   action doStutterAfterTerminalSurface = all {
     qSurface.in(Set(
       AttackHitPoisonRejectedRouteSurface,
       AttackHitPoisonExpiredRouteSurface,
+      FailedSaveBlindedNextTurnExpiredRouteSurface,
       FailedSaveRepeatSaveSuccessCleanupRouteSurface,
+      FailedSaveRestrainedEscapeCleanupRouteSurface,
+      FailedSaveSleepRepeatSaveFailureUnconsciousRouteSurface,
+      FailedSaveConditionRejectedRouteSurface,
     )),
     recordSurface(qSurface, qRoute, qFacts),
   }
@@ -264,9 +490,19 @@ module battleRuntimeConditionRidersRouteMbt {
     doAdmitAttackHitPoisonConditionRider,
     doRejectAttackHitPoisonConditionRiderByImmunity,
     doExpireAttackHitPoisonConditionRider,
-    doAdmitFailedSaveRepeatSaveConditionRider,
+    doAdmitFailedSaveBlindedNextTurnConditionRider,
+    doExpireFailedSaveBlindedNextTurnConditionRider,
+    doRejectFailedSaveBlindedConditionRiderByImmunity,
+    doAdmitFailedSaveBlindedRepeatSaveConditionRider,
+    doAdmitFailedSaveDeafenedRepeatSaveConditionRider,
     doOpenFailedSaveConditionRepeatSaveFrontier,
     doResolveFailedSaveConditionRepeatSaveSuccessCleanup,
+    doAdmitFailedSaveRestrainedUntilSpellEndEscapeConditionRider,
+    doOpenRestrainedAthleticsEscapeFrontier,
+    doResolveRestrainedAthleticsEscapeSuccessCleanup,
+    doAdmitFailedSaveSleepIncapacitatedConditionRider,
+    doOpenSleepRepeatSaveFrontier,
+    doResolveSleepRepeatSaveFailureTransitionToUnconscious,
     doStutterAfterTerminalSurface,
   }
 }

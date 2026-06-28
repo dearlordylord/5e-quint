@@ -421,7 +421,7 @@ describe("battle reducer route connector MBT", () => {
   );
 
   it(
-    "routes condition and poison riders through condition lifecycle owners",
+    "routes condition and poison riders through lifecycle, repeat-save, and escape owners",
     async () => {
       await run({
         spec: mbtSpecPath(
