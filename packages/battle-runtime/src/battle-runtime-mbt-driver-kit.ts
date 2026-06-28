@@ -891,6 +891,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "metamagicMissedSpellAttackReroll",
   "metamagicDamageDiceReroll",
   "spellBaseArmorClassEffect",
+  "hitPointRegainPrevention",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -1087,6 +1088,9 @@ type ReducerRoutedWardedTargetInterdictionProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
 type ReducerRoutedSpellBaseArmorClassEffectProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedHitPointRegainPreventionProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
 type ReducerRoutedSaveGatedSpellOrderingProjection =
@@ -1433,6 +1437,15 @@ const metamagicRouteDriverSchema = {
   doRouteSpellComponentProjection: {},
   doRouteMissedSpellAttackReroll: {},
   doRouteDamageDiceReroll: {},
+  step: {},
+} as const;
+
+const hitPointRegainPreventionRouteDriverSchema = {
+  init: {},
+  doAdmitAttackHitRegainPreventionEffect: {},
+  doInterdictLaterHitPointHealing: {},
+  doExpireAtTurnBoundary: {},
+  doStutterAfterExpiry: {},
   step: {},
 } as const;
 
@@ -3766,9 +3779,17 @@ const WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT =
   "wardedTargetInterdiction" satisfies ReducerRouteSubjectFamily;
 const SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT =
   "spellBaseArmorClassEffect" satisfies ReducerRouteSubjectFamily;
+const HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT =
+  "hitPointRegainPrevention" satisfies ReducerRouteSubjectFamily;
 const NO_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
 const TARGET_CHOICE_ROUTE_HOLES = [
   "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const ATTACK_ROLL_ROUTE_HOLES = [
+  "attackRoll",
+] as const satisfies readonly ReducerRouteHole[];
+const ROLLED_DICE_ROUTE_HOLES = [
+  "rolledDice",
 ] as const satisfies readonly ReducerRouteHole[];
 const SAVING_THROW_OUTCOME_ROUTE_HOLES = [
   "savingThrowOutcome",
@@ -4325,6 +4346,97 @@ export function createSpellBaseArmorClassEffectRouteDriver() {
       },
       step: () => {},
       getState: (): ReducerRoutedSpellBaseArmorClassEffectProjection => ({
+        route,
+      }),
+    };
+  });
+}
+
+function hitPointRegainPreventionInitialRoute(): readonly ReducerRouteEvent[] {
+  return [reducerRouteStartBattle("battleActionEconomy")];
+}
+
+function hitPointRegainPreventionAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "spellAttack",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function hitPointRegainPreventionHealingInterdictionRoute(): ReducerRouteEvent {
+  return routeResolveSubject({
+    subject: HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT,
+    fill: "hitPointHealingDistribution",
+    holes: NO_ROUTE_HOLES,
+    owner: "battleHitPoint",
+  });
+}
+
+function hitPointRegainPreventionCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+export function createHitPointRegainPreventionRouteDriver() {
+  return defineDriver(hitPointRegainPreventionRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      hitPointRegainPreventionInitialRoute();
+
+    return {
+      init: () => {
+        route = hitPointRegainPreventionInitialRoute();
+      },
+      doAdmitAttackHitRegainPreventionEffect: () => {
+        route = [...route, ...hitPointRegainPreventionAdmissionRoute()];
+      },
+      doInterdictLaterHitPointHealing: () => {
+        route = [
+          ...route,
+          hitPointRegainPreventionHealingInterdictionRoute(),
+        ];
+      },
+      doExpireAtTurnBoundary: () => {
+        route = [...route, ...hitPointRegainPreventionCleanupRoute()];
+      },
+      doStutterAfterExpiry: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedHitPointRegainPreventionProjection => ({
         route,
       }),
     };
@@ -7786,6 +7898,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
     "metamagicMissedSpellAttackReroll",
   MetamagicDamageDiceRerollRouteSubject: "metamagicDamageDiceReroll",
   SpellBaseArmorClassEffectRouteSubject: "spellBaseArmorClassEffect",
+  HitPointRegainPreventionRouteSubject: "hitPointRegainPrevention",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -8261,6 +8374,15 @@ function normalizeReducerRoutedWardedTargetInterdictionQuintState(
 function normalizeReducerRoutedSpellBaseArmorClassEffectQuintState(
   raw: unknown,
 ): ReducerRoutedSpellBaseArmorClassEffectProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedHitPointRegainPreventionQuintState(
+  raw: unknown,
+): ReducerRoutedHitPointRegainPreventionProjection {
   const state = quintStateRecord(raw);
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
@@ -8874,6 +8996,16 @@ export const reducerRoutedSpellBaseArmorClassEffectStateCheck = stateCheck(
   (
     spec: ReducerRoutedSpellBaseArmorClassEffectProjection,
     impl: ReducerRoutedSpellBaseArmorClassEffectProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedHitPointRegainPreventionStateCheck = stateCheck(
+  normalizeReducerRoutedHitPointRegainPreventionQuintState,
+  (
+    spec: ReducerRoutedHitPointRegainPreventionProjection,
+    impl: ReducerRoutedHitPointRegainPreventionProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;
