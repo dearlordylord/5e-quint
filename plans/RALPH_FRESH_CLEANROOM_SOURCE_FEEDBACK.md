@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "FCSF-03-SELECTED-SPELL-RESIDUAL-SHAPES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split residual selected spell effects into generic source route shapes"
     },
     {
@@ -217,6 +217,16 @@ tasks for hit-point-regain prevention, next-attack roll mode, opportunity-attack
 denial, condition/poison riders, object/light riders, mixed target outcomes, and
 exact damage projection facts.
 
+Outcome:
+
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json` now records
+  `task3ResidualSelectedSpellRouteTasks[]` with concrete follow-up route-input
+  task records `FCSF-03A` through `FCSF-03G` for the seven residual selected
+  spell blocker families.
+- `plans/cleanroom-guidance/reducer-spine.md` directs fresh cleanroom workers to
+  treat those records as the task queue and to keep selected spell identity out
+  of production reducer behavior.
+
 ### Task 4
 
 `FCSF-04-OBJECT-STALE-SUBJECT-PUBLIC-PROTOCOL`
@@ -254,8 +264,11 @@ attack roll mode.
 
 `FCSF-08-PACKAGE-REFRESH-AND-FRESH-REPLAY-SEED`
 
-Unblocked by `FCSF-01-ACTIVE-EFFECT-CONCENTRATION-CLEANUP-SOURCE-INPUT` and
-`FCSF-02-SCALAR-ACTIVE-EFFECT-PROFILE-PROGRESSION`. Refresh the cleanroom
-package from the updated source commit and create small fresh-target replay
-tasks that prove the Task 1 concentration teardown facts and Task 2 scalar-buff
-profile projection facts are consumed through public reducer/source entrypoints.
+Unblocked by `FCSF-01-ACTIVE-EFFECT-CONCENTRATION-CLEANUP-SOURCE-INPUT`,
+`FCSF-02-SCALAR-ACTIVE-EFFECT-PROFILE-PROGRESSION`, and
+`FCSF-03-SELECTED-SPELL-RESIDUAL-SHAPES`. Refresh the cleanroom package from the
+updated source commit and create small fresh-target replay tasks that prove the
+Task 1 concentration teardown facts and Task 2 scalar-buff profile projection
+facts are consumed through public reducer/source entrypoints. The refreshed
+package must also carry the Task 3 `task3ResidualSelectedSpellRouteTasks[]`
+queue forward as source guidance for selected spell residual blocker handling.

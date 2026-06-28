@@ -168,6 +168,25 @@ runtime substrate the QNT actually needs: support-profile facts, spell procedure
 shape, battle subject kind, resource owner, or cross-record reference. Implement
 that substrate before admitting catalog selection.
 
+The residual selected-spell source blockers are split in
+`cleanroom-input/branch-coverage/reducer-route-inventory.json` as
+`task3ResidualSelectedSpellRouteTasks[]`. Treat those records as the task queue
+for the remaining selected-spell branches:
+
+- Hit Point regain prevention.
+- next-Attack-Roll roll mode.
+- Opportunity Attack denial or reaction interdiction.
+- condition and poison riders.
+- object and light riders.
+- mixed target outcomes.
+- exact damage projection facts.
+
+Each category needs copied generic route or component connector evidence before
+a target replay can count the selected-identity branch. If the copied package
+has a selected driver branch but lacks the listed generic evidence, record a
+source-QNT-corpus blocker instead of routing production behavior by authored
+spell identity, branch action name, or fixture label.
+
 ## Anti-Explosion Rule
 
 Each cleanroom task may add one small subject family or one substrate. It must

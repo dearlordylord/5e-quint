@@ -60,6 +60,12 @@ source branch inventory, target replay evidence schema, and explicit
 route-class evidence must be sufficient without production TypeScript reads or
 dirty cleanroom history.
 
+`task3ResidualSelectedSpellRouteTasks[]` splits the selected-spell residual
+source blockers into generic route-input tasks. These records are planning
+guidance, not replay evidence: a fresh target may count a residual branch only
+after the named generic connector or component evidence exists and the observed
+target replay goes through the shared reducer surface.
+
 `*.route.mbt.qnt` connectors are the executable source of truth for reducer
 routing. A `reducer-routed` row is meaningful only when the connector projects
 `qRoute` through the reducer-route vocabulary. Rows should set

@@ -3694,13 +3694,149 @@
         "UBIQUITOUS_LANGUAGE.md",
         "ASSUMPTIONS.md"
       ],
+      "task3ResidualSelectedSpellRouteTasks": [
+        {
+          "taskId": "FCSF-03A-HIT-POINT-REGAIN-PREVENTION",
+          "subjectFamily": "attack-hit active Spell Effect that prevents later Hit Point regain",
+          "blockedDrivers": [
+            "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt"
+          ],
+          "requiredRouteInput": "Add a generic active-effect route subject whose fills derive the attack-hit damage result, target, duration boundary, and later healing-interdiction projection from typed procedure facts rather than selected spell identity.",
+          "existingSourceEvidence": [
+            "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt already covers the spell Attack Roll and damage frontier.",
+            "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt already names hit-point-regain prevention as an attack-hit projection fact."
+          ],
+          "rawDomainFacts": [
+            ".references/srd-5.2.1/Playing-the-Game.md#Healing defines Hit Point regain and maximum capping.",
+            ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack allows attacks to cause special effects in addition to damage.",
+            "UBIQUITOUS_LANGUAGE.md defines Hit Points, Spell Effect, Attack Roll, and Action Lifecycle."
+          ],
+          "acceptanceGate": "Target replay may count the residual branch only after copied route evidence shows battle-owned active-effect admission, later healing prevention, and cleanup without selected spell identity dispatch."
+        },
+        {
+          "taskId": "FCSF-03B-NEXT-ATTACK-ROLL-MODE",
+          "subjectFamily": "active Spell Effect that changes the next Attack Roll mode",
+          "blockedDrivers": [
+            "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt"
+          ],
+          "requiredRouteInput": "Add a generic next-Attack-Roll roll-mode route subject with typed source, beneficiary, affected target, expiration boundary, and Advantage or Disadvantage mode facts.",
+          "existingSourceEvidence": [
+            "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt proves generic roll-modifier active-effect routing for other roll families.",
+            "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt already distinguishes next-attack Advantage and Disadvantage projection facts."
+          ],
+          "rawDomainFacts": [
+            ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage defines roll modes.",
+            ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack defines Attack Roll modifier application.",
+            "UBIQUITOUS_LANGUAGE.md defines Attack Roll, Advantage, Disadvantage, Spell Effect, and Condition vocabulary."
+          ],
+          "acceptanceGate": "Target replay may count residual next-Attack-Roll branches only after route evidence consumes the active effect through shared roll-mode projection and expiration owners."
+        },
+        {
+          "taskId": "FCSF-03C-OPPORTUNITY-ATTACK-DENIAL",
+          "subjectFamily": "attack-hit active Spell Effect that denies Opportunity Attacks or otherwise gates reaction availability",
+          "blockedDrivers": [
+            "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt"
+          ],
+          "requiredRouteInput": "Add a generic reaction-interdiction route subject that records the attack-hit source, affected target, denied Opportunity Attack trigger family, and duration boundary as battle-owned effect facts.",
+          "existingSourceEvidence": [
+            "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt covers the attack-hit frontier.",
+            "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt names Opportunity Attack denial as an attack-hit projection."
+          ],
+          "rawDomainFacts": [
+            ".references/srd-5.2.1/Playing-the-Game.md#Opportunity Attacks and .references/srd-5.2.1/Rules-Glossary.md#Opportunity Attacks define the reaction trigger.",
+            ".references/srd-5.2.1/Rules-Glossary.md#Reaction defines reaction availability.",
+            "UBIQUITOUS_LANGUAGE.md defines Opportunity Attack, Reaction, Spell Effect, and Attack Roll."
+          ],
+          "acceptanceGate": "Target replay may count the residual branch only after observed route events show Opportunity Attack denial projected from active-effect state into movement/reaction discovery."
+        },
+        {
+          "taskId": "FCSF-03D-CONDITION-AND-POISON-RIDERS",
+          "subjectFamily": "post-damage or failed-save condition rider active effects",
+          "blockedDrivers": [
+            "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt"
+          ],
+          "requiredRouteInput": "Add or identify generic condition-rider route subjects that carry host outcome, condition kind, immunity check, duration or repeat-save boundary, and cleanup owner facts.",
+          "existingSourceEvidence": [
+            "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt covers condition choice and Saving Throw frontiers.",
+            "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.mbt.qnt and packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt already model direct condition lifecycle behavior."
+          ],
+          "rawDomainFacts": [
+            ".references/srd-5.2.1/Rules-Glossary.md condition entries define condition consequences, including Poisoned.",
+            ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack allows special effects in addition to damage.",
+            "UBIQUITOUS_LANGUAGE.md defines Rider, Condition, Poisoned, Saving Throw, and Spell Effect."
+          ],
+          "acceptanceGate": "Target replay may count residual condition or poison branches only after generic route evidence owns condition application, immunity rejection, and cleanup without selected spell identity dispatch."
+        },
+        {
+          "taskId": "FCSF-03E-OBJECT-AND-LIGHT-RIDERS",
+          "subjectFamily": "object target, object-attached light emitter, held-light, movable-light, and illumination projection routes",
+          "blockedDrivers": [
+            "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt"
+          ],
+          "requiredRouteInput": "Add generic object/light route subjects for object admission, object-attached or held emitter state, replacement cleanup, hurl cleanup, Bright/Dim Light projection, and table-owned cover or geometry witnesses.",
+          "existingSourceEvidence": [
+            "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt covers object-target spell Attack Roll routing.",
+            "packages/battle-runtime/battle-runtime-light.qnt and docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md describe light emitter, obscurement, and sight ownership boundaries."
+          ],
+          "rawDomainFacts": [
+            ".references/srd-5.2.1/Playing-the-Game.md#Interacting with Objects and #What Is an Object define object handling.",
+            ".references/srd-5.2.1/Playing-the-Game.md#Light and .references/srd-5.2.1/Rules-Glossary.md#Bright Light define illumination effects.",
+            ".references/srd-5.2.1/Rules-Glossary.md#Breaking Objects defines object Armor Class, Hit Points, Immunity, and threshold facts.",
+            "UBIQUITOUS_LANGUAGE.md defines Illumination, Obscurement, and Spell Effect; docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md documents light source, obscuring source, and sight witness ownership."
+          ],
+          "acceptanceGate": "Target replay may count object/light residual branches only after copied route evidence separates battle-owned emitter/effect facts from table-owned geometry, color, and presentation facts."
+        },
+        {
+          "taskId": "FCSF-03F-MIXED-TARGET-OUTCOMES",
+          "subjectFamily": "single invocation that combines attack-hit, miss, saving-throw, object, and multi-target outcomes",
+          "blockedDrivers": [
+            "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt"
+          ],
+          "requiredRouteInput": "Add a generic mixed-outcome route subject that makes each target's attack or Saving Throw outcome explicit and routes shared resource spend, per-target damage, and secondary target projections through one invocation owner.",
+          "existingSourceEvidence": [
+            "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt covers the attack branch frontier.",
+            "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt covers the Saving Throw branch frontier.",
+            "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt covers multi-step spell attack sequencing for a separate route family."
+          ],
+          "rawDomainFacts": [
+            ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets, #Attack Rolls, and #Saving Throws define mixed spell frontier facts.",
+            ".references/srd-5.2.1/Playing-the-Game.md#Damage against Multiple Targets defines one damage roll shared across simultaneous multi-target damage.",
+            "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Attack Roll, Saving Throw, Damage, and Action Lifecycle."
+          ],
+          "acceptanceGate": "Target replay may count mixed-outcome residual branches only after route evidence prevents adapter-local coupling between target order, outcome order, and damage projection."
+        },
+        {
+          "taskId": "FCSF-03G-EXACT-DAMAGE-PROJECTION-FACTS",
+          "subjectFamily": "exact spell damage projection facts for direct, attack, save-gated, and mixed outcomes",
+          "blockedDrivers": [
+            "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt"
+          ],
+          "requiredRouteInput": "Promote exact damage amount, damage type, instance count, dice count, critical doubling, success policy, and target damage-application facts into route or component connector evidence consumed by the selected residual routes.",
+          "existingSourceEvidence": [
+            "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt already models exact direct, attack, and save damage projection facts.",
+            "packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt already maps attack damage profiles to damage types, hit effects, and object-target support."
+          ],
+          "rawDomainFacts": [
+            ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines spell damage dice and modifier rules.",
+            ".references/srd-5.2.1/Playing-the-Game.md#Saving Throws and Damage defines successful-save damage policy.",
+            ".references/srd-5.2.1/Playing-the-Game.md#Critical Hits defines attack critical damage dice behavior.",
+            "UBIQUITOUS_LANGUAGE.md defines Damage, Damage Type, Critical Hit, Attack Roll, and Saving Throw."
+          ],
+          "acceptanceGate": "Target replay may count exact-damage residual branches only after copied connector evidence makes the exact projection facts public enough that a fresh target need not infer them from TypeScript or selected spell identity."
+        }
+      ],
       "task7FollowUpTasks": [
         {
           "taskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "subjectFamily": "selected spell invocation, active-effect, protection/charm, object, reaction, spatial, and spell-shape route substrates",
           "requiredSourceWork": [
             "Task 23 records connector-backed generic substrate evidence and precise source-QNT blockers on the selected spell identity driverRouteAssignments.",
-            "Use the remaining source-qnt-corpus-blocker records for follow-on source work; do not infer target replay from selected spell identity."
+            "FCSF-03 splits the remaining selected-spell residual blockers into task3ResidualSelectedSpellRouteTasks; use those route-input tasks for future source work and do not infer target replay from selected spell identity."
           ]
         },
         {
