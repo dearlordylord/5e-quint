@@ -53,6 +53,18 @@ const OWNER_BY_TAG = {
 type CharacterSheetRouteOwner =
   (typeof OWNER_BY_TAG)[keyof typeof OWNER_BY_TAG];
 
+const FACT_BY_TAG = {
+  SheetOrdinarySpellSlotDeltaFact: "ordinarySpellSlotDelta",
+  SheetPactSlotDeltaFact: "pactSlotDelta",
+  SheetCreatedSlotExpiryFact: "createdSlotExpiry",
+  SheetRestBenefitWindowFact: "restBenefitWindow",
+  SheetFeatureRecoveryStateFact: "featureRecoveryState",
+  SheetFeatureResourceSpendFact: "featureResourceSpend",
+  SheetHitPointMaximumArithmeticInputFact: "hitPointMaximumArithmeticInput",
+  SheetSpellResourceRejectionFact: "spellResourceRejection",
+} as const;
+type CharacterSheetRouteFact = (typeof FACT_BY_TAG)[keyof typeof FACT_BY_TAG];
+
 type CharacterSheetRouteEvent =
   | {
       readonly kind: "createCharacterSheet";
@@ -80,6 +92,12 @@ type CharacterSheetRouteEvent =
       readonly subject: CharacterSheetRouteSubject;
       readonly fill: CharacterSheetRouteFill;
       readonly holes: readonly CharacterSheetRouteHole[];
+      readonly owner: CharacterSheetRouteOwner;
+    }
+  | {
+      readonly kind: "recordCharacterSheetFacts";
+      readonly subject: CharacterSheetRouteSubject;
+      readonly facts: readonly CharacterSheetRouteFact[];
       readonly owner: CharacterSheetRouteOwner;
     };
 
@@ -508,6 +526,11 @@ function projectHitPointMaximumRoute(
       subject: "hitPoint",
       owner: "hitPoint",
     }),
+    recordCharacterSheetFacts({
+      subject: "hitPoint",
+      facts: ["hitPointMaximumArithmeticInput"],
+      owner: "buildProjection",
+    }),
   ];
 }
 
@@ -555,6 +578,11 @@ function spendHealingResourceRoute(
       owner: "featureResource",
     }),
     projectCharacterSheetFacts({ subject: "hitPoint", owner: "hitPoint" }),
+    recordCharacterSheetFacts({
+      subject: "featureResource",
+      facts: ["featureResourceSpend"],
+      owner: "featureResource",
+    }),
   ];
 }
 
@@ -575,7 +603,19 @@ function resetArcaneRecoveryRoute(
 function arcaneRecoverySpellSlotRoute(
   route: readonly CharacterSheetRouteEvent[],
 ): readonly CharacterSheetRouteEvent[] {
-  return resetArcaneRecoveryRoute(route);
+  return [
+    ...resetArcaneRecoveryRoute(route),
+    recordCharacterSheetFacts({
+      subject: "featureResource",
+      facts: ["featureRecoveryState"],
+      owner: "featureResource",
+    }),
+    recordCharacterSheetFacts({
+      subject: "spellResource",
+      facts: ["ordinarySpellSlotDelta"],
+      owner: "spellSlot",
+    }),
+  ];
 }
 
 function rejectPactSlotArcaneRecoveryRoute(
@@ -661,6 +701,11 @@ function rejectSpellResourceRoute(owner: CharacterSheetRouteOwner): RouteAppende
       holes: ["resourceSpend"],
       owner,
     }),
+    recordCharacterSheetFacts({
+      subject: "spellResource",
+      facts: ["spellResourceRejection"],
+      owner,
+    }),
   ];
 }
 
@@ -675,15 +720,35 @@ function completeRestoredSlotRoute(
       holes: [],
       owner,
     }),
+    recordCharacterSheetFacts({
+      subject: "spellResource",
+      facts: spellResourceDeltaFacts(owner),
+      owner,
+    }),
   ];
+}
+
+function spellResourceDeltaFacts(
+  owner: CharacterSheetRouteOwner,
+): readonly CharacterSheetRouteFact[] {
+  if (owner === "spellSlot") return ["ordinarySpellSlotDelta"];
+  if (owner === "pactSlot") return ["pactSlotDelta"];
+  return [];
 }
 
 function completeLongRestSpellResourceRoute(
   route: readonly CharacterSheetRouteEvent[],
 ): readonly CharacterSheetRouteEvent[] {
-  return completeRestoredSlotRoute("pactSlot")(
-    completeRestoredSlotRoute("spellSlot")(route),
-  );
+  return [
+    ...completeRestoredSlotRoute("pactSlot")(
+      completeRestoredSlotRoute("spellSlot")(route),
+    ),
+    recordCharacterSheetFacts({
+      subject: "spellResource",
+      facts: ["createdSlotExpiry"],
+      owner: "spellSlot",
+    }),
+  ];
 }
 
 function noSlotBenefitRestRoute(
@@ -695,6 +760,11 @@ function noSlotBenefitRestRoute(
       subject: "rest",
       fill: "restDuration",
       holes: ["restBenefitChoice"],
+      owner: "spellSlot",
+    }),
+    recordCharacterSheetFacts({
+      subject: "rest",
+      facts: ["restBenefitWindow"],
       owner: "spellSlot",
     }),
   ];
@@ -717,6 +787,16 @@ function pactSlotRecoveryRoute(
       holes: [],
       owner: "pactSlot",
     }),
+    recordCharacterSheetFacts({
+      subject: "featureResource",
+      facts: ["featureRecoveryState"],
+      owner: "featureResource",
+    }),
+    recordCharacterSheetFacts({
+      subject: "spellResource",
+      facts: ["spellResourceRejection"],
+      owner: "pactSlot",
+    }),
   ];
 }
 
@@ -729,6 +809,11 @@ function rejectPactSlotRecoveryRoute(
       subject: "spellResource",
       fill: "recoverySelection",
       holes: ["recoveryChoice"],
+      owner: "pactSlot",
+    }),
+    recordCharacterSheetFacts({
+      subject: "spellResource",
+      facts: ["pactSlotDelta"],
       owner: "pactSlot",
     }),
   ];
@@ -846,6 +931,19 @@ function completeCharacterSheetRest(input: {
     subject: input.subject,
     fill: input.fill,
     holes: uniqueSorted(input.holes),
+    owner: input.owner,
+  };
+}
+
+function recordCharacterSheetFacts(input: {
+  readonly subject: CharacterSheetRouteSubject;
+  readonly facts: readonly CharacterSheetRouteFact[];
+  readonly owner: CharacterSheetRouteOwner;
+}): CharacterSheetRouteEvent {
+  return {
+    kind: "recordCharacterSheetFacts",
+    subject: input.subject,
+    facts: uniqueSorted(input.facts),
     owner: input.owner,
   };
 }
@@ -1036,6 +1134,14 @@ function decodeCharacterSheetRouteEvent(
       owner: routeOwner(quintField(payload, "owner")),
     });
   }
+  if (tag === "RouteRecordCharacterSheetFacts") {
+    const payload = routePayload(raw, tag);
+    return recordCharacterSheetFacts({
+      subject: routeSubject(quintField(payload, "subject")),
+      facts: routeFacts(quintField(payload, "facts")),
+      owner: routeOwner(quintField(payload, "owner")),
+    });
+  }
   throw new Error(`Unknown character-sheet route event: ${tag}.`);
 }
 
@@ -1054,6 +1160,14 @@ function routeSubject(raw: unknown): CharacterSheetRouteSubject {
 
 function routeOwner(raw: unknown): CharacterSheetRouteOwner {
   return mappedVariant(raw, OWNER_BY_TAG, "character-sheet route owner");
+}
+
+function routeFact(raw: unknown): CharacterSheetRouteFact {
+  return mappedVariant(raw, FACT_BY_TAG, "character-sheet route fact");
+}
+
+function routeFacts(raw: unknown): readonly CharacterSheetRouteFact[] {
+  return uniqueSorted(quintSet(raw, "qRoute[].facts").map(routeFact));
 }
 
 function routeHole(raw: unknown): CharacterSheetRouteHole {

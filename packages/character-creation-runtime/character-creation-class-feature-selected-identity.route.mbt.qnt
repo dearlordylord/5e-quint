@@ -24,12 +24,20 @@ module characterCreationClassFeatureSelectedIdentityRouteMbt {
   pure def retainSelectedReferenceRoute(
     route: List[CharacterCreationRouteEvent],
   ): List[CharacterCreationRouteEvent] =
-    route.append(
-      routeRetainCreationSelectedReferences(
-        CreationSelectedReferenceRouteSubject,
-        CreationSelectedReferenceOwner,
+    route
+      .append(
+        routeRetainCreationSelectedReferences(
+          CreationSelectedReferenceRouteSubject,
+          CreationSelectedReferenceOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCreationFacts(
+          CreationSelectedReferenceRouteSubject,
+          Set(CreationSelectedReferenceRetentionFact),
+          CreationSelectedReferenceOwner,
+        )
+      )
 
   pure def projectSelectedReferenceRoute(
     route: List[CharacterCreationRouteEvent],
@@ -44,6 +52,13 @@ module characterCreationClassFeatureSelectedIdentityRouteMbt {
       .append(
         routeProjectCharacterBuildFacts(
           CreationBuildProjectionRouteSubject,
+          CharacterBuildOwner,
+        )
+      )
+      .append(
+        routeRecordCreationFacts(
+          CreationBuildProjectionRouteSubject,
+          Set(CreationBuildProjectionInputFact),
           CharacterBuildOwner,
         )
       )

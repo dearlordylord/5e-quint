@@ -44,6 +44,13 @@ module characterBattleInitProjectionRouteMbt {
         )
       )
       .append(
+        routeRecordCharacterBattleHandoffFacts(
+          SheetToBattleInitRouteSubject,
+          Set(HandoffBuildHitPointMaximumInputFact),
+          CharacterBattleBuildProjectionOwner,
+        )
+      )
+      .append(
         routeEnterBattleRuntime(
           SheetToBattleInitRouteSubject,
           CharacterBattleInitProjectionOwner,
@@ -67,6 +74,20 @@ module characterBattleInitProjectionRouteMbt {
         )
       )
       .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffResourceProjectionRouteSubject,
+          Set(HandoffSourceExactSpellSlotDeltaFact),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffFeatureResourceProjectionRouteSubject,
+          Set(HandoffFeatureResourceDeltaFact),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
+      .append(
         routeEnterBattleRuntime(
           HandoffResourceProjectionRouteSubject,
           CharacterBattleInitProjectionOwner,
@@ -80,6 +101,13 @@ module characterBattleInitProjectionRouteMbt {
       .append(
         routeProjectCharacterSheetToBattle(
           HandoffResourceProjectionRouteSubject,
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffResourceProjectionRouteSubject,
+          Set(HandoffSourceExactPactSlotDeltaFact),
           CharacterBattleResourceProjectionOwner,
         )
       )

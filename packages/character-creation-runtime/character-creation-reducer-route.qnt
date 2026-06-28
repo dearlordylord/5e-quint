@@ -31,6 +31,13 @@ module characterCreationReducerRoute {
     | CreationSupportProfileAdmissionOwner
     | CreationSelectedReferenceOwner
 
+  type CharacterCreationRouteFactFamily =
+    | CreationPartialFillDraftFact
+    | CreationStaleFillRejectionFact
+    | CreationSelectedReferenceRetentionFact
+    | CreationBuildProjectionInputFact
+    | CreationHitPointMaximumBuildInputFact
+
   type CharacterCreationRouteEvent =
     | RouteCreateCharacterDraft({ owner: CharacterCreationRouteOwnerGroup })
     | RouteDiscoverCreationHoles({
@@ -50,6 +57,11 @@ module characterCreationReducerRoute {
       })
     | RouteProjectCharacterBuildFacts({
         subject: CharacterCreationRouteSubjectFamily,
+        owner: CharacterCreationRouteOwnerGroup,
+      })
+    | RouteRecordCreationFacts({
+        subject: CharacterCreationRouteSubjectFamily,
+        facts: Set[CharacterCreationRouteFactFamily],
         owner: CharacterCreationRouteOwnerGroup,
       })
     | RouteFinalizeCharacterDraft({
@@ -101,6 +113,17 @@ module characterCreationReducerRoute {
   ): CharacterCreationRouteEvent =
     RouteProjectCharacterBuildFacts({
       subject: subject,
+      owner: owner,
+    })
+
+  pure def routeRecordCreationFacts(
+    subject: CharacterCreationRouteSubjectFamily,
+    facts: Set[CharacterCreationRouteFactFamily],
+    owner: CharacterCreationRouteOwnerGroup,
+  ): CharacterCreationRouteEvent =
+    RouteRecordCreationFacts({
+      subject: subject,
+      facts: facts,
       owner: owner,
     })
 

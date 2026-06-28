@@ -53,6 +53,16 @@ module characterBattleSettlementRouteMbt {
         )
       )
       .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffResourceProjectionRouteSubject,
+          Set(
+            HandoffSourceExactSpellSlotDeltaFact,
+            HandoffSourceExactPactSlotDeltaFact,
+          ),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
+      .append(
         routeProjectCharacterSheetToBattle(
           SheetToBattleInitRouteSubject,
           CharacterBattleSheetOwner,
@@ -62,29 +72,45 @@ module characterBattleSettlementRouteMbt {
   pure def settleFeatureResourceExpenditureRoute(
     route: List[CharacterBattleRouteEvent],
   ): List[CharacterBattleRouteEvent] =
-    route.append(
-      routeSettleBattleToCharacterSheet(
-        HandoffFeatureResourceProjectionRouteSubject,
-        HandoffResourceDeltaFill,
-        Set(),
-        CharacterBattleResourceProjectionOwner,
+    route
+      .append(
+        routeSettleBattleToCharacterSheet(
+          HandoffFeatureResourceProjectionRouteSubject,
+          HandoffResourceDeltaFill,
+          Set(),
+          CharacterBattleResourceProjectionOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffFeatureResourceProjectionRouteSubject,
+          Set(HandoffFeatureResourceDeltaFact),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
 
   pure def rejectAmbiguousCreatedSpellSlotSourceRoute(
     route: List[CharacterBattleRouteEvent],
   ): List[CharacterBattleRouteEvent] =
-    route.append(
-      routeRejectCharacterBattleHandoff(
-        HandoffResourceProjectionRouteSubject,
-        HandoffSettlementRejectionFill,
-        Set(
-          HandoffSpellResourceProjectionHoleFamily,
-          HandoffSettlementConflictHoleFamily,
-        ),
-        CharacterBattleResourceProjectionOwner,
+    route
+      .append(
+        routeRejectCharacterBattleHandoff(
+          HandoffResourceProjectionRouteSubject,
+          HandoffSettlementRejectionFill,
+          Set(
+            HandoffSpellResourceProjectionHoleFamily,
+            HandoffSettlementConflictHoleFamily,
+          ),
+          CharacterBattleResourceProjectionOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffResourceProjectionRouteSubject,
+          Set(HandoffSettlementConflictFact),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
 
   pure def rejectIdentityMismatchRoute(
     route: List[CharacterBattleRouteEvent],
@@ -113,26 +139,42 @@ module characterBattleSettlementRouteMbt {
   pure def rejectSettlementConflictRoute(
     route: List[CharacterBattleRouteEvent],
   ): List[CharacterBattleRouteEvent] =
-    route.append(
-      routeRejectCharacterBattleHandoff(
-        BattleToSheetSettlementRouteSubject,
-        HandoffSettlementRejectionFill,
-        Set(HandoffSettlementConflictHoleFamily),
-        CharacterBattleSettlementOwner,
+    route
+      .append(
+        routeRejectCharacterBattleHandoff(
+          BattleToSheetSettlementRouteSubject,
+          HandoffSettlementRejectionFill,
+          Set(HandoffSettlementConflictHoleFamily),
+          CharacterBattleSettlementOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          BattleToSheetSettlementRouteSubject,
+          Set(HandoffSettlementConflictFact),
+          CharacterBattleSettlementOwner,
+        )
+      )
 
   pure def settleZeroHpStableLifecycleRoute(
     route: List[CharacterBattleRouteEvent],
   ): List[CharacterBattleRouteEvent] =
-    route.append(
-      routeSettleBattleToCharacterSheet(
-        BattleToSheetSettlementRouteSubject,
-        HandoffBattleDeltaFill,
-        Set(),
-        CharacterBattleSettlementOwner,
+    route
+      .append(
+        routeSettleBattleToCharacterSheet(
+          BattleToSheetSettlementRouteSubject,
+          HandoffBattleDeltaFill,
+          Set(),
+          CharacterBattleSettlementOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          BattleToSheetSettlementRouteSubject,
+          Set(HandoffZeroHpStableLifecycleFact),
+          CharacterBattleSettlementOwner,
+        )
+      )
 
   action recordRoute(
     route: List[CharacterBattleRouteEvent],

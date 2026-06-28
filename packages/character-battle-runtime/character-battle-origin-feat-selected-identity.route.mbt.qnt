@@ -22,12 +22,20 @@ module characterBattleOriginFeatSelectedIdentityRouteMbt {
   pure def retainOriginFeatRoute(
     route: List[CharacterBattleRouteEvent],
   ): List[CharacterBattleRouteEvent] =
-    route.append(
-      routeProjectCharacterSheetToBattle(
-        HandoffSelectedReferenceRouteSubject,
-        CharacterBattleBuildProjectionOwner,
+    route
+      .append(
+        routeProjectCharacterSheetToBattle(
+          HandoffSelectedReferenceRouteSubject,
+          CharacterBattleBuildProjectionOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffSelectedReferenceRouteSubject,
+          Set(HandoffSelectedReferenceRetentionFact),
+          CharacterBattleBuildProjectionOwner,
+        )
+      )
 
   pure def projectInitiativeHandoffRoute(
     route: List[CharacterBattleRouteEvent],

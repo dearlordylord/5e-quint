@@ -37,6 +37,15 @@ module characterBattleReducerRoute {
     | StableInitiativeOrderOwnershipRouteFact
     | CurrentActorOwnershipRouteFact
 
+  type CharacterBattleRouteHandoffFactFamily =
+    | HandoffSelectedReferenceRetentionFact
+    | HandoffSourceExactSpellSlotDeltaFact
+    | HandoffSourceExactPactSlotDeltaFact
+    | HandoffFeatureResourceDeltaFact
+    | HandoffSettlementConflictFact
+    | HandoffZeroHpStableLifecycleFact
+    | HandoffBuildHitPointMaximumInputFact
+
   type CharacterBattleRouteOwnerGroup =
     | CharacterBattleSheetOwner
     | CharacterBattleBuildProjectionOwner
@@ -66,6 +75,11 @@ module characterBattleReducerRoute {
         subject: CharacterBattleRouteSubjectFamily,
         fill: CharacterBattleRouteFillFamily,
         holes: Set[CharacterBattleRouteHoleFamily],
+        owner: CharacterBattleRouteOwnerGroup,
+      })
+    | RouteRecordCharacterBattleHandoffFacts({
+        subject: CharacterBattleRouteSubjectFamily,
+        facts: Set[CharacterBattleRouteHandoffFactFamily],
         owner: CharacterBattleRouteOwnerGroup,
       })
     | RouteRejectCharacterBattleHandoff({
@@ -127,6 +141,17 @@ module characterBattleReducerRoute {
       subject: subject,
       fill: fill,
       holes: holes,
+      owner: owner,
+    })
+
+  pure def routeRecordCharacterBattleHandoffFacts(
+    subject: CharacterBattleRouteSubjectFamily,
+    facts: Set[CharacterBattleRouteHandoffFactFamily],
+    owner: CharacterBattleRouteOwnerGroup,
+  ): CharacterBattleRouteEvent =
+    RouteRecordCharacterBattleHandoffFacts({
+      subject: subject,
+      facts: facts,
       owner: owner,
     })
 }

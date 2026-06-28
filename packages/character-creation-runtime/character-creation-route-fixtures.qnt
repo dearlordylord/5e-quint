@@ -63,10 +63,27 @@ module characterCreationRouteFixtures {
       Set(CreationLoadoutSelectionFill),
       Set(),
       CharacterDraftOwner,
-    ).append(
-      routeFinalizeCharacterDraft(
-        CreationFinalizationRouteSubject,
-        CharacterBuildOwner,
-      )
     )
+      .append(
+        routeProjectCharacterBuildFacts(
+          CreationBuildProjectionRouteSubject,
+          CharacterBuildOwner,
+        )
+      )
+      .append(
+        routeRecordCreationFacts(
+          CreationBuildProjectionRouteSubject,
+          Set(
+            CreationBuildProjectionInputFact,
+            CreationHitPointMaximumBuildInputFact,
+          ),
+          CharacterBuildOwner,
+        )
+      )
+      .append(
+        routeFinalizeCharacterDraft(
+          CreationFinalizationRouteSubject,
+          CharacterBuildOwner,
+        )
+      )
 }

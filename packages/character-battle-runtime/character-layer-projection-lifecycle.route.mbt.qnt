@@ -24,12 +24,20 @@ module characterLayerProjectionLifecycleRouteMbt {
   pure def finalizeDraftToBuildRoute(
     route: List[CharacterBattleRouteEvent],
   ): List[CharacterBattleRouteEvent] =
-    route.append(
-      routeProjectCharacterSheetToBattle(
-        SheetToBattleInitRouteSubject,
-        CharacterBattleBuildProjectionOwner,
+    route
+      .append(
+        routeProjectCharacterSheetToBattle(
+          SheetToBattleInitRouteSubject,
+          CharacterBattleBuildProjectionOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          SheetToBattleInitRouteSubject,
+          Set(HandoffBuildHitPointMaximumInputFact),
+          CharacterBattleBuildProjectionOwner,
+        )
+      )
 
   pure def createSheetFromBuildRoute(
     route: List[CharacterBattleRouteEvent],

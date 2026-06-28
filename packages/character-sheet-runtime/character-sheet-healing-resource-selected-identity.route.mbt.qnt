@@ -44,6 +44,13 @@ module characterSheetHealingResourceSelectedIdentityRouteMbt {
           CharacterSheetHitPointOwner,
         )
       )
+      .append(
+        routeRecordCharacterSheetFacts(
+          SheetFeatureResourceRouteSubject,
+          Set(SheetFeatureResourceSpendFact),
+          CharacterSheetFeatureResourceOwner,
+        )
+      )
 
   action recordRoute(route: List[CharacterSheetRouteEvent]): bool = all {
     qState' = {

@@ -58,6 +58,18 @@ const COMPOSITION_FACT_BY_TAG = {
 type CharacterBattleRouteCompositionFact =
   (typeof COMPOSITION_FACT_BY_TAG)[keyof typeof COMPOSITION_FACT_BY_TAG];
 
+const HANDOFF_FACT_BY_TAG = {
+  HandoffSelectedReferenceRetentionFact: "selectedReferenceRetention",
+  HandoffSourceExactSpellSlotDeltaFact: "sourceExactSpellSlotDelta",
+  HandoffSourceExactPactSlotDeltaFact: "sourceExactPactSlotDelta",
+  HandoffFeatureResourceDeltaFact: "featureResourceDelta",
+  HandoffSettlementConflictFact: "settlementConflict",
+  HandoffZeroHpStableLifecycleFact: "zeroHpStableLifecycle",
+  HandoffBuildHitPointMaximumInputFact: "buildHitPointMaximumInput",
+} as const;
+type CharacterBattleRouteHandoffFact =
+  (typeof HANDOFF_FACT_BY_TAG)[keyof typeof HANDOFF_FACT_BY_TAG];
+
 const OWNER_BY_TAG = {
   CharacterBattleSheetOwner: "characterBattleSheet",
   CharacterBattleBuildProjectionOwner: "characterBattleBuildProjection",
@@ -101,6 +113,12 @@ type CharacterBattleRouteEvent =
       readonly subject: CharacterBattleRouteSubject;
       readonly fill: CharacterBattleRouteFill;
       readonly holes: readonly CharacterBattleRouteHole[];
+      readonly owner: CharacterBattleRouteOwner;
+    }
+  | {
+      readonly kind: "recordCharacterBattleHandoffFacts";
+      readonly subject: CharacterBattleRouteSubject;
+      readonly facts: readonly CharacterBattleRouteHandoffFact[];
       readonly owner: CharacterBattleRouteOwner;
     };
 
@@ -438,6 +456,11 @@ function sheetHitPointsArmorClassConditionsAndProfilesRoute(
       subject: "sheetToBattleInit",
       owner: "characterBattleBuildProjection",
     }),
+    recordCharacterBattleHandoffFacts({
+      subject: "sheetToBattleInit",
+      facts: ["buildHitPointMaximumInput"],
+      owner: "characterBattleBuildProjection",
+    }),
     enterBattleRuntime({
       subject: "sheetToBattleInit",
       owner: "characterBattleInitProjection",
@@ -458,6 +481,16 @@ function sheetSpellcastingAndMetamagicRoute(
       subject: "handoffFeatureResourceProjection",
       owner: "characterBattleResourceProjection",
     }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffResourceProjection",
+      facts: ["sourceExactSpellSlotDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffFeatureResourceProjection",
+      facts: ["featureResourceDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
     enterBattleRuntime({
       subject: "handoffResourceProjection",
       owner: "characterBattleInitProjection",
@@ -472,6 +505,11 @@ function purePactMagicSlotRoute(
     ...route,
     projectCharacterSheetToBattle({
       subject: "handoffResourceProjection",
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffResourceProjection",
+      facts: ["sourceExactPactSlotDelta"],
       owner: "characterBattleResourceProjection",
     }),
     enterBattleRuntime({
@@ -530,6 +568,11 @@ function retainOriginFeatRoute(
     ...route,
     projectCharacterSheetToBattle({
       subject: "handoffSelectedReference",
+      owner: "characterBattleBuildProjection",
+    }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffSelectedReference",
+      facts: ["selectedReferenceRetention"],
       owner: "characterBattleBuildProjection",
     }),
   ];
@@ -639,6 +682,11 @@ function settleHitPointsConditionsSlotsAndPreservedSheetStateRoute(
       holes: [],
       owner: "characterBattleResourceProjection",
     }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffResourceProjection",
+      facts: ["sourceExactPactSlotDelta", "sourceExactSpellSlotDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
     projectCharacterSheetToBattle({
       subject: "sheetToBattleInit",
       owner: "characterBattleSheet",
@@ -657,6 +705,11 @@ function settleFeatureResourceExpenditureRoute(
       holes: [],
       owner: "characterBattleResourceProjection",
     }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffFeatureResourceProjection",
+      facts: ["featureResourceDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
   ];
 }
 
@@ -669,6 +722,11 @@ function rejectAmbiguousCreatedSpellSlotSourceRoute(
       subject: "handoffResourceProjection",
       fill: "settlementRejection",
       holes: ["spellResourceProjection", "settlementConflict"],
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffResourceProjection",
+      facts: ["settlementConflict"],
       owner: "characterBattleResourceProjection",
     }),
   ];
@@ -713,6 +771,11 @@ function rejectSettlementConflictRoute(
       holes: ["settlementConflict"],
       owner: "characterBattleSettlement",
     }),
+    recordCharacterBattleHandoffFacts({
+      subject: "battleToSheetSettlement",
+      facts: ["settlementConflict"],
+      owner: "characterBattleSettlement",
+    }),
   ];
 }
 
@@ -727,6 +790,11 @@ function settleZeroHpStableLifecycleRoute(
       holes: [],
       owner: "characterBattleSettlement",
     }),
+    recordCharacterBattleHandoffFacts({
+      subject: "battleToSheetSettlement",
+      facts: ["zeroHpStableLifecycle"],
+      owner: "characterBattleSettlement",
+    }),
   ];
 }
 
@@ -737,6 +805,11 @@ function finalizeDraftToBuildRoute(
     ...route,
     projectCharacterSheetToBattle({
       subject: "sheetToBattleInit",
+      owner: "characterBattleBuildProjection",
+    }),
+    recordCharacterBattleHandoffFacts({
+      subject: "sheetToBattleInit",
+      facts: ["buildHitPointMaximumInput"],
       owner: "characterBattleBuildProjection",
     }),
   ];
@@ -801,6 +874,11 @@ function acceptedFeatureResourceRoute(
       subject: "handoffFeatureResourceProjection",
       owner: "characterBattleResourceProjection",
     }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffFeatureResourceProjection",
+      facts: ["featureResourceDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
   ];
 }
 
@@ -827,6 +905,11 @@ function rejectedFeatureResourceRoute(
       holes,
       owner: "characterBattleResourceProjection",
     }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffFeatureResourceProjection",
+      facts: ["settlementConflict"],
+      owner: "characterBattleResourceProjection",
+    }),
   ];
 }
 
@@ -837,6 +920,11 @@ function acceptedSpellResourceRoute(
     ...acceptedFeatureResourceRoute(route),
     projectCharacterSheetToBattle({
       subject: "handoffResourceProjection",
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffResourceProjection",
+      facts: ["sourceExactSpellSlotDelta"],
       owner: "characterBattleResourceProjection",
     }),
   ];
@@ -851,6 +939,11 @@ function rejectedSpellResourceRoute(
       subject: "handoffResourceProjection",
       fill: "resourceDelta",
       holes,
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffResourceProjection",
+      facts: ["settlementConflict"],
       owner: "characterBattleResourceProjection",
     }),
   ];
@@ -933,6 +1026,19 @@ function rejectCharacterBattleHandoff(input: {
     subject: input.subject,
     fill: input.fill,
     holes: uniqueSorted(input.holes),
+    owner: input.owner,
+  };
+}
+
+function recordCharacterBattleHandoffFacts(input: {
+  readonly subject: CharacterBattleRouteSubject;
+  readonly facts: readonly CharacterBattleRouteHandoffFact[];
+  readonly owner: CharacterBattleRouteOwner;
+}): CharacterBattleRouteEvent {
+  return {
+    kind: "recordCharacterBattleHandoffFacts",
+    subject: input.subject,
+    facts: uniqueSorted(input.facts),
     owner: input.owner,
   };
 }
@@ -1083,6 +1189,14 @@ function decodeCharacterBattleRouteEvent(
       owner: routeOwner(quintField(payload, "owner")),
     });
   }
+  if (tag === "RouteRecordCharacterBattleHandoffFacts") {
+    const payload = routePayload(raw, tag);
+    return recordCharacterBattleHandoffFacts({
+      subject: routeSubject(quintField(payload, "subject")),
+      facts: routeHandoffFacts(quintField(payload, "facts")),
+      owner: routeOwner(quintField(payload, "owner")),
+    });
+  }
   throw new Error(`Unknown character-battle route event: ${tag}.`);
 }
 
@@ -1125,6 +1239,20 @@ function routeCompositionFacts(
   return uniqueSorted(
     quintSet(raw, "qRoute[].facts").map(routeCompositionFact),
   );
+}
+
+function routeHandoffFact(raw: unknown): CharacterBattleRouteHandoffFact {
+  return mappedVariant(
+    raw,
+    HANDOFF_FACT_BY_TAG,
+    "character-battle route handoff fact",
+  );
+}
+
+function routeHandoffFacts(
+  raw: unknown,
+): readonly CharacterBattleRouteHandoffFact[] {
+  return uniqueSorted(quintSet(raw, "qRoute[].facts").map(routeHandoffFact));
 }
 
 function routeFill(raw: unknown): CharacterBattleRouteFill {

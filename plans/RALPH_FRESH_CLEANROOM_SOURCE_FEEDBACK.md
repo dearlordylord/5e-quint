@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "FCSF-04-OBJECT-STALE-SUBJECT-PUBLIC-PROTOCOL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Define public stale object subject route protocol or blocker"
     },
     {
@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "FCSF-06-CHARACTER-SHEET-HANDOFF-REJECTION-PAYLOADS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit character, sheet, and handoff rejection/resource payload facts"
     },
     {
@@ -256,6 +256,23 @@ is still pending in a cleanroom package.
 Admit character creation partial-fill, stale rejection, sheet resource/rest, and
 battle settlement conflict/zero-HP source facts without duplicating runtime
 state across layers.
+
+Outcome:
+
+- Source QNT now exposes typed reducer-route fact events for character
+  creation partial fills, stale fill rejection, selected-reference retention,
+  build projection inputs, and generic Hit Point maximum build inputs.
+- Character Sheet route connectors now expose ordinary Spell Slot deltas, Pact
+  Slot deltas, created-slot Long Rest expiry, rest-benefit windows, feature
+  recovery state, and generic Hit Point maximum arithmetic inputs through
+  existing sheet owners.
+- Character Battle handoff route connectors now expose source-exact Spell
+  Slot/Pact Slot deltas, feature-resource deltas, settlement conflict facts,
+  build Hit Point maximum inputs, and stable zero-HP lifecycle settlement facts
+  through existing handoff owners.
+- The four FEXP-06 blockers are source-resolved for the copied QNT/inventory
+  package. Target replay/package refresh remains owned by Task 8 or a later
+  cleanroom replay task; no dirty/fresh Rust target evidence was inspected.
 
 ### Task 7
 

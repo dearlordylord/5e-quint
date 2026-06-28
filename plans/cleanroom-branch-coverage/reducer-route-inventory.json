@@ -303,6 +303,7 @@
           "The target replay evidence file must match tasks/TARGET_REPLAY_EVIDENCE.example.json and be keyed to the manifest source SHA, source branch inventory SHA, QNT file hash, branch action, observed mbt::actionTaken, target profile, and stateCheck projection hashes.",
           "The active reducer-spine diagnostic batch seeds fresh replay tasks for Task 1 Concentration teardown and Task 2 scalar-buff profile projection; target acceptance must prove those facts through public reducer/source entrypoints rather than dirty cleanroom history.",
           "The package carries task3ResidualSelectedSpellRouteTasks[] forward as source guidance for selected spell residual blockers.",
+          "The package carries FCSF-06 typed character/sheet/handoff route facts for partial fills, stale rejection, selected-reference retention, rest/resource payloads, settlement conflicts, source-exact resource deltas, generic Hit Point maximum inputs, and zero-HP stable lifecycle settlement.",
           "Dirty cleanroom implementation ledgers, reports, adapters, and target code are not acceptance evidence for this package."
         ],
         "routeClassEvidence": [
@@ -2255,7 +2256,8 @@
           "derivability": {
             "qntFacts": [
               "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
-              "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt exposes qRoute for sheet/build fact projection, ordinary spellcasting and feature-resource projection, pure Pact Slot resource projection, battle init entry, mixed Spell Slot/Pact Slot handoff rejection, and init rejection holes through character-battle handoff owners."
+              "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt exposes qRoute for sheet/build fact projection, ordinary spellcasting and feature-resource projection, pure Pact Slot resource projection, battle init entry, mixed Spell Slot/Pact Slot handoff rejection, and init rejection holes through character-battle handoff owners.",
+              "FCSF-06 adds RouteRecordCharacterBattleHandoffFacts entries for HandoffBuildHitPointMaximumInputFact, HandoffSourceExactSpellSlotDeltaFact, HandoffSourceExactPactSlotDeltaFact, and HandoffFeatureResourceDeltaFact so init projection payloads are publicly typed."
             ],
             "rawDomainFacts": [
               "Combat setup rolls Initiative and orders battle participants; Hit Points, Temporary Hit Points, conditions, Armor Class, ordinary Spell Slots, Pact Slots, and feature resources are projected from existing sheet/build facts into battle init.",
@@ -2275,7 +2277,8 @@
           "derivability": {
             "qntFacts": [
               "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
-              "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt exposes qRoute for selected-reference retention, battle init projection, and runtime Initiative handoff without production dispatch on authored identity."
+              "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt exposes qRoute for selected-reference retention, battle init projection, and runtime Initiative handoff without production dispatch on authored identity.",
+              "FCSF-06 adds RouteRecordCharacterBattleHandoffFacts for HandoffSelectedReferenceRetentionFact at the selected-reference handoff boundary."
             ],
             "rawDomainFacts": [
               "Initiative is a Dexterity check made at the start of combat to determine turn order; selected origin feat identity remains a retained build/sheet reference projected into battle-facing initiative facts.",
@@ -2295,7 +2298,8 @@
           "derivability": {
             "qntFacts": [
               "packages/character-battle-runtime/character-battle-settlement.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s).",
-              "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt exposes qRoute for battle deltas, source-exact resource deltas, identity/maximum-HP conflict rejection, source-ambiguous created-slot rejection, and zero-HP settlement through character-battle settlement owners."
+              "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt exposes qRoute for battle deltas, source-exact resource deltas, identity/maximum-HP conflict rejection, source-ambiguous created-slot rejection, and zero-HP settlement through character-battle settlement owners.",
+              "FCSF-06 adds RouteRecordCharacterBattleHandoffFacts entries for source-exact Spell Slot/Pact Slot deltas, feature-resource deltas, settlement conflicts, and zero-HP Stable lifecycle settlement."
             ],
             "rawDomainFacts": [
               "Hit Points, Temporary Hit Points, conditions, Death Saving Throws, Stable, Spell Slots, Pact Slots, and feature pools are durable facts owned by sheet or battle state and reconciled at settlement.",
@@ -2315,7 +2319,8 @@
           "derivability": {
             "qntFacts": [
               "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
-              "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt exposes qRoute for build projection, sheet projection, battle runtime entry, battle mutation, and settlement without duplicating layer state."
+              "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt exposes qRoute for build projection, sheet projection, battle runtime entry, battle mutation, and settlement without duplicating layer state.",
+              "FCSF-06 adds RouteRecordCharacterBattleHandoffFacts for generic build Hit Point maximum input at the lifecycle layer boundary."
             ],
             "rawDomainFacts": [
               "Combat runtime owns turn/action mutation and battle Hit Point changes; the Character Sheet owns persistent character state before init and after accepted settlement.",
@@ -2335,7 +2340,8 @@
           "derivability": {
             "qntFacts": [
               "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt is present in source-branch-inventory.json with 14 branch obligation(s).",
-              "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt exposes qRoute for sheet-owned point/use state, source-exact spell resource projection, feature-resource rejection holes, and battle-owned aggregate metamagic/spell action state."
+              "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt exposes qRoute for sheet-owned point/use state, source-exact spell resource projection, feature-resource rejection holes, and battle-owned aggregate metamagic/spell action state.",
+              "FCSF-06 adds RouteRecordCharacterBattleHandoffFacts entries for feature-resource deltas, source-exact Spell Slot deltas, and settlement conflicts so handoff payloads are durable route facts."
             ],
             "rawDomainFacts": [
               "Lay On Hands, Short Rest, Long Rest, Uncanny Metabolism, Font of Magic, and Metamagic define pool/use, recovery, created-slot, and shared Sorcery Point facts.",
@@ -2355,7 +2361,8 @@
           "derivability": {
             "qntFacts": [
               "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
-              "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt exposes qRoute for build fact projection through CharacterBuildOwner without duplicating resource/source facts."
+              "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt exposes qRoute for build fact projection through CharacterBuildOwner without duplicating resource/source facts.",
+              "FCSF-06 adds RouteRecordCreationFacts for CreationBuildProjectionInputFact so build-projection inputs are explicit source facts rather than authored identity dispatch."
             ],
             "rawDomainFacts": [
               "Character creation records class features during creation; package vocabulary keeps derived resource/source facts projected from retained build facts plus the Unit catalog.",
@@ -2375,7 +2382,8 @@
           "derivability": {
             "qntFacts": [
               "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s).",
-              "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt exposes qRoute for in-scope selected class-feature references through fill, retention, projection, and finalization events."
+              "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt exposes qRoute for in-scope selected class-feature references through fill, retention, projection, and finalization events.",
+              "FCSF-06 adds RouteRecordCreationFacts for CreationSelectedReferenceRetentionFact and CreationBuildProjectionInputFact at the selected-reference boundary."
             ],
             "rawDomainFacts": [
               "Character creation class features can offer choices; Unit-backed selections are retained build facts and not downstream mechanics dispatch keys.",
@@ -2455,7 +2463,8 @@
           "derivability": {
             "qntFacts": [
               "packages/character-creation-runtime/character-creation-runtime.mbt.qnt is present in source-branch-inventory.json with 16 branch obligation(s).",
-              "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt exposes qRoute for draft creation, option discovery, atomic fill batches, hole rediscovery, rejection owners, and finalization."
+              "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt exposes qRoute for draft creation, option discovery, atomic fill batches, hole rediscovery, rejection owners, and finalization.",
+              "FCSF-06 adds RouteRecordCreationFacts for CreationPartialFillDraftFact, CreationStaleFillRejectionFact, CreationBuildProjectionInputFact, and CreationHitPointMaximumBuildInputFact."
             ],
             "rawDomainFacts": [
               "Local SRD character creation and level advancement define required choices; package vocabulary models Character Draft, Creation Hole, Creation Fill, Support Profile, and Finalization Gate.",
@@ -2595,7 +2604,8 @@
           "derivability": {
             "qntFacts": [
               "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt is present in source-branch-inventory.json with 1 branch obligation(s).",
-              "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.route.mbt.qnt exposes qRoute for Lay On Hands resource spending through the feature-resource owner and Hit Point projection owner."
+              "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.route.mbt.qnt exposes qRoute for Lay On Hands resource spending through the feature-resource owner and Hit Point projection owner.",
+              "FCSF-06 adds RouteRecordCharacterSheetFacts for SheetFeatureResourceSpendFact so feature-resource spend payloads are explicit sheet route facts."
             ],
             "rawDomainFacts": [
               "Lay On Hands spends one healing pool to restore Hit Points and remove Poisoned; the sheet owns the pool expenditure and Hit Point projection without a separate resource cache.",
@@ -2615,7 +2625,8 @@
           "derivability": {
             "qntFacts": [
               "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
-              "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt exposes qRoute for Hit Point Maximum projection through the existing Hit Point owner."
+              "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt exposes qRoute for Hit Point Maximum projection through the existing Hit Point owner.",
+              "FCSF-06 adds RouteRecordCharacterSheetFacts for SheetHitPointMaximumArithmeticInputFact so HP maximum arithmetic derives from generic build/sheet inputs."
             ],
             "rawDomainFacts": [
               "Hit Point Maximum and Hit Dice derive from class, level, and Constitution facts already retained by the build/sheet boundary; route evidence does not add a duplicate HP maximum table.",
@@ -2655,7 +2666,8 @@
           "derivability": {
             "qntFacts": [
               "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt is present in source-branch-inventory.json with 11 branch obligation(s).",
-              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt exposes qRoute for in-scope ordinary Spell Slot, Pact Slot, created-slot clearing, rest recovery, Magical Cunning, and second-level Arcane Recovery transitions."
+              "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt exposes qRoute for in-scope ordinary Spell Slot, Pact Slot, created-slot clearing, rest recovery, Magical Cunning, and second-level Arcane Recovery transitions.",
+              "FCSF-06 adds RouteRecordCharacterSheetFacts for ordinary Spell Slot deltas, Pact Slot deltas, created-slot expiry, rest-benefit windows, feature recovery state, and spell-resource rejection payloads."
             ],
             "rawDomainFacts": [
               "Spell Slots recover on Long Rest, Pact Slots recover on Short or Long Rest, and created slots remain in existing sheet Spell Slot source state rather than a duplicate slot table.",

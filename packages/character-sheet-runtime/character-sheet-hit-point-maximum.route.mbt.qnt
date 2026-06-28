@@ -30,12 +30,20 @@ module characterSheetHitPointMaximumRouteMbt {
   pure def projectHitPointMaximumRoute(
     route: List[CharacterSheetRouteEvent],
   ): List[CharacterSheetRouteEvent] =
-    route.append(
-      routeProjectCharacterSheetFacts(
-        SheetHitPointRouteSubject,
-        CharacterSheetHitPointOwner,
+    route
+      .append(
+        routeProjectCharacterSheetFacts(
+          SheetHitPointRouteSubject,
+          CharacterSheetHitPointOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterSheetFacts(
+          SheetHitPointRouteSubject,
+          Set(SheetHitPointMaximumArithmeticInputFact),
+          CharacterSheetBuildProjectionOwner,
+        )
+      )
 
   action recordRoute(
     replayIndex: int,

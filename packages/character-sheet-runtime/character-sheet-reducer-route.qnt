@@ -38,6 +38,16 @@ module characterSheetReducerRoute {
     | CharacterSheetBuildProjectionOwner
     | CharacterSheetSelectedReferenceOwner
 
+  type CharacterSheetRouteFactFamily =
+    | SheetOrdinarySpellSlotDeltaFact
+    | SheetPactSlotDeltaFact
+    | SheetCreatedSlotExpiryFact
+    | SheetRestBenefitWindowFact
+    | SheetFeatureRecoveryStateFact
+    | SheetFeatureResourceSpendFact
+    | SheetHitPointMaximumArithmeticInputFact
+    | SheetSpellResourceRejectionFact
+
   type CharacterSheetRouteEvent =
     | RouteCreateCharacterSheet({ owner: CharacterSheetRouteOwnerGroup })
     | RouteProjectCharacterSheetFacts({
@@ -58,6 +68,11 @@ module characterSheetReducerRoute {
         subject: CharacterSheetRouteSubjectFamily,
         fill: CharacterSheetRouteFillFamily,
         holes: Set[CharacterSheetRouteHoleFamily],
+        owner: CharacterSheetRouteOwnerGroup,
+      })
+    | RouteRecordCharacterSheetFacts({
+        subject: CharacterSheetRouteSubjectFamily,
+        facts: Set[CharacterSheetRouteFactFamily],
         owner: CharacterSheetRouteOwnerGroup,
       })
 
@@ -107,6 +122,17 @@ module characterSheetReducerRoute {
       subject: subject,
       fill: fill,
       holes: holes,
+      owner: owner,
+    })
+
+  pure def routeRecordCharacterSheetFacts(
+    subject: CharacterSheetRouteSubjectFamily,
+    facts: Set[CharacterSheetRouteFactFamily],
+    owner: CharacterSheetRouteOwnerGroup,
+  ): CharacterSheetRouteEvent =
+    RouteRecordCharacterSheetFacts({
+      subject: subject,
+      facts: facts,
       owner: owner,
     })
 }

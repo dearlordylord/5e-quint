@@ -25,12 +25,20 @@ module characterCreationClassFeatureProjectionsRouteMbt {
   pure def projectBuildFactsRoute(
     route: List[CharacterCreationRouteEvent],
   ): List[CharacterCreationRouteEvent] =
-    route.append(
-      routeProjectCharacterBuildFacts(
-        CreationBuildProjectionRouteSubject,
-        CharacterBuildOwner,
+    route
+      .append(
+        routeProjectCharacterBuildFacts(
+          CreationBuildProjectionRouteSubject,
+          CharacterBuildOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCreationFacts(
+          CreationBuildProjectionRouteSubject,
+          Set(CreationBuildProjectionInputFact),
+          CharacterBuildOwner,
+        )
+      )
 
   action recordRoute(
     replayIndex: int,

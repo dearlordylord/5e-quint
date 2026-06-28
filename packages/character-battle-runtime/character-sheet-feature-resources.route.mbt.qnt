@@ -35,12 +35,20 @@ module characterSheetFeatureResourcesRouteMbt {
   pure def acceptedFeatureResourceRoute(
     route: List[CharacterBattleRouteEvent],
   ): List[CharacterBattleRouteEvent] =
-    route.append(
-      routeProjectCharacterSheetToBattle(
-        HandoffFeatureResourceProjectionRouteSubject,
-        CharacterBattleResourceProjectionOwner,
+    route
+      .append(
+        routeProjectCharacterSheetToBattle(
+          HandoffFeatureResourceProjectionRouteSubject,
+          CharacterBattleResourceProjectionOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffFeatureResourceProjectionRouteSubject,
+          Set(HandoffFeatureResourceDeltaFact),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
 
   pure def acceptedFeatureResourceWithHitPointRoute(
     route: List[CharacterBattleRouteEvent],
@@ -57,14 +65,22 @@ module characterSheetFeatureResourcesRouteMbt {
     route: List[CharacterBattleRouteEvent],
     holes: Set[CharacterBattleRouteHoleFamily],
   ): List[CharacterBattleRouteEvent] =
-    route.append(
-      routeRejectCharacterBattleHandoff(
-        HandoffFeatureResourceProjectionRouteSubject,
-        HandoffResourceDeltaFill,
-        holes,
-        CharacterBattleResourceProjectionOwner,
+    route
+      .append(
+        routeRejectCharacterBattleHandoff(
+          HandoffFeatureResourceProjectionRouteSubject,
+          HandoffResourceDeltaFill,
+          holes,
+          CharacterBattleResourceProjectionOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffFeatureResourceProjectionRouteSubject,
+          Set(HandoffSettlementConflictFact),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
 
   pure def acceptedSpellResourceRoute(
     route: List[CharacterBattleRouteEvent],
@@ -76,19 +92,34 @@ module characterSheetFeatureResourcesRouteMbt {
           CharacterBattleResourceProjectionOwner,
         )
       )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffResourceProjectionRouteSubject,
+          Set(HandoffSourceExactSpellSlotDeltaFact),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
 
   pure def rejectedSpellResourceRoute(
     route: List[CharacterBattleRouteEvent],
     holes: Set[CharacterBattleRouteHoleFamily],
   ): List[CharacterBattleRouteEvent] =
-    route.append(
-      routeRejectCharacterBattleHandoff(
-        HandoffResourceProjectionRouteSubject,
-        HandoffResourceDeltaFill,
-        holes,
-        CharacterBattleResourceProjectionOwner,
+    route
+      .append(
+        routeRejectCharacterBattleHandoff(
+          HandoffResourceProjectionRouteSubject,
+          HandoffResourceDeltaFill,
+          holes,
+          CharacterBattleResourceProjectionOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffResourceProjectionRouteSubject,
+          Set(HandoffSettlementConflictFact),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
 
   pure def metamagicBattleBridgeRoute(
     route: List[CharacterBattleRouteEvent],

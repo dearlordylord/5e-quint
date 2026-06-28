@@ -109,6 +109,16 @@ const OWNER_BY_TAG = {
 type CharacterCreationRouteOwner =
   (typeof OWNER_BY_TAG)[keyof typeof OWNER_BY_TAG];
 
+const FACT_BY_TAG = {
+  CreationPartialFillDraftFact: "partialFillDraft",
+  CreationStaleFillRejectionFact: "staleFillRejection",
+  CreationSelectedReferenceRetentionFact: "selectedReferenceRetention",
+  CreationBuildProjectionInputFact: "buildProjectionInput",
+  CreationHitPointMaximumBuildInputFact: "hitPointMaximumBuildInput",
+} as const;
+type CharacterCreationRouteFact =
+  (typeof FACT_BY_TAG)[keyof typeof FACT_BY_TAG];
+
 type CharacterCreationRouteEvent =
   | {
       readonly kind: "createCharacterDraft";
@@ -135,6 +145,12 @@ type CharacterCreationRouteEvent =
   | {
       readonly kind: "projectCharacterBuildFacts";
       readonly subject: CharacterCreationRouteSubject;
+      readonly owner: CharacterCreationRouteOwner;
+    }
+  | {
+      readonly kind: "recordCreationFacts";
+      readonly subject: CharacterCreationRouteSubject;
+      readonly facts: readonly CharacterCreationRouteFact[];
       readonly owner: CharacterCreationRouteOwner;
     }
   | {
@@ -297,18 +313,20 @@ describe("character creation reducer route connector MBT", () => {
         classFeatureSelectedIdentityRouteDriverSchema,
         "cc:route-class-feature-selected-identity",
         {
-          doSelectBardExpertise: retainSelectedReferenceRoute,
-          doProjectClericChannelDivinity: projectSelectedReferenceRoute,
-          doProjectDruidWildShape: projectSelectedReferenceRoute,
-          doProjectDruidWildCompanion: projectSelectedReferenceRoute,
-          doProjectMonksFocus: projectSelectedReferenceRoute,
-          doProjectMonkUncannyMetabolism: projectSelectedReferenceRoute,
-          doSelectPaladinFightingStyle: retainSelectedReferenceRoute,
-          doSelectRangerDeftExplorer: retainSelectedReferenceRoute,
-          doSelectRangerFightingStyle: retainSelectedReferenceRoute,
-          doProjectWarlockPactMagic: projectSelectedReferenceRoute,
-          doSelectWizardScholar: retainSelectedReferenceRoute,
-          doSelectWizardEvocationSavant: retainSelectedReferenceRoute,
+          doSelectBardExpertise: retainSelectedReferenceWithFactsRoute,
+          doProjectClericChannelDivinity:
+            projectSelectedReferenceWithFactsRoute,
+          doProjectDruidWildShape: projectSelectedReferenceWithFactsRoute,
+          doProjectDruidWildCompanion: projectSelectedReferenceWithFactsRoute,
+          doProjectMonksFocus: projectSelectedReferenceWithFactsRoute,
+          doProjectMonkUncannyMetabolism:
+            projectSelectedReferenceWithFactsRoute,
+          doSelectPaladinFightingStyle: retainSelectedReferenceWithFactsRoute,
+          doSelectRangerDeftExplorer: retainSelectedReferenceWithFactsRoute,
+          doSelectRangerFightingStyle: retainSelectedReferenceWithFactsRoute,
+          doProjectWarlockPactMagic: projectSelectedReferenceWithFactsRoute,
+          doSelectWizardScholar: retainSelectedReferenceWithFactsRoute,
+          doSelectWizardEvocationSavant: retainSelectedReferenceWithFactsRoute,
         },
       ),
       maxSteps: focusedMbtMaxSteps(1),
@@ -437,10 +455,20 @@ function createRuntimeRouteDriver() {
           fills: initialChoicesOnlyFills(session.holes),
           owner: "characterDraft",
         });
+        appendCreationFactRoute(session, {
+          subject: "draftState",
+          facts: ["partialFillDraft"],
+          owner: "characterDraft",
+        });
       },
       doFillAbilityScoresOnly: () => {
         submitCreationFillBatch(session, {
           fills: abilityScoresOnlyFills(session.holes),
+          owner: "characterDraft",
+        });
+        appendCreationFactRoute(session, {
+          subject: "draftState",
+          facts: ["partialFillDraft"],
           owner: "characterDraft",
         });
       },
@@ -468,6 +496,11 @@ function createRuntimeRouteDriver() {
           fills: initialManifestFills(session.holes),
           owner: "characterDraft",
           expectedRevision: draftRevision(999),
+        });
+        appendCreationFactRoute(session, {
+          subject: "fillBatch",
+          facts: ["staleFillRejection"],
+          owner: "characterDraft",
         });
       },
       doRejectUnsupportedLanguage: () => {
@@ -692,11 +725,31 @@ function appendFinalizationRoute(session: RouteReducerSession): void {
   }
   session.route = [
     ...session.route,
+    projectCharacterBuildFacts({
+      subject: "buildProjection",
+      owner: "characterBuild",
+    }),
+    recordCreationFacts({
+      subject: "buildProjection",
+      facts: ["buildProjectionInput", "hitPointMaximumBuildInput"],
+      owner: "characterBuild",
+    }),
     finalizeCharacterDraft({
       subject: "finalization",
       owner: "characterBuild",
     }),
   ];
+}
+
+function appendCreationFactRoute(
+  session: RouteReducerSession,
+  input: {
+    readonly subject: CharacterCreationRouteSubject;
+    readonly facts: readonly CharacterCreationRouteFact[];
+    readonly owner: CharacterCreationRouteOwner;
+  },
+): void {
+  session.route = [...session.route, recordCreationFacts(input)];
 }
 
 function routeHoleFamilies(
@@ -1098,6 +1151,11 @@ function projectCharacterBuildFactsRoute(
       subject: "buildProjection",
       owner: "characterBuild",
     }),
+    recordCreationFacts({
+      subject: "buildProjection",
+      facts: ["buildProjectionInput"],
+      owner: "characterBuild",
+    }),
   ];
 }
 
@@ -1108,6 +1166,19 @@ function retainSelectedReferenceRoute(
     ...route,
     retainCreationSelectedReferences({
       subject: "selectedReference",
+      owner: "creationSelectedReference",
+    }),
+  ];
+}
+
+function retainSelectedReferenceWithFactsRoute(
+  route: readonly CharacterCreationRouteEvent[],
+): readonly CharacterCreationRouteEvent[] {
+  return [
+    ...retainSelectedReferenceRoute(route),
+    recordCreationFacts({
+      subject: "selectedReference",
+      facts: ["selectedReferenceRetention"],
       owner: "creationSelectedReference",
     }),
   ];
@@ -1140,6 +1211,19 @@ function projectSelectedReferenceRoute(
     }),
     projectCharacterBuildFacts({
       subject: "buildProjection",
+      owner: "characterBuild",
+    }),
+  ];
+}
+
+function projectSelectedReferenceWithFactsRoute(
+  route: readonly CharacterCreationRouteEvent[],
+): readonly CharacterCreationRouteEvent[] {
+  return [
+    ...projectSelectedReferenceRoute(route),
+    recordCreationFacts({
+      subject: "buildProjection",
+      facts: ["buildProjectionInput"],
       owner: "characterBuild",
     }),
   ];
@@ -1233,6 +1317,19 @@ function projectCharacterBuildFacts(input: {
   return {
     kind: "projectCharacterBuildFacts",
     subject: input.subject,
+    owner: input.owner,
+  };
+}
+
+function recordCreationFacts(input: {
+  readonly subject: CharacterCreationRouteSubject;
+  readonly facts: readonly CharacterCreationRouteFact[];
+  readonly owner: CharacterCreationRouteOwner;
+}): CharacterCreationRouteEvent {
+  return {
+    kind: "recordCreationFacts",
+    subject: input.subject,
+    facts: uniqueSorted(input.facts),
     owner: input.owner,
   };
 }
@@ -1335,6 +1432,14 @@ function decodeCharacterCreationRouteEvent(
       owner: routeOwner(quintField(payload, "owner")),
     });
   }
+  if (tag === "RouteRecordCreationFacts") {
+    const payload = routePayload(raw, tag);
+    return recordCreationFacts({
+      subject: routeSubject(quintField(payload, "subject")),
+      facts: routeFacts(quintField(payload, "facts")),
+      owner: routeOwner(quintField(payload, "owner")),
+    });
+  }
   if (tag === "RouteFinalizeCharacterDraft") {
     const payload = routePayload(raw, tag);
     return finalizeCharacterDraft({
@@ -1360,6 +1465,14 @@ function routeSubject(raw: unknown): CharacterCreationRouteSubject {
 
 function routeOwner(raw: unknown): CharacterCreationRouteOwner {
   return mappedVariant(raw, OWNER_BY_TAG, "character-creation route owner");
+}
+
+function routeFact(raw: unknown): CharacterCreationRouteFact {
+  return mappedVariant(raw, FACT_BY_TAG, "character-creation route fact");
+}
+
+function routeFacts(raw: unknown): readonly CharacterCreationRouteFact[] {
+  return uniqueSorted(quintSet(raw, "qRoute[].facts").map(routeFact));
 }
 
 function routeHole(raw: unknown): CharacterCreationRouteHole {

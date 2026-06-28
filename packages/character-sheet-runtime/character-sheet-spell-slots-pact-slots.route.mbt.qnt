@@ -32,27 +32,51 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
     route: List[CharacterSheetRouteEvent],
     owner: CharacterSheetRouteOwnerGroup,
   ): List[CharacterSheetRouteEvent] =
-    route.append(
-      routeResolveCharacterSheetSubject(
-        SheetSpellResourceRouteSubject,
-        SheetResourceSpendFill,
-        Set(SheetResourceSpendHoleFamily),
-        owner,
+    route
+      .append(
+        routeResolveCharacterSheetSubject(
+          SheetSpellResourceRouteSubject,
+          SheetResourceSpendFill,
+          Set(SheetResourceSpendHoleFamily),
+          owner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterSheetFacts(
+          SheetSpellResourceRouteSubject,
+          Set(SheetSpellResourceRejectionFact),
+          owner,
+        )
+      )
 
   pure def completeRestoredSlotRoute(
     route: List[CharacterSheetRouteEvent],
     owner: CharacterSheetRouteOwnerGroup,
   ): List[CharacterSheetRouteEvent] =
-    route.append(
-      routeCompleteCharacterSheetRest(
-        SheetSpellResourceRouteSubject,
-        SheetRestDurationFill,
-        Set(),
-        owner,
+    route
+      .append(
+        routeCompleteCharacterSheetRest(
+          SheetSpellResourceRouteSubject,
+          SheetRestDurationFill,
+          Set(),
+          owner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterSheetFacts(
+          SheetSpellResourceRouteSubject,
+          spellResourceDeltaFacts(owner),
+          owner,
+        )
+      )
+
+  pure def spellResourceDeltaFacts(
+    owner: CharacterSheetRouteOwnerGroup,
+  ): Set[CharacterSheetRouteFactFamily] = match owner {
+    | CharacterSheetSpellSlotOwner => Set(SheetOrdinarySpellSlotDeltaFact)
+    | CharacterSheetPactSlotOwner => Set(SheetPactSlotDeltaFact)
+    | _ => Set()
+  }
 
   pure def completeLongRestSpellResourceRoute(
     route: List[CharacterSheetRouteEvent],
@@ -60,19 +84,33 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
     completeRestoredSlotRoute(
       completeRestoredSlotRoute(route, CharacterSheetSpellSlotOwner),
       CharacterSheetPactSlotOwner,
+    ).append(
+      routeRecordCharacterSheetFacts(
+        SheetSpellResourceRouteSubject,
+        Set(SheetCreatedSlotExpiryFact),
+        CharacterSheetSpellSlotOwner,
+      )
     )
 
   pure def noSlotBenefitRestRoute(
     route: List[CharacterSheetRouteEvent],
   ): List[CharacterSheetRouteEvent] =
-    route.append(
-      routeCompleteCharacterSheetRest(
-        SheetRestRouteSubject,
-        SheetRestDurationFill,
-        Set(SheetRestBenefitChoiceHoleFamily),
-        CharacterSheetSpellSlotOwner,
+    route
+      .append(
+        routeCompleteCharacterSheetRest(
+          SheetRestRouteSubject,
+          SheetRestDurationFill,
+          Set(SheetRestBenefitChoiceHoleFamily),
+          CharacterSheetSpellSlotOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterSheetFacts(
+          SheetRestRouteSubject,
+          Set(SheetRestBenefitWindowFact),
+          CharacterSheetSpellSlotOwner,
+        )
+      )
 
   pure def pactSlotRecoveryRoute(
     route: List[CharacterSheetRouteEvent],
@@ -94,30 +132,67 @@ module characterSheetSpellSlotsPactSlotsRouteMbt {
           CharacterSheetPactSlotOwner,
         )
       )
+      .append(
+        routeRecordCharacterSheetFacts(
+          SheetFeatureResourceRouteSubject,
+          Set(SheetFeatureRecoveryStateFact),
+          CharacterSheetFeatureResourceOwner,
+        )
+      )
+      .append(
+        routeRecordCharacterSheetFacts(
+          SheetSpellResourceRouteSubject,
+          Set(SheetSpellResourceRejectionFact),
+          CharacterSheetPactSlotOwner,
+        )
+      )
 
   pure def arcaneRecoverySpellSlotRoute(
     route: List[CharacterSheetRouteEvent],
   ): List[CharacterSheetRouteEvent] =
-    route.append(
-      routeCompleteCharacterSheetRest(
-        SheetSpellResourceRouteSubject,
-        SheetRecoverySelectionFill,
-        Set(),
-        CharacterSheetSpellSlotOwner,
+    route
+      .append(
+        routeCompleteCharacterSheetRest(
+          SheetSpellResourceRouteSubject,
+          SheetRecoverySelectionFill,
+          Set(),
+          CharacterSheetSpellSlotOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterSheetFacts(
+          SheetFeatureResourceRouteSubject,
+          Set(SheetFeatureRecoveryStateFact),
+          CharacterSheetFeatureResourceOwner,
+        )
+      )
+      .append(
+        routeRecordCharacterSheetFacts(
+          SheetSpellResourceRouteSubject,
+          Set(SheetOrdinarySpellSlotDeltaFact),
+          CharacterSheetSpellSlotOwner,
+        )
+      )
 
   pure def rejectPactSlotRecoveryRoute(
     route: List[CharacterSheetRouteEvent],
   ): List[CharacterSheetRouteEvent] =
-    route.append(
-      routeResolveCharacterSheetSubject(
-        SheetSpellResourceRouteSubject,
-        SheetRecoverySelectionFill,
-        Set(SheetRecoveryChoiceHoleFamily),
-        CharacterSheetPactSlotOwner,
+    route
+      .append(
+        routeResolveCharacterSheetSubject(
+          SheetSpellResourceRouteSubject,
+          SheetRecoverySelectionFill,
+          Set(SheetRecoveryChoiceHoleFamily),
+          CharacterSheetPactSlotOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCharacterSheetFacts(
+          SheetSpellResourceRouteSubject,
+          Set(SheetPactSlotDeltaFact),
+          CharacterSheetPactSlotOwner,
+        )
+      )
 
   action recordRoute(route: List[CharacterSheetRouteEvent]): bool = all {
     qState' = {

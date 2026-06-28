@@ -67,15 +67,40 @@ module characterCreationRuntimeRouteMbt {
         )
       )
 
+  pure def recordCreationFactsRoute(
+    route: List[CharacterCreationRouteEvent],
+    subject: CharacterCreationRouteSubjectFamily,
+    facts: Set[CharacterCreationRouteFactFamily],
+    owner: CharacterCreationRouteOwnerGroup,
+  ): List[CharacterCreationRouteEvent] =
+    route.append(routeRecordCreationFacts(subject, facts, owner))
+
   pure def finalizeRoute(
     route: List[CharacterCreationRouteEvent],
   ): List[CharacterCreationRouteEvent] =
-    route.append(
-      routeFinalizeCharacterDraft(
-        CreationFinalizationRouteSubject,
-        CharacterBuildOwner,
+    route
+      .append(
+        routeProjectCharacterBuildFacts(
+          CreationBuildProjectionRouteSubject,
+          CharacterBuildOwner,
+        )
       )
-    )
+      .append(
+        routeRecordCreationFacts(
+          CreationBuildProjectionRouteSubject,
+          Set(
+            CreationBuildProjectionInputFact,
+            CreationHitPointMaximumBuildInputFact,
+          ),
+          CharacterBuildOwner,
+        )
+      )
+      .append(
+        routeFinalizeCharacterDraft(
+          CreationFinalizationRouteSubject,
+          CharacterBuildOwner,
+        )
+      )
 
   pure def stageHoleFamilies(
     stage: RuntimeRouteStage,
@@ -132,14 +157,19 @@ module characterCreationRuntimeRouteMbt {
     qState.stage == RuntimeDraftOpen,
     recordRoute(
       RuntimeInitialChoicesFilled,
-      applyFillBatchRoute(
-        qRoute,
-        Set(CreationChoiceSetFill),
-        Set(
-          CreationAbilityScoreHoleFamily,
-          CreationUnitChoiceHoleFamily,
-          CreationEquipmentSelectionHoleFamily,
+      recordCreationFactsRoute(
+        applyFillBatchRoute(
+          qRoute,
+          Set(CreationChoiceSetFill),
+          Set(
+            CreationAbilityScoreHoleFamily,
+            CreationUnitChoiceHoleFamily,
+            CreationEquipmentSelectionHoleFamily,
+          ),
+          CharacterDraftOwner,
         ),
+        CreationDraftStateRouteSubject,
+        Set(CreationPartialFillDraftFact),
         CharacterDraftOwner,
       ),
     ),
@@ -149,10 +179,15 @@ module characterCreationRuntimeRouteMbt {
     qState.stage == RuntimeDraftOpen,
     recordRoute(
       RuntimeAbilityScoresFilled,
-      applyFillBatchRoute(
-        qRoute,
-        Set(CreationAbilityScoreAssignmentFill),
-        Set(CreationDraftStructureHoleFamily),
+      recordCreationFactsRoute(
+        applyFillBatchRoute(
+          qRoute,
+          Set(CreationAbilityScoreAssignmentFill),
+          Set(CreationDraftStructureHoleFamily),
+          CharacterDraftOwner,
+        ),
+        CreationDraftStateRouteSubject,
+        Set(CreationPartialFillDraftFact),
         CharacterDraftOwner,
       ),
     ),
@@ -203,13 +238,18 @@ module characterCreationRuntimeRouteMbt {
     qState.stage == RuntimeDraftOpen,
     recordRoute(
       RuntimeRejected,
-      applyFillBatchRoute(
-        qRoute,
-        Set(CreationChoiceSetFill, CreationAbilityScoreAssignmentFill),
-        Set(
-          CreationDraftStructureHoleFamily,
-          CreationAbilityScoreHoleFamily,
+      recordCreationFactsRoute(
+        applyFillBatchRoute(
+          qRoute,
+          Set(CreationChoiceSetFill, CreationAbilityScoreAssignmentFill),
+          Set(
+            CreationDraftStructureHoleFamily,
+            CreationAbilityScoreHoleFamily,
+          ),
+          CharacterDraftOwner,
         ),
+        CreationFillBatchRouteSubject,
+        Set(CreationStaleFillRejectionFact),
         CharacterDraftOwner,
       ),
     ),
