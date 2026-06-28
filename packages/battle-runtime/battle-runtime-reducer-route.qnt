@@ -83,6 +83,7 @@ module battleRuntimeReducerRoute {
     | ReactionInterdictionRouteSubject
     | ConditionRiderRouteSubject
     | ObjectLightRiderRouteSubject
+    | SpatialEffectRouteSubject
     | MixedTargetOutcomeSpellRouteSubject
     | MarkedDamageRiderEffectRouteSubject
     | ConditionImmunityTemporaryHitPointEffectRouteSubject
@@ -122,6 +123,9 @@ module battleRuntimeReducerRoute {
     | BattleCreatureStateOwner
     | BattleArmorClassOwner
     | BattleLightProjectionOwner
+    | BattleSightProjectionOwner
+    | BattleObscurementProjectionOwner
+    | BattleAreaHazardOwner
     | BattleSpellInvocationOwner
     | BattleTablePresentationOwner
 

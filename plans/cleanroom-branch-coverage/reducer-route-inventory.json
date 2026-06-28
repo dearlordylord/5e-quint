@@ -926,6 +926,7 @@
           "routeConnectorPaths": [
             "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt"
           ],
           "route": "source-qnt-corpus-blocker",
@@ -940,18 +941,21 @@
               "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt supplies generic Reaction spell casting-time evidence; falling mitigation now uses the dedicated reaction payload taxonomy route below.",
               "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt records ReactionFallMitigationRouteSubject evidence for falling-trigger reaction mitigation through generic trigger/procedure/continuation facts, spell-slot/action-economy, active-effect, movement-resource, and Hit Point owners.",
               "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt supplies generic object-attached and held light-emitter route evidence for object admission, active-effect admission, Bright/Dim Light projection, replacement cleanup, hurl cleanup, duration cleanup, and table-owned object/geometry witnesses.",
+              "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt defines typed route facts that separate battle-owned effect lifecycle from table-owned light, geometry, presentation, sight, object, and hazard witnesses without selected spell identity.",
+              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt exposes SpatialEffectRouteSubject evidence for concentration-backed movable multi-emitter Dim Light movement, area-plus-Saving Throw outcome outline admission, invisible-benefit denial/Attack Roll Advantage projections, area obscurement admission plus separate duration and strong-wind dispersal cleanup, non-Concentration area hazard save/difficult-terrain movement/cleanup lifecycle, and a separate movement-damage trigger shape through action-economy, active-effect, Concentration, light, sight, obscurement, hazard, area-shape, Saving Throw, movement, Hit Point, and turn-boundary owners.",
               "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt supplies generic MovementPresentationRouteSubject evidence for movement replacement budget/distance plus table-supplied landing presentation witnesses, forced creature movement presentation, and object push/audible presentation through movement-resource, table-presentation, and object-boundary facts.",
-              "The grouped spatial witness still contains movable light emitters, outline/advantage effects, area hazard/obscurement behavior, and landing legality/consequence behavior that must split into generic route substrates; movement replacement budget/distance and forced-movement/object-push presentation now route through the movement/presentation connector."
+              "The grouped spatial witness still contains concentration-backed area hazards plus landing legality/consequence behavior that must split into generic route substrates; movement replacement budget/distance and forced-movement/object-push presentation now route through the movement/presentation connector."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Areas of Effect, #Targets, and #Saving Throws define spell area, target, and save frontiers.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Vision and Light plus .references/srd-5.2.1/Rules-Glossary.md#Dim Light / #Heavily Obscured define Illumination and Obscurement projections.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack and .references/srd-5.2.1/Rules-Glossary.md#Invisible [Condition] define sight-dependent Attack Roll mode effects.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Difficult Terrain and .references/srd-5.2.1/Rules-Glossary.md#Area of Effect / #Cover define hazard movement cost and table-owned geometry/obstruction witnesses.",
               ".references/srd-5.2.1/Playing-the-Game.md#Movement and Position and .references/srd-5.2.1/Rules-Glossary.md#Reaction define movement, forced movement, falling response, and Reaction vocabulary.",
-              "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Area of Effect, Movement, Reaction, Target, Saving Throw, and Boundary Crossing."
+              "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Area of Effect, Movement, Reaction, Target, Saving Throw, Boundary Crossing, Illumination, Obscurement, Attack Roll, and Table Decision."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: movable light emitter routing is still missing before doDancingLightsMovableDimLight may count for target replay; object-attached and held light obligations must route through packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt rather than selected spell identity.",
-              "source-qnt-corpus-blocker: add a generic outline / invisible-revealing / attack-advantage active-effect route subject before doFaerieFireOutlineAdvantageInvisibleDimLight may count for target replay.",
-              "source-qnt-corpus-blocker: add generic area hazard and obscurement lifecycle route subjects before doFogCloudAreaIdentityObscurementStrongWindCleanup, doGreaseCastGroundHazardSavingThrows, and doGreaseMovementAndTurnTriggers may count for target replay.",
+              "source-qnt-corpus-blocker: add a concentration-backed area hazard route before selected Sleet Storm, Spike Growth, or Web-like Concentration hazard rows may count; the current area hazard connector only covers non-Concentration hazard lifecycle plus a separate movement-damage trigger shape.",
               "source-qnt-corpus-blocker: add generic landing legality and failed-landing Prone consequence route facts before doJumpMovementReplacementLandingWitness may count beyond movement budget/distance and table-supplied landing presentation witness evidence."
             ]
           }
@@ -3850,14 +3854,17 @@
         },
         {
           "taskId": "FCSF-03E-OBJECT-AND-LIGHT-RIDERS",
-          "routeConnectorPath": "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt",
+          "routeConnectorPaths": [
+            "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
+          ],
           "route": "reducer-routed",
-          "subjectFamily": "object target, object-attached light emitter, held-light, movable-light, and illumination projection routes",
+          "subjectFamily": "object target, object-attached light emitter, held-light, movable multi-emitter light, and illumination projection routes",
           "blockedDrivers": [
             "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
             "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt"
           ],
-          "requiredRouteInput": "Add generic object/light route subjects for object admission, object-attached or held emitter state, replacement cleanup, hurl cleanup, Bright/Dim Light projection, and table-owned cover or geometry witnesses.",
+          "requiredRouteInput": "Add generic object/light and spatial-effect route subjects for object admission, object-attached or held emitter state, movable multi-emitter light state, replacement cleanup, hurl cleanup, Bright/Dim Light projection, and table-owned cover or geometry witnesses.",
           "existingSourceEvidence": [
             "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt covers object-target spell Attack Roll routing.",
             "packages/battle-runtime/battle-runtime-light.qnt and docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md describe light emitter, obscurement, and sight ownership boundaries."
@@ -3872,6 +3879,8 @@
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-object-light-rider-route-facts.qnt defines typed route facts for object-attached and held light emitter sources, object target table-witness admission/rejection, active emitter admission, emitter attachment, Bright/Dim Light projection, replacement cleanup, hurl cleanup, duration cleanup, and table-owned object/geometry/presentation/durability witnesses.",
               "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt exposes ObjectLightRiderRouteSubject evidence through BattleObjectTargetBoundaryOwner for object admission, BattleActiveEffectOwner for emitter admission and cleanup, BattleLightProjectionOwner for Bright/Dim Light projection, BattleTurnBoundaryOwner for duration cleanup, and BattleAreaShapeOwner for table geometry witness consumption.",
+              "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt defines generic movable multi-emitter light facts separate from object-attached and held emitter facts.",
+              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt exposes SpatialEffectRouteSubject evidence for concentration-backed movable multi-emitter Dim Light admission, table-owned movement/position witnesses, and later light projection without selected spell identity.",
               "The route facts keep object validity/admission inputs, object geometry, cover/opaque blocker geometry, color/presentation, and object AC/HP/immunity/threshold facts as table-owned witness or boundary facts rather than battle-owned durable state."
             ],
             "rawDomainFacts": [
@@ -3882,9 +3891,8 @@
               "UBIQUITOUS_LANGUAGE.md defines Table Decision, Illumination, Obscurement, Spell Effect, Spell Invocation, and Action Lifecycle."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: movable multi-emitter light routing is not covered by ObjectLightRiderRouteSubject, so doDancingLightsMovableDimLight remains blocked.",
-              "source-qnt-corpus-blocker: outline/invisible-revealing/attack-advantage effects and area hazard/obscurement lifecycle remain outside this object/held light substrate.",
-              "source-qnt-corpus-blocker: packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt and packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt are not reclassified as accepted wholesale; only object-attached and held light obligations with matching generic route facts may count through this connector."
+              "source-qnt-corpus-blocker: movement replacement and forced-movement/object-push presentation route through packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt, not the object/held light substrate.",
+              "source-qnt-corpus-blocker: packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt and packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt are not reclassified as accepted wholesale; only object-attached, held-light, or movable multi-emitter obligations with matching generic route facts may count through these connectors."
             ]
           },
           "acceptanceGate": "Target replay may count object/light residual branches only after copied route evidence separates battle-owned emitter/effect facts from table-owned geometry, color, and presentation facts."

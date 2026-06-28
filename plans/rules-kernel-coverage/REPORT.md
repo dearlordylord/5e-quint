@@ -697,6 +697,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-slow-fall.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-sorcerous-burst-damage-choice.qnt` | exempt | leaf-type-vocabulary: Sorcerous Burst damage-choice vocabulary leaf shared by the model and spell bridge. |
+| `packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic spatial-effect route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spell-attack.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt` | exempt | proof-only-example: Run-block examples for the spell bridge; registered spell rule-core and battle owners carry active coverage. |
