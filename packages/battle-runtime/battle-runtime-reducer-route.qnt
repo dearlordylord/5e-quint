@@ -82,6 +82,7 @@ module battleRuntimeReducerRoute {
     | ReactionInterdictionRouteSubject
     | ConditionRiderRouteSubject
     | ObjectLightRiderRouteSubject
+    | SpatialEffectRouteSubject
     | MixedTargetOutcomeSpellRouteSubject
 
   type ReducerRouteOwnerGroup =
@@ -119,6 +120,9 @@ module battleRuntimeReducerRoute {
     | BattleCreatureStateOwner
     | BattleArmorClassOwner
     | BattleLightProjectionOwner
+    | BattleSightProjectionOwner
+    | BattleObscurementProjectionOwner
+    | BattleAreaHazardOwner
     | BattleSpellInvocationOwner
 
   type ReducerRouteFillEvidence =

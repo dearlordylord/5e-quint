@@ -10434,6 +10434,12 @@
       "ownerPath": "packages/battle-runtime/battle-runtime-sorcerous-burst-damage-choice.qnt"
     },
     {
+      "category": "leaf-type-vocabulary",
+      "classification": "exempt",
+      "evidence": "Generic spatial-effect route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt"
+    },
+    {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt",
       "role": "semantic-core"

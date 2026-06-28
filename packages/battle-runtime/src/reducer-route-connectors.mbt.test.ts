@@ -27,6 +27,7 @@ import {
   createSaveGatedSpellOrderingRouteDriver,
   createSpellBaseArmorClassEffectRouteDriver,
   createSpellAttackOrderingRouteDriver,
+  createSpatialEffectRouteDriver,
   createWeaponAttackOrderingRouteDriver,
   createWeaponMasteryPropertyRouteDriver,
   createWardedTargetInterdictionRouteDriver,
@@ -55,6 +56,7 @@ import {
   reducerRoutedScalarBuffStateCheck,
   reducerRoutedSaveGatedSpellOrderingStateCheck,
   reducerRoutedSpellBaseArmorClassEffectStateCheck,
+  reducerRoutedSpatialEffectStateCheck,
   reducerRoutedWeaponAttackOrderingStateCheck,
   reducerRoutedWeaponAttackSkeletonStateCheck,
   reducerRoutedWeaponMasteryPropertyStateCheck,
@@ -459,6 +461,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(3),
         stateCheck: reducerRoutedObjectLightStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes spatial effects through light, sight, hazard, and table-witness owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-spatial-effects.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createSpatialEffectRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(3),
+        stateCheck: reducerRoutedSpatialEffectStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
