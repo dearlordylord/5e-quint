@@ -13,7 +13,7 @@ module battleRuntimeMovementPresentationRouteFacts {
     | ForcedMovementDistanceProjection
 
   type MovementPresentationTableFact =
-    | TableSelectedMovementRoute
+    | TableSuppliedMovementPathWitness
     | LandingSpacePresentationWitness
     | DirectionAwayFromSourcePresentationWitness
     | AreaGeometryPresentationWitness

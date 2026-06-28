@@ -102,7 +102,7 @@ module battleRuntimeMovementPresentationRouteMbt {
         resource: MovementReplacementDistanceProjection,
       }),
       RouteMovementPresentationTable({
-        presentation: TableSelectedMovementRoute,
+        presentation: TableSuppliedMovementPathWitness,
       }),
       RouteMovementPresentationTable({
         presentation: LandingSpacePresentationWitness,

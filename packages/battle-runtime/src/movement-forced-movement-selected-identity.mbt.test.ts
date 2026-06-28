@@ -314,7 +314,7 @@ type MovementPresentationResourceFact =
   (typeof MOVEMENT_PRESENTATION_RESOURCE_FACTS)[number];
 
 const MOVEMENT_PRESENTATION_TABLE_FACTS = [
-  "tableSelectedMovementRoute",
+  "tableSuppliedMovementPathWitness",
   "landingSpacePresentationWitness",
   "directionAwayFromSourcePresentationWitness",
   "areaGeometryPresentationWitness",
@@ -704,7 +704,7 @@ const movementReplacementPresentationFacts = [
   },
   {
     kind: "tablePresentation",
-    presentation: "tableSelectedMovementRoute",
+    presentation: "tableSuppliedMovementPathWitness",
   },
   {
     kind: "tablePresentation",
@@ -788,7 +788,7 @@ const MOVEMENT_PRESENTATION_RESOURCE_BY_VARIANT_TAG = {
 >;
 
 const MOVEMENT_PRESENTATION_TABLE_BY_VARIANT_TAG = {
-  TableSelectedMovementRoute: "tableSelectedMovementRoute",
+  TableSuppliedMovementPathWitness: "tableSuppliedMovementPathWitness",
   LandingSpacePresentationWitness: "landingSpacePresentationWitness",
   DirectionAwayFromSourcePresentationWitness:
     "directionAwayFromSourcePresentationWitness",
