@@ -19,6 +19,8 @@ module battleRuntimeConditionRiderRouteFacts {
     | DeafenedCondition
     | RestrainedCondition
     | IncapacitatedCondition
+    | ParalyzedCondition
+    | ProneCondition
     | UnconsciousCondition
 
   type ConditionRiderAdmissionFact =
@@ -54,6 +56,12 @@ module battleRuntimeConditionRiderRouteFacts {
     | RouteConditionRiderRepeatSaveSucceeded
     | RouteConditionRiderRepeatSaveFailed
     | RouteConditionRiderTransition({
+        condition: ConditionRiderConditionKindFact,
+      })
+    | RouteConditionRiderImpliedCondition({
+        condition: ConditionRiderConditionKindFact,
+      })
+    | RouteConditionRiderSelfEndBlocked({
         condition: ConditionRiderConditionKindFact,
       })
     | RouteConditionRiderEscapeCheckFrontierOpened

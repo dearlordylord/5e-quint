@@ -1238,6 +1238,8 @@ const CONDITION_RIDER_CONDITION_KINDS = [
   "deafened",
   "restrained",
   "incapacitated",
+  "paralyzed",
+  "prone",
   "unconscious",
 ] as const;
 type ConditionRiderConditionKind =
@@ -1293,6 +1295,14 @@ type ConditionRiderRouteFact =
   | { readonly kind: "repeatSaveFailed" }
   | {
       readonly kind: "transition";
+      readonly condition: ConditionRiderConditionKind;
+    }
+  | {
+      readonly kind: "impliedCondition";
+      readonly condition: ConditionRiderConditionKind;
+    }
+  | {
+      readonly kind: "selfEndBlocked";
       readonly condition: ConditionRiderConditionKind;
     }
   | { readonly kind: "escapeCheckFrontierOpened" }
@@ -1958,6 +1968,8 @@ const conditionRiderRouteDriverSchema = {
   doAdmitFailedSaveSleepIncapacitatedConditionRider: {},
   doOpenSleepRepeatSaveFrontier: {},
   doResolveSleepRepeatSaveFailureTransitionToUnconscious: {},
+  doAdmitFailedSaveParalyzedUntilSpellEndRepeatSaveConditionRider: {},
+  doAdmitFailedSaveIncapacitatedProneSelfEndBlockedConditionRider: {},
   doStutterAfterTerminalSurface: {},
   step: {},
 } as const;
@@ -5426,6 +5438,72 @@ const CONDITION_RIDER_FAILED_SAVE_SLEEP_INCAPACITATED_FACTS = [
   },
 ] as const satisfies readonly ConditionRiderRouteFact[];
 
+const CONDITION_RIDER_FAILED_SAVE_PARALYZED_REPEAT_SAVE_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostFailedSavingThrowOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "paralyzed",
+  },
+  {
+    kind: "impliedCondition",
+    condition: "incapacitated",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "untilSpellEnds",
+  },
+  {
+    kind: "boundary",
+    boundary: "affectedTargetEndTurnRepeatSave",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_FAILED_SAVE_INCAPACITATED_PRONE_SELF_END_BLOCKED_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostFailedSavingThrowOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "incapacitated",
+  },
+  {
+    kind: "conditionKind",
+    condition: "prone",
+  },
+  {
+    kind: "selfEndBlocked",
+    condition: "prone",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "untilSpellEnds",
+  },
+  {
+    kind: "boundary",
+    boundary: "affectedTargetEndTurnRepeatSave",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
 const CONDITION_RIDER_DURATION_CLEANUP_FACTS = [
   { kind: "expired" },
   { kind: "cleanedUpBy", owner: "battleTurnBoundary" },
@@ -5791,6 +5869,15 @@ export function createConditionRiderRouteDriver() {
       doResolveSleepRepeatSaveFailureTransitionToUnconscious: () => {
         route = [...route, ...conditionRiderSleepRepeatSaveFailureRoute()];
         facts = [...facts, ...CONDITION_RIDER_SLEEP_REPEAT_SAVE_FAILURE_FACTS];
+      },
+      doAdmitFailedSaveParalyzedUntilSpellEndRepeatSaveConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = CONDITION_RIDER_FAILED_SAVE_PARALYZED_REPEAT_SAVE_FACTS;
+      },
+      doAdmitFailedSaveIncapacitatedProneSelfEndBlockedConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts =
+          CONDITION_RIDER_FAILED_SAVE_INCAPACITATED_PRONE_SELF_END_BLOCKED_FACTS;
       },
       doStutterAfterTerminalSurface: () => {},
       step: () => {},
@@ -10595,6 +10682,8 @@ const CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG = {
   DeafenedCondition: "deafened",
   RestrainedCondition: "restrained",
   IncapacitatedCondition: "incapacitated",
+  ParalyzedCondition: "paralyzed",
+  ProneCondition: "prone",
   UnconsciousCondition: "unconscious",
 } as const satisfies Readonly<Record<string, ConditionRiderConditionKind>>;
 
@@ -11364,6 +11453,30 @@ function decodeConditionRiderRouteFact(raw: unknown): ConditionRiderRouteFact {
         "qFacts[].condition",
         CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG,
         "condition rider transition condition",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderImpliedCondition") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "impliedCondition",
+      condition: quintVariantMappedValue(
+        quintField(payload, "condition"),
+        "qFacts[].condition",
+        CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG,
+        "condition rider implied condition",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderSelfEndBlocked") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "selfEndBlocked",
+      condition: quintVariantMappedValue(
+        quintField(payload, "condition"),
+        "qFacts[].condition",
+        CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG,
+        "condition rider self-end blocked condition",
       ),
     };
   }
