@@ -896,6 +896,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "reactionInterdiction",
   "conditionRider",
   "objectLightRider",
+  "mixedTargetOutcomeSpell",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -934,6 +935,7 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleCreatureState",
   "battleArmorClass",
   "battleLightProjection",
+  "battleSpellInvocation",
 ] as const;
 type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
 const REDUCER_ROUTE_HOLES = [
@@ -1171,21 +1173,14 @@ type ReducerRoutedNextAttackRollModeProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly NextAttackRollModeRouteFact[];
 };
-const REACTION_INTERDICTION_SOURCES = [
-  "hostAttackHitDamageOutcome",
-] as const;
+const REACTION_INTERDICTION_SOURCES = ["hostAttackHitDamageOutcome"] as const;
 type ReactionInterdictionSource =
   (typeof REACTION_INTERDICTION_SOURCES)[number];
-const REACTION_INTERDICTION_CARRIERS = [
-  "hostOutcomeTargetCarrier",
-] as const;
+const REACTION_INTERDICTION_CARRIERS = ["hostOutcomeTargetCarrier"] as const;
 type ReactionInterdictionCarrier =
   (typeof REACTION_INTERDICTION_CARRIERS)[number];
-const REACTION_INTERDICTION_SCOPES = [
-  "affectedTargetReactionsOnly",
-] as const;
-type ReactionInterdictionScope =
-  (typeof REACTION_INTERDICTION_SCOPES)[number];
+const REACTION_INTERDICTION_SCOPES = ["affectedTargetReactionsOnly"] as const;
+type ReactionInterdictionScope = (typeof REACTION_INTERDICTION_SCOPES)[number];
 const REACTION_INTERDICTION_TRIGGER_FAMILIES = [
   "opportunityAttackTriggerFamily",
 ] as const;
@@ -1230,11 +1225,8 @@ const CONDITION_RIDER_HOST_OUTCOMES = [
   "hostAttackHitDamageOutcome",
   "hostFailedSavingThrowOutcome",
 ] as const;
-type ConditionRiderHostOutcome =
-  (typeof CONDITION_RIDER_HOST_OUTCOMES)[number];
-const CONDITION_RIDER_CARRIERS = [
-  "affectedTargetConditionCarrier",
-] as const;
+type ConditionRiderHostOutcome = (typeof CONDITION_RIDER_HOST_OUTCOMES)[number];
+const CONDITION_RIDER_CARRIERS = ["affectedTargetConditionCarrier"] as const;
 type ConditionRiderCarrier = (typeof CONDITION_RIDER_CARRIERS)[number];
 const CONDITION_RIDER_CONDITION_KINDS = [
   "poisoned",
@@ -1314,8 +1306,7 @@ const OBJECT_LIGHT_EMITTER_SOURCES = [
   "objectAttachedEmitterSource",
   "heldEmitterSource",
 ] as const;
-type ObjectLightEmitterSource =
-  (typeof OBJECT_LIGHT_EMITTER_SOURCES)[number];
+type ObjectLightEmitterSource = (typeof OBJECT_LIGHT_EMITTER_SOURCES)[number];
 const OBJECT_LIGHT_EMITTER_ADMISSIONS = [
   "objectTargetAdmittedByTableWitness",
   "objectTargetRejectedByTableWitness",
@@ -1344,8 +1335,7 @@ const OBJECT_LIGHT_CLEANUP_OWNERS = [
   "battleActiveEffect",
   "battleTurnBoundary",
 ] as const;
-type ObjectLightCleanupOwner =
-  (typeof OBJECT_LIGHT_CLEANUP_OWNERS)[number];
+type ObjectLightCleanupOwner = (typeof OBJECT_LIGHT_CLEANUP_OWNERS)[number];
 const OBJECT_LIGHT_TABLE_WITNESSES = [
   "objectValidityAdmissionWitness",
   "objectGeometryWitness",
@@ -1354,8 +1344,7 @@ const OBJECT_LIGHT_TABLE_WITNESSES = [
   "colorPresentationWitness",
   "objectDurabilityBoundaryWitness",
 ] as const;
-type ObjectLightTableWitness =
-  (typeof OBJECT_LIGHT_TABLE_WITNESSES)[number];
+type ObjectLightTableWitness = (typeof OBJECT_LIGHT_TABLE_WITNESSES)[number];
 type ObjectLightRouteFact =
   | {
       readonly kind: "emitterSource";
@@ -1385,6 +1374,73 @@ type ObjectLightRouteFact =
 type ReducerRoutedObjectLightProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly ObjectLightRouteFact[];
+};
+const MIXED_TARGET_OUTCOME_TARGETS = [
+  "primaryTarget",
+  "secondaryTarget",
+  "objectTarget",
+] as const;
+type MixedTargetOutcomeTarget = (typeof MIXED_TARGET_OUTCOME_TARGETS)[number];
+const MIXED_TARGET_OUTCOME_RESOLUTIONS = [
+  "attackHit",
+  "attackMiss",
+  "savingThrowFailed",
+  "savingThrowSucceeded",
+] as const;
+type MixedTargetOutcomeResolution =
+  (typeof MIXED_TARGET_OUTCOME_RESOLUTIONS)[number];
+const MIXED_TARGET_OUTCOME_DAMAGE_PROJECTIONS = [
+  "attackDamage",
+  "fullSavingThrowDamage",
+  "halfSavingThrowDamage",
+  "noDamage",
+] as const;
+type MixedTargetOutcomeDamageProjection =
+  (typeof MIXED_TARGET_OUTCOME_DAMAGE_PROJECTIONS)[number];
+const MIXED_TARGET_OUTCOME_SHARED_RESOURCES = [
+  "sharedSpellSlotSpend",
+  "sharedCantripActionSpend",
+  "sharedSavingThrowDamageRoll",
+] as const;
+type MixedTargetOutcomeSharedResource =
+  (typeof MIXED_TARGET_OUTCOME_SHARED_RESOURCES)[number];
+const MIXED_TARGET_OUTCOME_SECONDARY_PROJECTIONS = [
+  "objectBoundary",
+  "light",
+  "condition",
+  "nextAttackRollMode",
+  "burstSavingThrow",
+  "chainedAttackTarget",
+] as const;
+type MixedTargetOutcomeSecondaryProjection =
+  (typeof MIXED_TARGET_OUTCOME_SECONDARY_PROJECTIONS)[number];
+type MixedTargetOutcomeRouteFact =
+  | {
+      readonly kind: "target";
+      readonly target: MixedTargetOutcomeTarget;
+    }
+  | {
+      readonly kind: "resolution";
+      readonly target: MixedTargetOutcomeTarget;
+      readonly outcome: MixedTargetOutcomeResolution;
+    }
+  | {
+      readonly kind: "damageProjection";
+      readonly target: MixedTargetOutcomeTarget;
+      readonly damage: MixedTargetOutcomeDamageProjection;
+    }
+  | {
+      readonly kind: "sharedResource";
+      readonly resource: MixedTargetOutcomeSharedResource;
+    }
+  | {
+      readonly kind: "secondaryProjection";
+      readonly target: MixedTargetOutcomeTarget;
+      readonly projection: MixedTargetOutcomeSecondaryProjection;
+    };
+type ReducerRoutedMixedTargetOutcomeProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly MixedTargetOutcomeRouteFact[];
 };
 type ReducerRoutedSaveGatedSpellOrderingProjection =
   SaveGatedSpellOrderingProjection & {
@@ -1797,6 +1853,19 @@ const objectLightRouteDriverSchema = {
   doCleanupHeldEmitterOnHurl: {},
   doCleanupObjectAttachedEmitterOnDuration: {},
   doRecordTableOwnedGeometryAndCoverWitnesses: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const mixedTargetOutcomeRouteDriverSchema = {
+  init: {},
+  doRouteAreaSavingThrowMixedOutcomes: {},
+  doRouteAttackHitBurstSavingThrowMixedOutcomes: {},
+  doRouteAttackMissBurstSavingThrowMixedOutcomes: {},
+  doRouteObjectAttackSecondaryProjection: {},
+  doRouteAttackHitConditionProjection: {},
+  doRouteSaveFailureNextAttackProjection: {},
+  doRouteChainedAttackMixedTargetOutcomes: {},
   doStutterAfterTerminalSurface: {},
   step: {},
 } as const;
@@ -5581,10 +5650,7 @@ export function createConditionRiderRouteDriver() {
       },
       doResolveSleepRepeatSaveFailureTransitionToUnconscious: () => {
         route = [...route, ...conditionRiderSleepRepeatSaveFailureRoute()];
-        facts = [
-          ...facts,
-          ...CONDITION_RIDER_SLEEP_REPEAT_SAVE_FAILURE_FACTS,
-        ];
+        facts = [...facts, ...CONDITION_RIDER_SLEEP_REPEAT_SAVE_FAILURE_FACTS];
       },
       doStutterAfterTerminalSurface: () => {},
       step: () => {},
@@ -5844,6 +5910,374 @@ export function createObjectLightRouteDriver() {
       doStutterAfterTerminalSurface: () => {},
       step: () => {},
       getState: (): ReducerRoutedObjectLightProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+const MIXED_TARGET_OUTCOME_ROUTE_SUBJECT =
+  "mixedTargetOutcomeSpell" satisfies ReducerRouteSubjectFamily;
+const MIXED_TARGET_OUTCOME_OWNER =
+  "battleSpellInvocation" satisfies ReducerRouteOwnerGroup;
+
+function mixedTargetOutcomeInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function mixedTargetOutcomeDiscoverRoute(
+  holes: readonly ReducerRouteHole[],
+): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: MIXED_TARGET_OUTCOME_ROUTE_SUBJECT,
+    holes,
+    owner: MIXED_TARGET_OUTCOME_OWNER,
+  });
+}
+
+function mixedTargetOutcomeResolveRoute(
+  fill: ReducerRouteFill,
+  holes: readonly ReducerRouteHole[],
+): ReducerRouteEvent {
+  return routeResolveSubject({
+    subject: MIXED_TARGET_OUTCOME_ROUTE_SUBJECT,
+    fill,
+    holes,
+    owner: MIXED_TARGET_OUTCOME_OWNER,
+  });
+}
+
+function mixedTargetOutcomeProjectionRoute(): ReducerRouteEvent {
+  return routeResolveSubjectWithoutFill({
+    subject: MIXED_TARGET_OUTCOME_ROUTE_SUBJECT,
+    holes: NO_ROUTE_HOLES,
+    owner: MIXED_TARGET_OUTCOME_OWNER,
+  });
+}
+
+function mixedTargetOutcomeAreaSaveRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(SAVING_THROW_OUTCOME_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute(
+      "savingThrowOutcome",
+      ROLLED_DICE_ROUTE_HOLES,
+    ),
+    mixedTargetOutcomeResolveRoute("rolledDice", NO_ROUTE_HOLES),
+  ];
+}
+
+function mixedTargetOutcomeAttackBurstRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("targetChoice", ATTACK_ROLL_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute(
+      "attackRoll",
+      SAVING_THROW_OUTCOME_ROUTE_HOLES,
+    ),
+    mixedTargetOutcomeResolveRoute(
+      "savingThrowOutcome",
+      ROLLED_DICE_ROUTE_HOLES,
+    ),
+    mixedTargetOutcomeResolveRoute("rolledDice", NO_ROUTE_HOLES),
+  ];
+}
+
+function mixedTargetOutcomeObjectAttackRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("targetChoice", ATTACK_ROLL_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("attackRoll", ROLLED_DICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("rolledDice", NO_ROUTE_HOLES),
+    mixedTargetOutcomeProjectionRoute(),
+  ];
+}
+
+function mixedTargetOutcomeSaveProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute(
+      "targetChoice",
+      SAVING_THROW_OUTCOME_ROUTE_HOLES,
+    ),
+    mixedTargetOutcomeResolveRoute(
+      "savingThrowOutcome",
+      ROLLED_DICE_ROUTE_HOLES,
+    ),
+    mixedTargetOutcomeResolveRoute("rolledDice", NO_ROUTE_HOLES),
+    mixedTargetOutcomeProjectionRoute(),
+  ];
+}
+
+function mixedTargetOutcomeChainedAttackRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("targetChoice", ATTACK_ROLL_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("attackRoll", ROLLED_DICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("rolledDice", TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("targetChoice", ATTACK_ROLL_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("attackRoll", ROLLED_DICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("rolledDice", NO_ROUTE_HOLES),
+  ];
+}
+
+const MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT = [
+  {
+    kind: "sharedResource",
+    resource: "sharedSpellSlotSpend",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_CANTRIP_SPEND_FACT = [
+  {
+    kind: "sharedResource",
+    resource: "sharedCantripActionSpend",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_AREA_SAVE_FACTS = [
+  ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
+  {
+    kind: "sharedResource",
+    resource: "sharedSavingThrowDamageRoll",
+  },
+  { kind: "target", target: "primaryTarget" },
+  { kind: "target", target: "secondaryTarget" },
+  {
+    kind: "resolution",
+    target: "primaryTarget",
+    outcome: "savingThrowFailed",
+  },
+  {
+    kind: "resolution",
+    target: "secondaryTarget",
+    outcome: "savingThrowSucceeded",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "fullSavingThrowDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "secondaryTarget",
+    damage: "halfSavingThrowDamage",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_ATTACK_HIT_BURST_FACTS = [
+  ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
+  {
+    kind: "sharedResource",
+    resource: "sharedSavingThrowDamageRoll",
+  },
+  { kind: "target", target: "primaryTarget" },
+  { kind: "target", target: "secondaryTarget" },
+  { kind: "resolution", target: "primaryTarget", outcome: "attackHit" },
+  {
+    kind: "resolution",
+    target: "primaryTarget",
+    outcome: "savingThrowFailed",
+  },
+  {
+    kind: "resolution",
+    target: "secondaryTarget",
+    outcome: "savingThrowSucceeded",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "attackDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "fullSavingThrowDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "secondaryTarget",
+    damage: "halfSavingThrowDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "primaryTarget",
+    projection: "burstSavingThrow",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "secondaryTarget",
+    projection: "burstSavingThrow",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_ATTACK_MISS_BURST_FACTS = [
+  ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
+  {
+    kind: "sharedResource",
+    resource: "sharedSavingThrowDamageRoll",
+  },
+  { kind: "target", target: "primaryTarget" },
+  { kind: "target", target: "secondaryTarget" },
+  { kind: "resolution", target: "primaryTarget", outcome: "attackMiss" },
+  {
+    kind: "resolution",
+    target: "primaryTarget",
+    outcome: "savingThrowFailed",
+  },
+  {
+    kind: "resolution",
+    target: "secondaryTarget",
+    outcome: "savingThrowSucceeded",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "noDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "fullSavingThrowDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "secondaryTarget",
+    damage: "halfSavingThrowDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "primaryTarget",
+    projection: "burstSavingThrow",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "secondaryTarget",
+    projection: "burstSavingThrow",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_OBJECT_ATTACK_FACTS = [
+  ...MIXED_TARGET_OUTCOME_CANTRIP_SPEND_FACT,
+  { kind: "target", target: "objectTarget" },
+  { kind: "resolution", target: "objectTarget", outcome: "attackHit" },
+  {
+    kind: "damageProjection",
+    target: "objectTarget",
+    damage: "attackDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "objectTarget",
+    projection: "objectBoundary",
+  },
+  { kind: "secondaryProjection", target: "objectTarget", projection: "light" },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_ATTACK_CONDITION_FACTS = [
+  ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
+  { kind: "target", target: "primaryTarget" },
+  { kind: "resolution", target: "primaryTarget", outcome: "attackHit" },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "attackDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "primaryTarget",
+    projection: "condition",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_SAVE_NEXT_ATTACK_FACTS = [
+  ...MIXED_TARGET_OUTCOME_CANTRIP_SPEND_FACT,
+  { kind: "target", target: "primaryTarget" },
+  {
+    kind: "resolution",
+    target: "primaryTarget",
+    outcome: "savingThrowFailed",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "fullSavingThrowDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "primaryTarget",
+    projection: "nextAttackRollMode",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_CHAINED_ATTACK_FACTS = [
+  ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
+  { kind: "target", target: "primaryTarget" },
+  { kind: "target", target: "secondaryTarget" },
+  { kind: "resolution", target: "primaryTarget", outcome: "attackHit" },
+  { kind: "resolution", target: "secondaryTarget", outcome: "attackHit" },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "attackDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "secondaryTarget",
+    damage: "attackDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "secondaryTarget",
+    projection: "chainedAttackTarget",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+export function createMixedTargetOutcomeRouteDriver() {
+  return defineDriver(mixedTargetOutcomeRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = mixedTargetOutcomeInitialRoute();
+    let facts: readonly MixedTargetOutcomeRouteFact[] = [];
+
+    function reset(): void {
+      route = mixedTargetOutcomeInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteAreaSavingThrowMixedOutcomes: () => {
+        route = [...route, ...mixedTargetOutcomeAreaSaveRoute()];
+        facts = MIXED_TARGET_OUTCOME_AREA_SAVE_FACTS;
+      },
+      doRouteAttackHitBurstSavingThrowMixedOutcomes: () => {
+        route = [...route, ...mixedTargetOutcomeAttackBurstRoute()];
+        facts = MIXED_TARGET_OUTCOME_ATTACK_HIT_BURST_FACTS;
+      },
+      doRouteAttackMissBurstSavingThrowMixedOutcomes: () => {
+        route = [...route, ...mixedTargetOutcomeAttackBurstRoute()];
+        facts = MIXED_TARGET_OUTCOME_ATTACK_MISS_BURST_FACTS;
+      },
+      doRouteObjectAttackSecondaryProjection: () => {
+        route = [...route, ...mixedTargetOutcomeObjectAttackRoute()];
+        facts = MIXED_TARGET_OUTCOME_OBJECT_ATTACK_FACTS;
+      },
+      doRouteAttackHitConditionProjection: () => {
+        route = [...route, ...mixedTargetOutcomeObjectAttackRoute()];
+        facts = MIXED_TARGET_OUTCOME_ATTACK_CONDITION_FACTS;
+      },
+      doRouteSaveFailureNextAttackProjection: () => {
+        route = [...route, ...mixedTargetOutcomeSaveProjectionRoute()];
+        facts = MIXED_TARGET_OUTCOME_SAVE_NEXT_ATTACK_FACTS;
+      },
+      doRouteChainedAttackMixedTargetOutcomes: () => {
+        route = [...route, ...mixedTargetOutcomeChainedAttackRoute()];
+        facts = MIXED_TARGET_OUTCOME_CHAINED_ATTACK_FACTS;
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedMixedTargetOutcomeProjection => ({
         route,
         facts,
       }),
@@ -9311,6 +9745,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   ReactionInterdictionRouteSubject: "reactionInterdiction",
   ConditionRiderRouteSubject: "conditionRider",
   ObjectLightRiderRouteSubject: "objectLightRider",
+  MixedTargetOutcomeSpellRouteSubject: "mixedTargetOutcomeSpell",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -9348,6 +9783,7 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleCreatureStateOwner: "battleCreatureState",
   BattleArmorClassOwner: "battleArmorClass",
   BattleLightProjectionOwner: "battleLightProjection",
+  BattleSpellInvocationOwner: "battleSpellInvocation",
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
 
 const NEXT_ATTACK_ROLL_MODE_SOURCE_BY_VARIANT_TAG = {
@@ -9492,6 +9928,45 @@ const OBJECT_LIGHT_TABLE_WITNESS_BY_VARIANT_TAG = {
   ColorPresentationWitness: "colorPresentationWitness",
   ObjectDurabilityBoundaryWitness: "objectDurabilityBoundaryWitness",
 } as const satisfies Readonly<Record<string, ObjectLightTableWitness>>;
+
+const MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG = {
+  PrimaryTarget: "primaryTarget",
+  SecondaryTarget: "secondaryTarget",
+  ObjectTarget: "objectTarget",
+} as const satisfies Readonly<Record<string, MixedTargetOutcomeTarget>>;
+
+const MIXED_TARGET_OUTCOME_RESOLUTION_BY_VARIANT_TAG = {
+  AttackHitOutcome: "attackHit",
+  AttackMissOutcome: "attackMiss",
+  SavingThrowFailedOutcome: "savingThrowFailed",
+  SavingThrowSucceededOutcome: "savingThrowSucceeded",
+} as const satisfies Readonly<Record<string, MixedTargetOutcomeResolution>>;
+
+const MIXED_TARGET_OUTCOME_DAMAGE_PROJECTION_BY_VARIANT_TAG = {
+  AttackDamageProjection: "attackDamage",
+  FullSavingThrowDamageProjection: "fullSavingThrowDamage",
+  HalfSavingThrowDamageProjection: "halfSavingThrowDamage",
+  NoDamageProjection: "noDamage",
+} as const satisfies Readonly<
+  Record<string, MixedTargetOutcomeDamageProjection>
+>;
+
+const MIXED_TARGET_OUTCOME_SHARED_RESOURCE_BY_VARIANT_TAG = {
+  SharedSpellSlotSpend: "sharedSpellSlotSpend",
+  SharedCantripActionSpend: "sharedCantripActionSpend",
+  SharedSavingThrowDamageRoll: "sharedSavingThrowDamageRoll",
+} as const satisfies Readonly<Record<string, MixedTargetOutcomeSharedResource>>;
+
+const MIXED_TARGET_OUTCOME_SECONDARY_PROJECTION_BY_VARIANT_TAG = {
+  ObjectBoundaryProjection: "objectBoundary",
+  LightProjection: "light",
+  ConditionProjection: "condition",
+  NextAttackRollModeProjection: "nextAttackRollMode",
+  BurstSavingThrowProjection: "burstSavingThrow",
+  ChainedAttackTargetProjection: "chainedAttackTarget",
+} as const satisfies Readonly<
+  Record<string, MixedTargetOutcomeSecondaryProjection>
+>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
   AbilityCheckHoleKind: "abilityCheck",
@@ -9992,9 +10467,7 @@ function decodeConditionRiderRouteFacts(
   return quintList(raw, "qFacts").map(decodeConditionRiderRouteFact);
 }
 
-function decodeConditionRiderRouteFact(
-  raw: unknown,
-): ConditionRiderRouteFact {
+function decodeConditionRiderRouteFact(raw: unknown): ConditionRiderRouteFact {
   const tag = quintVariantTag(raw, "qFacts[]");
   if (tag === "RouteConditionRiderHostOutcome") {
     const payload = conditionRiderFactPayload(raw, tag);
@@ -10228,6 +10701,110 @@ function objectLightFactPayload(
   throw new Error(`Expected object/light ${tag} payload record.`);
 }
 
+function decodeMixedTargetOutcomeRouteFacts(
+  raw: unknown,
+): readonly MixedTargetOutcomeRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeMixedTargetOutcomeRouteFact);
+}
+
+function decodeMixedTargetOutcomeRouteFact(
+  raw: unknown,
+): MixedTargetOutcomeRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteMixedTargetOutcomeTarget") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "target",
+      target: quintVariantMappedValue(
+        quintField(payload, "target"),
+        "qFacts[].target",
+        MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG,
+        "mixed-target outcome target",
+      ),
+    };
+  }
+  if (tag === "RouteMixedTargetOutcomeResolution") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "resolution",
+      target: quintVariantMappedValue(
+        quintField(payload, "target"),
+        "qFacts[].target",
+        MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG,
+        "mixed-target outcome resolution target",
+      ),
+      outcome: quintVariantMappedValue(
+        quintField(payload, "outcome"),
+        "qFacts[].outcome",
+        MIXED_TARGET_OUTCOME_RESOLUTION_BY_VARIANT_TAG,
+        "mixed-target outcome resolution",
+      ),
+    };
+  }
+  if (tag === "RouteMixedTargetOutcomeDamageProjection") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "damageProjection",
+      target: quintVariantMappedValue(
+        quintField(payload, "target"),
+        "qFacts[].target",
+        MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG,
+        "mixed-target outcome damage target",
+      ),
+      damage: quintVariantMappedValue(
+        quintField(payload, "damage"),
+        "qFacts[].damage",
+        MIXED_TARGET_OUTCOME_DAMAGE_PROJECTION_BY_VARIANT_TAG,
+        "mixed-target outcome damage projection",
+      ),
+    };
+  }
+  if (tag === "RouteMixedTargetOutcomeSharedResource") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "sharedResource",
+      resource: quintVariantMappedValue(
+        quintField(payload, "resource"),
+        "qFacts[].resource",
+        MIXED_TARGET_OUTCOME_SHARED_RESOURCE_BY_VARIANT_TAG,
+        "mixed-target outcome shared resource",
+      ),
+    };
+  }
+  if (tag === "RouteMixedTargetOutcomeSecondaryProjection") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "secondaryProjection",
+      target: quintVariantMappedValue(
+        quintField(payload, "target"),
+        "qFacts[].target",
+        MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG,
+        "mixed-target outcome secondary projection target",
+      ),
+      projection: quintVariantMappedValue(
+        quintField(payload, "projection"),
+        "qFacts[].projection",
+        MIXED_TARGET_OUTCOME_SECONDARY_PROJECTION_BY_VARIANT_TAG,
+        "mixed-target outcome secondary projection",
+      ),
+    };
+  }
+
+  throw new Error(`Unknown mixed-target outcome route fact: ${tag}.`);
+}
+
+function mixedTargetOutcomeFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected mixed-target outcome ${tag} payload record.`);
+}
+
 function normalizeQuintState(raw: unknown): MbtProjection {
   const root = quintStateRecord(raw);
   const state = Object.hasOwn(root, "qState")
@@ -10439,6 +11016,16 @@ function normalizeReducerRoutedObjectLightQuintState(
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
     facts: decodeObjectLightRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedMixedTargetOutcomeQuintState(
+  raw: unknown,
+): ReducerRoutedMixedTargetOutcomeProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeMixedTargetOutcomeRouteFacts(quintField(state, "qFacts")),
   };
 }
 
@@ -11099,6 +11686,16 @@ export const reducerRoutedObjectLightStateCheck = stateCheck(
   (
     spec: ReducerRoutedObjectLightProjection,
     impl: ReducerRoutedObjectLightProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedMixedTargetOutcomeStateCheck = stateCheck(
+  normalizeReducerRoutedMixedTargetOutcomeQuintState,
+  (
+    spec: ReducerRoutedMixedTargetOutcomeProjection,
+    impl: ReducerRoutedMixedTargetOutcomeProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;

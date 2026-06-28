@@ -3872,7 +3872,26 @@
             ".references/srd-5.2.1/Playing-the-Game.md#Damage against Multiple Targets defines one damage roll shared across simultaneous multi-target damage.",
             "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Attack Roll, Saving Throw, Damage, and Action Lifecycle."
           ],
-          "acceptanceGate": "Target replay may count mixed-outcome residual branches only after route evidence prevents adapter-local coupling between target order, outcome order, and damage projection."
+          "acceptanceGate": "Target replay may count mixed-outcome residual branches only after route evidence prevents adapter-local coupling between target order, outcome order, and damage projection.",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-mixed-target-outcome-route-facts.qnt defines generic mixed-target route facts for synthetic target references, per-target Attack Roll or Saving Throw outcomes, per-target damage projections, shared spell-slot/cantrip/action spend, shared Saving Throw damage rolls, and secondary projections.",
+              "packages/battle-runtime/battle-runtime-mixed-target-outcomes.route.mbt.qnt exposes MixedTargetOutcomeSpellRouteSubject evidence through BattleSpellInvocationOwner for area Saving Throw mixed outcomes, attack-hit plus burst Saving Throw outcomes, attack-miss plus burst Saving Throw outcomes, object attack secondary projections, attack-hit condition projections, failed-save next-Attack-Roll projections, and chained attack target projections.",
+              "The route facts bind every outcome and damage projection to an explicit synthetic target reference, so target order, outcome order, and damage projection cannot be inferred from adapter list position or authored spell identity."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Targets, #Attack Rolls, and #Saving Throws define spell target selection plus per-target attack and Saving Throw outcomes.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack defines target choice, attack resolution, hit damage, and special effects in addition to or instead of damage.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Damage against Multiple Targets and #Half Damage define one shared damage roll for simultaneous multi-target Saving Throw damage and per-target half-damage projection.",
+              "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Attack Roll, Saving Throw, Damage, Target, and Action Lifecycle."
+            ],
+            "blockers": [
+              "source-qnt-corpus-blocker: packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt is not reclassified as accepted wholesale; only residual branches whose replay obligation matches MixedTargetOutcomeSpellRouteSubject facts may count through this connector.",
+              "source-qnt-corpus-blocker: exact authored spell damage amounts, dice counts, damage types, critical doubling, duplicate-face limits, and spell-specific target-admission rules remain outside FCSF-03F and stay assigned to FCSF-03G-EXACT-DAMAGE-PROJECTION-FACTS or more specific substrate tasks.",
+              "source-qnt-corpus-blocker: object durability, light geometry, invisible-revealing, and cover/obstruction presentation remain outside this mixed-outcome connector unless separately covered by object/light route evidence."
+            ]
+          },
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-mixed-target-outcomes.route.mbt.qnt"
         },
         {
           "taskId": "FCSF-03G-EXACT-DAMAGE-PROJECTION-FACTS",
