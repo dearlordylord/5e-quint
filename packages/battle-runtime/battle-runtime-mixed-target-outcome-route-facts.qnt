@@ -23,9 +23,11 @@ module battleRuntimeMixedTargetOutcomeRouteFacts {
     | HalfSavingThrowDamageProjection
     | NoDamageProjection
 
-  type MixedTargetOutcomeSharedResourceFact =
+  type MixedTargetOutcomeSharedSpendFact =
     | SharedSpellSlotSpend
     | SharedCantripActionSpend
+
+  type MixedTargetOutcomeSharedDamageRollFact =
     | SharedSavingThrowDamageRoll
 
   type MixedTargetOutcomeSecondaryProjectionFact =
@@ -48,8 +50,11 @@ module battleRuntimeMixedTargetOutcomeRouteFacts {
         target: MixedTargetOutcomeRouteTargetFact,
         damage: MixedTargetOutcomeDamageProjectionFact,
       })
-    | RouteMixedTargetOutcomeSharedResource({
-        resource: MixedTargetOutcomeSharedResourceFact,
+    | RouteMixedTargetOutcomeSharedSpend({
+        spend: MixedTargetOutcomeSharedSpendFact,
+      })
+    | RouteMixedTargetOutcomeSharedDamageRoll({
+        roll: MixedTargetOutcomeSharedDamageRollFact,
       })
     | RouteMixedTargetOutcomeSecondaryProjection({
         target: MixedTargetOutcomeRouteTargetFact,

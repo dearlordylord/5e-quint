@@ -3875,7 +3875,7 @@
           "acceptanceGate": "Target replay may count mixed-outcome residual branches only after route evidence prevents adapter-local coupling between target order, outcome order, and damage projection.",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-mixed-target-outcome-route-facts.qnt defines generic mixed-target route facts for synthetic target references, per-target Attack Roll or Saving Throw outcomes, per-target damage projections, shared spell-slot/cantrip/action spend, shared Saving Throw damage rolls, and secondary projections.",
+              "packages/battle-runtime/battle-runtime-mixed-target-outcome-route-facts.qnt defines generic mixed-target route facts for synthetic target references, per-target Attack Roll or Saving Throw outcomes, per-target damage projections, shared spell-slot/cantrip/action spend facts, separate shared Saving Throw damage-roll facts, and secondary projections.",
               "packages/battle-runtime/battle-runtime-mixed-target-outcomes.route.mbt.qnt exposes MixedTargetOutcomeSpellRouteSubject evidence through BattleSpellInvocationOwner for area Saving Throw mixed outcomes, attack-hit plus burst Saving Throw outcomes, attack-miss plus burst Saving Throw outcomes, object attack secondary projections, attack-hit condition projections, failed-save next-Attack-Roll projections, and chained attack target projections.",
               "The route facts bind every outcome and damage projection to an explicit synthetic target reference, so target order, outcome order, and damage projection cannot be inferred from adapter list position or authored spell identity."
             ],

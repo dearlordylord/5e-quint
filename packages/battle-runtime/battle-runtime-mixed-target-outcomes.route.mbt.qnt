@@ -137,23 +137,27 @@ module battleRuntimeMixedTargetOutcomesRouteMbt {
 
   pure def slotSpendFact: List[MixedTargetOutcomeRouteFact] =
     List(
-      RouteMixedTargetOutcomeSharedResource({
-        resource: SharedSpellSlotSpend,
+      RouteMixedTargetOutcomeSharedSpend({
+        spend: SharedSpellSlotSpend,
       }),
     )
 
   pure def cantripSpendFact: List[MixedTargetOutcomeRouteFact] =
     List(
-      RouteMixedTargetOutcomeSharedResource({
-        resource: SharedCantripActionSpend,
+      RouteMixedTargetOutcomeSharedSpend({
+        spend: SharedCantripActionSpend,
+      }),
+    )
+
+  pure def sharedSavingThrowDamageRollFact: List[MixedTargetOutcomeRouteFact] =
+    List(
+      RouteMixedTargetOutcomeSharedDamageRoll({
+        roll: SharedSavingThrowDamageRoll,
       }),
     )
 
   pure def areaSavingThrowMixedOutcomeFacts: List[MixedTargetOutcomeRouteFact] =
-    slotSpendFact.concat(List(
-      RouteMixedTargetOutcomeSharedResource({
-        resource: SharedSavingThrowDamageRoll,
-      }),
+    slotSpendFact.concat(sharedSavingThrowDamageRollFact).concat(List(
       RouteMixedTargetOutcomeTarget({ target: PrimaryTarget }),
       RouteMixedTargetOutcomeTarget({ target: SecondaryTarget }),
       RouteMixedTargetOutcomeResolution({
@@ -175,10 +179,7 @@ module battleRuntimeMixedTargetOutcomesRouteMbt {
     ))
 
   pure def attackHitBurstSavingThrowFacts: List[MixedTargetOutcomeRouteFact] =
-    slotSpendFact.concat(List(
-      RouteMixedTargetOutcomeSharedResource({
-        resource: SharedSavingThrowDamageRoll,
-      }),
+    slotSpendFact.concat(sharedSavingThrowDamageRollFact).concat(List(
       RouteMixedTargetOutcomeTarget({ target: PrimaryTarget }),
       RouteMixedTargetOutcomeTarget({ target: SecondaryTarget }),
       RouteMixedTargetOutcomeResolution({
@@ -216,10 +217,7 @@ module battleRuntimeMixedTargetOutcomesRouteMbt {
     ))
 
   pure def attackMissBurstSavingThrowFacts: List[MixedTargetOutcomeRouteFact] =
-    slotSpendFact.concat(List(
-      RouteMixedTargetOutcomeSharedResource({
-        resource: SharedSavingThrowDamageRoll,
-      }),
+    slotSpendFact.concat(sharedSavingThrowDamageRollFact).concat(List(
       RouteMixedTargetOutcomeTarget({ target: PrimaryTarget }),
       RouteMixedTargetOutcomeTarget({ target: SecondaryTarget }),
       RouteMixedTargetOutcomeResolution({

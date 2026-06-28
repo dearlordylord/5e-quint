@@ -1397,13 +1397,17 @@ const MIXED_TARGET_OUTCOME_DAMAGE_PROJECTIONS = [
 ] as const;
 type MixedTargetOutcomeDamageProjection =
   (typeof MIXED_TARGET_OUTCOME_DAMAGE_PROJECTIONS)[number];
-const MIXED_TARGET_OUTCOME_SHARED_RESOURCES = [
+const MIXED_TARGET_OUTCOME_SHARED_SPENDS = [
   "sharedSpellSlotSpend",
   "sharedCantripActionSpend",
+] as const;
+type MixedTargetOutcomeSharedSpend =
+  (typeof MIXED_TARGET_OUTCOME_SHARED_SPENDS)[number];
+const MIXED_TARGET_OUTCOME_SHARED_DAMAGE_ROLLS = [
   "sharedSavingThrowDamageRoll",
 ] as const;
-type MixedTargetOutcomeSharedResource =
-  (typeof MIXED_TARGET_OUTCOME_SHARED_RESOURCES)[number];
+type MixedTargetOutcomeSharedDamageRoll =
+  (typeof MIXED_TARGET_OUTCOME_SHARED_DAMAGE_ROLLS)[number];
 const MIXED_TARGET_OUTCOME_SECONDARY_PROJECTIONS = [
   "objectBoundary",
   "light",
@@ -1430,8 +1434,12 @@ type MixedTargetOutcomeRouteFact =
       readonly damage: MixedTargetOutcomeDamageProjection;
     }
   | {
-      readonly kind: "sharedResource";
-      readonly resource: MixedTargetOutcomeSharedResource;
+      readonly kind: "sharedSpend";
+      readonly spend: MixedTargetOutcomeSharedSpend;
+    }
+  | {
+      readonly kind: "sharedDamageRoll";
+      readonly roll: MixedTargetOutcomeSharedDamageRoll;
     }
   | {
       readonly kind: "secondaryProjection";
@@ -6023,24 +6031,28 @@ function mixedTargetOutcomeChainedAttackRoute(): readonly ReducerRouteEvent[] {
 
 const MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT = [
   {
-    kind: "sharedResource",
-    resource: "sharedSpellSlotSpend",
+    kind: "sharedSpend",
+    spend: "sharedSpellSlotSpend",
   },
 ] as const satisfies readonly MixedTargetOutcomeRouteFact[];
 
 const MIXED_TARGET_OUTCOME_CANTRIP_SPEND_FACT = [
   {
-    kind: "sharedResource",
-    resource: "sharedCantripActionSpend",
+    kind: "sharedSpend",
+    spend: "sharedCantripActionSpend",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_SHARED_SAVE_DAMAGE_ROLL_FACT = [
+  {
+    kind: "sharedDamageRoll",
+    roll: "sharedSavingThrowDamageRoll",
   },
 ] as const satisfies readonly MixedTargetOutcomeRouteFact[];
 
 const MIXED_TARGET_OUTCOME_AREA_SAVE_FACTS = [
   ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
-  {
-    kind: "sharedResource",
-    resource: "sharedSavingThrowDamageRoll",
-  },
+  ...MIXED_TARGET_OUTCOME_SHARED_SAVE_DAMAGE_ROLL_FACT,
   { kind: "target", target: "primaryTarget" },
   { kind: "target", target: "secondaryTarget" },
   {
@@ -6067,10 +6079,7 @@ const MIXED_TARGET_OUTCOME_AREA_SAVE_FACTS = [
 
 const MIXED_TARGET_OUTCOME_ATTACK_HIT_BURST_FACTS = [
   ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
-  {
-    kind: "sharedResource",
-    resource: "sharedSavingThrowDamageRoll",
-  },
+  ...MIXED_TARGET_OUTCOME_SHARED_SAVE_DAMAGE_ROLL_FACT,
   { kind: "target", target: "primaryTarget" },
   { kind: "target", target: "secondaryTarget" },
   { kind: "resolution", target: "primaryTarget", outcome: "attackHit" },
@@ -6113,10 +6122,7 @@ const MIXED_TARGET_OUTCOME_ATTACK_HIT_BURST_FACTS = [
 
 const MIXED_TARGET_OUTCOME_ATTACK_MISS_BURST_FACTS = [
   ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
-  {
-    kind: "sharedResource",
-    resource: "sharedSavingThrowDamageRoll",
-  },
+  ...MIXED_TARGET_OUTCOME_SHARED_SAVE_DAMAGE_ROLL_FACT,
   { kind: "target", target: "primaryTarget" },
   { kind: "target", target: "secondaryTarget" },
   { kind: "resolution", target: "primaryTarget", outcome: "attackMiss" },
@@ -9951,11 +9957,16 @@ const MIXED_TARGET_OUTCOME_DAMAGE_PROJECTION_BY_VARIANT_TAG = {
   Record<string, MixedTargetOutcomeDamageProjection>
 >;
 
-const MIXED_TARGET_OUTCOME_SHARED_RESOURCE_BY_VARIANT_TAG = {
+const MIXED_TARGET_OUTCOME_SHARED_SPEND_BY_VARIANT_TAG = {
   SharedSpellSlotSpend: "sharedSpellSlotSpend",
   SharedCantripActionSpend: "sharedCantripActionSpend",
+} as const satisfies Readonly<Record<string, MixedTargetOutcomeSharedSpend>>;
+
+const MIXED_TARGET_OUTCOME_SHARED_DAMAGE_ROLL_BY_VARIANT_TAG = {
   SharedSavingThrowDamageRoll: "sharedSavingThrowDamageRoll",
-} as const satisfies Readonly<Record<string, MixedTargetOutcomeSharedResource>>;
+} as const satisfies Readonly<
+  Record<string, MixedTargetOutcomeSharedDamageRoll>
+>;
 
 const MIXED_TARGET_OUTCOME_SECONDARY_PROJECTION_BY_VARIANT_TAG = {
   ObjectBoundaryProjection: "objectBoundary",
@@ -10759,15 +10770,27 @@ function decodeMixedTargetOutcomeRouteFact(
       ),
     };
   }
-  if (tag === "RouteMixedTargetOutcomeSharedResource") {
+  if (tag === "RouteMixedTargetOutcomeSharedSpend") {
     const payload = mixedTargetOutcomeFactPayload(raw, tag);
     return {
-      kind: "sharedResource",
-      resource: quintVariantMappedValue(
-        quintField(payload, "resource"),
-        "qFacts[].resource",
-        MIXED_TARGET_OUTCOME_SHARED_RESOURCE_BY_VARIANT_TAG,
-        "mixed-target outcome shared resource",
+      kind: "sharedSpend",
+      spend: quintVariantMappedValue(
+        quintField(payload, "spend"),
+        "qFacts[].spend",
+        MIXED_TARGET_OUTCOME_SHARED_SPEND_BY_VARIANT_TAG,
+        "mixed-target outcome shared spend",
+      ),
+    };
+  }
+  if (tag === "RouteMixedTargetOutcomeSharedDamageRoll") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "sharedDamageRoll",
+      roll: quintVariantMappedValue(
+        quintField(payload, "roll"),
+        "qFacts[].roll",
+        MIXED_TARGET_OUTCOME_SHARED_DAMAGE_ROLL_BY_VARIANT_TAG,
+        "mixed-target outcome shared damage roll",
       ),
     };
   }
