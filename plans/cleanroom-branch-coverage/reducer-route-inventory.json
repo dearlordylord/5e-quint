@@ -864,9 +864,10 @@
             "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
-            "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt"
+            "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt"
           ],
-          "route": "source-qnt-corpus-blocker",
+          "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "subjectFamily": "selected weapon-hosted buff, after-hit rider, scalar buff, and marked-effect substrates",
           "branchObligations": 12,
@@ -877,17 +878,14 @@
               "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt exposes AfterHitDamageRiderRouteSubject evidence for selected after-hit damage, condition, turn-start, and cleanup rider branches.",
               "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt exposes ScalarBuffEffectRouteSubject evidence for selected scalar buff branches such as temporary Hit Points and Speed increases.",
               "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt, battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt, and battle-runtime-held-weapon-active-effect.route.mbt.qnt expose the generic weapon-hosted rider and held-weapon override substrates.",
-              "Marked-target transfer and condition-immunity / turn-start temporary Hit Point behavior still require generic active-effect substrates before target replay may count those selected-identity branches."
+              "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt exposes MarkedDamageRiderEffectRouteSubject and ConditionImmunityTemporaryHitPointEffectRouteSubject evidence for marked-target damage projection, target-drop transfer timing, condition-immunity projection, turn-start Temporary Hit Point grants, and Concentration cleanup through active-effect, damage, Hit Point, turn-boundary, temporary-HP, condition-lifecycle, and Concentration owners."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack, #Damage Rolls, #Temporary Hit Points, and #Movement and Position define the generic attack, damage, temporary Hit Point, and Speed facts represented by connector evidence.",
               ".references/srd-5.2.1/Rules-Glossary.md#Concentration and condition entries define active-effect, condition-immunity, and cleanup ownership boundaries.",
               "UBIQUITOUS_LANGUAGE.md defines Rider, Attack Damage Rider, Spell Invocation, Spell Effect, Spend, Concentration, Condition, Hit Points, and Movement."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add a generic marked-target damage rider plus transfer active-effect route subject before doHexMarkedDamageRiderAndLaterTurnTransfer and doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer may count for target replay.",
-              "source-qnt-corpus-blocker: add a generic condition-immunity plus turn-start temporary Hit Points active-effect route subject before doHeroismFrightenedImmunityTurnStartTemporaryHitPoints and doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup may count for target replay."
-            ]
+            "blockers": []
           }
         },
         {
@@ -4011,6 +4009,13 @@
           "requiredSourceWork": [
             "Task 28 supplied packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt as generic WeaponMasteryPropertyRouteSubject evidence for Sap active-effect riders, Topple save-gated condition riders, and Cleave optional once-per-turn nested weapon attacks through target-selection, attack-roll, Hit Point, active-effect, condition-lifecycle, and feature-resource owners.",
             "The current source selected-identity driver covers Sap, Topple, and Cleave only; Graze, Nick, Push, Slow, and Vex remain separate source/runtime expansion work if future scope requires them."
+          ]
+        },
+        {
+          "taskId": "L15-RR07-FU06A-MARKED-DAMAGE-IMMUNITY-ACTIVE-EFFECT-SUBSTRATES",
+          "subjectFamily": "marked damage rider transfer plus condition-immunity turn-start Temporary Hit Point substrates",
+          "requiredSourceWork": [
+            "Task SQNT-07A supplied packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt as generic MarkedDamageRiderEffectRouteSubject and ConditionImmunityTemporaryHitPointEffectRouteSubject evidence for marked-target extra damage, target-drop transfer timing, condition-immunity rejection, turn-start Temporary Hit Point grants, and Concentration cleanup through public reducer owners before selected level-1 buff/mark/smite identity replay counts."
           ]
         },
         {

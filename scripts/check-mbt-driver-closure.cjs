@@ -142,6 +142,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-magic-missile-facts.qnt",
   "battle-runtime-mirror-image-constants.qnt",
   "battle-runtime-condition-rider-route-facts.qnt",
+  "battle-runtime-marked-damage-immunity-route-facts.qnt",
   "battle-runtime-mixed-target-outcome-route-facts.qnt",
   "battle-runtime-next-attack-roll-mode-route-facts.qnt",
   "battle-runtime-object-light-rider-route-facts.qnt",

@@ -650,6 +650,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-levitate-creature.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-light.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-magic-missile-facts.qnt` | exempt | proof-only-example: Literal Magic Missile fixture facts shared by the focused witness and the reducer-route connector; the active route contract is owned by battle-runtime-magic-missile.route.mbt.qnt. |
+| `packages/battle-runtime/battle-runtime-marked-damage-immunity-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic marked-damage and condition-immunity route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-marked-riders.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-marked-spells.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-metamagic.qnt` | qnt-owner-role | semantic-core |

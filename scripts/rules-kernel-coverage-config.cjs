@@ -226,6 +226,13 @@ const qntRegistryExemptions = [
   },
   {
     ownerPath:
+      "packages/battle-runtime/battle-runtime-marked-damage-immunity-route-facts.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Generic marked-damage and condition-immunity route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
+  },
+  {
+    ownerPath:
       "packages/battle-runtime/battle-runtime-object-light-rider-route-facts.qnt",
     category: "leaf-type-vocabulary",
     evidence:

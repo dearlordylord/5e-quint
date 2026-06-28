@@ -83,6 +83,8 @@ module battleRuntimeReducerRoute {
     | ConditionRiderRouteSubject
     | ObjectLightRiderRouteSubject
     | MixedTargetOutcomeSpellRouteSubject
+    | MarkedDamageRiderEffectRouteSubject
+    | ConditionImmunityTemporaryHitPointEffectRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner

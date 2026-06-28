@@ -17,6 +17,7 @@ import {
   createHitPointRegainPreventionRouteDriver,
   createIndependentSpellAttackSequenceRouteDriver,
   createMagicMissileRouteDriver,
+  createMarkedDamageImmunityRouteDriver,
   createMetamagicRouteDriver,
   createMixedTargetOutcomeRouteDriver,
   createNextAttackRollModeRouteDriver,
@@ -45,6 +46,7 @@ import {
   reducerRoutedConditionRiderStateCheck,
   reducerRoutedIndependentSpellAttackSequenceStateCheck,
   reducerRoutedMagicMissileStateCheck,
+  reducerRoutedMarkedDamageImmunityStateCheck,
   reducerRoutedCommandOrderingStateCheck,
   reducerRoutedMetamagicStateCheck,
   reducerRoutedMixedTargetOutcomeStateCheck,
@@ -479,6 +481,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(2),
         stateCheck: reducerRoutedMixedTargetOutcomeStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes marked damage and condition-immunity Temporary Hit Point effects through generic active-effect owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createMarkedDamageImmunityRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: reducerRoutedMarkedDamageImmunityStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,

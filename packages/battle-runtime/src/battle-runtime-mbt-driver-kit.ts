@@ -897,6 +897,8 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "conditionRider",
   "objectLightRider",
   "mixedTargetOutcomeSpell",
+  "markedDamageRiderEffect",
+  "conditionImmunityTemporaryHitPointEffect",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -1450,6 +1452,89 @@ type ReducerRoutedMixedTargetOutcomeProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly MixedTargetOutcomeRouteFact[];
 };
+const MARKED_DAMAGE_RIDER_HOSTS = ["attackRollHitMarkedTarget"] as const;
+type MarkedDamageRiderHost = (typeof MARKED_DAMAGE_RIDER_HOSTS)[number];
+const MARKED_DAMAGE_RIDER_DAMAGE_FACTS = [
+  "extraDamageOnMarkedTargetHit",
+] as const;
+type MarkedDamageRiderDamage =
+  (typeof MARKED_DAMAGE_RIDER_DAMAGE_FACTS)[number];
+const MARKED_DAMAGE_RIDER_TRANSFERS = [
+  "transferAwaitsMarkedTargetDrop",
+  "transferAvailableAfterMarkedTargetDrops",
+  "transferAvailableOnSameTurn",
+  "transferAvailableOnLaterTurn",
+  "transferConsumesBonusAction",
+  "transferResetsAwaitingMarkedTargetDrop",
+] as const;
+type MarkedDamageRiderTransfer = (typeof MARKED_DAMAGE_RIDER_TRANSFERS)[number];
+const MARKED_DAMAGE_RIDER_ABILITY_CHECKS = [
+  "markedTargetAbilityCheckModifier",
+] as const;
+type MarkedDamageRiderAbilityCheck =
+  (typeof MARKED_DAMAGE_RIDER_ABILITY_CHECKS)[number];
+type MarkedDamageRiderRouteFact =
+  | {
+      readonly kind: "markedHost";
+      readonly host: MarkedDamageRiderHost;
+    }
+  | {
+      readonly kind: "markedDamage";
+      readonly damage: MarkedDamageRiderDamage;
+    }
+  | {
+      readonly kind: "markedTransfer";
+      readonly transfer: MarkedDamageRiderTransfer;
+    }
+  | {
+      readonly kind: "markedAbilityCheck";
+      readonly abilityCheck: MarkedDamageRiderAbilityCheck;
+    };
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECTS = [
+  "conditionImmunityApplied",
+  "conditionApplicationRejectedByImmunity",
+  "turnStartTemporaryHitPointGrantScheduled",
+  "turnStartTemporaryHitPointsGranted",
+  "temporaryHitPointsUseNonStackingChoice",
+  "concentrationCleanupPreventsLaterTurnStartGrant",
+] as const;
+type ConditionImmunityTemporaryHitPointEffect =
+  (typeof CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECTS)[number];
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_CONDITIONS = [
+  "frightenedConditionImmunity",
+] as const;
+type ConditionImmunityTemporaryHitPointCondition =
+  (typeof CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_CONDITIONS)[number];
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_OWNERS = [
+  "battleActiveEffect",
+  "battleConditionLifecycle",
+  "battleTemporaryHitPoint",
+  "battleTurnBoundary",
+  "battleConcentration",
+  "battleActiveEffectCleanup",
+] as const;
+type ConditionImmunityTemporaryHitPointOwner =
+  (typeof CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_OWNERS)[number];
+type ConditionImmunityTemporaryHitPointRouteFact =
+  | {
+      readonly kind: "immunityTemporaryHitPointEffect";
+      readonly effect: ConditionImmunityTemporaryHitPointEffect;
+    }
+  | {
+      readonly kind: "immunityTemporaryHitPointCondition";
+      readonly condition: ConditionImmunityTemporaryHitPointCondition;
+    }
+  | {
+      readonly kind: "immunityTemporaryHitPointOwner";
+      readonly owner: ConditionImmunityTemporaryHitPointOwner;
+    };
+type MarkedDamageImmunityRouteFact =
+  | MarkedDamageRiderRouteFact
+  | ConditionImmunityTemporaryHitPointRouteFact;
+type ReducerRoutedMarkedDamageImmunityProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly MarkedDamageImmunityRouteFact[];
+};
 type ReducerRoutedSaveGatedSpellOrderingProjection =
   SaveGatedSpellOrderingProjection & {
     readonly route: readonly ReducerRouteEvent[];
@@ -1874,6 +1959,21 @@ const mixedTargetOutcomeRouteDriverSchema = {
   doRouteAttackHitConditionProjection: {},
   doRouteSaveFailureNextAttackProjection: {},
   doRouteChainedAttackMixedTargetOutcomes: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const markedDamageImmunityRouteDriverSchema = {
+  init: {},
+  doAdmitMarkedDamageRider: {},
+  doProjectMarkedDamageRiderOnHit: {},
+  doOpenMarkedDamageRiderTransferAfterTargetDrop: {},
+  doTransferMarkedDamageRiderSameTurn: {},
+  doTransferMarkedDamageRiderLaterTurn: {},
+  doAdmitConditionImmunityTemporaryHitPoints: {},
+  doProjectConditionImmunity: {},
+  doGrantTurnStartTemporaryHitPoints: {},
+  doCleanupConditionImmunityTemporaryHitPoints: {},
   doStutterAfterTerminalSurface: {},
   step: {},
 } as const;
@@ -6291,6 +6391,377 @@ export function createMixedTargetOutcomeRouteDriver() {
   });
 }
 
+const MARKED_DAMAGE_RIDER_EFFECT_ROUTE_SUBJECT =
+  "markedDamageRiderEffect" satisfies ReducerRouteSubjectFamily;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_ROUTE_SUBJECT =
+  "conditionImmunityTemporaryHitPointEffect" satisfies ReducerRouteSubjectFamily;
+
+function markedDamageImmunityInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function discoverMarkedDamageRiderRoute(input: {
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: MARKED_DAMAGE_RIDER_EFFECT_ROUTE_SUBJECT,
+    holes: input.holes,
+    owner: input.owner,
+  });
+}
+
+function resolveMarkedDamageRiderRoute(input: {
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeResolveSubject({
+    subject: MARKED_DAMAGE_RIDER_EFFECT_ROUTE_SUBJECT,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  });
+}
+
+function resolveMarkedDamageRiderWithoutFill(
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return routeResolveSubjectWithoutFill({
+    subject: MARKED_DAMAGE_RIDER_EFFECT_ROUTE_SUBJECT,
+    holes: NO_ROUTE_HOLES,
+    owner,
+  });
+}
+
+function discoverConditionImmunityTemporaryHitPointRoute(input: {
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_ROUTE_SUBJECT,
+    holes: input.holes,
+    owner: input.owner,
+  });
+}
+
+function resolveConditionImmunityTemporaryHitPointRoute(input: {
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeResolveSubject({
+    subject: CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_ROUTE_SUBJECT,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  });
+}
+
+function resolveConditionImmunityTemporaryHitPointWithoutFill(
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return routeResolveSubjectWithoutFill({
+    subject: CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_ROUTE_SUBJECT,
+    holes: NO_ROUTE_HOLES,
+    owner,
+  });
+}
+
+function markedDamageRiderAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverMarkedDamageRiderRoute({
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    resolveMarkedDamageRiderWithoutFill("battleActiveEffect"),
+    resolveMarkedDamageRiderWithoutFill("battleConcentration"),
+  ];
+}
+
+function markedDamageRiderAttackHitProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverMarkedDamageRiderRoute({
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function markedDamageRiderTransferAvailabilityRoute(): readonly ReducerRouteEvent[] {
+  return [
+    resolveMarkedDamageRiderWithoutFill("battleHitPointAndZeroHpLifecycle"),
+    resolveMarkedDamageRiderWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function markedDamageRiderTransferRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverMarkedDamageRiderRoute({
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    resolveMarkedDamageRiderWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function immunityTemporaryHitPointAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverConditionImmunityTemporaryHitPointRoute({
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    resolveConditionImmunityTemporaryHitPointRoute({
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    resolveConditionImmunityTemporaryHitPointWithoutFill("battleActiveEffect"),
+    resolveConditionImmunityTemporaryHitPointWithoutFill("battleConcentration"),
+  ];
+}
+
+function conditionImmunityProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    resolveConditionImmunityTemporaryHitPointWithoutFill(
+      "battleConditionLifecycle",
+    ),
+    resolveConditionImmunityTemporaryHitPointWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function turnStartTemporaryHitPointRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverConditionImmunityTemporaryHitPointRoute({
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    resolveConditionImmunityTemporaryHitPointWithoutFill(
+      "battleTemporaryHitPoint",
+    ),
+  ];
+}
+
+function immunityTemporaryHitPointCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    resolveConditionImmunityTemporaryHitPointWithoutFill("battleConcentration"),
+    resolveConditionImmunityTemporaryHitPointWithoutFill("battleActiveEffect"),
+  ];
+}
+
+const MARKED_RIDER_ADMISSION_FACTS = [
+  {
+    kind: "markedTransfer",
+    transfer: "transferAwaitsMarkedTargetDrop",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const MARKED_RIDER_DAMAGE_PROJECTION_FACTS = [
+  {
+    kind: "markedHost",
+    host: "attackRollHitMarkedTarget",
+  },
+  {
+    kind: "markedDamage",
+    damage: "extraDamageOnMarkedTargetHit",
+  },
+  {
+    kind: "markedAbilityCheck",
+    abilityCheck: "markedTargetAbilityCheckModifier",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const MARKED_RIDER_TRANSFER_AVAILABILITY_FACTS = [
+  {
+    kind: "markedTransfer",
+    transfer: "transferAvailableAfterMarkedTargetDrops",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const MARKED_RIDER_SAME_TURN_TRANSFER_FACTS = [
+  {
+    kind: "markedTransfer",
+    transfer: "transferAvailableOnSameTurn",
+  },
+  {
+    kind: "markedTransfer",
+    transfer: "transferConsumesBonusAction",
+  },
+  {
+    kind: "markedTransfer",
+    transfer: "transferResetsAwaitingMarkedTargetDrop",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const MARKED_RIDER_LATER_TURN_TRANSFER_FACTS = [
+  {
+    kind: "markedTransfer",
+    transfer: "transferAvailableOnLaterTurn",
+  },
+  {
+    kind: "markedTransfer",
+    transfer: "transferConsumesBonusAction",
+  },
+  {
+    kind: "markedTransfer",
+    transfer: "transferResetsAwaitingMarkedTargetDrop",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const IMMUNITY_TEMPORARY_HP_ADMISSION_FACTS = [
+  {
+    kind: "immunityTemporaryHitPointCondition",
+    condition: "frightenedConditionImmunity",
+  },
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "conditionImmunityApplied",
+  },
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "turnStartTemporaryHitPointGrantScheduled",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleActiveEffect",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const CONDITION_IMMUNITY_PROJECTION_FACTS = [
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "conditionApplicationRejectedByImmunity",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleConditionLifecycle",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const TURN_START_TEMPORARY_HP_FACTS = [
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "turnStartTemporaryHitPointsGranted",
+  },
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "temporaryHitPointsUseNonStackingChoice",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleTurnBoundary",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleTemporaryHitPoint",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const IMMUNITY_TEMPORARY_HP_CLEANUP_FACTS = [
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "concentrationCleanupPreventsLaterTurnStartGrant",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleConcentration",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleActiveEffectCleanup",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+export function createMarkedDamageImmunityRouteDriver() {
+  return defineDriver(markedDamageImmunityRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      markedDamageImmunityInitialRoute();
+    let facts: readonly MarkedDamageImmunityRouteFact[] = [];
+
+    function reset(): void {
+      route = markedDamageImmunityInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAdmitMarkedDamageRider: () => {
+        route = [...route, ...markedDamageRiderAdmissionRoute()];
+        facts = MARKED_RIDER_ADMISSION_FACTS;
+      },
+      doProjectMarkedDamageRiderOnHit: () => {
+        route = [...route, ...markedDamageRiderAttackHitProjectionRoute()];
+        facts = [...facts, ...MARKED_RIDER_DAMAGE_PROJECTION_FACTS];
+      },
+      doOpenMarkedDamageRiderTransferAfterTargetDrop: () => {
+        route = [...route, ...markedDamageRiderTransferAvailabilityRoute()];
+        facts = [...facts, ...MARKED_RIDER_TRANSFER_AVAILABILITY_FACTS];
+      },
+      doTransferMarkedDamageRiderSameTurn: () => {
+        route = [...route, ...markedDamageRiderTransferRoute()];
+        facts = [...facts, ...MARKED_RIDER_SAME_TURN_TRANSFER_FACTS];
+      },
+      doTransferMarkedDamageRiderLaterTurn: () => {
+        route = [
+          ...route,
+          resolveMarkedDamageRiderWithoutFill("battleTurnBoundary"),
+          ...markedDamageRiderTransferRoute(),
+        ];
+        facts = [...facts, ...MARKED_RIDER_LATER_TURN_TRANSFER_FACTS];
+      },
+      doAdmitConditionImmunityTemporaryHitPoints: () => {
+        route = [...route, ...immunityTemporaryHitPointAdmissionRoute()];
+        facts = IMMUNITY_TEMPORARY_HP_ADMISSION_FACTS;
+      },
+      doProjectConditionImmunity: () => {
+        route = [...route, ...conditionImmunityProjectionRoute()];
+        facts = [...facts, ...CONDITION_IMMUNITY_PROJECTION_FACTS];
+      },
+      doGrantTurnStartTemporaryHitPoints: () => {
+        route = [...route, ...turnStartTemporaryHitPointRoute()];
+        facts = [...facts, ...TURN_START_TEMPORARY_HP_FACTS];
+      },
+      doCleanupConditionImmunityTemporaryHitPoints: () => {
+        route = [...route, ...immunityTemporaryHitPointCleanupRoute()];
+        facts = [...facts, ...IMMUNITY_TEMPORARY_HP_CLEANUP_FACTS];
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedMarkedDamageImmunityProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
 export function createSaveGatedSpellOrderingRouteDriver() {
   return defineDriver(saveGatedSpellOrderingDriverSchema, () => {
     let state = saveGatedSpellOrderingBattle("lightning_bolt", 3);
@@ -9752,6 +10223,9 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   ConditionRiderRouteSubject: "conditionRider",
   ObjectLightRiderRouteSubject: "objectLightRider",
   MixedTargetOutcomeSpellRouteSubject: "mixedTargetOutcomeSpell",
+  MarkedDamageRiderEffectRouteSubject: "markedDamageRiderEffect",
+  ConditionImmunityTemporaryHitPointEffectRouteSubject:
+    "conditionImmunityTemporaryHitPointEffect",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -9977,6 +10451,61 @@ const MIXED_TARGET_OUTCOME_SECONDARY_PROJECTION_BY_VARIANT_TAG = {
   ChainedAttackTargetProjection: "chainedAttackTarget",
 } as const satisfies Readonly<
   Record<string, MixedTargetOutcomeSecondaryProjection>
+>;
+
+const MARKED_DAMAGE_RIDER_HOST_BY_VARIANT_TAG = {
+  AttackRollHitMarkedTarget: "attackRollHitMarkedTarget",
+} as const satisfies Readonly<Record<string, MarkedDamageRiderHost>>;
+
+const MARKED_DAMAGE_RIDER_DAMAGE_BY_VARIANT_TAG = {
+  ExtraDamageOnMarkedTargetHit: "extraDamageOnMarkedTargetHit",
+} as const satisfies Readonly<Record<string, MarkedDamageRiderDamage>>;
+
+const MARKED_DAMAGE_RIDER_TRANSFER_BY_VARIANT_TAG = {
+  TransferAwaitsMarkedTargetDrop: "transferAwaitsMarkedTargetDrop",
+  TransferAvailableAfterMarkedTargetDrops:
+    "transferAvailableAfterMarkedTargetDrops",
+  TransferAvailableOnSameTurn: "transferAvailableOnSameTurn",
+  TransferAvailableOnLaterTurn: "transferAvailableOnLaterTurn",
+  TransferConsumesBonusAction: "transferConsumesBonusAction",
+  TransferResetsAwaitingMarkedTargetDrop:
+    "transferResetsAwaitingMarkedTargetDrop",
+} as const satisfies Readonly<Record<string, MarkedDamageRiderTransfer>>;
+
+const MARKED_DAMAGE_RIDER_ABILITY_CHECK_BY_VARIANT_TAG = {
+  MarkedTargetAbilityCheckModifier: "markedTargetAbilityCheckModifier",
+} as const satisfies Readonly<Record<string, MarkedDamageRiderAbilityCheck>>;
+
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECT_BY_VARIANT_TAG = {
+  ConditionImmunityApplied: "conditionImmunityApplied",
+  ConditionApplicationRejectedByImmunity:
+    "conditionApplicationRejectedByImmunity",
+  TurnStartTemporaryHitPointGrantScheduled:
+    "turnStartTemporaryHitPointGrantScheduled",
+  TurnStartTemporaryHitPointsGranted: "turnStartTemporaryHitPointsGranted",
+  TemporaryHitPointsUseNonStackingChoice:
+    "temporaryHitPointsUseNonStackingChoice",
+  ConcentrationCleanupPreventsLaterTurnStartGrant:
+    "concentrationCleanupPreventsLaterTurnStartGrant",
+} as const satisfies Readonly<
+  Record<string, ConditionImmunityTemporaryHitPointEffect>
+>;
+
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_CONDITION_BY_VARIANT_TAG = {
+  FrightenedConditionImmunity: "frightenedConditionImmunity",
+} as const satisfies Readonly<
+  Record<string, ConditionImmunityTemporaryHitPointCondition>
+>;
+
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_OWNER_BY_VARIANT_TAG = {
+  BattleActiveEffectProjectionOwner: "battleActiveEffect",
+  BattleConditionLifecycleProjectionOwner: "battleConditionLifecycle",
+  BattleTemporaryHitPointProjectionOwner: "battleTemporaryHitPoint",
+  BattleTurnBoundaryProjectionOwner: "battleTurnBoundary",
+  ImmunityBattleConcentrationCleanupOwner: "battleConcentration",
+  ImmunityBattleActiveEffectCleanupOwner: "battleActiveEffectCleanup",
+} as const satisfies Readonly<
+  Record<string, ConditionImmunityTemporaryHitPointOwner>
 >;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
@@ -10828,6 +11357,170 @@ function mixedTargetOutcomeFactPayload(
   throw new Error(`Expected mixed-target outcome ${tag} payload record.`);
 }
 
+function decodeMarkedDamageImmunityRouteFacts(
+  raw: unknown,
+): readonly MarkedDamageImmunityRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeMarkedDamageImmunityRouteFact);
+}
+
+function decodeMarkedDamageImmunityRouteFact(
+  raw: unknown,
+): MarkedDamageImmunityRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteMarkedDamageRiderFact") {
+    const payload = markedDamageImmunityFactPayload(raw, tag);
+    return decodeMarkedDamageRiderRouteFact(quintField(payload, "fact"));
+  }
+  if (tag === "RouteConditionImmunityTemporaryHitPointFact") {
+    const payload = markedDamageImmunityFactPayload(raw, tag);
+    return decodeConditionImmunityTemporaryHitPointRouteFact(
+      quintField(payload, "fact"),
+    );
+  }
+
+  throw new Error(`Unknown marked-damage/immunity route fact: ${tag}.`);
+}
+
+function decodeMarkedDamageRiderRouteFact(
+  raw: unknown,
+): MarkedDamageRiderRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[].fact");
+  if (tag === "RouteMarkedDamageRiderHost") {
+    const payload = markedDamageRiderFactPayload(raw, tag);
+    return {
+      kind: "markedHost",
+      host: quintVariantMappedValue(
+        quintField(payload, "host"),
+        "qFacts[].fact.host",
+        MARKED_DAMAGE_RIDER_HOST_BY_VARIANT_TAG,
+        "marked damage rider host",
+      ),
+    };
+  }
+  if (tag === "RouteMarkedDamageRiderDamage") {
+    const payload = markedDamageRiderFactPayload(raw, tag);
+    return {
+      kind: "markedDamage",
+      damage: quintVariantMappedValue(
+        quintField(payload, "damage"),
+        "qFacts[].fact.damage",
+        MARKED_DAMAGE_RIDER_DAMAGE_BY_VARIANT_TAG,
+        "marked damage rider damage",
+      ),
+    };
+  }
+  if (tag === "RouteMarkedDamageRiderTransfer") {
+    const payload = markedDamageRiderFactPayload(raw, tag);
+    return {
+      kind: "markedTransfer",
+      transfer: quintVariantMappedValue(
+        quintField(payload, "transfer"),
+        "qFacts[].fact.transfer",
+        MARKED_DAMAGE_RIDER_TRANSFER_BY_VARIANT_TAG,
+        "marked damage rider transfer",
+      ),
+    };
+  }
+  if (tag === "RouteMarkedDamageRiderAbilityCheck") {
+    const payload = markedDamageRiderFactPayload(raw, tag);
+    return {
+      kind: "markedAbilityCheck",
+      abilityCheck: quintVariantMappedValue(
+        quintField(payload, "abilityCheck"),
+        "qFacts[].fact.abilityCheck",
+        MARKED_DAMAGE_RIDER_ABILITY_CHECK_BY_VARIANT_TAG,
+        "marked damage rider ability check",
+      ),
+    };
+  }
+
+  throw new Error(`Unknown marked damage rider route fact: ${tag}.`);
+}
+
+function decodeConditionImmunityTemporaryHitPointRouteFact(
+  raw: unknown,
+): ConditionImmunityTemporaryHitPointRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[].fact");
+  if (tag === "RouteConditionImmunityTemporaryHitPointEffect") {
+    const payload = conditionImmunityTemporaryHitPointFactPayload(raw, tag);
+    return {
+      kind: "immunityTemporaryHitPointEffect",
+      effect: quintVariantMappedValue(
+        quintField(payload, "effect"),
+        "qFacts[].fact.effect",
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECT_BY_VARIANT_TAG,
+        "condition-immunity temporary-Hit-Point effect",
+      ),
+    };
+  }
+  if (tag === "RouteConditionImmunityTemporaryHitPointCondition") {
+    const payload = conditionImmunityTemporaryHitPointFactPayload(raw, tag);
+    return {
+      kind: "immunityTemporaryHitPointCondition",
+      condition: quintVariantMappedValue(
+        quintField(payload, "condition"),
+        "qFacts[].fact.condition",
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_CONDITION_BY_VARIANT_TAG,
+        "condition-immunity temporary-Hit-Point condition",
+      ),
+    };
+  }
+  if (tag === "RouteConditionImmunityTemporaryHitPointOwner") {
+    const payload = conditionImmunityTemporaryHitPointFactPayload(raw, tag);
+    return {
+      kind: "immunityTemporaryHitPointOwner",
+      owner: quintVariantMappedValue(
+        quintField(payload, "owner"),
+        "qFacts[].fact.owner",
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_OWNER_BY_VARIANT_TAG,
+        "condition-immunity temporary-Hit-Point owner",
+      ),
+    };
+  }
+
+  throw new Error(
+    `Unknown condition-immunity temporary-Hit-Point route fact: ${tag}.`,
+  );
+}
+
+function markedDamageImmunityFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected marked-damage/immunity ${tag} payload record.`);
+}
+
+function markedDamageRiderFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[].fact");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected marked damage rider ${tag} payload record.`);
+}
+
+function conditionImmunityTemporaryHitPointFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[].fact");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(
+    `Expected condition-immunity temporary-Hit-Point ${tag} payload record.`,
+  );
+}
+
 function normalizeQuintState(raw: unknown): MbtProjection {
   const root = quintStateRecord(raw);
   const state = Object.hasOwn(root, "qState")
@@ -11049,6 +11742,16 @@ function normalizeReducerRoutedMixedTargetOutcomeQuintState(
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
     facts: decodeMixedTargetOutcomeRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedMarkedDamageImmunityQuintState(
+  raw: unknown,
+): ReducerRoutedMarkedDamageImmunityProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeMarkedDamageImmunityRouteFacts(quintField(state, "qFacts")),
   };
 }
 
@@ -11719,6 +12422,16 @@ export const reducerRoutedMixedTargetOutcomeStateCheck = stateCheck(
   (
     spec: ReducerRoutedMixedTargetOutcomeProjection,
     impl: ReducerRoutedMixedTargetOutcomeProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedMarkedDamageImmunityStateCheck = stateCheck(
+  normalizeReducerRoutedMarkedDamageImmunityQuintState,
+  (
+    spec: ReducerRoutedMarkedDamageImmunityProjection,
+    impl: ReducerRoutedMarkedDamageImmunityProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;
