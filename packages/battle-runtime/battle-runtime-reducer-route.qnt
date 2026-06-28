@@ -60,6 +60,7 @@ module battleRuntimeReducerRoute {
     | MovementResourceRouteSubject
     | SpecialSpeedProjectionRouteSubject
     | ForcedMovementRouteSubject
+    | MovementPresentationRouteSubject
     | ActiveFormLifecycleRouteSubject
     | CreatureTypeTargetAdmissionRouteSubject
     | ProtectionCharmActiveEffectRouteSubject
@@ -122,6 +123,7 @@ module battleRuntimeReducerRoute {
     | BattleArmorClassOwner
     | BattleLightProjectionOwner
     | BattleSpellInvocationOwner
+    | BattleTablePresentationOwner
 
   type ReducerRouteFillEvidence =
     | RouteFillKind({ fill: BattleFillKind })

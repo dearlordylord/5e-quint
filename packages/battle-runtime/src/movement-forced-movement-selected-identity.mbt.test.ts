@@ -58,6 +58,9 @@ import {
   mbtSpecPath,
   mbtTraceCount,
   quintField,
+  quintList,
+  quintVariantMappedValue,
+  quintVariantTag,
   quintStateRecord,
   reducerRouteDiscoverBattleActs,
   reducerRouteResolveBattleSubject,
@@ -301,6 +304,52 @@ type MovementForcedMovementRouteProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
 
+const MOVEMENT_PRESENTATION_RESOURCE_FACTS = [
+  "movementReplacementFixedBudgetSpend",
+  "movementReplacementDistanceProjection",
+  "forcedMovementNoOwnMovementResource",
+  "forcedMovementDistanceProjection",
+] as const;
+type MovementPresentationResourceFact =
+  (typeof MOVEMENT_PRESENTATION_RESOURCE_FACTS)[number];
+
+const MOVEMENT_PRESENTATION_TABLE_FACTS = [
+  "tableSuppliedMovementPathWitness",
+  "landingSpacePresentationWitness",
+  "directionAwayFromSourcePresentationWitness",
+  "areaGeometryPresentationWitness",
+  "audibleEffectPresentationWitness",
+] as const;
+type MovementPresentationTableFact =
+  (typeof MOVEMENT_PRESENTATION_TABLE_FACTS)[number];
+
+const MOVEMENT_PRESENTATION_OBJECT_BOUNDARY_FACTS = [
+  "objectUnsecuredBoundary",
+  "objectEntirelyWithinAreaBoundary",
+  "objectPushProjection",
+] as const;
+type MovementPresentationObjectBoundaryFact =
+  (typeof MOVEMENT_PRESENTATION_OBJECT_BOUNDARY_FACTS)[number];
+
+type MovementPresentationRouteFact =
+  | {
+      readonly kind: "resource";
+      readonly resource: MovementPresentationResourceFact;
+    }
+  | {
+      readonly kind: "tablePresentation";
+      readonly presentation: MovementPresentationTableFact;
+    }
+  | {
+      readonly kind: "objectBoundary";
+      readonly boundary: MovementPresentationObjectBoundaryFact;
+    };
+
+type MovementPresentationRouteProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly MovementPresentationRouteFact[];
+};
+
 const movementForcedMovementRouteDriverSchema = {
   init: {},
   doDissonantWhispersForcedReactionMovement: {},
@@ -309,6 +358,14 @@ const movementForcedMovementRouteDriverSchema = {
   doRangerRovingClimbSwimMovement: {},
   doBarbarianFastMovementDash: {},
   doMonkUnarmoredMovementDash: {},
+  step: {},
+} as const;
+
+const movementPresentationRouteDriverSchema = {
+  init: {},
+  doRouteMovementReplacementLandingWitness: {},
+  doRouteForcedCreatureMovementPresentation: {},
+  doRouteObjectPushPresentation: {},
   step: {},
 } as const;
 
@@ -326,6 +383,22 @@ describe("Movement and forced movement substrate route MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(1),
       stateCheck: movementForcedMovementRouteStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes movement replacement, forced movement, and object-push presentation through generic facts", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-movement-presentation.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createMovementPresentationRouteDriver(),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: movementPresentationRouteStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 });
@@ -507,6 +580,286 @@ const movementForcedMovementRouteStateCheck = stateCheck(
   normalizeMovementForcedMovementRouteQuintState,
   compareMovementForcedMovementRouteStates,
 );
+
+function createMovementPresentationRouteDriver() {
+  return defineDriver<
+    typeof movementPresentationRouteDriverSchema,
+    MovementPresentationRouteProjection
+  >(movementPresentationRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [];
+    let facts: readonly MovementPresentationRouteFact[] = [];
+
+    function reset(): void {
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteMovementReplacementLandingWitness: () => {
+        route = appendMovementReplacementPresentationRoute(route);
+        facts = movementReplacementPresentationFacts;
+      },
+      doRouteForcedCreatureMovementPresentation: () => {
+        route = appendForcedCreatureMovementPresentationRoute(route);
+        facts = forcedCreatureMovementPresentationFacts;
+      },
+      doRouteObjectPushPresentation: () => {
+        route = appendObjectPushPresentationRoute(route);
+        facts = objectPushPresentationFacts;
+      },
+      step: () => {},
+      getState: () => ({ route, facts }),
+    };
+  });
+}
+
+function appendMovementReplacementPresentationRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "movementPresentation",
+      holes: [{ kind: "movement" }],
+      owner: "battleMovementResource",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "movementPresentation",
+      fill: "movement",
+      holes: [],
+      owner: "battleMovementResource",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "movementPresentation",
+      holes: [],
+      owner: "battleTablePresentation",
+    }),
+  ];
+}
+
+function appendForcedCreatureMovementPresentationRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "movementPresentation",
+      holes: [{ kind: "savingThrowOutcome" }, { kind: "movement" }],
+      owner: "battleSavingThrowOutcome",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "movementPresentation",
+      fill: "savingThrowOutcome",
+      holes: [{ kind: "movement" }],
+      owner: "battleSavingThrowOutcome",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: "movementPresentation",
+      fill: "movement",
+      holes: [],
+      owner: "battleMovementResource",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "movementPresentation",
+      holes: [],
+      owner: "battleTablePresentation",
+    }),
+  ];
+}
+
+function appendObjectPushPresentationRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "movementPresentation",
+      holes: [],
+      owner: "battleObjectTargetBoundary",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "movementPresentation",
+      holes: [],
+      owner: "battleObjectTargetBoundary",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "movementPresentation",
+      holes: [],
+      owner: "battleTablePresentation",
+    }),
+  ];
+}
+
+const movementReplacementPresentationFacts = [
+  {
+    kind: "resource",
+    resource: "movementReplacementFixedBudgetSpend",
+  },
+  {
+    kind: "resource",
+    resource: "movementReplacementDistanceProjection",
+  },
+  {
+    kind: "tablePresentation",
+    presentation: "tableSuppliedMovementPathWitness",
+  },
+  {
+    kind: "tablePresentation",
+    presentation: "landingSpacePresentationWitness",
+  },
+] as const satisfies readonly MovementPresentationRouteFact[];
+
+const forcedCreatureMovementPresentationFacts = [
+  {
+    kind: "resource",
+    resource: "forcedMovementNoOwnMovementResource",
+  },
+  {
+    kind: "resource",
+    resource: "forcedMovementDistanceProjection",
+  },
+  {
+    kind: "tablePresentation",
+    presentation: "directionAwayFromSourcePresentationWitness",
+  },
+  {
+    kind: "tablePresentation",
+    presentation: "areaGeometryPresentationWitness",
+  },
+] as const satisfies readonly MovementPresentationRouteFact[];
+
+const objectPushPresentationFacts = [
+  {
+    kind: "objectBoundary",
+    boundary: "objectUnsecuredBoundary",
+  },
+  {
+    kind: "objectBoundary",
+    boundary: "objectEntirelyWithinAreaBoundary",
+  },
+  {
+    kind: "objectBoundary",
+    boundary: "objectPushProjection",
+  },
+  {
+    kind: "tablePresentation",
+    presentation: "directionAwayFromSourcePresentationWitness",
+  },
+  {
+    kind: "tablePresentation",
+    presentation: "audibleEffectPresentationWitness",
+  },
+] as const satisfies readonly MovementPresentationRouteFact[];
+
+const movementPresentationRouteStateCheck = stateCheck(
+  normalizeMovementPresentationRouteQuintState,
+  compareMovementPresentationRouteStates,
+);
+
+function normalizeMovementPresentationRouteQuintState(
+  raw: unknown,
+): MovementPresentationRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeMovementPresentationRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function compareMovementPresentationRouteStates(
+  spec: MovementPresentationRouteProjection,
+  impl: MovementPresentationRouteProjection,
+): boolean {
+  expect(impl).toEqual(spec);
+  return true;
+}
+
+const MOVEMENT_PRESENTATION_RESOURCE_BY_VARIANT_TAG = {
+  MovementReplacementFixedBudgetSpend: "movementReplacementFixedBudgetSpend",
+  MovementReplacementDistanceProjection:
+    "movementReplacementDistanceProjection",
+  ForcedMovementNoOwnMovementResource: "forcedMovementNoOwnMovementResource",
+  ForcedMovementDistanceProjection: "forcedMovementDistanceProjection",
+} as const satisfies Readonly<
+  Record<string, MovementPresentationResourceFact>
+>;
+
+const MOVEMENT_PRESENTATION_TABLE_BY_VARIANT_TAG = {
+  TableSuppliedMovementPathWitness: "tableSuppliedMovementPathWitness",
+  LandingSpacePresentationWitness: "landingSpacePresentationWitness",
+  DirectionAwayFromSourcePresentationWitness:
+    "directionAwayFromSourcePresentationWitness",
+  AreaGeometryPresentationWitness: "areaGeometryPresentationWitness",
+  AudibleEffectPresentationWitness: "audibleEffectPresentationWitness",
+} as const satisfies Readonly<Record<string, MovementPresentationTableFact>>;
+
+const MOVEMENT_PRESENTATION_OBJECT_BOUNDARY_BY_VARIANT_TAG = {
+  ObjectUnsecuredBoundary: "objectUnsecuredBoundary",
+  ObjectEntirelyWithinAreaBoundary: "objectEntirelyWithinAreaBoundary",
+  ObjectPushProjection: "objectPushProjection",
+} as const satisfies Readonly<
+  Record<string, MovementPresentationObjectBoundaryFact>
+>;
+
+function decodeMovementPresentationRouteFacts(
+  raw: unknown,
+): readonly MovementPresentationRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeMovementPresentationRouteFact);
+}
+
+function decodeMovementPresentationRouteFact(
+  raw: unknown,
+): MovementPresentationRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteMovementPresentationResource") {
+    const payload = movementPresentationFactPayload(raw);
+    return {
+      kind: "resource",
+      resource: quintVariantMappedValue(
+        quintField(payload, "resource"),
+        "qFacts[].resource",
+        MOVEMENT_PRESENTATION_RESOURCE_BY_VARIANT_TAG,
+        "movement/presentation resource fact",
+      ),
+    };
+  }
+  if (tag === "RouteMovementPresentationTable") {
+    const payload = movementPresentationFactPayload(raw);
+    return {
+      kind: "tablePresentation",
+      presentation: quintVariantMappedValue(
+        quintField(payload, "presentation"),
+        "qFacts[].presentation",
+        MOVEMENT_PRESENTATION_TABLE_BY_VARIANT_TAG,
+        "movement/presentation table fact",
+      ),
+    };
+  }
+  if (tag === "RouteMovementPresentationObjectBoundary") {
+    const payload = movementPresentationFactPayload(raw);
+    return {
+      kind: "objectBoundary",
+      boundary: quintVariantMappedValue(
+        quintField(payload, "boundary"),
+        "qFacts[].boundary",
+        MOVEMENT_PRESENTATION_OBJECT_BOUNDARY_BY_VARIANT_TAG,
+        "movement/presentation object-boundary fact",
+      ),
+    };
+  }
+
+  throw new Error(`Unknown movement/presentation route fact: ${tag}.`);
+}
+
+function movementPresentationFactPayload(
+  raw: unknown,
+): Readonly<Record<string, unknown>> {
+  const value = quintField(quintStateRecord(raw), "value");
+  return quintStateRecord(value);
+}
 
 function normalizeMovementForcedMovementRouteQuintState(
   raw: unknown,

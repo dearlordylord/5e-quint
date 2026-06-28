@@ -10272,6 +10272,12 @@
       "role": "bridge"
     },
     {
+      "category": "leaf-type-vocabulary",
+      "classification": "exempt",
+      "evidence": "Generic movement/presentation route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
+      "ownerPath": "packages/battle-runtime/battle-runtime-movement-presentation-route-facts.qnt"
+    },
+    {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-movement.qnt",
       "role": "semantic-core"
