@@ -895,6 +895,7 @@ const REDUCER_ROUTE_SUBJECT_FAMILIES = [
   "nextAttackRollMode",
   "reactionInterdiction",
   "conditionRider",
+  "objectLightRider",
 ] as const;
 type ReducerRouteSubjectFamily =
   (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
@@ -932,6 +933,7 @@ const REDUCER_ROUTE_OWNER_GROUPS = [
   "battleCreatureSpaceMovement",
   "battleCreatureState",
   "battleArmorClass",
+  "battleLightProjection",
 ] as const;
 type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
 const REDUCER_ROUTE_HOLES = [
@@ -1307,6 +1309,82 @@ type ConditionRiderRouteFact =
 type ReducerRoutedConditionRiderProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly ConditionRiderRouteFact[];
+};
+const OBJECT_LIGHT_EMITTER_SOURCES = [
+  "objectAttachedEmitterSource",
+  "heldEmitterSource",
+] as const;
+type ObjectLightEmitterSource =
+  (typeof OBJECT_LIGHT_EMITTER_SOURCES)[number];
+const OBJECT_LIGHT_EMITTER_ADMISSIONS = [
+  "objectTargetAdmittedByTableWitness",
+  "objectTargetRejectedByTableWitness",
+  "emitterEffectAdmitted",
+] as const;
+type ObjectLightEmitterAdmission =
+  (typeof OBJECT_LIGHT_EMITTER_ADMISSIONS)[number];
+const OBJECT_LIGHT_EMITTER_ATTACHMENTS = [
+  "attachedToObject",
+  "heldByCaster",
+] as const;
+type ObjectLightEmitterAttachment =
+  (typeof OBJECT_LIGHT_EMITTER_ATTACHMENTS)[number];
+const OBJECT_LIGHT_PROJECTIONS = [
+  "brightLightProjection",
+  "dimLightProjection",
+] as const;
+type ObjectLightProjection = (typeof OBJECT_LIGHT_PROJECTIONS)[number];
+const OBJECT_LIGHT_CLEANUPS = [
+  "replacementCleanup",
+  "hurlCleanup",
+  "durationCleanup",
+] as const;
+type ObjectLightCleanup = (typeof OBJECT_LIGHT_CLEANUPS)[number];
+const OBJECT_LIGHT_CLEANUP_OWNERS = [
+  "battleActiveEffect",
+  "battleTurnBoundary",
+] as const;
+type ObjectLightCleanupOwner =
+  (typeof OBJECT_LIGHT_CLEANUP_OWNERS)[number];
+const OBJECT_LIGHT_TABLE_WITNESSES = [
+  "objectValidityAdmissionWitness",
+  "objectGeometryWitness",
+  "coverGeometryWitness",
+  "opaqueBlockerGeometryWitness",
+  "colorPresentationWitness",
+  "objectDurabilityBoundaryWitness",
+] as const;
+type ObjectLightTableWitness =
+  (typeof OBJECT_LIGHT_TABLE_WITNESSES)[number];
+type ObjectLightRouteFact =
+  | {
+      readonly kind: "emitterSource";
+      readonly source: ObjectLightEmitterSource;
+    }
+  | {
+      readonly kind: "admission";
+      readonly admission: ObjectLightEmitterAdmission;
+    }
+  | {
+      readonly kind: "attachment";
+      readonly attachment: ObjectLightEmitterAttachment;
+    }
+  | {
+      readonly kind: "projection";
+      readonly projection: ObjectLightProjection;
+    }
+  | {
+      readonly kind: "cleanedUpBy";
+      readonly cleanup: ObjectLightCleanup;
+      readonly owner: ObjectLightCleanupOwner;
+    }
+  | {
+      readonly kind: "tableWitness";
+      readonly witness: ObjectLightTableWitness;
+    };
+type ReducerRoutedObjectLightProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly ObjectLightRouteFact[];
 };
 type ReducerRoutedSaveGatedSpellOrderingProjection =
   SaveGatedSpellOrderingProjection & {
@@ -1704,6 +1782,21 @@ const conditionRiderRouteDriverSchema = {
   doAdmitFailedSaveSleepIncapacitatedConditionRider: {},
   doOpenSleepRepeatSaveFrontier: {},
   doResolveSleepRepeatSaveFailureTransitionToUnconscious: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const objectLightRouteDriverSchema = {
+  init: {},
+  doAdmitObjectAttachedEmitter: {},
+  doRejectObjectAttachedEmitterWithoutObjectWitness: {},
+  doAdmitHeldLightEmitter: {},
+  doProjectObjectAttachedBrightDimLight: {},
+  doProjectHeldBrightDimLight: {},
+  doCleanupObjectAttachedEmitterOnReplacement: {},
+  doCleanupHeldEmitterOnHurl: {},
+  doCleanupObjectAttachedEmitterOnDuration: {},
+  doRecordTableOwnedGeometryAndCoverWitnesses: {},
   doStutterAfterTerminalSurface: {},
   step: {},
 } as const;
@@ -4046,6 +4139,8 @@ const REACTION_INTERDICTION_ROUTE_SUBJECT =
   "reactionInterdiction" satisfies ReducerRouteSubjectFamily;
 const CONDITION_RIDER_ROUTE_SUBJECT =
   "conditionRider" satisfies ReducerRouteSubjectFamily;
+const OBJECT_LIGHT_RIDER_ROUTE_SUBJECT =
+  "objectLightRider" satisfies ReducerRouteSubjectFamily;
 const NO_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
 const TARGET_CHOICE_ROUTE_HOLES = [
   "targetChoice",
@@ -5494,6 +5589,261 @@ export function createConditionRiderRouteDriver() {
       doStutterAfterTerminalSurface: () => {},
       step: () => {},
       getState: (): ReducerRoutedConditionRiderProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+const OBJECT_LIGHT_OBJECT_ATTACHED_ADMISSION_FACTS = [
+  {
+    kind: "emitterSource",
+    source: "objectAttachedEmitterSource",
+  },
+  {
+    kind: "admission",
+    admission: "objectTargetAdmittedByTableWitness",
+  },
+  {
+    kind: "admission",
+    admission: "emitterEffectAdmitted",
+  },
+  {
+    kind: "attachment",
+    attachment: "attachedToObject",
+  },
+  {
+    kind: "tableWitness",
+    witness: "objectValidityAdmissionWitness",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_OBJECT_REJECTED_FACTS = [
+  {
+    kind: "emitterSource",
+    source: "objectAttachedEmitterSource",
+  },
+  {
+    kind: "admission",
+    admission: "objectTargetRejectedByTableWitness",
+  },
+  {
+    kind: "tableWitness",
+    witness: "objectValidityAdmissionWitness",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_HELD_ADMISSION_FACTS = [
+  {
+    kind: "emitterSource",
+    source: "heldEmitterSource",
+  },
+  {
+    kind: "admission",
+    admission: "emitterEffectAdmitted",
+  },
+  {
+    kind: "attachment",
+    attachment: "heldByCaster",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_BRIGHT_DIM_PROJECTION_FACTS = [
+  {
+    kind: "projection",
+    projection: "brightLightProjection",
+  },
+  {
+    kind: "projection",
+    projection: "dimLightProjection",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_REPLACEMENT_CLEANUP_FACTS = [
+  {
+    kind: "cleanedUpBy",
+    cleanup: "replacementCleanup",
+    owner: "battleActiveEffect",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_HURL_CLEANUP_FACTS = [
+  {
+    kind: "cleanedUpBy",
+    cleanup: "hurlCleanup",
+    owner: "battleActiveEffect",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_DURATION_CLEANUP_FACTS = [
+  {
+    kind: "cleanedUpBy",
+    cleanup: "durationCleanup",
+    owner: "battleTurnBoundary",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "durationCleanup",
+    owner: "battleActiveEffect",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_TABLE_GEOMETRY_WITNESS_FACTS = [
+  {
+    kind: "tableWitness",
+    witness: "objectGeometryWitness",
+  },
+  {
+    kind: "tableWitness",
+    witness: "coverGeometryWitness",
+  },
+  {
+    kind: "tableWitness",
+    witness: "opaqueBlockerGeometryWitness",
+  },
+  {
+    kind: "tableWitness",
+    witness: "colorPresentationWitness",
+  },
+  {
+    kind: "tableWitness",
+    witness: "objectDurabilityBoundaryWitness",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+function objectLightInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function objectLightObjectAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleObjectTargetBoundary",
+    }),
+  ];
+}
+
+function objectLightEmitterAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function objectLightProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleLightProjection",
+    }),
+  ];
+}
+
+function objectLightActiveEffectCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function objectLightDurationCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function objectLightTableGeometryWitnessRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaShape",
+    }),
+  ];
+}
+
+export function createObjectLightRouteDriver() {
+  return defineDriver(objectLightRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = objectLightInitialRoute();
+    let facts: readonly ObjectLightRouteFact[] = [];
+
+    function reset(): void {
+      route = objectLightInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAdmitObjectAttachedEmitter: () => {
+        route = [
+          ...route,
+          ...objectLightObjectAdmissionRoute(),
+          ...objectLightEmitterAdmissionRoute(),
+        ];
+        facts = OBJECT_LIGHT_OBJECT_ATTACHED_ADMISSION_FACTS;
+      },
+      doRejectObjectAttachedEmitterWithoutObjectWitness: () => {
+        route = [...route, ...objectLightObjectAdmissionRoute()];
+        facts = OBJECT_LIGHT_OBJECT_REJECTED_FACTS;
+      },
+      doAdmitHeldLightEmitter: () => {
+        route = [...route, ...objectLightEmitterAdmissionRoute()];
+        facts = OBJECT_LIGHT_HELD_ADMISSION_FACTS;
+      },
+      doProjectObjectAttachedBrightDimLight: () => {
+        route = [...route, ...objectLightProjectionRoute()];
+        facts = [...facts, ...OBJECT_LIGHT_BRIGHT_DIM_PROJECTION_FACTS];
+      },
+      doProjectHeldBrightDimLight: () => {
+        route = [...route, ...objectLightProjectionRoute()];
+        facts = [...facts, ...OBJECT_LIGHT_BRIGHT_DIM_PROJECTION_FACTS];
+      },
+      doCleanupObjectAttachedEmitterOnReplacement: () => {
+        route = [...route, ...objectLightActiveEffectCleanupRoute()];
+        facts = [...facts, ...OBJECT_LIGHT_REPLACEMENT_CLEANUP_FACTS];
+      },
+      doCleanupHeldEmitterOnHurl: () => {
+        route = [...route, ...objectLightActiveEffectCleanupRoute()];
+        facts = [...facts, ...OBJECT_LIGHT_HURL_CLEANUP_FACTS];
+      },
+      doCleanupObjectAttachedEmitterOnDuration: () => {
+        route = [...route, ...objectLightDurationCleanupRoute()];
+        facts = [...facts, ...OBJECT_LIGHT_DURATION_CLEANUP_FACTS];
+      },
+      doRecordTableOwnedGeometryAndCoverWitnesses: () => {
+        route = [...route, ...objectLightTableGeometryWitnessRoute()];
+        facts = OBJECT_LIGHT_TABLE_GEOMETRY_WITNESS_FACTS;
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedObjectLightProjection => ({
         route,
         facts,
       }),
@@ -8960,6 +9310,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   NextAttackRollModeRouteSubject: "nextAttackRollMode",
   ReactionInterdictionRouteSubject: "reactionInterdiction",
   ConditionRiderRouteSubject: "conditionRider",
+  ObjectLightRiderRouteSubject: "objectLightRider",
 } as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
 
 const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
@@ -8996,6 +9347,7 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleCreatureSpaceMovementOwner: "battleCreatureSpaceMovement",
   BattleCreatureStateOwner: "battleCreatureState",
   BattleArmorClassOwner: "battleArmorClass",
+  BattleLightProjectionOwner: "battleLightProjection",
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
 
 const NEXT_ATTACK_ROLL_MODE_SOURCE_BY_VARIANT_TAG = {
@@ -9099,6 +9451,47 @@ const CONDITION_RIDER_CLEANUP_OWNER_BY_VARIANT_TAG = {
   BattleConditionLifecycleCleanupOwner: "battleConditionLifecycle",
   BattleActiveEffectCleanupOwner: "battleActiveEffect",
 } as const satisfies Readonly<Record<string, ConditionRiderCleanupOwner>>;
+
+const OBJECT_LIGHT_EMITTER_SOURCE_BY_VARIANT_TAG = {
+  ObjectAttachedEmitterSource: "objectAttachedEmitterSource",
+  HeldEmitterSource: "heldEmitterSource",
+} as const satisfies Readonly<Record<string, ObjectLightEmitterSource>>;
+
+const OBJECT_LIGHT_EMITTER_ADMISSION_BY_VARIANT_TAG = {
+  ObjectTargetAdmittedByTableWitness: "objectTargetAdmittedByTableWitness",
+  ObjectTargetRejectedByTableWitness: "objectTargetRejectedByTableWitness",
+  EmitterEffectAdmitted: "emitterEffectAdmitted",
+} as const satisfies Readonly<Record<string, ObjectLightEmitterAdmission>>;
+
+const OBJECT_LIGHT_EMITTER_ATTACHMENT_BY_VARIANT_TAG = {
+  AttachedToObject: "attachedToObject",
+  HeldByCaster: "heldByCaster",
+} as const satisfies Readonly<Record<string, ObjectLightEmitterAttachment>>;
+
+const OBJECT_LIGHT_PROJECTION_BY_VARIANT_TAG = {
+  BrightLightProjection: "brightLightProjection",
+  DimLightProjection: "dimLightProjection",
+} as const satisfies Readonly<Record<string, ObjectLightProjection>>;
+
+const OBJECT_LIGHT_CLEANUP_BY_VARIANT_TAG = {
+  ReplacementCleanup: "replacementCleanup",
+  HurlCleanup: "hurlCleanup",
+  DurationCleanup: "durationCleanup",
+} as const satisfies Readonly<Record<string, ObjectLightCleanup>>;
+
+const OBJECT_LIGHT_CLEANUP_OWNER_BY_VARIANT_TAG = {
+  BattleActiveEffectCleanupOwner: "battleActiveEffect",
+  BattleTurnBoundaryCleanupOwner: "battleTurnBoundary",
+} as const satisfies Readonly<Record<string, ObjectLightCleanupOwner>>;
+
+const OBJECT_LIGHT_TABLE_WITNESS_BY_VARIANT_TAG = {
+  ObjectValidityAdmissionWitness: "objectValidityAdmissionWitness",
+  ObjectGeometryWitness: "objectGeometryWitness",
+  CoverGeometryWitness: "coverGeometryWitness",
+  OpaqueBlockerGeometryWitness: "opaqueBlockerGeometryWitness",
+  ColorPresentationWitness: "colorPresentationWitness",
+  ObjectDurabilityBoundaryWitness: "objectDurabilityBoundaryWitness",
+} as const satisfies Readonly<Record<string, ObjectLightTableWitness>>;
 
 const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
   AbilityCheckHoleKind: "abilityCheck",
@@ -9733,6 +10126,108 @@ function conditionRiderFactPayload(
   throw new Error(`Expected condition rider ${tag} payload record.`);
 }
 
+function decodeObjectLightRouteFacts(
+  raw: unknown,
+): readonly ObjectLightRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeObjectLightRouteFact);
+}
+
+function decodeObjectLightRouteFact(raw: unknown): ObjectLightRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteObjectLightEmitterSource") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "emitterSource",
+      source: quintVariantMappedValue(
+        quintField(payload, "source"),
+        "qFacts[].source",
+        OBJECT_LIGHT_EMITTER_SOURCE_BY_VARIANT_TAG,
+        "object/light emitter source",
+      ),
+    };
+  }
+  if (tag === "RouteObjectLightAdmission") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "admission",
+      admission: quintVariantMappedValue(
+        quintField(payload, "admission"),
+        "qFacts[].admission",
+        OBJECT_LIGHT_EMITTER_ADMISSION_BY_VARIANT_TAG,
+        "object/light admission",
+      ),
+    };
+  }
+  if (tag === "RouteObjectLightAttachment") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "attachment",
+      attachment: quintVariantMappedValue(
+        quintField(payload, "attachment"),
+        "qFacts[].attachment",
+        OBJECT_LIGHT_EMITTER_ATTACHMENT_BY_VARIANT_TAG,
+        "object/light attachment",
+      ),
+    };
+  }
+  if (tag === "RouteObjectLightProjection") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "projection",
+      projection: quintVariantMappedValue(
+        quintField(payload, "projection"),
+        "qFacts[].projection",
+        OBJECT_LIGHT_PROJECTION_BY_VARIANT_TAG,
+        "object/light projection",
+      ),
+    };
+  }
+  if (tag === "RouteObjectLightCleanedUpBy") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "cleanedUpBy",
+      cleanup: quintVariantMappedValue(
+        quintField(payload, "cleanup"),
+        "qFacts[].cleanup",
+        OBJECT_LIGHT_CLEANUP_BY_VARIANT_TAG,
+        "object/light cleanup",
+      ),
+      owner: quintVariantMappedValue(
+        quintField(payload, "owner"),
+        "qFacts[].owner",
+        OBJECT_LIGHT_CLEANUP_OWNER_BY_VARIANT_TAG,
+        "object/light cleanup owner",
+      ),
+    };
+  }
+  if (tag === "RouteObjectLightTableWitness") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "tableWitness",
+      witness: quintVariantMappedValue(
+        quintField(payload, "witness"),
+        "qFacts[].witness",
+        OBJECT_LIGHT_TABLE_WITNESS_BY_VARIANT_TAG,
+        "object/light table witness",
+      ),
+    };
+  }
+
+  throw new Error(`Unknown object/light route fact: ${tag}.`);
+}
+
+function objectLightFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected object/light ${tag} payload record.`);
+}
+
 function normalizeQuintState(raw: unknown): MbtProjection {
   const root = quintStateRecord(raw);
   const state = Object.hasOwn(root, "qState")
@@ -9934,6 +10429,16 @@ function normalizeReducerRoutedConditionRiderQuintState(
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
     facts: decodeConditionRiderRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedObjectLightQuintState(
+  raw: unknown,
+): ReducerRoutedObjectLightProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeObjectLightRouteFacts(quintField(state, "qFacts")),
   };
 }
 
@@ -10584,6 +11089,16 @@ export const reducerRoutedConditionRiderStateCheck = stateCheck(
   (
     spec: ReducerRoutedConditionRiderProjection,
     impl: ReducerRoutedConditionRiderProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedObjectLightStateCheck = stateCheck(
+  normalizeReducerRoutedObjectLightQuintState,
+  (
+    spec: ReducerRoutedObjectLightProjection,
+    impl: ReducerRoutedObjectLightProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;

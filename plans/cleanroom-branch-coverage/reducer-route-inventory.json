@@ -941,6 +941,7 @@
               "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt supplies generic Saving Throw frontier evidence for the selected save-gated spatial branches.",
               "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt supplies generic Reaction spell casting-time evidence; falling mitigation now uses the dedicated reaction payload taxonomy route below.",
               "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt records ReactionFallMitigationRouteSubject evidence for falling-trigger reaction mitigation through generic trigger/procedure/continuation facts, spell-slot/action-economy, active-effect, movement-resource, and Hit Point owners.",
+              "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt supplies generic object-attached and held light-emitter route evidence for object admission, active-effect admission, Bright/Dim Light projection, replacement cleanup, hurl cleanup, duration cleanup, and table-owned object/geometry witnesses.",
               "The grouped spatial witness still contains light emitters, outline/advantage effects, area hazard/obscurement, movement replacement, and forced-movement/object-push behavior that must split into generic route substrates."
             ],
             "rawDomainFacts": [
@@ -949,7 +950,7 @@
               "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Area of Effect, Movement, Reaction, Target, Saving Throw, and Boundary Crossing."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add generic movable, held, and object light-emitter active-effect route subjects before doDancingLightsMovableDimLight, doLightObjectEmitterProjectionReplacementCleanup, and doProduceFlameHeldLightProjectionHurlCleanup may count for target replay.",
+              "source-qnt-corpus-blocker: movable light emitter routing is still missing before doDancingLightsMovableDimLight may count for target replay; object-attached and held light obligations must route through packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt rather than selected spell identity.",
               "source-qnt-corpus-blocker: add a generic outline / invisible-revealing / attack-advantage active-effect route subject before doFaerieFireOutlineAdvantageInvisibleDimLight may count for target replay.",
               "source-qnt-corpus-blocker: add generic area hazard and obscurement lifecycle route subjects before doFogCloudAreaIdentityObscurementStrongWindCleanup, doGreaseCastGroundHazardSavingThrows, and doGreaseMovementAndTurnTriggers may count for target replay.",
               "source-qnt-corpus-blocker: add a generic movement replacement route subject before doJumpMovementReplacementLandingWitness may count for target replay; Feather Fall reaction mitigation now has generic ReactionFallMitigationRouteSubject source input.",
@@ -3815,6 +3816,8 @@
         },
         {
           "taskId": "FCSF-03E-OBJECT-AND-LIGHT-RIDERS",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt",
+          "route": "reducer-routed",
           "subjectFamily": "object target, object-attached light emitter, held-light, movable-light, and illumination projection routes",
           "blockedDrivers": [
             "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
@@ -3831,6 +3834,25 @@
             ".references/srd-5.2.1/Rules-Glossary.md#Breaking Objects defines object Armor Class, Hit Points, Immunity, and threshold facts.",
             "UBIQUITOUS_LANGUAGE.md defines Illumination, Obscurement, and Spell Effect; docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md documents light source, obscuring source, and sight witness ownership."
           ],
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-object-light-rider-route-facts.qnt defines typed route facts for object-attached and held light emitter sources, object target table-witness admission/rejection, active emitter admission, emitter attachment, Bright/Dim Light projection, replacement cleanup, hurl cleanup, duration cleanup, and table-owned object/geometry/presentation/durability witnesses.",
+              "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt exposes ObjectLightRiderRouteSubject evidence through BattleObjectTargetBoundaryOwner for object admission, BattleActiveEffectOwner for emitter admission and cleanup, BattleLightProjectionOwner for Bright/Dim Light projection, BattleTurnBoundaryOwner for duration cleanup, and BattleAreaShapeOwner for table geometry witness consumption.",
+              "The route facts keep object validity/admission inputs, object geometry, cover/opaque blocker geometry, color/presentation, and object AC/HP/immunity/threshold facts as table-owned witness or boundary facts rather than battle-owned durable state."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Playing-the-Game.md#What Is an Object defines an object as a discrete, inanimate item.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Light and .references/srd-5.2.1/Rules-Glossary.md#Dim Light define Bright Light and Dim Light illumination and Dim Light's Lightly Obscured consequence.",
+              ".references/srd-5.2.1/Playing-the-Game.md#Cover and .references/srd-5.2.1/Rules-Glossary.md#Area of Effect define cover and obstruction geometry as table projection inputs.",
+              ".references/srd-5.2.1/Rules-Glossary.md#Breaking Objects defines object durability facts as GM/table facts unless represented as boundary facts.",
+              "UBIQUITOUS_LANGUAGE.md defines Object, Table Decision, Illumination, Obscurement, Spell Effect, Spell Invocation, and Action Lifecycle."
+            ],
+            "blockers": [
+              "source-qnt-corpus-blocker: movable multi-emitter light routing is not covered by ObjectLightRiderRouteSubject, so doDancingLightsMovableDimLight remains blocked.",
+              "source-qnt-corpus-blocker: outline/invisible-revealing/attack-advantage effects, area hazard/obscurement lifecycle, movement replacement, and forced-movement/object-push presentation remain outside this object/held light substrate.",
+              "source-qnt-corpus-blocker: packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt and packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt are not reclassified as accepted wholesale; only object-attached and held light obligations with matching generic route facts may count through this connector."
+            ]
+          },
           "acceptanceGate": "Target replay may count object/light residual branches only after copied route evidence separates battle-owned emitter/effect facts from table-owned geometry, color, and presentation facts."
         },
         {

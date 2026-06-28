@@ -19,6 +19,7 @@ import {
   createMagicMissileRouteDriver,
   createMetamagicRouteDriver,
   createNextAttackRollModeRouteDriver,
+  createObjectLightRouteDriver,
   createOpportunityAttackDenialRouteDriver,
   createProtectionCharmRouteDriver,
   createScalarBuffRouteDriver,
@@ -46,6 +47,7 @@ import {
   reducerRoutedCommandOrderingStateCheck,
   reducerRoutedMetamagicStateCheck,
   reducerRoutedNextAttackRollModeStateCheck,
+  reducerRoutedObjectLightStateCheck,
   reducerRoutedOpportunityAttackDenialStateCheck,
   reducerRoutedProtectionCharmStateCheck,
   reducerRoutedScalarBuffStateCheck,
@@ -435,6 +437,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(3),
         stateCheck: reducerRoutedConditionRiderStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes object and light riders through object boundary, active-effect, projection, and table-witness owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-object-light-riders.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createObjectLightRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(3),
+        stateCheck: reducerRoutedObjectLightStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
