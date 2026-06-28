@@ -77,6 +77,7 @@ module battleRuntimeReducerRoute {
     | MetamagicMissedSpellAttackRerollRouteSubject
     | MetamagicDamageDiceRerollRouteSubject
     | SpellBaseArmorClassEffectRouteSubject
+    | HitPointRegainPreventionRouteSubject
 
   type ReducerRouteOwnerGroup =
     | BattleActionEconomyOwner

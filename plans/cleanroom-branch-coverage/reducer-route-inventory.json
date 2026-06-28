@@ -430,7 +430,8 @@
           "driverPath": "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
           "routeConnectorPaths": [
             "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
-            "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt"
+            "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt"
           ],
           "route": "source-qnt-corpus-blocker",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
@@ -442,6 +443,7 @@
               "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt is present in source-branch-inventory.json with 6 branch obligation(s).",
               "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt exposes SpellAttackRouteSubject evidence for the selected spell-attack branches' target, Attack Roll, damage dice, and damage-type fills.",
               "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for the selected save-gated damage branches' Saving Throw and damage frontiers.",
+              "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt exposes HitPointRegainPreventionRouteSubject evidence for attack-hit active-effect admission, later Hit Point healing interdiction, and turn-boundary cleanup through active-effect, Hit Point, and turn-boundary owners.",
               "The post-hit active-effect branches in this grouped selected-identity witness split into separate generic active-effect substrates before target replay may count them."
             ],
             "rawDomainFacts": [
@@ -450,7 +452,6 @@
               "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Attack Roll, Saving Throw, Damage, Hit Points, Reaction, and Action Lifecycle vocabulary."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: add a generic hit-point-regain-prevention active-effect route subject before doChillTouchHitPointRegainPrevention may count for target replay.",
               "source-qnt-corpus-blocker: add a generic next-attack advantage active-effect route subject before doGuidingBoltNextAttackAdvantage may count for target replay.",
               "source-qnt-corpus-blocker: add a generic Opportunity Attack denial / reaction-interdiction active-effect route subject before doShockingGraspOpportunityAttackDenied may count for target replay."
             ]
@@ -3743,11 +3744,14 @@
         {
           "taskId": "FCSF-03A-HIT-POINT-REGAIN-PREVENTION",
           "subjectFamily": "attack-hit active Spell Effect that prevents later Hit Point regain",
+          "route": "reducer-routed",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt",
           "blockedDrivers": [
             "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt"
           ],
           "requiredRouteInput": "Add a generic active-effect route subject whose fills derive the attack-hit damage result, target, duration boundary, and later healing-interdiction projection from typed procedure facts rather than selected spell identity.",
           "existingSourceEvidence": [
+            "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt exposes a generic HitPointRegainPreventionRouteSubject route from attack-hit damage into active-effect admission, later Hit Point healing interdiction, and turn-boundary cleanup.",
             "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt already covers the spell Attack Roll and damage frontier.",
             "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt already names hit-point-regain prevention as an attack-hit projection fact."
           ],

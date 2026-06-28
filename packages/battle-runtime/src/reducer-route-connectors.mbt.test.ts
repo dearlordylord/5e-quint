@@ -13,6 +13,7 @@ import {
   createCommandOrderingRouteDriver,
   createDeathSavingThrowRouteDriver,
   createHitPointRestorationOrderingRouteDriver,
+  createHitPointRegainPreventionRouteDriver,
   createIndependentSpellAttackSequenceRouteDriver,
   createMagicMissileRouteDriver,
   createMetamagicRouteDriver,
@@ -31,6 +32,7 @@ import {
   reducerRoutedConcentrationBreakTeardownStateCheck,
   reducerRoutedDeathSavingThrowStateCheck,
   reducerRoutedHitPointRestorationOrderingStateCheck,
+  reducerRoutedHitPointRegainPreventionStateCheck,
   reducerRoutedActiveFeatureSpellBenefitStateCheck,
   reducerRoutedAdrenalineRushStateCheck,
   reducerRoutedAttackActionAreaSaveDamageReplacementStateCheck,
@@ -347,6 +349,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(4),
         stateCheck: reducerRoutedHitPointRestorationOrderingStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes Hit Point regain prevention through the shared reducer surface",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-hit-point-regain-prevention.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createHitPointRegainPreventionRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(3),
+        stateCheck: reducerRoutedHitPointRegainPreventionStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
