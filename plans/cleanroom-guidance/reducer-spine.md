@@ -81,6 +81,16 @@ connector, including those fact-family sets, while production state owns the
 corresponding participant, Encounter Side, subject-profile, Initiative, and
 current-actor facts. Matching marker order or the focused non-route projection
 alone proves behavior parity, not reducer architecture.
+
+The Concentration teardown connector is the public source for active-effect
+cleanup caused by losing Concentration. Failed damage saves, voluntary
+Concentration end, and replacement Concentration effects use
+`ConcentrationTeardownRouteSubject` route events owned by
+`BattleConcentrationOwner` and `BattleActiveEffectOwner`; targets must derive
+cleanup from those route events and BattleState-owned Concentration/active
+Spell Effect state, not from spell names, fixture labels, QNT branch names, or
+driver-local active-effect ledgers.
+
 The reducer-route inventory is an ordering and derivability index. A
 `reducer-routed` row is accepted only with copied connector evidence from
 `routeConnectorPath` or the sibling `.route.mbt.qnt` driver.

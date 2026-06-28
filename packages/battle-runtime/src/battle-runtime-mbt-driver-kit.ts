@@ -6054,18 +6054,28 @@ export function createConcentrationBreakTeardownRouteDriver() {
         reducerRouteResolveBattleSubjectWithoutFill({
           subject: "concentrationTeardown",
           holes: [],
+          owner: "battleActiveEffect",
+        }),
+        reducerRouteResolveBattleSubjectWithoutFill({
+          subject: "concentrationTeardown",
+          holes: [],
           owner: "battleConcentration",
         }),
       ];
     }
 
-    function appendConcentrationOwnerNoFillRoute(): void {
+    function appendConcentrationBreakCleanupRoute(): void {
       route = [
         ...route,
         reducerRouteResolveBattleSubjectWithoutFill({
           subject: "concentrationTeardown",
           holes: [],
           owner: "battleConcentration",
+        }),
+        reducerRouteResolveBattleSubjectWithoutFill({
+          subject: "concentrationTeardown",
+          holes: [],
+          owner: "battleActiveEffect",
         }),
       ];
     }
@@ -6105,6 +6115,11 @@ export function createConcentrationBreakTeardownRouteDriver() {
             holes: [],
             owner: "battleConcentration",
           }),
+          reducerRouteResolveBattleSubjectWithoutFill({
+            subject: "concentrationTeardown",
+            holes: [],
+            owner: "battleActiveEffect",
+          }),
         ];
       },
       doVoluntaryEndConcentration: () => {
@@ -6112,12 +6127,13 @@ export function createConcentrationBreakTeardownRouteDriver() {
           initialConcentrationBreakTeardownState(),
         );
         appendConcentrationCastRoute();
-        appendConcentrationOwnerNoFillRoute();
+        appendConcentrationBreakCleanupRoute();
       },
       doCastReplacementConcentrationSpell: () => {
         state = castReplacementConcentrationSpell(
           initialConcentrationBreakTeardownState(),
         );
+        appendConcentrationBreakCleanupRoute();
         appendConcentrationCastRoute();
       },
       step: () => {},

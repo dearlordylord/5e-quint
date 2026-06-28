@@ -182,12 +182,12 @@
             "discover_battle_acts",
             "resolve_battle_subject"
           ],
-          "durableStateOwner": "BattleState owns concentrating source, active Spell Effect instances, and teardown before the next command; no adapter-local concentration ledger is allowed.",
-          "acceptanceCondition": "Target replay evidence proves failed damage save, voluntary end, and replacement Concentration teardown through one durable Concentration owner.",
+          "durableStateOwner": "BattleState owns the concentrating source and active Spell Effect instances; Concentration cleanup routes through BattleConcentrationOwner and BattleActiveEffectOwner, and no adapter-local concentration or active-effect ledger is allowed.",
+          "acceptanceCondition": "Target replay evidence proves failed damage save, voluntary end, and replacement Concentration teardown through durable Concentration and active-effect owners.",
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt covers damage-save failure, voluntary end, and replacement Concentration teardown.",
-              "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt exposes qRoute for ConcentrationTeardownRouteSubject through BattleConcentrationOwner.",
+              "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt exposes qRoute for ConcentrationTeardownRouteSubject through BattleConcentrationOwner and BattleActiveEffectOwner: failed-save and voluntary-end cleanup resolve Concentration before active Spell Effect removal, while replacement resolves the prior cleanup before recording the new active effect and Concentration owner.",
               "packages/battle-runtime/battle-runtime-concentration.qnt is the semantic owner for Concentration break facts."
             ],
             "rawDomainFacts": [
@@ -510,10 +510,10 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
-              "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt records ConcentrationTeardownRouteSubject evidence through BattleConcentrationOwner."
+              "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt records ConcentrationTeardownRouteSubject evidence through BattleConcentrationOwner and BattleActiveEffectOwner for failed-save, voluntary-end, and replacement cleanup."
             ],
             "rawDomainFacts": [
-              "Local SRD Concentration rules and UBIQUITOUS_LANGUAGE.md Spell Effect terms define BattleState-owned concentration source, active effects, and teardown state."
+              "Local SRD Concentration rules and UBIQUITOUS_LANGUAGE.md Spell Effect terms define BattleState-owned concentration source, active Spell Effect instances, and teardown state."
             ],
             "blockers": []
           }

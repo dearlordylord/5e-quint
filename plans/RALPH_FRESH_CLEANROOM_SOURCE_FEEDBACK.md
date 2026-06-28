@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "FCSF-01-ACTIVE-EFFECT-CONCENTRATION-CLEANUP-SOURCE-INPUT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Make concentration-break active-effect cleanup publicly derivable from source inputs"
     },
     {
@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "FCSF-08-PACKAGE-REFRESH-AND-FRESH-REPLAY-SEED",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Refresh cleanroom package and seed the next fresh replay campaign"
     }
   ]
@@ -246,11 +246,7 @@ attack roll mode.
 
 `FCSF-08-PACKAGE-REFRESH-AND-FRESH-REPLAY-SEED`
 
-Blocked until at least one source-input task lands. Refresh the cleanroom package
-from the updated source commit and create a small fresh-target replay task that
-proves the newly supplied facts are consumed through public reducer entrypoints.
-
-Blocker Type: dependency
-
-Blocker Detail: waits for at least one of Tasks 1 through 7 to produce accepted
-source input.
+Unblocked by `FCSF-01-ACTIVE-EFFECT-CONCENTRATION-CLEANUP-SOURCE-INPUT`.
+Refresh the cleanroom package from the updated source commit and create a small
+fresh-target replay task that proves the Task 1 concentration teardown facts are
+consumed through public reducer entrypoints.

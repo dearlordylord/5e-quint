@@ -165,7 +165,7 @@ These prerequisite route connectors are copied with the cleanroom package and mu
 | 2 | `cleanroom-input/qnt/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt` | reducer-routed | Target replay evidence reuses the existing Magic-action and spell-slot ownership instead of introducing a local save-gated ordering island. |
 | 3 | `cleanroom-input/qnt/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt` | reducer-routed | Target replay evidence adds HP restoration through the battle-owned HP lifecycle and keeps spell target/distribution fills as reducer subject progress through the shared reducer surface. |
 | 4 | `cleanroom-input/qnt/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt` | reducer-routed | Target replay evidence routes Death Saving Throw discovery/fill through turn advancement or subject resolution using the same HP lifecycle owner as damage and healing. |
-| 5 | `cleanroom-input/qnt/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt` | reducer-routed | Target replay evidence proves failed damage save, voluntary end, and replacement Concentration teardown through one durable Concentration owner. |
+| 5 | `cleanroom-input/qnt/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt` | reducer-routed | Target replay evidence proves failed damage save, voluntary end, and replacement Concentration teardown through durable Concentration and active-effect owners. |
 
 ## Future Level 1-2 Queue
 

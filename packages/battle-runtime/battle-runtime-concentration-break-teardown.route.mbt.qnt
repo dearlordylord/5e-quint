@@ -95,7 +95,31 @@ module battleRuntimeConcentrationBreakTeardownRouteMbt {
         routeResolveBattleSubjectWithoutFill(
           ConcentrationTeardownRouteSubject,
           Set(),
+          BattleActiveEffectOwner,
+        )
+      )
+      .append(
+        routeResolveBattleSubjectWithoutFill(
+          ConcentrationTeardownRouteSubject,
+          Set(),
           BattleConcentrationOwner,
+        )
+      )
+
+  pure def concentrationBreakCleanupRoute(route: List[ReducerRouteEvent]): List[ReducerRouteEvent] =
+    route
+      .append(
+        routeResolveBattleSubjectWithoutFill(
+          ConcentrationTeardownRouteSubject,
+          Set(),
+          BattleConcentrationOwner,
+        )
+      )
+      .append(
+        routeResolveBattleSubjectWithoutFill(
+          ConcentrationTeardownRouteSubject,
+          Set(),
+          BattleActiveEffectOwner,
         )
       )
 
@@ -185,6 +209,12 @@ module battleRuntimeConcentrationBreakTeardownRouteMbt {
             Set(),
             BattleConcentrationOwner,
           )
+        ).append(
+          routeResolveBattleSubjectWithoutFill(
+            ConcentrationTeardownRouteSubject,
+            Set(),
+            BattleActiveEffectOwner,
+          )
         ),
       ),
     }
@@ -204,13 +234,7 @@ module battleRuntimeConcentrationBreakTeardownRouteMbt {
       true,
       false,
       witnessResolved(ConcentrationBreakTeardown),
-      concentrationCastRoute(qRoute).append(
-        routeResolveBattleSubjectWithoutFill(
-          ConcentrationTeardownRouteSubject,
-          Set(),
-          BattleConcentrationOwner,
-        )
-      ),
+      concentrationBreakCleanupRoute(concentrationCastRoute(qRoute)),
     ),
   }
 
@@ -228,7 +252,7 @@ module battleRuntimeConcentrationBreakTeardownRouteMbt {
       false,
       true,
       witnessResolved(ConcentrationBreakTeardown),
-      concentrationCastRoute(qRoute),
+      concentrationCastRoute(concentrationBreakCleanupRoute(qRoute)),
     ),
   }
 
