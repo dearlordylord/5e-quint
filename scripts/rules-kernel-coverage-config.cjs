@@ -211,6 +211,13 @@ const qntRegistryExemptions = [
       "Generic next-Attack-Roll mode route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
   },
   {
+    ownerPath:
+      "packages/battle-runtime/battle-runtime-opportunity-attack-denial-route-facts.qnt",
+    category: "leaf-type-vocabulary",
+    evidence:
+      "Generic reaction-interdiction route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
+  },
+  {
     ownerPath: "packages/battle-runtime/battle-runtime-magic-missile-facts.qnt",
     category: "proof-only-example",
     evidence:

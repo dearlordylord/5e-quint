@@ -414,9 +414,11 @@
           "routeConnectorPaths": [
             "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
-            "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt"
+            "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-next-attack-roll-mode.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-opportunity-attack-denial.route.mbt.qnt"
           ],
-          "route": "source-qnt-corpus-blocker",
+          "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "subjectFamily": "selected spell attack, save-gated damage, and post-hit active-effect substrates",
           "branchObligations": 6,
@@ -427,17 +429,15 @@
               "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt exposes SpellAttackRouteSubject evidence for the selected spell-attack branches' target, Attack Roll, damage dice, and damage-type fills.",
               "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for the selected save-gated damage branches' Saving Throw and damage frontiers.",
               "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt exposes HitPointRegainPreventionRouteSubject evidence for attack-hit active-effect admission, later Hit Point healing interdiction, turn-boundary duration expiry, and active-effect cleanup through active-effect, Hit Point, and turn-boundary owners.",
-              "The post-hit active-effect branches in this grouped selected-identity witness split into separate generic active-effect substrates before target replay may count them."
+              "packages/battle-runtime/battle-runtime-next-attack-roll-mode.route.mbt.qnt exposes NextAttackRollModeRouteSubject evidence for attack-hit or save/effect active-effect admission, roll-mode projection and consumption, turn-boundary expiration, and active-effect cleanup.",
+              "packages/battle-runtime/battle-runtime-opportunity-attack-denial.route.mbt.qnt exposes ReactionInterdictionRouteSubject evidence for attack-hit active-effect admission, Opportunity Attack denial projection into movement/reaction discovery, turn-boundary expiration, and active-effect cleanup."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Attack Rolls and #Saving Throws define the generic spell attack and spell save shapes represented by the connector evidence.",
               ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack, #Damage Rolls, and #Hit Points define the attack, damage, and Hit Point effects represented by the route subjects.",
               "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Attack Roll, Saving Throw, Damage, Hit Points, Reaction, and Action Lifecycle vocabulary."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add a generic next-attack advantage active-effect route subject before doGuidingBoltNextAttackAdvantage may count for target replay.",
-              "source-qnt-corpus-blocker: add a generic Opportunity Attack denial / reaction-interdiction active-effect route subject before doShockingGraspOpportunityAttackDenied may count for target replay."
-            ]
+            "blockers": []
           }
         },
         {
@@ -3756,12 +3756,16 @@
         {
           "taskId": "FCSF-03C-OPPORTUNITY-ATTACK-DENIAL",
           "subjectFamily": "attack-hit active Spell Effect that denies Opportunity Attacks or otherwise gates reaction availability",
+          "route": "reducer-routed",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-opportunity-attack-denial.route.mbt.qnt",
           "blockedDrivers": [
             "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt"
           ],
           "requiredRouteInput": "Add a generic reaction-interdiction route subject that records the attack-hit source, affected target, denied Opportunity Attack trigger family, and duration boundary as battle-owned effect facts.",
           "existingSourceEvidence": [
             "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt covers the attack-hit frontier.",
+            "packages/battle-runtime/battle-runtime-opportunity-attack-denial.route.mbt.qnt exposes qRoute for ReactionInterdictionRouteSubject through SpellAttackRouteSubject attack-hit setup, BattleActiveEffectOwner admission and cleanup, BattleMovementResourceOwner movement discovery, BattleInterruptStackOwner reaction discovery, and BattleTurnBoundaryOwner expiration.",
+            "packages/battle-runtime/battle-runtime-opportunity-attack-denial.route.mbt.qnt exposes qFacts for attack-hit source, affected target carrier/scope, denied Opportunity Attack trigger family, affected-target next-turn-start duration boundary, admission, movement/reaction projection, expiration, and cleanup.",
             "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt names Opportunity Attack denial as an attack-hit projection."
           ],
           "rawDomainFacts": [
