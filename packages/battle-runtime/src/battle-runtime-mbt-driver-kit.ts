@@ -1449,6 +1449,7 @@ const SPATIAL_EFFECT_HAZARDS = [
 type SpatialEffectHazard = (typeof SPATIAL_EFFECT_HAZARDS)[number];
 const SPATIAL_EFFECT_CLEANUPS = [
   "durationCleanup",
+  "concentrationBreakCleanup",
   "dispersalCleanup",
   "removalCleanup",
   "replacementCleanup",
@@ -2081,6 +2082,8 @@ const spatialEffectRouteDriverSchema = {
   doResolveAreaHazardDifficultTerrainMovement: {},
   doResolveAreaHazardMovementDamageTrigger: {},
   doCleanupAreaHazard: {},
+  doAdmitConcentrationBackedAreaHazard: {},
+  doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak: {},
   doRecordTableOwnedSpatialWitnesses: {},
   doStutterAfterTerminalSurface: {},
   step: {},
@@ -6364,6 +6367,25 @@ const SPATIAL_EFFECT_AREA_HAZARD_FACTS = [
   },
 ] as const satisfies readonly SpatialEffectRouteFact[];
 
+const SPATIAL_EFFECT_CONCENTRATION_BACKED_AREA_HAZARD_FACTS = [
+  {
+    kind: "battleEffect",
+    effect: "areaHazardEffectAdmitted",
+  },
+  {
+    kind: "battleEffect",
+    effect: "concentrationBackedEffect",
+  },
+  {
+    kind: "geometry",
+    geometry: "areaShapeWitness",
+  },
+  {
+    kind: "hazard",
+    hazard: "difficultTerrainProjection",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
 const SPATIAL_EFFECT_HAZARD_SAVE_FACTS = [
   {
     kind: "geometry",
@@ -6458,6 +6480,28 @@ const SPATIAL_EFFECT_HAZARD_CLEANUP_FACTS = [
   {
     kind: "cleanedUpBy",
     cleanup: "durationCleanup",
+    owner: "battleActiveEffect",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_CONCENTRATION_BREAK_HAZARD_CLEANUP_FACTS = [
+  {
+    kind: "hazard",
+    hazard: "areaRemovedCleanup",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "concentrationBreakCleanup",
+    owner: "battleConcentration",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "concentrationBreakCleanup",
+    owner: "battleAreaHazard",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "concentrationBreakCleanup",
     owner: "battleActiveEffect",
   },
 ] as const satisfies readonly SpatialEffectRouteFact[];
@@ -6787,6 +6831,27 @@ function spatialEffectHazardCleanupRoute(): readonly ReducerRouteEvent[] {
   ];
 }
 
+function spatialEffectConcentrationBreakHazardCleanupRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConcentration",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaHazard",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
 function spatialEffectTableSpatialWitnessRoute(): readonly ReducerRouteEvent[] {
   return [
     routeResolveSubjectWithoutFill({
@@ -6898,6 +6963,25 @@ export function createSpatialEffectRouteDriver() {
       doCleanupAreaHazard: () => {
         route = [...route, ...spatialEffectHazardCleanupRoute()];
         facts = [...facts, ...SPATIAL_EFFECT_HAZARD_CLEANUP_FACTS];
+      },
+      doAdmitConcentrationBackedAreaHazard: () => {
+        route = [
+          ...route,
+          ...spatialEffectAreaAdmissionRoute(),
+          ...spatialEffectConcentrationRoute(),
+          ...spatialEffectHazardProjectionRoute(),
+        ];
+        facts = SPATIAL_EFFECT_CONCENTRATION_BACKED_AREA_HAZARD_FACTS;
+      },
+      doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak: () => {
+        route = [
+          ...route,
+          ...spatialEffectConcentrationBreakHazardCleanupRoute(),
+        ];
+        facts = [
+          ...facts,
+          ...SPATIAL_EFFECT_CONCENTRATION_BREAK_HAZARD_CLEANUP_FACTS,
+        ];
       },
       doRecordTableOwnedSpatialWitnesses: () => {
         route = [...route, ...spatialEffectTableSpatialWitnessRoute()];
@@ -11356,6 +11440,7 @@ const SPATIAL_EFFECT_HAZARD_BY_VARIANT_TAG = {
 
 const SPATIAL_EFFECT_CLEANUP_BY_VARIANT_TAG = {
   DurationCleanup: "durationCleanup",
+  ConcentrationBreakCleanup: "concentrationBreakCleanup",
   DispersalCleanup: "dispersalCleanup",
   RemovalCleanup: "removalCleanup",
   ReplacementCleanup: "replacementCleanup",

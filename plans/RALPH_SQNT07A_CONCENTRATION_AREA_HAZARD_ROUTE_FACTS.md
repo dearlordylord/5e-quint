@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "SQNT07A-CONCENTRATION-AREA-HAZARD-ROUTE-FACTS",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Expose concentration-backed area hazard admission and cleanup as generic spatial route facts"
     }
   ]
