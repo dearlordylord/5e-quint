@@ -112,6 +112,25 @@ module battleRuntimeSpatialEffectRouteSurfaces {
       ),
     )
 
+  pure def spatialEffectHazardSavingThrowDamageRoute:
+    List[ReducerRouteEvent] =
+    List(
+      spatialEffectDiscoverRoute(
+        spatialEffectSavingThrowOutcomeHoles,
+        BattleAreaHazardOwner,
+      ),
+      spatialEffectResolveRoute(
+        SavingThrowOutcomeFillKind,
+        spatialEffectRolledDiceHoles,
+        BattleSavingThrowOutcomeOwner,
+      ),
+      spatialEffectResolveRoute(
+        RolledDiceFillKind,
+        spatialEffectNoHoles,
+        BattleHitPointOwner,
+      ),
+    )
+
   pure def spatialEffectHazardDifficultTerrainMovementRoute:
     List[ReducerRouteEvent] =
     List(
@@ -215,6 +234,13 @@ module battleRuntimeSpatialEffectRouteSurfaces {
     List(
       RouteSpatialEffectGeometry({ geometry: MovementPathWitness }),
       RouteSpatialEffectHazard({ hazard: MovementDamageTrigger }),
+    )
+
+  pure def spatialEffectHazardSavingThrowDamageFacts:
+    List[SpatialEffectRouteFact] =
+    List(
+      RouteSpatialEffectGeometry({ geometry: AreaMembershipWitness }),
+      RouteSpatialEffectHazard({ hazard: SaveTriggeredDamageTrigger }),
     )
 
   pure def spatialEffectConcentrationBreakHazardCleanupFacts:
