@@ -1505,6 +1505,9 @@ type ReducerRoutedSpatialEffectProjection = {
 type ReducerRoutedLevel1SpatialCompositionProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
+type ReducerRoutedLevel1WeaponHostedSelectedRouteProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
 const MIXED_TARGET_OUTCOME_TARGETS = [
   "primaryTarget",
   "secondaryTarget",
@@ -2104,6 +2107,15 @@ const level1SpatialCompositionRouteDriverSchema = {
   doRouteObjectLightEmitter: {},
   doRouteHeldLightEmitter: {},
   doRouteSavePushPresentation: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const level1WeaponHostedSelectedRouteDriverSchema = {
+  init: {},
+  doDivineFavorWeaponDamageRider: {},
+  doShillelaghWeaponAttackOverride: {},
+  doTrueStrikeSpellHostedWeaponAttack: {},
   doStutterAfterTerminalSurface: {},
   step: {},
 } as const;
@@ -7271,6 +7283,198 @@ export function createLevel1SpatialCompositionRouteDriver() {
       getState: (): ReducerRoutedLevel1SpatialCompositionProjection => ({
         route,
       }),
+    };
+  });
+}
+
+const LEVEL1_WEAPON_HOSTED_DAMAGE_RIDER_ROUTE_SUBJECT =
+  "weaponDamageRider" satisfies ReducerRouteSubjectFamily;
+const LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT =
+  "heldWeaponActiveEffect" satisfies ReducerRouteSubjectFamily;
+const LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT =
+  "spellHostedWeaponAttack" satisfies ReducerRouteSubjectFamily;
+const DAMAGE_TYPE_AND_TARGET_CHOICE_ROUTE_HOLES = [
+  "damageTypeChoice",
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+
+function level1WeaponHostedSelectedInitialRoute():
+  readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function level1WeaponHostedRouteDiscover(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeDiscoverSubject(input);
+}
+
+function level1WeaponHostedRouteResolve(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeResolveSubject(input);
+}
+
+function level1WeaponHostedRouteResolveWithoutFill(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeResolveSubjectWithoutFill({
+    subject: input.subject,
+    holes: NO_ROUTE_HOLES,
+    owner: input.owner,
+  });
+}
+
+function divineFavorWeaponDamageRiderRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_DAMAGE_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    level1WeaponHostedRouteResolveWithoutFill({
+      subject: LEVEL1_WEAPON_HOSTED_DAMAGE_RIDER_ROUTE_SUBJECT,
+      owner: "battleActiveEffect",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_DAMAGE_RIDER_ROUTE_SUBJECT,
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_DAMAGE_RIDER_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function shillelaghWeaponAttackOverrideRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    level1WeaponHostedRouteResolveWithoutFill({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      owner: "battleActiveEffect",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function trueStrikeSpellHostedWeaponAttackRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      holes: DAMAGE_TYPE_AND_TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      fill: "damageTypeChoice",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleHoleFrontier",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+export function createLevel1WeaponHostedSelectedRouteDriver() {
+  return defineDriver(level1WeaponHostedSelectedRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      level1WeaponHostedSelectedInitialRoute();
+
+    function reset(): void {
+      route = level1WeaponHostedSelectedInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDivineFavorWeaponDamageRider: () => {
+        route = divineFavorWeaponDamageRiderRoute();
+      },
+      doShillelaghWeaponAttackOverride: () => {
+        route = shillelaghWeaponAttackOverrideRoute();
+      },
+      doTrueStrikeSpellHostedWeaponAttack: () => {
+        route = trueStrikeSpellHostedWeaponAttackRoute();
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState:
+        (): ReducerRoutedLevel1WeaponHostedSelectedRouteProjection => ({
+          route,
+        }),
     };
   });
 }
@@ -13210,6 +13414,15 @@ function normalizeReducerRoutedLevel1SpatialCompositionQuintState(
   };
 }
 
+function normalizeReducerRoutedLevel1WeaponHostedSelectedRouteQuintState(
+  raw: unknown,
+): ReducerRoutedLevel1WeaponHostedSelectedRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
 function normalizeReducerRoutedMixedTargetOutcomeQuintState(
   raw: unknown,
 ): ReducerRoutedMixedTargetOutcomeProjection {
@@ -13912,6 +14125,17 @@ export const reducerRoutedLevel1SpatialCompositionStateCheck = stateCheck(
     return true;
   },
 );
+export const reducerRoutedLevel1WeaponHostedSelectedRouteStateCheck =
+  stateCheck(
+    normalizeReducerRoutedLevel1WeaponHostedSelectedRouteQuintState,
+    (
+      spec: ReducerRoutedLevel1WeaponHostedSelectedRouteProjection,
+      impl: ReducerRoutedLevel1WeaponHostedSelectedRouteProjection,
+    ) => {
+      expect(impl).toEqual(spec);
+      return true;
+    },
+  );
 export const reducerRoutedMixedTargetOutcomeStateCheck = stateCheck(
   normalizeReducerRoutedMixedTargetOutcomeQuintState,
   (
