@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "SQNT07A-LEVEL1-SPATIAL-COMPOSITION-ROUTE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Connect the grouped level-1 spatial selected witness to the reducer route surface"
     }
   ]
