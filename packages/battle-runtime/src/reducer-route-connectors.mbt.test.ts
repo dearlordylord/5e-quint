@@ -17,6 +17,7 @@ import {
   createHitPointRegainPreventionRouteDriver,
   createIndependentSpellAttackSequenceRouteDriver,
   createLevel1SpatialCompositionRouteDriver,
+  createLevel1WeaponHostedSelectedRouteDriver,
   createMagicMissileRouteDriver,
   createMarkedDamageImmunityRouteDriver,
   createMetamagicRouteDriver,
@@ -50,6 +51,7 @@ import {
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedMarkedDamageImmunityStateCheck,
   reducerRoutedLevel1SpatialCompositionStateCheck,
+  reducerRoutedLevel1WeaponHostedSelectedRouteStateCheck,
   reducerRoutedCommandOrderingStateCheck,
   reducerRoutedMetamagicStateCheck,
   reducerRoutedMixedTargetOutcomeStateCheck,
@@ -505,6 +507,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(2),
         stateCheck: reducerRoutedLevel1SpatialCompositionStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes selected level-1 weapon-hosted rows through composed generic reducer surfaces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-level1-weapon-hosted-selected-identity.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createLevel1WeaponHostedSelectedRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(2),
+        stateCheck: reducerRoutedLevel1WeaponHostedSelectedRouteStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
