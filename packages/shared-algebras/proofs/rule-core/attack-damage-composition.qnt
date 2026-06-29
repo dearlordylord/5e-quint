@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.light-extra-attack-damage-ability-modifier
 
 module attackDamageComposition {
+  import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
   import hitPointDamage.* from "./hit-point-damage"
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
   import hitPointRecovery.* from "./hit-point-recovery"
@@ -16,18 +17,6 @@ module attackDamageComposition {
     | BeyondRange
 
   type AttackKind = MeleeAttack | RangedAttack
-
-  type AttackRollProcedureFacts = {
-    naturalD20: int,
-    total: int,
-    armorClass: int,
-    criticalThreshold: int,
-  }
-
-  type AttackRollOutcome = {
-    hits: bool,
-    critical: bool,
-  }
 
   type ActionQuota = ActionAvailable | ActionSpent
 
@@ -50,46 +39,9 @@ module attackDamageComposition {
     damageResult: HitPointRecoveryResult,
   }
 
-  pure def legalAttackRollProcedureFacts(facts: AttackRollProcedureFacts): bool = all {
-    facts.naturalD20 >= 1,
-    facts.naturalD20 <= 20,
-    facts.total >= 0,
-    facts.total <= 40,
-    facts.armorClass >= 1,
-    facts.armorClass <= 30,
-    facts.criticalThreshold == 19 or facts.criticalThreshold == 20,
-  }
-
-  pure def naturalD20MeetsCriticalThreshold(naturalD20: int, criticalThreshold: int): bool =
-    naturalD20 >= criticalThreshold
-
-  pure def attackRollIsCriticalHit(facts: AttackRollProcedureFacts): bool =
-    naturalD20MeetsCriticalThreshold(facts.naturalD20, facts.criticalThreshold)
-
-  pure def resolveAttackRoll(facts: AttackRollProcedureFacts): AttackRollOutcome = {
-    val critical = attackRollIsCriticalHit(facts)
-    {
-      hits:
-        if (facts.naturalD20 == 1) false
-        else if (critical) true
-        else facts.total >= facts.armorClass,
-      critical: critical,
-    }
-  }
-
   pure def legalAttackTargetFact(attackKind: AttackKind, rangeFact: AttackRangeFact): bool =
     if (attackKind == MeleeAttack) rangeFact == WithinMeleeReach
     else rangeFact == WithinNormalRange or rangeFact == WithinLongRange
-
-  pure def criticalDamageDiceCount(baseDice: int, critical: bool): int =
-    if (critical) baseDice * 2 else baseDice
-
-  pure def damageDiceCountMatchesCritical(
-    baseDice: int,
-    filledDiceCount: int,
-    critical: bool
-  ): bool =
-    filledDiceCount == criticalDamageDiceCount(baseDice, critical)
 
   type LightExtraAttackDamageAbilityModifierFact =
     | LightExtraAttackNoExistingDamageAbilityModifier

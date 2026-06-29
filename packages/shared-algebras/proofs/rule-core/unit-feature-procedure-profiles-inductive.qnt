@@ -7,6 +7,7 @@ module unitFeatureProcedureProfilesInductive {
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
   import hitPointRecovery.* from "./hit-point-recovery"
   import damageComponentAdjustments.* from "./damage-component-adjustments"
+  import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
   import attackDamageComposition.* from "./attack-damage-composition"
   import actionTurnProcedures.* from "./action-turn-procedures"
   import reactionsContinuationsConcentration.* from "./reactions-continuations-concentration"

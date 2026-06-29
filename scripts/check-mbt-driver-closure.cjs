@@ -35,6 +35,7 @@ const ROOT = path.resolve(__dirname, "..");
 const BUDGET_FILES = 8;
 
 const PURE_VOCABULARY_LEAF_MODULES = new Set([
+  "packages/shared-algebras/proofs/rule-core/attack-roll-damage-dice-core.qnt",
   "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt",
   "packages/battle-runtime/rule-core-component-route.qnt",
 ]);

@@ -7,6 +7,7 @@ module attackDamageCompositionExamples {
   import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
   import hitPointRecovery.* from "./hit-point-recovery"
   import damageComponentAdjustments.* from "./damage-component-adjustments"
+  import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
   import attackDamageComposition.* from "./attack-damage-composition"
 
   run test_natural_one_misses_regardless_of_total = {

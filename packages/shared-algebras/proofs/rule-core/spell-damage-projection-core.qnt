@@ -4,7 +4,7 @@
 module spellDamageProjectionCore {
   import hitPointDamage.* from "./hit-point-damage"
   import damageComponentAdjustments.* from "./damage-component-adjustments"
-  import attackDamageComposition.* from "./attack-damage-composition"
+  import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
 
   // RAW anchors:
   // - Spells/Gaining-and-Casting.md: spell effects, targets, Saving Throws,
