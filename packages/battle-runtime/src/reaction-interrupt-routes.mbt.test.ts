@@ -9,10 +9,12 @@ import {
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
+  numberFromQuintInt,
   quintField,
-  quintRecordField,
   quintStateRecord,
   quintVariantMappedValue,
+  quintVariantTag,
+  quintVariantValue,
   run,
   stateCheck,
   type ReducerRouteEvent,
@@ -95,10 +97,84 @@ const REACTION_CONTINUATION_BY_TAG = {
 type ReactionContinuation =
   (typeof REACTION_CONTINUATION_BY_TAG)[keyof typeof REACTION_CONTINUATION_BY_TAG];
 
-type ReactionInterruptPayloadFacts = {
+type ReactionInterruptPayloadFacts =
+  | {
+      readonly kind: "fresh";
+    }
+  | {
+      readonly kind: "armorClass";
+      readonly trigger: ReactionTrigger;
+      readonly procedure: ReactionProcedure;
+      readonly continuation: ReactionContinuation;
+      readonly reactionResource: "spent";
+      readonly reactionSpend: ReactionSpellSlotSpendFact;
+      readonly armorClass: ReactionArmorClassProjection;
+    }
+  | {
+      readonly kind: "afterDamageSaveDamage";
+      readonly trigger: ReactionTrigger;
+      readonly procedure: ReactionProcedure;
+      readonly continuation: ReactionContinuation;
+      readonly reactionResource: "spent";
+      readonly reactionSpend: ReactionSpellSlotSpendFact;
+      readonly saveAbility: "dexterity";
+      readonly damage: ReactionRolledDamageProjection;
+      readonly saveDamagePolicy: "halfDamageOnSuccess";
+    }
+  | {
+      readonly kind: "spellInterruptionEnded";
+      readonly trigger: ReactionTrigger;
+      readonly procedure: ReactionProcedure;
+      readonly continuation: ReactionContinuation;
+      readonly reactionResource: "spent";
+      readonly reactionSpend: ReactionSpellSlotSpendFact;
+      readonly saveAbility: "constitution";
+      readonly interruptedEffect: "dissipatesWithoutEffect";
+      readonly interruptedSlot: "preserved";
+    }
+  | {
+      readonly kind: "spellInterruptionResumed";
+      readonly trigger: ReactionTrigger;
+      readonly procedure: ReactionProcedure;
+      readonly continuation: ReactionContinuation;
+      readonly reactionResource: "spent";
+      readonly reactionSpend: ReactionSpellSlotSpendFact;
+      readonly saveAbility: "constitution";
+      readonly interruptedEffect: "resumesAfterReaction";
+      readonly interruptedSlot: InterruptedSpellSlotSpentOnResume;
+    }
+  | {
+      readonly kind: "fallMitigation";
+      readonly trigger: ReactionTrigger;
+      readonly procedure: ReactionProcedure;
+      readonly continuation: ReactionContinuation;
+      readonly reactionResource: "spent";
+      readonly reactionSpend: { readonly kind: "none" };
+    };
+
+type ReactionSpellSlotSpendFact =
+  | { readonly kind: "none" }
+  | { readonly kind: "spent"; readonly slotLevel: number };
+type ReactionArmorClassProjection = {
+  readonly kind: "bonusUntilReactorNextTurnStart";
+  readonly bonus: number;
+};
+type ReactionRolledDamageProjection = {
+  readonly kind: "rolledDamage";
+  readonly diceCount: number;
+  readonly dieFaces: number;
+  readonly damageType: "fire";
+};
+type InterruptedSpellSlotSpentOnResume = {
+  readonly kind: "spentOnResume";
+  readonly slotLevel: number;
+};
+type ReactionProjectionCommon = {
   readonly trigger: ReactionTrigger;
   readonly procedure: ReactionProcedure;
   readonly continuation: ReactionContinuation;
+  readonly reactionResource: "spent";
+  readonly reactionSpend: ReactionSpellSlotSpendFact;
 };
 
 type ReactionInterruptPayloadRouteState =
@@ -505,29 +581,62 @@ function payloadRouteState(
 }
 
 const freshPayloadFacts = {
-  trigger: "attackHit",
-  procedure: "noReaction",
-  continuation: "attackDamage",
+  kind: "fresh",
 } as const satisfies ReactionInterruptPayloadFacts;
 const armorClassPayloadFacts = {
+  kind: "armorClass",
   trigger: "attackHit",
   procedure: "reactionArmorClassEffect",
   continuation: "attackDamage",
+  reactionResource: "spent",
+  reactionSpend: { kind: "spent", slotLevel: 1 },
+  armorClass: { kind: "bonusUntilReactorNextTurnStart", bonus: 5 },
 } as const satisfies ReactionInterruptPayloadFacts;
 const afterDamagePayloadFacts = {
+  kind: "afterDamageSaveDamage",
   trigger: "afterDamage",
   procedure: "afterDamageSpellReaction",
   continuation: "afterDamage",
+  reactionResource: "spent",
+  reactionSpend: { kind: "spent", slotLevel: 2 },
+  saveAbility: "dexterity",
+  damage: {
+    kind: "rolledDamage",
+    diceCount: 3,
+    dieFaces: 10,
+    damageType: "fire",
+  },
+  saveDamagePolicy: "halfDamageOnSuccess",
 } as const satisfies ReactionInterruptPayloadFacts;
-const spellInterruptionPayloadFacts = {
+const spellInterruptionEndedPayloadFacts = {
+  kind: "spellInterruptionEnded",
   trigger: "spellCast",
   procedure: "spellInterruptionReaction",
   continuation: "spellCast",
+  reactionResource: "spent",
+  reactionSpend: { kind: "spent", slotLevel: 3 },
+  saveAbility: "constitution",
+  interruptedEffect: "dissipatesWithoutEffect",
+  interruptedSlot: "preserved",
+} as const satisfies ReactionInterruptPayloadFacts;
+const spellInterruptionResumedPayloadFacts = {
+  kind: "spellInterruptionResumed",
+  trigger: "spellCast",
+  procedure: "spellInterruptionReaction",
+  continuation: "spellCast",
+  reactionResource: "spent",
+  reactionSpend: { kind: "spent", slotLevel: 3 },
+  saveAbility: "constitution",
+  interruptedEffect: "resumesAfterReaction",
+  interruptedSlot: { kind: "spentOnResume", slotLevel: 1 },
 } as const satisfies ReactionInterruptPayloadFacts;
 const fallMitigationPayloadFacts = {
+  kind: "fallMitigation",
   trigger: "creatureFalls",
   procedure: "fallMitigationReaction",
   continuation: "fallDamage",
+  reactionResource: "spent",
+  reactionSpend: { kind: "none" },
 } as const satisfies ReactionInterruptPayloadFacts;
 
 function reactionPayloadDiscover(
@@ -640,7 +749,7 @@ function afterDamageSaveDamageRouteState(): ReactionInterruptPayloadRouteState {
 function spellInterruptionEndedRouteState(): ReactionInterruptPayloadRouteState {
   return payloadRouteState(
     "spellInterruptionEnded",
-    spellInterruptionPayloadFacts,
+    spellInterruptionEndedPayloadFacts,
     [
       ...pendingReactionPayloadRoute(
         REACTION_SPELL_INTERRUPTION_ROUTE_SUBJECT,
@@ -670,7 +779,7 @@ function spellInterruptionEndedRouteState(): ReactionInterruptPayloadRouteState 
 function spellInterruptionResumedRouteState(): ReactionInterruptPayloadRouteState {
   return payloadRouteState(
     "spellInterruptionResumed",
-    spellInterruptionPayloadFacts,
+    spellInterruptionResumedPayloadFacts,
     [
       ...pendingReactionPayloadRoute(
         REACTION_SPELL_INTERRUPTION_ROUTE_SUBJECT,
@@ -1048,7 +1157,6 @@ function normalizeReactionInterruptPayloadRouteQuintState(
   raw: unknown,
 ): ReactionInterruptPayloadRouteState {
   const state = quintStateRecord(raw);
-  const facts = quintRecordField(state, "qFacts");
   return {
     surface: quintVariantMappedValue(
       quintField(state, "qSurface"),
@@ -1056,26 +1164,259 @@ function normalizeReactionInterruptPayloadRouteQuintState(
       REACTION_INTERRUPT_PAYLOAD_ROUTE_SURFACE_BY_TAG,
       "reaction payload route surface",
     ),
-    facts: {
-      trigger: quintVariantMappedValue(
-        quintField(facts, "trigger"),
-        "qFacts.trigger",
-        REACTION_TRIGGER_BY_TAG,
-        "reaction trigger",
-      ),
-      procedure: quintVariantMappedValue(
-        quintField(facts, "procedure"),
-        "qFacts.procedure",
-        REACTION_PROCEDURE_BY_TAG,
-        "reaction procedure",
-      ),
-      continuation: quintVariantMappedValue(
-        quintField(facts, "continuation"),
-        "qFacts.continuation",
-        REACTION_CONTINUATION_BY_TAG,
-        "reaction continuation",
-      ),
-    },
+    facts: decodeReactionInterruptPayloadFacts(quintField(state, "qFacts")),
     route: decodeReducerRoute(quintField(state, "qRoute")),
   };
+}
+
+function decodeReactionInterruptPayloadFacts(
+  raw: unknown,
+): ReactionInterruptPayloadFacts {
+  const tag = quintVariantTag(raw, "qFacts");
+  if (tag === "FreshReactionProjectionFacts") {
+    return { kind: "fresh" };
+  }
+  if (tag === "ReactionArmorClassProjectionFacts") {
+    const payload = quintVariantRecordValue(raw, tag, "qFacts");
+    return {
+      kind: "armorClass",
+      ...decodeCommonReactionProjectionFacts(payload),
+      armorClass: decodeReactionArmorClassProjection(
+        quintField(payload, "armorClass"),
+      ),
+    };
+  }
+  if (tag === "AfterDamageSaveDamageProjectionFacts") {
+    const payload = quintVariantRecordValue(raw, tag, "qFacts");
+    return {
+      kind: "afterDamageSaveDamage",
+      ...decodeCommonReactionProjectionFacts(payload),
+      saveAbility: decodeReactionSaveAbility(
+        quintField(payload, "saveAbility"),
+      ),
+      damage: decodeReactionDamageProjection(quintField(payload, "damage")),
+      saveDamagePolicy: decodeReactionSaveDamagePolicy(
+        quintField(payload, "saveDamagePolicy"),
+      ),
+    };
+  }
+  if (tag === "SpellInterruptionEndedProjectionFacts") {
+    const payload = quintVariantRecordValue(raw, tag, "qFacts");
+    return {
+      kind: "spellInterruptionEnded",
+      ...decodeCommonReactionProjectionFacts(payload),
+      saveAbility: decodeReactionConstitutionSaveAbility(
+        quintField(payload, "saveAbility"),
+      ),
+      interruptedEffect: decodeInterruptedSpellDissipates(
+        quintField(payload, "interruptedEffect"),
+      ),
+      interruptedSlot: decodeInterruptedSpellPreservedSlot(
+        quintField(payload, "interruptedSlot"),
+      ),
+    };
+  }
+  if (tag === "SpellInterruptionResumedProjectionFacts") {
+    const payload = quintVariantRecordValue(raw, tag, "qFacts");
+    return {
+      kind: "spellInterruptionResumed",
+      ...decodeCommonReactionProjectionFacts(payload),
+      saveAbility: decodeReactionConstitutionSaveAbility(
+        quintField(payload, "saveAbility"),
+      ),
+      interruptedEffect: decodeInterruptedSpellResumes(
+        quintField(payload, "interruptedEffect"),
+      ),
+      interruptedSlot: decodeInterruptedSpellSpentSlotOnResume(
+        quintField(payload, "interruptedSlot"),
+      ),
+    };
+  }
+  if (tag === "FallMitigationProjectionFacts") {
+    const payload = quintVariantRecordValue(raw, tag, "qFacts");
+    return {
+      kind: "fallMitigation",
+      ...decodeCommonReactionProjectionFacts(payload),
+      reactionSpend: decodeNoReactionSpellSlotSpend(
+        quintField(payload, "reactionSpend"),
+      ),
+    };
+  }
+
+  throw new Error(`Unknown reaction projection facts tag: ${tag}.`);
+}
+
+function decodeCommonReactionProjectionFacts(
+  payload: Readonly<Record<string, unknown>>,
+): ReactionProjectionCommon {
+  return {
+    trigger: quintVariantMappedValue(
+      quintField(payload, "trigger"),
+      "qFacts.trigger",
+      REACTION_TRIGGER_BY_TAG,
+      "reaction trigger",
+    ),
+    procedure: quintVariantMappedValue(
+      quintField(payload, "procedure"),
+      "qFacts.procedure",
+      REACTION_PROCEDURE_BY_TAG,
+      "reaction procedure",
+    ),
+    continuation: quintVariantMappedValue(
+      quintField(payload, "continuation"),
+      "qFacts.continuation",
+      REACTION_CONTINUATION_BY_TAG,
+      "reaction continuation",
+    ),
+    reactionResource: decodeReactionResourceProjection(
+      quintField(payload, "reactionResource"),
+    ),
+    reactionSpend: decodeReactionSpellSlotSpend(
+      quintField(payload, "reactionSpend"),
+    ),
+  };
+}
+
+function quintVariantRecordValue(
+  raw: unknown,
+  tag: string,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, field);
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    return value as Readonly<Record<string, unknown>>;
+  }
+  throw new Error(`Expected Quint ${tag} record payload at ${field}.`);
+}
+
+function decodeReactionResourceProjection(raw: unknown): "spent" {
+  const tag = quintVariantTag(raw, "reactionResource");
+  if (tag === "ReactionResourceSpent") return "spent";
+  throw new Error(`Unsupported reaction resource projection: ${tag}.`);
+}
+
+function decodeReactionSpellSlotSpend(
+  raw: unknown,
+): ReactionSpellSlotSpendFact {
+  const tag = quintVariantTag(raw, "reactionSpend");
+  if (tag === "NoReactionSpellSlotSpend") return { kind: "none" };
+  if (tag === "ReactionSpellSlotSpent") {
+    const payload = quintVariantRecordValue(raw, tag, "reactionSpend");
+    return {
+      kind: "spent",
+      slotLevel: numberFromQuintInt(
+        quintField(payload, "slotLevel"),
+        "slotLevel",
+      ),
+    };
+  }
+  throw new Error(`Unsupported reaction spell slot spend: ${tag}.`);
+}
+
+function decodeNoReactionSpellSlotSpend(raw: unknown): {
+  readonly kind: "none";
+} {
+  const tag = quintVariantTag(raw, "reactionSpend");
+  if (tag === "NoReactionSpellSlotSpend") return { kind: "none" };
+  throw new Error(`Expected slotless reaction spend, got: ${tag}.`);
+}
+
+function decodeReactionArmorClassProjection(
+  raw: unknown,
+): ReactionArmorClassProjection {
+  const tag = quintVariantTag(raw, "armorClass");
+  if (tag === "ReactionArmorClassBonusUntilReactorNextTurnStart") {
+    const payload = quintVariantRecordValue(raw, tag, "armorClass");
+    return {
+      kind: "bonusUntilReactorNextTurnStart",
+      bonus: numberFromQuintInt(quintField(payload, "bonus"), "bonus"),
+    };
+  }
+  throw new Error(`Unsupported reaction Armor Class projection: ${tag}.`);
+}
+
+function decodeReactionSaveAbility(raw: unknown): "dexterity" {
+  const tag = quintVariantTag(raw, "saveAbility");
+  if (tag === "DexteritySavingThrowAbility") return "dexterity";
+  throw new Error(`Unsupported reaction Saving Throw ability: ${tag}.`);
+}
+
+function decodeReactionConstitutionSaveAbility(raw: unknown): "constitution" {
+  const tag = quintVariantTag(raw, "saveAbility");
+  if (tag === "ConstitutionSavingThrowAbility") return "constitution";
+  throw new Error(`Unsupported reaction interruption save ability: ${tag}.`);
+}
+
+function decodeReactionDamageProjection(
+  raw: unknown,
+): ReactionRolledDamageProjection {
+  const tag = quintVariantTag(raw, "damage");
+  if (tag === "ReactionRolledDamage") {
+    const payload = quintVariantRecordValue(raw, tag, "damage");
+    return {
+      kind: "rolledDamage",
+      diceCount: numberFromQuintInt(
+        quintField(payload, "diceCount"),
+        "diceCount",
+      ),
+      dieFaces: numberFromQuintInt(quintField(payload, "dieFaces"), "dieFaces"),
+      damageType: decodeReactionDamageType(quintField(payload, "damageType")),
+    };
+  }
+  throw new Error(`Unsupported reaction damage projection: ${tag}.`);
+}
+
+function decodeReactionDamageType(raw: unknown): "fire" {
+  const tag = quintVariantTag(raw, "damageType");
+  if (tag === "FireDamageTypeProjection") return "fire";
+  throw new Error(`Unsupported reaction damage type: ${tag}.`);
+}
+
+function decodeReactionSaveDamagePolicy(raw: unknown): "halfDamageOnSuccess" {
+  const tag = quintVariantTag(raw, "saveDamagePolicy");
+  if (tag === "HalfDamageOnSuccessfulSave") return "halfDamageOnSuccess";
+  throw new Error(`Unsupported reaction save damage policy: ${tag}.`);
+}
+
+function decodeInterruptedSpellDissipates(
+  raw: unknown,
+): "dissipatesWithoutEffect" {
+  const tag = quintVariantTag(raw, "interruptedEffect");
+  if (tag === "InterruptedSpellDissipatesWithoutEffect") {
+    return "dissipatesWithoutEffect";
+  }
+  throw new Error(`Unsupported interrupted spell end projection: ${tag}.`);
+}
+
+function decodeInterruptedSpellResumes(raw: unknown): "resumesAfterReaction" {
+  const tag = quintVariantTag(raw, "interruptedEffect");
+  if (tag === "InterruptedSpellResumesAfterReaction") {
+    return "resumesAfterReaction";
+  }
+  throw new Error(`Unsupported interrupted spell resume projection: ${tag}.`);
+}
+
+function decodeInterruptedSpellPreservedSlot(raw: unknown): "preserved" {
+  const tag = quintVariantTag(raw, "interruptedSlot");
+  if (tag === "InterruptedSpellSlotPreserved") return "preserved";
+  throw new Error(`Unsupported interrupted spell slot preservation: ${tag}.`);
+}
+
+function decodeInterruptedSpellSpentSlotOnResume(
+  raw: unknown,
+): InterruptedSpellSlotSpentOnResume {
+  const tag = quintVariantTag(raw, "interruptedSlot");
+  if (tag === "InterruptedSpellSlotSpentOnResume") {
+    const payload = quintVariantRecordValue(raw, tag, "interruptedSlot");
+    return {
+      kind: "spentOnResume",
+      slotLevel: numberFromQuintInt(
+        quintField(payload, "slotLevel"),
+        "slotLevel",
+      ),
+    };
+  }
+  throw new Error(
+    `Unsupported interrupted spell slot resume projection: ${tag}.`,
+  );
 }
