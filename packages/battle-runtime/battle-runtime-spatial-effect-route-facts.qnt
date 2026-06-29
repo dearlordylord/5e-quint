@@ -51,6 +51,7 @@ module battleRuntimeSpatialEffectRouteFacts {
     | EntrySavingThrowTrigger
     | StartTurnSavingThrowTrigger
     | EndTurnSavingThrowTrigger
+    | SaveTriggeredDamageTrigger
     | MovementDamageTrigger
     | FailedSaveRestraintTrigger
     | PerTurnTriggerLimit

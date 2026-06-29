@@ -1445,6 +1445,7 @@ const SPATIAL_EFFECT_HAZARDS = [
   "entrySavingThrowTrigger",
   "startTurnSavingThrowTrigger",
   "endTurnSavingThrowTrigger",
+  "saveTriggeredDamageTrigger",
   "movementDamageTrigger",
   "failedSaveRestraintTrigger",
   "perTurnTriggerLimit",
@@ -1468,7 +1469,7 @@ const SPATIAL_EFFECT_CLEANUP_OWNERS = [
 ] as const;
 type SpatialEffectCleanupOwner =
   (typeof SPATIAL_EFFECT_CLEANUP_OWNERS)[number];
-type SpatialEffectRouteFact =
+export type SpatialEffectRouteFact =
   | {
       readonly kind: "battleEffect";
       readonly effect: SpatialEffectBattleEffect;
@@ -12292,6 +12293,7 @@ const SPATIAL_EFFECT_HAZARD_BY_VARIANT_TAG = {
   EntrySavingThrowTrigger: "entrySavingThrowTrigger",
   StartTurnSavingThrowTrigger: "startTurnSavingThrowTrigger",
   EndTurnSavingThrowTrigger: "endTurnSavingThrowTrigger",
+  SaveTriggeredDamageTrigger: "saveTriggeredDamageTrigger",
   MovementDamageTrigger: "movementDamageTrigger",
   FailedSaveRestraintTrigger: "failedSaveRestraintTrigger",
   PerTurnTriggerLimit: "perTurnTriggerLimit",
@@ -13198,7 +13200,7 @@ function objectLightFactPayload(
   throw new Error(`Expected object/light ${tag} payload record.`);
 }
 
-function decodeSpatialEffectRouteFacts(
+export function decodeSpatialEffectRouteFacts(
   raw: unknown,
 ): readonly SpatialEffectRouteFact[] {
   return quintList(raw, "qFacts").map(decodeSpatialEffectRouteFact);
