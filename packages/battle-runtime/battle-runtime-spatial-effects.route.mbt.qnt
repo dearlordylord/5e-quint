@@ -44,6 +44,9 @@ module battleRuntimeSpatialEffectsRouteMbt {
     | AreaHazardMovementDamageResolvedRouteSurface
     | AreaHazardCleanedRouteSurface
     | ConcentrationBackedAreaHazardActiveRouteSurface
+    | ConcentrationBackedAreaHazardSaveResolvedRouteSurface
+    | ConcentrationBackedAreaHazardDifficultTerrainMovementResolvedRouteSurface
+    | ConcentrationBackedAreaHazardMovementDamageResolvedRouteSurface
     | ConcentrationBackedAreaHazardCleanedRouteSurface
     | TableSpatialWitnessRouteSurface
 
@@ -521,6 +524,33 @@ module battleRuntimeSpatialEffectsRouteMbt {
     ),
   }
 
+  action doResolveConcentrationBackedAreaHazardSavingThrowTrigger = all {
+    qSurface == ConcentrationBackedAreaHazardActiveRouteSurface,
+    recordSurface(
+      ConcentrationBackedAreaHazardSaveResolvedRouteSurface,
+      qRoute.concat(hazardSavingThrowRoute),
+      qFacts.concat(hazardSaveFacts),
+    ),
+  }
+
+  action doResolveConcentrationBackedAreaHazardDifficultTerrainMovement = all {
+    qSurface == ConcentrationBackedAreaHazardActiveRouteSurface,
+    recordSurface(
+      ConcentrationBackedAreaHazardDifficultTerrainMovementResolvedRouteSurface,
+      qRoute.concat(hazardDifficultTerrainMovementRoute),
+      qFacts.concat(hazardDifficultTerrainMovementFacts),
+    ),
+  }
+
+  action doResolveConcentrationBackedAreaHazardMovementDamageTrigger = all {
+    qSurface == ConcentrationBackedAreaHazardActiveRouteSurface,
+    recordSurface(
+      ConcentrationBackedAreaHazardMovementDamageResolvedRouteSurface,
+      qRoute.concat(hazardMovementDamageRoute),
+      qFacts.concat(hazardMovementDamageFacts),
+    ),
+  }
+
   action doCleanupAreaHazard = all {
     qSurface.in(Set(
       AreaHazardActiveRouteSurface,
@@ -536,7 +566,12 @@ module battleRuntimeSpatialEffectsRouteMbt {
   }
 
   action doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak = all {
-    qSurface == ConcentrationBackedAreaHazardActiveRouteSurface,
+    qSurface.in(Set(
+      ConcentrationBackedAreaHazardActiveRouteSurface,
+      ConcentrationBackedAreaHazardSaveResolvedRouteSurface,
+      ConcentrationBackedAreaHazardDifficultTerrainMovementResolvedRouteSurface,
+      ConcentrationBackedAreaHazardMovementDamageResolvedRouteSurface,
+    )),
     recordSurface(
       ConcentrationBackedAreaHazardCleanedRouteSurface,
       qRoute.concat(concentrationBreakHazardCleanupRoute),
@@ -580,6 +615,9 @@ module battleRuntimeSpatialEffectsRouteMbt {
     doResolveAreaHazardMovementDamageTrigger,
     doCleanupAreaHazard,
     doAdmitConcentrationBackedAreaHazard,
+    doResolveConcentrationBackedAreaHazardSavingThrowTrigger,
+    doResolveConcentrationBackedAreaHazardDifficultTerrainMovement,
+    doResolveConcentrationBackedAreaHazardMovementDamageTrigger,
     doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak,
     doRecordTableOwnedSpatialWitnesses,
     doStutterAfterTerminalSurface,

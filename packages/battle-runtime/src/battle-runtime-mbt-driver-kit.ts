@@ -2107,6 +2107,9 @@ const spatialEffectRouteDriverSchema = {
   doResolveAreaHazardMovementDamageTrigger: {},
   doCleanupAreaHazard: {},
   doAdmitConcentrationBackedAreaHazard: {},
+  doResolveConcentrationBackedAreaHazardSavingThrowTrigger: {},
+  doResolveConcentrationBackedAreaHazardDifficultTerrainMovement: {},
+  doResolveConcentrationBackedAreaHazardMovementDamageTrigger: {},
   doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak: {},
   doRecordTableOwnedSpatialWitnesses: {},
   doStutterAfterTerminalSurface: {},
@@ -7122,6 +7125,24 @@ export function createSpatialEffectRouteDriver() {
           ...spatialEffectHazardProjectionRoute(),
         ];
         facts = SPATIAL_EFFECT_CONCENTRATION_BACKED_AREA_HAZARD_FACTS;
+      },
+      doResolveConcentrationBackedAreaHazardSavingThrowTrigger: () => {
+        route = [...route, ...spatialEffectHazardSavingThrowRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_HAZARD_SAVE_FACTS];
+      },
+      doResolveConcentrationBackedAreaHazardDifficultTerrainMovement: () => {
+        route = [
+          ...route,
+          ...spatialEffectHazardDifficultTerrainMovementRoute(),
+        ];
+        facts = [
+          ...facts,
+          ...SPATIAL_EFFECT_HAZARD_DIFFICULT_TERRAIN_MOVEMENT_FACTS,
+        ];
+      },
+      doResolveConcentrationBackedAreaHazardMovementDamageTrigger: () => {
+        route = [...route, ...spatialEffectHazardMovementDamageRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_HAZARD_MOVEMENT_DAMAGE_FACTS];
       },
       doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak: () => {
         route = [
