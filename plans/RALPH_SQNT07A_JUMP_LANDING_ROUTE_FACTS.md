@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "SQNT07A-JUMP-LANDING-ROUTE-FACTS",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Expose jump landing legality and failed landing Prone as generic movement-presentation route facts"
     }
   ]
