@@ -33,13 +33,6 @@ module battleRuntimeReactionInterruptPayloadTaxonomyRouteMbt {
     | SpellInterruptionResumedRouteSurface
     | FallMitigationRouteSurface
 
-  type ReactionSpellSlotSpendFact =
-    | NoReactionSpellSlotSpend
-    | ReactionSpellSlotSpent({ slotLevel: int })
-
-  type ReactionResourceProjection =
-    | ReactionResourceSpent
-
   type ReactionArmorClassProjection =
     | ReactionArmorClassBonusUntilReactorNextTurnStart({ bonus: int })
 
@@ -71,50 +64,24 @@ module battleRuntimeReactionInterruptPayloadTaxonomyRouteMbt {
   type ReactionInterruptPayloadFacts =
     | FreshReactionProjectionFacts
     | ReactionArmorClassProjectionFacts({
-        trigger: BattleRuntimeReactionTrigger,
-        procedure: BattleRuntimeReactionProcedure,
-        continuation: BattleRuntimeContinuationKind,
-        reactionResource: ReactionResourceProjection,
-        reactionSpend: ReactionSpellSlotSpendFact,
         armorClass: ReactionArmorClassProjection,
       })
     | AfterDamageSaveDamageProjectionFacts({
-        trigger: BattleRuntimeReactionTrigger,
-        procedure: BattleRuntimeReactionProcedure,
-        continuation: BattleRuntimeContinuationKind,
-        reactionResource: ReactionResourceProjection,
-        reactionSpend: ReactionSpellSlotSpendFact,
         saveAbility: ReactionSavingThrowAbility,
         damage: ReactionDamageProjection,
         saveDamagePolicy: ReactionSaveDamagePolicy,
       })
     | SpellInterruptionEndedProjectionFacts({
-        trigger: BattleRuntimeReactionTrigger,
-        procedure: BattleRuntimeReactionProcedure,
-        continuation: BattleRuntimeContinuationKind,
-        reactionResource: ReactionResourceProjection,
-        reactionSpend: ReactionSpellSlotSpendFact,
         saveAbility: ReactionSavingThrowAbility,
         interruptedEffect: InterruptedSpellEffectProjection,
         interruptedSlot: InterruptedSpellSlotProjection,
       })
     | SpellInterruptionResumedProjectionFacts({
-        trigger: BattleRuntimeReactionTrigger,
-        procedure: BattleRuntimeReactionProcedure,
-        continuation: BattleRuntimeContinuationKind,
-        reactionResource: ReactionResourceProjection,
-        reactionSpend: ReactionSpellSlotSpendFact,
         saveAbility: ReactionSavingThrowAbility,
         interruptedEffect: InterruptedSpellEffectProjection,
         interruptedSlot: InterruptedSpellSlotProjection,
       })
-    | FallMitigationProjectionFacts({
-        trigger: BattleRuntimeReactionTrigger,
-        procedure: BattleRuntimeReactionProcedure,
-        continuation: BattleRuntimeContinuationKind,
-        reactionResource: ReactionResourceProjection,
-        reactionSpend: ReactionSpellSlotSpendFact,
-      })
+    | FallMitigationProjectionFacts
 
   var qSurface: ReactionInterruptPayloadRouteSurface
   var qFacts: ReactionInterruptPayloadFacts
@@ -136,21 +103,11 @@ module battleRuntimeReactionInterruptPayloadTaxonomyRouteMbt {
 
   pure def armorClassFacts: ReactionInterruptPayloadFacts =
     ReactionArmorClassProjectionFacts({
-      trigger: BattleRuntimeAttackHit,
-      procedure: BattleRuntimeReactionArmorClassEffectProcedure,
-      continuation: BattleRuntimeAttackDamageContinuation,
-      reactionResource: ReactionResourceSpent,
-      reactionSpend: ReactionSpellSlotSpent({ slotLevel: 1 }),
       armorClass: ReactionArmorClassBonusUntilReactorNextTurnStart({ bonus: 5 }),
     })
 
   pure def afterDamageFacts: ReactionInterruptPayloadFacts =
     AfterDamageSaveDamageProjectionFacts({
-      trigger: BattleRuntimeAfterDamage,
-      procedure: BattleRuntimeAfterDamageSpellReactionProcedure,
-      continuation: BattleRuntimeAfterDamageContinuation,
-      reactionResource: ReactionResourceSpent,
-      reactionSpend: ReactionSpellSlotSpent({ slotLevel: 2 }),
       saveAbility: DexteritySavingThrowAbility,
       damage: ReactionRolledDamage({
         diceCount: 3,
@@ -162,11 +119,6 @@ module battleRuntimeReactionInterruptPayloadTaxonomyRouteMbt {
 
   pure def spellInterruptionEndedFacts: ReactionInterruptPayloadFacts =
     SpellInterruptionEndedProjectionFacts({
-      trigger: BattleRuntimeSpellCast,
-      procedure: BattleRuntimeSpellInterruptionReactionProcedure,
-      continuation: BattleRuntimeSpellCastContinuation,
-      reactionResource: ReactionResourceSpent,
-      reactionSpend: ReactionSpellSlotSpent({ slotLevel: 3 }),
       saveAbility: ConstitutionSavingThrowAbility,
       interruptedEffect: InterruptedSpellDissipatesWithoutEffect,
       interruptedSlot: InterruptedSpellSlotPreserved,
@@ -174,24 +126,13 @@ module battleRuntimeReactionInterruptPayloadTaxonomyRouteMbt {
 
   pure def spellInterruptionResumedFacts: ReactionInterruptPayloadFacts =
     SpellInterruptionResumedProjectionFacts({
-      trigger: BattleRuntimeSpellCast,
-      procedure: BattleRuntimeSpellInterruptionReactionProcedure,
-      continuation: BattleRuntimeSpellCastContinuation,
-      reactionResource: ReactionResourceSpent,
-      reactionSpend: ReactionSpellSlotSpent({ slotLevel: 3 }),
       saveAbility: ConstitutionSavingThrowAbility,
       interruptedEffect: InterruptedSpellResumesAfterReaction,
       interruptedSlot: InterruptedSpellSlotSpentOnResume({ slotLevel: 1 }),
     })
 
   pure def fallMitigationFacts: ReactionInterruptPayloadFacts =
-    FallMitigationProjectionFacts({
-      trigger: BattleRuntimeCreatureFalls,
-      procedure: BattleRuntimeFallMitigationReactionProcedure,
-      continuation: BattleRuntimeFallDamageContinuation,
-      reactionResource: ReactionResourceSpent,
-      reactionSpend: NoReactionSpellSlotSpend,
-    })
+    FallMitigationProjectionFacts
 
   pure def discoverReactionPayload(
     subject: ReducerRouteSubjectFamily,
