@@ -1599,6 +1599,23 @@ const MARKED_DAMAGE_RIDER_TRANSFERS = [
   "transferResetsAwaitingMarkedTargetDrop",
 ] as const;
 type MarkedDamageRiderTransfer = (typeof MARKED_DAMAGE_RIDER_TRANSFERS)[number];
+const TARGETED_ABILITY_CHECK_ROLL_MODE_FACTS = [
+  "targetScopedSelectedAbility",
+  "matchingTargetSelectedAbilityCheckDisadvantage",
+  "nonmatchingAbilityCheckNormal",
+  "nonmarkedActorAbilityCheckNormal",
+  "concentrationCleanupRestoresNormalAbilityCheck",
+] as const;
+type TargetedAbilityCheckRollModeFact =
+  (typeof TARGETED_ABILITY_CHECK_ROLL_MODE_FACTS)[number];
+const MARKED_DAMAGE_RIDER_OWNER_FACTS = [
+  "markedRiderBattleActiveEffect",
+  "markedRiderBattleConcentration",
+  "markedRiderBattleAbilityCheckRollMode",
+  "markedRiderBattleActiveEffectCleanup",
+] as const;
+type MarkedDamageRiderOwnerFact =
+  (typeof MARKED_DAMAGE_RIDER_OWNER_FACTS)[number];
 type MarkedDamageRiderRouteFact =
   | {
       readonly kind: "markedHost";
@@ -1611,6 +1628,14 @@ type MarkedDamageRiderRouteFact =
   | {
       readonly kind: "markedTransfer";
       readonly transfer: MarkedDamageRiderTransfer;
+    }
+  | {
+      readonly kind: "targetedAbilityCheckRollMode";
+      readonly rollMode: TargetedAbilityCheckRollModeFact;
+    }
+  | {
+      readonly kind: "markedOwner";
+      readonly owner: MarkedDamageRiderOwnerFact;
     };
 const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECTS = [
   "conditionImmunityApplied",
@@ -2140,6 +2165,9 @@ const markedDamageImmunityRouteDriverSchema = {
   doOpenMarkedDamageRiderTransferAfterTargetDrop: {},
   doTransferMarkedDamageRiderSameTurn: {},
   doTransferMarkedDamageRiderLaterTurn: {},
+  doAdmitTargetedAbilityCheckMarkedDamageRider: {},
+  doProjectTargetedAbilityCheckRollMode: {},
+  doCleanupTargetedAbilityCheckRollMode: {},
   doAdmitConditionImmunityTemporaryHitPoints: {},
   doProjectConditionImmunity: {},
   doGrantTurnStartTemporaryHitPoints: {},
@@ -4490,6 +4518,13 @@ const OBJECT_LIGHT_RIDER_ROUTE_SUBJECT =
   "objectLightRider" satisfies ReducerRouteSubjectFamily;
 const NO_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
 const TARGET_CHOICE_ROUTE_HOLES = [
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const ABILITY_CHOICE_ROUTE_HOLES = [
+  "abilityChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const TARGET_AND_ABILITY_CHOICE_ROUTE_HOLES = [
+  "abilityChoice",
   "targetChoice",
 ] as const satisfies readonly ReducerRouteHole[];
 const ATTACK_ROLL_ROUTE_HOLES = [
@@ -7938,6 +7973,37 @@ function markedDamageRiderAdmissionRoute(): readonly ReducerRouteEvent[] {
   ];
 }
 
+function targetedAbilityCheckMarkedRiderAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverMarkedDamageRiderRoute({
+      holes: TARGET_AND_ABILITY_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "targetChoice",
+      holes: ABILITY_CHOICE_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: { kind: "abilityChoice", ability: "wis" },
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    resolveMarkedDamageRiderWithoutFill("battleConcentration"),
+  ];
+}
+
+function targetedAbilityCheckRollModeProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [resolveMarkedDamageRiderWithoutFill("battleAbilityCheckRollMode")];
+}
+
+function targetedAbilityCheckRollModeCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    resolveMarkedDamageRiderWithoutFill("battleConcentration"),
+    resolveMarkedDamageRiderWithoutFill("battleActiveEffect"),
+  ];
+}
+
 function markedDamageRiderAttackHitProjectionRoute(): readonly ReducerRouteEvent[] {
   return [
     discoverMarkedDamageRiderRoute({
@@ -8032,6 +8098,55 @@ const MARKED_RIDER_ADMISSION_FACTS = [
   {
     kind: "markedTransfer",
     transfer: "transferAwaitsMarkedTargetDrop",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const TARGETED_ABILITY_CHECK_MARKED_RIDER_ADMISSION_FACTS = [
+  {
+    kind: "targetedAbilityCheckRollMode",
+    rollMode: "targetScopedSelectedAbility",
+  },
+  {
+    kind: "markedOwner",
+    owner: "markedRiderBattleActiveEffect",
+  },
+  {
+    kind: "markedOwner",
+    owner: "markedRiderBattleConcentration",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const TARGETED_ABILITY_CHECK_ROLL_MODE_PROJECTION_FACTS = [
+  {
+    kind: "targetedAbilityCheckRollMode",
+    rollMode: "matchingTargetSelectedAbilityCheckDisadvantage",
+  },
+  {
+    kind: "targetedAbilityCheckRollMode",
+    rollMode: "nonmatchingAbilityCheckNormal",
+  },
+  {
+    kind: "targetedAbilityCheckRollMode",
+    rollMode: "nonmarkedActorAbilityCheckNormal",
+  },
+  {
+    kind: "markedOwner",
+    owner: "markedRiderBattleAbilityCheckRollMode",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const TARGETED_ABILITY_CHECK_ROLL_MODE_CLEANUP_FACTS = [
+  {
+    kind: "targetedAbilityCheckRollMode",
+    rollMode: "concentrationCleanupRestoresNormalAbilityCheck",
+  },
+  {
+    kind: "markedOwner",
+    owner: "markedRiderBattleConcentration",
+  },
+  {
+    kind: "markedOwner",
+    owner: "markedRiderBattleActiveEffectCleanup",
   },
 ] as const satisfies readonly MarkedDamageImmunityRouteFact[];
 
@@ -8185,6 +8300,24 @@ export function createMarkedDamageImmunityRouteDriver() {
           ...markedDamageRiderTransferRoute(),
         ];
         facts = [...facts, ...MARKED_RIDER_LATER_TURN_TRANSFER_FACTS];
+      },
+      doAdmitTargetedAbilityCheckMarkedDamageRider: () => {
+        route = [...route, ...targetedAbilityCheckMarkedRiderAdmissionRoute()];
+        facts = TARGETED_ABILITY_CHECK_MARKED_RIDER_ADMISSION_FACTS;
+      },
+      doProjectTargetedAbilityCheckRollMode: () => {
+        route = [...route, ...targetedAbilityCheckRollModeProjectionRoute()];
+        facts = [
+          ...facts,
+          ...TARGETED_ABILITY_CHECK_ROLL_MODE_PROJECTION_FACTS,
+        ];
+      },
+      doCleanupTargetedAbilityCheckRollMode: () => {
+        route = [...route, ...targetedAbilityCheckRollModeCleanupRoute()];
+        facts = [
+          ...facts,
+          ...TARGETED_ABILITY_CHECK_ROLL_MODE_CLEANUP_FACTS,
+        ];
       },
       doAdmitConditionImmunityTemporaryHitPoints: () => {
         route = [...route, ...immunityTemporaryHitPointAdmissionRoute()];
@@ -11999,6 +12132,28 @@ const MARKED_DAMAGE_RIDER_TRANSFER_BY_VARIANT_TAG = {
     "transferResetsAwaitingMarkedTargetDrop",
 } as const satisfies Readonly<Record<string, MarkedDamageRiderTransfer>>;
 
+const TARGETED_ABILITY_CHECK_ROLL_MODE_FACT_BY_VARIANT_TAG = {
+  TargetScopedSelectedAbility: "targetScopedSelectedAbility",
+  MatchingTargetSelectedAbilityCheckDisadvantage:
+    "matchingTargetSelectedAbilityCheckDisadvantage",
+  NonmatchingAbilityCheckNormal: "nonmatchingAbilityCheckNormal",
+  NonmarkedActorAbilityCheckNormal: "nonmarkedActorAbilityCheckNormal",
+  ConcentrationCleanupRestoresNormalAbilityCheck:
+    "concentrationCleanupRestoresNormalAbilityCheck",
+} as const satisfies Readonly<
+  Record<string, TargetedAbilityCheckRollModeFact>
+>;
+
+const MARKED_DAMAGE_RIDER_OWNER_FACT_BY_VARIANT_TAG = {
+  MarkedRiderBattleActiveEffectProjectionOwner:
+    "markedRiderBattleActiveEffect",
+  MarkedRiderBattleConcentrationOwner: "markedRiderBattleConcentration",
+  MarkedRiderBattleAbilityCheckRollModeOwner:
+    "markedRiderBattleAbilityCheckRollMode",
+  MarkedRiderBattleActiveEffectCleanupOwner:
+    "markedRiderBattleActiveEffectCleanup",
+} as const satisfies Readonly<Record<string, MarkedDamageRiderOwnerFact>>;
+
 const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECT_BY_VARIANT_TAG = {
   ConditionImmunityApplied: "conditionImmunityApplied",
   ConditionApplicationRejectedByImmunity:
@@ -13091,6 +13246,30 @@ function decodeMarkedDamageRiderRouteFact(
         "qFacts[].fact.transfer",
         MARKED_DAMAGE_RIDER_TRANSFER_BY_VARIANT_TAG,
         "marked damage rider transfer",
+      ),
+    };
+  }
+  if (tag === "RouteMarkedDamageRiderTargetedAbilityCheckRollMode") {
+    const payload = markedDamageRiderFactPayload(raw, tag);
+    return {
+      kind: "targetedAbilityCheckRollMode",
+      rollMode: quintVariantMappedValue(
+        quintField(payload, "rollMode"),
+        "qFacts[].fact.rollMode",
+        TARGETED_ABILITY_CHECK_ROLL_MODE_FACT_BY_VARIANT_TAG,
+        "targeted ability-check roll-mode fact",
+      ),
+    };
+  }
+  if (tag === "RouteMarkedDamageRiderOwner") {
+    const payload = markedDamageRiderFactPayload(raw, tag);
+    return {
+      kind: "markedOwner",
+      owner: quintVariantMappedValue(
+        quintField(payload, "owner"),
+        "qFacts[].fact.owner",
+        MARKED_DAMAGE_RIDER_OWNER_FACT_BY_VARIANT_TAG,
+        "marked damage rider owner",
       ),
     };
   }

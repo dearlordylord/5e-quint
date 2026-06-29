@@ -20,6 +20,19 @@ module battleRuntimeMarkedDamageImmunityRouteFacts {
     | TransferConsumesBonusAction
     | TransferResetsAwaitingMarkedTargetDrop
 
+  type TargetedAbilityCheckRollModeFact =
+    | TargetScopedSelectedAbility
+    | MatchingTargetSelectedAbilityCheckDisadvantage
+    | NonmatchingAbilityCheckNormal
+    | NonmarkedActorAbilityCheckNormal
+    | ConcentrationCleanupRestoresNormalAbilityCheck
+
+  type MarkedDamageRiderOwnerFact =
+    | MarkedRiderBattleActiveEffectProjectionOwner
+    | MarkedRiderBattleConcentrationOwner
+    | MarkedRiderBattleAbilityCheckRollModeOwner
+    | MarkedRiderBattleActiveEffectCleanupOwner
+
   type MarkedDamageRiderRouteFact =
     | RouteMarkedDamageRiderHost({ host: MarkedDamageRiderHostFact })
     | RouteMarkedDamageRiderDamage({
@@ -28,6 +41,10 @@ module battleRuntimeMarkedDamageImmunityRouteFacts {
     | RouteMarkedDamageRiderTransfer({
         transfer: MarkedDamageRiderTransferFact,
       })
+    | RouteMarkedDamageRiderTargetedAbilityCheckRollMode({
+        rollMode: TargetedAbilityCheckRollModeFact,
+      })
+    | RouteMarkedDamageRiderOwner({ owner: MarkedDamageRiderOwnerFact })
 
   type ConditionImmunityTemporaryHitPointEffectFact =
     | ConditionImmunityApplied

@@ -7,6 +7,9 @@
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hex and #Hunter's Mark
 //   define marked-target extra damage on attack-roll hits, Concentration, and
 //   target transfer after the marked target drops to 0 Hit Points.
+// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hex defines a selected
+//   ability whose target-scoped Ability Checks have Disadvantage while the
+//   spell effect persists.
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Heroism defines
 //   Frightened immunity and turn-start Temporary Hit Points for a willing
 //   target while the spell lasts.
@@ -20,6 +23,7 @@
 module battleRuntimeMarkedDamageImmunityActiveEffectsRouteMbt {
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
+  import battleRuntimeRouteChoicePayloads.* from "./battle-runtime-route-choice-payloads"
   import battleRuntimeReducerRoute.* from "./battle-runtime-reducer-route"
   import battleRuntimeMarkedDamageImmunityRouteFacts.* from "./battle-runtime-marked-damage-immunity-route-facts"
 
@@ -30,6 +34,9 @@ module battleRuntimeMarkedDamageImmunityActiveEffectsRouteMbt {
     | MarkedDamageRiderTransferAvailableRouteSurface
     | MarkedDamageRiderSameTurnTransferRouteSurface
     | MarkedDamageRiderLaterTurnTransferRouteSurface
+    | TargetedAbilityCheckMarkedDamageRiderAdmittedRouteSurface
+    | TargetedAbilityCheckRollModeProjectedRouteSurface
+    | TargetedAbilityCheckRollModeCleanedUpRouteSurface
     | ConditionImmunityTemporaryHitPointAdmittedRouteSurface
     | ConditionImmunityProjectedRouteSurface
     | TurnStartTemporaryHitPointsGrantedRouteSurface
@@ -42,6 +49,10 @@ module battleRuntimeMarkedDamageImmunityActiveEffectsRouteMbt {
   pure val noHoles: Set[BattleHoleFamilyKind] = Set()
   pure val targetChoiceHoles: Set[BattleHoleFamilyKind] =
     Set(TargetChoiceHoleKind)
+  pure val abilityChoiceHoles: Set[BattleHoleFamilyKind] =
+    Set(AbilityChoiceHoleKind)
+  pure val targetAndAbilityChoiceHoles: Set[BattleHoleFamilyKind] =
+    Set(TargetChoiceHoleKind, AbilityChoiceHoleKind)
   pure val attackRollHoles: Set[BattleHoleFamilyKind] = Set(AttackRollHoleKind)
   pure val rolledDiceHoles: Set[BattleHoleFamilyKind] = Set(RolledDiceHoleKind)
 
@@ -74,6 +85,18 @@ module battleRuntimeMarkedDamageImmunityActiveEffectsRouteMbt {
     owner: ReducerRouteOwnerGroup,
   ): ReducerRouteEvent =
     routeResolveBattleSubject(
+      MarkedDamageRiderEffectRouteSubject,
+      fill,
+      holes,
+      owner,
+    )
+
+  pure def resolveMarkedRiderWithFillEvidence(
+    fill: ReducerRouteFillEvidence,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubjectWithFillEvidence(
       MarkedDamageRiderEffectRouteSubject,
       fill,
       holes,
@@ -133,6 +156,34 @@ module battleRuntimeMarkedDamageImmunityActiveEffectsRouteMbt {
       ),
       resolveMarkedRiderWithoutFill(BattleActiveEffectOwner),
       resolveMarkedRiderWithoutFill(BattleConcentrationOwner),
+    )
+
+  pure def targetedAbilityCheckMarkedRiderAdmissionRoute: List[ReducerRouteEvent] =
+    List(
+      discoverMarkedRider(
+        targetAndAbilityChoiceHoles,
+        BattleSpellSlotAndActionEconomyOwner,
+      ),
+      resolveMarkedRider(
+        TargetChoiceFillKind,
+        abilityChoiceHoles,
+        BattleTargetSelectionOwner,
+      ),
+      resolveMarkedRiderWithFillEvidence(
+        RouteAbilityChoiceFill({ ability: RouteAbilityWis }),
+        noHoles,
+        BattleActiveEffectOwner,
+      ),
+      resolveMarkedRiderWithoutFill(BattleConcentrationOwner),
+    )
+
+  pure def targetedAbilityCheckRollModeProjectionRoute: List[ReducerRouteEvent] =
+    List(resolveMarkedRiderWithoutFill(BattleAbilityCheckRollModeOwner))
+
+  pure def targetedAbilityCheckRollModeCleanupRoute: List[ReducerRouteEvent] =
+    List(
+      resolveMarkedRiderWithoutFill(BattleConcentrationOwner),
+      resolveMarkedRiderWithoutFill(BattleActiveEffectOwner),
     )
 
   pure def markedRiderAttackHitProjectionRoute: List[ReducerRouteEvent] =
@@ -209,6 +260,48 @@ module battleRuntimeMarkedDamageImmunityActiveEffectsRouteMbt {
     List(
       markedFact(RouteMarkedDamageRiderTransfer({
         transfer: TransferAwaitsMarkedTargetDrop,
+      })),
+    )
+
+  pure def targetedAbilityCheckMarkedRiderAdmissionFacts: List[MarkedDamageImmunityRouteFact] =
+    List(
+      markedFact(RouteMarkedDamageRiderTargetedAbilityCheckRollMode({
+        rollMode: TargetScopedSelectedAbility,
+      })),
+      markedFact(RouteMarkedDamageRiderOwner({
+        owner: MarkedRiderBattleActiveEffectProjectionOwner,
+      })),
+      markedFact(RouteMarkedDamageRiderOwner({
+        owner: MarkedRiderBattleConcentrationOwner,
+      })),
+    )
+
+  pure def targetedAbilityCheckRollModeProjectionFacts: List[MarkedDamageImmunityRouteFact] =
+    List(
+      markedFact(RouteMarkedDamageRiderTargetedAbilityCheckRollMode({
+        rollMode: MatchingTargetSelectedAbilityCheckDisadvantage,
+      })),
+      markedFact(RouteMarkedDamageRiderTargetedAbilityCheckRollMode({
+        rollMode: NonmatchingAbilityCheckNormal,
+      })),
+      markedFact(RouteMarkedDamageRiderTargetedAbilityCheckRollMode({
+        rollMode: NonmarkedActorAbilityCheckNormal,
+      })),
+      markedFact(RouteMarkedDamageRiderOwner({
+        owner: MarkedRiderBattleAbilityCheckRollModeOwner,
+      })),
+    )
+
+  pure def targetedAbilityCheckRollModeCleanupFacts: List[MarkedDamageImmunityRouteFact] =
+    List(
+      markedFact(RouteMarkedDamageRiderTargetedAbilityCheckRollMode({
+        rollMode: ConcentrationCleanupRestoresNormalAbilityCheck,
+      })),
+      markedFact(RouteMarkedDamageRiderOwner({
+        owner: MarkedRiderBattleConcentrationOwner,
+      })),
+      markedFact(RouteMarkedDamageRiderOwner({
+        owner: MarkedRiderBattleActiveEffectCleanupOwner,
       })),
     )
 
@@ -372,6 +465,33 @@ module battleRuntimeMarkedDamageImmunityActiveEffectsRouteMbt {
     ),
   }
 
+  action doAdmitTargetedAbilityCheckMarkedDamageRider = all {
+    qSurface == FreshRouteSurface,
+    recordSurface(
+      TargetedAbilityCheckMarkedDamageRiderAdmittedRouteSurface,
+      qRoute.concat(targetedAbilityCheckMarkedRiderAdmissionRoute),
+      targetedAbilityCheckMarkedRiderAdmissionFacts,
+    ),
+  }
+
+  action doProjectTargetedAbilityCheckRollMode = all {
+    qSurface == TargetedAbilityCheckMarkedDamageRiderAdmittedRouteSurface,
+    recordSurface(
+      TargetedAbilityCheckRollModeProjectedRouteSurface,
+      qRoute.concat(targetedAbilityCheckRollModeProjectionRoute),
+      qFacts.concat(targetedAbilityCheckRollModeProjectionFacts),
+    ),
+  }
+
+  action doCleanupTargetedAbilityCheckRollMode = all {
+    qSurface == TargetedAbilityCheckRollModeProjectedRouteSurface,
+    recordSurface(
+      TargetedAbilityCheckRollModeCleanedUpRouteSurface,
+      qRoute.concat(targetedAbilityCheckRollModeCleanupRoute),
+      qFacts.concat(targetedAbilityCheckRollModeCleanupFacts),
+    ),
+  }
+
   action doAdmitConditionImmunityTemporaryHitPoints = all {
     qSurface == FreshRouteSurface,
     recordSurface(
@@ -419,6 +539,7 @@ module battleRuntimeMarkedDamageImmunityActiveEffectsRouteMbt {
     qSurface.in(Set(
       MarkedDamageRiderSameTurnTransferRouteSurface,
       MarkedDamageRiderLaterTurnTransferRouteSurface,
+      TargetedAbilityCheckRollModeCleanedUpRouteSurface,
       ConditionImmunityTemporaryHitPointCleanupRouteSurface,
     )),
     recordSurface(qSurface, qRoute, qFacts),
@@ -430,6 +551,9 @@ module battleRuntimeMarkedDamageImmunityActiveEffectsRouteMbt {
     doOpenMarkedDamageRiderTransferAfterTargetDrop,
     doTransferMarkedDamageRiderSameTurn,
     doTransferMarkedDamageRiderLaterTurn,
+    doAdmitTargetedAbilityCheckMarkedDamageRider,
+    doProjectTargetedAbilityCheckRollMode,
+    doCleanupTargetedAbilityCheckRollMode,
     doAdmitConditionImmunityTemporaryHitPoints,
     doProjectConditionImmunity,
     doGrantTurnStartTemporaryHitPoints,
