@@ -27,6 +27,7 @@ const COMPONENT_BRIDGE_IMPORT =
   /\bfrom\s+"\.\/rule-core-component-route\.ts"/;
 const COMPONENT_RUNTIME_BRIDGE_CALL = "withRuleCoreComponentRoute";
 const COMPONENT_QUINT_BRIDGE_DECODER = "decodeRuleCoreComponentRoute";
+const IMPORT_RE = /from "((?:\.\/|\.\.\/)[A-Za-z0-9/\-]+)"/g;
 const ROUTE_SURFACES = [
   {
     packageDir: "packages/battle-runtime",
@@ -335,6 +336,21 @@ function hasRouteEvidence(text, call) {
   return new RegExp(`\\b${call}\\s*\\(`).test(text);
 }
 
+function routeEvidenceText(file, seen = new Set()) {
+  if (seen.has(file) || !fs.existsSync(file)) return "";
+  seen.add(file);
+  const text = fs.readFileSync(file, "utf8");
+  const importedText = [];
+  let match;
+  const re = new RegExp(IMPORT_RE.source, "g");
+  while ((match = re.exec(text)) !== null) {
+    importedText.push(
+      routeEvidenceText(path.resolve(path.dirname(file), match[1]) + ".qnt", seen),
+    );
+  }
+  return [text, ...importedText].join("\n");
+}
+
 function validateConnector(root, repoPath, failures) {
   const surface = surfaceForRepoPath(repoPath);
   if (surface === undefined) {
@@ -343,6 +359,7 @@ function validateConnector(root, repoPath, failures) {
   }
 
   const text = fs.readFileSync(path.join(root, repoPath), "utf8");
+  const evidenceText = routeEvidenceText(path.join(root, repoPath));
   if (!surface.vocabularyImport.test(text)) {
     failures.push(`${repoPath}: must import ${surface.routeVocabularyPath}.`);
   }
@@ -352,7 +369,7 @@ function validateConnector(root, repoPath, failures) {
   for (const evidenceCall of surface.requiredEvidenceCalls) {
     const calls =
       typeof evidenceCall === "string" ? [evidenceCall] : evidenceCall.calls;
-    if (!calls.some((call) => hasRouteEvidence(text, call))) {
+    if (!calls.some((call) => hasRouteEvidence(evidenceText, call))) {
       const label =
         typeof evidenceCall === "string" ? evidenceCall : evidenceCall.label;
       failures.push(`${repoPath}: must record ${label} route evidence.`);

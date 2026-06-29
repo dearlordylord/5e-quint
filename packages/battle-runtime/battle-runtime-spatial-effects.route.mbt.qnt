@@ -28,6 +28,7 @@ module battleRuntimeSpatialEffectsRouteMbt {
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeReducerRoute.* from "./battle-runtime-reducer-route"
   import battleRuntimeSpatialEffectRouteFacts.* from "./battle-runtime-spatial-effect-route-facts"
+  import battleRuntimeSpatialEffectRouteSurfaces.* from "./battle-runtime-spatial-effect-route-surfaces"
 
   type SpatialEffectRouteSurface =
     | FreshSpatialEffectRouteSurface
@@ -44,6 +45,9 @@ module battleRuntimeSpatialEffectsRouteMbt {
     | AreaHazardMovementDamageResolvedRouteSurface
     | AreaHazardCleanedRouteSurface
     | ConcentrationBackedAreaHazardActiveRouteSurface
+    | ConcentrationBackedAreaHazardSaveResolvedRouteSurface
+    | ConcentrationBackedAreaHazardDifficultTerrainMovementResolvedRouteSurface
+    | ConcentrationBackedAreaHazardMovementDamageResolvedRouteSurface
     | ConcentrationBackedAreaHazardCleanedRouteSurface
     | TableSpatialWitnessRouteSurface
 
@@ -208,13 +212,6 @@ module battleRuntimeSpatialEffectsRouteMbt {
       resolveRouteWithoutFill(noHoles, BattleActiveEffectOwner),
     )
 
-  pure def concentrationBreakHazardCleanupRoute: List[ReducerRouteEvent] =
-    List(
-      resolveRouteWithoutFill(noHoles, BattleConcentrationOwner),
-      resolveRouteWithoutFill(noHoles, BattleAreaHazardOwner),
-      resolveRouteWithoutFill(noHoles, BattleActiveEffectOwner),
-    )
-
   pure def tableSpatialWitnessRoute: List[ReducerRouteEvent] =
     List(
       resolveRouteWithoutFill(noHoles, BattleAreaShapeOwner),
@@ -282,15 +279,6 @@ module battleRuntimeSpatialEffectsRouteMbt {
       RouteSpatialEffectHazard({ hazard: DifficultTerrainProjection }),
     )
 
-  pure def concentrationBackedAreaHazardFacts:
-    List[SpatialEffectRouteFact] =
-    List(
-      RouteSpatialEffectBattleEffect({ effect: AreaHazardEffectAdmitted }),
-      RouteSpatialEffectBattleEffect({ effect: ConcentrationBackedEffect }),
-      RouteSpatialEffectGeometry({ geometry: AreaShapeWitness }),
-      RouteSpatialEffectHazard({ hazard: DifficultTerrainProjection }),
-    )
-
   pure def hazardSaveFacts: List[SpatialEffectRouteFact] =
     List(
       RouteSpatialEffectGeometry({ geometry: AreaMembershipWitness }),
@@ -353,24 +341,6 @@ module battleRuntimeSpatialEffectsRouteMbt {
       }),
       RouteSpatialEffectCleanedUpBy({
         cleanup: DurationCleanup,
-        owner: BattleActiveEffectCleanupOwner,
-      }),
-    )
-
-  pure def concentrationBreakHazardCleanupFacts:
-    List[SpatialEffectRouteFact] =
-    List(
-      RouteSpatialEffectHazard({ hazard: AreaRemovedCleanup }),
-      RouteSpatialEffectCleanedUpBy({
-        cleanup: ConcentrationBreakCleanup,
-        owner: BattleConcentrationCleanupOwner,
-      }),
-      RouteSpatialEffectCleanedUpBy({
-        cleanup: ConcentrationBreakCleanup,
-        owner: BattleAreaHazardCleanupOwner,
-      }),
-      RouteSpatialEffectCleanedUpBy({
-        cleanup: ConcentrationBreakCleanup,
         owner: BattleActiveEffectCleanupOwner,
       }),
     )
@@ -486,11 +456,9 @@ module battleRuntimeSpatialEffectsRouteMbt {
     qSurface == FreshSpatialEffectRouteSurface,
     recordSurface(
       ConcentrationBackedAreaHazardActiveRouteSurface,
-      qRoute
-        .concat(areaAdmissionRoute)
-        .concat(concentrationRoute)
-        .concat(hazardProjectionRoute),
-      concentrationBackedAreaHazardFacts,
+      qRoute.concat(spatialEffectConcentrationBackedAreaHazardAdmissionRoute),
+      spatialEffectConcentrationBackedAreaHazardBaseFacts
+        .concat(spatialEffectDifficultTerrainHazardFacts),
     ),
   }
 
@@ -521,6 +489,33 @@ module battleRuntimeSpatialEffectsRouteMbt {
     ),
   }
 
+  action doResolveConcentrationBackedAreaHazardSavingThrowTrigger = all {
+    qSurface == ConcentrationBackedAreaHazardActiveRouteSurface,
+    recordSurface(
+      ConcentrationBackedAreaHazardSaveResolvedRouteSurface,
+      qRoute.concat(spatialEffectHazardSavingThrowRoute),
+      qFacts.concat(spatialEffectHazardSaveFacts),
+    ),
+  }
+
+  action doResolveConcentrationBackedAreaHazardDifficultTerrainMovement = all {
+    qSurface == ConcentrationBackedAreaHazardActiveRouteSurface,
+    recordSurface(
+      ConcentrationBackedAreaHazardDifficultTerrainMovementResolvedRouteSurface,
+      qRoute.concat(spatialEffectHazardDifficultTerrainMovementRoute),
+      qFacts.concat(spatialEffectHazardDifficultTerrainMovementFacts),
+    ),
+  }
+
+  action doResolveConcentrationBackedAreaHazardMovementDamageTrigger = all {
+    qSurface == ConcentrationBackedAreaHazardActiveRouteSurface,
+    recordSurface(
+      ConcentrationBackedAreaHazardMovementDamageResolvedRouteSurface,
+      qRoute.concat(spatialEffectHazardMovementDamageRoute),
+      qFacts.concat(spatialEffectHazardMovementDamageFacts),
+    ),
+  }
+
   action doCleanupAreaHazard = all {
     qSurface.in(Set(
       AreaHazardActiveRouteSurface,
@@ -536,11 +531,16 @@ module battleRuntimeSpatialEffectsRouteMbt {
   }
 
   action doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak = all {
-    qSurface == ConcentrationBackedAreaHazardActiveRouteSurface,
+    qSurface.in(Set(
+      ConcentrationBackedAreaHazardActiveRouteSurface,
+      ConcentrationBackedAreaHazardSaveResolvedRouteSurface,
+      ConcentrationBackedAreaHazardDifficultTerrainMovementResolvedRouteSurface,
+      ConcentrationBackedAreaHazardMovementDamageResolvedRouteSurface,
+    )),
     recordSurface(
       ConcentrationBackedAreaHazardCleanedRouteSurface,
-      qRoute.concat(concentrationBreakHazardCleanupRoute),
-      qFacts.concat(concentrationBreakHazardCleanupFacts),
+      qRoute.concat(spatialEffectConcentrationBreakHazardCleanupRoute),
+      qFacts.concat(spatialEffectConcentrationBreakHazardCleanupFacts),
     ),
   }
 
@@ -580,6 +580,9 @@ module battleRuntimeSpatialEffectsRouteMbt {
     doResolveAreaHazardMovementDamageTrigger,
     doCleanupAreaHazard,
     doAdmitConcentrationBackedAreaHazard,
+    doResolveConcentrationBackedAreaHazardSavingThrowTrigger,
+    doResolveConcentrationBackedAreaHazardDifficultTerrainMovement,
+    doResolveConcentrationBackedAreaHazardMovementDamageTrigger,
     doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak,
     doRecordTableOwnedSpatialWitnesses,
     doStutterAfterTerminalSurface,

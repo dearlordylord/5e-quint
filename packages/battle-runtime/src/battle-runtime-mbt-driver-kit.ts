@@ -1440,9 +1440,13 @@ const SPATIAL_EFFECT_SIGHTS = [
 type SpatialEffectSight = (typeof SPATIAL_EFFECT_SIGHTS)[number];
 const SPATIAL_EFFECT_HAZARDS = [
   "difficultTerrainProjection",
+  "areaCreatedSavingThrowTrigger",
+  "areaMovedSavingThrowTrigger",
   "entrySavingThrowTrigger",
   "startTurnSavingThrowTrigger",
+  "endTurnSavingThrowTrigger",
   "movementDamageTrigger",
+  "failedSaveRestraintTrigger",
   "perTurnTriggerLimit",
   "areaRemovedCleanup",
 ] as const;
@@ -1499,6 +1503,20 @@ type SpatialEffectRouteFact =
       readonly owner: SpatialEffectCleanupOwner;
     };
 type ReducerRoutedSpatialEffectProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly SpatialEffectRouteFact[];
+};
+const SELECTED_CONCENTRATION_HAZARD_ROWS = [
+  "none",
+  "flamingSphereHazard",
+  "moonbeamMovableZone",
+  "spikeGrowthMovementHazard",
+  "webRestraintHazard",
+] as const;
+type SelectedConcentrationHazardRow =
+  (typeof SELECTED_CONCENTRATION_HAZARD_ROWS)[number];
+type ReducerRoutedSelectedConcentrationHazardProjection = {
+  readonly selectedRow: SelectedConcentrationHazardRow;
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly SpatialEffectRouteFact[];
 };
@@ -2114,8 +2132,21 @@ const spatialEffectRouteDriverSchema = {
   doResolveAreaHazardMovementDamageTrigger: {},
   doCleanupAreaHazard: {},
   doAdmitConcentrationBackedAreaHazard: {},
+  doResolveConcentrationBackedAreaHazardSavingThrowTrigger: {},
+  doResolveConcentrationBackedAreaHazardDifficultTerrainMovement: {},
+  doResolveConcentrationBackedAreaHazardMovementDamageTrigger: {},
   doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak: {},
   doRecordTableOwnedSpatialWitnesses: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const selectedConcentrationHazardRouteDriverSchema = {
+  init: {},
+  doDiscoverFlamingSphereHazard: {},
+  doDiscoverMoonbeamMovableZone: {},
+  doDiscoverSpikeGrowthMovementHazard: {},
+  doDiscoverWebRestraintHazard: {},
   doStutterAfterTerminalSurface: {},
   step: {},
 } as const;
@@ -6611,6 +6642,97 @@ const SPATIAL_EFFECT_TABLE_SPATIAL_WITNESS_FACTS = [
   },
 ] as const satisfies readonly SpatialEffectRouteFact[];
 
+const SELECTED_CONCENTRATION_HAZARD_BASE_FACTS = [
+  {
+    kind: "battleEffect",
+    effect: "areaHazardEffectAdmitted",
+  },
+  {
+    kind: "battleEffect",
+    effect: "concentrationBackedEffect",
+  },
+  {
+    kind: "geometry",
+    geometry: "areaShapeWitness",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SELECTED_CONCENTRATION_HAZARD_DIFFICULT_TERRAIN_FACTS = [
+  {
+    kind: "hazard",
+    hazard: "difficultTerrainProjection",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SELECTED_FLAMING_SPHERE_HAZARD_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "areaMembershipWitness",
+  },
+  {
+    kind: "hazard",
+    hazard: "areaMovedSavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "endTurnSavingThrowTrigger",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SELECTED_MOONBEAM_HAZARD_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "areaMembershipWitness",
+  },
+  {
+    kind: "light",
+    light: "dimLightProjection",
+  },
+  {
+    kind: "hazard",
+    hazard: "areaCreatedSavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "areaMovedSavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "entrySavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "endTurnSavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "perTurnTriggerLimit",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SELECTED_WEB_HAZARD_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "areaMembershipWitness",
+  },
+  {
+    kind: "sight",
+    sight: "lightlyObscuredProjection",
+  },
+  {
+    kind: "hazard",
+    hazard: "entrySavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "startTurnSavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "failedSaveRestraintTrigger",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
 function spatialEffectInitialRoute(): readonly ReducerRouteEvent[] {
   return [routeStart()];
 }
@@ -7039,6 +7161,24 @@ export function createSpatialEffectRouteDriver() {
         ];
         facts = SPATIAL_EFFECT_CONCENTRATION_BACKED_AREA_HAZARD_FACTS;
       },
+      doResolveConcentrationBackedAreaHazardSavingThrowTrigger: () => {
+        route = [...route, ...spatialEffectHazardSavingThrowRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_HAZARD_SAVE_FACTS];
+      },
+      doResolveConcentrationBackedAreaHazardDifficultTerrainMovement: () => {
+        route = [
+          ...route,
+          ...spatialEffectHazardDifficultTerrainMovementRoute(),
+        ];
+        facts = [
+          ...facts,
+          ...SPATIAL_EFFECT_HAZARD_DIFFICULT_TERRAIN_MOVEMENT_FACTS,
+        ];
+      },
+      doResolveConcentrationBackedAreaHazardMovementDamageTrigger: () => {
+        route = [...route, ...spatialEffectHazardMovementDamageRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_HAZARD_MOVEMENT_DAMAGE_FACTS];
+      },
       doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak: () => {
         route = [
           ...route,
@@ -7056,6 +7196,107 @@ export function createSpatialEffectRouteDriver() {
       doStutterAfterTerminalSurface: () => {},
       step: () => {},
       getState: (): ReducerRoutedSpatialEffectProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+function selectedConcentrationHazardAdmissionRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    ...spatialEffectAreaAdmissionRoute(),
+    ...spatialEffectConcentrationRoute(),
+    ...spatialEffectHazardProjectionRoute(),
+  ];
+}
+
+function selectedConcentrationHazardMovementDamageRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    ...selectedConcentrationHazardAdmissionRoute(),
+    ...spatialEffectHazardMovementDamageRoute(),
+    ...spatialEffectConcentrationBreakHazardCleanupRoute(),
+  ];
+}
+
+export function createSelectedConcentrationHazardRouteDriver() {
+  return defineDriver(selectedConcentrationHazardRouteDriverSchema, () => {
+    let selectedRow: SelectedConcentrationHazardRow = "none";
+    let route: readonly ReducerRouteEvent[] = spatialEffectInitialRoute();
+    let facts: readonly SpatialEffectRouteFact[] = [];
+
+    function reset(): void {
+      selectedRow = "none";
+      route = spatialEffectInitialRoute();
+      facts = [];
+    }
+
+    function recordSaveHazard(input: {
+      readonly row: SelectedConcentrationHazardRow;
+      readonly projectionRoute?: readonly ReducerRouteEvent[];
+      readonly rowFacts: readonly SpatialEffectRouteFact[];
+    }): void {
+      selectedRow = input.row;
+      route = [
+        ...spatialEffectInitialRoute(),
+        ...selectedConcentrationHazardAdmissionRoute(),
+        ...(input.projectionRoute ?? []),
+        ...spatialEffectHazardSavingThrowRoute(),
+        ...spatialEffectConcentrationBreakHazardCleanupRoute(),
+      ];
+      facts = [
+        ...SELECTED_CONCENTRATION_HAZARD_BASE_FACTS,
+        ...input.rowFacts,
+        ...SPATIAL_EFFECT_CONCENTRATION_BREAK_HAZARD_CLEANUP_FACTS,
+      ];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverFlamingSphereHazard: () => {
+        recordSaveHazard({
+          row: "flamingSphereHazard",
+          rowFacts: SELECTED_FLAMING_SPHERE_HAZARD_FACTS,
+        });
+      },
+      doDiscoverMoonbeamMovableZone: () => {
+        recordSaveHazard({
+          row: "moonbeamMovableZone",
+          projectionRoute: spatialEffectLightProjectionRoute(),
+          rowFacts: SELECTED_MOONBEAM_HAZARD_FACTS,
+        });
+      },
+      doDiscoverSpikeGrowthMovementHazard: () => {
+        selectedRow = "spikeGrowthMovementHazard";
+        route = [
+          ...spatialEffectInitialRoute(),
+          ...selectedConcentrationHazardMovementDamageRoute(),
+        ];
+        facts = [
+          ...SELECTED_CONCENTRATION_HAZARD_BASE_FACTS,
+          ...SELECTED_CONCENTRATION_HAZARD_DIFFICULT_TERRAIN_FACTS,
+          ...SPATIAL_EFFECT_HAZARD_MOVEMENT_DAMAGE_FACTS,
+          ...SPATIAL_EFFECT_CONCENTRATION_BREAK_HAZARD_CLEANUP_FACTS,
+        ];
+      },
+      doDiscoverWebRestraintHazard: () => {
+        recordSaveHazard({
+          row: "webRestraintHazard",
+          projectionRoute: spatialEffectObscurementProjectionRoute(),
+          rowFacts: [
+            ...SELECTED_CONCENTRATION_HAZARD_DIFFICULT_TERRAIN_FACTS,
+            ...SELECTED_WEB_HAZARD_FACTS,
+          ],
+        });
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedSelectedConcentrationHazardProjection => ({
+        selectedRow,
         route,
         facts,
       }),
@@ -12046,9 +12287,13 @@ const SPATIAL_EFFECT_SIGHT_BY_VARIANT_TAG = {
 
 const SPATIAL_EFFECT_HAZARD_BY_VARIANT_TAG = {
   DifficultTerrainProjection: "difficultTerrainProjection",
+  AreaCreatedSavingThrowTrigger: "areaCreatedSavingThrowTrigger",
+  AreaMovedSavingThrowTrigger: "areaMovedSavingThrowTrigger",
   EntrySavingThrowTrigger: "entrySavingThrowTrigger",
   StartTurnSavingThrowTrigger: "startTurnSavingThrowTrigger",
+  EndTurnSavingThrowTrigger: "endTurnSavingThrowTrigger",
   MovementDamageTrigger: "movementDamageTrigger",
+  FailedSaveRestraintTrigger: "failedSaveRestraintTrigger",
   PerTurnTriggerLimit: "perTurnTriggerLimit",
   AreaRemovedCleanup: "areaRemovedCleanup",
 } as const satisfies Readonly<Record<string, SpatialEffectHazard>>;
@@ -12068,6 +12313,16 @@ const SPATIAL_EFFECT_CLEANUP_OWNER_BY_VARIANT_TAG = {
   BattleObscurementCleanupOwner: "battleObscurementProjection",
   BattleAreaHazardCleanupOwner: "battleAreaHazard",
 } as const satisfies Readonly<Record<string, SpatialEffectCleanupOwner>>;
+
+const SELECTED_CONCENTRATION_HAZARD_ROW_BY_VARIANT_TAG = {
+  NoSelectedConcentrationHazardRow: "none",
+  FlamingSphereHazardRow: "flamingSphereHazard",
+  MoonbeamMovableZoneRow: "moonbeamMovableZone",
+  SpikeGrowthMovementHazardRow: "spikeGrowthMovementHazard",
+  WebRestraintHazardRow: "webRestraintHazard",
+} as const satisfies Readonly<
+  Record<string, SelectedConcentrationHazardRow>
+>;
 
 const MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG = {
   PrimaryTarget: "primaryTarget",
@@ -13584,6 +13839,22 @@ function normalizeReducerRoutedSpatialEffectQuintState(
   };
 }
 
+function normalizeReducerRoutedSelectedConcentrationHazardQuintState(
+  raw: unknown,
+): ReducerRoutedSelectedConcentrationHazardProjection {
+  const state = quintStateRecord(raw);
+  return {
+    selectedRow: quintVariantMappedValue(
+      quintField(state, "qSelectedRow"),
+      "qSelectedRow",
+      SELECTED_CONCENTRATION_HAZARD_ROW_BY_VARIANT_TAG,
+      "selected concentration hazard row",
+    ),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeSpatialEffectRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
 function normalizeReducerRoutedLevel1SpatialCompositionQuintState(
   raw: unknown,
 ): ReducerRoutedLevel1SpatialCompositionProjection {
@@ -14289,6 +14560,16 @@ export const reducerRoutedSpatialEffectStateCheck = stateCheck(
   (
     spec: ReducerRoutedSpatialEffectProjection,
     impl: ReducerRoutedSpatialEffectProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedSelectedConcentrationHazardStateCheck = stateCheck(
+  normalizeReducerRoutedSelectedConcentrationHazardQuintState,
+  (
+    spec: ReducerRoutedSelectedConcentrationHazardProjection,
+    impl: ReducerRoutedSelectedConcentrationHazardProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;
