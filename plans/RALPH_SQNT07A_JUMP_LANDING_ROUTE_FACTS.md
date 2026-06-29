@@ -44,7 +44,7 @@ geometry, or pathfinding.
 - If a required fact cannot be stated from QNT/RAW/domain guidance, record a
   concrete blocker instead of guessing.
 
-## Task 1
+### Task 1
 
 ### Goal
 
