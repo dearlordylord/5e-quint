@@ -85,6 +85,7 @@ import {
   applyBattleHitPointDamage,
   breakBattleConcentration,
 } from "./battle-reducer/damage-apply.ts";
+import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import {
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
@@ -218,6 +219,7 @@ type HexMarkedTarget = "target" | "transferTarget" | "none";
 type HexTransferKind = "awaitingTargetDrop" | "availableAfterTurn" | "none";
 type HexRetargetTiming = "laterTurn" | "none";
 type HexAbilityCheckAbility = "wis" | "none";
+type HexAbilityCheckRollMode = "disadvantage" | "normal" | "none";
 type MarkedDamageRiderActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spellMarkedDamageRider" }
@@ -286,6 +288,10 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
   readonly hexActiveMarkSourceSpellId: HexSourceSpellId;
   readonly hexActiveMarkTarget: HexMarkedTarget;
   readonly hexAbilityCheckAbility: HexAbilityCheckAbility;
+  readonly hexMatchingTargetAbilityRollMode: HexAbilityCheckRollMode;
+  readonly hexNonmatchingAbilityRollMode: HexAbilityCheckRollMode;
+  readonly hexNonmarkedActorAbilityRollMode: HexAbilityCheckRollMode;
+  readonly hexAfterCleanupAbilityRollMode: HexAbilityCheckRollMode;
   readonly hexTransferKindOnDropTurn: HexTransferKind;
   readonly hexActiveMarkTransferKind: HexTransferKind;
   readonly hexActiveMarkRetargetTiming: HexRetargetTiming;
@@ -360,6 +366,9 @@ type HexActiveMarkProjection = Pick<
   | "hexActiveMarkSourceSpellId"
   | "hexActiveMarkTarget"
   | "hexAbilityCheckAbility"
+  | "hexMatchingTargetAbilityRollMode"
+  | "hexNonmatchingAbilityRollMode"
+  | "hexNonmarkedActorAbilityRollMode"
   | "hexActiveMarkTransferKind"
   | "hexActiveMarkRetargetTiming"
 >;
@@ -644,6 +653,10 @@ const selectedUnitIdentityReplays = [
           hexActiveMarkSourceSpellId: "hex",
           hexActiveMarkTarget: "transferTarget",
           hexAbilityCheckAbility: "wis",
+          hexMatchingTargetAbilityRollMode: "disadvantage",
+          hexNonmatchingAbilityRollMode: "normal",
+          hexNonmarkedActorAbilityRollMode: "normal",
+          hexAfterCleanupAbilityRollMode: "normal",
           hexTransferKindOnDropTurn: "availableAfterTurn",
           hexActiveMarkTransferKind: "awaitingTargetDrop",
           hexActiveMarkRetargetTiming: "laterTurn",
@@ -873,6 +886,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
     let huntersMarkTransferVisibleOnDropTurn = false;
     let hexTransferKindOnDropTurn: HexTransferKind = "none";
     let hexTransferVisibleOnDropTurn = false;
+    let hexAfterCleanupAbilityRollMode: HexAbilityCheckRollMode = "none";
     let ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
     let falseLifeTemporaryHitPoints =
       defaultFalseLifeTemporaryHitPointsProjection();
@@ -893,6 +907,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       huntersMarkTransferVisibleOnDropTurn = false;
       hexTransferKindOnDropTurn = "none";
       hexTransferVisibleOnDropTurn = false;
+      hexAfterCleanupAbilityRollMode = "none";
       ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
       falseLifeTemporaryHitPoints =
         defaultFalseLifeTemporaryHitPointsProjection();
@@ -1356,6 +1371,11 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
           }),
           "hex",
         );
+        hexAfterCleanupAbilityRollMode = hexAbilityCheckRollModeFor(
+          breakBattleConcentration(state, casterId),
+          markedDamageTransferTargetId,
+          "wis",
+        );
       },
       doLongstriderSpeedIncrease: () => {
         state = level1BuffMarkSmiteBattle({
@@ -1571,6 +1591,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
           hexDamageHoleRider,
           hexTransferKindOnDropTurn,
           hexTransferVisibleOnDropTurn,
+          hexAfterCleanupAbilityRollMode,
           ensnaringStrikeLifecycle,
           falseLifeTemporaryHitPoints,
           heroismEffects,
@@ -1637,6 +1658,10 @@ function expectedProjection(
     hexActiveMarkSourceSpellId: "none",
     hexActiveMarkTarget: "none",
     hexAbilityCheckAbility: "none",
+    hexMatchingTargetAbilityRollMode: "none",
+    hexNonmatchingAbilityRollMode: "none",
+    hexNonmarkedActorAbilityRollMode: "none",
+    hexAfterCleanupAbilityRollMode: "none",
     hexTransferKindOnDropTurn: "none",
     hexActiveMarkTransferKind: "none",
     hexActiveMarkRetargetTiming: "none",
@@ -2824,6 +2849,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     | undefined,
   hexTransferKindOnDropTurn: HexTransferKind,
   hexTransferVisibleOnDropTurn: boolean,
+  hexAfterCleanupAbilityRollMode: HexAbilityCheckRollMode,
   ensnaringStrikeLifecycle: EnsnaringStrikeLifecycleProjection,
   falseLifeTemporaryHitPoints: FalseLifeTemporaryHitPointsProjection,
   heroismEffects: HeroismEffectsProjection,
@@ -2873,6 +2899,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     ...hexActiveMarkProjection(state),
     hexTransferKindOnDropTurn,
     hexTransferVisibleOnDropTurn,
+    hexAfterCleanupAbilityRollMode,
     searingSmiteLifecycle,
     shillelaghWeaponAttackOverride,
     trueStrikeSpellHostedWeaponAttack,
@@ -3157,13 +3184,58 @@ function hexDamageHoleProjection(
 
 function hexActiveMarkProjection(state: BattleState): HexActiveMarkProjection {
   const effect = hexActiveMarkEffect(state);
+  if (effect === undefined) {
+    return {
+      hexActiveMarkSourceSpellId: "none",
+      hexActiveMarkTarget: "none",
+      hexAbilityCheckAbility: "none",
+      hexMatchingTargetAbilityRollMode: "none",
+      hexNonmatchingAbilityRollMode: "none",
+      hexNonmarkedActorAbilityRollMode: "none",
+      hexActiveMarkTransferKind: "none",
+      hexActiveMarkRetargetTiming: "none",
+    };
+  }
   return {
     hexActiveMarkSourceSpellId: hexSourceSpellId(effect),
     hexActiveMarkTarget: hexActiveMarkTarget(effect),
     hexAbilityCheckAbility: hexAbilityCheckAbility(effect),
+    hexMatchingTargetAbilityRollMode: hexAbilityCheckRollModeFor(
+      state,
+      effect.targetCombatantId,
+      "wis",
+    ),
+    hexNonmatchingAbilityRollMode: hexAbilityCheckRollModeFor(
+      state,
+      effect.targetCombatantId,
+      "str",
+    ),
+    hexNonmarkedActorAbilityRollMode: hexAbilityCheckRollModeFor(
+      state,
+      casterId,
+      "wis",
+    ),
     hexActiveMarkTransferKind: hexActiveMarkTransferKind(effect),
     hexActiveMarkRetargetTiming: hexActiveMarkRetargetTiming(effect),
   };
+}
+
+function hexAbilityCheckRollModeFor(
+  state: BattleState,
+  actorId: CombatantId | undefined,
+  ability: "str" | "wis",
+): HexAbilityCheckRollMode {
+  if (actorId === undefined) {
+    return "none";
+  }
+  const mode = requiredAbilityCheckRollMode(state, actorId, ability);
+  if (mode === undefined || mode === "normal") {
+    return "normal";
+  }
+  if (mode === "disadvantage") {
+    return "disadvantage";
+  }
+  throw new Error(`Unexpected Hex ability-check roll mode ${mode}.`);
 }
 
 function hexActiveMarkEffect(
@@ -3487,6 +3559,18 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
     hexAbilityCheckAbility: hexAbilityFromQuint(
       state["qHexAbilityCheckAbility"],
     ),
+    hexMatchingTargetAbilityRollMode: hexAbilityCheckRollModeFromQuint(
+      state["qHexMatchingTargetAbilityRollMode"],
+    ),
+    hexNonmatchingAbilityRollMode: hexAbilityCheckRollModeFromQuint(
+      state["qHexNonmatchingAbilityRollMode"],
+    ),
+    hexNonmarkedActorAbilityRollMode: hexAbilityCheckRollModeFromQuint(
+      state["qHexNonmarkedActorAbilityRollMode"],
+    ),
+    hexAfterCleanupAbilityRollMode: hexAbilityCheckRollModeFromQuint(
+      state["qHexAfterCleanupAbilityRollMode"],
+    ),
     hexTransferKindOnDropTurn: hexTransferKindFromQuint(
       state["qHexTransferKindOnDropTurn"],
     ),
@@ -3690,6 +3774,15 @@ function hexAbilityFromQuint(raw: unknown): HexAbilityCheckAbility {
     return raw;
   }
   throw new Error(`Unexpected Hex ability ${String(raw)}.`);
+}
+
+function hexAbilityCheckRollModeFromQuint(
+  raw: unknown,
+): HexAbilityCheckRollMode {
+  if (raw === "disadvantage" || raw === "normal" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected Hex ability-check roll mode ${String(raw)}.`);
 }
 
 function hexTransferKindFromQuint(raw: unknown): HexTransferKind {

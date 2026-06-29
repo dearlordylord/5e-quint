@@ -59,6 +59,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     qHexActiveMarkSourceSpellId: str,
     qHexActiveMarkTarget: str,
     qHexAbilityCheckAbility: str,
+    qHexMatchingTargetAbilityRollMode: str,
+    qHexNonmatchingAbilityRollMode: str,
+    qHexNonmarkedActorAbilityRollMode: str,
+    qHexAfterCleanupAbilityRollMode: str,
     qHexTransferKindOnDropTurn: str,
     qHexActiveMarkTransferKind: str,
     qHexActiveMarkRetargetTiming: str,
@@ -154,6 +158,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   pure def qHexActiveMarkSourceSpellId: str = qState.qHexActiveMarkSourceSpellId
   pure def qHexActiveMarkTarget: str = qState.qHexActiveMarkTarget
   pure def qHexAbilityCheckAbility: str = qState.qHexAbilityCheckAbility
+  pure def qHexMatchingTargetAbilityRollMode: str = qState.qHexMatchingTargetAbilityRollMode
+  pure def qHexNonmatchingAbilityRollMode: str = qState.qHexNonmatchingAbilityRollMode
+  pure def qHexNonmarkedActorAbilityRollMode: str = qState.qHexNonmarkedActorAbilityRollMode
+  pure def qHexAfterCleanupAbilityRollMode: str = qState.qHexAfterCleanupAbilityRollMode
   pure def qHexTransferKindOnDropTurn: str = qState.qHexTransferKindOnDropTurn
   pure def qHexActiveMarkTransferKind: str = qState.qHexActiveMarkTransferKind
   pure def qHexActiveMarkRetargetTiming: str = qState.qHexActiveMarkRetargetTiming
@@ -252,6 +260,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     hexActiveMarkSourceSpellId: str,
     hexActiveMarkTarget: str,
     hexAbilityCheckAbility: str,
+    hexMatchingTargetAbilityRollMode: str,
+    hexNonmatchingAbilityRollMode: str,
+    hexNonmarkedActorAbilityRollMode: str,
+    hexAfterCleanupAbilityRollMode: str,
     hexTransferKindOnDropTurn: str,
     hexActiveMarkTransferKind: str,
     hexActiveMarkRetargetTiming: str,
@@ -309,6 +321,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       qHexActiveMarkSourceSpellId: hexActiveMarkSourceSpellId,
       qHexActiveMarkTarget: hexActiveMarkTarget,
       qHexAbilityCheckAbility: hexAbilityCheckAbility,
+      qHexMatchingTargetAbilityRollMode: hexMatchingTargetAbilityRollMode,
+      qHexNonmatchingAbilityRollMode: hexNonmatchingAbilityRollMode,
+      qHexNonmarkedActorAbilityRollMode: hexNonmarkedActorAbilityRollMode,
+      qHexAfterCleanupAbilityRollMode: hexAfterCleanupAbilityRollMode,
       qHexTransferKindOnDropTurn: hexTransferKindOnDropTurn,
       qHexActiveMarkTransferKind: hexActiveMarkTransferKind,
       qHexActiveMarkRetargetTiming: hexActiveMarkRetargetTiming,
@@ -437,6 +453,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     "none",
     "none",
     "none",
+    "none",
+    "none",
+    "none",
+    "none",
     false,
     lastResult,
   )
@@ -499,6 +519,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     "none",
     0,
     0,
+    "none",
+    "none",
+    "none",
+    "none",
     "none",
     "none",
     "none",
@@ -713,6 +737,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "available", "awaitingTargetDrop", "sameTurn", true,
       "none", "none", 0, 0,
       "none", "none", "none",
+      "none", "none", "none", "none",
       "none", "none", "none", false,
       HuntersMark,
     ),
@@ -730,6 +755,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "none", "none", "none", false,
       "hex", "necrotic", 1, 6,
       "hex", "transferTarget", "wis",
+      "disadvantage", "normal", "normal", "normal",
       "availableAfterTurn", "awaitingTargetDrop", "laterTurn", false,
       Hex,
     ),
