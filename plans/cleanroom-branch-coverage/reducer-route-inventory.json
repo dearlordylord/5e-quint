@@ -942,9 +942,9 @@
               "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt records ReactionFallMitigationRouteSubject evidence for falling-trigger reaction mitigation through generic trigger/procedure/continuation facts, spell-slot/action-economy, active-effect, movement-resource, and Hit Point owners.",
               "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt supplies generic object-attached and held light-emitter route evidence for object admission, active-effect admission, Bright/Dim Light projection, replacement cleanup, hurl cleanup, duration cleanup, and table-owned object/geometry witnesses.",
               "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt defines typed route facts that separate battle-owned effect lifecycle from table-owned light, geometry, presentation, sight, object, and hazard witnesses without selected spell identity.",
-              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt exposes SpatialEffectRouteSubject evidence for concentration-backed movable multi-emitter Dim Light movement, area-plus-Saving Throw outcome outline admission, invisible-benefit denial/Attack Roll Advantage projections, area obscurement admission plus separate duration and strong-wind dispersal cleanup, non-Concentration area hazard save/difficult-terrain movement/cleanup lifecycle, and a separate movement-damage trigger shape through action-economy, active-effect, Concentration, light, sight, obscurement, hazard, area-shape, Saving Throw, movement, Hit Point, and turn-boundary owners.",
+              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt exposes SpatialEffectRouteSubject evidence for concentration-backed movable multi-emitter Dim Light movement, area-plus-Saving Throw outcome outline admission, invisible-benefit denial/Attack Roll Advantage projections, area obscurement admission plus separate duration and strong-wind dispersal cleanup, non-Concentration area hazard save/difficult-terrain movement/cleanup lifecycle, concentration-backed area hazard admission plus Concentration-break cleanup, and a separate movement-damage trigger shape through action-economy, active-effect, Concentration, light, sight, obscurement, hazard, area-shape, Saving Throw, movement, Hit Point, and turn-boundary owners.",
               "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt supplies generic MovementPresentationRouteSubject evidence for movement replacement budget/distance plus table-supplied landing presentation witnesses, landing legality outcomes, failed Difficult Terrain landing Prone through BattleConditionLifecycleOwner, forced creature movement presentation, and object push/audible presentation through movement-resource, table-presentation, landing-outcome, condition-lifecycle, and object-boundary facts.",
-              "The grouped spatial witness still contains concentration-backed area hazards that must split into generic route substrates; movement replacement budget/distance, landing legality/consequence, and forced-movement/object-push presentation now route through the movement/presentation connector."
+              "The grouped spatial witness's SQNT-07A generic spatial, movement, light, area hazard, and presentation rows now route through generic spatial-effects, movement-presentation, reaction, object-light, and save-gated connectors rather than selected identity."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Areas of Effect, #Targets, and #Saving Throws define spell area, target, and save frontiers.",
@@ -954,9 +954,7 @@
               ".references/srd-5.2.1/Playing-the-Game.md#Movement and Position and .references/srd-5.2.1/Rules-Glossary.md#Reaction define movement, forced movement, falling response, and Reaction vocabulary.",
               "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Area of Effect, Movement, Reaction, Target, Saving Throw, Boundary Crossing, Illumination, Obscurement, Attack Roll, and Table Decision."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add a concentration-backed area hazard route before selected Sleet Storm, Spike Growth, or Web-like Concentration hazard rows may count; the current area hazard connector only covers non-Concentration hazard lifecycle plus a separate movement-damage trigger shape."
-            ]
+            "blockers": []
           }
         },
         {

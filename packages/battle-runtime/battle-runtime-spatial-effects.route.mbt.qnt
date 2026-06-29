@@ -15,6 +15,8 @@
 // - .references/srd-5.2.1/Playing-the-Game.md#Difficult Terrain and
 //   .references/srd-5.2.1/Rules-Glossary.md#Difficult Terrain define movement
 //   cost through hazardous or obstructed spaces.
+// - .references/srd-5.2.1/Rules-Glossary.md#Concentration defines that when
+//   an effect's creator loses Concentration, that effect ends.
 // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dancing Lights,
 //   Descriptions-E-L.md#Faerie Fire / #Fog Cloud / #Grease, and
 //   Descriptions-S-Z.md#Sleet Storm / #Spike Growth / #Web provide SRD
@@ -41,6 +43,8 @@ module battleRuntimeSpatialEffectsRouteMbt {
     | AreaHazardDifficultTerrainMovementResolvedRouteSurface
     | AreaHazardMovementDamageResolvedRouteSurface
     | AreaHazardCleanedRouteSurface
+    | ConcentrationBackedAreaHazardActiveRouteSurface
+    | ConcentrationBackedAreaHazardCleanedRouteSurface
     | TableSpatialWitnessRouteSurface
 
   var qSurface: SpatialEffectRouteSurface
@@ -204,6 +208,13 @@ module battleRuntimeSpatialEffectsRouteMbt {
       resolveRouteWithoutFill(noHoles, BattleActiveEffectOwner),
     )
 
+  pure def concentrationBreakHazardCleanupRoute: List[ReducerRouteEvent] =
+    List(
+      resolveRouteWithoutFill(noHoles, BattleConcentrationOwner),
+      resolveRouteWithoutFill(noHoles, BattleAreaHazardOwner),
+      resolveRouteWithoutFill(noHoles, BattleActiveEffectOwner),
+    )
+
   pure def tableSpatialWitnessRoute: List[ReducerRouteEvent] =
     List(
       resolveRouteWithoutFill(noHoles, BattleAreaShapeOwner),
@@ -271,6 +282,15 @@ module battleRuntimeSpatialEffectsRouteMbt {
       RouteSpatialEffectHazard({ hazard: DifficultTerrainProjection }),
     )
 
+  pure def concentrationBackedAreaHazardFacts:
+    List[SpatialEffectRouteFact] =
+    List(
+      RouteSpatialEffectBattleEffect({ effect: AreaHazardEffectAdmitted }),
+      RouteSpatialEffectBattleEffect({ effect: ConcentrationBackedEffect }),
+      RouteSpatialEffectGeometry({ geometry: AreaShapeWitness }),
+      RouteSpatialEffectHazard({ hazard: DifficultTerrainProjection }),
+    )
+
   pure def hazardSaveFacts: List[SpatialEffectRouteFact] =
     List(
       RouteSpatialEffectGeometry({ geometry: AreaMembershipWitness }),
@@ -333,6 +353,24 @@ module battleRuntimeSpatialEffectsRouteMbt {
       }),
       RouteSpatialEffectCleanedUpBy({
         cleanup: DurationCleanup,
+        owner: BattleActiveEffectCleanupOwner,
+      }),
+    )
+
+  pure def concentrationBreakHazardCleanupFacts:
+    List[SpatialEffectRouteFact] =
+    List(
+      RouteSpatialEffectHazard({ hazard: AreaRemovedCleanup }),
+      RouteSpatialEffectCleanedUpBy({
+        cleanup: ConcentrationBreakCleanup,
+        owner: BattleConcentrationCleanupOwner,
+      }),
+      RouteSpatialEffectCleanedUpBy({
+        cleanup: ConcentrationBreakCleanup,
+        owner: BattleAreaHazardCleanupOwner,
+      }),
+      RouteSpatialEffectCleanedUpBy({
+        cleanup: ConcentrationBreakCleanup,
         owner: BattleActiveEffectCleanupOwner,
       }),
     )
@@ -444,6 +482,18 @@ module battleRuntimeSpatialEffectsRouteMbt {
     ),
   }
 
+  action doAdmitConcentrationBackedAreaHazard = all {
+    qSurface == FreshSpatialEffectRouteSurface,
+    recordSurface(
+      ConcentrationBackedAreaHazardActiveRouteSurface,
+      qRoute
+        .concat(areaAdmissionRoute)
+        .concat(concentrationRoute)
+        .concat(hazardProjectionRoute),
+      concentrationBackedAreaHazardFacts,
+    ),
+  }
+
   action doResolveAreaHazardSavingThrowTrigger = all {
     qSurface == AreaHazardActiveRouteSurface,
     recordSurface(
@@ -485,6 +535,15 @@ module battleRuntimeSpatialEffectsRouteMbt {
     ),
   }
 
+  action doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak = all {
+    qSurface == ConcentrationBackedAreaHazardActiveRouteSurface,
+    recordSurface(
+      ConcentrationBackedAreaHazardCleanedRouteSurface,
+      qRoute.concat(concentrationBreakHazardCleanupRoute),
+      qFacts.concat(concentrationBreakHazardCleanupFacts),
+    ),
+  }
+
   action doRecordTableOwnedSpatialWitnesses = all {
     qSurface == FreshSpatialEffectRouteSurface,
     recordSurface(
@@ -501,6 +560,7 @@ module battleRuntimeSpatialEffectsRouteMbt {
       AreaObscurementDurationCleanedRouteSurface,
       AreaObscurementDispersedRouteSurface,
       AreaHazardCleanedRouteSurface,
+      ConcentrationBackedAreaHazardCleanedRouteSurface,
       TableSpatialWitnessRouteSurface,
     )),
     recordSurface(qSurface, qRoute, qFacts),
@@ -519,6 +579,8 @@ module battleRuntimeSpatialEffectsRouteMbt {
     doResolveAreaHazardDifficultTerrainMovement,
     doResolveAreaHazardMovementDamageTrigger,
     doCleanupAreaHazard,
+    doAdmitConcentrationBackedAreaHazard,
+    doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak,
     doRecordTableOwnedSpatialWitnesses,
     doStutterAfterTerminalSurface,
   }

@@ -54,6 +54,7 @@ module battleRuntimeSpatialEffectRouteFacts {
 
   type SpatialEffectCleanupFact =
     | DurationCleanup
+    | ConcentrationBreakCleanup
     | DispersalCleanup
     | RemovalCleanup
     | ReplacementCleanup
