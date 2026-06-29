@@ -163,6 +163,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-sorcerous-burst-damage-choice.qnt",
   "battle-runtime-witness-protocol.qnt",
   "battle-runtime-weapon-attack-ordering.qnt",
+  "battle-runtime-weapon-hosted-capability-facts.qnt",
   "creature-attack.qnt",
   "rule-core-component-route.qnt",
 ]);
