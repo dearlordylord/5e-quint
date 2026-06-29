@@ -2223,7 +2223,7 @@
             "qntFacts": [
               "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner and RuleCoreHitPointDamageOwner.",
               "The component witness projects exact direct damage instance count and damage-per-instance facts, spell attack damage base dice, rolled dice count, critical doubling, damage die size, exact damage amount and damage type, save-gated success policy, saving-throw outcome, target initial Hit Points, applied target Hit Points, and damage-to-Hit-Points facts.",
-              "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt bridges those exact component facts to public AfterHitDamageRiderRouteSubject, WeaponDamageRiderRouteSubject, HeldWeaponActiveEffectRouteSubject, and SpellHostedWeaponAttackRouteSubject Hit Point damage routes without selected spell, item, or attack identity.",
+              "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt computes exact details from the same rule-core fact records and functions as rule-core-exact-damage-projection.mbt.qnt, then exposes them beside public AfterHitDamageRiderRouteSubject, WeaponDamageRiderRouteSubject, HeldWeaponActiveEffectRouteSubject, and SpellHostedWeaponAttackRouteSubject Hit Point damage routes without selected spell, item, or attack identity.",
               "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt remains the semantic owner for direct, spell-attack, and save-gated exact damage projection; packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt remains the semantic owner for target Hit Point application."
             ],
             "rawDomainFacts": [
@@ -3951,7 +3951,7 @@
             "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt already models exact direct, attack, and save damage projection facts.",
             "packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt already maps attack damage profiles to damage types, hit effects, and object-target support.",
             "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt exposes component connector evidence for exact damage amount, damage type, direct instance count, spell-attack dice count, critical doubling, save success policy, saving-throw outcome, and target Hit Point application facts without dispatching on selected spell identity.",
-            "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt connects exact damage details to public after-hit/timed and weapon-hosted damage route subjects while retaining authored spell, item, and attack identity as boundary-only evidence."
+            "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt connects exact damage details to public after-hit/timed and weapon-hosted damage route subjects and carries no authored spell, item, or attack identity."
           ],
           "rawDomainFacts": [
             ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines spell damage dice and modifier rules.",
@@ -3963,7 +3963,7 @@
             "qntFacts": [
               "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt is component-first evidence through RuleCoreSpellProcedureProfileOwner and RuleCoreHitPointDamageOwner.",
               "The witness records qScenario, qDamageType, qDamageAmount, qInstanceCount, qDamagePerInstance, qBaseDamageDice, qRolledDamageDiceCount, qDamageDieSize, qCritical, qSuccessPolicy, qSavingThrowFailed, qTargetInitialHp, qTargetHp, and qDamageToHitPoints as public replay facts.",
-              "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt records qRoute plus qComponentRoute for AfterHitDamageRiderRouteSubject attack damage, AfterHitDamageRiderRouteSubject timed damage, WeaponDamageRiderRouteSubject damage, HeldWeaponActiveEffectRouteSubject damage, and SpellHostedWeaponAttackRouteSubject damage.",
+              "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt records qRoute plus qComponentRoute for AfterHitDamageRiderRouteSubject attack damage, AfterHitDamageRiderRouteSubject timed damage with its Ability Check next-hole frontier, WeaponDamageRiderRouteSubject damage, HeldWeaponActiveEffectRouteSubject damage, and SpellHostedWeaponAttackRouteSubject damage.",
               "The reusable rule-core semantic owners remain packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt for exact spell damage projection and packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt for target damage application."
             ],
             "rawDomainFacts": [

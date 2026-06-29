@@ -82,15 +82,15 @@ const SCENARIO_BY_TAG = {
 } as const satisfies Readonly<Record<string, ExactDamageRouteBridgeScenario>>;
 
 const DAMAGE_TYPE_BY_TAG = {
-  BridgeAcidDamage: "acid",
-  BridgeColdDamage: "cold",
-  BridgeFireDamage: "fire",
-  BridgeForceDamage: "force",
+  AcidDamage: "acid",
+  ColdDamage: "cold",
+  FireDamage: "fire",
+  ForceDamage: "force",
 } as const satisfies Readonly<Record<string, ExactDamageBridgeDamageType>>;
 
 const SUCCESS_POLICY_BY_TAG = {
-  BridgeNoDamageOnSuccessfulSave: "noDamageOnSuccessfulSave",
-  BridgeHalfDamageOnSuccessfulSave: "halfDamageOnSuccessfulSave",
+  SpellNoDamageOnSuccessfulSave: "noDamageOnSuccessfulSave",
+  SpellHalfDamageOnSuccessfulSave: "halfDamageOnSuccessfulSave",
 } as const satisfies Readonly<
   Record<string, ExactDamageBridgeSaveSuccessPolicy>
 >;
@@ -106,6 +106,7 @@ const driverSchema = {
 } as const;
 
 const rolledDiceHole = [{ kind: "rolledDice" }] as const;
+const abilityCheckHole = [{ kind: "abilityCheck" }] as const;
 const noHoles = [] as const;
 const targetInitialHp = 20;
 const spellProcedureComponentOwner = "RuleCoreSpellProcedureProfileOwner";
@@ -137,6 +138,7 @@ const routeByAction = {
     route: damageRoute(
       "afterHitDamageRider",
       "battleHitPoint",
+      noHoles,
       "battleHitPoint",
     ),
     damageType: "force",
@@ -159,6 +161,7 @@ const routeByAction = {
     route: damageRoute(
       "afterHitDamageRider",
       "battleActiveEffect",
+      abilityCheckHole,
       "battleHitPoint",
     ),
     damageType: "fire",
@@ -181,6 +184,7 @@ const routeByAction = {
     route: damageRoute(
       "weaponDamageRider",
       "battleActiveEffect",
+      noHoles,
       "battleHitPoint",
     ),
     damageType: "force",
@@ -203,6 +207,7 @@ const routeByAction = {
     route: damageRoute(
       "heldWeaponActiveEffect",
       "battleActiveEffect",
+      noHoles,
       "battleHitPoint",
     ),
     damageType: "cold",
@@ -225,6 +230,7 @@ const routeByAction = {
     route: damageRoute(
       "spellHostedWeaponAttack",
       "battleHitPoint",
+      noHoles,
       "battleHitPoint",
     ),
     damageType: "cold",
@@ -264,6 +270,7 @@ function bridgeProjection(
 function damageRoute(
   subject: ReducerRouteSubjectFamily,
   discoverOwner: ReducerRouteOwnerGroup,
+  nextHoles: readonly { readonly kind: "abilityCheck" | "rolledDice" }[],
   resolveOwner: ReducerRouteOwnerGroup,
 ): readonly ReducerRouteEvent[] {
   return [
@@ -276,7 +283,7 @@ function damageRoute(
     reducerRouteResolveBattleSubject({
       subject,
       fill: "rolledDice",
-      holes: noHoles,
+      holes: nextHoles,
       owner: resolveOwner,
     }),
   ];

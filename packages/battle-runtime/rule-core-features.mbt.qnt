@@ -3,6 +3,7 @@
 module ruleCoreFeaturesMbt {
   import ruleCoreComponentRoute.* from "./rule-core-component-route"
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
+  import attackRollDamageDiceCore.* from "../shared-algebras/proofs/rule-core/attack-roll-damage-dice-core"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"

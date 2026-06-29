@@ -2,6 +2,7 @@
 
 module ruleCoreAttackDamageDispositionMbt {
   import ruleCoreComponentRoute.* from "./rule-core-component-route"
+  import attackRollDamageDiceCore.* from "../shared-algebras/proofs/rule-core/attack-roll-damage-dice-core"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"

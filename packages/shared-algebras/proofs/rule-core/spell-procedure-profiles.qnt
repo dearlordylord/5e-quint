@@ -5,6 +5,7 @@
 
 module spellProcedureProfiles {
   import damageComponentAdjustments.* from "./damage-component-adjustments"
+  import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
   import attackDamageComposition.* from "./attack-damage-composition"
   import spellDamageProjectionCore.* from "./spell-damage-projection-core"
   import spellAttackDamageProjectionCore.* from "./spell-attack-damage-projection-core"

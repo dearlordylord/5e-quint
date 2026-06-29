@@ -5,6 +5,7 @@
 
 module unitFeatureAttackRiderCore {
   import hitPointDamage.* from "./hit-point-damage"
+  import attackRollDamageDiceCore.* from "./attack-roll-damage-dice-core"
   import attackDamageComposition.* from "./attack-damage-composition"
   import damageComponentAdjustments.* from "./damage-component-adjustments"
 
