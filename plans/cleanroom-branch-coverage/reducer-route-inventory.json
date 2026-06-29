@@ -877,7 +877,7 @@
               "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt exposes AfterHitDamageRiderRouteSubject evidence for selected after-hit damage, condition, turn-start, and cleanup rider branches.",
               "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt exposes ScalarBuffEffectRouteSubject evidence for selected scalar buff branches such as temporary Hit Points and Speed increases.",
               "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt, battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt, and battle-runtime-held-weapon-active-effect.route.mbt.qnt expose the generic weapon-hosted rider and held-weapon override substrates.",
-              "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt exposes MarkedDamageRiderEffectRouteSubject and ConditionImmunityTemporaryHitPointEffectRouteSubject evidence for marked-target damage projection, target-drop transfer timing, condition-immunity projection, turn-start Temporary Hit Point grants, and Concentration cleanup through active-effect, damage, Hit Point, turn-boundary, temporary-HP, condition-lifecycle, and Concentration owners."
+              "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt exposes MarkedDamageRiderEffectRouteSubject and ConditionImmunityTemporaryHitPointEffectRouteSubject evidence for marked-target damage projection, target-drop transfer timing, targeted ability-check roll-mode projection and cleanup, condition-immunity projection, turn-start Temporary Hit Point grants, and Concentration cleanup through active-effect, ability-check roll-mode, damage, Hit Point, turn-boundary, temporary-HP, condition-lifecycle, and Concentration owners."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack, #Damage Rolls, #Temporary Hit Points, and #Movement and Position define the generic attack, damage, temporary Hit Point, and Speed facts represented by connector evidence.",
@@ -4064,9 +4064,9 @@
         },
         {
           "taskId": "L15-RR07-FU06A-MARKED-DAMAGE-IMMUNITY-ACTIVE-EFFECT-SUBSTRATES",
-          "subjectFamily": "marked damage rider transfer plus condition-immunity turn-start Temporary Hit Point substrates",
+          "subjectFamily": "marked damage rider transfer, targeted ability-check roll-mode, and condition-immunity turn-start Temporary Hit Point substrates",
           "requiredSourceWork": [
-            "Task SQNT-07A supplied packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt as generic MarkedDamageRiderEffectRouteSubject and ConditionImmunityTemporaryHitPointEffectRouteSubject evidence for marked-target extra damage, target-drop transfer timing, condition-immunity rejection, turn-start Temporary Hit Point grants, and Concentration cleanup through public reducer owners before selected level-1 buff/mark/smite identity replay counts."
+            "Task SQNT-07A supplied packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt as generic MarkedDamageRiderEffectRouteSubject and ConditionImmunityTemporaryHitPointEffectRouteSubject evidence for marked-target extra damage, target-drop transfer timing, targeted ability-check roll-mode projection and cleanup, condition-immunity rejection, turn-start Temporary Hit Point grants, and Concentration cleanup through public reducer owners before selected level-1 buff/mark/smite identity replay counts."
           ]
         },
         {
