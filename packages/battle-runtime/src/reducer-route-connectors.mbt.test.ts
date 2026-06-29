@@ -16,6 +16,7 @@ import {
   createHitPointRestorationOrderingRouteDriver,
   createHitPointRegainPreventionRouteDriver,
   createIndependentSpellAttackSequenceRouteDriver,
+  createLevel1SpatialCompositionRouteDriver,
   createMagicMissileRouteDriver,
   createMarkedDamageImmunityRouteDriver,
   createMetamagicRouteDriver,
@@ -48,6 +49,7 @@ import {
   reducerRoutedIndependentSpellAttackSequenceStateCheck,
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedMarkedDamageImmunityStateCheck,
+  reducerRoutedLevel1SpatialCompositionStateCheck,
   reducerRoutedCommandOrderingStateCheck,
   reducerRoutedMetamagicStateCheck,
   reducerRoutedMixedTargetOutcomeStateCheck,
@@ -483,6 +485,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(3),
         stateCheck: reducerRoutedSpatialEffectStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes the grouped level-1 spatial witness through composed generic reducer surfaces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createLevel1SpatialCompositionRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(2),
+        stateCheck: reducerRoutedLevel1SpatialCompositionStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,

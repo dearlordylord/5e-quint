@@ -1502,6 +1502,9 @@ type ReducerRoutedSpatialEffectProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly SpatialEffectRouteFact[];
 };
+type ReducerRoutedLevel1SpatialCompositionProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
 const MIXED_TARGET_OUTCOME_TARGETS = [
   "primaryTarget",
   "secondaryTarget",
@@ -2085,6 +2088,22 @@ const spatialEffectRouteDriverSchema = {
   doAdmitConcentrationBackedAreaHazard: {},
   doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak: {},
   doRecordTableOwnedSpatialWitnesses: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const level1SpatialCompositionRouteDriverSchema = {
+  init: {},
+  doRouteMovableMultiEmitterLight: {},
+  doRouteOutlineSightAdvantage: {},
+  doRouteFallMitigation: {},
+  doRouteAreaObscurementCleanup: {},
+  doRouteAreaHazardSave: {},
+  doRouteAreaHazardMovement: {},
+  doRouteMovementReplacement: {},
+  doRouteObjectLightEmitter: {},
+  doRouteHeldLightEmitter: {},
+  doRouteSavePushPresentation: {},
   doStutterAfterTerminalSurface: {},
   step: {},
 } as const;
@@ -6992,6 +7011,265 @@ export function createSpatialEffectRouteDriver() {
       getState: (): ReducerRoutedSpatialEffectProjection => ({
         route,
         facts,
+      }),
+    };
+  });
+}
+
+const LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT =
+  "reactionFallMitigation" satisfies ReducerRouteSubjectFamily;
+const LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT =
+  "movementPresentation" satisfies ReducerRouteSubjectFamily;
+const INTERRUPT_DECISION_ROUTE_HOLES = [
+  "interruptDecision",
+] as const satisfies readonly ReducerRouteHole[];
+const MOVEMENT_AND_SAVING_THROW_ROUTE_HOLES = [
+  "movement",
+  "savingThrowOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+
+function routeResolveInterrupt(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleInterrupt",
+    subject: input.subject,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function level1SpatialCompositionInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function level1SpatialMovableMultiEmitterLightRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...spatialEffectAdmissionRoute(),
+    ...spatialEffectConcentrationRoute(),
+    ...spatialEffectLightProjectionRoute(),
+    ...spatialEffectMoveEmitterRoute(),
+  ];
+}
+
+function level1SpatialOutlineSightAdvantageRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...spatialEffectOutlineAdmissionRoute(),
+    ...spatialEffectConcentrationRoute(),
+    ...spatialEffectOutlineProjectionRoute(),
+  ];
+}
+
+function level1SpatialFallMitigationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      holes: INTERRUPT_DECISION_ROUTE_HOLES,
+      owner: "battleInterruptStack",
+    }),
+    routeResolveInterrupt({
+      subject: LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      fill: "interruptDecision",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function level1SpatialAreaObscurementCleanupRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...spatialEffectAreaAdmissionRoute(),
+    ...spatialEffectConcentrationRoute(),
+    ...spatialEffectObscurementProjectionRoute(),
+    ...spatialEffectObscurementDispersalCleanupRoute(),
+  ];
+}
+
+function level1SpatialAreaHazardSaveRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...spatialEffectAreaAdmissionRoute(),
+    ...spatialEffectHazardProjectionRoute(),
+    ...spatialEffectHazardSavingThrowRoute(),
+  ];
+}
+
+function level1SpatialAreaHazardMovementRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...spatialEffectAreaAdmissionRoute(),
+    ...spatialEffectHazardProjectionRoute(),
+    ...spatialEffectHazardDifficultTerrainMovementRoute(),
+    ...spatialEffectHazardCleanupRoute(),
+  ];
+}
+
+function level1SpatialMovementReplacementRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: MOVEMENT_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+    routeResolveSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      fill: "movement",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTablePresentation",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+  ];
+}
+
+function level1SpatialObjectLightEmitterRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...objectLightObjectAdmissionRoute(),
+    ...objectLightEmitterAdmissionRoute(),
+    ...objectLightProjectionRoute(),
+    ...objectLightActiveEffectCleanupRoute(),
+  ];
+}
+
+function level1SpatialHeldLightEmitterRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...objectLightEmitterAdmissionRoute(),
+    ...objectLightProjectionRoute(),
+    ...objectLightActiveEffectCleanupRoute(),
+  ];
+}
+
+function level1SpatialSavePushPresentationRoute():
+  readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: MOVEMENT_AND_SAVING_THROW_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: MOVEMENT_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      fill: "movement",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTablePresentation",
+    }),
+    routeDiscoverSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleObjectTargetBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleObjectTargetBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTablePresentation",
+    }),
+  ];
+}
+
+export function createLevel1SpatialCompositionRouteDriver() {
+  return defineDriver(level1SpatialCompositionRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      level1SpatialCompositionInitialRoute();
+
+    function reset(): void {
+      route = level1SpatialCompositionInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteMovableMultiEmitterLight: () => {
+        route = level1SpatialMovableMultiEmitterLightRoute();
+      },
+      doRouteOutlineSightAdvantage: () => {
+        route = level1SpatialOutlineSightAdvantageRoute();
+      },
+      doRouteFallMitigation: () => {
+        route = level1SpatialFallMitigationRoute();
+      },
+      doRouteAreaObscurementCleanup: () => {
+        route = level1SpatialAreaObscurementCleanupRoute();
+      },
+      doRouteAreaHazardSave: () => {
+        route = level1SpatialAreaHazardSaveRoute();
+      },
+      doRouteAreaHazardMovement: () => {
+        route = level1SpatialAreaHazardMovementRoute();
+      },
+      doRouteMovementReplacement: () => {
+        route = level1SpatialMovementReplacementRoute();
+      },
+      doRouteObjectLightEmitter: () => {
+        route = level1SpatialObjectLightEmitterRoute();
+      },
+      doRouteHeldLightEmitter: () => {
+        route = level1SpatialHeldLightEmitterRoute();
+      },
+      doRouteSavePushPresentation: () => {
+        route = level1SpatialSavePushPresentationRoute();
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedLevel1SpatialCompositionProjection => ({
+        route,
       }),
     };
   });
@@ -12923,6 +13201,15 @@ function normalizeReducerRoutedSpatialEffectQuintState(
   };
 }
 
+function normalizeReducerRoutedLevel1SpatialCompositionQuintState(
+  raw: unknown,
+): ReducerRoutedLevel1SpatialCompositionProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
 function normalizeReducerRoutedMixedTargetOutcomeQuintState(
   raw: unknown,
 ): ReducerRoutedMixedTargetOutcomeProjection {
@@ -13610,6 +13897,16 @@ export const reducerRoutedSpatialEffectStateCheck = stateCheck(
   (
     spec: ReducerRoutedSpatialEffectProjection,
     impl: ReducerRoutedSpatialEffectProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedLevel1SpatialCompositionStateCheck = stateCheck(
+  normalizeReducerRoutedLevel1SpatialCompositionQuintState,
+  (
+    spec: ReducerRoutedLevel1SpatialCompositionProjection,
+    impl: ReducerRoutedLevel1SpatialCompositionProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;

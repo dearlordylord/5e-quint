@@ -923,13 +923,17 @@
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt",
           "routeConnectorPaths": [
+            "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt"
           ],
-          "route": "source-qnt-corpus-blocker",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "subjectFamily": "selected spatial, light, area hazard, movement, and reaction mitigation substrates",
           "branchObligations": 10,
@@ -937,6 +941,7 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s).",
+              "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt records one executable reducer-route composition surface per grouped spatial witness branch, using SpatialEffectRouteSubject, ObjectLightRiderRouteSubject, MovementPresentationRouteSubject, and ReactionFallMitigationRouteSubject without selected spell identity dispatch.",
               "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt supplies generic Saving Throw frontier evidence for the selected save-gated spatial branches.",
               "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt supplies generic Reaction spell casting-time evidence; falling mitigation now uses the dedicated reaction payload taxonomy route below.",
               "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt records ReactionFallMitigationRouteSubject evidence for falling-trigger reaction mitigation through generic trigger/procedure/continuation facts, spell-slot/action-economy, active-effect, movement-resource, and Hit Point owners.",
