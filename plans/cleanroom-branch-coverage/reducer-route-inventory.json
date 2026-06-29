@@ -947,7 +947,7 @@
               "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt records ReactionFallMitigationRouteSubject evidence for falling-trigger reaction mitigation through generic trigger/procedure/continuation facts, spell-slot/action-economy, active-effect, movement-resource, and Hit Point owners.",
               "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt supplies generic object-attached and held light-emitter route evidence for object admission, active-effect admission, Bright/Dim Light projection, replacement cleanup, hurl cleanup, duration cleanup, and table-owned object/geometry witnesses.",
               "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt defines typed route facts that separate battle-owned effect lifecycle from table-owned light, geometry, presentation, sight, object, and hazard witnesses without selected spell identity.",
-              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt exposes SpatialEffectRouteSubject evidence for concentration-backed movable multi-emitter Dim Light movement, area-plus-Saving Throw outcome outline admission, invisible-benefit denial/Attack Roll Advantage projections, area obscurement admission plus separate duration and strong-wind dispersal cleanup, non-Concentration area hazard save/difficult-terrain movement/cleanup lifecycle, concentration-backed area hazard admission, save, difficult-terrain movement, movement-damage, and Concentration-break cleanup paths through action-economy, active-effect, Concentration, light, sight, obscurement, hazard, area-shape, Saving Throw, movement, Hit Point, and turn-boundary owners.",
+              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt exposes SpatialEffectRouteSubject evidence for concentration-backed movable multi-emitter Dim Light movement, area-plus-Saving Throw outcome outline admission, invisible-benefit denial/Attack Roll Advantage projections, area obscurement admission plus separate duration and strong-wind dispersal cleanup, non-Concentration area hazard save/difficult-terrain movement/cleanup lifecycle, concentration-backed area hazard admission, save/condition, difficult-terrain movement, movement-damage Hit Point, and Concentration-break cleanup paths through action-economy, active-effect, Concentration, light, sight, obscurement, hazard, area-shape, Saving Throw, movement, Hit Point, and turn-boundary owners.",
               "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt supplies generic MovementPresentationRouteSubject evidence for movement replacement budget/distance plus table-supplied landing presentation witnesses, landing legality outcomes, failed Difficult Terrain landing Prone through BattleConditionLifecycleOwner, forced creature movement presentation, and object push/audible presentation through movement-resource, table-presentation, landing-outcome, condition-lifecycle, and object-boundary facts.",
               "The grouped spatial witness's SQNT-07A generic spatial, movement, light, area hazard, and presentation rows now route through generic spatial-effects, movement-presentation, reaction, object-light, and save-gated connectors rather than selected identity."
             ],
@@ -967,6 +967,7 @@
           "routeConnectorPath": "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
           "routeConnectorPaths": [
             "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
             "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
           ],
           "route": "reducer-routed",
@@ -977,9 +978,10 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverFlamingSphereHazard and doDiscoverMoonbeamMovableZone selected-row branches.",
-              "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt maps those selected rows to generic SpatialEffectRouteSubject route and fact surfaces without selected spell identity dispatch in the public reducer facts.",
+              "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt maps those selected rows to the generic SpatialEffectRouteSubject admission, Saving Throw trigger, light projection, and Concentration-break cleanup route/fact surfaces without selected spell identity dispatch in the public reducer facts.",
+              "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt supplies the shared concentration-backed area hazard route/fact definitions consumed by both the generic spatial route and this selected witness, so the selected witness does not carry parallel reducer route fragments.",
               "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt defines generic concentration-backed area hazard admission, area geometry, light, Saving Throw trigger, movement trigger, failed-save restraint trigger, and Concentration-break cleanup facts.",
-              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt remains the generic concentration-backed area hazard route substrate for admission, hazard projection, Saving Throw or movement resolution, Hit Point damage, and Concentration-break cleanup owners."
+              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt remains the generic concentration-backed area hazard route substrate for admission, hazard projection, Saving Throw/ConditionLifecycle resolution, movement resolution, movement-damage Hit Point resolution, and Concentration-break cleanup owners."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Flaming Sphere defines a Concentration fire sphere whose movement into a creature space and end-turn adjacency force Dexterity Saving Throws.",
@@ -987,7 +989,9 @@
               ".references/srd-5.2.1/Rules-Glossary.md#Concentration defines creator Concentration loss as ending the effect, and .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines spell Saving Throw frontiers.",
               "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Area of Effect, Concentration, Movement, Saving Throw, and Table Decision."
             ],
-            "blockers": []
+            "blockers": [
+              "retained-blocker: doDiscoverFlamingSphereHazard and doDiscoverMoonbeamMovableZone are accepted here only for concentration-backed hazard admission, selected Saving Throw trigger exactness, light projection where applicable, and Concentration-break cleanup. Exact Hit Point damage for save-triggered Flaming Sphere and Moonbeam rows remains blocked until a generic concentration-backed save-damage hazard route exposes damage roll and BattleHitPointOwner evidence."
+            ]
           }
         },
         {
@@ -995,6 +999,7 @@
           "routeConnectorPath": "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
           "routeConnectorPaths": [
             "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
             "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
           ],
           "route": "reducer-routed",
@@ -1005,9 +1010,10 @@
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverSpikeGrowthMovementHazard and doDiscoverWebRestraintHazard selected-row branches.",
-              "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt maps those selected rows to generic SpatialEffectRouteSubject route and fact surfaces without selected spell identity dispatch in the public reducer facts.",
+              "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt maps those selected rows to the generic SpatialEffectRouteSubject admission, movement-damage or Saving Throw trigger, obscurement projection, and Concentration-break cleanup route/fact surfaces without selected spell identity dispatch in the public reducer facts.",
+              "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt supplies the shared concentration-backed area hazard route/fact definitions consumed by both the generic spatial route and this selected witness, so the selected witness does not carry parallel reducer route fragments.",
               "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt defines generic concentration-backed area hazard admission, Difficult Terrain, area geometry, Lightly Obscured sight projection, Saving Throw trigger, movement-damage trigger, failed-save restraint trigger, and Concentration-break cleanup facts.",
-              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt remains the generic concentration-backed area hazard route substrate for admission, hazard projection, Saving Throw or movement resolution, Hit Point damage, and Concentration-break cleanup owners."
+              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt remains the generic concentration-backed area hazard route substrate for admission, hazard projection, Saving Throw/ConditionLifecycle resolution, movement resolution, movement-damage Hit Point resolution, and Concentration-break cleanup owners."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spike Growth defines a Concentration Sphere that becomes Difficult Terrain and deals Piercing damage when a creature moves into or within the area.",
@@ -1015,7 +1021,9 @@
               ".references/srd-5.2.1/Rules-Glossary.md#Concentration defines creator Concentration loss as ending the effect, .references/srd-5.2.1/Rules-Glossary.md#Difficult Terrain defines movement-cost projection, and .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines spell Saving Throw frontiers.",
               "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Area of Effect, Concentration, Movement, Difficult Terrain, Saving Throw, Restrained, and Table Decision."
             ],
-            "blockers": []
+            "blockers": [
+              "retained-blocker: doDiscoverWebRestraintHazard is accepted here for admission, Difficult Terrain, Lightly Obscured projection, selected Saving Throw/restraint trigger exactness, and Concentration-break cleanup; it does not claim Hit Point damage. Spike Growth movement damage uses the generic movement-damage Hit Point route."
+            ]
           }
         },
         {

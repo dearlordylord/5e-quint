@@ -17,10 +17,9 @@
 // - UBIQUITOUS_LANGUAGE.md: Spell Effect, Area of Effect, Concentration,
 //   Movement, Difficult Terrain, Saving Throw, Restrained, and Table Decision.
 module battleRuntimeConcentrationHazardSelectedRouteMbt {
-  import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
-  import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeReducerRoute.* from "./battle-runtime-reducer-route"
   import battleRuntimeSpatialEffectRouteFacts.* from "./battle-runtime-spatial-effect-route-facts"
+  import battleRuntimeSpatialEffectRouteSurfaces.* from "./battle-runtime-spatial-effect-route-surfaces"
 
   type SelectedConcentrationHazardRow =
     | NoSelectedConcentrationHazardRow
@@ -38,107 +37,6 @@ module battleRuntimeConcentrationHazardSelectedRouteMbt {
   var qSurface: SelectedConcentrationHazardRouteSurface
   var qRoute: List[ReducerRouteEvent]
   var qFacts: List[SpatialEffectRouteFact]
-
-  pure val noHoles: Set[BattleHoleFamilyKind] = Set()
-  pure val targetChoiceHoles: Set[BattleHoleFamilyKind] =
-    Set(TargetChoiceHoleKind)
-  pure val savingThrowOutcomeHoles: Set[BattleHoleFamilyKind] =
-    Set(SavingThrowOutcomeHoleKind)
-  pure val movementHoles: Set[BattleHoleFamilyKind] = Set(MovementHoleKind)
-  pure val rolledDiceHoles: Set[BattleHoleFamilyKind] = Set(RolledDiceHoleKind)
-
-  pure def startRoute: ReducerRouteEvent =
-    routeStartBattle(BattleActionEconomyOwner)
-
-  pure def discoverRoute(
-    holes: Set[BattleHoleFamilyKind],
-    owner: ReducerRouteOwnerGroup,
-  ): ReducerRouteEvent =
-    routeDiscoverBattleActs(SpatialEffectRouteSubject, holes, owner)
-
-  pure def resolveRoute(
-    fill: BattleFillKind,
-    holes: Set[BattleHoleFamilyKind],
-    owner: ReducerRouteOwnerGroup,
-  ): ReducerRouteEvent =
-    routeResolveBattleSubject(
-      SpatialEffectRouteSubject,
-      fill,
-      holes,
-      owner,
-    )
-
-  pure def resolveRouteWithoutFill(
-    holes: Set[BattleHoleFamilyKind],
-    owner: ReducerRouteOwnerGroup,
-  ): ReducerRouteEvent =
-    routeResolveBattleSubjectWithoutFill(
-      SpatialEffectRouteSubject,
-      holes,
-      owner,
-    )
-
-  pure def concentrationBackedAreaHazardAdmissionRoute:
-    List[ReducerRouteEvent] =
-    List(
-      discoverRoute(targetChoiceHoles, BattleSpellSlotAndActionEconomyOwner),
-      resolveRoute(TargetChoiceFillKind, noHoles, BattleAreaShapeOwner),
-      resolveRouteWithoutFill(noHoles, BattleActiveEffectOwner),
-      resolveRouteWithoutFill(noHoles, BattleConcentrationOwner),
-      resolveRouteWithoutFill(noHoles, BattleAreaHazardOwner),
-      resolveRouteWithoutFill(noHoles, BattleCreatureSpaceMovementOwner),
-    )
-
-  pure def hazardSavingThrowRoute: List[ReducerRouteEvent] =
-    List(
-      discoverRoute(savingThrowOutcomeHoles, BattleAreaHazardOwner),
-      resolveRoute(
-        SavingThrowOutcomeFillKind,
-        noHoles,
-        BattleSavingThrowOutcomeOwner,
-      ),
-      resolveRouteWithoutFill(noHoles, BattleConditionLifecycleOwner),
-    )
-
-  pure def hazardLightProjectionRoute: List[ReducerRouteEvent] =
-    List(resolveRouteWithoutFill(noHoles, BattleLightProjectionOwner))
-
-  pure def hazardObscurementProjectionRoute: List[ReducerRouteEvent] =
-    List(
-      resolveRouteWithoutFill(noHoles, BattleObscurementProjectionOwner),
-      resolveRouteWithoutFill(noHoles, BattleSightProjectionOwner),
-    )
-
-  pure def hazardMovementDamageRoute: List[ReducerRouteEvent] =
-    List(
-      discoverRoute(movementHoles, BattleAreaHazardOwner),
-      resolveRoute(
-        MovementFillKind,
-        rolledDiceHoles,
-        BattleMovementResourceOwner,
-      ),
-      resolveRoute(RolledDiceFillKind, noHoles, BattleHitPointOwner),
-    )
-
-  pure def concentrationBreakHazardCleanupRoute: List[ReducerRouteEvent] =
-    List(
-      resolveRouteWithoutFill(noHoles, BattleConcentrationOwner),
-      resolveRouteWithoutFill(noHoles, BattleAreaHazardOwner),
-      resolveRouteWithoutFill(noHoles, BattleActiveEffectOwner),
-    )
-
-  pure def concentrationBackedAreaHazardBaseFacts:
-    List[SpatialEffectRouteFact] =
-    List(
-      RouteSpatialEffectBattleEffect({ effect: AreaHazardEffectAdmitted }),
-      RouteSpatialEffectBattleEffect({ effect: ConcentrationBackedEffect }),
-      RouteSpatialEffectGeometry({ geometry: AreaShapeWitness }),
-    )
-
-  pure def difficultTerrainHazardFacts: List[SpatialEffectRouteFact] =
-    List(
-      RouteSpatialEffectHazard({ hazard: DifficultTerrainProjection }),
-    )
 
   pure def flamingSphereHazardSaveFacts: List[SpatialEffectRouteFact] =
     List(
@@ -167,30 +65,6 @@ module battleRuntimeConcentrationHazardSelectedRouteMbt {
       RouteSpatialEffectHazard({ hazard: FailedSaveRestraintTrigger }),
     )
 
-  pure def hazardMovementDamageFacts: List[SpatialEffectRouteFact] =
-    List(
-      RouteSpatialEffectGeometry({ geometry: MovementPathWitness }),
-      RouteSpatialEffectHazard({ hazard: MovementDamageTrigger }),
-    )
-
-  pure def concentrationBreakHazardCleanupFacts:
-    List[SpatialEffectRouteFact] =
-    List(
-      RouteSpatialEffectHazard({ hazard: AreaRemovedCleanup }),
-      RouteSpatialEffectCleanedUpBy({
-        cleanup: ConcentrationBreakCleanup,
-        owner: BattleConcentrationCleanupOwner,
-      }),
-      RouteSpatialEffectCleanedUpBy({
-        cleanup: ConcentrationBreakCleanup,
-        owner: BattleAreaHazardCleanupOwner,
-      }),
-      RouteSpatialEffectCleanedUpBy({
-        cleanup: ConcentrationBreakCleanup,
-        owner: BattleActiveEffectCleanupOwner,
-      }),
-    )
-
   action recordRoute(
     selectedRow: SelectedConcentrationHazardRow,
     surface: SelectedConcentrationHazardRouteSurface,
@@ -206,7 +80,7 @@ module battleRuntimeConcentrationHazardSelectedRouteMbt {
   action init = recordRoute(
     NoSelectedConcentrationHazardRow,
     FreshSelectedConcentrationHazardRouteSurface,
-    List(startRoute),
+    List(spatialEffectStartRoute),
     List(),
   )
 
@@ -216,12 +90,12 @@ module battleRuntimeConcentrationHazardSelectedRouteMbt {
       FlamingSphereHazardRow,
       SelectedConcentrationHazardSaveRouteSurface,
       qRoute
-        .concat(concentrationBackedAreaHazardAdmissionRoute)
-        .concat(hazardSavingThrowRoute)
-        .concat(concentrationBreakHazardCleanupRoute),
-      concentrationBackedAreaHazardBaseFacts
+        .concat(spatialEffectConcentrationBackedAreaHazardAdmissionRoute)
+        .concat(spatialEffectHazardSavingThrowRoute)
+        .concat(spatialEffectConcentrationBreakHazardCleanupRoute),
+      spatialEffectConcentrationBackedAreaHazardBaseFacts
         .concat(flamingSphereHazardSaveFacts)
-        .concat(concentrationBreakHazardCleanupFacts),
+        .concat(spatialEffectConcentrationBreakHazardCleanupFacts),
     ),
   }
 
@@ -231,13 +105,13 @@ module battleRuntimeConcentrationHazardSelectedRouteMbt {
       MoonbeamMovableZoneRow,
       SelectedConcentrationHazardSaveRouteSurface,
       qRoute
-        .concat(concentrationBackedAreaHazardAdmissionRoute)
-        .concat(hazardLightProjectionRoute)
-        .concat(hazardSavingThrowRoute)
-        .concat(concentrationBreakHazardCleanupRoute),
-      concentrationBackedAreaHazardBaseFacts
+        .concat(spatialEffectConcentrationBackedAreaHazardAdmissionRoute)
+        .concat(spatialEffectLightProjectionRoute)
+        .concat(spatialEffectHazardSavingThrowRoute)
+        .concat(spatialEffectConcentrationBreakHazardCleanupRoute),
+      spatialEffectConcentrationBackedAreaHazardBaseFacts
         .concat(moonbeamHazardSaveFacts)
-        .concat(concentrationBreakHazardCleanupFacts),
+        .concat(spatialEffectConcentrationBreakHazardCleanupFacts),
     ),
   }
 
@@ -247,13 +121,13 @@ module battleRuntimeConcentrationHazardSelectedRouteMbt {
       SpikeGrowthMovementHazardRow,
       SelectedConcentrationHazardMovementDamageRouteSurface,
       qRoute
-        .concat(concentrationBackedAreaHazardAdmissionRoute)
-        .concat(hazardMovementDamageRoute)
-        .concat(concentrationBreakHazardCleanupRoute),
-      concentrationBackedAreaHazardBaseFacts
-        .concat(difficultTerrainHazardFacts)
-        .concat(hazardMovementDamageFacts)
-        .concat(concentrationBreakHazardCleanupFacts),
+        .concat(spatialEffectConcentrationBackedAreaHazardAdmissionRoute)
+        .concat(spatialEffectHazardMovementDamageRoute)
+        .concat(spatialEffectConcentrationBreakHazardCleanupRoute),
+      spatialEffectConcentrationBackedAreaHazardBaseFacts
+        .concat(spatialEffectDifficultTerrainHazardFacts)
+        .concat(spatialEffectHazardMovementDamageFacts)
+        .concat(spatialEffectConcentrationBreakHazardCleanupFacts),
     ),
   }
 
@@ -263,14 +137,14 @@ module battleRuntimeConcentrationHazardSelectedRouteMbt {
       WebRestraintHazardRow,
       SelectedConcentrationHazardSaveRouteSurface,
       qRoute
-        .concat(concentrationBackedAreaHazardAdmissionRoute)
-        .concat(hazardObscurementProjectionRoute)
-        .concat(hazardSavingThrowRoute)
-        .concat(concentrationBreakHazardCleanupRoute),
-      concentrationBackedAreaHazardBaseFacts
-        .concat(difficultTerrainHazardFacts)
+        .concat(spatialEffectConcentrationBackedAreaHazardAdmissionRoute)
+        .concat(spatialEffectObscurementProjectionRoute)
+        .concat(spatialEffectHazardSavingThrowRoute)
+        .concat(spatialEffectConcentrationBreakHazardCleanupRoute),
+      spatialEffectConcentrationBackedAreaHazardBaseFacts
+        .concat(spatialEffectDifficultTerrainHazardFacts)
         .concat(webHazardSaveFacts)
-        .concat(concentrationBreakHazardCleanupFacts),
+        .concat(spatialEffectConcentrationBreakHazardCleanupFacts),
     ),
   }
 

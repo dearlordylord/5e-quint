@@ -155,6 +155,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-save-gated-spell-ordering.qnt",
   "battle-runtime-see-invisibility-constants.qnt",
   "battle-runtime-spatial-effect-route-facts.qnt",
+  "battle-runtime-spatial-effect-route-surfaces.qnt",
   "battle-runtime-spell-attack-ordering.qnt",
   "battle-runtime-stat-block-action-ordering.qnt",
   "battle-runtime-subject-kinds.qnt",
