@@ -3783,6 +3783,418 @@
       }
     },
     {
+      "branchAction": "doDiscoverCalmEmotionsConditionImmunity",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverCalmEmotionsConditionImmunity"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt#step:doDiscoverCalmEmotionsConditionImmunity",
+      "qntFileSha256": "13117ad980d4f1389a7fbf8f5a79ac84d52e5da4248d10ddda54dce369169b3a",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverCharmPersonSaveGatedCondition",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverCharmPersonSaveGatedCondition"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt#step:doDiscoverCharmPersonSaveGatedCondition",
+      "qntFileSha256": "13117ad980d4f1389a7fbf8f5a79ac84d52e5da4248d10ddda54dce369169b3a",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverDarknessPointOrigin",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverDarknessPointOrigin"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt#step:doDiscoverDarknessPointOrigin",
+      "qntFileSha256": "13117ad980d4f1389a7fbf8f5a79ac84d52e5da4248d10ddda54dce369169b3a",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverEnthrallPerceptionPenalty",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverEnthrallPerceptionPenalty"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt#step:doDiscoverEnthrallPerceptionPenalty",
+      "qntFileSha256": "13117ad980d4f1389a7fbf8f5a79ac84d52e5da4248d10ddda54dce369169b3a",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverGustOfWindLine",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverGustOfWindLine"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt#step:doDiscoverGustOfWindLine",
+      "qntFileSha256": "13117ad980d4f1389a7fbf8f5a79ac84d52e5da4248d10ddda54dce369169b3a",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverInvisibilityDirectCondition",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverInvisibilityDirectCondition"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt#step:doDiscoverInvisibilityDirectCondition",
+      "qntFileSha256": "13117ad980d4f1389a7fbf8f5a79ac84d52e5da4248d10ddda54dce369169b3a",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverLevitateCreature",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverLevitateCreature"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt#step:doDiscoverLevitateCreature",
+      "qntFileSha256": "13117ad980d4f1389a7fbf8f5a79ac84d52e5da4248d10ddda54dce369169b3a",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverSeeInvisibilityObserverSight",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverSeeInvisibilityObserverSight"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt#step:doDiscoverSeeInvisibilityObserverSight",
+      "qntFileSha256": "13117ad980d4f1389a7fbf8f5a79ac84d52e5da4248d10ddda54dce369169b3a",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverSpikeGrowthMovementHazard",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverSpikeGrowthMovementHazard"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt#step:doDiscoverSpikeGrowthMovementHazard",
+      "qntFileSha256": "13117ad980d4f1389a7fbf8f5a79ac84d52e5da4248d10ddda54dce369169b3a",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverWebRestraintHazard",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverWebRestraintHazard"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt#step:doDiscoverWebRestraintHazard",
+      "qntFileSha256": "13117ad980d4f1389a7fbf8f5a79ac84d52e5da4248d10ddda54dce369169b3a",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverAcidArrowAttackTiming",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverAcidArrowAttackTiming"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt#step:doDiscoverAcidArrowAttackTiming",
+      "qntFileSha256": "71ccf6feea9c9cebe099cc78a6f40c66cf5884fa487acd5cead3232dc2ba97c3",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverDragonsBreathInitial",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverDragonsBreathInitial"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt#step:doDiscoverDragonsBreathInitial",
+      "qntFileSha256": "71ccf6feea9c9cebe099cc78a6f40c66cf5884fa487acd5cead3232dc2ba97c3",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverFlameBladeHeldObject",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverFlameBladeHeldObject"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt#step:doDiscoverFlameBladeHeldObject",
+      "qntFileSha256": "71ccf6feea9c9cebe099cc78a6f40c66cf5884fa487acd5cead3232dc2ba97c3",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverFlamingSphereHazard",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverFlamingSphereHazard"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt#step:doDiscoverFlamingSphereHazard",
+      "qntFileSha256": "71ccf6feea9c9cebe099cc78a6f40c66cf5884fa487acd5cead3232dc2ba97c3",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverHeatMetalObjectContact",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverHeatMetalObjectContact"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt#step:doDiscoverHeatMetalObjectContact",
+      "qntFileSha256": "71ccf6feea9c9cebe099cc78a6f40c66cf5884fa487acd5cead3232dc2ba97c3",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverMoonbeamMovableZone",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverMoonbeamMovableZone"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt#step:doDiscoverMoonbeamMovableZone",
+      "qntFileSha256": "71ccf6feea9c9cebe099cc78a6f40c66cf5884fa487acd5cead3232dc2ba97c3",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverRayOfEnfeeblementSaveGate",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverRayOfEnfeeblementSaveGate"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt#step:doDiscoverRayOfEnfeeblementSaveGate",
+      "qntFileSha256": "71ccf6feea9c9cebe099cc78a6f40c66cf5884fa487acd5cead3232dc2ba97c3",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverScorchingRayAttackSequence",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverScorchingRayAttackSequence"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt#step:doDiscoverScorchingRayAttackSequence",
+      "qntFileSha256": "71ccf6feea9c9cebe099cc78a6f40c66cf5884fa487acd5cead3232dc2ba97c3",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverShatterSaveGatedDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverShatterSaveGatedDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt#step:doDiscoverShatterSaveGatedDamage",
+      "qntFileSha256": "71ccf6feea9c9cebe099cc78a6f40c66cf5884fa487acd5cead3232dc2ba97c3",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doDiscoverSpiritualWeaponAttackProxy",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDiscoverSpiritualWeaponAttackProxy"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt#step:doDiscoverSpiritualWeaponAttackProxy",
+      "qntFileSha256": "71ccf6feea9c9cebe099cc78a6f40c66cf5884fa487acd5cead3232dc2ba97c3",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+        "reviewedBy": "codex-2026-06-29",
+        "tag": "out-of-scope"
+      }
+    },
+    {
       "branchAction": "doDiscoverMageArmorUnarmoredSelfTarget",
       "branchFamily": "step",
       "branchPath": [

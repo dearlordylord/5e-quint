@@ -46,9 +46,13 @@ module battleRuntimeSpatialEffectRouteFacts {
 
   type SpatialEffectHazardFact =
     | DifficultTerrainProjection
+    | AreaCreatedSavingThrowTrigger
+    | AreaMovedSavingThrowTrigger
     | EntrySavingThrowTrigger
     | StartTurnSavingThrowTrigger
+    | EndTurnSavingThrowTrigger
     | MovementDamageTrigger
+    | FailedSaveRestraintTrigger
     | PerTurnTriggerLimit
     | AreaRemovedCleanup
 

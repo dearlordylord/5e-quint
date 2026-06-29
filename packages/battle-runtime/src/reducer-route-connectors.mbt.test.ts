@@ -28,6 +28,7 @@ import {
   createProtectionCharmRouteDriver,
   createScalarBuffRouteDriver,
   createSaveGatedSpellOrderingRouteDriver,
+  createSelectedConcentrationHazardRouteDriver,
   createSpellBaseArmorClassEffectRouteDriver,
   createSpellAttackOrderingRouteDriver,
   createSpatialEffectRouteDriver,
@@ -61,6 +62,7 @@ import {
   reducerRoutedProtectionCharmStateCheck,
   reducerRoutedScalarBuffStateCheck,
   reducerRoutedSaveGatedSpellOrderingStateCheck,
+  reducerRoutedSelectedConcentrationHazardStateCheck,
   reducerRoutedSpellBaseArmorClassEffectStateCheck,
   reducerRoutedSpatialEffectStateCheck,
   reducerRoutedWeaponAttackOrderingStateCheck,
@@ -487,6 +489,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(3),
         stateCheck: reducerRoutedSpatialEffectStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes selected concentration-backed hazards through generic spatial hazard surfaces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createSelectedConcentrationHazardRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: reducerRoutedSelectedConcentrationHazardStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
