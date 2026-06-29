@@ -331,6 +331,15 @@ const MOVEMENT_PRESENTATION_OBJECT_BOUNDARY_FACTS = [
 type MovementPresentationObjectBoundaryFact =
   (typeof MOVEMENT_PRESENTATION_OBJECT_BOUNDARY_FACTS)[number];
 
+const MOVEMENT_REPLACEMENT_LANDING_OUTCOME_FACTS = [
+  "landingAcceptedNoCheck",
+  "landingAcceptedDifficultTerrainAcrobaticsPassed",
+  "landingAcceptedDifficultTerrainAcrobaticsFailedProne",
+  "landingRejectedIllegal",
+] as const;
+type MovementReplacementLandingOutcomeFact =
+  (typeof MOVEMENT_REPLACEMENT_LANDING_OUTCOME_FACTS)[number];
+
 type MovementPresentationRouteFact =
   | {
       readonly kind: "resource";
@@ -343,6 +352,10 @@ type MovementPresentationRouteFact =
   | {
       readonly kind: "objectBoundary";
       readonly boundary: MovementPresentationObjectBoundaryFact;
+    }
+  | {
+      readonly kind: "landingOutcome";
+      readonly outcome: MovementReplacementLandingOutcomeFact;
     };
 
 type MovementPresentationRouteProjection = {
@@ -363,44 +376,56 @@ const movementForcedMovementRouteDriverSchema = {
 
 const movementPresentationRouteDriverSchema = {
   init: {},
-  doRouteMovementReplacementLandingWitness: {},
+  doRouteMovementReplacementLandingAcceptedNoCheck: {},
+  doRouteMovementReplacementLandingAcceptedDifficultTerrainAcrobaticsPassed: {},
+  doRouteMovementReplacementLandingAcceptedDifficultTerrainAcrobaticsFailedProne:
+    {},
+  doRouteMovementReplacementLandingRejectedIllegal: {},
   doRouteForcedCreatureMovementPresentation: {},
   doRouteObjectPushPresentation: {},
   step: {},
 } as const;
 
 describe("Movement and forced movement substrate route MBT", () => {
-  it("routes movement, forced movement, and special-speed substrates", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createMovementForcedMovementRouteDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(1),
-      stateCheck: movementForcedMovementRouteStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes movement, forced movement, and special-speed substrates",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createMovementForcedMovementRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: movementForcedMovementRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes movement replacement, forced movement, and object-push presentation through generic facts", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-movement-presentation.route.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createMovementPresentationRouteDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(1),
-      stateCheck: movementPresentationRouteStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes movement replacement, forced movement, and object-push presentation through generic facts",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-movement-presentation.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createMovementPresentationRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: movementPresentationRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function createMovementForcedMovementRouteDriver() {
@@ -598,9 +623,29 @@ function createMovementPresentationRouteDriver() {
 
     return {
       init: reset,
-      doRouteMovementReplacementLandingWitness: () => {
+      doRouteMovementReplacementLandingAcceptedNoCheck: () => {
         route = appendMovementReplacementPresentationRoute(route);
-        facts = movementReplacementPresentationFacts;
+        facts = movementReplacementAcceptedPresentationFacts(
+          "landingAcceptedNoCheck",
+        );
+      },
+      doRouteMovementReplacementLandingAcceptedDifficultTerrainAcrobaticsPassed:
+        () => {
+          route = appendMovementReplacementPresentationRoute(route);
+          facts = movementReplacementAcceptedPresentationFacts(
+            "landingAcceptedDifficultTerrainAcrobaticsPassed",
+          );
+        },
+      doRouteMovementReplacementLandingAcceptedDifficultTerrainAcrobaticsFailedProne:
+        () => {
+          route = appendMovementReplacementFailedLandingProneRoute(route);
+          facts = movementReplacementAcceptedPresentationFacts(
+            "landingAcceptedDifficultTerrainAcrobaticsFailedProne",
+          );
+        },
+      doRouteMovementReplacementLandingRejectedIllegal: () => {
+        route = appendMovementReplacementIllegalLandingRejectedRoute(route);
+        facts = movementReplacementLandingRejectedIllegalFacts;
       },
       doRouteForcedCreatureMovementPresentation: () => {
         route = appendForcedCreatureMovementPresentationRoute(route);
@@ -631,6 +676,37 @@ function appendMovementReplacementPresentationRoute(
       fill: "movement",
       holes: [],
       owner: "battleMovementResource",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "movementPresentation",
+      holes: [],
+      owner: "battleTablePresentation",
+    }),
+  ];
+}
+
+function appendMovementReplacementFailedLandingProneRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...appendMovementReplacementPresentationRoute(route),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: "movementPresentation",
+      holes: [],
+      owner: "battleConditionLifecycle",
+    }),
+  ];
+}
+
+function appendMovementReplacementIllegalLandingRejectedRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    reducerRouteDiscoverBattleActs({
+      subject: "movementPresentation",
+      holes: [],
+      owner: "battleTablePresentation",
     }),
     reducerRouteResolveBattleSubjectWithoutFill({
       subject: "movementPresentation",
@@ -693,22 +769,37 @@ function appendObjectPushPresentationRoute(
   ];
 }
 
-const movementReplacementPresentationFacts = [
+function movementReplacementAcceptedPresentationFacts(
+  outcome: MovementReplacementLandingOutcomeFact,
+): readonly MovementPresentationRouteFact[] {
+  return [
+    {
+      kind: "resource",
+      resource: "movementReplacementFixedBudgetSpend",
+    },
+    {
+      kind: "resource",
+      resource: "movementReplacementDistanceProjection",
+    },
+    {
+      kind: "tablePresentation",
+      presentation: "tableSuppliedMovementPathWitness",
+    },
+    {
+      kind: "tablePresentation",
+      presentation: "landingSpacePresentationWitness",
+    },
+    {
+      kind: "landingOutcome",
+      outcome,
+    },
+  ] as const satisfies readonly MovementPresentationRouteFact[];
+}
+
+const movementReplacementLandingRejectedIllegalFacts = [
   {
-    kind: "resource",
-    resource: "movementReplacementFixedBudgetSpend",
-  },
-  {
-    kind: "resource",
-    resource: "movementReplacementDistanceProjection",
-  },
-  {
-    kind: "tablePresentation",
-    presentation: "tableSuppliedMovementPathWitness",
-  },
-  {
-    kind: "tablePresentation",
-    presentation: "landingSpacePresentationWitness",
+    kind: "landingOutcome",
+    outcome: "landingRejectedIllegal",
   },
 ] as const satisfies readonly MovementPresentationRouteFact[];
 
@@ -783,9 +874,7 @@ const MOVEMENT_PRESENTATION_RESOURCE_BY_VARIANT_TAG = {
     "movementReplacementDistanceProjection",
   ForcedMovementNoOwnMovementResource: "forcedMovementNoOwnMovementResource",
   ForcedMovementDistanceProjection: "forcedMovementDistanceProjection",
-} as const satisfies Readonly<
-  Record<string, MovementPresentationResourceFact>
->;
+} as const satisfies Readonly<Record<string, MovementPresentationResourceFact>>;
 
 const MOVEMENT_PRESENTATION_TABLE_BY_VARIANT_TAG = {
   TableSuppliedMovementPathWitness: "tableSuppliedMovementPathWitness",
@@ -802,6 +891,17 @@ const MOVEMENT_PRESENTATION_OBJECT_BOUNDARY_BY_VARIANT_TAG = {
   ObjectPushProjection: "objectPushProjection",
 } as const satisfies Readonly<
   Record<string, MovementPresentationObjectBoundaryFact>
+>;
+
+const MOVEMENT_REPLACEMENT_LANDING_OUTCOME_BY_VARIANT_TAG = {
+  LandingAcceptedNoCheck: "landingAcceptedNoCheck",
+  LandingAcceptedDifficultTerrainAcrobaticsPassed:
+    "landingAcceptedDifficultTerrainAcrobaticsPassed",
+  LandingAcceptedDifficultTerrainAcrobaticsFailedProne:
+    "landingAcceptedDifficultTerrainAcrobaticsFailedProne",
+  LandingRejectedIllegal: "landingRejectedIllegal",
+} as const satisfies Readonly<
+  Record<string, MovementReplacementLandingOutcomeFact>
 >;
 
 function decodeMovementPresentationRouteFacts(
@@ -847,6 +947,18 @@ function decodeMovementPresentationRouteFact(
         "qFacts[].boundary",
         MOVEMENT_PRESENTATION_OBJECT_BOUNDARY_BY_VARIANT_TAG,
         "movement/presentation object-boundary fact",
+      ),
+    };
+  }
+  if (tag === "RouteMovementPresentationLandingOutcome") {
+    const payload = movementPresentationFactPayload(raw);
+    return {
+      kind: "landingOutcome",
+      outcome: quintVariantMappedValue(
+        quintField(payload, "outcome"),
+        "qFacts[].outcome",
+        MOVEMENT_REPLACEMENT_LANDING_OUTCOME_BY_VARIANT_TAG,
+        "movement replacement landing outcome fact",
       ),
     };
   }

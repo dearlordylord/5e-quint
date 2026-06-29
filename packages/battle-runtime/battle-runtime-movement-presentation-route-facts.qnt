@@ -24,6 +24,12 @@ module battleRuntimeMovementPresentationRouteFacts {
     | ObjectEntirelyWithinAreaBoundary
     | ObjectPushProjection
 
+  type MovementReplacementLandingOutcomeFact =
+    | LandingAcceptedNoCheck
+    | LandingAcceptedDifficultTerrainAcrobaticsPassed
+    | LandingAcceptedDifficultTerrainAcrobaticsFailedProne
+    | LandingRejectedIllegal
+
   type MovementPresentationRouteFact =
     | RouteMovementPresentationResource({
         resource: MovementPresentationResourceFact,
@@ -33,5 +39,8 @@ module battleRuntimeMovementPresentationRouteFacts {
       })
     | RouteMovementPresentationObjectBoundary({
         boundary: MovementPresentationObjectBoundaryFact,
+      })
+    | RouteMovementPresentationLandingOutcome({
+        outcome: MovementReplacementLandingOutcomeFact,
       })
 }

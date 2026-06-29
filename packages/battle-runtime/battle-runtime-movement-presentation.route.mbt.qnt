@@ -7,6 +7,8 @@
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Jump defines a
 //   spell-granted movement replacement: jump up to 30 feet by spending 10 feet
 //   of movement.
+// - .references/srd-5.2.1/Rules-Glossary.md#Long Jump defines the
+//   Difficult Terrain landing Dexterity (Acrobatics) check and Prone outcome.
 // - .references/srd-5.2.1/Playing-the-Game.md#Movement and Position and
 //   .references/srd-5.2.1/Rules-Glossary.md#Speed define movement budget,
 //   special speeds, and movement-cost accounting.
@@ -24,7 +26,10 @@ module battleRuntimeMovementPresentationRouteMbt {
 
   type MovementPresentationRouteSurface =
     | FreshMovementPresentationRouteSurface
-    | MovementReplacementLandingRouteSurface
+    | MovementReplacementLandingAcceptedNoCheckRouteSurface
+    | MovementReplacementLandingAcceptedDifficultTerrainAcrobaticsPassedRouteSurface
+    | MovementReplacementLandingAcceptedDifficultTerrainAcrobaticsFailedProneRouteSurface
+    | MovementReplacementLandingRejectedIllegalRouteSurface
     | ForcedCreatureMovementPresentationRouteSurface
     | ObjectPushPresentationRouteSurface
 
@@ -74,6 +79,17 @@ module battleRuntimeMovementPresentationRouteMbt {
       resolveRouteWithoutFill(BattleTablePresentationOwner),
     )
 
+  pure def movementReplacementFailedLandingProneRoute: List[ReducerRouteEvent] =
+    movementReplacementRoute.append(
+      resolveRouteWithoutFill(BattleConditionLifecycleOwner)
+    )
+
+  pure def movementReplacementIllegalLandingRejectedRoute: List[ReducerRouteEvent] =
+    List(
+      discoverRoute(noHoles, BattleTablePresentationOwner),
+      resolveRouteWithoutFill(BattleTablePresentationOwner),
+    )
+
   pure def forcedCreatureMovementRoute: List[ReducerRouteEvent] =
     List(
       discoverRoute(savingThrowMovementHoles, BattleSavingThrowOutcomeOwner),
@@ -93,7 +109,9 @@ module battleRuntimeMovementPresentationRouteMbt {
       resolveRouteWithoutFill(BattleTablePresentationOwner),
     )
 
-  pure def movementReplacementFacts: List[MovementPresentationRouteFact] =
+  pure def movementReplacementAcceptedFacts(
+    outcome: MovementReplacementLandingOutcomeFact
+  ): List[MovementPresentationRouteFact] =
     List(
       RouteMovementPresentationResource({
         resource: MovementReplacementFixedBudgetSpend,
@@ -106,6 +124,14 @@ module battleRuntimeMovementPresentationRouteMbt {
       }),
       RouteMovementPresentationTable({
         presentation: LandingSpacePresentationWitness,
+      }),
+      RouteMovementPresentationLandingOutcome({ outcome: outcome }),
+    )
+
+  pure def movementReplacementLandingRejectedIllegalFacts: List[MovementPresentationRouteFact] =
+    List(
+      RouteMovementPresentationLandingOutcome({
+        outcome: LandingRejectedIllegal,
       }),
     )
 
@@ -160,12 +186,43 @@ module battleRuntimeMovementPresentationRouteMbt {
     List(),
   )
 
-  action doRouteMovementReplacementLandingWitness = all {
+  action doRouteMovementReplacementLandingAcceptedNoCheck = all {
     qSurface == FreshMovementPresentationRouteSurface,
     recordSurface(
-      MovementReplacementLandingRouteSurface,
+      MovementReplacementLandingAcceptedNoCheckRouteSurface,
       qRoute.concat(movementReplacementRoute),
-      movementReplacementFacts,
+      movementReplacementAcceptedFacts(LandingAcceptedNoCheck),
+    ),
+  }
+
+  action doRouteMovementReplacementLandingAcceptedDifficultTerrainAcrobaticsPassed = all {
+    qSurface == FreshMovementPresentationRouteSurface,
+    recordSurface(
+      MovementReplacementLandingAcceptedDifficultTerrainAcrobaticsPassedRouteSurface,
+      qRoute.concat(movementReplacementRoute),
+      movementReplacementAcceptedFacts(
+        LandingAcceptedDifficultTerrainAcrobaticsPassed
+      ),
+    ),
+  }
+
+  action doRouteMovementReplacementLandingAcceptedDifficultTerrainAcrobaticsFailedProne = all {
+    qSurface == FreshMovementPresentationRouteSurface,
+    recordSurface(
+      MovementReplacementLandingAcceptedDifficultTerrainAcrobaticsFailedProneRouteSurface,
+      qRoute.concat(movementReplacementFailedLandingProneRoute),
+      movementReplacementAcceptedFacts(
+        LandingAcceptedDifficultTerrainAcrobaticsFailedProne
+      ),
+    ),
+  }
+
+  action doRouteMovementReplacementLandingRejectedIllegal = all {
+    qSurface == FreshMovementPresentationRouteSurface,
+    recordSurface(
+      MovementReplacementLandingRejectedIllegalRouteSurface,
+      qRoute.concat(movementReplacementIllegalLandingRejectedRoute),
+      movementReplacementLandingRejectedIllegalFacts,
     ),
   }
 
@@ -188,7 +245,10 @@ module battleRuntimeMovementPresentationRouteMbt {
   }
 
   action step = any {
-    doRouteMovementReplacementLandingWitness,
+    doRouteMovementReplacementLandingAcceptedNoCheck,
+    doRouteMovementReplacementLandingAcceptedDifficultTerrainAcrobaticsPassed,
+    doRouteMovementReplacementLandingAcceptedDifficultTerrainAcrobaticsFailedProne,
+    doRouteMovementReplacementLandingRejectedIllegal,
     doRouteForcedCreatureMovementPresentation,
     doRouteObjectPushPresentation,
   }
