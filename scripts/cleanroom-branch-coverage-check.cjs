@@ -351,6 +351,22 @@ function replayRefreshOnlyDriverPaths(routeInventory) {
   );
 }
 
+function replayRefreshOnlyAssignment(routeInventory) {
+  const queue = Array.from(replayRefreshOnlyDriverPaths(routeInventory))
+    .sort()
+    .map(cleanroomDriverPath);
+  if (queue.length === 0) return undefined;
+  return {
+    assignmentId: "baseline-replay-refresh",
+    customLanes: [
+      {
+        laneId: "battle",
+        queue,
+      },
+    ],
+  };
+}
+
 function ordinaryImplementationScopeRows(scopeRows, routeInventory) {
   const replayRefreshOnly = replayRefreshOnlyDriverPaths(routeInventory);
   return scopeRows.filter((row) => !replayRefreshOnly.has(row.driverPath));
@@ -402,9 +418,11 @@ function reducerDiagnosticAssignment(routeInventory) {
 
 function scaffoldAssignmentsFor(routeInventory) {
   const reducerAssignment = reducerDiagnosticAssignment(routeInventory);
+  const replayRefreshAssignment = replayRefreshOnlyAssignment(routeInventory);
   return [
-    ...(reducerAssignment === undefined ? [] : [reducerAssignment]),
     ...baseScaffoldAssignments,
+    ...(replayRefreshAssignment === undefined ? [] : [replayRefreshAssignment]),
+    ...(reducerAssignment === undefined ? [] : [reducerAssignment]),
   ];
 }
 
@@ -477,6 +495,9 @@ function renderCurrentQueueSection(scopeRows, routeInventory) {
 function renderReducerDiagnosticQueueSection(routeInventory) {
   const batch = reducerDiagnosticBatch(routeInventory);
   const prerequisites = reducerDiagnosticPrerequisites(routeInventory);
+  const replayRefreshOnly = Array.from(
+    replayRefreshOnlyDriverPaths(routeInventory),
+  ).sort();
   if (batch === undefined) {
     return [
       "## Reducer-Spine Diagnostic Queue",
@@ -495,6 +516,21 @@ function renderReducerDiagnosticQueueSection(routeInventory) {
     `- Assignment: \`${batch.assignmentId}\``,
     `- Batch: \`${batch.batchId}\``,
     "",
+    ...(replayRefreshOnly.length === 0
+      ? []
+      : [
+          "### Baseline Replay Refresh Assignment",
+          "",
+          "`replay-refresh-only` witnesses are not ordinary implementation work, but they are selectable so a fresh target can prove baseline behavior against the current cleanroom manifest.",
+          "",
+          "- Assignment: `baseline-replay-refresh`",
+          "",
+          ...replayRefreshOnly.map(
+            (driverPath, index) =>
+              `${index + 1}. \`${cleanroomDriverPath(driverPath)}\``,
+          ),
+          "",
+        ]),
     ...(prerequisites.length === 0
       ? []
       : [
@@ -1960,6 +1996,11 @@ function collectReducerConvergenceDenominatorFacts({
     "reducer-spine-diagnostic-battle",
     "battle",
   );
+  const baselineReplayRefreshDriverPaths = activeWorkLaneDriverPaths(
+    activeWork,
+    "baseline-replay-refresh",
+    "battle",
+  );
   if (activeBattleLaneDriverPaths === undefined) {
     issues.push(
       `${context}: cannot read level-1-2-full battle queue from active work template.`,
@@ -2038,6 +2079,33 @@ function collectReducerConvergenceDenominatorFacts({
       );
     }
   }
+  if (
+    replayRefreshOnly.size > 0 &&
+    baselineReplayRefreshDriverPaths === undefined
+  ) {
+    issues.push(
+      `${context}: cannot read baseline-replay-refresh battle queue from active work template.`,
+    );
+  } else if (baselineReplayRefreshDriverPaths !== undefined) {
+    const missingFromRouteInventory = sortedSetDifference(
+      baselineReplayRefreshDriverPaths,
+      replayRefreshOnly,
+    );
+    const missingFromActiveWork = sortedSetDifference(
+      replayRefreshOnly,
+      baselineReplayRefreshDriverPaths,
+    );
+    for (const driverPath of missingFromRouteInventory) {
+      issues.push(
+        `${context}: baseline replay-refresh driver ${driverPath} is not replay-refresh-only in route inventory.`,
+      );
+    }
+    for (const driverPath of missingFromActiveWork) {
+      issues.push(
+        `${context}: replay-refresh-only driver ${driverPath} is missing from active work baseline replay-refresh queue.`,
+      );
+    }
+  }
   const battleLaneBranchObligations = inventory.branchObligations.filter(
     (obligation) => implementationBattleLaneDriverPaths.has(obligation.driverPath),
   ).length;
@@ -2056,6 +2124,7 @@ function collectReducerConvergenceDenominatorFacts({
     ruleCoreComponentBranchObligations,
     battleRuntimeBranchObligations:
       battleLaneBranchObligations + ruleCoreComponentBranchObligations,
+    baselineReplayRefreshDrivers: baselineReplayRefreshDriverPaths?.size,
     diagnosticBattleDrivers: diagnosticBattleDriverPaths?.size,
     diagnosticReducerRoutedDrivers: diagnosticReducerRoutedDriverPaths.size,
   };

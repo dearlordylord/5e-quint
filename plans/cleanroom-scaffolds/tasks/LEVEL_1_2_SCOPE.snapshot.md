@@ -152,6 +152,14 @@ It is a focused battle diagnostic assignment, not a replacement for the full lev
 - Assignment: `reducer-spine-diagnostic-battle`
 - Batch: `reducer-spine-diagnostic-v1`
 
+### Baseline Replay Refresh Assignment
+
+`replay-refresh-only` witnesses are not ordinary implementation work, but they are selectable so a fresh target can prove baseline behavior against the current cleanroom manifest.
+
+- Assignment: `baseline-replay-refresh`
+
+1. `cleanroom-input/qnt/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt`
+
 ### Prerequisites
 
 These prerequisite route connectors are copied with the cleanroom package and must be satisfied before the batch queue can prove an integrated reducer route.
