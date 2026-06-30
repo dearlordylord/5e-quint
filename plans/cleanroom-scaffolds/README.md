@@ -4,6 +4,19 @@ This directory preserves reusable cleanroom instruction scaffolds for future
 target-language cleanroom runs. They are source-repo planning assets, not
 active instructions for this repository.
 
+## Target Labels
+
+Use date labels for durable cleanroom target repos. Descriptive words such as
+legacy, fresh, dirty, or clean are allowed only as secondary context because they
+change as the target is reused.
+
+- `2026-06-19 Rust cleanroom`: the older/legacy Rust target at
+  `/workspace/typescript/dnd-cleanroom-rust-agent`. Use this as the capability
+  baseline when comparing the earlier draft/fill character-creation surface.
+- `2026-06-29 Rust cleanroom`: the newer Rust target at
+  `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`. Use this as the
+  current dirty diagnostic target when applying post-mortem harness fixes.
+
 Use these files when preparing or refreshing a separate cleanroom repo such as
 a sibling target-language experiment directory. This source repo prepares the
 transferable package; the project owner starts the cleanroom session manually in

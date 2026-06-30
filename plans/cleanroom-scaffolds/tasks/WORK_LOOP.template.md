@@ -20,6 +20,14 @@ Read these files, in this order:
 
 Do not read any file outside this repository. Do not read sibling repos.
 
+## Run Objective
+
+For assignments that include creation, sheet, handoff, battle, and rules-core
+lanes, preserve that lane order and prove the copied QNT path across the
+product workflow: draft/fill/finalize -> sheet -> handoff -> battle act
+discovery/resolution -> settlement. Scope is still exactly the copied branch
+inventory and reducer-route rows.
+
 ## Pick The Next Branch Set
 
 `tasks/ACTIVE_WORK.json` is the active assignment source. If the owner query

@@ -52,6 +52,29 @@ const levelScopeSnapshotPath = path.join(
 const targetReplayEvidencePath = argValue("--target-replay-evidence");
 const passingStateCheckTags = new Set(["state-match", "projection-match"]);
 const sha256Pattern = /^[0-9a-f]{64}$/i;
+const qntAcceptanceTags = new Set(["qnt-semantic", "qnt-route"]);
+const qntRouteProjection = "qRoute";
+const qntRouteComparator = "route-event-list";
+const characterCreationFullVerticalDriverPath =
+  "packages/character-creation-runtime/character-creation-runtime.mbt.qnt";
+const characterCreationFullVerticalSemanticOwnerPath =
+  "packages/character-creation-runtime/character-creation-runtime-slice.qnt";
+const characterCreationFullVerticalRouteConnectorPath =
+  "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt";
+const characterCreationFullVerticalQntAcceptanceRequired = [
+  {
+    tag: "qnt-semantic",
+    ownerPath: characterCreationFullVerticalSemanticOwnerPath,
+    projection: "qState",
+    comparator: "character-creation-runtime-state",
+  },
+  {
+    tag: "qnt-route",
+    connectorPath: characterCreationFullVerticalRouteConnectorPath,
+    projection: qntRouteProjection,
+    comparator: qntRouteComparator,
+  },
+];
 const scaffoldLaneOrder = [
   "creation",
   "sheet",
@@ -862,6 +885,161 @@ function collectRouteConnectorPaths(row) {
   return Array.from(found).sort();
 }
 
+function acceptancePath(requirement) {
+  if (!isRecord(requirement)) return undefined;
+  if (requirement.tag === "qnt-semantic") return requirement.ownerPath;
+  if (requirement.tag === "qnt-route") return requirement.connectorPath;
+  return undefined;
+}
+
+function qntAcceptanceKey(requirement) {
+  const qntPath = acceptancePath(requirement);
+  if (
+    !isRecord(requirement) ||
+    !nonEmptyString(requirement.tag) ||
+    !nonEmptyString(qntPath) ||
+    !nonEmptyString(requirement.projection) ||
+    !nonEmptyString(requirement.comparator)
+  ) {
+    return undefined;
+  }
+  return [
+    requirement.tag,
+    qntPath,
+    requirement.projection,
+    requirement.comparator,
+  ].join("\u0000");
+}
+
+function qntAcceptanceRequirements(row) {
+  if (!isRecord(row?.qntAcceptance) || !Array.isArray(row.qntAcceptance.required)) {
+    return [];
+  }
+  return row.qntAcceptance.required.filter(isRecord);
+}
+
+function mandatoryQntAcceptanceRequirements(row) {
+  if (row?.driverPath !== characterCreationFullVerticalDriverPath) return [];
+  return characterCreationFullVerticalQntAcceptanceRequired;
+}
+
+function validateQntAcceptanceRequirement(row, requirement, context, issues) {
+  if (!isRecord(requirement)) {
+    issues.push(`${context}: requirement must be an object.`);
+    return;
+  }
+  if (!qntAcceptanceTags.has(requirement.tag)) {
+    issues.push(
+      `${context}: tag must be one of ${Array.from(qntAcceptanceTags).join(", ")}.`,
+    );
+    return;
+  }
+  for (const field of ["projection", "comparator"]) {
+    if (!nonEmptyString(requirement[field])) {
+      issues.push(`${context}: ${field} must be a non-empty string.`);
+    }
+  }
+  const routeConnectorPaths = collectRouteConnectorPaths(row);
+  if (requirement.tag === "qnt-semantic") {
+    if (!nonEmptyString(requirement.ownerPath)) {
+      issues.push(`${context}: qnt-semantic requires ownerPath.`);
+    } else {
+      if (requirement.ownerPath.endsWith(".route.mbt.qnt")) {
+        issues.push(`${context}: qnt-semantic ownerPath must not point at a route connector.`);
+      }
+      if (routeConnectorPaths.includes(requirement.ownerPath)) {
+        issues.push(`${context}: qnt-semantic ownerPath must not equal the row route connector path.`);
+      }
+      if (!repoFileExists(requirement.ownerPath)) {
+        issues.push(`${context}: qnt-semantic ownerPath ${requirement.ownerPath} does not exist.`);
+      }
+    }
+    if (requirement.connectorPath !== undefined) {
+      issues.push(`${context}: qnt-semantic must use ownerPath, not connectorPath.`);
+    }
+    if (requirement.projection === qntRouteProjection) {
+      issues.push(`${context}: qnt-semantic must not use projection ${qntRouteProjection}.`);
+    }
+    if (requirement.comparator === qntRouteComparator) {
+      issues.push(`${context}: qnt-semantic must not use comparator ${qntRouteComparator}.`);
+    }
+    return;
+  }
+  if (!nonEmptyString(requirement.connectorPath)) {
+    issues.push(`${context}: qnt-route requires connectorPath.`);
+  } else {
+    if (!requirement.connectorPath.endsWith(".route.mbt.qnt")) {
+      issues.push(`${context}: qnt-route connectorPath must point at a .route.mbt.qnt driver.`);
+    }
+    if (!routeConnectorPaths.includes(requirement.connectorPath)) {
+      issues.push(
+        `${context}: qnt-route connectorPath must match the row routeConnectorPath or routeConnectorPaths.`,
+      );
+    }
+    if (!repoFileExists(requirement.connectorPath)) {
+      issues.push(`${context}: qnt-route connectorPath ${requirement.connectorPath} does not exist.`);
+    }
+  }
+  if (requirement.ownerPath !== undefined) {
+    issues.push(`${context}: qnt-route must use connectorPath, not ownerPath.`);
+  }
+  if (requirement.projection !== qntRouteProjection) {
+    issues.push(`${context}: qnt-route requires projection ${qntRouteProjection}.`);
+  }
+  if (requirement.comparator !== qntRouteComparator) {
+    issues.push(`${context}: qnt-route requires comparator ${qntRouteComparator}.`);
+  }
+}
+
+function validateQntAcceptance(row, context) {
+  const issues = [];
+  const mandatoryRequirements = mandatoryQntAcceptanceRequirements(row);
+  if (row?.qntAcceptance === undefined) {
+    if (mandatoryRequirements.length > 0) {
+      issues.push(`${context}: qntAcceptance is required for ${row.driverPath}.`);
+    }
+    return issues;
+  }
+  if (!isRecord(row.qntAcceptance)) {
+    return [`${context}: qntAcceptance must be an object when present.`];
+  }
+  if (
+    !Array.isArray(row.qntAcceptance.required) ||
+    row.qntAcceptance.required.length === 0
+  ) {
+    issues.push(`${context}: qntAcceptance.required must be a non-empty array.`);
+    return issues;
+  }
+  const seen = new Set();
+  for (const [index, requirement] of row.qntAcceptance.required.entries()) {
+    const requirementContext = `${context}: qntAcceptance.required[${index}]`;
+    validateQntAcceptanceRequirement(row, requirement, requirementContext, issues);
+    const key = qntAcceptanceKey(requirement);
+    if (key === undefined) continue;
+    if (seen.has(key)) {
+      issues.push(`${requirementContext}: duplicate qntAcceptance requirement.`);
+    }
+    seen.add(key);
+  }
+  if (mandatoryRequirements.length > 0) {
+    const mandatoryKeys = new Set(mandatoryRequirements.map(qntAcceptanceKey));
+    if (seen.size !== mandatoryKeys.size) {
+      issues.push(
+        `${context}: qntAcceptance.required must contain exactly ${mandatoryKeys.size} required QNT acceptance entries for ${row.driverPath}.`,
+      );
+    }
+    for (const [index, requirement] of mandatoryRequirements.entries()) {
+      const key = qntAcceptanceKey(requirement);
+      if (!seen.has(key)) {
+        issues.push(
+          `${context}: qntAcceptance.required is missing required entry ${index} (${requirement.tag} ${acceptancePath(requirement)}).`,
+        );
+      }
+    }
+  }
+  return issues;
+}
+
 function hasExplicitSourceBlocker(row) {
   return (
     isRecord(row?.derivability) &&
@@ -1039,6 +1217,19 @@ function routeRowForReplay(routeInventory, run) {
   );
 }
 
+function routeRowForObligation(routeInventory, obligation) {
+  const { branchRows, driverRows } = routeRowsForReplay(routeInventory);
+  return (
+    branchRows.find(
+      (row) =>
+        row.driverPath === obligation.driverPath &&
+        row.branchFamily === obligation.branchFamily &&
+        row.branchAction === obligation.branchAction,
+    ) ??
+    driverRows.find((row) => row.driverPath === obligation.driverPath)
+  );
+}
+
 function expectedReplayStateCheck(routeRow) {
   if (!isRecord(routeRow)) return undefined;
   if (routeRow.route === "component-first") {
@@ -1048,7 +1239,7 @@ function expectedReplayStateCheck(routeRow) {
     };
   }
   if (routeRow.route === "reducer-routed") {
-    return { projection: "qRoute", comparator: "route-event-list" };
+    return { projection: qntRouteProjection, comparator: qntRouteComparator };
   }
   if (
     typeof routeRow.componentConnectorPath === "string" &&
@@ -1062,12 +1253,13 @@ function expectedReplayStateCheck(routeRow) {
   if (
     collectRouteConnectorPaths(routeRow).length > 0
   ) {
-    return { projection: "qRoute", comparator: "route-event-list" };
+    return { projection: qntRouteProjection, comparator: qntRouteComparator };
   }
   return undefined;
 }
 
 function validateRouteReplayProjection(run, routeInventory, context, issues) {
+  if (run.stateCheck?.qntAcceptance?.tag === "qnt-semantic") return;
   const expectedStateCheck = expectedReplayStateCheck(
     routeRowForReplay(routeInventory, run),
   );
@@ -1082,6 +1274,67 @@ function validateRouteReplayProjection(run, routeInventory, context, issues) {
       `${context}: ${run.driverPath} route evidence requires stateCheck.comparator ${expectedStateCheck.comparator}.`,
     );
   }
+}
+
+function qntAcceptanceStateCheckRequirement(stateCheck, routeRow, context, issues) {
+  const acceptance = stateCheck?.qntAcceptance;
+  if (acceptance === undefined) return undefined;
+  if (!isRecord(acceptance)) {
+    issues.push(`${context}: stateCheck.qntAcceptance must be an object when present.`);
+    return undefined;
+  }
+  if (!qntAcceptanceTags.has(acceptance.tag)) {
+    issues.push(
+      `${context}: stateCheck.qntAcceptance.tag must be one of ${Array.from(qntAcceptanceTags).join(", ")}.`,
+    );
+    return undefined;
+  }
+  const routeConnectorPaths = collectRouteConnectorPaths(routeRow);
+  if (acceptance.tag === "qnt-semantic") {
+    if (!nonEmptyString(acceptance.ownerPath)) {
+      issues.push(`${context}: qnt-semantic stateCheck.qntAcceptance requires ownerPath.`);
+      return undefined;
+    }
+    if (acceptance.ownerPath.endsWith(".route.mbt.qnt")) {
+      issues.push(`${context}: qnt-semantic stateCheck.qntAcceptance ownerPath must not point at a route connector.`);
+    }
+    if (routeConnectorPaths.includes(acceptance.ownerPath)) {
+      issues.push(`${context}: qnt-semantic stateCheck.qntAcceptance ownerPath must not equal the row route connector path.`);
+    }
+    if (stateCheck.projection === qntRouteProjection) {
+      issues.push(`${context}: qnt-semantic stateCheck must not use projection ${qntRouteProjection}.`);
+    }
+    if (stateCheck.comparator === qntRouteComparator) {
+      issues.push(`${context}: qnt-semantic stateCheck must not use comparator ${qntRouteComparator}.`);
+    }
+    return {
+      tag: acceptance.tag,
+      ownerPath: acceptance.ownerPath,
+      projection: stateCheck.projection,
+      comparator: stateCheck.comparator,
+    };
+  }
+  if (!nonEmptyString(acceptance.connectorPath)) {
+    issues.push(`${context}: qnt-route stateCheck.qntAcceptance requires connectorPath.`);
+    return undefined;
+  }
+  if (!routeConnectorPaths.includes(acceptance.connectorPath)) {
+    issues.push(
+      `${context}: qnt-route stateCheck.qntAcceptance connectorPath must match the row routeConnectorPath or routeConnectorPaths.`,
+    );
+  }
+  if (stateCheck.projection !== qntRouteProjection) {
+    issues.push(`${context}: qnt-route stateCheck requires projection ${qntRouteProjection}.`);
+  }
+  if (stateCheck.comparator !== qntRouteComparator) {
+    issues.push(`${context}: qnt-route stateCheck requires comparator ${qntRouteComparator}.`);
+  }
+  return {
+    tag: acceptance.tag,
+    connectorPath: acceptance.connectorPath,
+    projection: stateCheck.projection,
+    comparator: stateCheck.comparator,
+  };
 }
 
 function validateLevelDenominator(denominator, context, inventory) {
@@ -1268,6 +1521,7 @@ function validateLevelDenominator(denominator, context, inventory) {
       issues.push(
         ...validateDerivability(assignment.derivability, assignmentContext),
       );
+      issues.push(...validateQntAcceptance(assignment, assignmentContext));
     }
     for (const driverPath of inventoryDrivers) {
       if (!assignedDrivers.has(driverPath)) {
@@ -1341,6 +1595,7 @@ function validateLevelDenominator(denominator, context, inventory) {
       issues.push(
         ...validateDerivability(decision.derivability, decisionContext),
       );
+      issues.push(...validateQntAcceptance(decision, decisionContext));
     }
     for (const branchKey of outOfScopeBranches) {
       if (!classifiedBranches.has(branchKey)) {
@@ -1550,6 +1805,7 @@ function validateReducerRouteInventory(routeInventory, scopeRows, inventory) {
         }
       }
       issues.push(...validateDerivability(entry.derivability, entryContext));
+      issues.push(...validateQntAcceptance(entry, entryContext));
     }
   }
   if (
@@ -2207,6 +2463,7 @@ function validateTargetReplayEvidence(
     obligationsById.set(obligation.obligationId, obligation);
   }
   const covered = new Set();
+  const qntAcceptanceCovered = new Set();
   const sampledInputsByObligation = new Map();
   for (const input of inventory.sampledInputs ?? []) {
     const obligationId = `${input.driverPath}#${input.branchFamily}:${input.branchAction}`;
@@ -2310,12 +2567,39 @@ function validateTargetReplayEvidence(
     if (!isRecord(run.result) || typeof run.result.tag !== "string") {
       issues.push(`${context}: result must be a tagged record.`);
     }
+    const routeRow = routeRowForReplay(routeInventory, run);
+    let acceptedQntRequirementKey;
     if (run.result?.tag === "pass") {
       validatePassingStateCheck(run.stateCheck, context, issues);
+      const acceptedQntRequirement = qntAcceptanceStateCheckRequirement(
+        run.stateCheck,
+        routeRow,
+        context,
+        issues,
+      );
+      if (acceptedQntRequirement !== undefined) {
+        acceptedQntRequirementKey = qntAcceptanceKey(acceptedQntRequirement);
+        const requiredKeys = new Set(
+          qntAcceptanceRequirements(routeRow)
+            .map(qntAcceptanceKey)
+            .filter((key) => key !== undefined),
+        );
+        if (
+          acceptedQntRequirementKey === undefined ||
+          !requiredKeys.has(acceptedQntRequirementKey)
+        ) {
+          issues.push(
+            `${context}: stateCheck.qntAcceptance does not match a qntAcceptance.required entry for ${run.driverPath}.`,
+          );
+        }
+      }
       validateRouteReplayProjection(run, routeInventory, context, issues);
     }
     if (run.result?.tag === "pass" && issues.length === issueCountBeforeRun) {
       covered.add(obligationId);
+      if (acceptedQntRequirementKey !== undefined) {
+        qntAcceptanceCovered.add(`${obligationId}\u0000${acceptedQntRequirementKey}`);
+      }
     } else if (run.result?.tag !== "pass" && run.result?.tag !== "fail") {
       issues.push(`${context}: result tag must be pass or fail.`);
     }
@@ -2326,6 +2610,18 @@ function validateTargetReplayEvidence(
         issues.push(
           `${obligation.obligationId}: missing passing target replay evidence.`,
         );
+      }
+      const routeRow = routeRowForObligation(routeInventory, obligation);
+      for (const requirement of qntAcceptanceRequirements(routeRow)) {
+        const key = qntAcceptanceKey(requirement);
+        if (
+          key !== undefined &&
+          !qntAcceptanceCovered.has(`${obligation.obligationId}\u0000${key}`)
+        ) {
+          issues.push(
+            `${obligation.obligationId}: missing passing target replay evidence for ${requirement.tag} ${acceptancePath(requirement)}.`,
+          );
+        }
       }
     }
   }
@@ -2767,6 +3063,222 @@ function runSelfTest() {
     if (cleanroomPathProjectionResult.issues.length > 0) {
       throw new Error(
         `expected cleanroom-input route derivability evidence to pass: ${cleanroomPathProjectionResult.issues.join("; ")}`,
+      );
+    }
+    const semanticOwnerPath = characterCreationFullVerticalSemanticOwnerPath;
+    const routeConnectorPath = characterCreationFullVerticalRouteConnectorPath;
+    const qntAcceptanceRow = {
+      driverPath: "packages/fixture/fixture.mbt.qnt",
+      route: "reducer-routed",
+      routeTaskId: "fixture-route",
+      subjectFamily: "fixture subject",
+      derivability: {
+        qntFacts: [],
+        rawDomainFacts: [],
+        blockers: [],
+      },
+      routeConnectorPath,
+      qntAcceptance: {
+        required: [
+          {
+            tag: "qnt-semantic",
+            ownerPath: semanticOwnerPath,
+            projection: "qState",
+            comparator: "fixture-state-projection-v1",
+          },
+          {
+            tag: "qnt-route",
+            connectorPath: routeConnectorPath,
+            projection: qntRouteProjection,
+            comparator: qntRouteComparator,
+          },
+        ],
+      },
+    };
+    const qntAcceptanceInventory = {
+      schemaVersion: 1,
+      activeDiagnosticBatchId: "fixture-route",
+      routeTags: Array.from(reducerRouteTags),
+      diagnosticBatches: [
+        {
+          batchId: "fixture-route",
+          assignmentId: "fixture-assignment",
+          entries: [
+            {
+              order: 1,
+              driverPath: "packages/fixture/fixture.mbt.qnt",
+              route: "reducer-routed",
+              subjectFamily: "fixture subject",
+              acceptanceCondition: "fixture acceptance",
+              derivability: {
+                qntFacts: [],
+                rawDomainFacts: [],
+                blockers: [],
+              },
+            },
+          ],
+        },
+      ],
+      levelDenominators: [
+        {
+          driverRouteAssignments: [qntAcceptanceRow],
+          branchDecisionClasses: [],
+        },
+      ],
+    };
+    const qntAcceptanceIssues = validateQntAcceptance(
+      qntAcceptanceRow,
+      "fixture qntAcceptance row",
+    );
+    if (qntAcceptanceIssues.length > 0) {
+      throw new Error(
+        `expected qntAcceptance route inventory to pass: ${qntAcceptanceIssues.join("; ")}`,
+      );
+    }
+    const mandatoryQntAcceptanceRow = {
+      ...qntAcceptanceRow,
+      driverPath: characterCreationFullVerticalDriverPath,
+      qntAcceptance: {
+        required: stable(characterCreationFullVerticalQntAcceptanceRequired),
+      },
+    };
+    const missingMandatoryQntAcceptanceRow = stable(mandatoryQntAcceptanceRow);
+    delete missingMandatoryQntAcceptanceRow.qntAcceptance;
+    const missingMandatoryQntAcceptanceIssues = validateQntAcceptance(
+      missingMandatoryQntAcceptanceRow,
+      "fixture missing mandatory character creation qntAcceptance row",
+    );
+    if (
+      !missingMandatoryQntAcceptanceIssues.some((issue) =>
+        issue.includes(`qntAcceptance is required for ${characterCreationFullVerticalDriverPath}`),
+      )
+    ) {
+      throw new Error(
+        `expected missing mandatory character creation qntAcceptance to fail, got ${JSON.stringify(missingMandatoryQntAcceptanceIssues)}`,
+      );
+    }
+    const validMandatoryQntAcceptanceIssues = validateQntAcceptance(
+      mandatoryQntAcceptanceRow,
+      "fixture mandatory character creation qntAcceptance row",
+    );
+    if (validMandatoryQntAcceptanceIssues.length > 0) {
+      throw new Error(
+        `expected mandatory character creation qntAcceptance to pass, got ${JSON.stringify(validMandatoryQntAcceptanceIssues)}`,
+      );
+    }
+    const badSemanticRoutePathInventory = stable(qntAcceptanceInventory);
+    badSemanticRoutePathInventory.levelDenominators[0].driverRouteAssignments[0]
+      .qntAcceptance.required[0].ownerPath = routeConnectorPath;
+    const badSemanticRoutePathIssues = validateQntAcceptance(
+      badSemanticRoutePathInventory.levelDenominators[0].driverRouteAssignments[0],
+      "fixture bad semantic route path row",
+    );
+    if (
+      !badSemanticRoutePathIssues.some((issue) =>
+        issue.includes("qnt-semantic ownerPath must not point at a route connector"),
+      )
+    ) {
+      throw new Error(
+        `expected semantic route connector ownerPath to fail, got ${JSON.stringify(badSemanticRoutePathIssues)}`,
+      );
+    }
+    const badSemanticProjectionInventory = stable(qntAcceptanceInventory);
+    badSemanticProjectionInventory.levelDenominators[0].driverRouteAssignments[0]
+      .qntAcceptance.required[0].projection = qntRouteProjection;
+    const badSemanticProjectionIssues = validateQntAcceptance(
+      badSemanticProjectionInventory.levelDenominators[0].driverRouteAssignments[0],
+      "fixture bad semantic projection row",
+    );
+    if (
+      !badSemanticProjectionIssues.some((issue) =>
+        issue.includes("qnt-semantic must not use projection qRoute"),
+      )
+    ) {
+      throw new Error(
+        `expected semantic qRoute projection to fail, got ${JSON.stringify(badSemanticProjectionIssues)}`,
+      );
+    }
+    const badSemanticComparatorInventory = stable(qntAcceptanceInventory);
+    badSemanticComparatorInventory.levelDenominators[0].driverRouteAssignments[0]
+      .qntAcceptance.required[0].comparator = qntRouteComparator;
+    const badSemanticComparatorIssues = validateQntAcceptance(
+      badSemanticComparatorInventory.levelDenominators[0].driverRouteAssignments[0],
+      "fixture bad semantic comparator row",
+    );
+    if (
+      !badSemanticComparatorIssues.some((issue) =>
+        issue.includes("qnt-semantic must not use comparator route-event-list"),
+      )
+    ) {
+      throw new Error(
+        `expected semantic route-event-list comparator to fail, got ${JSON.stringify(badSemanticComparatorIssues)}`,
+      );
+    }
+    const badRouteConnectorInventory = stable(qntAcceptanceInventory);
+    badRouteConnectorInventory.levelDenominators[0].driverRouteAssignments[0]
+      .qntAcceptance.required[1].connectorPath =
+      "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt";
+    const badRouteConnectorIssues = validateQntAcceptance(
+      badRouteConnectorInventory.levelDenominators[0].driverRouteAssignments[0],
+      "fixture bad route connector row",
+    );
+    if (
+      !badRouteConnectorIssues.some((issue) =>
+        issue.includes("qnt-route connectorPath must match"),
+      )
+    ) {
+      throw new Error(
+        `expected divergent qnt-route connectorPath to fail, got ${JSON.stringify(badRouteConnectorIssues)}`,
+      );
+    }
+    const semanticAndRouteEvidence = stable(targetEvidence);
+    semanticAndRouteEvidence.runs = targetEvidence.runs.flatMap((run) => {
+      const semanticRun = stable(run);
+      semanticRun.traceId = `${run.traceId} semantic`;
+      semanticRun.stateCheck.projection = "qState";
+      semanticRun.stateCheck.comparator = "fixture-state-projection-v1";
+      semanticRun.stateCheck.qntAcceptance = {
+        tag: "qnt-semantic",
+        ownerPath: semanticOwnerPath,
+      };
+      const routeRun = stable(run);
+      routeRun.traceId = `${run.traceId} route`;
+      routeRun.stateCheck.projection = qntRouteProjection;
+      routeRun.stateCheck.comparator = qntRouteComparator;
+      routeRun.stateCheck.qntAcceptance = {
+        tag: "qnt-route",
+        connectorPath: routeConnectorPath,
+      };
+      return [semanticRun, routeRun];
+    });
+    const semanticAndRouteResult = validateTargetReplayEvidence(
+      semanticAndRouteEvidence,
+      inventory,
+      inventorySha,
+      { routeInventory: qntAcceptanceInventory },
+    );
+    if (semanticAndRouteResult.issues.length > 0) {
+      throw new Error(
+        `expected paired semantic and route qntAcceptance evidence to pass: ${semanticAndRouteResult.issues.join("; ")}`,
+      );
+    }
+    const routeOnlyAcceptanceEvidence = stable(semanticAndRouteEvidence);
+    routeOnlyAcceptanceEvidence.runs = routeOnlyAcceptanceEvidence.runs.filter(
+      (run) => run.stateCheck.qntAcceptance.tag === "qnt-route",
+    );
+    const routeOnlyAcceptanceResult = validateTargetReplayEvidence(
+      routeOnlyAcceptanceEvidence,
+      inventory,
+      inventorySha,
+      { routeInventory: qntAcceptanceInventory },
+    );
+    if (
+      !routeOnlyAcceptanceResult.issues.some((issue) =>
+        issue.includes("missing passing target replay evidence for qnt-semantic"),
+      )
+    ) {
+      throw new Error(
+        `expected route-only qntAcceptance evidence to fail, got ${JSON.stringify(routeOnlyAcceptanceResult.issues)}`,
       );
     }
     const badEvidence = stable(targetEvidence);

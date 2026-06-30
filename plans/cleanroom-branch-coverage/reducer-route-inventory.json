@@ -57,6 +57,43 @@
         "blockers": []
       },
       "routeConnectorPath": "packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt"
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "route": "reducer-routed",
+      "routeTaskId": "SDK-GAP-SHEET-DERIVED-BATTLE-ACTS",
+      "subjectFamily": "sheet-derived SDK battle acts and settlement",
+      "branchObligations": 10,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivability": {
+        "qntFacts": [
+          "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt exposes sheet-derived weapon and resource-backed spell act projection, selected spell and wielded weapon prerequisites and missing-prerequisite rejection, early/stale spell fill non-spend, stale open action rejection, exhausted slot rediscovery rejection, accepted spell-slot spend, and spell-slot settlement.",
+          "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt exposes qRoute for sheet projection, encounter composition, subject availability, runtime entry, and source-exact spell-slot settlement."
+        ],
+        "rawDomainFacts": [
+          ".references/srd-5.2.1/Equipment.md#Weapons defines equipped weapons as attack-capable equipment.",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots defines spending one slot for a level 1+ spell cast with a slot and source-exact slot expenditure.",
+          "UBIQUITOUS_LANGUAGE.md names Magic Action, Attack Roll, Spell Slot, Spend, Character Sheet, Battle Runtime, and Settlement."
+        ],
+        "blockers": []
+      },
+      "routeConnectorPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt",
+      "qntAcceptance": {
+        "required": [
+          {
+            "tag": "qnt-semantic",
+            "ownerPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+            "projection": "qState",
+            "comparator": "sheet-derived-battle-act-state"
+          },
+          {
+            "tag": "qnt-route",
+            "connectorPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt",
+            "projection": "qRoute",
+            "comparator": "route-event-list"
+          }
+        ]
+      }
     }
   ],
   "diagnosticBatches": [
@@ -238,15 +275,15 @@
       "excludedCharacterLevels": [6, 7],
       "excludedSpellLevels": [4, 5],
       "sourceBranchInventory": {
-        "driverFiles": 100,
-        "branchObligations": 728,
-        "currentInScopeBranchObligations": 667,
+        "driverFiles": 101,
+        "branchObligations": 738,
+        "currentInScopeBranchObligations": 677,
         "currentOutOfScopeBranchObligations": 61,
         "sampledInputs": 24,
         "baselineWitnessDriverFiles": 1,
         "alreadyReducerRoutedDriverFiles": 3,
-        "currentNonBaselineRemainingDriverFiles": 96,
-        "currentDriverFilesWithoutRouteOrComponentConnector": 86,
+        "currentNonBaselineRemainingDriverFiles": 97,
+        "currentDriverFilesWithoutRouteOrComponentConnector": 87,
         "currentOutOfScopeBranchDecisionsInLevelDenominator": 43,
         "currentOutOfScopeBranchDecisionsOutsideLevelDenominator": 17,
         "currentOutOfScopeBranchDecisionSourceBlockers": 1
@@ -685,7 +722,7 @@
           ],
           "durableStateOwner": "BattleState owns independent spell-attack sequence progress through the typed spell procedure subject: per-beam target admission, Attack Roll resolution, Hit Point damage, and sequence continuation. Object target identity, Armor Class, range, and Hit Point facts remain table-supplied boundary fills at the object-target boundary.",
           "acceptanceCondition": "Target replay evidence routes independent multi-beam spell attack fills through SpellAttackProcedureRouteSubject and BattleSpellAttackProcedureOwner, with object-target alternatives documented as BattleObjectTargetBoundaryOwner evidence and no selected spell identity dispatch.",
-          "branchObligations": 8,
+          "branchObligations": 10,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
@@ -1359,7 +1396,7 @@
           ],
           "durableStateOwner": "BattleState owns Sleep active-effect state, Concentration, condition lifecycle, and turn-boundary repeat-save frontier; no duplicate repeat-save or condition ledger is introduced.",
           "acceptanceCondition": "Target replay evidence routes Sleep initial save, concentration break, turn-boundary repeat-save discovery, repeat-save cleanup, and Unconscious application through condition, active-effect, Concentration, and turn-boundary owners.",
-          "branchObligations": 8,
+          "branchObligations": 10,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
@@ -2368,6 +2405,49 @@
           "routeConnectorPath": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt"
         },
         {
+          "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+          "routeConnectorPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt",
+          "route": "reducer-routed",
+          "routeTaskId": "SDK-GAP-SHEET-DERIVED-BATTLE-ACTS",
+          "subjectFamily": "sheet-derived SDK battle acts and settlement",
+          "requiredReducerEntrypoints": [
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "durableStateOwner": "The finalized Character Session owns sheet/build facts before battle entry; BattleState owns generic battle subjects, action availability, target Hit Points, and ordinary spell-slot expenditure during battle; settlement writes only typed deltas back to the durable session.",
+          "acceptanceCondition": "Target replay evidence derives weapon and resource-backed spell subjects from the finalized session without manual SubjectProfile handoff, rejects early/stale spell fills and stale open action rediscovery without spending, rejects exhausted slot spell rediscovery, spends one ordinary level-1 slot on the accepted spell invocation path, and settles the slot delta back to the session.",
+          "branchObligations": 8,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt is present in source-branch-inventory.json with 10 branch obligation(s).",
+              "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt exposes qRoute for sheet projection, encounter composition, subject availability, runtime entry, and source-exact spell-slot settlement."
+            ],
+            "rawDomainFacts": [
+              ".references/srd-5.2.1/Equipment.md#Weapons defines equipped weapons as attack-capable equipment.",
+              ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots defines spending one slot for a level 1+ spell cast with a slot.",
+              "UBIQUITOUS_LANGUAGE.md names Magic Action, Attack Roll, Spell Slot, Spend, Character Sheet, Battle Runtime, and Settlement."
+            ],
+            "blockers": []
+          },
+          "qntAcceptance": {
+            "required": [
+              {
+                "tag": "qnt-semantic",
+                "ownerPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+                "projection": "qState",
+                "comparator": "sheet-derived-battle-act-state"
+              },
+              {
+                "tag": "qnt-route",
+                "connectorPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt",
+                "projection": "qRoute",
+                "comparator": "route-event-list"
+              }
+            ]
+          }
+        },
+        {
           "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
           "route": "reducer-routed",
           "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
@@ -2551,7 +2631,23 @@
             ],
             "blockers": []
           },
-          "routeConnectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt"
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+          "qntAcceptance": {
+            "required": [
+              {
+                "tag": "qnt-semantic",
+                "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
+                "projection": "qState",
+                "comparator": "character-creation-runtime-state"
+              },
+              {
+                "tag": "qnt-route",
+                "connectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+                "projection": "qRoute",
+                "comparator": "route-event-list"
+              }
+            ]
+          }
         },
         {
           "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",

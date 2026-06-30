@@ -82,6 +82,14 @@ corresponding participant, Encounter Side, subject-profile, Initiative, and
 current-actor facts. Matching marker order or the focused non-route projection
 alone proves behavior parity, not reducer architecture.
 
+Route connectors are architecture witnesses, not semantic rule owners. For the
+character creation full vertical, the draft/fill/finalize semantics come from
+`cleanroom-input/qnt/character-creation-runtime/character-creation-runtime-slice.qnt`;
+`cleanroom-input/qnt/character-creation-runtime/character-creation-runtime.route.mbt.qnt`
+proves that those semantics are reachable through the reducer-route surface and
+produce the expected `qRoute`. Target acceptance for that row therefore needs
+both the semantic slice projection and the route connector projection.
+
 Reducer-route owner names are semantic domain boundaries. A target may encode
 them in its native type and module system, while preserving domain-shaped
 meaning: action economy, active-effect lifecycle, condition lifecycle, Hit

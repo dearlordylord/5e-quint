@@ -11372,6 +11372,196 @@
       }
     },
     {
+      "branchAction": "doAcceptSpellInvocationAndSpendOneSlot",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doAcceptSpellInvocationAndSpendOneSlot"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doAcceptSpellInvocationAndSpendOneSlot",
+      "qntFileSha256": "948a7df4ab8c0a8f38c3afe13fc213aef58113cb90c2d0e642168f61b7d0e84c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectResourceBackedSpellAttackCapability",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectResourceBackedSpellAttackCapability"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doProjectResourceBackedSpellAttackCapability",
+      "qntFileSha256": "948a7df4ab8c0a8f38c3afe13fc213aef58113cb90c2d0e642168f61b7d0e84c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doProjectWeaponAttackCapability",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doProjectWeaponAttackCapability"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doProjectWeaponAttackCapability",
+      "qntFileSha256": "948a7df4ab8c0a8f38c3afe13fc213aef58113cb90c2d0e642168f61b7d0e84c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectEarlySpellFillWithoutSpend",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectEarlySpellFillWithoutSpend"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectEarlySpellFillWithoutSpend",
+      "qntFileSha256": "948a7df4ab8c0a8f38c3afe13fc213aef58113cb90c2d0e642168f61b7d0e84c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectExhaustedSlotRediscovery",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectExhaustedSlotRediscovery"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectExhaustedSlotRediscovery",
+      "qntFileSha256": "948a7df4ab8c0a8f38c3afe13fc213aef58113cb90c2d0e642168f61b7d0e84c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectMissingSelectedSpellAttackCapability",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectMissingSelectedSpellAttackCapability"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectMissingSelectedSpellAttackCapability",
+      "qntFileSha256": "948a7df4ab8c0a8f38c3afe13fc213aef58113cb90c2d0e642168f61b7d0e84c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectMissingWieldedWeaponCapability",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectMissingWieldedWeaponCapability"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectMissingWieldedWeaponCapability",
+      "qntFileSha256": "948a7df4ab8c0a8f38c3afe13fc213aef58113cb90c2d0e642168f61b7d0e84c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectStaleOpenActionAfterInvocation",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectStaleOpenActionAfterInvocation"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectStaleOpenActionAfterInvocation",
+      "qntFileSha256": "948a7df4ab8c0a8f38c3afe13fc213aef58113cb90c2d0e642168f61b7d0e84c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectStaleSpellFillWithoutSecondSpend",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectStaleSpellFillWithoutSecondSpend"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectStaleSpellFillWithoutSecondSpend",
+      "qntFileSha256": "948a7df4ab8c0a8f38c3afe13fc213aef58113cb90c2d0e642168f61b7d0e84c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSettleSpellSlotExpenditure",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSettleSpellSlotExpenditure"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "obligationId": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doSettleSpellSlotExpenditure",
+      "qntFileSha256": "948a7df4ab8c0a8f38c3afe13fc213aef58113cb90c2d0e642168f61b7d0e84c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
       "branchAction": "doFontOfMagicPointsToSlot",
       "branchFamily": "step",
       "branchPath": [
