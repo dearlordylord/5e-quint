@@ -97,6 +97,13 @@ When `cleanroom-input/` is already synced in the target directory, the renderer
 also materializes the current manifest source SHA, source branch inventory SHA,
 first queued driver, and target profile SHA in rendered task files.
 
+Use sync/render for fresh bootstrap packages or disposable shakedowns, not as a
+mid-run refresh on a cleanroom repo that already has accepted replay evidence.
+`sync-cleanroom-input.cjs` rewrites `cleanroom-input/MANIFEST.md`, and that
+manifest SHA is part of every accepted evidence entry. A scaffold-prose-only
+source correction should be applied to the active cleanroom task files without
+pretending the copied QNT/RAW/input corpus changed.
+
 ## Manual Transfer Bootstrap
 
 1. Create or reset the sibling cleanroom repo, or create a temporary transfer
