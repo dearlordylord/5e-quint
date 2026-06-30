@@ -4,22 +4,22 @@
   "generatedBy": "RRCONV-01-DENOMINATOR-BACKLOG-SCHEMA",
   "denominator": {
     "tag": "source-derived-driver-denominator",
-    "totalDrivers": 77,
-    "battleLaneDrivers": 67,
+    "totalDrivers": 76,
+    "battleLaneDrivers": 66,
     "ruleCoreComponentDrivers": 10,
-    "battleRuntimeBranchObligations": 568,
-    "battleLaneBranchObligations": 424,
+    "battleRuntimeBranchObligations": 559,
+    "battleLaneBranchObligations": 415,
     "ruleCoreComponentBranchObligations": 144,
     "diagnosticBattleDrivers": 6,
     "diagnosticReducerRoutedDrivers": 6,
     "sourceCitations": [
       {
         "artifactPath": "plans/cleanroom-scaffolds/tasks/ACTIVE_WORK.template.json",
-        "fact": "assignment level-1-2-full has 67 battle queue drivers and 10 rules-core queue drivers; assignment reducer-spine-diagnostic-battle has 6 battle queue drivers."
+        "fact": "assignment level-1-2-full has 66 battle queue drivers and 10 rules-core queue drivers after replay-refresh-only witnesses are omitted; assignment reducer-spine-diagnostic-battle has 6 battle queue drivers."
       },
       {
         "artifactPath": "plans/cleanroom-branch-coverage/source-branch-inventory.json",
-        "fact": "unique packages/battle-runtime/*.mbt.qnt drivers split into 67 battle-lane drivers and 10 rule-core component drivers, carrying 424 and 144 branch obligations respectively."
+        "fact": "ordinary implementation packages/battle-runtime/*.mbt.qnt drivers split into 66 battle-lane drivers and 10 rule-core component drivers, carrying 415 and 144 branch obligations respectively; replay-refresh-only witnesses remain in source inventory but outside the ordinary queue."
       },
       {
         "artifactPath": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",

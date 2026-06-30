@@ -507,7 +507,7 @@
         {
           "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
           "routeConnectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
-          "route": "replay-refresh-only",
+          "route": "reducer-routed",
           "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
           "subjectFamily": "Command option next-turn active-effect replay",
           "branchObligations": 15,
@@ -930,10 +930,11 @@
             "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-mixed-target-outcomes.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt"
           ],
-          "route": "source-qnt-corpus-blocker",
+          "route": "catalog-after-substrate",
           "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
           "subjectFamily": "selected damage spell attack, save-gated damage, object-target, and mixed-shape substrates",
           "branchObligations": 10,
@@ -944,6 +945,7 @@
               "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt exposes SaveGatedSpellRouteSubject evidence for selected area and single-target save-gated damage branches.",
               "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt exposes SpellAttackRouteSubject evidence for selected spell attack damage branches.",
               "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt exposes SpellAttackProcedureRouteSubject evidence for selected chained spell-attack duplicate damage branches.",
+              "packages/battle-runtime/battle-runtime-mixed-target-outcomes.route.mbt.qnt exposes MixedTargetOutcomeSpellRouteSubject evidence for the selected mixed attack-hit or attack-miss plus mandatory burst Saving Throw shape, including target choice, attack roll outcome, hit-only primary attack damage fill, mandatory burst save outcomes, burst damage fill, explicit target-bound outcome/damage facts, and BattleAttackRollOwner / BattleSavingThrowOutcomeOwner / BattleHitPointOwner route ownership.",
               "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt exposes ObjectTargetSpellAttackRouteSubject evidence for selected object-target spell attack, active-effect, and post-resolution stale-replay branches.",
               "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt exposes ConditionRiderRouteSubject evidence for post-attack-hit Poisoned condition rider admission, condition-immunity rejection, until-source-next-turn-end expiration, and cleanup through condition-lifecycle, active-effect, and turn-boundary owners."
             ],
@@ -953,9 +955,7 @@
               ".references/srd-5.2.1/Playing-the-Game.md#Damage Rolls, #Damage against Multiple Targets, and #Hit Points define damage and Hit Point updates represented by the route subjects.",
               "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Spell Effect, Attack Roll, Saving Throw, Damage, Damage Type, Target, and Hit Points."
             ],
-            "blockers": [
-              "source-qnt-corpus-blocker: add a generic mixed spell-attack plus burst saving-throw route subject before doResolveIceKnifeHitAttackDamageAndBurstSavingThrows and doResolveIceKnifeMissBurstSavingThrows may count for target replay."
-            ]
+            "blockers": []
           }
         },
         {
@@ -1004,6 +1004,7 @@
           "routeConnectorPath": "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
           "routeConnectorPaths": [
             "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-concentration-hazard-exact-damage.route.mbt.qnt",
             "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
             "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
           ],
@@ -1016,6 +1017,7 @@
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverFlamingSphereHazard and doDiscoverMoonbeamMovableZone selected-row branches.",
               "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt maps those selected rows to the generic SpatialEffectRouteSubject admission, Saving Throw trigger, light projection, and Concentration-break cleanup route/fact surfaces without selected spell identity dispatch in the public reducer facts.",
+              "packages/battle-runtime/battle-runtime-concentration-hazard-exact-damage.route.mbt.qnt exposes the generic concentration-backed save-triggered damage route with Saving Throw outcome fill, damage roll fill, BattleHitPointOwner evidence, damage type, save success policy, damage dice, damage amount, and target Hit Point projection facts.",
               "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt supplies the shared concentration-backed area hazard route/fact definitions consumed by both the generic spatial route and this selected witness, so the selected witness does not carry parallel reducer route fragments.",
               "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt defines generic concentration-backed area hazard admission, area geometry, light, Saving Throw trigger, movement trigger, failed-save restraint trigger, and Concentration-break cleanup facts.",
               "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt remains the generic concentration-backed area hazard route substrate for admission, hazard projection, Saving Throw/ConditionLifecycle resolution, movement resolution, movement-damage Hit Point resolution, and Concentration-break cleanup owners."
@@ -1026,9 +1028,7 @@
               ".references/srd-5.2.1/Rules-Glossary.md#Concentration defines creator Concentration loss as ending the effect, and .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines spell Saving Throw frontiers.",
               "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Area of Effect, Concentration, Movement, Saving Throw, and Table Decision."
             ],
-            "blockers": [
-              "retained-blocker: doDiscoverFlamingSphereHazard and doDiscoverMoonbeamMovableZone are accepted here only for concentration-backed hazard admission, selected Saving Throw trigger exactness, light projection where applicable, and Concentration-break cleanup. Exact Hit Point damage for save-triggered Flaming Sphere and Moonbeam rows remains blocked until a generic concentration-backed save-damage hazard route exposes damage roll and BattleHitPointOwner evidence."
-            ]
+            "blockers": []
           }
         },
         {
@@ -1050,7 +1050,8 @@
               "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt maps those selected rows to the generic SpatialEffectRouteSubject admission, movement-damage or Saving Throw trigger, obscurement projection, and Concentration-break cleanup route/fact surfaces without selected spell identity dispatch in the public reducer facts.",
               "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt supplies the shared concentration-backed area hazard route/fact definitions consumed by both the generic spatial route and this selected witness, so the selected witness does not carry parallel reducer route fragments.",
               "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt defines generic concentration-backed area hazard admission, Difficult Terrain, area geometry, Lightly Obscured sight projection, Saving Throw trigger, movement-damage trigger, failed-save restraint trigger, and Concentration-break cleanup facts.",
-              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt remains the generic concentration-backed area hazard route substrate for admission, hazard projection, Saving Throw/ConditionLifecycle resolution, movement resolution, movement-damage Hit Point resolution, and Concentration-break cleanup owners."
+              "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt remains the generic concentration-backed area hazard route substrate for admission, hazard projection, Saving Throw/ConditionLifecycle resolution, movement resolution, movement-damage Hit Point resolution, and Concentration-break cleanup owners.",
+              "doDiscoverWebRestraintHazard is accepted here for admission, Difficult Terrain, Lightly Obscured projection, selected Saving Throw/restraint trigger exactness, and Concentration-break cleanup; it does not claim Hit Point damage. Spike Growth movement damage uses the generic movement-damage Hit Point route."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Spike Growth defines a Concentration Sphere that becomes Difficult Terrain and deals Piercing damage when a creature moves into or within the area.",
@@ -1058,9 +1059,7 @@
               ".references/srd-5.2.1/Rules-Glossary.md#Concentration defines creator Concentration loss as ending the effect, .references/srd-5.2.1/Rules-Glossary.md#Difficult Terrain defines movement-cost projection, and .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws defines spell Saving Throw frontiers.",
               "UBIQUITOUS_LANGUAGE.md defines Spell Effect, Area of Effect, Concentration, Movement, Difficult Terrain, Saving Throw, Restrained, and Table Decision."
             ],
-            "blockers": [
-              "retained-blocker: doDiscoverWebRestraintHazard is accepted here for admission, Difficult Terrain, Lightly Obscured projection, selected Saving Throw/restraint trigger exactness, and Concentration-break cleanup; it does not claim Hit Point damage. Spike Growth movement damage uses the generic movement-damage Hit Point route."
-            ]
+            "blockers": []
           }
         },
         {
@@ -4083,7 +4082,7 @@
           "blockedDrivers": [
             "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt"
           ],
-          "requiredRouteInput": "Add a generic mixed-outcome route subject that makes each target's attack or Saving Throw outcome explicit and routes shared resource spend, per-target damage, and secondary target projections through one invocation owner.",
+          "requiredRouteInput": "Use the generic mixed-outcome route subject that makes each target's attack or Saving Throw outcome explicit and routes shared resource spend, hit-only attack damage, mandatory burst Saving Throw damage, and secondary target projections through invocation, attack-roll, Saving Throw, and Hit Point owners.",
           "existingSourceEvidence": [
             "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt covers the attack branch frontier.",
             "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt covers the Saving Throw branch frontier.",
@@ -4097,8 +4096,8 @@
           "acceptanceGate": "Target replay may count mixed-outcome residual branches only after route evidence prevents adapter-local coupling between target order, outcome order, and damage projection.",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/battle-runtime-mixed-target-outcome-route-facts.qnt defines generic mixed-target route facts for synthetic target references, per-target Attack Roll or Saving Throw outcomes, per-target damage projections, shared spell-slot/cantrip/action spend facts, separate shared Saving Throw damage-roll facts, and secondary projections.",
-              "packages/battle-runtime/battle-runtime-mixed-target-outcomes.route.mbt.qnt exposes MixedTargetOutcomeSpellRouteSubject evidence through BattleSpellInvocationOwner for area Saving Throw mixed outcomes, attack-hit plus burst Saving Throw outcomes, attack-miss plus burst Saving Throw outcomes, object attack secondary projections, attack-hit condition projections, failed-save next-Attack-Roll projections, and chained attack target projections.",
+              "packages/battle-runtime/battle-runtime-mixed-target-outcome-route-facts.qnt defines generic mixed-target route facts for synthetic target references, per-target Attack Roll or Saving Throw outcomes, per-target damage projections, shared spell-slot/cantrip/action spend facts, neutral damage-roll facts for the primary attack roll and shared Saving Throw roll, and secondary projections.",
+              "packages/battle-runtime/battle-runtime-mixed-target-outcomes.route.mbt.qnt exposes MixedTargetOutcomeSpellRouteSubject evidence through BattleSpellInvocationOwner, BattleAttackRollOwner, BattleSavingThrowOutcomeOwner, and BattleHitPointOwner for area Saving Throw mixed outcomes, attack-hit plus burst Saving Throw outcomes, attack-miss plus burst Saving Throw outcomes, object attack secondary projections, attack-hit condition projections, failed-save next-Attack-Roll projections, and chained attack target projections.",
               "The route facts bind every outcome and damage projection to an explicit synthetic target reference, so target order, outcome order, and damage projection cannot be inferred from adapter list position or authored spell identity."
             ],
             "rawDomainFacts": [
@@ -4108,7 +4107,6 @@
               "UBIQUITOUS_LANGUAGE.md defines Spell Invocation, Attack Roll, Saving Throw, Damage, Target, and Action Lifecycle."
             ],
             "blockers": [
-              "source-qnt-corpus-blocker: packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt is not reclassified as accepted wholesale; only residual branches whose replay obligation matches MixedTargetOutcomeSpellRouteSubject facts may count through this connector.",
               "source-qnt-corpus-blocker: exact authored spell damage amounts, dice counts, damage types, critical doubling, duplicate-face limits, and spell-specific target-admission rules remain outside FCSF-03F and stay assigned to FCSF-03G-EXACT-DAMAGE-PROJECTION-FACTS or more specific substrate tasks.",
               "source-qnt-corpus-blocker: object durability, light geometry, invisible-revealing, and cover/obstruction presentation remain outside this mixed-outcome connector unless separately covered by object/light route evidence."
             ]

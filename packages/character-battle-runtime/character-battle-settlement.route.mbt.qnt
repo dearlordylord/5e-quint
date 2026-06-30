@@ -89,6 +89,49 @@ module characterBattleSettlementRouteMbt {
         )
       )
 
+  pure def settlePurePactMagicSlotExpenditureRoute(
+    route: List[CharacterBattleRouteEvent],
+  ): List[CharacterBattleRouteEvent] =
+    route
+      .append(
+        routeSettleBattleToCharacterSheet(
+          HandoffResourceProjectionRouteSubject,
+          HandoffResourceDeltaFill,
+          Set(),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffResourceProjectionRouteSubject,
+          Set(HandoffSourceExactPactSlotDeltaFact),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
+
+  pure def rejectMixedSpellAndPactSlotSettlementRoute(
+    route: List[CharacterBattleRouteEvent],
+  ): List[CharacterBattleRouteEvent] =
+    route
+      .append(
+        routeRejectCharacterBattleHandoff(
+          HandoffResourceProjectionRouteSubject,
+          HandoffSettlementRejectionFill,
+          Set(
+            HandoffSpellResourceProjectionHoleFamily,
+            HandoffSettlementConflictHoleFamily,
+          ),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
+      .append(
+        routeRecordCharacterBattleHandoffFacts(
+          HandoffResourceProjectionRouteSubject,
+          Set(HandoffSettlementConflictFact),
+          CharacterBattleResourceProjectionOwner,
+        )
+      )
+
   pure def rejectAmbiguousCreatedSpellSlotSourceRoute(
     route: List[CharacterBattleRouteEvent],
   ): List[CharacterBattleRouteEvent] =
@@ -197,47 +240,65 @@ module characterBattleSettlementRouteMbt {
   }
 
   action doSettleFeatureResourceExpenditure = all {
+    qState.replayIndex == 3,
+    recordRoute(settleFeatureResourceExpenditureRoute(qRoute), 4),
+  }
+
+  action doSettlePurePactMagicSlotExpenditure = all {
     qState.replayIndex == 1,
-    recordRoute(settleFeatureResourceExpenditureRoute(qRoute), 2),
+    recordRoute(settlePurePactMagicSlotExpenditureRoute(qRoute), 2),
+  }
+
+  action doRejectMixedSpellAndPactSlotSettlement = all {
+    qState.replayIndex == 2,
+    recordRoute(rejectMixedSpellAndPactSlotSettlementRoute(qRoute), 3),
   }
 
   action doRejectAmbiguousCreatedSpellSlotSource = all {
-    qState.replayIndex == 2,
-    recordRoute(rejectAmbiguousCreatedSpellSlotSourceRoute(qRoute), 3),
+    qState.replayIndex == 4,
+    recordRoute(rejectAmbiguousCreatedSpellSlotSourceRoute(qRoute), 5),
   }
 
   action doRejectMismatchedCharacterIdentity = all {
-    qState.replayIndex == 3,
-    recordRoute(rejectIdentityMismatchRoute(qRoute), 4),
+    qState.replayIndex == 5,
+    recordRoute(rejectIdentityMismatchRoute(qRoute), 6),
   }
 
   action doRejectMaximumHpDrift = all {
-    qState.replayIndex == 4,
-    recordRoute(rejectMaximumHpDriftRoute(qRoute), 5),
+    qState.replayIndex == 6,
+    recordRoute(rejectMaximumHpDriftRoute(qRoute), 7),
   }
 
   action doRejectActiveWildShapeHandoff = all {
-    qState.replayIndex == 5,
-    recordRoute(rejectSettlementConflictRoute(qRoute), 6),
+    qState.replayIndex == 7,
+    recordRoute(rejectSettlementConflictRoute(qRoute), 8),
+  }
+
+  action doRejectActiveBattleStateHandoff = all {
+    qState.replayIndex == 8,
+    recordRoute(rejectSettlementConflictRoute(qRoute), 9),
   }
 
   action doRejectStableRecoveryProgressHandoff = all {
-    qState.replayIndex == 6,
-    recordRoute(rejectSettlementConflictRoute(qRoute), 7),
+    qState.replayIndex == 9,
+    recordRoute(rejectSettlementConflictRoute(qRoute), 10),
   }
 
   action doSettleZeroHpStableLifecycle = all {
-    qState.replayIndex == 7,
-    recordRoute(settleZeroHpStableLifecycleRoute(qRoute), 8),
+    qState.replayIndex == 10,
+    recordRoute(settleZeroHpStableLifecycleRoute(qRoute), 11),
   }
 
   action step = any {
     doSettleHitPointsConditionsSlotsAndPreservedSheetState,
+    doSettlePurePactMagicSlotExpenditure,
+    doRejectMixedSpellAndPactSlotSettlement,
     doSettleFeatureResourceExpenditure,
     doRejectAmbiguousCreatedSpellSlotSource,
     doRejectMismatchedCharacterIdentity,
     doRejectMaximumHpDrift,
     doRejectActiveWildShapeHandoff,
+    doRejectActiveBattleStateHandoff,
     doRejectStableRecoveryProgressHandoff,
     doSettleZeroHpStableLifecycle,
   }

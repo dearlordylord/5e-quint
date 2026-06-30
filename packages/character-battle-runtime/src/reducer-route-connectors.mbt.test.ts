@@ -171,11 +171,14 @@ const encounterCompositionRouteDriverSchema = {
 const settlementRouteDriverSchema = {
   init: {},
   doSettleHitPointsConditionsSlotsAndPreservedSheetState: {},
+  doSettlePurePactMagicSlotExpenditure: {},
+  doRejectMixedSpellAndPactSlotSettlement: {},
   doSettleFeatureResourceExpenditure: {},
   doRejectAmbiguousCreatedSpellSlotSource: {},
   doRejectMismatchedCharacterIdentity: {},
   doRejectMaximumHpDrift: {},
   doRejectActiveWildShapeHandoff: {},
+  doRejectActiveBattleStateHandoff: {},
   doRejectStableRecoveryProgressHandoff: {},
   doSettleZeroHpStableLifecycle: {},
   step: {},
@@ -264,7 +267,7 @@ describe("character battle reducer route connector MBT", () => {
         settlementRouteActions,
         initialBattleSettlementRoute,
       ),
-      maxSteps: 8,
+      maxSteps: 11,
     });
   }, MBT_TEST_TIMEOUT_MS);
 
@@ -344,6 +347,14 @@ const settlementRouteActions = indexedActionEntries(settlementRouteDriverSchema,
     "doSettleHitPointsConditionsSlotsAndPreservedSheetState",
     settleHitPointsConditionsSlotsAndPreservedSheetStateRoute,
   ],
+  [
+    "doSettlePurePactMagicSlotExpenditure",
+    settlePurePactMagicSlotExpenditureRoute,
+  ],
+  [
+    "doRejectMixedSpellAndPactSlotSettlement",
+    rejectMixedSpellAndPactSlotSettlementRoute,
+  ],
   ["doSettleFeatureResourceExpenditure", settleFeatureResourceExpenditureRoute],
   [
     "doRejectAmbiguousCreatedSpellSlotSource",
@@ -352,6 +363,7 @@ const settlementRouteActions = indexedActionEntries(settlementRouteDriverSchema,
   ["doRejectMismatchedCharacterIdentity", rejectIdentityMismatchRoute],
   ["doRejectMaximumHpDrift", rejectMaximumHpDriftRoute],
   ["doRejectActiveWildShapeHandoff", rejectSettlementConflictRoute],
+  ["doRejectActiveBattleStateHandoff", rejectSettlementConflictRoute],
   ["doRejectStableRecoveryProgressHandoff", rejectSettlementConflictRoute],
   ["doSettleZeroHpStableLifecycle", settleZeroHpStableLifecycleRoute],
 ]);
@@ -708,6 +720,44 @@ function settleFeatureResourceExpenditureRoute(
     recordCharacterBattleHandoffFacts({
       subject: "handoffFeatureResourceProjection",
       facts: ["featureResourceDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function settlePurePactMagicSlotExpenditureRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    settleBattleToCharacterSheet({
+      subject: "handoffResourceProjection",
+      fill: "resourceDelta",
+      holes: [],
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffResourceProjection",
+      facts: ["sourceExactPactSlotDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function rejectMixedSpellAndPactSlotSettlementRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    rejectCharacterBattleHandoff({
+      subject: "handoffResourceProjection",
+      fill: "settlementRejection",
+      holes: ["settlementConflict", "spellResourceProjection"],
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFacts({
+      subject: "handoffResourceProjection",
+      facts: ["settlementConflict"],
       owner: "characterBattleResourceProjection",
     }),
   ];

@@ -58,11 +58,18 @@ module battleRuntimeMixedTargetOutcomesRouteMbt {
     fill: BattleFillKind,
     holes: Set[BattleHoleFamilyKind],
   ): ReducerRouteEvent =
+    resolveInvocationRouteWithOwner(fill, holes, BattleSpellInvocationOwner)
+
+  pure def resolveInvocationRouteWithOwner(
+    fill: BattleFillKind,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
     routeResolveBattleSubject(
       MixedTargetOutcomeSpellRouteSubject,
       fill,
       holes,
-      BattleSpellInvocationOwner,
+      owner,
     )
 
   pure def resolveInvocationProjectionRoute: ReducerRouteEvent =
@@ -82,19 +89,56 @@ module battleRuntimeMixedTargetOutcomesRouteMbt {
   pure def attackHitThenBurstRoute: List[ReducerRouteEvent] =
     List(
       discoverInvocationRoute(targetChoiceHoles),
-      resolveInvocationRoute(TargetChoiceFillKind, attackRollHoles),
-      resolveInvocationRoute(AttackRollFillKind, savingThrowOutcomeHoles),
-      resolveInvocationRoute(SavingThrowOutcomeFillKind, rolledDiceHoles),
-      resolveInvocationRoute(RolledDiceFillKind, noHoles),
+      resolveInvocationRouteWithOwner(
+        TargetChoiceFillKind,
+        attackRollHoles,
+        BattleTargetSelectionOwner,
+      ),
+      resolveInvocationRouteWithOwner(
+        AttackRollFillKind,
+        rolledDiceHoles,
+        BattleAttackRollOwner,
+      ),
+      resolveInvocationRouteWithOwner(
+        RolledDiceFillKind,
+        savingThrowOutcomeHoles,
+        BattleHitPointOwner,
+      ),
+      resolveInvocationRouteWithOwner(
+        SavingThrowOutcomeFillKind,
+        rolledDiceHoles,
+        BattleSavingThrowOutcomeOwner,
+      ),
+      resolveInvocationRouteWithOwner(
+        RolledDiceFillKind,
+        noHoles,
+        BattleHitPointOwner,
+      ),
     )
 
   pure def attackMissThenBurstRoute: List[ReducerRouteEvent] =
     List(
       discoverInvocationRoute(targetChoiceHoles),
-      resolveInvocationRoute(TargetChoiceFillKind, attackRollHoles),
-      resolveInvocationRoute(AttackRollFillKind, savingThrowOutcomeHoles),
-      resolveInvocationRoute(SavingThrowOutcomeFillKind, rolledDiceHoles),
-      resolveInvocationRoute(RolledDiceFillKind, noHoles),
+      resolveInvocationRouteWithOwner(
+        TargetChoiceFillKind,
+        attackRollHoles,
+        BattleTargetSelectionOwner,
+      ),
+      resolveInvocationRouteWithOwner(
+        AttackRollFillKind,
+        savingThrowOutcomeHoles,
+        BattleAttackRollOwner,
+      ),
+      resolveInvocationRouteWithOwner(
+        SavingThrowOutcomeFillKind,
+        rolledDiceHoles,
+        BattleSavingThrowOutcomeOwner,
+      ),
+      resolveInvocationRouteWithOwner(
+        RolledDiceFillKind,
+        noHoles,
+        BattleHitPointOwner,
+      ),
     )
 
   pure def objectAttackProjectionRoute: List[ReducerRouteEvent] =
@@ -151,8 +195,15 @@ module battleRuntimeMixedTargetOutcomesRouteMbt {
 
   pure def sharedSavingThrowDamageRollFact: List[MixedTargetOutcomeRouteFact] =
     List(
-      RouteMixedTargetOutcomeSharedDamageRoll({
+      RouteMixedTargetOutcomeDamageRoll({
         roll: SharedSavingThrowDamageRoll,
+      }),
+    )
+
+  pure def primaryAttackDamageRollFact: List[MixedTargetOutcomeRouteFact] =
+    List(
+      RouteMixedTargetOutcomeDamageRoll({
+        roll: PrimaryAttackDamageRoll,
       }),
     )
 
@@ -179,7 +230,10 @@ module battleRuntimeMixedTargetOutcomesRouteMbt {
     ))
 
   pure def attackHitBurstSavingThrowFacts: List[MixedTargetOutcomeRouteFact] =
-    slotSpendFact.concat(sharedSavingThrowDamageRollFact).concat(List(
+    slotSpendFact
+      .concat(primaryAttackDamageRollFact)
+      .concat(sharedSavingThrowDamageRollFact)
+      .concat(List(
       RouteMixedTargetOutcomeTarget({ target: PrimaryTarget }),
       RouteMixedTargetOutcomeTarget({ target: SecondaryTarget }),
       RouteMixedTargetOutcomeResolution({

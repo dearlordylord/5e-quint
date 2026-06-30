@@ -325,6 +325,43 @@ function cleanroomQueueByLane(scopeRows) {
   return queues;
 }
 
+function routeAssignmentRows(routeInventory) {
+  if (!isRecord(routeInventory) || !Array.isArray(routeInventory.levelDenominators)) {
+    return [];
+  }
+  return routeInventory.levelDenominators.flatMap((denominator) =>
+    Array.isArray(denominator.driverRouteAssignments)
+      ? denominator.driverRouteAssignments.filter(isRecord)
+      : [],
+  );
+}
+
+function replayRefreshOnlyDriverPaths(routeInventory) {
+  const rows = [
+    ...routeAssignmentRows(routeInventory),
+    ...(Array.isArray(routeInventory?.prerequisites)
+      ? routeInventory.prerequisites.filter(isRecord)
+      : []),
+  ];
+  return new Set(
+    rows
+      .filter((row) => row.route === "replay-refresh-only")
+      .map((row) => row.driverPath)
+      .filter((driverPath) => typeof driverPath === "string"),
+  );
+}
+
+function ordinaryImplementationScopeRows(scopeRows, routeInventory) {
+  const replayRefreshOnly = replayRefreshOnlyDriverPaths(routeInventory);
+  return scopeRows.filter((row) => !replayRefreshOnly.has(row.driverPath));
+}
+
+function cleanroomImplementationQueueByLane(scopeRows, routeInventory) {
+  return cleanroomQueueByLane(
+    ordinaryImplementationScopeRows(scopeRows, routeInventory),
+  );
+}
+
 function reducerDiagnosticBatch(routeInventory) {
   if (
     !isRecord(routeInventory) ||
@@ -372,7 +409,7 @@ function scaffoldAssignmentsFor(routeInventory) {
 }
 
 function renderActiveWorkTemplate(scopeRows, routeInventory) {
-  const queues = cleanroomQueueByLane(scopeRows);
+  const queues = cleanroomImplementationQueueByLane(scopeRows, routeInventory);
   const activeWork = {
     schemaVersion: 1,
     assignments: scaffoldAssignmentsFor(routeInventory).map((assignment) => ({
@@ -392,8 +429,8 @@ function numberedList(items) {
   return items.map((item, index) => `${index + 1}. \`${item}\``).join("\n");
 }
 
-function renderFutureQueueSection(scopeRows) {
-  const queues = cleanroomQueueByLane(scopeRows);
+function renderFutureQueueSection(scopeRows, routeInventory) {
+  const queues = cleanroomImplementationQueueByLane(scopeRows, routeInventory);
   const laneHeadings = new Map([
     ["creation", "Creation"],
     ["sheet", "Sheet"],
@@ -405,6 +442,7 @@ function renderFutureQueueSection(scopeRows) {
     "## Future Level 1-2 Queue",
     "",
     "This queue is generated from `plans/cleanroom-branch-coverage/branch-scope.jsonl`.",
+    "`replay-refresh-only` baseline witnesses are omitted from ordinary implementation queues.",
     "Drivers are ordered by dependency lane, then by branch-scope row order.",
     "",
     ...scaffoldLaneOrder.flatMap((laneId) => [
@@ -418,14 +456,19 @@ function renderFutureQueueSection(scopeRows) {
     .replace(/\n+$/, "\n\n");
 }
 
-function renderCurrentQueueSection(scopeRows) {
+function renderCurrentQueueSection(scopeRows, routeInventory) {
+  const implementationRows = ordinaryImplementationScopeRows(
+    scopeRows,
+    routeInventory,
+  );
   return [
     "## Current Branch-Inventory-Ready Queue",
     "",
     "This queue is generated from `plans/cleanroom-branch-coverage/branch-scope.jsonl`.",
+    "`replay-refresh-only` baseline witnesses are omitted from ordinary implementation queues.",
     "`tasks/ACTIVE_WORK.json` selects which ready drivers are assigned to a run.",
     "",
-    numberedList(scopeRows.map((row) => cleanroomDriverPath(row.driverPath))),
+    numberedList(implementationRows.map((row) => cleanroomDriverPath(row.driverPath))),
     "",
     "",
   ].join("\n");
@@ -493,9 +536,9 @@ function replaceTopLevelSection(markdown, heading, replacement) {
 }
 
 function renderLevelScopeSnapshot(scopeRows, routeInventory) {
-  const current = renderCurrentQueueSection(scopeRows);
+  const current = renderCurrentQueueSection(scopeRows, routeInventory);
   const reducerDiagnostic = renderReducerDiagnosticQueueSection(routeInventory);
-  const future = renderFutureQueueSection(scopeRows);
+  const future = renderFutureQueueSection(scopeRows, routeInventory);
   const existing = fs.readFileSync(levelScopeSnapshotPath, "utf8");
   return replaceTopLevelSection(
     replaceTopLevelSection(
@@ -1891,6 +1934,12 @@ function collectReducerConvergenceDenominatorFacts({
         !driverPath.startsWith("packages/battle-runtime/rule-core-"),
     ),
   );
+  const replayRefreshOnly = replayRefreshOnlyDriverPaths(routeInventory);
+  const implementationBattleLaneDriverPaths = new Set(
+    Array.from(battleLaneDriverPaths).filter(
+      (driverPath) => !replayRefreshOnly.has(driverPath),
+    ),
+  );
   const ruleCoreComponentDriverPaths = new Set(
     Array.from(inventoryDrivers).filter((driverPath) =>
       driverPath.startsWith("packages/battle-runtime/rule-core-"),
@@ -1918,10 +1967,10 @@ function collectReducerConvergenceDenominatorFacts({
   } else {
     const missingFromInventory = sortedSetDifference(
       activeBattleLaneDriverPaths,
-      battleLaneDriverPaths,
+      implementationBattleLaneDriverPaths,
     );
     const missingFromActiveWork = sortedSetDifference(
-      battleLaneDriverPaths,
+      implementationBattleLaneDriverPaths,
       activeBattleLaneDriverPaths,
     );
     for (const driverPath of missingFromInventory) {
@@ -1990,19 +2039,19 @@ function collectReducerConvergenceDenominatorFacts({
     }
   }
   const battleLaneBranchObligations = inventory.branchObligations.filter(
-    (obligation) => battleLaneDriverPaths.has(obligation.driverPath),
+    (obligation) => implementationBattleLaneDriverPaths.has(obligation.driverPath),
   ).length;
   const ruleCoreComponentBranchObligations =
     inventory.branchObligations.filter((obligation) =>
       ruleCoreComponentDriverPaths.has(obligation.driverPath),
     ).length;
   return {
-    battleLaneDriverPaths,
+    battleLaneDriverPaths: implementationBattleLaneDriverPaths,
     ruleCoreComponentDriverPaths,
-    battleLaneDrivers: battleLaneDriverPaths.size,
+    battleLaneDrivers: implementationBattleLaneDriverPaths.size,
     ruleCoreComponentDrivers: ruleCoreComponentDriverPaths.size,
     totalDrivers:
-      battleLaneDriverPaths.size + ruleCoreComponentDriverPaths.size,
+      implementationBattleLaneDriverPaths.size + ruleCoreComponentDriverPaths.size,
     battleLaneBranchObligations,
     ruleCoreComponentBranchObligations,
     battleRuntimeBranchObligations:
@@ -3560,6 +3609,10 @@ function main() {
   const activeWorkTemplate = fs.existsSync(activeWorkTemplatePath)
     ? readJson(activeWorkTemplatePath)
     : undefined;
+  const expectedActiveWorkTemplate =
+    activeWorkTemplate === undefined
+      ? undefined
+      : JSON.parse(renderActiveWorkTemplate(scopeRows, reducerRouteInventory));
   const routeIssues = validateReducerRouteInventory(
     reducerRouteInventory,
     scopeRows,
@@ -3571,7 +3624,7 @@ function main() {
     process.exit(1);
   }
   const convergenceBacklogIssues = validateReducerConvergenceBacklogArtifacts({
-    activeWork: activeWorkTemplate,
+    activeWork: write ? expectedActiveWorkTemplate : activeWorkTemplate,
     inventory,
     routeInventory: reducerRouteInventory,
   });

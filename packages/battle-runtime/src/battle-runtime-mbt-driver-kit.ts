@@ -1555,11 +1555,12 @@ const MIXED_TARGET_OUTCOME_SHARED_SPENDS = [
 ] as const;
 type MixedTargetOutcomeSharedSpend =
   (typeof MIXED_TARGET_OUTCOME_SHARED_SPENDS)[number];
-const MIXED_TARGET_OUTCOME_SHARED_DAMAGE_ROLLS = [
+const MIXED_TARGET_OUTCOME_DAMAGE_ROLLS = [
+  "primaryAttackDamageRoll",
   "sharedSavingThrowDamageRoll",
 ] as const;
-type MixedTargetOutcomeSharedDamageRoll =
-  (typeof MIXED_TARGET_OUTCOME_SHARED_DAMAGE_ROLLS)[number];
+type MixedTargetOutcomeDamageRoll =
+  (typeof MIXED_TARGET_OUTCOME_DAMAGE_ROLLS)[number];
 const MIXED_TARGET_OUTCOME_SECONDARY_PROJECTIONS = [
   "objectBoundary",
   "light",
@@ -1590,8 +1591,8 @@ type MixedTargetOutcomeRouteFact =
       readonly spend: MixedTargetOutcomeSharedSpend;
     }
   | {
-      readonly kind: "sharedDamageRoll";
-      readonly roll: MixedTargetOutcomeSharedDamageRoll;
+      readonly kind: "damageRoll";
+      readonly roll: MixedTargetOutcomeDamageRoll;
     }
   | {
       readonly kind: "secondaryProjection";
@@ -7779,11 +7780,23 @@ function mixedTargetOutcomeResolveRoute(
   fill: ReducerRouteFill,
   holes: readonly ReducerRouteHole[],
 ): ReducerRouteEvent {
+  return mixedTargetOutcomeResolveRouteWithOwner(
+    fill,
+    holes,
+    MIXED_TARGET_OUTCOME_OWNER,
+  );
+}
+
+function mixedTargetOutcomeResolveRouteWithOwner(
+  fill: ReducerRouteFill,
+  holes: readonly ReducerRouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
   return routeResolveSubject({
     subject: MIXED_TARGET_OUTCOME_ROUTE_SUBJECT,
     fill,
     holes,
-    owner: MIXED_TARGET_OUTCOME_OWNER,
+    owner,
   });
 }
 
@@ -7806,19 +7819,60 @@ function mixedTargetOutcomeAreaSaveRoute(): readonly ReducerRouteEvent[] {
   ];
 }
 
-function mixedTargetOutcomeAttackBurstRoute(): readonly ReducerRouteEvent[] {
+function mixedTargetOutcomeAttackHitBurstRoute(): readonly ReducerRouteEvent[] {
   return [
     mixedTargetOutcomeDiscoverRoute(TARGET_CHOICE_ROUTE_HOLES),
-    mixedTargetOutcomeResolveRoute("targetChoice", ATTACK_ROLL_ROUTE_HOLES),
-    mixedTargetOutcomeResolveRoute(
-      "attackRoll",
-      SAVING_THROW_OUTCOME_ROUTE_HOLES,
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "targetChoice",
+      ATTACK_ROLL_ROUTE_HOLES,
+      "battleTargetSelection",
     ),
-    mixedTargetOutcomeResolveRoute(
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "attackRoll",
+      ROLLED_DICE_ROUTE_HOLES,
+      "battleAttackRoll",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "rolledDice",
+      SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      "battleHitPoint",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
       "savingThrowOutcome",
       ROLLED_DICE_ROUTE_HOLES,
+      "battleSavingThrowOutcome",
     ),
-    mixedTargetOutcomeResolveRoute("rolledDice", NO_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "rolledDice",
+      NO_ROUTE_HOLES,
+      "battleHitPoint",
+    ),
+  ];
+}
+
+function mixedTargetOutcomeAttackMissBurstRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "targetChoice",
+      ATTACK_ROLL_ROUTE_HOLES,
+      "battleTargetSelection",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "attackRoll",
+      SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      "battleAttackRoll",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "savingThrowOutcome",
+      ROLLED_DICE_ROUTE_HOLES,
+      "battleSavingThrowOutcome",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "rolledDice",
+      NO_ROUTE_HOLES,
+      "battleHitPoint",
+    ),
   ];
 }
 
@@ -7876,8 +7930,15 @@ const MIXED_TARGET_OUTCOME_CANTRIP_SPEND_FACT = [
 
 const MIXED_TARGET_OUTCOME_SHARED_SAVE_DAMAGE_ROLL_FACT = [
   {
-    kind: "sharedDamageRoll",
+    kind: "damageRoll",
     roll: "sharedSavingThrowDamageRoll",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_PRIMARY_ATTACK_DAMAGE_ROLL_FACT = [
+  {
+    kind: "damageRoll",
+    roll: "primaryAttackDamageRoll",
   },
 ] as const satisfies readonly MixedTargetOutcomeRouteFact[];
 
@@ -7910,6 +7971,7 @@ const MIXED_TARGET_OUTCOME_AREA_SAVE_FACTS = [
 
 const MIXED_TARGET_OUTCOME_ATTACK_HIT_BURST_FACTS = [
   ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
+  ...MIXED_TARGET_OUTCOME_PRIMARY_ATTACK_DAMAGE_ROLL_FACT,
   ...MIXED_TARGET_OUTCOME_SHARED_SAVE_DAMAGE_ROLL_FACT,
   { kind: "target", target: "primaryTarget" },
   { kind: "target", target: "secondaryTarget" },
@@ -8089,11 +8151,11 @@ export function createMixedTargetOutcomeRouteDriver() {
         facts = MIXED_TARGET_OUTCOME_AREA_SAVE_FACTS;
       },
       doRouteAttackHitBurstSavingThrowMixedOutcomes: () => {
-        route = [...route, ...mixedTargetOutcomeAttackBurstRoute()];
+        route = [...route, ...mixedTargetOutcomeAttackHitBurstRoute()];
         facts = MIXED_TARGET_OUTCOME_ATTACK_HIT_BURST_FACTS;
       },
       doRouteAttackMissBurstSavingThrowMixedOutcomes: () => {
-        route = [...route, ...mixedTargetOutcomeAttackBurstRoute()];
+        route = [...route, ...mixedTargetOutcomeAttackMissBurstRoute()];
         facts = MIXED_TARGET_OUTCOME_ATTACK_MISS_BURST_FACTS;
       },
       doRouteObjectAttackSecondaryProjection: () => {
@@ -12353,11 +12415,10 @@ const MIXED_TARGET_OUTCOME_SHARED_SPEND_BY_VARIANT_TAG = {
   SharedCantripActionSpend: "sharedCantripActionSpend",
 } as const satisfies Readonly<Record<string, MixedTargetOutcomeSharedSpend>>;
 
-const MIXED_TARGET_OUTCOME_SHARED_DAMAGE_ROLL_BY_VARIANT_TAG = {
+const MIXED_TARGET_OUTCOME_DAMAGE_ROLL_BY_VARIANT_TAG = {
+  PrimaryAttackDamageRoll: "primaryAttackDamageRoll",
   SharedSavingThrowDamageRoll: "sharedSavingThrowDamageRoll",
-} as const satisfies Readonly<
-  Record<string, MixedTargetOutcomeSharedDamageRoll>
->;
+} as const satisfies Readonly<Record<string, MixedTargetOutcomeDamageRoll>>;
 
 const MIXED_TARGET_OUTCOME_SECONDARY_PROJECTION_BY_VARIANT_TAG = {
   ObjectBoundaryProjection: "objectBoundary",
@@ -13396,15 +13457,15 @@ function decodeMixedTargetOutcomeRouteFact(
       ),
     };
   }
-  if (tag === "RouteMixedTargetOutcomeSharedDamageRoll") {
+  if (tag === "RouteMixedTargetOutcomeDamageRoll") {
     const payload = mixedTargetOutcomeFactPayload(raw, tag);
     return {
-      kind: "sharedDamageRoll",
+      kind: "damageRoll",
       roll: quintVariantMappedValue(
         quintField(payload, "roll"),
         "qFacts[].roll",
-        MIXED_TARGET_OUTCOME_SHARED_DAMAGE_ROLL_BY_VARIANT_TAG,
-        "mixed-target outcome shared damage roll",
+        MIXED_TARGET_OUTCOME_DAMAGE_ROLL_BY_VARIANT_TAG,
+        "mixed-target outcome damage roll",
       ),
     };
   }
