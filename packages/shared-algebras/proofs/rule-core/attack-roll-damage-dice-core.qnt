@@ -1,6 +1,16 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.ATTACK_ROLL_DAMAGE_DICE
+// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.ATTACK_BRANCHES
+
+// RAW trace:
+// - .references/srd-5.2.1/Playing-the-Game.md#Attack Rolls defines hit
+//   resolution against Armor Class.
+// - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines damage
+//   dice rolls and attack damage modifiers.
+// - .references/srd-5.2.1/Playing-the-Game.md#Critical Hits defines doubled
+//   damage dice for Critical Hits.
+// - UBIQUITOUS_LANGUAGE.md defines Attack Roll and Critical Hit; the Damage
+//   section supplies downstream attack-damage vocabulary.
 
 module attackRollDamageDiceCore {
   type AttackRollProcedureFacts = {

@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.EXACT_DAMAGE_ROUTE_BRIDGE
+// KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 import { describe, expect, it } from "vitest";
 

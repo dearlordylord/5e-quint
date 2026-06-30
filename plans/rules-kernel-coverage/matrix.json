@@ -2679,6 +2679,7 @@
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+        "packages/shared-algebras/proofs/rule-core/attack-roll-damage-dice-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
@@ -4139,17 +4140,28 @@
           "ownerPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "deterministicReplayRationale": "The exact-damage details route witness is a deterministic replay because qReplayIndex selects a closed sequence of route scenarios. The TS witness compares production route projections to QNT-owned route and rule-core component facts; random branch interleavings are not the risk at this connector boundary, and detailed Damage Roll, Critical Hit, adjustment, and Hit Point semantics remain owned by focused rule-core slices.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/battle-runtime/src/exact-damage-details-route.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-reducer-route.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-hosted-capability-facts.qnt",
         "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
         "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
-        "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt"
       ],
-      "reason": "This is executable cleanroom architecture evidence, not a new whole-battle rule owner. The generic route vocabulary defines reducer entrypoint events, subject families, fill families, hole-family frontier facts, and battle-owned durable owner groups without authored catalog identity. Each route connector driver composes an existing focused rule witness with qRoute, requiring the TS MBT driver and cleanroom rehearsal to prove that the same QNT-observed behavior is reachable through startBattle, discoverBattleActs, and resolveBattleSubject. Detailed spell targeting, save gating, healing, damage, and zero-Hit-Point semantics remain owned by their focused rule QNT rows.",
+      "reason": "This is executable cleanroom architecture evidence, not a new whole-battle rule owner. The generic route vocabulary defines reducer entrypoint events, subject families, fill families, hole-family frontier facts, and battle-owned durable owner groups without authored catalog identity. Shared route fact and surface files carry typed route vocabulary for spatial-effect and weapon-hosted capability connectors without authored catalog identity. Each route connector driver composes an existing focused rule witness with qRoute, requiring the TS MBT driver and cleanroom rehearsal to prove that the same QNT-observed behavior is reachable through startBattle, discoverBattleActs, and resolveBattleSubject. Detailed spell targeting, save gating, healing, damage, and zero-Hit-Point semantics remain owned by their focused rule QNT rows.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
@@ -8817,6 +8829,14 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/attack-roll-damage-dice-core.qnt carries identity-free Attack Roll hit/miss, Critical Hit, and doubled damage-dice semantics for the attack-branches obligation.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.ATTACK_BRANCHES"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-damage-dice-core.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"
@@ -9927,6 +9947,30 @@
       "role": "bridge"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt defines generic spatial-effect route fact vocabulary for route connector drivers. It separates battle-owned lifecycle facts from table-owned geometry, presentation, sight, object, and hazard witnesses without authored spell identity.",
+      "obligationIds": [
+        "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt",
+      "role": "bridge"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt defines generic spatial-effect reducer-route surfaces over shared route vocabulary. It carries route connector bridge facts, not standalone rule semantics.",
+      "obligationIds": [
+        "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
+      "role": "bridge"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-weapon-hosted-capability-facts.qnt defines generic weapon-hosted item and attack capability route facts for route connector drivers without authored spell, item, attack, catalog, or source-section identity.",
+      "obligationIds": [
+        "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hosted-capability-facts.qnt",
+      "role": "bridge"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt is the reducer-route connector fixture for the focused Magic Missile allocation witness. It proves the observed route goes through start battle, act discovery, and subject resolution rather than a local driver island.",
       "obligationIds": [
         "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
@@ -9956,6 +10000,14 @@
         "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt is the reducer-route connector fixture for exact damage details. It proves detailed damage projections are reachable through shared reducer route events while Damage Roll, Critical Hit, damage adjustment, and Hit Point math remain owned by focused rule-core slices.",
+      "obligationIds": [
+        "BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt",
       "role": "mbt-fixture"
     }
   ],
@@ -10458,10 +10510,14 @@
       "ownerPath": "packages/battle-runtime/battle-runtime-sorcerous-burst-damage-choice.qnt"
     },
     {
-      "category": "leaf-type-vocabulary",
-      "classification": "exempt",
-      "evidence": "Generic spatial-effect route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
-      "ownerPath": "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt"
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt",
+      "role": "bridge"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
@@ -10564,6 +10620,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hosted-capability-facts.qnt",
+      "role": "bridge"
     },
     {
       "category": "witness-protocol-leaf",
@@ -10679,6 +10740,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-damage-dice-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -13807,6 +13873,7 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+        "packages/shared-algebras/proofs/rule-core/attack-roll-damage-dice-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
@@ -13892,7 +13959,6 @@
         "bool",
         "if-expression",
         "let-binding",
-        "arithmetic",
         "comparison",
         "boolean-connective",
         "all-block",

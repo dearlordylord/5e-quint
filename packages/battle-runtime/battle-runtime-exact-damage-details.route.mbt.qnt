@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
-// KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.EXACT_DAMAGE_ROUTE_BRIDGE
+// KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 // RAW trace:
 // - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines damage

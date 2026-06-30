@@ -468,6 +468,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt` | semantic-core | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
 | `packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt` | proof-only | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` |
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` |
+| `packages/shared-algebras/proofs/rule-core/attack-roll-damage-dice-core.qnt` | semantic-core | `BATTLE.DAMAGE.ATTACK_BRANCHES` |
 | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt` | semantic-core | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` |
 | `packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt` | semantic-core | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` |
 | `packages/shared-algebras/proofs/rule-core/hit-point-recovery.qnt` | semantic-core | `SHEET.HP_REST_HIT_DICE.TRANSITIONS` |
@@ -590,10 +591,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt` | proof-only | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` |
 | `packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt` | proof-only | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE`, `BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE`, `BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION`, `BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE` |
 | `packages/battle-runtime/battle-runtime-reducer-route.qnt` | bridge | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
+| `packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt` | bridge | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
+| `packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt` | bridge | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-capability-facts.qnt` | bridge | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
 | `packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
 | `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
 | `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
 | `packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
+| `packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
 
 ## QNT Registry
 
@@ -697,7 +702,8 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-slow-fall.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-sorcerous-burst-damage-choice.qnt` | exempt | leaf-type-vocabulary: Sorcerous Burst damage-choice vocabulary leaf shared by the model and spell bridge. |
-| `packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic spatial-effect route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
+| `packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt` | qnt-owner-role | bridge |
 | `packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spell-attack.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt` | exempt | proof-only-example: Run-block examples for the spell bridge; registered spell rule-core and battle owners carry active coverage. |
@@ -718,6 +724,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-capability-facts.qnt` | qnt-owner-role | bridge |
 | `packages/battle-runtime/battle-runtime-witness-protocol.qnt` | exempt | witness-protocol-leaf: Typed witness protocol vocabulary leaf for lightweight battle-runtime MBT witnesses. |
 | `packages/battle-runtime/creature-attack.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/rule-core-component-route.qnt` | exempt | leaf-type-vocabulary: Rule-core component route vocabulary leaf shared by component-first MBT drivers; executable component evidence is registered on the rule-core driver witnesses. |
@@ -739,6 +746,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition-inductive.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/attack-roll-damage-dice-core.qnt` | qnt-owner-role | semantic-core |
 | `packages/shared-algebras/proofs/rule-core/creature-size-order.qnt` | exempt | leaf-type-vocabulary: Shared creature size order leaf imported by registered movement and Unit feature procedure owners. |
 | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments-examples.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/damage-component-adjustments-inductive.qnt` | qnt-owner-role | proof-only |
@@ -948,7 +956,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.DAMAGE.ATTACK_BRANCHES` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
 | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
 | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership`, `list`, `fold`, `map`, `exists` |  |  |
-| `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |
+| `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists` |  |  |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | generation-subset-clean | `variant`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `fold`, `set-operators`, `membership` |  |  |
 | `CREATION.CHOICE_DISCOVERY_CARDINALITY` | generation-subset-clean | `variant`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `fold`, `set-operators`, `membership` |  |  |

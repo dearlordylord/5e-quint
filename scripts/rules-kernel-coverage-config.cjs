@@ -240,13 +240,6 @@ const qntRegistryExemptions = [
   },
   {
     ownerPath:
-      "packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt",
-    category: "leaf-type-vocabulary",
-    evidence:
-      "Generic spatial-effect route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
-  },
-  {
-    ownerPath:
       "packages/battle-runtime/battle-runtime-mixed-target-outcome-route-facts.qnt",
     category: "leaf-type-vocabulary",
     evidence:
@@ -428,6 +421,7 @@ const markerKinds = new Set([
 ]);
 
 const skippedScanDirs = new Set([
+  ".codex-worktrees",
   ".git",
   ".ralph",
   ".turbo",
