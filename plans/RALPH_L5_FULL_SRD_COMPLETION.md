@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "L5FULL-SDK-11-SLEET-STORM",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Sleet Storm"
     },
     {
