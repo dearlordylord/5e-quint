@@ -926,18 +926,22 @@ cleanup_active_worktrees() {
   local branch
 
   if [[ "$keep_worktrees" == false ]]; then
-    for wt in "${active_worktrees[@]}"; do
-      [[ -n "$wt" ]] || continue
-      if git worktree list --porcelain | grep -Fqx "worktree $wt"; then
-        git worktree remove --force "$wt" >/dev/null 2>&1 || true
-      fi
-    done
+    if ((${#active_worktrees[@]} > 0)); then
+      for wt in "${active_worktrees[@]}"; do
+        [[ -n "$wt" ]] || continue
+        if git worktree list --porcelain | grep -Fqx "worktree $wt"; then
+          git worktree remove --force "$wt" >/dev/null 2>&1 || true
+        fi
+      done
+    fi
     active_worktrees=()
 
-    for branch in "${task_branches[@]}"; do
-      [[ -n "$branch" ]] || continue
-      git branch -D "$branch" >/dev/null 2>&1 || true
-    done
+    if ((${#task_branches[@]} > 0)); then
+      for branch in "${task_branches[@]}"; do
+        [[ -n "$branch" ]] || continue
+        git branch -D "$branch" >/dev/null 2>&1 || true
+      done
+    fi
     task_branches=()
 
     find "$worktree_root" -type d -empty -delete >/dev/null 2>&1 || true
@@ -2610,7 +2614,7 @@ run_task_attempt() {
   return 0
 }
 
-declare -A task_attempts=()
+declare -a task_attempts=()
 iteration=0
 
 log "base $base_ref is $base_sha"
