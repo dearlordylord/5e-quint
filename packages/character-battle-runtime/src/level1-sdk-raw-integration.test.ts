@@ -26,6 +26,10 @@ import {
   abilityScoreAssignment,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
+  characterBuildArmorTraining,
+  characterBuildHitPoints,
+  characterBuildProficiencies,
+  characterBuildUnitRefs,
   characterDraftId,
   classUnitId,
   createCharacterDraft,
@@ -70,6 +74,9 @@ import {
   resourceCount,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import {
+  readClassCreationFacts,
+} from "@dnd/surface/surface/character-creation-readers";
 import { describe, expect, test } from "vitest";
 
 import { settleCharacterSheetFromBattle } from "./index.ts";
@@ -84,6 +91,8 @@ import {
   characterSheet,
   createLegalSourceCharacterFixture,
   damageRollFillWithGroups,
+  legalAnyLoadoutChoice,
+  legalAnyUnitChoice,
   legalUnitChoice,
   monsterBattleInput,
   ordinaryAttackDamageFills,
@@ -312,6 +321,57 @@ const animalFriendshipDurationTicks = requireRight(
 );
 const huntersMarkDurationTicks = requireRight(elapsedTimeTicksFromHours(1));
 
+const barbarianBuildSheetDraftPlan = {
+  label: "Barbarian build-sheet projection",
+  classUnitId: "class_barbarian",
+  level: 1,
+  backgroundUnitId: "background_soldier",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 15,
+    dex: 14,
+    con: 13,
+    int: 8,
+    wis: 10,
+    cha: 12,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_barbarian",
+      "class_skill_proficiency_choice",
+      "perception",
+      "survival",
+    ),
+    legalUnitChoice(
+      "barbarian_weapon_mastery",
+      "weapon_mastery_options",
+      "weapon_longsword",
+      "weapon_dagger",
+    ),
+    legalUnitChoice(
+      "background_soldier",
+      "background_ability_score_increase",
+      "two_and_one:str:con",
+    ),
+    legalUnitChoice(
+      "background_soldier",
+      "background_tool_choice",
+      "tool_dice_set",
+    ),
+    legalUnitChoice("class_barbarian", "class_equipment_choice", "option_b"),
+    legalUnitChoice(
+      "background_soldier",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalAnyUnitChoice("class_barbarian", "equipment_purchase"),
+    legalAnyLoadoutChoice("equipment_shield", "shield"),
+    legalAnyLoadoutChoice("weapon_longsword", "weapon"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 const warlockPactMagicCreationDraftPlan = {
   label: "Warlock Pact Magic creation",
   classUnitId: "class_warlock",
@@ -373,6 +433,78 @@ const warlockPactMagicCreationDraftPlan = {
 } as const satisfies LegalSourceCharacterDraftPlan;
 
 describe("level 1 SDK RAW integration", () => {
+  test("Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-barbarian-build-sheet",
+      draftPlan: barbarianBuildSheetDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-barbarian-build-sheet",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_barbarian"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+
+    const classFactsResult = readClassCreationFacts(
+      unitLibrary.requireUnit(fixture.sheet.build.progression.startingClass),
+    );
+    expect(classFactsResult.tag).toBe("readable");
+    if (classFactsResult.tag !== "readable") return;
+    const classFacts = classFactsResult.value;
+
+    expect(characterBuildUnitRefs(fixture.sheet.build)).toContainEqual({
+      unitId: fixture.sheet.build.progression.startingClass,
+    });
+    expect(classFacts.primaryAbilities).toEqual({
+      abilities: ["str"],
+      kind: "all_of",
+    });
+    expect(
+      requireRight(characterBuildHitPoints(fixture.sheet.build, unitLibrary))
+        .hitDice,
+    ).toEqual([
+      {
+        classUnitId: fixture.sheet.build.progression.startingClass,
+        dieSize: classFacts.hitPointDie,
+        total: 1,
+      },
+    ]);
+
+    const proficiencies = requireRight(
+      characterBuildProficiencies(fixture.sheet.build, unitLibrary),
+    );
+    expect(proficiencies.savingThrows).toEqual(
+      classFacts.savingThrowProficiencies,
+    );
+    expect(proficiencies.skills).toEqual(
+      expect.arrayContaining(
+        fixture.sheet.build.proficiencyChoices.flatMap((choice) =>
+          choice.kind === "skill" ? [choice.skill] : [],
+        ),
+      ),
+    );
+    expect(proficiencies.weapon).toEqual(
+      expect.arrayContaining(
+        classFacts.weaponProficiencies.flatMap((proficiency) =>
+          proficiency.kind === "weapon_category" ? [proficiency.category] : [],
+        ),
+      ),
+    );
+    expect(
+      requireRight(characterBuildArmorTraining(fixture.sheet.build, unitLibrary)),
+    ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
+  });
+
   test("legal Fighter source fixture creates a level 1 sheet and battle combatant", () => {
     const fixture = createLegalSourceCharacterFixture({
       draftIdText: "draft:l1-sdk-legal-fighter",

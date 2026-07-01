@@ -12533,6 +12533,13 @@
       "category": "class container",
       "className": "Barbarian",
       "concept": "Barbarian class container",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:3"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -12540,7 +12547,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
       "rowKind": "class-container",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 26,
         "lineStart": 3,
@@ -12757,6 +12764,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Barbarian",
       "concept": "Barbarian Armor Training",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:12"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -12764,7 +12778,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 12,
         "lineStart": 12,
@@ -12800,6 +12814,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Barbarian",
       "concept": "Barbarian Hit Point Die",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:8"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -12807,7 +12828,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 8,
         "lineStart": 8,
@@ -12843,6 +12864,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Barbarian",
       "concept": "Barbarian Primary Ability",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:7"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -12850,7 +12878,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 7,
         "lineStart": 7,
@@ -12886,6 +12914,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Barbarian",
       "concept": "Barbarian Saving Throw Proficiencies",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:9"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -12893,7 +12928,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 9,
         "lineStart": 9,
@@ -12929,6 +12964,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Barbarian",
       "concept": "Barbarian Skill Proficiencies",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:10"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -12936,7 +12978,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 10,
         "lineStart": 10,
@@ -12972,6 +13014,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Barbarian",
       "concept": "Barbarian Weapon Proficiencies",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:11"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -12979,7 +13028,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 11,
         "lineStart": 11,
@@ -50719,7 +50768,7 @@
         "ownerTaskIds": [
           "L12-SH06-BUILD-SHEET-FIRST-SLICE"
         ],
-        "rowCount": 100,
+        "rowCount": 93,
         "rowFamily": "source-row",
         "taskFamily": "build-sheet-sdk"
       },
@@ -50784,7 +50833,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 65,
+        "groupCount": 66,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -50796,7 +50845,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 65,
+        "rowCount": 72,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -50856,11 +50905,11 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 65,
+        "groupCount": 66,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 65,
+        "rowCount": 72,
         "rowFamily": "seed-row"
       },
       {
@@ -50876,7 +50925,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 240,
+        "rowCount": 233,
         "rowFamily": "source-row"
       }
     ],
@@ -50886,11 +50935,30 @@
       "sourcePathPrefix": ".references/srd-5.2.1/"
     },
     "totals": {
-      "groupCount": 207,
+      "groupCount": 208,
       "rowCount": 400
     }
   },
   "levelOneTwoSeedMigrationAuditRows": [
+    {
+      "candidateUnitId": "class_barbarian",
+      "classification": "legal build-sheet owner proof",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "rowKind": "class-container",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
     {
       "candidateUnitId": "barbarian_rage",
       "classification": "hand-built build needing migration",
@@ -50907,6 +50975,120 @@
       "rowKind": "class-feature-grant",
       "sourceBuildPath": "direct-character-build",
       "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "classification": "legal build-sheet owner proof",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "classification": "legal build-sheet owner proof",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "classification": "legal build-sheet owner proof",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "classification": "legal build-sheet owner proof",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "classification": "legal build-sheet owner proof",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "classification": "legal build-sheet owner proof",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
       "wholeWidthSourceLifecycleProof": false
     },
     {
@@ -57992,13 +58174,13 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 433,
+      "sdk-scenario-needed": 426,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 71,
+      "seed-scenario-present": 78,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "levelOneTwoCampaignGroups": 207,
+    "levelOneTwoCampaignGroups": 208,
     "levelOneTwoCampaignGroupsByLane": {
       "battle-feature-sdk": 6,
       "battle-spell-sdk": 32,
@@ -58008,14 +58190,14 @@
       "character-sheet-sdk": 7,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 65,
+      "seed-present": 66,
       "sheet-spell-access-sdk": 7,
       "spell-effect-owner-review": 22
     },
     "levelOneTwoCampaignGroupsByRowFamily": {
       "closure-review-row": 22,
       "explicit-closure-row": 24,
-      "seed-row": 65,
+      "seed-row": 66,
       "source-row": 96
     },
     "levelOneTwoCampaignRows": 400,
@@ -58023,37 +58205,38 @@
       "battle-feature-sdk": 6,
       "battle-spell-sdk": 83,
       "build-battle-sdk": 17,
-      "build-sheet-sdk": 100,
+      "build-sheet-sdk": 93,
       "character-creation-sdk": 14,
       "character-sheet-sdk": 7,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 65,
+      "seed-present": 72,
       "sheet-spell-access-sdk": 7,
       "spell-effect-owner-review": 71
     },
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 71,
       "explicit-closure-row": 24,
-      "seed-row": 65,
-      "source-row": 240
+      "seed-row": 72,
+      "source-row": 233
     },
-    "levelOneTwoSeedMigrationAuditRows": 65,
+    "levelOneTwoSeedMigrationAuditRows": 72,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 57,
       "hand-built build needing migration": 7,
+      "legal build-sheet owner proof": 7,
       "legal creation owner proof": 1
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 1,
+      "not-real-sheet-battle": 8,
       "real-sheet-battle": 64
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
       "direct-character-build": 7,
-      "legal-creation-draft-finalize": 58
+      "legal-creation-draft-finalize": 65
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 57,
-    "scenarioGroups": 411,
+    "scenarioGroups": 412,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
       "battle-spell-sdk": 83,
@@ -58066,13 +58249,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 71,
+      "seed-present": 72,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 174,
+      "L15-SDK-RAW-03": 175,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -61523,8 +61706,7 @@
         "class_barbarian"
       ],
       "categories": [
-        "character-creation or progression mechanic",
-        "class container"
+        "character-creation or progression mechanic"
       ],
       "classNames": [
         "Barbarian"
@@ -61542,127 +61724,13 @@
       ],
       "rawGroupKey": "[\"L15-SDK-RAW-03\",\"build-sheet-sdk\",\"Barbarian\"]",
       "rawSources": [
-        ".references/srd-5.2.1/Classes/Barbarian.md:10",
-        ".references/srd-5.2.1/Classes/Barbarian.md:11",
-        ".references/srd-5.2.1/Classes/Barbarian.md:12",
-        ".references/srd-5.2.1/Classes/Barbarian.md:22",
-        ".references/srd-5.2.1/Classes/Barbarian.md:3",
-        ".references/srd-5.2.1/Classes/Barbarian.md:7",
-        ".references/srd-5.2.1/Classes/Barbarian.md:8",
-        ".references/srd-5.2.1/Classes/Barbarian.md:9"
+        ".references/srd-5.2.1/Classes/Barbarian.md:22"
       ],
-      "rowCount": 8,
+      "rowCount": 1,
       "rowKinds": [
-        "class-container",
-        "core-trait",
         "multiclass-entry"
       ],
       "rows": [
-        {
-          "candidateUnitId": "class_barbarian",
-          "className": "Barbarian",
-          "concept": "Barbarian class container",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 26,
-            "lineStart": 3,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_barbarian",
-          "className": "Barbarian",
-          "concept": "Barbarian Armor Training",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 12,
-            "lineStart": 12,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_barbarian",
-          "className": "Barbarian",
-          "concept": "Barbarian Hit Point Die",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 8,
-            "lineStart": 8,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_barbarian",
-          "className": "Barbarian",
-          "concept": "Barbarian Primary Ability",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 7,
-            "lineStart": 7,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_barbarian",
-          "className": "Barbarian",
-          "concept": "Barbarian Saving Throw Proficiencies",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 9,
-            "lineStart": 9,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_barbarian",
-          "className": "Barbarian",
-          "concept": "Barbarian Skill Proficiencies",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 10,
-            "lineStart": 10,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_barbarian",
-          "className": "Barbarian",
-          "concept": "Barbarian Weapon Proficiencies",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 11,
-            "lineStart": 11,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        },
         {
           "candidateUnitId": "class_barbarian",
           "className": "Barbarian",
@@ -61680,13 +61748,6 @@
         }
       ],
       "sampleConcepts": [
-        "Barbarian Armor Training",
-        "Barbarian Hit Point Die",
-        "Barbarian Primary Ability",
-        "Barbarian Saving Throw Proficiencies",
-        "Barbarian Skill Proficiencies",
-        "Barbarian Weapon Proficiencies",
-        "Barbarian class container",
         "Barbarian multiclass entry traits"
       ],
       "sdkInventoryDispositions": [
@@ -65074,6 +65135,165 @@
       ],
       "sampleConcepts": [
         "Barbarian Rage"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "class_barbarian"
+      ],
+      "categories": [
+        "character-creation or progression mechanic",
+        "class container"
+      ],
+      "classNames": [
+        "Barbarian"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-barbarian-class-barbarian",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-build-to-sheet"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Barbarian:class_barbarian\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Barbarian.md:10",
+        ".references/srd-5.2.1/Classes/Barbarian.md:11",
+        ".references/srd-5.2.1/Classes/Barbarian.md:12",
+        ".references/srd-5.2.1/Classes/Barbarian.md:3",
+        ".references/srd-5.2.1/Classes/Barbarian.md:7",
+        ".references/srd-5.2.1/Classes/Barbarian.md:8",
+        ".references/srd-5.2.1/Classes/Barbarian.md:9"
+      ],
+      "rowCount": 7,
+      "rowKinds": [
+        "class-container",
+        "core-trait"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "class_barbarian",
+          "className": "Barbarian",
+          "concept": "Barbarian class container",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 26,
+            "lineStart": 3,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_barbarian",
+          "className": "Barbarian",
+          "concept": "Barbarian Armor Training",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 12,
+            "lineStart": 12,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_barbarian",
+          "className": "Barbarian",
+          "concept": "Barbarian Hit Point Die",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 8,
+            "lineStart": 8,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_barbarian",
+          "className": "Barbarian",
+          "concept": "Barbarian Primary Ability",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 7,
+            "lineStart": 7,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_barbarian",
+          "className": "Barbarian",
+          "concept": "Barbarian Saving Throw Proficiencies",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 9,
+            "lineStart": 9,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_barbarian",
+          "className": "Barbarian",
+          "concept": "Barbarian Skill Proficiencies",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 10,
+            "lineStart": 10,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_barbarian",
+          "className": "Barbarian",
+          "concept": "Barbarian Weapon Proficiencies",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 11,
+            "lineStart": 11,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Barbarian Armor Training",
+        "Barbarian Hit Point Die",
+        "Barbarian Primary Ability",
+        "Barbarian Saving Throw Proficiencies",
+        "Barbarian Skill Proficiencies",
+        "Barbarian Weapon Proficiencies",
+        "Barbarian class container"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -87263,6 +87483,335 @@
     "title": "Level 1-5 SDK RAW Integration Inventory"
   },
   "seededSdkScenarioRows": [
+    {
+      "candidateUnitId": "class_barbarian",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:3"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const barbarianBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_barbarian\"",
+            "\"class_skill_proficiency_choice\"",
+            "\"barbarian_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_barbarian\", \"class_equipment_choice\", \"option_b\")",
+            "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
+            "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
+            "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "tracerNeedles": [
+        "barbarianBuildSheetDraftPlan",
+        "createLegalSourceCharacterFixture({",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "weaponProficiencies",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:12"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const barbarianBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_barbarian\"",
+            "\"class_skill_proficiency_choice\"",
+            "\"barbarian_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_barbarian\", \"class_equipment_choice\", \"option_b\")",
+            "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
+            "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
+            "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "tracerNeedles": [
+        "barbarianBuildSheetDraftPlan",
+        "createLegalSourceCharacterFixture({",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "weaponProficiencies",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:8"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const barbarianBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_barbarian\"",
+            "\"class_skill_proficiency_choice\"",
+            "\"barbarian_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_barbarian\", \"class_equipment_choice\", \"option_b\")",
+            "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
+            "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
+            "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "tracerNeedles": [
+        "barbarianBuildSheetDraftPlan",
+        "createLegalSourceCharacterFixture({",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "weaponProficiencies",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:7"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const barbarianBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_barbarian\"",
+            "\"class_skill_proficiency_choice\"",
+            "\"barbarian_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_barbarian\", \"class_equipment_choice\", \"option_b\")",
+            "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
+            "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
+            "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "tracerNeedles": [
+        "barbarianBuildSheetDraftPlan",
+        "createLegalSourceCharacterFixture({",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "weaponProficiencies",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:9"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const barbarianBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_barbarian\"",
+            "\"class_skill_proficiency_choice\"",
+            "\"barbarian_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_barbarian\", \"class_equipment_choice\", \"option_b\")",
+            "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
+            "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
+            "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "tracerNeedles": [
+        "barbarianBuildSheetDraftPlan",
+        "createLegalSourceCharacterFixture({",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "weaponProficiencies",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:10"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const barbarianBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_barbarian\"",
+            "\"class_skill_proficiency_choice\"",
+            "\"barbarian_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_barbarian\", \"class_equipment_choice\", \"option_b\")",
+            "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
+            "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
+            "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "tracerNeedles": [
+        "barbarianBuildSheetDraftPlan",
+        "createLegalSourceCharacterFixture({",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "weaponProficiencies",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:11"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const barbarianBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_barbarian\"",
+            "\"class_skill_proficiency_choice\"",
+            "\"barbarian_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_barbarian\", \"class_equipment_choice\", \"option_b\")",
+            "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
+            "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
+            "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "tracerNeedles": [
+        "barbarianBuildSheetDraftPlan",
+        "createLegalSourceCharacterFixture({",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "weaponProficiencies",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
     {
       "candidateUnitId": "barbarian_rage",
       "className": "Barbarian",

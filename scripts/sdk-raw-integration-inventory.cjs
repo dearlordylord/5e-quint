@@ -100,8 +100,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "closure-review-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 207;
-const expectedLevelOneTwoSeedScenarioRows = 65;
+const expectedLevelOneTwoCampaignGroups = 208;
+const expectedLevelOneTwoSeedScenarioRows = 72;
 const handBuiltSourceSeedRowIds = new Set([
   "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
   "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -253,7 +253,92 @@ const levelOneTwoCampaignLaneOwnership = new Map([
   ],
 ]);
 
+const barbarianBuildSheetScenarioLabel =
+  "level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet";
+const barbarianBuildSheetScenarioPath =
+  paths.seedScenarioFiles.level1BattleFeatures;
+const barbarianBuildSheetScenarioNeedles = [
+  "barbarianBuildSheetDraftPlan",
+  "createLegalSourceCharacterFixture({",
+  "battle: { tag: \"withoutBattle\" }",
+  "fixture.sheet.build",
+  "readClassCreationFacts(",
+  "characterBuildUnitRefs(",
+  "primaryAbilities",
+  "characterBuildHitPoints(",
+  ".hitDice",
+  "characterBuildProficiencies(",
+  "savingThrowProficiencies",
+  "proficiencyChoices",
+  "weaponProficiencies",
+  "characterBuildArmorTraining(",
+  "armorTraining",
+];
+const barbarianBuildSheetScenarioHelperNeedles = [
+  {
+    anchor: "const barbarianBuildSheetDraftPlan =",
+    needles: [
+      'classUnitId: "class_barbarian"',
+      '"class_skill_proficiency_choice"',
+      '"barbarian_weapon_mastery"',
+      '"weapon_mastery_options"',
+      'legalUnitChoice("class_barbarian", "class_equipment_choice", "option_b")',
+      'legalAnyUnitChoice("class_barbarian", "equipment_purchase")',
+      'legalAnyLoadoutChoice("equipment_shield", "shield")',
+      'legalAnyLoadoutChoice("weapon_longsword", "weapon")',
+    ],
+  },
+];
+const barbarianBuildSheetScenarioRows = [
+  {
+    rowId:
+      "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:3"],
+  },
+  {
+    rowId:
+      "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:12"],
+  },
+  {
+    rowId:
+      "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:8"],
+  },
+  {
+    rowId:
+      "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:7"],
+  },
+  {
+    rowId:
+      "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:9"],
+  },
+  {
+    rowId:
+      "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:10"],
+  },
+  {
+    rowId:
+      "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:11"],
+  },
+].map((row) => ({
+  candidateUnitId: "class_barbarian",
+  className: "Barbarian",
+  levelBand: "level-1",
+  label: barbarianBuildSheetScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: "legal-build-sheet-owner",
+  tracerNeedles: barbarianBuildSheetScenarioNeedles,
+  helperNeedles: barbarianBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
+
 const seededSdkScenarioRows = [
+  ...barbarianBuildSheetScenarioRows,
   {
     candidateUnitId: "barbarian_rage",
     className: "Barbarian",
@@ -5418,6 +5503,9 @@ function seedMigrationClassification(seed, usesRealSheetBattleHandoff) {
   if (seed.sourceProof === "legal-creation-owner") {
     return "legal creation owner proof";
   }
+  if (seed.sourceProof === "legal-build-sheet-owner") {
+    return "legal build-sheet owner proof";
+  }
   if (!usesRealSheetBattleHandoff) {
     return (seed.evidenceNeedles ?? []).length > 0
       ? "lower-level focused seed only"
@@ -5431,6 +5519,9 @@ function seedMigrationClassification(seed, usesRealSheetBattleHandoff) {
 function seedMigrationAuditReason(classification) {
   if (classification === "legal creation owner proof") {
     return "The represented source character build is finalized through character creation at the row owner boundary; battle handoff is not required for this owner.";
+  }
+  if (classification === "legal build-sheet owner proof") {
+    return "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.";
   }
   if (classification === "already legal creation path") {
     return "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.";
@@ -5447,6 +5538,9 @@ function seedMigrationAuditReason(classification) {
 function seedMigrationNextAction(classification) {
   if (classification === "legal creation owner proof") {
     return "Keep as source creation seed; add sheet or battle assertions only for rows owned by those boundaries.";
+  }
+  if (classification === "legal build-sheet owner proof") {
+    return "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.";
   }
   if (classification === "already legal creation path") {
     return "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.";
