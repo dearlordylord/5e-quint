@@ -17,7 +17,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
 | Existing level-5 SDK seed scenario rows | 6 |
-| Scenario groups | 412 |
+| Scenario groups | 414 |
 | Level 5 scenario groups | 72 |
 
 ### All Level 1-5 Rows by Level Band
@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 421 |
+| sdk-scenario-needed | 418 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 83 |
+| seed-scenario-present | 86 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -74,7 +74,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Task | Groups |
 | --- | ---: |
-| L15-SDK-RAW-03 | 175 |
+| L15-SDK-RAW-03 | 177 |
 | L15-SDK-RAW-04 | 33 |
 | L15-SDK-RAW-05 | 107 |
 | L15-SDK-RAW-06 | 25 |
@@ -85,7 +85,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 20 |
-| battle-spell-sdk | 83 |
+| battle-spell-sdk | 82 |
 | build-battle-sdk | 11 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 28 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
-| seed-present | 76 |
+| seed-present | 79 |
 | sheet-spell-access-sdk | 11 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -199,6 +199,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark` / `spell-level-1:Ranger:hunters_mark`: level1-sdk-raw-integration: Ranger Hunter's Mark resolves from a level-1 prepared spell-list choice through a Spell Slot
 - `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless` / `spell-level-1:Cleric:bless`: level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects
 - `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless` / `spell-level-1:Paladin:bless`: level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane` / `spell-level-1:Bard:bane`: level1-sdk-raw-integration: Bard, Cleric, and Warlock Bane resolve from level-1 spell access as Charisma saves that create negative Attack Roll and Saving Throw modifiers
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane` / `spell-level-1:Cleric:bane`: level1-sdk-raw-integration: Bard, Cleric, and Warlock Bane resolve from level-1 spell access as Charisma saves that create negative Attack Roll and Saving Throw modifiers
+- `srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane` / `spell-level-1:Warlock:bane`: level1-sdk-raw-integration: Bard, Cleric, and Warlock Bane resolve from level-1 spell access as Charisma saves that create negative Attack Roll and Saving Throw modifiers
 - `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith` / `spell-level-1:Cleric:shield_of_faith`: level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects
 - `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith` / `spell-level-1:Paladin:shield_of_faith`: level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects
 - `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds` / `spell-level-1:Bard:cure_wounds`: level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration
@@ -243,26 +246,26 @@ projection. It covers only the active L1/L2 source-harness dispositions
 and keeps the SRD provenance/license fact at the collection boundary:
 `srd-5.2.1-local-corpus` / `redistributable-srd`.
 
-Rows/groups assigned: 400/208.
+Rows/groups assigned: 400/210.
 
 | Row family | SDK disposition | Rows | Groups | Lanes |
 | --- | --- | ---: | ---: | --- |
 | closure-review-row | closure-review-needed | 71 | 22 | spell-effect-owner-review |
 | explicit-closure-row | explicit-closure-needed | 24 | 24 | explicit-closure |
-| seed-row | seed-scenario-present | 77 | 70 | seed-present |
-| source-row | sdk-scenario-needed | 228 | 92 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
+| seed-row | seed-scenario-present | 80 | 73 | seed-present |
+| source-row | sdk-scenario-needed | 225 | 91 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
 
 | Lane | SDK disposition | Row family | Rows | Groups | Task family | Owner tasks | Follow-up tasks |
 | --- | --- | --- | ---: | ---: | --- | --- | --- |
 | battle-feature-sdk | sdk-scenario-needed | source-row | 5 | 5 | battle-feature-sdk | `L12-SH10-BATTLE-FEATURE-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| battle-spell-sdk | sdk-scenario-needed | source-row | 83 | 32 | battle-spell-sdk | `L12-SH11-BATTLE-SPELL-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| battle-spell-sdk | sdk-scenario-needed | source-row | 80 | 31 | battle-spell-sdk | `L12-SH11-BATTLE-SPELL-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | build-battle-sdk | sdk-scenario-needed | source-row | 15 | 11 | build-battle-sdk | `L12-SH07-BUILD-BATTLE-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | build-sheet-sdk | sdk-scenario-needed | source-row | 93 | 12 | build-sheet-sdk | `L12-SH06-BUILD-SHEET-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | character-creation-sdk | sdk-scenario-needed | source-row | 14 | 14 | character-creation-sdk | `L12-SH05-CREATION-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | character-sheet-sdk | sdk-scenario-needed | source-row | 6 | 6 | character-sheet-sdk | `L12-SH08-SHEET-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | explicit-closure | explicit-closure-needed | explicit-closure-row | 24 | 24 | explicit-closure | `L12-SH04-GROUPING-GENERATOR-GATE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | multi-owner-feature-sdk | sdk-scenario-needed | source-row | 6 | 6 | multi-owner-feature-sdk | `L12-SH12-MULTI-OWNER-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| seed-present | seed-scenario-present | seed-row | 77 | 70 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| seed-present | seed-scenario-present | seed-row | 80 | 73 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | sheet-spell-access-sdk | sdk-scenario-needed | source-row | 6 | 6 | sheet-spell-access-sdk | `L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | spell-effect-owner-review | closure-review-needed | closure-review-row | 71 | 22 | spell-effect-owner-review | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
 
@@ -276,7 +279,7 @@ Character Sheet and battle handoff.
 
 | Classification | Rows |
 | --- | ---: |
-| already legal creation path | 60 |
+| already legal creation path | 63 |
 | hand-built build needing migration | 7 |
 | legal build-sheet owner proof | 9 |
 | legal creation owner proof | 1 |
@@ -284,14 +287,14 @@ Character Sheet and battle handoff.
 | Source build path | Rows |
 | --- | ---: |
 | direct-character-build | 7 |
-| legal-creation-draft-finalize | 70 |
+| legal-creation-draft-finalize | 73 |
 
 | Real sheet/battle handoff | Rows |
 | --- | ---: |
 | not-real-sheet-battle | 10 |
-| real-sheet-battle | 67 |
+| real-sheet-battle | 70 |
 
-Whole-width source lifecycle seed rows: 60/77.
+Whole-width source lifecycle seed rows: 63/80.
 
 | Band | Class | Unit | Row kind | Classification | Source build path | Real sheet/battle handoff | Whole-width source lifecycle proof | Next action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -311,11 +314,13 @@ Whole-width source lifecycle seed rows: 60/77.
 | level-1 | Bard | `class_bard` | spell-access | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
 | spell-level-0 | Bard | `vicious_mockery` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Bard | `animal_friendship` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Bard | `bane` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Bard | `cure_wounds` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Bard | `dissonant_whispers` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Bard | `healing_word` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Cleric | `sacred_flame` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Cleric | `thaumaturgy` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Cleric | `bane` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Cleric | `bless` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Cleric | `cure_wounds` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Cleric | `guiding_bolt` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
@@ -358,6 +363,7 @@ Whole-width source lifecycle seed rows: 60/77.
 | spell-level-0 | Warlock | `chill_touch` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Warlock | `eldritch_blast` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Warlock | `poison_spray` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Warlock | `bane` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Warlock | `hex` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Wizard | `acid_splash` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Wizard | `chill_touch` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |

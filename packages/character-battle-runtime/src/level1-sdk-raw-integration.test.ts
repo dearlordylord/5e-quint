@@ -152,6 +152,9 @@ const healingWordBardId = combatantId("combatant:l1-sdk-healing-word-bard");
 const animalFriendshipBardId = combatantId(
   "combatant:l1-sdk-animal-friendship-bard",
 );
+const baneBardId = combatantId("combatant:l1-sdk-bane-bard");
+const baneClericId = combatantId("combatant:l1-sdk-bane-cleric");
+const baneWarlockId = combatantId("combatant:l1-sdk-bane-warlock");
 const animalFriendshipDruidId = combatantId(
   "combatant:l1-sdk-animal-friendship-druid",
 );
@@ -290,6 +293,7 @@ const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const dissonantWhispersSpellId = "dissonant_whispers";
 const viciousMockerySpellId = "vicious_mockery";
 const healingWordSpellId = "healing_word";
+const baneSpellId = "bane";
 const blessSpellId = "bless";
 const shieldOfFaithSpellId = "shield_of_faith";
 const animalFriendshipSpellId = "animal_friendship";
@@ -1787,6 +1791,68 @@ describe("level 1 SDK RAW integration", () => {
       build: paladinBuild,
       casterId: blessPaladinId,
       targetId: blessTargetId,
+    });
+  });
+
+  test("Bard, Cleric, and Warlock Bane resolve from level-1 spell access as Charisma saves that create negative Attack Roll and Saving Throw modifiers", () => {
+    const bardBuild = finalizedLevelOneBardBaneBuild();
+    const clericBuild = finalizedLevelOneClericBaneBuild();
+    const warlockBuild = finalizedLevelOneWarlockBaneBuild();
+
+    expect(bardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_bard",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([baneSpellId]),
+        }),
+      ]),
+    );
+    expect(clericBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([baneSpellId]),
+        }),
+      ]),
+    );
+    expect(warlockBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_warlock",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([baneSpellId]),
+        }),
+      ]),
+    );
+    expect(warlockBuild.spellcasting?.slotPools).toMatchObject({
+      pactMagic: { kind: "pactMagic", slotLevel: 1, count: 1 },
+    });
+
+    assertLevelOneBane({
+      battleIdText: "battle:l1-sdk-bane-bard",
+      characterIdText: "character:l1-sdk-bane-bard",
+      build: bardBuild,
+      casterId: baneBardId,
+      expectedSpellSaveDc: 12,
+      expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 1 }],
+    });
+    assertLevelOneBane({
+      battleIdText: "battle:l1-sdk-bane-cleric",
+      characterIdText: "character:l1-sdk-bane-cleric",
+      build: clericBuild,
+      casterId: baneClericId,
+      expectedSpellSaveDc: 12,
+      expectedSpellSlots: [{ spellLevel: 1, count: 2, expended: 1 }],
+    });
+    assertLevelOneBane({
+      battleIdText: "battle:l1-sdk-bane-warlock",
+      characterIdText: "character:l1-sdk-bane-warlock",
+      build: warlockBuild,
+      casterId: baneWarlockId,
+      expectedSpellSaveDc: 12,
+      expectedSpellSlots: [{ spellLevel: 1, count: 1, expended: 1 }],
     });
   });
 
@@ -4513,6 +4579,140 @@ function expectedLevelOneBlessEffect(
   };
 }
 
+function assertLevelOneBane(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+  readonly expectedSpellSlots: readonly {
+    readonly spellLevel: number;
+    readonly count: number;
+    readonly expended: number;
+  }[];
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        secondMonsterId,
+        15,
+        srdStatBlock("stat_block_skeleton"),
+      ),
+    ],
+  });
+  const act = spellSlotActForProcedure(state, baneSpellId, 1, "rollModifier");
+  const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
+  const targetFill = baneTargetListFill(targetList, input.casterId, [
+    monsterId,
+    secondMonsterId,
+  ]);
+
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(act.subject).toMatchObject({
+    tag: "actionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: baneSpellId,
+      slotLevel: 1,
+      procedure: "rollModifier",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(targetList).toMatchObject({
+    label: "Bane targets",
+    minTargets: 1,
+    maxTargets: 3,
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([monsterId, secondMonsterId]),
+    spell: {
+      access: { tag: "prepared" },
+      procedure: "rollModifier",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      actionCost: "magicAction",
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 3 },
+      rangeFeet: movementFeet(30),
+      effect: expectedLevelOneBaneEffect(input.casterId),
+    },
+  });
+
+  const awaitingSaves = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill],
+  });
+  const save = requireHole(awaitingSaves, "savingThrowOutcome");
+
+  expect(save).toMatchObject({
+    ability: "cha",
+    dc: { kind: "caster_spell_save_dc" },
+    targetRollModes: [],
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(save, [
+          { targetId: monsterId, succeeded: false },
+          { targetId: secondMonsterId, succeeded: true },
+        ]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+
+  expect(requireCombatant(resolved.state, monsterId).activeEffects).toEqual([
+    expectedLevelOneBaneEffect(input.casterId),
+  ]);
+  expect(requireCombatant(resolved.state, secondMonsterId).activeEffects).toEqual(
+    [],
+  );
+  expect(caster.concentration).toEqual({
+    sourceSpellId: baneSpellId,
+    effectKind: "spellEffect",
+  });
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual(
+    input.expectedSpellSlots,
+  );
+}
+
+function expectedLevelOneBaneEffect(
+  casterId: CombatantId,
+): Extract<BattleActiveEffect, { readonly kind: "d20RollModifier" }> {
+  return {
+    kind: "d20RollModifier",
+    sourceSpellId: baneSpellId,
+    sourceCombatantId: casterId,
+    on: ["attack_roll", "saving_throw"],
+    delta: { sign: "-", dice: 1, dieSize: 4 },
+    skill: null,
+    expiresAt: {
+      kind: "concentration",
+      combatantId: casterId,
+    },
+  };
+}
+
 function assertLevelOneShieldOfFaith(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -6969,6 +7169,20 @@ function finalizedLevelOneBardAnimalFriendshipBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneBardBaneBuild(): CharacterBuild {
+  return finalizedLevelOneBardBuild({
+    draftIdText: "draft:l1-sdk-bard-bane",
+    expectedBuildLabel: "Bard Bane",
+    cantrips: ["dancing_lights", viciousMockerySpellId],
+    preparedSpells: [
+      baneSpellId,
+      "charm_person",
+      "color_spray",
+      healingWordSpellId,
+    ],
+  });
+}
+
 function finalizedLevelOneBardBuild(input: {
   readonly draftIdText: string;
   readonly expectedBuildLabel: string;
@@ -7133,6 +7347,20 @@ function finalizedLevelOneClericBlessBuild(): CharacterBuild {
     cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
     preparedSpells: [
       blessSpellId,
+      cureWoundsSpellId,
+      guidingBoltSpellId,
+      shieldOfFaithSpellId,
+    ],
+  });
+}
+
+function finalizedLevelOneClericBaneBuild(): CharacterBuild {
+  return finalizedLevelOneClericBuild({
+    draftIdText: "draft:l1-sdk-cleric-bane",
+    expectedBuildLabel: "Cleric Bane",
+    cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
+    preparedSpells: [
+      baneSpellId,
       cureWoundsSpellId,
       guidingBoltSpellId,
       shieldOfFaithSpellId,
@@ -8196,6 +8424,16 @@ function finalizedLevelOneWarlockHexBuild(): CharacterBuild {
     expectedBuildLabel: "Warlock Hex",
     cantrips: [eldritchBlastSpellId, poisonSpraySpellId],
     preparedSpells: [hexSpellId, "hellish_rebuke"],
+    eldritchInvocation: "eldritch_mind",
+  });
+}
+
+function finalizedLevelOneWarlockBaneBuild(): CharacterBuild {
+  return finalizedLevelOneWarlockBuild({
+    draftIdText: "draft:l1-sdk-warlock-bane",
+    expectedBuildLabel: "Warlock Bane",
+    cantrips: [eldritchBlastSpellId, poisonSpraySpellId],
+    preparedSpells: [baneSpellId, hexSpellId],
     eldritchInvocation: "eldritch_mind",
   });
 }
@@ -9304,6 +9542,24 @@ function blessTargetListFill(
     spatialFacts: [
       { kind: "spellTarget", casterId, targetId, spellId: blessSpellId },
     ],
+  };
+}
+
+function baneTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  targetIds: readonly [CombatantId, ...CombatantId[]],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.map((targetId) => ({
+      kind: "spellTarget",
+      casterId,
+      targetId,
+      spellId: baneSpellId,
+    })),
   };
 }
 

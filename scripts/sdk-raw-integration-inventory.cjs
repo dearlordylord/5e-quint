@@ -100,8 +100,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "closure-review-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 208;
-const expectedLevelOneTwoSeedScenarioRows = 77;
+const expectedLevelOneTwoCampaignGroups = 210;
+const expectedLevelOneTwoSeedScenarioRows = 80;
 const handBuiltSourceSeedRowIds = new Set([
   "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
   "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -2416,6 +2416,99 @@ const seededSdkScenarioRows = [
     helperNeedles: blessSdkHelperNeedles("Paladin"),
   },
   {
+    candidateUnitId: "bane",
+    className: "Bard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, and Warlock Bane resolve from level-1 spell access as Charisma saves that create negative Attack Roll and Saving Throw modifiers",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Bard.md:69-89",
+      ".references/srd-5.2.1/Classes/Bard.md:163",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:406-418",
+      ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+    ],
+    rowId:
+      "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane",
+    tracerNeedles: [
+      "const bardBuild = finalizedLevelOneBardBaneBuild();",
+      'sourceUnitId: "class_bard"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([baneSpellId])",
+      "build: bardBuild,",
+      "casterId: baneBardId,",
+      "expectedSpellSaveDc: 12,",
+      "{ spellLevel: 1, count: 2, expended: 1 }",
+    ],
+    helperNeedles: baneSdkHelperNeedles("Bard"),
+  },
+  {
+    candidateUnitId: "bane",
+    className: "Cleric",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, and Warlock Bane resolve from level-1 spell access as Charisma saves that create negative Attack Roll and Saving Throw modifiers",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+      ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+      ".references/srd-5.2.1/Classes/Cleric.md:162",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:406-418",
+      ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+    ],
+    rowId:
+      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane",
+    tracerNeedles: [
+      "const clericBuild = finalizedLevelOneClericBaneBuild();",
+      'sourceUnitId: "class_cleric"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([baneSpellId])",
+      "build: clericBuild,",
+      "casterId: baneClericId,",
+      "expectedSpellSaveDc: 12,",
+      "{ spellLevel: 1, count: 2, expended: 1 }",
+    ],
+    helperNeedles: baneSdkHelperNeedles("Cleric"),
+  },
+  {
+    candidateUnitId: "bane",
+    className: "Warlock",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, and Warlock Bane resolve from level-1 spell access as Charisma saves that create negative Attack Roll and Saving Throw modifiers",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Warlock.md:34-35",
+      ".references/srd-5.2.1/Classes/Warlock.md:64-86",
+      ".references/srd-5.2.1/Classes/Warlock.md:348",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:44-50",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:108-116",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:406-418",
+      ".references/srd-5.2.1/Rules-Glossary.md:239-247",
+    ],
+    rowId:
+      "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane",
+    tracerNeedles: [
+      "const warlockBuild = finalizedLevelOneWarlockBaneBuild();",
+      'sourceUnitId: "class_warlock"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([baneSpellId])",
+      "pactMagic: { kind: \"pactMagic\", slotLevel: 1, count: 1 }",
+      "build: warlockBuild,",
+      "casterId: baneWarlockId,",
+      "expectedSpellSaveDc: 12,",
+      "{ spellLevel: 1, count: 1, expended: 1 }",
+    ],
+    helperNeedles: baneSdkHelperNeedles("Warlock"),
+  },
+  {
     candidateUnitId: "shield_of_faith",
     className: "Cleric",
     levelBand: "spell-level-1",
@@ -4322,6 +4415,116 @@ function blessTargetListFillHelperNeedle() {
       "casterId",
       "targetId",
       "spellId: blessSpellId",
+    ],
+  };
+}
+
+function baneSdkHelperNeedles(className) {
+  return [
+    baneBuildHelperNeedle(className),
+    baneResolutionHelperNeedle(),
+    baneActiveEffectHelperNeedle(),
+    baneTargetListFillHelperNeedle(),
+  ];
+}
+
+function baneBuildHelperNeedle(className) {
+  const specs = {
+    Bard: {
+      anchor: "function finalizedLevelOneBardBaneBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOneBardBuild({",
+      draftIdText: "draft:l1-sdk-bard-bane",
+      expectedBuildLabel: "Bard Bane",
+      preparedNeedle: "baneSpellId",
+    },
+    Cleric: {
+      anchor: "function finalizedLevelOneClericBaneBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOneClericBuild({",
+      draftIdText: "draft:l1-sdk-cleric-bane",
+      expectedBuildLabel: "Cleric Bane",
+      preparedNeedle: "baneSpellId",
+    },
+    Warlock: {
+      anchor: "function finalizedLevelOneWarlockBaneBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOneWarlockBuild({",
+      draftIdText: "draft:l1-sdk-warlock-bane",
+      expectedBuildLabel: "Warlock Bane",
+      preparedNeedle: "preparedSpells: [baneSpellId, hexSpellId]",
+    },
+  };
+  const spec = specs[className];
+  if (spec === undefined) {
+    throw new Error(`Unsupported Bane seed class ${className}.`);
+  }
+  return {
+    anchor: spec.anchor,
+    needles: [
+      spec.buildHelper,
+      `draftIdText: "${spec.draftIdText}"`,
+      `expectedBuildLabel: "${spec.expectedBuildLabel}"`,
+      spec.preparedNeedle,
+    ],
+  };
+}
+
+function baneResolutionHelperNeedle() {
+  return {
+    anchor: "function assertLevelOneBane",
+    needles: [
+      'spellSlotActForProcedure(state, baneSpellId, 1, "rollModifier")',
+      "baneTargetListFill(targetList, input.casterId",
+      "spellSaveDcForCaster(state, input.casterId)",
+      'spellId: baneSpellId',
+      'procedure: "rollModifier"',
+      'label: "Bane targets"',
+      "maxTargets: 3",
+      'actionCost: "magicAction"',
+      "rangeFeet: movementFeet(30)",
+      "effect: expectedLevelOneBaneEffect(input.casterId)",
+      'ability: "cha"',
+      'dc: { kind: "caster_spell_save_dc" }',
+      "savingThrowOutcomeFill(save",
+      "succeeded: false",
+      "succeeded: true",
+      "activeEffects",
+      "expectedLevelOneBaneEffect(input.casterId)",
+      "caster.concentration",
+      'effectKind: "spellEffect"',
+      "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+      "expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);",
+      "spellSlotUsesThisTurn",
+      "input.expectedSpellSlots",
+    ],
+  };
+}
+
+function baneActiveEffectHelperNeedle() {
+  return {
+    anchor: "function expectedLevelOneBaneEffect",
+    needles: [
+      'kind: "d20RollModifier"',
+      "sourceSpellId: baneSpellId",
+      'on: ["attack_roll", "saving_throw"]',
+      'delta: { sign: "-", dice: 1, dieSize: 4 }',
+      "skill: null",
+      "expiresAt: {",
+      'kind: "concentration"',
+      "combatantId: casterId",
+    ],
+  };
+}
+
+function baneTargetListFillHelperNeedle() {
+  return {
+    anchor: "function baneTargetListFill",
+    needles: [
+      'kind: "spellTargetList"',
+      "value: { targetIds }",
+      "spatialFacts: targetIds.map((targetId) => ({",
+      'kind: "spellTarget"',
+      "casterId",
+      "targetId",
+      "spellId: baneSpellId",
     ],
   };
 }
