@@ -9,6 +9,7 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
+  type AvailableBattleAct,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -18,6 +19,7 @@ import {
   type BattleState,
   type BattleTrackedOngoingSpellLightEmitter,
   type CombatantId,
+  type SpellSlotProcedure,
 } from "@dnd/battle-runtime";
 import {
   CHARACTER_SHEET_SHORT_REST_TICKS,
@@ -138,6 +140,18 @@ const lightningBoltFailedSaveTargetId = combatantId(
 const lightningBoltSuccessfulSaveTargetId = combatantId(
   "combatant:l5-tracer-lightning-bolt-successful-save-target",
 );
+const massHealingWordBardId = combatantId(
+  "combatant:l5-tracer-mass-healing-word-bard",
+);
+const massHealingWordClericId = combatantId(
+  "combatant:l5-tracer-mass-healing-word-cleric",
+);
+const massHealingWordTargetAId = combatantId(
+  "combatant:l5-tracer-mass-healing-word-target-a",
+);
+const massHealingWordTargetBId = combatantId(
+  "combatant:l5-tracer-mass-healing-word-target-b",
+);
 
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
@@ -155,6 +169,7 @@ const flySpellId = "fly";
 const glyphOfWardingSpellId = "glyph_of_warding";
 const hypnoticPatternSpellId = "hypnotic_pattern";
 const lightningBoltSpellId = "lightning_bolt";
+const massHealingWordSpellId = "mass_healing_word";
 const counterspellCastLevel = 3;
 const dispelMagicCastLevel = 3;
 const fireballCastLevel = 3;
@@ -163,6 +178,7 @@ const hasteCastLevel = 3;
 const glyphOfWardingCastLevel = 3;
 const hypnoticPatternCastLevel = 3;
 const lightningBoltCastLevel = 3;
+const massHealingWordCastLevel = 3;
 const flySpeedFeet = 60;
 const magicMissileSpellId = "magic_missile";
 const magicMissileTriggerSlotLevel = 1;
@@ -182,6 +198,11 @@ const lightningBoltDamageTotal = lightningBoltDamageRollResults.reduce(
   0,
 );
 const lightningBoltHalfDamageTotal = Math.floor(lightningBoltDamageTotal / 2);
+const massHealingWordHealingRollResults = [2, 3] as const;
+const massHealingWordSpellcastingAbilityModifier = 3;
+const massHealingWordHealingTotal =
+  massHealingWordHealingRollResults.reduce((total, roll) => total + roll, 0) +
+  massHealingWordSpellcastingAbilityModifier;
 type CounterspellClassAccessCase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly reactorId: CombatantId;
@@ -222,6 +243,17 @@ type LightningBoltClassAccessCase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly casterId: CombatantId;
   readonly build: CharacterBuild;
+};
+type MassHealingWordClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
+};
+type CastBonusActionSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    AvailableBattleAct["subject"],
+    { readonly tag: "bonusActionSpell" }
+  >;
 };
 type OngoingSpellTargetChoiceFill = Extract<
   BattleFill,
@@ -1438,13 +1470,13 @@ describe("level 5 SDK tracer bullets", () => {
         Number(
           requireCombatant(resolved.state, lightningBoltFailedSaveTargetId).hp,
         ),
-      ).toBe(Number(failedSaveTargetBeforeDamage.hp) - lightningBoltDamageTotal);
+      ).toBe(
+        Number(failedSaveTargetBeforeDamage.hp) - lightningBoltDamageTotal,
+      );
       expect(
         Number(
-          requireCombatant(
-            resolved.state,
-            lightningBoltSuccessfulSaveTargetId,
-          ).hp,
+          requireCombatant(resolved.state, lightningBoltSuccessfulSaveTargetId)
+            .hp,
         ),
       ).toBe(
         Number(successfulSaveTargetBeforeDamage.hp) -
@@ -1459,6 +1491,190 @@ describe("level 5 SDK tracer bullets", () => {
           }),
         ]),
       );
+    }
+  });
+
+  test("Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action", () => {
+    const massHealingWordCases = [
+      {
+        sourceUnitId: "class_bard",
+        casterId: massHealingWordBardId,
+        build: levelFiveBardBuild({
+          preparedSpells: [massHealingWordSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_cleric",
+        casterId: massHealingWordClericId,
+        build: levelFiveClericBuild({
+          preparedSpells: [massHealingWordSpellId],
+        }),
+      },
+    ] as const satisfies ReadonlyArray<MassHealingWordClassAccessCase>;
+
+    for (const massHealingWordCase of massHealingWordCases) {
+      expectMassHealingWordClassAccess(massHealingWordCase);
+
+      const state = battleFromSheets({
+        battleIdText: `battle:l5-tracer-mass-healing-word-${massHealingWordCase.sourceUnitId}`,
+        characters: [
+          characterSheet({
+            characterIdText: `character:l5-tracer-mass-healing-word-${massHealingWordCase.sourceUnitId}`,
+            build: massHealingWordCase.build,
+            combatantId: massHealingWordCase.casterId,
+            initiative: 20,
+          }),
+          characterSheet({
+            characterIdText: `character:l5-tracer-mass-healing-word-target-a-${massHealingWordCase.sourceUnitId}`,
+            build: levelFiveMartialBuild({
+              classUnitId: "class_fighter",
+              weaponUnitId: "weapon_longsword",
+            }),
+            combatantId: massHealingWordTargetAId,
+            initiative: 15,
+            currentHp: 3,
+          }),
+          characterSheet({
+            characterIdText: `character:l5-tracer-mass-healing-word-target-b-${massHealingWordCase.sourceUnitId}`,
+            build: levelFiveMartialBuild({
+              classUnitId: "class_fighter",
+              weaponUnitId: "weapon_longsword",
+            }),
+            combatantId: massHealingWordTargetBId,
+            initiative: 10,
+            currentHp: 5,
+          }),
+        ],
+        monsters: [],
+      });
+      const act = bonusActionSpellSlotActForProcedure(
+        state,
+        massHealingWordCase.casterId,
+        massHealingWordSpellId,
+        massHealingWordCastLevel,
+        "directHitPointRestoration",
+      );
+      const targetList = requireHoleFromList(
+        act.initialHoles,
+        "spellTargetList",
+      );
+
+      expect(act.subject).toMatchObject({
+        tag: "bonusActionSpell",
+        actorId: massHealingWordCase.casterId,
+        invocation: {
+          tag: "spellSlot",
+          spellId: massHealingWordSpellId,
+          slotLevel: massHealingWordCastLevel,
+          procedure: "directHitPointRestoration",
+        },
+        mode: { tag: "cast" },
+      });
+      expect(targetList).toMatchObject({
+        label: "Mass Healing Word targets",
+        minTargets: 1,
+        maxTargets: 6,
+        requiresTableSpatialFact: true,
+        choices: expect.arrayContaining([
+          massHealingWordCase.casterId,
+          massHealingWordTargetAId,
+          massHealingWordTargetBId,
+        ]),
+        spell: expect.objectContaining({
+          procedure: "directHitPointRestoration",
+          actionCost: "bonusAction",
+          resource: { tag: "spellSlot", slotLevel: massHealingWordCastLevel },
+          targeting: { kind: "targetList", minTargets: 1, maxTargets: 6 },
+          healing: {
+            expr: {
+              dice: 2,
+              dieSize: 4,
+              flat: massHealingWordSpellcastingAbilityModifier,
+            },
+          },
+          rangeFeet: 60,
+        }),
+      });
+
+      const targetIds = [massHealingWordTargetAId, massHealingWordTargetBId];
+      const targetFill = spellTargetListFill(
+        targetList,
+        massHealingWordCase.casterId,
+        massHealingWordSpellId,
+        targetIds,
+      );
+      const healingRoll = requireHole(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [targetFill],
+        }),
+        "rolledDice",
+      );
+
+      expect(healingRoll).toMatchObject({
+        label: `Mass Healing Word healing (2d4+${massHealingWordSpellcastingAbilityModifier})`,
+        spell: expect.objectContaining({
+          procedure: "directHitPointRestoration",
+          actionCost: "bonusAction",
+          resource: { tag: "spellSlot", slotLevel: massHealingWordCastLevel },
+          targeting: { kind: "targetList", minTargets: 1, maxTargets: 6 },
+          healing: {
+            expr: {
+              dice: 2,
+              dieSize: 4,
+              flat: massHealingWordSpellcastingAbilityModifier,
+            },
+          },
+          rangeFeet: 60,
+        }),
+      });
+
+      const firstTargetBeforeHealing = requireCombatant(
+        state,
+        massHealingWordTargetAId,
+      );
+      const secondTargetBeforeHealing = requireCombatant(
+        state,
+        massHealingWordTargetBId,
+      );
+      const resolved = requireResolved(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            targetFill,
+            damageRollFillWithGroups(healingRoll, [
+              massHealingWordHealingRollResults,
+            ]),
+          ],
+        }),
+      );
+      const caster = requireCharacterCombatant(
+        resolved.state,
+        massHealingWordCase.casterId,
+      );
+
+      expect(
+        Number(requireCombatant(resolved.state, massHealingWordTargetAId).hp),
+      ).toBe(Number(firstTargetBeforeHealing.hp) + massHealingWordHealingTotal);
+      expect(
+        Number(requireCombatant(resolved.state, massHealingWordTargetBId).hp),
+      ).toBe(
+        Number(secondTargetBeforeHealing.hp) + massHealingWordHealingTotal,
+      );
+      expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
+        false,
+      );
+      expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
+        [{ kind: "committed", combatantId: massHealingWordCase.casterId }],
+      );
+      expect(caster.concentration).toBeNull();
+      expect(caster.origin.spellcasting?.spellSlots).toEqual([
+        { spellLevel: 1, count: 4, expended: 0 },
+        { spellLevel: 2, count: 3, expended: 0 },
+        { spellLevel: massHealingWordCastLevel, count: 2, expended: 1 },
+      ]);
     }
   });
 
@@ -1775,6 +1991,73 @@ function expectLightningBoltClassAccess(input: {
       ]),
     },
   });
+}
+
+function expectMassHealingWordClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly build: CharacterBuild;
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([massHealingWordSpellId]),
+      }),
+    ]),
+  );
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({
+          spellLevel: massHealingWordCastLevel,
+          count: 2,
+        }),
+      ]),
+    },
+  });
+}
+
+function bonusActionSpellSlotActForProcedure(
+  state: BattleState,
+  casterId: CombatantId,
+  spellId: string,
+  slotLevel: number,
+  procedure: SpellSlotProcedure,
+): CastBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is CastBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.actorId === casterId &&
+      candidate.subject.mode.tag === "cast" &&
+      candidate.subject.invocation.tag === "spellSlot" &&
+      candidate.subject.invocation.spellId === spellId &&
+      candidate.subject.invocation.slotLevel === slotLevel &&
+      candidate.subject.invocation.procedure === procedure,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected ${spellId} Bonus Action spell-slot act.`);
+  }
+  return act;
+}
+
+function spellTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  spellId: string,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.map((targetId) => ({
+      kind: "spellTarget" as const,
+      casterId,
+      targetId,
+      spellId,
+    })),
+  };
 }
 
 function trackedObjectSpellLightEmitter(input: {
