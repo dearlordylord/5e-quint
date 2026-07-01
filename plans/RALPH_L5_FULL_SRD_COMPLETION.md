@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L5FULL-SDK-10-PROTECTION-FROM-ENERGY",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Protection from Energy"
     },
     {

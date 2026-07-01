@@ -3666,6 +3666,52 @@ const seededSdkScenarioRows = [
   },
   {
     candidateUnitId: "protection_from_energy",
+    className: "Cleric",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Protection from Energy",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
+    tracerNeedles: [
+      "protectionFromEnergySpellId",
+      "protectionFromEnergyClericId",
+      "levelFiveClericBuild",
+      '"class_cleric"',
+    ],
+  },
+  {
+    candidateUnitId: "protection_from_energy",
+    className: "Druid",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Protection from Energy",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
+    tracerNeedles: [
+      "protectionFromEnergySpellId",
+      "protectionFromEnergyDruidId",
+      "levelFiveDruidBuild",
+      "levelFiveDruidWildShapeKnownFormStatBlockIds",
+      '"class_druid"',
+    ],
+  },
+  {
+    candidateUnitId: "protection_from_energy",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Protection from Energy",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
+    tracerNeedles: [
+      "protectionFromEnergySpellId",
+      "protectionFromEnergySorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "protection_from_energy",
     className: "Wizard",
     levelBand: "spell-level-3",
     label: "level5-sdk-tracer-bullets: Protection from Energy",

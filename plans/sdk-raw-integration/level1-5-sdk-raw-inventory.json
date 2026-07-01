@@ -1985,6 +1985,10 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Protection from Energy",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Protection from Energy",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -1992,7 +1996,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 215,
         "lineStart": 215,
@@ -2866,6 +2870,10 @@
       "category": "spell Unit pressure",
       "className": "Druid",
       "concept": "Druid spell list Protection from Energy",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Protection from Energy",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -2873,7 +2881,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 259,
         "lineStart": 259,
@@ -4859,6 +4867,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Protection from Energy",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Protection from Energy",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -4866,7 +4878,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 313,
         "lineStart": 313,
@@ -7623,97 +7635,6 @@
       "sampleConcepts": [
         "Bard spell list Mass Healing Word",
         "Cleric spell list Mass Healing Word"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "protection_from_energy"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric",
-        "Druid",
-        "Sorcerer"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:protection-from-energy",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"protection_from_energy\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:215",
-        ".references/srd-5.2.1/Classes/Druid.md:259",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:313"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "protection_from_energy",
-          "className": "Cleric",
-          "concept": "Cleric spell list Protection from Energy",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 215,
-            "lineStart": 215,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "protection_from_energy",
-          "className": "Druid",
-          "concept": "Druid spell list Protection from Energy",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 259,
-            "lineStart": 259,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "candidateUnitId": "protection_from_energy",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Protection from Energy",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 313,
-            "lineStart": 313,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Protection from Energy",
-        "Druid spell list Protection from Energy",
-        "Sorcerer spell list Protection from Energy"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -11088,6 +11009,61 @@
     },
     {
       "candidateUnitIds": [
+        "protection_from_energy"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-cleric-protection-from-energy",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Cleric:protection_from_energy\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:215"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "protection_from_energy",
+          "className": "Cleric",
+          "concept": "Cleric spell list Protection from Energy",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 215,
+            "lineStart": 215,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Protection from Energy"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "dispel_magic"
       ],
       "categories": [
@@ -11134,6 +11110,61 @@
       ],
       "sampleConcepts": [
         "Druid spell list Dispel Magic"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "protection_from_energy"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-druid-protection-from-energy",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Druid:protection_from_energy\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:259"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "protection_from_energy",
+          "className": "Druid",
+          "concept": "Druid spell list Protection from Energy",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 259,
+            "lineStart": 259,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid spell list Protection from Energy"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -11519,6 +11550,61 @@
       ],
       "sampleConcepts": [
         "Sorcerer spell list Lightning Bolt"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "protection_from_energy"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-sorcerer-protection-from-energy",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Sorcerer:protection_from_energy\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:313"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "protection_from_energy",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Protection from Energy",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 313,
+            "lineStart": 313,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Protection from Energy"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -23034,6 +23120,10 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Protection from Energy",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Protection from Energy",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -23041,7 +23131,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 215,
         "lineStart": 215,
@@ -27424,6 +27514,10 @@
       "category": "spell Unit pressure",
       "className": "Druid",
       "concept": "Druid spell list Protection from Energy",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Protection from Energy",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -27431,7 +27525,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 259,
         "lineStart": 259,
@@ -41732,6 +41826,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Protection from Energy",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Protection from Energy",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -41739,7 +41837,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 313,
         "lineStart": 313,
@@ -57470,21 +57568,21 @@
       "closure-review-needed": 36,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 43,
-      "sdk-scenario-needed": 11,
+      "sdk-scenario-needed": 8,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 30
+      "seed-scenario-present": 33
     },
-    "level5ScenarioGroups": 88,
+    "level5ScenarioGroups": 90,
     "level5ScenarioGroupsByLane": {
-      "battle-spell-sdk": 4,
+      "battle-spell-sdk": 3,
       "explicit-closure": 12,
       "feature-owner-review": 2,
       "future-owner-before-sdk": 22,
       "owner-review": 6,
-      "seed-present": 30,
+      "seed-present": 33,
       "spell-effect-owner-review": 12
     },
-    "level5SeedScenarioRows": 30,
+    "level5SeedScenarioRows": 33,
     "levelOneFiveMinedRows": 770,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -57533,16 +57631,16 @@
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 410,
+      "sdk-scenario-needed": 407,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 94,
+      "seed-scenario-present": 97,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 427,
+    "scenarioGroups": 429,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 75,
+      "battle-spell-sdk": 74,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -57552,7 +57650,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 94,
+      "seed-present": 97,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -57562,7 +57660,7 @@
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
-      "L15-SDK-RAW-07": 88
+      "L15-SDK-RAW-07": 90
     }
   },
   "scenarioGroups": [
@@ -81655,97 +81753,6 @@
     },
     {
       "candidateUnitIds": [
-        "protection_from_energy"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric",
-        "Druid",
-        "Sorcerer"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:protection-from-energy",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"protection_from_energy\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:215",
-        ".references/srd-5.2.1/Classes/Druid.md:259",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:313"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "protection_from_energy",
-          "className": "Cleric",
-          "concept": "Cleric spell list Protection from Energy",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 215,
-            "lineStart": 215,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "protection_from_energy",
-          "className": "Druid",
-          "concept": "Druid spell list Protection from Energy",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 259,
-            "lineStart": 259,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "candidateUnitId": "protection_from_energy",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Protection from Energy",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 313,
-            "lineStart": 313,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Protection from Energy",
-        "Druid spell list Protection from Energy",
-        "Sorcerer spell list Protection from Energy"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "sleet_storm"
       ],
       "categories": [
@@ -85111,6 +85118,61 @@
     },
     {
       "candidateUnitIds": [
+        "protection_from_energy"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-cleric-protection-from-energy",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Cleric:protection_from_energy\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:215"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "protection_from_energy",
+          "className": "Cleric",
+          "concept": "Cleric spell list Protection from Energy",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 215,
+            "lineStart": 215,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Protection from Energy"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "dispel_magic"
       ],
       "categories": [
@@ -85157,6 +85219,61 @@
       ],
       "sampleConcepts": [
         "Druid spell list Dispel Magic"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "protection_from_energy"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-druid-protection-from-energy",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Druid:protection_from_energy\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:259"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "protection_from_energy",
+          "className": "Druid",
+          "concept": "Druid spell list Protection from Energy",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 259,
+            "lineStart": 259,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid spell list Protection from Energy"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85542,6 +85659,61 @@
       ],
       "sampleConcepts": [
         "Sorcerer spell list Lightning Bolt"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "protection_from_energy"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-sorcerer-protection-from-energy",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Sorcerer:protection_from_energy\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:313"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "protection_from_energy",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Protection from Energy",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 313,
+            "lineStart": 313,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Protection from Energy"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -92039,6 +92211,64 @@
       "tracerNeedles": [
         "hasteSpellId",
         "hasteSorcererId",
+        "levelFiveSorcererBuild",
+        "\"class_sorcerer\""
+      ]
+    },
+    {
+      "candidateUnitId": "protection_from_energy",
+      "className": "Cleric",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Protection from Energy",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
+      "rowKey": "spell-level-3:Cleric:protection_from_energy",
+      "tracerNeedles": [
+        "protectionFromEnergySpellId",
+        "protectionFromEnergyClericId",
+        "levelFiveClericBuild",
+        "\"class_cleric\""
+      ]
+    },
+    {
+      "candidateUnitId": "protection_from_energy",
+      "className": "Druid",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Protection from Energy",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
+      "rowKey": "spell-level-3:Druid:protection_from_energy",
+      "tracerNeedles": [
+        "protectionFromEnergySpellId",
+        "protectionFromEnergyDruidId",
+        "levelFiveDruidBuild",
+        "levelFiveDruidWildShapeKnownFormStatBlockIds",
+        "\"class_druid\""
+      ]
+    },
+    {
+      "candidateUnitId": "protection_from_energy",
+      "className": "Sorcerer",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Protection from Energy",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
+      "rowKey": "spell-level-3:Sorcerer:protection_from_energy",
+      "tracerNeedles": [
+        "protectionFromEnergySpellId",
+        "protectionFromEnergySorcererId",
         "levelFiveSorcererBuild",
         "\"class_sorcerer\""
       ]

@@ -152,6 +152,15 @@ const massHealingWordTargetAId = combatantId(
 const massHealingWordTargetBId = combatantId(
   "combatant:l5-tracer-mass-healing-word-target-b",
 );
+const protectionFromEnergyClericId = combatantId(
+  "combatant:l5-tracer-protection-from-energy-cleric",
+);
+const protectionFromEnergyDruidId = combatantId(
+  "combatant:l5-tracer-protection-from-energy-druid",
+);
+const protectionFromEnergySorcererId = combatantId(
+  "combatant:l5-tracer-protection-from-energy-sorcerer",
+);
 
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
@@ -179,6 +188,7 @@ const glyphOfWardingCastLevel = 3;
 const hypnoticPatternCastLevel = 3;
 const lightningBoltCastLevel = 3;
 const massHealingWordCastLevel = 3;
+const protectionFromEnergyCastLevel = 3;
 const flySpeedFeet = 60;
 const magicMissileSpellId = "magic_missile";
 const magicMissileTriggerSlotLevel = 1;
@@ -248,6 +258,12 @@ type MassHealingWordClassAccessCase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly casterId: CombatantId;
   readonly build: CharacterBuild;
+};
+type ProtectionFromEnergyClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockRecord["id"][];
 };
 type CastBonusActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -701,7 +717,37 @@ describe("level 5 SDK tracer bullets", () => {
     }
   });
 
-  test("Protection from Energy casts through sheet projection and halves only the chosen damage type", () => {
+  test("Protection from Energy projects Cleric, Druid, and Sorcerer access while the Wizard seed halves only the chosen damage type", () => {
+    const protectionFromEnergyCases = [
+      {
+        sourceUnitId: "class_cleric",
+        casterId: protectionFromEnergyClericId,
+        build: levelFiveClericBuild({
+          preparedSpells: [protectionFromEnergySpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_druid",
+        casterId: protectionFromEnergyDruidId,
+        build: levelFiveDruidBuild({
+          preparedSpells: [protectionFromEnergySpellId],
+        }),
+        druidWildShapeKnownFormStatBlockIds:
+          levelFiveDruidWildShapeKnownFormStatBlockIds,
+      },
+      {
+        sourceUnitId: "class_sorcerer",
+        casterId: protectionFromEnergySorcererId,
+        build: levelFiveSorcererBuild({
+          preparedSpells: [protectionFromEnergySpellId],
+        }),
+      },
+    ] as const satisfies ReadonlyArray<ProtectionFromEnergyClassAccessCase>;
+
+    for (const protectionFromEnergyCase of protectionFromEnergyCases) {
+      expectProtectionFromEnergyClassAccess(protectionFromEnergyCase);
+    }
+
     const matching = protectionFromEnergyDamageScenario("fire");
     expect(matching.afterDamageHp).toBe(
       Hp(Number(matching.beforeDamageHp) - 4),
@@ -2018,6 +2064,83 @@ function expectMassHealingWordClassAccess(input: {
   });
 }
 
+function expectProtectionFromEnergyClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockRecord["id"][];
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([protectionFromEnergySpellId]),
+      }),
+    ]),
+  );
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({
+          spellLevel: protectionFromEnergyCastLevel,
+          count: 2,
+        }),
+      ]),
+    },
+  });
+
+  const state = battleFromSheets({
+    battleIdText: `battle:l5-tracer-protection-from-energy-access-${input.sourceUnitId}`,
+    characters: [
+      characterSheet({
+        characterIdText: `character:l5-tracer-protection-from-energy-access-${input.sourceUnitId}`,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+          ? {}
+          : {
+              druidWildShapeKnownFormStatBlockIds:
+                input.druidWildShapeKnownFormStatBlockIds,
+            }),
+      }),
+    ],
+    monsters: [],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    protectionFromEnergySpellId,
+    protectionFromEnergyCastLevel,
+    "chosenDamageResistance",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const damageType = requireHoleFromList(
+    act.initialHoles,
+    "damageTypeChoice",
+  );
+
+  expect(act.subject).toMatchObject({
+    tag: "actionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: protectionFromEnergySpellId,
+      slotLevel: protectionFromEnergyCastLevel,
+      procedure: "chosenDamageResistance",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(target.choices).toEqual(expect.arrayContaining([input.casterId]));
+  expect(damageType.choices).toEqual([
+    "acid",
+    "cold",
+    "fire",
+    "lightning",
+    "thunder",
+  ]);
+}
+
 function bonusActionSpellSlotActForProcedure(
   state: BattleState,
   casterId: CombatantId,
@@ -2410,7 +2533,7 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
   const act = spellSlotActForProcedure(
     state,
     protectionFromEnergySpellId,
-    3,
+    protectionFromEnergyCastLevel,
     "chosenDamageResistance",
   );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
