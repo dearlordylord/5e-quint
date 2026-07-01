@@ -139,7 +139,7 @@
     {
       "number": 23,
       "id": "L5FULL-FUT-07-CONJURE-ANIMALS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Conjure Animals"
     },
     {
