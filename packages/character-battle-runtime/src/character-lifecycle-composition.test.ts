@@ -19,11 +19,11 @@ import {
   fighterLifecycleSheetMaximumHp,
   fighterLifecycleUnitLibrary,
   finalizeFighterLifecycleDraft,
-  requireFighterCharacterCombatant,
+  requireLifecycleCharacterCombatant,
   requireRight,
   resolveFighterLifecycleSkeletonShortswordAttack,
   startFighterLifecycleBattle,
-  type FighterCharacterBattleCombatant,
+  type LifecycleCharacterBattleCombatant,
 } from "./fighter-character-lifecycle-test-support.ts";
 import { settleCharacterSheetFromBattle } from "./index.ts";
 
@@ -59,7 +59,7 @@ describe("Fighter character lifecycle composition", () => {
     const resolvedBattle = resolveFighterLifecycleSkeletonShortswordAttack(
       battle.state,
     );
-    const combatant = requireFighterCharacterCombatant(
+    const combatant = requireLifecycleCharacterCombatant(
       resolvedBattle.combatants.get(fighterLifecycleCharacterCombatantId),
     );
     expect(Number(combatant.hp)).toBe(fighterLifecycleSettledHp);
@@ -87,7 +87,7 @@ describe("Fighter character lifecycle composition", () => {
     const build = finalizeFighterLifecycleDraft(draft);
     const sheet = createFighterLifecycleSheet(build);
     const battle = startFighterLifecycleBattle(sheet);
-    const wrongCharacterCombatant: FighterCharacterBattleCombatant = {
+    const wrongCharacterCombatant: LifecycleCharacterBattleCombatant = {
       ...battle.combatant,
       origin: {
         ...battle.combatant.origin,

@@ -29,6 +29,7 @@ module characterLayerProjectionLifecycleMbt {
     settlementPersistedBattleHp: bool,
     buildIdentityUnchanged: bool,
     wrongCharacterSettlementRejected: bool,
+    classBreadthLegalSourceProjectsToBattleInit: bool,
   }
 
   var qLayer: CharacterLifecycleLayer
@@ -45,6 +46,7 @@ module characterLayerProjectionLifecycleMbt {
   var qSettlementPersistedBattleHp: bool
   var qBuildIdentityUnchanged: bool
   var qWrongCharacterSettlementRejected: bool
+  var qClassBreadthLegalSourceProjectsToBattleInit: bool
   var qReplayIndex: int
 
   pure def emptyLifecycleFacts = {
@@ -61,7 +63,14 @@ module characterLayerProjectionLifecycleMbt {
     settlementPersistedBattleHp: false,
     buildIdentityUnchanged: false,
     wrongCharacterSettlementRejected: false,
+    classBreadthLegalSourceProjectsToBattleInit: false,
   }
+
+  pure def withClassBreadthSourceProjection(
+    facts: CharacterLifecycleFacts,
+  ): CharacterLifecycleFacts =
+    facts
+      .with("classBreadthLegalSourceProjectsToBattleInit", true)
 
   action recordProjection(
     layer: CharacterLifecycleLayer,
@@ -82,6 +91,8 @@ module characterLayerProjectionLifecycleMbt {
     qSettlementPersistedBattleHp' = facts.settlementPersistedBattleHp,
     qBuildIdentityUnchanged' = facts.buildIdentityUnchanged,
     qWrongCharacterSettlementRejected' = facts.wrongCharacterSettlementRejected,
+    qClassBreadthLegalSourceProjectsToBattleInit' =
+      facts.classBreadthLegalSourceProjectsToBattleInit,
     qReplayIndex' = replayIndex,
   }
 
@@ -120,12 +131,14 @@ module characterLayerProjectionLifecycleMbt {
     qReplayIndex == 2,
     recordProjection(
       BattleInitProjection,
-      emptyLifecycleFacts
-        .with("buildFinalized", true)
-        .with("sheetOwnsHitPoints", true)
-        .with("sheetCurrentHp", 12)
-        .with("sheetMaxHp", 12)
-        .with("battleInitCharacterCombatant", true),
+      withClassBreadthSourceProjection(
+        emptyLifecycleFacts
+          .with("buildFinalized", true)
+          .with("sheetOwnsHitPoints", true)
+          .with("sheetCurrentHp", 12)
+          .with("sheetMaxHp", 12)
+          .with("battleInitCharacterCombatant", true),
+      ),
       3,
     ),
   }
@@ -134,14 +147,16 @@ module characterLayerProjectionLifecycleMbt {
     qReplayIndex == 3,
     recordProjection(
       BattleRuntime,
-      emptyLifecycleFacts
-        .with("buildFinalized", true)
-        .with("sheetOwnsHitPoints", true)
-        .with("sheetCurrentHp", 12)
-        .with("sheetMaxHp", 12)
-        .with("battleInitCharacterCombatant", true)
-        .with("battleRuntimeCharacterHp", 8)
-        .with("battleRuntimeHpChanged", true),
+      withClassBreadthSourceProjection(
+        emptyLifecycleFacts
+          .with("buildFinalized", true)
+          .with("sheetOwnsHitPoints", true)
+          .with("sheetCurrentHp", 12)
+          .with("sheetMaxHp", 12)
+          .with("battleInitCharacterCombatant", true)
+          .with("battleRuntimeCharacterHp", 8)
+          .with("battleRuntimeHpChanged", true),
+      ),
       4,
     ),
   }
@@ -150,18 +165,20 @@ module characterLayerProjectionLifecycleMbt {
     qReplayIndex == 4,
     recordProjection(
       Settlement,
-      emptyLifecycleFacts
-        .with("buildFinalized", true)
-        .with("sheetOwnsHitPoints", true)
-        .with("sheetCurrentHp", 12)
-        .with("sheetMaxHp", 12)
-        .with("battleInitCharacterCombatant", true)
-        .with("battleRuntimeCharacterHp", 8)
-        .with("battleRuntimeHpChanged", true)
-        .with("settlementCurrentHp", 8)
-        .with("settlementPersistedBattleHp", true)
-        .with("buildIdentityUnchanged", true)
-        .with("wrongCharacterSettlementRejected", true),
+      withClassBreadthSourceProjection(
+        emptyLifecycleFacts
+          .with("buildFinalized", true)
+          .with("sheetOwnsHitPoints", true)
+          .with("sheetCurrentHp", 12)
+          .with("sheetMaxHp", 12)
+          .with("battleInitCharacterCombatant", true)
+          .with("battleRuntimeCharacterHp", 8)
+          .with("battleRuntimeHpChanged", true)
+          .with("settlementCurrentHp", 8)
+          .with("settlementPersistedBattleHp", true)
+          .with("buildIdentityUnchanged", true)
+          .with("wrongCharacterSettlementRejected", true),
+      ),
       5,
     ),
   }

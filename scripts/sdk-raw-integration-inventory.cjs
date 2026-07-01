@@ -49,6 +49,10 @@ const paths = {
       root,
       "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
     ),
+    sdkIntegrationSupport: path.join(
+      root,
+      "packages/character-battle-runtime/src/sdk-integration-test-support.ts",
+    ),
     level5Tracer: path.join(
       root,
       "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts",
@@ -289,6 +293,7 @@ const barbarianBuildSheetScenarioNeedles = [
 ];
 const barbarianBuildSheetScenarioHelperNeedles = [
   {
+    path: paths.seedScenarioFiles.sdkIntegrationSupport,
     anchor: "const barbarianBuildSheetDraftPlan =",
     needles: [
       'classUnitId: "class_barbarian"',
@@ -4675,7 +4680,13 @@ const seededSdkScenarioRecords = seededSdkScenarioRows.map((row) => ({
   className: row.className,
   candidateUnitId: row.candidateUnitId,
   tracerNeedles: row.tracerNeedles,
-  helperNeedles: row.helperNeedles ?? [],
+  helperNeedles: (row.helperNeedles ?? []).map((helper) => ({
+    ...(helper.path === undefined
+      ? {}
+      : { path: toRepoPath(root, helper.path) }),
+    anchor: helper.anchor,
+    needles: helper.needles,
+  })),
   evidenceNeedles: (row.evidenceNeedles ?? []).map((evidence) => ({
     path: toRepoPath(root, evidence.path),
     testTitle: evidence.testTitle,
@@ -5813,13 +5824,15 @@ function assertSeedScenarios(seedScenarioSources, rows) {
       }
     }
     for (const helper of seed.helperNeedles ?? []) {
+      const helperPath = helper.path ?? seed.path;
+      const helperSourceText = seedScenarioSources.get(helperPath);
       const helperText =
-        seedSourceText === undefined
+        helperSourceText === undefined
           ? undefined
-          : seedHelperSourceText(seedSourceText, helper.anchor);
+          : seedHelperSourceText(helperSourceText, helper.anchor);
       if (helperText === undefined) {
         seedErrors.push(
-          `${seed.rowId} helper anchor "${helper.anchor}" is absent from ${toRepoPath(root, seed.path)}`,
+          `${seed.rowId} helper anchor "${helper.anchor}" is absent from ${toRepoPath(root, helperPath)}`,
         );
         continue;
       }
@@ -5871,7 +5884,11 @@ function seedScenarioEvidenceText(seed, seedScenarioSources) {
   const title = seedScenarioTitle(seed);
   const scenarioText = seedScenarioSourceText(seedSourceText, title) ?? "";
   const helperTexts = (seed.helperNeedles ?? []).map(
-    (helper) => seedHelperSourceText(seedSourceText, helper.anchor) ?? "",
+    (helper) => {
+      const helperPath = helper.path ?? seed.path;
+      const helperSourceText = seedScenarioSources.get(helperPath) ?? "";
+      return seedHelperSourceText(helperSourceText, helper.anchor) ?? "";
+    },
   );
   const calledHelperPattern = new RegExp(
     `\\b(${[

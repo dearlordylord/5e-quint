@@ -5,6 +5,7 @@ import { characterId, type BattleState } from "@dnd/battle-runtime";
 import {
   discoverCreationHoles,
   finalizeCharacterDraft,
+  classUnitId,
   type CharacterBuild,
   type CharacterDraft,
 } from "@dnd/character-creation-runtime";
@@ -18,24 +19,32 @@ import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
+  barbarianClassBreadthCharacterCombatantId,
+  barbarianClassBreadthSheetMaximumHp,
   battleStateWithCombatant,
+  createBarbarianClassBreadthDraft,
+  createBarbarianClassBreadthSheet,
   createFighterLifecycleDraft,
   createFighterLifecycleSheet,
+  fighterLifecycleDraftPlan,
   fighterLifecycleBuildMaximumHp,
   fighterLifecycleCharacterCombatantId,
   fighterLifecycleSettledHp,
   fighterLifecycleSheetMaximumHp,
   fighterLifecycleUnitLibrary,
+  finalizeBarbarianClassBreadthDraft,
   finalizeFighterLifecycleDraft,
-  requireFighterCharacterCombatant,
+  requireLifecycleCharacterCombatant,
   requireRight,
+  startBarbarianClassBreadthBattle,
   resolveFighterLifecycleSkeletonShortswordAttack,
   startFighterLifecycleBattle,
-  type FighterCharacterBattleCombatant,
+  type LifecycleCharacterBattleCombatant,
 } from "./fighter-character-lifecycle-test-support.ts";
 import {
   settleCharacterSheetFromBattle,
 } from "./index.ts";
+import { barbarianBuildSheetDraftPlan } from "./sdk-integration-test-support.ts";
 
 const characterLifecycleLayers = [
   "Draft",
@@ -63,6 +72,7 @@ type CharacterLifecycleProjection = {
   readonly settlementPersistedBattleHp: boolean;
   readonly buildIdentityUnchanged: boolean;
   readonly wrongCharacterSettlementRejected: boolean;
+  readonly classBreadthLegalSourceProjectsToBattleInit: boolean;
   readonly replayIndex: number;
 };
 
@@ -72,7 +82,7 @@ type LifecycleSession = {
   readonly buildSignature?: string;
   readonly sheet?: CharacterSheet;
   readonly battleState?: BattleState;
-  readonly characterCombatant?: FighterCharacterBattleCombatant;
+  readonly characterCombatant?: LifecycleCharacterBattleCombatant;
   readonly battleRuntimeCharacterHp?: number;
 };
 
@@ -194,6 +204,8 @@ function createLifecycleDriver() {
             ...projection,
             layer: "BattleInitProjection",
             battleInitCharacterCombatant: true,
+            classBreadthLegalSourceProjectsToBattleInit:
+              classBreadthLegalSourceProjectsToBattleInit(),
             replayIndex: 3,
           };
         });
@@ -203,7 +215,7 @@ function createLifecycleDriver() {
           const battleState = resolveFighterLifecycleSkeletonShortswordAttack(
             requireSessionBattleState(session),
           );
-          const combatant = requireFighterCharacterCombatant(
+          const combatant = requireLifecycleCharacterCombatant(
             battleState.combatants.get(fighterLifecycleCharacterCombatantId),
           );
           const battleRuntimeCharacterHp = Number(combatant.hp);
@@ -243,7 +255,7 @@ function createLifecycleDriver() {
           if (settlementCurrentHp !== fighterLifecycleSettledHp) {
             throw new Error("Expected settlement to persist 8 HP.");
           }
-          const wrongCharacterCombatant: FighterCharacterBattleCombatant = {
+          const wrongCharacterCombatant: LifecycleCharacterBattleCombatant = {
             ...combatant,
             origin: {
               ...combatant.origin,
@@ -307,8 +319,43 @@ function initialProjection(): CharacterLifecycleProjection {
     settlementPersistedBattleHp: false,
     buildIdentityUnchanged: false,
     wrongCharacterSettlementRejected: false,
+    classBreadthLegalSourceProjectsToBattleInit: false,
     replayIndex: 0,
   };
+}
+
+function classBreadthLegalSourceProjectsToBattleInit(): boolean {
+  const draft = createBarbarianClassBreadthDraft();
+  const build = finalizeBarbarianClassBreadthDraft(draft);
+  const sheet = createBarbarianClassBreadthSheet(build);
+  const battle = startBarbarianClassBreadthBattle(sheet);
+  const sheetMaxHp = Number(
+    requireRight(
+      characterSheetHitPointMaximum({
+        sheet,
+        unitLibrary: fighterLifecycleUnitLibrary,
+      }),
+    ),
+  );
+  if (sheetMaxHp !== barbarianClassBreadthSheetMaximumHp) {
+    throw new Error("Expected class-breadth Barbarian sheet to have 14 HP.");
+  }
+  const classBreadthStartingClass = classUnitId(
+    barbarianBuildSheetDraftPlan.classUnitId,
+  );
+  const primaryLifecycleStartingClass = classUnitId(
+    fighterLifecycleDraftPlan.classUnitId,
+  );
+
+  return (
+    Number(characterSheetCurrentHp(sheet)) === sheetMaxHp &&
+    Number(battle.combatant.hp) === sheetMaxHp &&
+    Number(battle.combatant.maxHp) === sheetMaxHp &&
+    battle.combatant.origin.kind === "character" &&
+    battle.combatant.combatantId === barbarianClassBreadthCharacterCombatantId &&
+    build.progression.startingClass === classBreadthStartingClass &&
+    build.progression.startingClass !== primaryLifecycleStartingClass
+  );
 }
 
 function requireSessionDraft(session: LifecycleSession): CharacterDraft {
@@ -348,7 +395,7 @@ function requireSessionBattleState(session: LifecycleSession): BattleState {
 
 function requireSessionCombatant(
   session: LifecycleSession,
-): FighterCharacterBattleCombatant {
+): LifecycleCharacterBattleCombatant {
   if (session.characterCombatant === undefined) {
     throw new Error("Expected lifecycle character combatant.");
   }
@@ -411,6 +458,10 @@ function normalizeLifecycleQuintState(
     wrongCharacterSettlementRejected: booleanField(
       state["qWrongCharacterSettlementRejected"],
       "qWrongCharacterSettlementRejected",
+    ),
+    classBreadthLegalSourceProjectsToBattleInit: booleanField(
+      state["qClassBreadthLegalSourceProjectsToBattleInit"],
+      "qClassBreadthLegalSourceProjectsToBattleInit",
     ),
     replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
   };

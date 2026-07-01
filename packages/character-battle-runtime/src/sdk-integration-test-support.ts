@@ -321,6 +321,57 @@ export function legalAnyLoadoutChoice(
   };
 }
 
+export const barbarianBuildSheetDraftPlan = {
+  label: "Barbarian build-sheet projection",
+  classUnitId: "class_barbarian",
+  level: 1,
+  backgroundUnitId: "background_soldier",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 15,
+    dex: 14,
+    con: 13,
+    int: 8,
+    wis: 10,
+    cha: 12,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_barbarian",
+      "class_skill_proficiency_choice",
+      "perception",
+      "survival",
+    ),
+    legalUnitChoice(
+      "barbarian_weapon_mastery",
+      "weapon_mastery_options",
+      "weapon_longsword",
+      "weapon_dagger",
+    ),
+    legalUnitChoice(
+      "background_soldier",
+      "background_ability_score_increase",
+      "two_and_one:str:con",
+    ),
+    legalUnitChoice(
+      "background_soldier",
+      "background_tool_choice",
+      "tool_dice_set",
+    ),
+    legalUnitChoice("class_barbarian", "class_equipment_choice", "option_b"),
+    legalUnitChoice(
+      "background_soldier",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalAnyUnitChoice("class_barbarian", "equipment_purchase"),
+    legalAnyLoadoutChoice("equipment_shield", "shield"),
+    legalAnyLoadoutChoice("weapon_longsword", "weapon"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 export function createLegalSourceCharacterDraft(input: {
   readonly draftIdText: string;
 }): CharacterDraft {

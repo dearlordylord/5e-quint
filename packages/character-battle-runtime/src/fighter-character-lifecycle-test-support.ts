@@ -19,6 +19,7 @@ import { DieRollResult } from "@dnd/shared/types";
 import { Either } from "effect";
 
 import {
+  barbarianBuildSheetDraftPlan,
   createLegalSourceCharacterDraft,
   createLegalSourceCharacterSheet,
   finalizeLegalSourceCharacterDraft,
@@ -31,7 +32,7 @@ import {
   type LegalSourceCharacterDraftPlan,
 } from "./sdk-integration-test-support.ts";
 
-export type FighterCharacterBattleCombatant = BattleCreatureState & {
+export type LifecycleCharacterBattleCombatant = BattleCreatureState & {
   readonly origin: Extract<
     BattleCreatureState["origin"],
     { readonly kind: "character" }
@@ -54,6 +55,14 @@ const fighterLifecycleSkeletonCombatantId = combatantId(
 );
 export const fighterLifecycleSheetMaximumHp = 12;
 export const fighterLifecycleSettledHp = 8;
+
+export const barbarianClassBreadthCharacterCombatantId = combatantId(
+  "combatant:barbarian-class-breadth-character",
+);
+const barbarianClassBreadthSkeletonCombatantId = combatantId(
+  "combatant:barbarian-class-breadth-skeleton",
+);
+export const barbarianClassBreadthSheetMaximumHp = 14;
 
 export const fighterLifecycleDraftPlan = {
   label: "Fighter lifecycle",
@@ -125,12 +134,27 @@ export function createFighterLifecycleDraft(): CharacterDraft {
   });
 }
 
+export function createBarbarianClassBreadthDraft(): CharacterDraft {
+  return createLegalSourceCharacterDraft({
+    draftIdText: "draft:barbarian-class-breadth",
+  });
+}
+
 export function finalizeFighterLifecycleDraft(
   draft: CharacterDraft,
 ): CharacterBuild {
   return finalizeLegalSourceCharacterDraft({
     draft,
     plan: fighterLifecycleDraftPlan,
+  }).build;
+}
+
+export function finalizeBarbarianClassBreadthDraft(
+  draft: CharacterDraft,
+): CharacterBuild {
+  return finalizeLegalSourceCharacterDraft({
+    draft,
+    plan: barbarianBuildSheetDraftPlan,
   }).build;
 }
 
@@ -148,9 +172,23 @@ export function createFighterLifecycleSheet(
   });
 }
 
+export function createBarbarianClassBreadthSheet(
+  build: CharacterBuild,
+): CharacterSheet {
+  const maximumHp = lifecycleBuildMaximumHp(build);
+  if (maximumHp !== barbarianClassBreadthSheetMaximumHp) {
+    throw new Error("Expected Barbarian class-breadth build to have 14 HP.");
+  }
+  return createLegalSourceCharacterSheet({
+    characterIdText: "character:barbarian-class-breadth",
+    build,
+    hitPoints: { tag: "maximum" },
+  });
+}
+
 export function startFighterLifecycleBattle(sheet: CharacterSheet): {
   readonly state: BattleState;
-  readonly combatant: FighterCharacterBattleCombatant;
+  readonly combatant: LifecycleCharacterBattleCombatant;
 } {
   const state = startLegalSourceCharacterBattle({
     sheet,
@@ -168,8 +206,34 @@ export function startFighterLifecycleBattle(sheet: CharacterSheet): {
       ],
     },
   });
-  const combatant = requireFighterCharacterCombatant(
+  const combatant = requireLifecycleCharacterCombatant(
     state.combatants.get(fighterLifecycleCharacterCombatantId),
+  );
+  return { state, combatant };
+}
+
+export function startBarbarianClassBreadthBattle(sheet: CharacterSheet): {
+  readonly state: BattleState;
+  readonly combatant: LifecycleCharacterBattleCombatant;
+} {
+  const state = startLegalSourceCharacterBattle({
+    sheet,
+    battle: {
+      tag: "withBattle",
+      battleIdText: "battle:barbarian-class-breadth",
+      combatantId: barbarianClassBreadthCharacterCombatantId,
+      initiative: 9,
+      monsters: [
+        monsterBattleInput(
+          barbarianClassBreadthSkeletonCombatantId,
+          20,
+          srdStatBlock("stat_block_skeleton"),
+        ),
+      ],
+    },
+  });
+  const combatant = requireLifecycleCharacterCombatant(
+    state.combatants.get(barbarianClassBreadthCharacterCombatantId),
   );
   return { state, combatant };
 }
@@ -218,16 +282,20 @@ export function resolveFighterLifecycleSkeletonShortswordAttack(
 }
 
 export function fighterLifecycleBuildMaximumHp(build: CharacterBuild): number {
+  return lifecycleBuildMaximumHp(build);
+}
+
+function lifecycleBuildMaximumHp(build: CharacterBuild): number {
   const hitPoints = requireRight(
     characterBuildHitPoints(build, fighterLifecycleUnitLibrary),
   );
   return Number(hitPoints.maximum);
 }
 
-export function requireFighterCharacterCombatant(
+export function requireLifecycleCharacterCombatant(
   combatant: BattleCreatureState | undefined,
-): FighterCharacterBattleCombatant {
-  if (!isFighterCharacterCombatant(combatant)) {
+): LifecycleCharacterBattleCombatant {
+  if (!isLifecycleCharacterCombatant(combatant)) {
     throw new Error("Expected character-origin battle combatant.");
   }
   return combatant;
@@ -377,8 +445,8 @@ function requireResultHole<K extends BattleHole["kind"]>(
   return requireHoleFromList(result.holes, kind);
 }
 
-function isFighterCharacterCombatant(
+function isLifecycleCharacterCombatant(
   combatant: BattleCreatureState | undefined,
-): combatant is FighterCharacterBattleCombatant {
+): combatant is LifecycleCharacterBattleCombatant {
   return combatant?.origin.kind === "character";
 }

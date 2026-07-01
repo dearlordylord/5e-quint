@@ -87878,7 +87878,8 @@
             "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
             "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
             "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
-          ]
+          ],
+          "path": "packages/character-battle-runtime/src/sdk-integration-test-support.ts"
         }
       ],
       "levelBand": "level-1",
@@ -87925,7 +87926,8 @@
             "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
             "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
             "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
-          ]
+          ],
+          "path": "packages/character-battle-runtime/src/sdk-integration-test-support.ts"
         }
       ],
       "levelBand": "level-1",
@@ -87972,7 +87974,8 @@
             "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
             "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
             "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
-          ]
+          ],
+          "path": "packages/character-battle-runtime/src/sdk-integration-test-support.ts"
         }
       ],
       "levelBand": "level-1",
@@ -88019,7 +88022,8 @@
             "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
             "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
             "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
-          ]
+          ],
+          "path": "packages/character-battle-runtime/src/sdk-integration-test-support.ts"
         }
       ],
       "levelBand": "level-1",
@@ -88066,7 +88070,8 @@
             "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
             "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
             "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
-          ]
+          ],
+          "path": "packages/character-battle-runtime/src/sdk-integration-test-support.ts"
         }
       ],
       "levelBand": "level-1",
@@ -88113,7 +88118,8 @@
             "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
             "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
             "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
-          ]
+          ],
+          "path": "packages/character-battle-runtime/src/sdk-integration-test-support.ts"
         }
       ],
       "levelBand": "level-1",
@@ -88160,7 +88166,8 @@
             "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
             "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
             "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
-          ]
+          ],
+          "path": "packages/character-battle-runtime/src/sdk-integration-test-support.ts"
         }
       ],
       "levelBand": "level-1",
@@ -88207,7 +88214,8 @@
             "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
             "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
             "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
-          ]
+          ],
+          "path": "packages/character-battle-runtime/src/sdk-integration-test-support.ts"
         }
       ],
       "levelBand": "level-1",
@@ -88252,7 +88260,8 @@
             "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
             "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
             "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
-          ]
+          ],
+          "path": "packages/character-battle-runtime/src/sdk-integration-test-support.ts"
         }
       ],
       "levelBand": "level-1",
@@ -88297,7 +88306,8 @@
             "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
             "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
             "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
-          ]
+          ],
+          "path": "packages/character-battle-runtime/src/sdk-integration-test-support.ts"
         }
       ],
       "levelBand": "level-1",
@@ -93495,6 +93505,7 @@
     ],
     "seedScenarioFiles": [
       "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+      "packages/character-battle-runtime/src/sdk-integration-test-support.ts",
       "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
     ],
     "unitClaims": "plans/unit-profile-coverage/unit-claims.jsonl",
