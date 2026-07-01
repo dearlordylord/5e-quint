@@ -505,6 +505,76 @@ describe("level 1 SDK RAW integration", () => {
     ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
   });
 
+  test("Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-barbarian-build-battle",
+      draftPlan: barbarianBuildSheetDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-barbarian-build-battle",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l1-sdk-barbarian-build-battle",
+        combatantId: barbarianId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      },
+    });
+
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.sheet.build).toEqual(fixture.build);
+
+    const barbarian = requireCharacterCombatant(fixture.state, barbarianId);
+    expect(barbarian.origin.characterId).toBe(
+      "character:l1-sdk-barbarian-build-battle",
+    );
+    expect(barbarian.origin.selectedLoadout).toMatchObject({
+      shield: { unitId: "equipment_shield" },
+      weapon: { unitId: "weapon_longsword", grip: "one_handed" },
+    });
+    expect(barbarian.origin.weaponMasteries).toEqual(
+      expect.arrayContaining([
+        { weaponUnitId: "weapon_longsword" },
+        { weaponUnitId: "weapon_dagger" },
+      ]),
+    );
+    expect(barbarian.origin.attack).toMatchObject({
+      kind: "weapon",
+      ability: "str",
+      abilityModifier: abilityModifier(3),
+      weapon: {
+        id: "weapon_longsword",
+        name: "Longsword",
+        mastery: "sap",
+      },
+    });
+
+    const snapshot = snapshotCombatant(fixture.state, barbarianId);
+    expect(snapshot).toMatchObject({
+      hp: Hp(14),
+      maxHp: Hp(14),
+      armorClass: 16,
+      movement: { speedFeet: movementFeet(30) },
+    });
+    expect(attackSubject(fixture.state, barbarianId, "Longsword")).toMatchObject(
+      {
+        tag: "action",
+        actorId: barbarianId,
+      },
+    );
+  });
+
   test("legal Fighter source fixture creates a level 1 sheet and battle combatant", () => {
     const fixture = createLegalSourceCharacterFixture({
       draftIdText: "draft:l1-sdk-legal-fighter",

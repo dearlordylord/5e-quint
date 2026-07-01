@@ -13064,6 +13064,13 @@
       "category": "equipment/weapon/armor pressure",
       "className": "Barbarian",
       "concept": "Barbarian Starting Equipment",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:13"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -13071,7 +13078,7 @@
       "proposedOwnerBoundary": "character-build-to-battle",
       "rowId": "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
       "rowKind": "equipment-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 13,
         "lineStart": 13,
@@ -13107,6 +13114,13 @@
       "category": "mastery pressure",
       "className": "Barbarian",
       "concept": "Barbarian Weapon Mastery",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:84-89"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -13114,7 +13128,7 @@
       "proposedOwnerBoundary": "character-build-to-battle",
       "rowId": "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
       "rowKind": "mastery-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 89,
         "lineStart": 84,
@@ -50749,12 +50763,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 12,
+        "groupCount": 11,
         "lane": "build-battle-sdk",
         "ownerTaskIds": [
           "L12-SH07-BUILD-BATTLE-FIRST-SLICE"
         ],
-        "rowCount": 17,
+        "rowCount": 15,
         "rowFamily": "source-row",
         "taskFamily": "build-battle-sdk"
       },
@@ -50833,7 +50847,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 66,
+        "groupCount": 67,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -50845,7 +50859,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 72,
+        "rowCount": 74,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -50905,16 +50919,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 66,
+        "groupCount": 67,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 72,
+        "rowCount": 74,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 96,
+        "groupCount": 95,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -50925,7 +50939,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 233,
+        "rowCount": 231,
         "rowFamily": "source-row"
       }
     ],
@@ -51090,6 +51104,44 @@
       "sourceProof": "legal-build-sheet-owner",
       "usesRealSheetBattleHandoff": false,
       "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "classification": "already legal creation path",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "rowKind": "equipment-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-battle-handoff",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "barbarian_weapon_mastery",
+      "classification": "already legal creation path",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+      "rowKey": "level-1:Barbarian:barbarian_weapon_mastery",
+      "rowKind": "mastery-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-battle-handoff",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
     },
     {
       "candidateUnitId": "bard_bardic_inspiration",
@@ -58174,9 +58226,9 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 426,
+      "sdk-scenario-needed": 424,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 78,
+      "seed-scenario-present": 80,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
@@ -58184,63 +58236,63 @@
     "levelOneTwoCampaignGroupsByLane": {
       "battle-feature-sdk": 6,
       "battle-spell-sdk": 32,
-      "build-battle-sdk": 12,
+      "build-battle-sdk": 11,
       "build-sheet-sdk": 12,
       "character-creation-sdk": 14,
       "character-sheet-sdk": 7,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 66,
+      "seed-present": 67,
       "sheet-spell-access-sdk": 7,
       "spell-effect-owner-review": 22
     },
     "levelOneTwoCampaignGroupsByRowFamily": {
       "closure-review-row": 22,
       "explicit-closure-row": 24,
-      "seed-row": 66,
-      "source-row": 96
+      "seed-row": 67,
+      "source-row": 95
     },
     "levelOneTwoCampaignRows": 400,
     "levelOneTwoCampaignRowsByLane": {
       "battle-feature-sdk": 6,
       "battle-spell-sdk": 83,
-      "build-battle-sdk": 17,
+      "build-battle-sdk": 15,
       "build-sheet-sdk": 93,
       "character-creation-sdk": 14,
       "character-sheet-sdk": 7,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 72,
+      "seed-present": 74,
       "sheet-spell-access-sdk": 7,
       "spell-effect-owner-review": 71
     },
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 71,
       "explicit-closure-row": 24,
-      "seed-row": 72,
-      "source-row": 233
+      "seed-row": 74,
+      "source-row": 231
     },
-    "levelOneTwoSeedMigrationAuditRows": 72,
+    "levelOneTwoSeedMigrationAuditRows": 74,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 57,
+      "already legal creation path": 59,
       "hand-built build needing migration": 7,
       "legal build-sheet owner proof": 7,
       "legal creation owner proof": 1
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
       "not-real-sheet-battle": 8,
-      "real-sheet-battle": 64
+      "real-sheet-battle": 66
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
       "direct-character-build": 7,
-      "legal-creation-draft-finalize": 65
+      "legal-creation-draft-finalize": 67
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 57,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 59,
     "scenarioGroups": 412,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
       "battle-spell-sdk": 83,
-      "build-battle-sdk": 12,
+      "build-battle-sdk": 11,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 28,
       "character-sheet-sdk": 7,
@@ -58249,7 +58301,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 72,
+      "seed-present": 73,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -60939,81 +60991,6 @@
         "sdk-scenario-needed"
       ],
       "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "barbarian_weapon_mastery",
-        "class_barbarian"
-      ],
-      "categories": [
-        "equipment/weapon/armor pressure",
-        "mastery pressure"
-      ],
-      "classNames": [
-        "Barbarian"
-      ],
-      "groupId": "l15-sdk-raw-03:build-battle-sdk:barbarian",
-      "lane": "build-battle-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-build-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"build-battle-sdk\",\"Barbarian\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Barbarian.md:13",
-        ".references/srd-5.2.1/Classes/Barbarian.md:84"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "equipment-pressure",
-        "mastery-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "class_barbarian",
-          "className": "Barbarian",
-          "concept": "Barbarian Starting Equipment",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-battle",
-          "rowId": "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 13,
-            "lineStart": 13,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        },
-        {
-          "candidateUnitId": "barbarian_weapon_mastery",
-          "className": "Barbarian",
-          "concept": "Barbarian Weapon Mastery",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-battle",
-          "rowId": "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 89,
-            "lineStart": 84,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Barbarian Starting Equipment",
-        "Barbarian Weapon Mastery"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Finalize build and equipment/mastery choices, project to battle, and assert AC, attack, damage, or mastery facts that a user reaches through the SDK path.",
       "taskId": "L15-SDK-RAW-03"
     },
     {
@@ -65144,11 +65121,68 @@
     },
     {
       "candidateUnitIds": [
+        "barbarian_weapon_mastery"
+      ],
+      "categories": [
+        "mastery pressure"
+      ],
+      "classNames": [
+        "Barbarian"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-barbarian-barbarian-weapon-mastery",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-build-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Barbarian:barbarian_weapon_mastery\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Barbarian.md:84",
+        ".references/srd-5.2.1/Classes/Barbarian.md:84-89"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "mastery-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "barbarian_weapon_mastery",
+          "className": "Barbarian",
+          "concept": "Barbarian Weapon Mastery",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-battle",
+          "rowId": "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 89,
+            "lineStart": 84,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Barbarian Weapon Mastery"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "class_barbarian"
       ],
       "categories": [
         "character-creation or progression mechanic",
-        "class container"
+        "class container",
+        "equipment/weapon/armor pressure"
       ],
       "classNames": [
         "Barbarian"
@@ -65162,6 +65196,7 @@
         "resolved"
       ],
       "proposedOwnerBoundaries": [
+        "character-build-to-battle",
         "character-build-to-sheet"
       ],
       "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Barbarian:class_barbarian\"]",
@@ -65169,15 +65204,17 @@
         ".references/srd-5.2.1/Classes/Barbarian.md:10",
         ".references/srd-5.2.1/Classes/Barbarian.md:11",
         ".references/srd-5.2.1/Classes/Barbarian.md:12",
+        ".references/srd-5.2.1/Classes/Barbarian.md:13",
         ".references/srd-5.2.1/Classes/Barbarian.md:3",
         ".references/srd-5.2.1/Classes/Barbarian.md:7",
         ".references/srd-5.2.1/Classes/Barbarian.md:8",
         ".references/srd-5.2.1/Classes/Barbarian.md:9"
       ],
-      "rowCount": 7,
+      "rowCount": 8,
       "rowKinds": [
         "class-container",
-        "core-trait"
+        "core-trait",
+        "equipment-pressure"
       ],
       "rows": [
         {
@@ -65284,6 +65321,21 @@
             "lineStart": 11,
             "path": ".references/srd-5.2.1/Classes/Barbarian.md"
           }
+        },
+        {
+          "candidateUnitId": "class_barbarian",
+          "className": "Barbarian",
+          "concept": "Barbarian Starting Equipment",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-battle",
+          "rowId": "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 13,
+            "lineStart": 13,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
         }
       ],
       "sampleConcepts": [
@@ -65292,6 +65344,7 @@
         "Barbarian Primary Ability",
         "Barbarian Saving Throw Proficiencies",
         "Barbarian Skill Proficiencies",
+        "Barbarian Starting Equipment",
         "Barbarian Weapon Proficiencies",
         "Barbarian class container"
       ],
@@ -87810,6 +87863,96 @@
         "weaponProficiencies",
         "characterBuildArmorTraining(",
         "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_barbarian",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:13"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const barbarianBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_barbarian\"",
+            "\"class_skill_proficiency_choice\"",
+            "\"barbarian_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_barbarian\", \"class_equipment_choice\", \"option_b\")",
+            "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
+            "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
+            "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
+      "rowKey": "level-1:Barbarian:class_barbarian",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-barbarian-build-battle\"",
+        "barbarianBuildSheetDraftPlan",
+        "battleIdText: \"battle:l1-sdk-barbarian-build-battle\"",
+        "requireCharacterCombatant(fixture.state, barbarianId)",
+        "origin.selectedLoadout",
+        "origin.weaponMasteries",
+        "origin.attack",
+        "id: \"weapon_longsword\"",
+        "mastery: \"sap\"",
+        "snapshotCombatant(fixture.state, barbarianId)",
+        "armorClass: 16",
+        "attackSubject(fixture.state, barbarianId, \"Longsword\")"
+      ]
+    },
+    {
+      "candidateUnitId": "barbarian_weapon_mastery",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:84-89"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const barbarianBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_barbarian\"",
+            "\"class_skill_proficiency_choice\"",
+            "\"barbarian_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_barbarian\", \"class_equipment_choice\", \"option_b\")",
+            "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
+            "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
+            "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+      "rowKey": "level-1:Barbarian:barbarian_weapon_mastery",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-barbarian-build-battle\"",
+        "barbarianBuildSheetDraftPlan",
+        "battleIdText: \"battle:l1-sdk-barbarian-build-battle\"",
+        "requireCharacterCombatant(fixture.state, barbarianId)",
+        "origin.selectedLoadout",
+        "origin.weaponMasteries",
+        "origin.attack",
+        "id: \"weapon_longsword\"",
+        "mastery: \"sap\"",
+        "snapshotCombatant(fixture.state, barbarianId)",
+        "armorClass: 16",
+        "attackSubject(fixture.state, barbarianId, \"Longsword\")"
       ]
     },
     {

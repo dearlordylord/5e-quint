@@ -101,7 +101,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 208;
-const expectedLevelOneTwoSeedScenarioRows = 72;
+const expectedLevelOneTwoSeedScenarioRows = 74;
 const handBuiltSourceSeedRowIds = new Set([
   "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
   "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -289,6 +289,47 @@ const barbarianBuildSheetScenarioHelperNeedles = [
     ],
   },
 ];
+const barbarianBuildBattleScenarioLabel =
+  "level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant";
+const legalBuildBattleHandoffSourceProof = "legal-build-battle-handoff";
+const barbarianBuildBattleScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-barbarian-build-battle"',
+  "barbarianBuildSheetDraftPlan",
+  'battleIdText: "battle:l1-sdk-barbarian-build-battle"',
+  "requireCharacterCombatant(fixture.state, barbarianId)",
+  "origin.selectedLoadout",
+  "origin.weaponMasteries",
+  "origin.attack",
+  'id: "weapon_longsword"',
+  'mastery: "sap"',
+  "snapshotCombatant(fixture.state, barbarianId)",
+  "armorClass: 16",
+  'attackSubject(fixture.state, barbarianId, "Longsword")',
+];
+const barbarianBuildBattleScenarioRows = [
+  {
+    candidateUnitId: "class_barbarian",
+    rowId:
+      "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:13"],
+  },
+  {
+    candidateUnitId: "barbarian_weapon_mastery",
+    rowId:
+      "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:84-89"],
+  },
+].map((row) => ({
+  className: "Barbarian",
+  levelBand: "level-1",
+  label: barbarianBuildBattleScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: legalBuildBattleHandoffSourceProof,
+  tracerNeedles: barbarianBuildBattleScenarioNeedles,
+  helperNeedles: barbarianBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
 const barbarianBuildSheetScenarioRows = [
   {
     rowId:
@@ -339,6 +380,7 @@ const barbarianBuildSheetScenarioRows = [
 
 const seededSdkScenarioRows = [
   ...barbarianBuildSheetScenarioRows,
+  ...barbarianBuildBattleScenarioRows,
   {
     candidateUnitId: "barbarian_rage",
     className: "Barbarian",
@@ -5561,8 +5603,9 @@ function buildLevelOneTwoSeedMigrationAudit(seedScenarioSources, miningRows) {
     .map((seed) => {
       const evidenceText = seedScenarioEvidenceText(seed, seedScenarioSources);
       const usesRealSheetBattleHandoff =
-        evidenceText.includes("battleFromSheets(") &&
-        evidenceText.includes("characterSheet({");
+        seed.sourceProof === legalBuildBattleHandoffSourceProof ||
+        (evidenceText.includes("battleFromSheets(") &&
+          evidenceText.includes("characterSheet({"));
       const classification = seedMigrationClassification(
         seed,
         usesRealSheetBattleHandoff,

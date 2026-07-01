@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 426 |
+| sdk-scenario-needed | 424 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 78 |
+| seed-scenario-present | 80 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -86,7 +86,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | --- | ---: |
 | battle-feature-sdk | 21 |
 | battle-spell-sdk | 83 |
-| build-battle-sdk | 12 |
+| build-battle-sdk | 11 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 28 |
 | character-sheet-sdk | 7 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
-| seed-present | 72 |
+| seed-present | 73 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -159,6 +159,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies` / `level-1:Barbarian:class_barbarian`: level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
 - `srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies` / `level-1:Barbarian:class_barbarian`: level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
 - `srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies` / `level-1:Barbarian:class_barbarian`: level1-sdk-raw-integration: Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
+- `srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment` / `level-1:Barbarian:class_barbarian`: level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant
+- `srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery` / `level-1:Barbarian:barbarian_weapon_mastery`: level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant
 - `srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage` / `level-1:Barbarian:barbarian_rage`: level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders
 - `srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration` / `level-1:Bard:bard_bardic_inspiration`: level1-sdk-raw-integration: Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action
 - `srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind` / `level-1:Fighter:fighter_second_wind`: level1-sdk-raw-integration: Fighter Second Wind heals through sheet projection and spends one Bonus Action use
@@ -244,20 +246,20 @@ Rows/groups assigned: 400/208.
 | --- | --- | ---: | ---: | --- |
 | closure-review-row | closure-review-needed | 71 | 22 | spell-effect-owner-review |
 | explicit-closure-row | explicit-closure-needed | 24 | 24 | explicit-closure |
-| seed-row | seed-scenario-present | 72 | 66 | seed-present |
-| source-row | sdk-scenario-needed | 233 | 96 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
+| seed-row | seed-scenario-present | 74 | 67 | seed-present |
+| source-row | sdk-scenario-needed | 231 | 95 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
 
 | Lane | SDK disposition | Row family | Rows | Groups | Task family | Owner tasks | Follow-up tasks |
 | --- | --- | --- | ---: | ---: | --- | --- | --- |
 | battle-feature-sdk | sdk-scenario-needed | source-row | 6 | 6 | battle-feature-sdk | `L12-SH10-BATTLE-FEATURE-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | battle-spell-sdk | sdk-scenario-needed | source-row | 83 | 32 | battle-spell-sdk | `L12-SH11-BATTLE-SPELL-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| build-battle-sdk | sdk-scenario-needed | source-row | 17 | 12 | build-battle-sdk | `L12-SH07-BUILD-BATTLE-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| build-battle-sdk | sdk-scenario-needed | source-row | 15 | 11 | build-battle-sdk | `L12-SH07-BUILD-BATTLE-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | build-sheet-sdk | sdk-scenario-needed | source-row | 93 | 12 | build-sheet-sdk | `L12-SH06-BUILD-SHEET-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | character-creation-sdk | sdk-scenario-needed | source-row | 14 | 14 | character-creation-sdk | `L12-SH05-CREATION-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | character-sheet-sdk | sdk-scenario-needed | source-row | 7 | 7 | character-sheet-sdk | `L12-SH08-SHEET-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | explicit-closure | explicit-closure-needed | explicit-closure-row | 24 | 24 | explicit-closure | `L12-SH04-GROUPING-GENERATOR-GATE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | multi-owner-feature-sdk | sdk-scenario-needed | source-row | 6 | 6 | multi-owner-feature-sdk | `L12-SH12-MULTI-OWNER-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| seed-present | seed-scenario-present | seed-row | 72 | 66 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| seed-present | seed-scenario-present | seed-row | 74 | 67 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | sheet-spell-access-sdk | sdk-scenario-needed | source-row | 7 | 7 | sheet-spell-access-sdk | `L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | spell-effect-owner-review | closure-review-needed | closure-review-row | 71 | 22 | spell-effect-owner-review | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
 
@@ -271,7 +273,7 @@ Character Sheet and battle handoff.
 
 | Classification | Rows |
 | --- | ---: |
-| already legal creation path | 57 |
+| already legal creation path | 59 |
 | hand-built build needing migration | 7 |
 | legal build-sheet owner proof | 7 |
 | legal creation owner proof | 1 |
@@ -279,14 +281,14 @@ Character Sheet and battle handoff.
 | Source build path | Rows |
 | --- | ---: |
 | direct-character-build | 7 |
-| legal-creation-draft-finalize | 65 |
+| legal-creation-draft-finalize | 67 |
 
 | Real sheet/battle handoff | Rows |
 | --- | ---: |
 | not-real-sheet-battle | 8 |
-| real-sheet-battle | 64 |
+| real-sheet-battle | 66 |
 
-Whole-width source lifecycle seed rows: 57/72.
+Whole-width source lifecycle seed rows: 59/74.
 
 | Band | Class | Unit | Row kind | Classification | Source build path | Real sheet/battle handoff | Whole-width source lifecycle proof | Next action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -298,6 +300,8 @@ Whole-width source lifecycle seed rows: 57/72.
 | level-1 | Barbarian | `class_barbarian` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
 | level-1 | Barbarian | `class_barbarian` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
 | level-1 | Barbarian | `class_barbarian` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
+| level-1 | Barbarian | `class_barbarian` | equipment-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| level-1 | Barbarian | `barbarian_weapon_mastery` | mastery-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | level-1 | Bard | `bard_bardic_inspiration` | class-feature-grant | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
 | spell-level-0 | Bard | `vicious_mockery` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Bard | `animal_friendship` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
