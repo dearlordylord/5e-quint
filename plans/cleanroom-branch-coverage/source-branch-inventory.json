@@ -11286,7 +11286,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doCreateSheetFromBuild",
-      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "qntFileSha256": "1536f4363b9e11770d03642a4bea30f90ab8bb2f0e6414472a4125c68bea891f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -11305,7 +11305,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doFinalizeDraftToBuild",
-      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "qntFileSha256": "1536f4363b9e11770d03642a4bea30f90ab8bb2f0e6414472a4125c68bea891f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -11324,7 +11324,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doProjectSheetToBattleInit",
-      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "qntFileSha256": "1536f4363b9e11770d03642a4bea30f90ab8bb2f0e6414472a4125c68bea891f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -11343,7 +11343,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doResolveSkeletonShortswordAttack",
-      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "qntFileSha256": "1536f4363b9e11770d03642a4bea30f90ab8bb2f0e6414472a4125c68bea891f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -11362,7 +11362,7 @@
       "decisionSource": "default",
       "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
       "obligationId": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doSettleBattleToSheet",
-      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "qntFileSha256": "1536f4363b9e11770d03642a4bea30f90ab8bb2f0e6414472a4125c68bea891f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"

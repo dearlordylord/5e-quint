@@ -17,6 +17,7 @@ module characterLayerProjectionLifecycleMbt {
 
   type CharacterLifecycleFacts = {
     draftHasOpenHoles: bool,
+    openDraftFinalizationRejected: bool,
     buildFinalized: bool,
     sheetOwnsHitPoints: bool,
     sheetCurrentHp: int,
@@ -27,10 +28,12 @@ module characterLayerProjectionLifecycleMbt {
     settlementCurrentHp: int,
     settlementPersistedBattleHp: bool,
     buildIdentityUnchanged: bool,
+    wrongCharacterSettlementRejected: bool,
   }
 
   var qLayer: CharacterLifecycleLayer
   var qDraftHasOpenHoles: bool
+  var qOpenDraftFinalizationRejected: bool
   var qBuildFinalized: bool
   var qSheetOwnsHitPoints: bool
   var qSheetCurrentHp: int
@@ -41,10 +44,12 @@ module characterLayerProjectionLifecycleMbt {
   var qSettlementCurrentHp: int
   var qSettlementPersistedBattleHp: bool
   var qBuildIdentityUnchanged: bool
+  var qWrongCharacterSettlementRejected: bool
   var qReplayIndex: int
 
   pure def emptyLifecycleFacts = {
     draftHasOpenHoles: false,
+    openDraftFinalizationRejected: false,
     buildFinalized: false,
     sheetOwnsHitPoints: false,
     sheetCurrentHp: 0,
@@ -55,6 +60,7 @@ module characterLayerProjectionLifecycleMbt {
     settlementCurrentHp: 0,
     settlementPersistedBattleHp: false,
     buildIdentityUnchanged: false,
+    wrongCharacterSettlementRejected: false,
   }
 
   action recordProjection(
@@ -64,6 +70,7 @@ module characterLayerProjectionLifecycleMbt {
   ): bool = all {
     qLayer' = layer,
     qDraftHasOpenHoles' = facts.draftHasOpenHoles,
+    qOpenDraftFinalizationRejected' = facts.openDraftFinalizationRejected,
     qBuildFinalized' = facts.buildFinalized,
     qSheetOwnsHitPoints' = facts.sheetOwnsHitPoints,
     qSheetCurrentHp' = facts.sheetCurrentHp,
@@ -74,12 +81,15 @@ module characterLayerProjectionLifecycleMbt {
     qSettlementCurrentHp' = facts.settlementCurrentHp,
     qSettlementPersistedBattleHp' = facts.settlementPersistedBattleHp,
     qBuildIdentityUnchanged' = facts.buildIdentityUnchanged,
+    qWrongCharacterSettlementRejected' = facts.wrongCharacterSettlementRejected,
     qReplayIndex' = replayIndex,
   }
 
   action init = recordProjection(
     Draft,
-    emptyLifecycleFacts.with("draftHasOpenHoles", true),
+    emptyLifecycleFacts
+      .with("draftHasOpenHoles", true)
+      .with("openDraftFinalizationRejected", true),
     0,
   )
 
@@ -150,7 +160,8 @@ module characterLayerProjectionLifecycleMbt {
         .with("battleRuntimeHpChanged", true)
         .with("settlementCurrentHp", 8)
         .with("settlementPersistedBattleHp", true)
-        .with("buildIdentityUnchanged", true),
+        .with("buildIdentityUnchanged", true)
+        .with("wrongCharacterSettlementRejected", true),
       5,
     ),
   }
