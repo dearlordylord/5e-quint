@@ -180,7 +180,7 @@ const body = process.argv[3] ?? fs.readFileSync(0, "utf8")
 const parsed = JSON.parse(body)
 const models = Array.isArray(parsed.data) ? parsed.data : []
 if (!models.some((model) => model?.id === modelId)) {
-  throw new Error(`OpenCode Ollama model not found: ${modelId}`)
+  throw new Error("OpenCode Ollama model not found: " + modelId)
 }
 NODE
 }
@@ -449,12 +449,12 @@ const text = fs.readFileSync(path, "utf8")
 const indexMatch = text.match(/<!-- ralph-task-index\n([\s\S]*?)\n-->/)
 
 if (!indexMatch) {
-  throw new Error(`missing ralph-task-index block in ${path}`)
+  throw new Error("missing ralph-task-index block in " + path)
 }
 
 const index = JSON.parse(indexMatch[1])
 if (index.schema !== "ralph-plan.v1" || !Array.isArray(index.tasks)) {
-  throw new Error(`invalid ralph-task-index schema in ${path}`)
+  throw new Error("invalid ralph-task-index schema in " + path)
 }
 
 const lineStarts = [0]
@@ -492,11 +492,11 @@ const headingByNumber = new Map(headings.map((heading, index) => [
 
 for (const task of index.tasks) {
   if (!Number.isInteger(task.number) || typeof task.id !== "string" || typeof task.status !== "string" || typeof task.title !== "string") {
-    throw new Error(`invalid task metadata: ${JSON.stringify(task)}`)
+    throw new Error("invalid task metadata: " + JSON.stringify(task))
   }
   const heading = headingByNumber.get(task.number)
   if (!heading) {
-    throw new Error(`missing markdown heading for task ${task.number} (${task.id})`)
+    throw new Error("missing markdown heading for task " + task.number + " (" + task.id + ")")
   }
   console.log([task.number, task.id, task.status, heading.startLine, heading.endLine, task.title].join("\t"))
 }
@@ -526,15 +526,16 @@ text = text.replace(/<!-- ralph-task-index\n([\s\S]*?)\n-->/, (full, jsonBlock) 
   const index = JSON.parse(jsonBlock)
   const task = index.tasks.find((entry) => entry.number === taskNo && entry.id === taskId)
   if (!task) {
-    throw new Error(`task ${taskNo}/${taskId} missing from ralph-task-index`)
+    throw new Error("task " + taskNo + "/" + taskId + " missing from ralph-task-index")
   }
   task.status = newStatus
-  return `<!-- ralph-task-index\n${JSON.stringify(index, null, 2)}\n-->`
+  return "<!-- ralph-task-index\n" + JSON.stringify(index, null, 2) + "\n-->"
 })
 
-const heading = new RegExp(`(### Task ${taskNo}[^\\n]*\\n\\nStatus: \\\`)([^\\\`]+)(\\\`)`)
+const tick = String.fromCharCode(96)
+const heading = new RegExp("(### Task " + taskNo + "[^\\n]*\\n\\nStatus: " + tick + ")([^" + tick + "]+)(" + tick + ")")
 if (heading.test(text)) {
-  text = text.replace(heading, `$1${newStatus}$3`)
+  text = text.replace(heading, "$1" + newStatus + "$3")
 }
 
 const lines = text.split("\n")
@@ -545,8 +546,8 @@ for (let i = 0; i < lines.length; i += 1) {
   if (cells.length < 5) continue
   const order = cells[1]?.trim()
   const titleCell = cells[2]?.trim()
-  if (order === String(taskNo) && titleCell.startsWith(`${taskId} -`)) {
-    cells[3] = ` ${newStatus} `
+  if (order === String(taskNo) && titleCell.startsWith(taskId + " -")) {
+    cells[3] = " " + newStatus + " "
     lines[i] = cells.join("|")
     break
   }
@@ -581,7 +582,7 @@ const expandDependency = (value) => {
     const start = Number(numericRange[2])
     const end = Number(numericRange[4])
     if (Number.isInteger(start) && Number.isInteger(end) && start <= end) {
-      return Array.from({ length: end - start + 1 }, (_, index) => `${prefix}${start + index}`)
+      return Array.from({ length: end - start + 1 }, (_, index) => prefix + (start + index))
     }
   }
 
@@ -592,7 +593,7 @@ const expandDependency = (value) => {
     const start = sameNumberLetterRange[3].charCodeAt(0)
     const end = sameNumberLetterRange[6].charCodeAt(0)
     if (start <= end) {
-      return Array.from({ length: end - start + 1 }, (_, index) => `${prefix}${number}${String.fromCharCode(start + index)}`)
+      return Array.from({ length: end - start + 1 }, (_, index) => prefix + number + String.fromCharCode(start + index))
     }
   }
 
@@ -601,12 +602,12 @@ const expandDependency = (value) => {
 
 const indexMatch = text.match(/<!-- ralph-task-index\n([\s\S]*?)\n-->/)
 if (!indexMatch) {
-  throw new Error(`missing ralph-task-index block in ${path}`)
+  throw new Error("missing ralph-task-index block in " + path)
 }
 
 const index = JSON.parse(indexMatch[1])
 if (index.schema !== "ralph-plan.v1" || !Array.isArray(index.tasks)) {
-  throw new Error(`invalid ralph-task-index schema in ${path}`)
+  throw new Error("invalid ralph-task-index schema in " + path)
 }
 
 const statusById = new Map()
@@ -708,29 +709,30 @@ if (unblocked.length === 0) {
 for (const task of unblocked) {
   const rowIndex = rowIndexByNumber.get(task.number)
   if (typeof rowIndex !== "number") {
-    throw new Error(`missing DAG row index for #${task.number}`)
+    throw new Error("missing DAG row index for #" + task.number)
   }
 
   const rowCells = lines[rowIndex].split("|")
-  rowCells[3] = ` ${task.status} `
+  rowCells[3] = " " + task.status + " "
   lines[rowIndex] = rowCells.join("|")
 }
 
 let updatedText = lines.join("\n")
+const tick = String.fromCharCode(96)
 for (const task of unblocked) {
-  const headingPattern = new RegExp("(^### Task " + task.number + "[^\\n]*\\n\\nStatus: `)([^`]+)(`)", "m")
-  const headingReplacement = `$1${task.status}$3`
+  const headingPattern = new RegExp("(^### Task " + task.number + "[^\\n]*\\n\\nStatus: " + tick + ")([^" + tick + "]+)(" + tick + ")", "m")
+  const headingReplacement = "$1" + task.status + "$3"
 
   if (headingPattern.test(updatedText)) {
     updatedText = updatedText.replace(headingPattern, headingReplacement)
   }
 }
 
-updatedText = updatedText.replace(/<!-- ralph-task-index\n[\s\S]*?\n-->/, `<!-- ralph-task-index\n${JSON.stringify(index, null, 2)}\n-->`)
+updatedText = updatedText.replace(/<!-- ralph-task-index\n[\s\S]*?\n-->/, "<!-- ralph-task-index\n" + JSON.stringify(index, null, 2) + "\n-->")
 
 fs.writeFileSync(path, updatedText)
 for (const task of unblocked) {
-  const safe = `${task.number}|${task.id}`
+  const safe = task.number + "|" + task.id
   console.log(safe)
 }
 NODE
@@ -760,7 +762,7 @@ const expandDependency = (value) => {
     const start = Number(numericRange[2])
     const end = Number(numericRange[4])
     if (Number.isInteger(start) && Number.isInteger(end) && start <= end) {
-      return Array.from({ length: end - start + 1 }, (_, index) => `${prefix}${start + index}`)
+      return Array.from({ length: end - start + 1 }, (_, index) => prefix + (start + index))
     }
   }
 
@@ -771,7 +773,7 @@ const expandDependency = (value) => {
     const start = sameNumberLetterRange[3].charCodeAt(0)
     const end = sameNumberLetterRange[6].charCodeAt(0)
     if (start <= end) {
-      return Array.from({ length: end - start + 1 }, (_, index) => `${prefix}${number}${String.fromCharCode(start + index)}`)
+      return Array.from({ length: end - start + 1 }, (_, index) => prefix + number + String.fromCharCode(start + index))
     }
   }
 
@@ -780,12 +782,12 @@ const expandDependency = (value) => {
 
 const indexMatch = text.match(/<!-- ralph-task-index\n([\s\S]*?)\n-->/)
 if (!indexMatch) {
-  throw new Error(`missing ralph-task-index block in ${path}`)
+  throw new Error("missing ralph-task-index block in " + path)
 }
 
 const index = JSON.parse(indexMatch[1])
 if (index.schema !== "ralph-plan.v1" || !Array.isArray(index.tasks)) {
-  throw new Error(`invalid ralph-task-index schema in ${path}`)
+  throw new Error("invalid ralph-task-index schema in " + path)
 }
 
 const statusById = new Map()
@@ -848,14 +850,14 @@ for (const line of lines) {
   const missing = deps.filter((dep) => !statusById.has(dep))
 
   if (missing.length > 0 && activeUnsatisfied.length === 0) {
-    staleBlocks.push(`${order} ${taskId}: unresolved dependency refs not in active index: ${missing.join(", ")}`)
+    staleBlocks.push(order + " " + taskId + ": unresolved dependency refs not in active index: " + missing.join(", "))
   }
 }
 
 if (staleBlocks.length > 0) {
   throw new Error([
     "no runnable tasks, but blocked dependency tasks may be stale:",
-    ...staleBlocks.map((entry) => `- ${entry}`),
+    ...staleBlocks.map((entry) => "- " + entry),
     "Fix the plan by unblocking the task, restoring dependency tasks to the index, or recording an explicit owner-decision blocker.",
   ].join("\n"))
 }
@@ -1230,9 +1232,9 @@ const raw = sameLine?.[1] ?? nextLine?.[1]
 if (!raw) {
   throw new Error("review report missing Verdict section")
 }
-const verdict = raw.trim().replace(/[`*]/g, "").toLowerCase()
+const verdict = raw.trim().replace(/[\x60*]/g, "").toLowerCase()
 if (!["accept", "accept-with-fixes", "reject"].includes(verdict)) {
-  throw new Error(`invalid review verdict: ${verdict}`)
+  throw new Error("invalid review verdict: " + verdict)
 }
 process.stdout.write(verdict)
 NODE
@@ -1831,7 +1833,7 @@ if (decision === "run-task | stop") {
 if (task === "<number>\\t<id> | none") {
   throw new Error("chooser returned the task template instead of a concrete selection")
 }
-process.stdout.write(`${decision}\t${task}\t${reason}`)
+process.stdout.write(decision + "\t" + task + "\t" + reason)
 NODE
 }
 
@@ -1840,7 +1842,7 @@ parse_decider_disposition() {
   node - "$report" <<'NODE'
 const fs = require("fs")
 const text = fs.readFileSync(process.argv[2], "utf8")
-const clean = (s) => s.replace(/[`*_]/g, "").trim().toLowerCase()
+const clean = (s) => s.replace(/[\x60*_]/g, "").trim().toLowerCase()
 const allowed = new Set(["done", "retry-same-task", "needs-more-research", "blocked-needs-design", "deferred"])
 
 const lines = text.split(/\r?\n/)
@@ -1887,7 +1889,7 @@ parse_decider_blocker_type() {
   node - "$report" <<'NODE'
 const fs = require("fs")
 const text = fs.readFileSync(process.argv[2], "utf8")
-const clean = (s) => s.replace(/[`*_]/g, "").trim().toLowerCase()
+const clean = (s) => s.replace(/[\x60*_]/g, "").trim().toLowerCase()
 const lines = text.split(/\r?\n/)
 let inBlockerSection = false
 let raw = ""
@@ -1928,7 +1930,7 @@ const fs = require("fs")
 const reportPath = process.argv[2]
 const text = fs.readFileSync(reportPath, "utf8")
 function clean(s) {
-  return s.replace(/\r/g, "").replace(/[`*_]/g, "")
+  return s.replace(/\r/g, "").replace(/[\x60*_]/g, "")
 }
 const normalized = clean(text)
 const sameLine = normalized.match(/deferred detail:\s*(.+)/i)
@@ -1999,10 +2001,10 @@ const readJson = (p) => {
 }
 const normalize = (value) => String(value ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "")
 const taskText = read(taskPath)
-const taskNeedle = normalize(`${taskId}\n${taskText}`)
-const title = taskText.match(/^### Task [^\n]+-\s*(.+)$/m)?.[1]?.trim() ?? `Task ${taskNo}`
+const taskNeedle = normalize(taskId + "\n" + taskText)
+const title = taskText.match(/^### Task [^\n]+-\s*(.+)$/m)?.[1]?.trim() ?? ("Task " + taskNo)
 const taskType = (() => {
-  const text = `${title}\n${taskText}`.toLowerCase()
+  const text = (title + "\n" + taskText).toLowerCase()
   if (/recursive|review/.test(text)) return "review/planning"
   if (/widen surface|surface/.test(text)) return "surface-widening"
   if (/author|spell records|record/.test(text)) return "content-authoring"
@@ -2047,7 +2049,7 @@ if (taskType === "review/planning" && matchedRows.length < 8) {
 const cap = (array, n) => array.slice(0, n)
 const fmt = (value) => String(value ?? "").replace(/\s+/g, " ").trim().replace(/\|/g, "\\|")
 const ownerEvidence = (row) => Array.isArray(row.ownerEvidence)
-  ? row.ownerEvidence.map((entry) => `${entry.owner}: ${entry.status}`).join("; ")
+  ? row.ownerEvidence.map((entry) => entry.owner + ": " + entry.status).join("; ")
   : ""
 const claimText = (claim) => {
   if (!claim) return ""
@@ -2057,7 +2059,7 @@ const claimText = (claim) => {
     const deferred = Array.isArray(claim.deferredMechanics)
       ? claim.deferredMechanics.map((entry) => entry.mechanic).join("; ")
       : ""
-    return `supported: ${claim.supportedMechanics.join("; ")}${deferred ? `; deferred: ${deferred}` : ""}`
+    return "supported: " + claim.supportedMechanics.join("; ") + (deferred ? "; deferred: " + deferred : "")
   }
   return JSON.stringify(claim)
 }
@@ -2133,25 +2135,27 @@ const fileFamilies = {
   "implementation": []
 }
 
+const tick = String.fromCharCode(96)
+const fence = tick + tick + tick
 const lines = []
 lines.push("# Ralph Task Context Packet", "")
-lines.push(`- Task: ${taskNo} / ${taskId} - ${title}`)
-lines.push(`- Inferred task type: ${taskType}`)
-lines.push(`- Plan snapshot: ${planPath}`)
-lines.push(`- Task body: ${taskPath}`)
+lines.push("- Task: " + taskNo + " / " + taskId + " - " + title)
+lines.push("- Inferred task type: " + taskType)
+lines.push("- Plan snapshot: " + planPath)
+lines.push("- Task body: " + taskPath)
 if (batch) {
-  lines.push(`- Inventory batch rows: ${batch.rows ?? "unknown"}`)
-  lines.push(`- Batch intent: ${fmt(batch.intent)}`)
-  lines.push(`- Batch acceptance: ${fmt(batch.acceptance)}`)
+  lines.push("- Inventory batch rows: " + (batch.rows ?? "unknown"))
+  lines.push("- Batch intent: " + fmt(batch.intent))
+  lines.push("- Batch acceptance: " + fmt(batch.acceptance))
 }
 lines.push("", "## Current Metrics")
 if (inventory?.metrics) {
-  lines.push("```json", JSON.stringify(inventory.metrics, null, 2), "```")
+  lines.push(fence + "json", JSON.stringify(inventory.metrics, null, 2), fence)
 } else {
   lines.push("No SRD inventory metrics artifact found.")
 }
 if (matrix?.metrics) {
-  lines.push("", "Unit matrix metrics:", "```json", JSON.stringify(matrix.metrics, null, 2), "```")
+  lines.push("", "Unit matrix metrics:", fence + "json", JSON.stringify(matrix.metrics, null, 2), fence)
 }
 lines.push("", "## Task-Specific Inventory Rows")
 if (matchedRows.length === 0) {
@@ -2160,43 +2164,43 @@ if (matchedRows.length === 0) {
   lines.push("| Concept | Unit | Disposition | Owner evidence | Next action |")
   lines.push("|---|---|---|---|---|")
   for (const row of cap(matchedRows, 60)) {
-    lines.push(`| ${fmt(row.concept)} | ${fmt(row.candidateUnitId)} | ${fmt(row.finalDisposition)} | ${fmt(ownerEvidence(row))} | ${fmt(row.nextAction)} |`)
+    lines.push("| " + fmt(row.concept) + " | " + fmt(row.candidateUnitId) + " | " + fmt(row.finalDisposition) + " | " + fmt(ownerEvidence(row)) + " | " + fmt(row.nextAction) + " |")
   }
   if (matchedRows.length > 60) {
-    lines.push(`| ... | ... | ... | ... | ${matchedRows.length - 60} more rows omitted; inspect srd-unit-inventory.json. |`)
+    lines.push("| ... | ... | ... | ... | " + (matchedRows.length - 60) + " more rows omitted; inspect srd-unit-inventory.json. |")
   }
 }
 lines.push("", "## Matched Unit Claims")
 if (matchedUnits.length === 0) {
-  lines.push("No direct Unit matrix claims matched. Search `plans/unit-profile-coverage/unit-matrix.json` if needed.")
+  lines.push("No direct Unit matrix claims matched. Search " + tick + "plans/unit-profile-coverage/unit-matrix.json" + tick + " if needed.")
 } else {
   lines.push("| Unit | Kind | Executable | Claim | Source |")
   lines.push("|---|---|---:|---|---|")
   for (const unit of cap(matchedUnits, 40)) {
-    lines.push(`| ${fmt(unit.unitId)} | ${fmt(unit.kind)} | ${unit.executableMechanics ? "yes" : "no"} | ${fmt(unit.claim?.tag)}: ${fmt(claimText(unit.claim))} | ${fmt(unit.sourceRecordPath)} |`)
+    lines.push("| " + fmt(unit.unitId) + " | " + fmt(unit.kind) + " | " + (unit.executableMechanics ? "yes" : "no") + " | " + fmt(unit.claim?.tag) + ": " + fmt(claimText(unit.claim)) + " | " + fmt(unit.sourceRecordPath) + " |")
   }
   if (matchedUnits.length > 40) {
-    lines.push(`| ... | ... | ... | ... | ${matchedUnits.length - 40} more Units omitted; inspect unit-matrix.json. |`)
+    lines.push("| ... | ... | ... | ... | " + (matchedUnits.length - 40) + " more Units omitted; inspect unit-matrix.json. |")
   }
 }
 lines.push("", "## Expected File Families")
 for (const family of (fileFamilies[taskType] ?? fileFamilies.implementation)) {
-  lines.push(`- ${family}`)
+  lines.push("- " + family)
 }
 lines.push("", "## Checklist")
 for (const item of (checklistByType[taskType] ?? checklistByType.implementation)) {
-  lines.push(`- ${item}`)
+  lines.push("- " + item)
 }
 lines.push("", "## Suggested First Reads")
 lines.push("- AGENTS.md / CLAUDE.md")
 lines.push("- UBIQUITOUS_LANGUAGE.md")
-lines.push("- Relevant `.references/srd-5.2.1/` file(s) named by the task body")
+lines.push("- Relevant " + tick + ".references/srd-5.2.1/" + tick + " file(s) named by the task body")
 if (unitIds.length > 0) {
-  lines.push(`- Search affected units: ${unitIds.map((id) => `\`${id}\``).join(", ")}`)
+  lines.push("- Search affected units: " + unitIds.map((id) => tick + id + tick).join(", "))
 }
-lines.push("- For generated matrix changes, run or inspect `pnpm unit-profile-coverage:check --write` / `pnpm unit-profile-coverage:check` as appropriate.")
+lines.push("- For generated matrix changes, run or inspect " + tick + "pnpm unit-profile-coverage:check --write" + tick + " / " + tick + "pnpm unit-profile-coverage:check" + tick + " as appropriate.")
 
-fs.writeFileSync(outputPath, `${lines.join("\n")}\n`)
+fs.writeFileSync(outputPath, lines.join("\n") + "\n")
 NODE
 }
 
@@ -2254,7 +2258,7 @@ const addMetric = (label, keys) => {
   const left = get(before, keys)
   const right = get(after, keys)
   const fmt = (value) => typeof value === "object" && value
-    ? `${value.numerator ?? value.value ?? "?"}${value.denominator ? `/${value.denominator}` : ""}${value.percent ? ` ${value.percent}` : ""}`
+    ? String(value.numerator ?? value.value ?? "?") + (value.denominator ? "/" + value.denominator : "") + (value.percent ? " " + value.percent : "")
     : JSON.stringify(value)
   const a = fmt(left)
   const b = fmt(right)
@@ -2272,10 +2276,10 @@ if (rows.length === 0) {
   lines.push("| Area | Metric | Before | After | Delta |")
   lines.push("|---|---|---:|---:|---:|")
   for (const [area, metric, a, b, delta] of rows) {
-    lines.push(`| ${area} | ${metric} | ${a} | ${b} | ${delta} |`)
+    lines.push("| " + area + " | " + metric + " | " + a + " | " + b + " | " + delta + " |")
   }
 }
-fs.writeFileSync(outputPath, `${lines.join("\n")}\n`)
+fs.writeFileSync(outputPath, lines.join("\n") + "\n")
 NODE
 }
 
