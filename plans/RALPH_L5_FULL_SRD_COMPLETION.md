@@ -199,7 +199,7 @@
     {
       "number": 33,
       "id": "L5FULL-FUT-17-REVIVIFY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Revivify"
     },
     {
