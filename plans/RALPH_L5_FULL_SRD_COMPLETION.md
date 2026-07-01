@@ -157,7 +157,7 @@
     {
       "number": 26,
       "id": "L5FULL-FUT-10-FEAR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Fear"
     },
     {
