@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # @file scripts/sync-active-plan-to-ralph.sh
-# @brief Commit a plan update onto a live Ralph launcher branch.
+# @brief Sync the active plan into a Ralph integration branch.
 # @description
 #   Operator helper for mid-run queue edits. Requires a target
-#   ralph/*/integration worktree and prints target and branch facts, plus the
+#   `ralph/*/integration` worktree and prints target and branch facts, plus the
 #   new commit when a sync commit is created.
 set -euo pipefail
 
@@ -13,12 +13,12 @@ Usage:
   scripts/sync-active-plan-to-ralph.sh [--target /path/to/ralph-launcher] [--source /path/to/ACTIVE_PLAN.md] [--message "plan: sync active plan"]
 
 Behavior:
-  - Copies the source ACTIVE_PLAN.md into the active Ralph launcher worktree.
-  - Commits the synced plan on the launcher's current branch.
+  - Copies the source ACTIVE_PLAN.md into the target Ralph integration worktree.
+  - Commits the synced plan on the target branch when the source differs.
   - Auto-detects the launcher worktree from a live `scripts/ralph-run.sh` process when --target is omitted.
 
 Notes:
-  - This script syncs the live Ralph branch only. Commit the source plan on master first if
+  - This script syncs a Ralph integration branch only. Commit the source plan on master first if
     you want the change to persist outside the current run.
   - Ralph only picks up tasks that exist on the branch/worktree it is actively running in.
 EOF

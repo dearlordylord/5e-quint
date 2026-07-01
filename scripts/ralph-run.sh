@@ -949,17 +949,26 @@ cleanup_active_worktrees() {
   fi
 }
 
-remove_array_value() {
+:remove-array-value() {
   local array_name="$1"
   local needle="$2"
   local item
-  local -a retained=()
-  local -n values="$array_name"
+  local -a remaining=()
 
-  for item in "${values[@]}"; do
-    [[ "$item" == "$needle" ]] || retained+=("$item")
+  case "$array_name" in
+    active_worktrees | task_branches)
+      ;;
+    *)
+      die "unsupported array for exact removal: $array_name"
+      ;;
+  esac
+
+  local -n target_array="$array_name"
+
+  for item in "${target_array[@]}"; do
+    [[ "$item" == "$needle" ]] || remaining+=("$item")
   done
-  values=("${retained[@]}")
+  target_array=("${remaining[@]}")
 }
 
 cleanup() {
@@ -1017,6 +1026,7 @@ write_run_report() {
   local head=""
   local branch=""
   local clean="unknown"
+  local markdown_tick='`'
   branch="$(git branch --show-current 2>/dev/null || true)"
   head="$(git rev-parse --short HEAD 2>/dev/null || true)"
   if git diff --quiet >/dev/null 2>&1 && git diff --cached --quiet >/dev/null 2>&1; then
@@ -1027,13 +1037,13 @@ write_run_report() {
 
   {
     printf '# Ralph Run Report\n\n'
-    printf '%s\n' "- Run id: \`$run_id\`"
-    printf '%s\n' "- Exit status: \`$status\`"
-    printf '%s\n' "- Branch: \`$branch\`"
-    printf '%s\n' "- HEAD: \`$head\`"
-    printf '%s\n' "- Base: \`$base_ref\` \`$base_sha\`"
-    printf '%s\n' "- Output branch: \`$output_branch\`"
-    printf '%s\n' "- Main worktree clean: \`$clean\`"
+    printf -- '- Run id: %s%s%s\n' "$markdown_tick" "$run_id" "$markdown_tick"
+    printf -- '- Exit status: %s%s%s\n' "$markdown_tick" "$status" "$markdown_tick"
+    printf -- '- Branch: %s%s%s\n' "$markdown_tick" "$branch" "$markdown_tick"
+    printf -- '- HEAD: %s%s%s\n' "$markdown_tick" "$head" "$markdown_tick"
+    printf -- '- Base: %s%s%s %s%s%s\n' "$markdown_tick" "$base_ref" "$markdown_tick" "$markdown_tick" "$base_sha" "$markdown_tick"
+    printf -- '- Output branch: %s%s%s\n' "$markdown_tick" "$output_branch" "$markdown_tick"
+    printf -- '- Main worktree clean: %s%s%s\n' "$markdown_tick" "$clean" "$markdown_tick"
     printf '\n## Last Error\n\n'
     if [[ -s "$last_error_file" ]]; then
       sed -n '1,80p' "$last_error_file"
@@ -1057,9 +1067,10 @@ write_run_report() {
 
 write_process_snapshot() {
   local output_file="$1"
+  local markdown_tick='`'
   {
     printf '# Ralph Process Snapshot\n\n'
-    printf '%s\n\n' "Generated: \`$(date -u +%Y-%m-%dT%H:%M:%SZ)\`"
+    printf 'Generated: %s%s%s\n\n' "$markdown_tick" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$markdown_tick"
     printf '## Ralph / Codex / OpenCode\n\n'
     ps -eo pid,ppid,etimes,stat,cmd |
       rg 'ralph-run|codex exec|opencode run' |
@@ -2616,10 +2627,16 @@ run_task_attempt() {
   append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "completed" "$new_head" "$task_title"
 
   if [[ "$keep_worktrees" == false ]]; then
-    git worktree remove --force "$implementation_worktree" >/dev/null 2>&1 || true
-    git branch -D "$implementation_branch" >/dev/null 2>&1 || true
-    remove_array_value active_worktrees "$implementation_worktree"
-    remove_array_value task_branches "$implementation_branch"
+    if git worktree remove --force "$implementation_worktree" >/dev/null 2>&1; then
+      :remove-array-value active_worktrees "$implementation_worktree"
+    else
+      log "warning: failed to remove task worktree; cleanup will retry: $implementation_worktree"
+    fi
+    if git branch -D "$implementation_branch" >/dev/null 2>&1; then
+      :remove-array-value task_branches "$implementation_branch"
+    else
+      log "warning: failed to remove task branch; cleanup will retry: $implementation_branch"
+    fi
     rmdir "$(dirname "$implementation_worktree")" >/dev/null 2>&1 || true
   fi
 
