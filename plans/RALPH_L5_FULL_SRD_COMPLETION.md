@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L5FULL-SDK-09-MASS-HEALING-WORD",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Mass Healing Word"
     },
     {
