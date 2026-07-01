@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "L5FULL-FUT-04-BESTOW-CURSE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Bestow Curse"
     },
     {
