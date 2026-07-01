@@ -3872,6 +3872,54 @@ const seededSdkScenarioRows = [
       '"class_wizard"',
     ],
   },
+  {
+    candidateUnitId: "glyph_of_warding",
+    className: "Bard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
+    tracerNeedles: [
+      "glyphOfWardingSpellId",
+      "glyphOfWardingBardId",
+      "levelFiveBardBuild",
+      '"class_bard"',
+    ],
+  },
+  {
+    candidateUnitId: "glyph_of_warding",
+    className: "Cleric",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
+    tracerNeedles: [
+      "glyphOfWardingSpellId",
+      "glyphOfWardingClericId",
+      "levelFiveClericBuild",
+      '"class_cleric"',
+    ],
+  },
+  {
+    candidateUnitId: "glyph_of_warding",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
+    tracerNeedles: [
+      "glyphOfWardingSpellId",
+      "glyphOfWardingWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
 ];
 
 function animalFriendshipSdkHelperNeedles() {

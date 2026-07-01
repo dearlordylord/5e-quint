@@ -576,6 +576,10 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Glyph of Warding",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -583,7 +587,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 221,
         "lineStart": 221,
@@ -1769,6 +1773,10 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Glyph of Warding",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -1776,7 +1784,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 211,
         "lineStart": 211,
@@ -6518,6 +6526,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Glyph of Warding",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -6525,7 +6537,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 247,
         "lineStart": 247,
@@ -7517,97 +7529,6 @@
     }
   ],
   "level5ScenarioGroups": [
-    {
-      "candidateUnitIds": [
-        "glyph_of_warding"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:glyph-of-warding",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"glyph_of_warding\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:221",
-        ".references/srd-5.2.1/Classes/Cleric.md:211",
-        ".references/srd-5.2.1/Classes/Wizard.md:247"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "glyph_of_warding",
-          "className": "Bard",
-          "concept": "Bard spell list Glyph of Warding",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 221,
-            "lineStart": 221,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "glyph_of_warding",
-          "className": "Cleric",
-          "concept": "Cleric spell list Glyph of Warding",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 211,
-            "lineStart": 211,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "glyph_of_warding",
-          "className": "Wizard",
-          "concept": "Wizard spell list Glyph of Warding",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 247,
-            "lineStart": 247,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Glyph of Warding",
-        "Cleric spell list Glyph of Warding",
-        "Wizard spell list Glyph of Warding"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
     {
       "candidateUnitIds": [
         "haste"
@@ -11156,6 +11077,61 @@
     },
     {
       "candidateUnitIds": [
+        "glyph_of_warding"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-bard-glyph-of-warding",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Bard:glyph_of_warding\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:221"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "glyph_of_warding",
+          "className": "Bard",
+          "concept": "Bard spell list Glyph of Warding",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 221,
+            "lineStart": 221,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Glyph of Warding"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "dispel_magic"
       ],
       "categories": [
@@ -11202,6 +11178,61 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Dispel Magic"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "glyph_of_warding"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-cleric-glyph-of-warding",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Cleric:glyph_of_warding\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:211"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "glyph_of_warding",
+          "className": "Cleric",
+          "concept": "Cleric spell list Glyph of Warding",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 211,
+            "lineStart": 211,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Glyph of Warding"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -11862,6 +11893,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Fly"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "glyph_of_warding"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-wizard-glyph-of-warding",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Wizard:glyph_of_warding\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:247"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "glyph_of_warding",
+          "className": "Wizard",
+          "concept": "Wizard spell list Glyph of Warding",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 247,
+            "lineStart": 247,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Glyph of Warding"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -18411,6 +18497,10 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Glyph of Warding",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -18418,7 +18508,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 221,
         "lineStart": 221,
@@ -22556,6 +22646,10 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Glyph of Warding",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -22563,7 +22657,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 211,
         "lineStart": 211,
@@ -50303,6 +50397,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Glyph of Warding",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -50310,7 +50408,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 247,
         "lineStart": 247,
@@ -57168,21 +57266,21 @@
       "closure-review-needed": 36,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 43,
-      "sdk-scenario-needed": 21,
+      "sdk-scenario-needed": 18,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 20
+      "seed-scenario-present": 23
     },
-    "level5ScenarioGroups": 82,
+    "level5ScenarioGroups": 84,
     "level5ScenarioGroupsByLane": {
-      "battle-spell-sdk": 8,
+      "battle-spell-sdk": 7,
       "explicit-closure": 12,
       "feature-owner-review": 2,
       "future-owner-before-sdk": 22,
       "owner-review": 6,
-      "seed-present": 20,
+      "seed-present": 23,
       "spell-effect-owner-review": 12
     },
-    "level5SeedScenarioRows": 20,
+    "level5SeedScenarioRows": 23,
     "levelOneFiveMinedRows": 770,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -57231,16 +57329,16 @@
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 420,
+      "sdk-scenario-needed": 417,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 84,
+      "seed-scenario-present": 87,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 421,
+    "scenarioGroups": 423,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 79,
+      "battle-spell-sdk": 78,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -57250,7 +57348,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 84,
+      "seed-present": 87,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -57260,7 +57358,7 @@
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
-      "L15-SDK-RAW-07": 82
+      "L15-SDK-RAW-07": 84
     }
   },
   "scenarioGroups": [
@@ -81280,97 +81378,6 @@
     },
     {
       "candidateUnitIds": [
-        "glyph_of_warding"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:glyph-of-warding",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"glyph_of_warding\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:221",
-        ".references/srd-5.2.1/Classes/Cleric.md:211",
-        ".references/srd-5.2.1/Classes/Wizard.md:247"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "glyph_of_warding",
-          "className": "Bard",
-          "concept": "Bard spell list Glyph of Warding",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 221,
-            "lineStart": 221,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "glyph_of_warding",
-          "className": "Cleric",
-          "concept": "Cleric spell list Glyph of Warding",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 211,
-            "lineStart": 211,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "glyph_of_warding",
-          "className": "Wizard",
-          "concept": "Wizard spell list Glyph of Warding",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 247,
-            "lineStart": 247,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Glyph of Warding",
-        "Cleric spell list Glyph of Warding",
-        "Wizard spell list Glyph of Warding"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "haste"
       ],
       "categories": [
@@ -84917,6 +84924,61 @@
     },
     {
       "candidateUnitIds": [
+        "glyph_of_warding"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-bard-glyph-of-warding",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Bard:glyph_of_warding\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:221"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "glyph_of_warding",
+          "className": "Bard",
+          "concept": "Bard spell list Glyph of Warding",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 221,
+            "lineStart": 221,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Glyph of Warding"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "dispel_magic"
       ],
       "categories": [
@@ -84963,6 +85025,61 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Dispel Magic"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "glyph_of_warding"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-cleric-glyph-of-warding",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Cleric:glyph_of_warding\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:211"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "glyph_of_warding",
+          "className": "Cleric",
+          "concept": "Cleric spell list Glyph of Warding",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 211,
+            "lineStart": 211,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Glyph of Warding"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85623,6 +85740,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Fly"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "glyph_of_warding"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-wizard-glyph-of-warding",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Wizard:glyph_of_warding\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:247"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "glyph_of_warding",
+          "className": "Wizard",
+          "concept": "Wizard spell list Glyph of Warding",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 247,
+            "lineStart": 247,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Glyph of Warding"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -91778,6 +91950,63 @@
       "tracerNeedles": [
         "flySpellId",
         "flyWizardId",
+        "levelFiveWizardBuild",
+        "\"class_wizard\""
+      ]
+    },
+    {
+      "candidateUnitId": "glyph_of_warding",
+      "className": "Bard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
+      "rowKey": "spell-level-3:Bard:glyph_of_warding",
+      "tracerNeedles": [
+        "glyphOfWardingSpellId",
+        "glyphOfWardingBardId",
+        "levelFiveBardBuild",
+        "\"class_bard\""
+      ]
+    },
+    {
+      "candidateUnitId": "glyph_of_warding",
+      "className": "Cleric",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
+      "rowKey": "spell-level-3:Cleric:glyph_of_warding",
+      "tracerNeedles": [
+        "glyphOfWardingSpellId",
+        "glyphOfWardingClericId",
+        "levelFiveClericBuild",
+        "\"class_cleric\""
+      ]
+    },
+    {
+      "candidateUnitId": "glyph_of_warding",
+      "className": "Wizard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
+      "rowKey": "spell-level-3:Wizard:glyph_of_warding",
+      "tracerNeedles": [
+        "glyphOfWardingSpellId",
+        "glyphOfWardingWizardId",
         "levelFiveWizardBuild",
         "\"class_wizard\""
       ]

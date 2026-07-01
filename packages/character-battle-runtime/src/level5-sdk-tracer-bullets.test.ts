@@ -3,6 +3,7 @@ import {
   battleSpellEffectOccurrenceId,
   breakBattleConcentration,
   combatantId,
+  discoverBattleActs,
   endTurn,
   resolveBattleInterrupt,
   resolveBattleSubject,
@@ -102,6 +103,15 @@ const fireballTargetId = combatantId("combatant:l5-tracer-fireball-target");
 const flySorcererId = combatantId("combatant:l5-tracer-fly-sorcerer");
 const flyWarlockId = combatantId("combatant:l5-tracer-fly-warlock");
 const flyWizardId = combatantId("combatant:l5-tracer-fly-wizard");
+const glyphOfWardingBardId = combatantId(
+  "combatant:l5-tracer-glyph-of-warding-bard",
+);
+const glyphOfWardingClericId = combatantId(
+  "combatant:l5-tracer-glyph-of-warding-cleric",
+);
+const glyphOfWardingWizardId = combatantId(
+  "combatant:l5-tracer-glyph-of-warding-wizard",
+);
 
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
@@ -116,10 +126,12 @@ const dispelMagicSpellId = "dispel_magic";
 const continualFlameSpellId = "continual_flame";
 const fireballSpellId = "fireball";
 const flySpellId = "fly";
+const glyphOfWardingSpellId = "glyph_of_warding";
 const counterspellCastLevel = 3;
 const dispelMagicCastLevel = 3;
 const fireballCastLevel = 3;
 const flyCastLevel = 3;
+const glyphOfWardingCastLevel = 3;
 const flySpeedFeet = 60;
 const magicMissileSpellId = "magic_missile";
 const magicMissileTriggerSlotLevel = 1;
@@ -146,6 +158,11 @@ type FireballClassAccessCase = {
   readonly build: CharacterBuild;
 };
 type FlyClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
+};
+type GlyphOfWardingClassAccessCase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly casterId: CombatantId;
   readonly build: CharacterBuild;
@@ -1033,6 +1050,58 @@ describe("level 5 SDK tracer bullets", () => {
     }
   });
 
+  test("Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery", () => {
+    const glyphOfWardingCases = [
+      {
+        sourceUnitId: "class_bard",
+        casterId: glyphOfWardingBardId,
+        build: levelFiveBardBuild({
+          preparedSpells: [glyphOfWardingSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_cleric",
+        casterId: glyphOfWardingClericId,
+        build: levelFiveClericBuild({
+          preparedSpells: [glyphOfWardingSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_wizard",
+        casterId: glyphOfWardingWizardId,
+        build: levelFiveWizardBuild({
+          preparedSpells: [glyphOfWardingSpellId],
+        }),
+      },
+    ] as const satisfies ReadonlyArray<GlyphOfWardingClassAccessCase>;
+
+    for (const glyphOfWardingCase of glyphOfWardingCases) {
+      expectGlyphOfWardingClassAccess(glyphOfWardingCase);
+
+      const state = battleFromSheets({
+        battleIdText: `battle:l5-tracer-glyph-of-warding-${glyphOfWardingCase.sourceUnitId}`,
+        characters: [
+          characterSheet({
+            characterIdText: `character:l5-tracer-glyph-of-warding-${glyphOfWardingCase.sourceUnitId}`,
+            build: glyphOfWardingCase.build,
+            combatantId: glyphOfWardingCase.casterId,
+            initiative: 20,
+          }),
+        ],
+        monsters: [],
+      });
+      const glyphCreationActs = discoverBattleActs(state).filter(
+        (candidate) =>
+          candidate.subject.tag === "actionSpell" &&
+          candidate.subject.mode.tag === "cast" &&
+          candidate.subject.invocation.tag === "spellSlot" &&
+          candidate.subject.invocation.spellId === glyphOfWardingSpellId,
+      );
+
+      expect(glyphCreationActs).toEqual([]);
+    }
+  });
+
   test("Sorcerous Restoration uses the sheet rest lifecycle to recover half level rounded down once per Long Rest", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
@@ -1231,6 +1300,31 @@ function expectFlyClassAccess(input: {
       slots: expect.arrayContaining([
         expect.objectContaining({
           spellLevel: flyCastLevel,
+          count: 2,
+        }),
+      ]),
+    },
+  });
+}
+
+function expectGlyphOfWardingClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly build: CharacterBuild;
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([glyphOfWardingSpellId]),
+      }),
+    ]),
+  );
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({
+          spellLevel: glyphOfWardingCastLevel,
           count: 2,
         }),
       ]),

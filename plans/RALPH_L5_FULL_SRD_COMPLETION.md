@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L5FULL-SDK-05-GLYPH-OF-WARDING",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Glyph of Warding"
     },
     {

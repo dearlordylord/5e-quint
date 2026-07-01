@@ -16,9 +16,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-5 mined rows | 770 |
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
-| Existing level-5 SDK seed scenario rows | 20 |
-| Scenario groups | 421 |
-| Level 5 scenario groups | 82 |
+| Existing level-5 SDK seed scenario rows | 23 |
+| Scenario groups | 423 |
+| Level 5 scenario groups | 84 |
 
 ### All Level 1-5 Rows by Level Band
 
@@ -42,9 +42,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 420 |
+| sdk-scenario-needed | 417 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 84 |
+| seed-scenario-present | 87 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -79,14 +79,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-04 | 33 |
 | L15-SDK-RAW-05 | 107 |
 | L15-SDK-RAW-06 | 25 |
-| L15-SDK-RAW-07 | 82 |
+| L15-SDK-RAW-07 | 84 |
 
 ### Scenario Groups by Lane
 
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 79 |
+| battle-spell-sdk | 78 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -96,7 +96,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
-| seed-present | 84 |
+| seed-present | 87 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -108,9 +108,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 36 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 43 |
-| sdk-scenario-needed | 21 |
+| sdk-scenario-needed | 18 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 20 |
+| seed-scenario-present | 23 |
 
 ### Level 5 Completion Rows by Proposed Owner Boundary
 
@@ -134,12 +134,12 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Lane | Groups |
 | --- | ---: |
-| battle-spell-sdk | 8 |
+| battle-spell-sdk | 7 |
 | explicit-closure | 12 |
 | feature-owner-review | 2 |
 | future-owner-before-sdk | 22 |
 | owner-review | 6 |
-| seed-present | 20 |
+| seed-present | 23 |
 | spell-effect-owner-review | 12 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -237,12 +237,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fly` / `spell-level-3:Sorcerer:fly`: level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed
 - `srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_fly` / `spell-level-3:Warlock:fly`: level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_fly` / `spell-level-3:Wizard:fly`: level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed
+- `srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding` / `spell-level-3:Bard:glyph_of_warding`: level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery
+- `srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding` / `spell-level-3:Cleric:glyph_of_warding`: level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery
+- `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding` / `spell-level-3:Wizard:glyph_of_warding`: level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery
 
 ## Level 5 Scenario Groups
 
 | Task | Lane | Rows | Bands | Classes | Units | Sample concepts | Suggested scenario |
 | --- | --- | ---: | --- | --- | --- | --- | --- |
-| L15-SDK-RAW-07 | battle-spell-sdk | 3 | spell-level-3 | Bard, Cleric, Wizard | `glyph_of_warding` | Bard spell list Glyph of Warding<br>Cleric spell list Glyph of Warding<br>Wizard spell list Glyph of Warding | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 1 | spell-level-3 | Sorcerer | `haste` | Sorcerer spell list Haste | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard | `hypnotic_pattern` | Bard spell list Hypnotic Pattern<br>Sorcerer spell list Hypnotic Pattern<br>Warlock spell list Hypnotic Pattern<br>Wizard spell list Hypnotic Pattern | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 2 | spell-level-3 | Sorcerer, Wizard | `lightning_bolt` | Sorcerer spell list Lightning Bolt<br>Wizard spell list Lightning Bolt | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
@@ -297,7 +299,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Rogue | `rogue_cunning_strike` | Rogue Cunning Strike | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Sorcerer | `sorcerer_sorcerous_restoration` | Sorcerer Sorcerous Restoration | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `dispel_magic` | Bard spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `glyph_of_warding` | Bard spell list Glyph of Warding | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Cleric | `dispel_magic` | Cleric spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Cleric | `glyph_of_warding` | Cleric spell list Glyph of Warding | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Druid | `dispel_magic` | Druid spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `counterspell` | Sorcerer spell list Counterspell | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `dispel_magic` | Sorcerer spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
@@ -310,6 +314,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `dispel_magic` | Wizard spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `fireball` | Wizard spell list Fireball | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `fly` | Wizard spell list Fly | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `glyph_of_warding` | Wizard spell list Glyph of Warding | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `haste` | Wizard spell list Haste | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `protection_from_energy` | Wizard spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 4 | spell-level-3 | Bard, Cleric, Sorcerer, Wizard | `clairvoyance` | Bard spell list Clairvoyance<br>Cleric spell list Clairvoyance<br>Sorcerer spell list Clairvoyance<br>Wizard spell list Clairvoyance | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
@@ -338,7 +343,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Bard spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Bard.md:218` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
 | spell-level-3 | Bard spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Bard.md:219` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Dispel Magic | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Bard spell list Fear | `fear` | `.references/srd-5.2.1/Classes/Bard.md:220` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers. |
-| spell-level-3 | Bard spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Bard.md:221` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Bard spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Bard.md:221` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Bard spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Bard.md:222` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Bard spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Bard.md:223` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
 | spell-level-3 | Bard spell list Mass Healing Word | `mass_healing_word` | `.references/srd-5.2.1/Classes/Bard.md:224` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
@@ -360,7 +365,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Cleric spell list Create Food and Water | `create_food_and_water` | `.references/srd-5.2.1/Classes/Cleric.md:208` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers. |
 | spell-level-3 | Cleric spell list Daylight | `daylight` | `.references/srd-5.2.1/Classes/Cleric.md:209` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers. |
 | spell-level-3 | Cleric spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Cleric.md:210` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Dispel Magic | Owner-specific operational evidence is classified and present. |
-| spell-level-3 | Cleric spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Cleric.md:211` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Cleric spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Cleric.md:211` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Cleric spell list Magic Circle | `magic_circle` | `.references/srd-5.2.1/Classes/Cleric.md:212` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name. |
 | spell-level-3 | Cleric spell list Mass Healing Word | `mass_healing_word` | `.references/srd-5.2.1/Classes/Cleric.md:213` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Cleric spell list Meld into Stone | `meld_into_stone` | `.references/srd-5.2.1/Classes/Cleric.md:214` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name. |
@@ -448,7 +453,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Wizard spell list Fireball | `fireball` | `.references/srd-5.2.1/Classes/Wizard.md:244` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Fireball | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Fly | `fly` | `.references/srd-5.2.1/Classes/Wizard.md:245` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Gaseous Form | `gaseous_form` | `.references/srd-5.2.1/Classes/Wizard.md:246` | catalog-installed-owner-evidence-required | battle-runtime-required | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance. |
-| spell-level-3 | Wizard spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Wizard.md:247` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Wizard spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Wizard.md:247` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Haste | `haste` | `.references/srd-5.2.1/Classes/Wizard.md:248` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Haste | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Wizard.md:249` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Lightning Bolt | `lightning_bolt` | `.references/srd-5.2.1/Classes/Wizard.md:250` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
