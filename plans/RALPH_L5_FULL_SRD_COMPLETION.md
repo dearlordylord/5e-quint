@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "L5FULL-FUT-05-BLINK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Blink"
     },
     {
