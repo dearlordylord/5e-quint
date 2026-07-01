@@ -151,7 +151,7 @@
     {
       "number": 25,
       "id": "L5FULL-FUT-09-DRUID-WILD-RESURGENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Druid Wild Resurgence"
     },
     {
