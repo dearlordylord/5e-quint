@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "L5FULL-FUT-02-BARD-FONT-OF-INSPIRATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Bard Font of Inspiration"
     },
     {
