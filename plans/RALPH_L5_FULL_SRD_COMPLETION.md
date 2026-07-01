@@ -211,7 +211,7 @@
     {
       "number": 35,
       "id": "L5FULL-FUT-19-STINKING-CLOUD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Stinking Cloud"
     },
     {
