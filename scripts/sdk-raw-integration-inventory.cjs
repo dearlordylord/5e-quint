@@ -121,6 +121,15 @@ const ownerPathPrefixes = [
   ["packages/character-battle-runtime/", "character-battle-runtime"],
   ["packages/battle-runtime/", "character-battle-to-battle"],
 ];
+const explicitClosureRecordedDisposition = "explicit-closure-recorded";
+const levelFiveClassTableSummaryClosure = Object.freeze({
+  source: "sdk-class-table-summary-closure",
+  taskId: "L5FULL-CLOSE-01-LEVEL5-CLASS-TABLES",
+  closureKind: "sdk-scope-table-only-closure",
+  audit: "plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md",
+  reason:
+    "The level-5 class table row is a table summary. The progression delta audit maps Proficiency Bonus, Spell Access, Spell Slot, Pact Slot, Weapon Mastery, and feature-resource deltas to existing generic owners, while feature grants and spell pressure remain separate source rows.",
+});
 
 const seededSdkScenarioRows = [
   {
@@ -4411,6 +4420,23 @@ function battleReadinessStateIs(row, state) {
   return battleReadiness.state === state;
 }
 
+function isLevelFiveClassTableSummaryRow(row) {
+  return row.levelBand === "level-5" && row.rowKind === "class-table-summary";
+}
+
+function levelFiveClassTableSummaryRecordedClosureEvidence(row, disposition) {
+  if (disposition !== explicitClosureRecordedDisposition) return undefined;
+  if (
+    !isLevelFiveClassTableSummaryRow(row) ||
+    row.supportSnapshot.finalDisposition !== "non-runtime"
+  ) {
+    throw new Error(
+      `Internal invariant failed: ${explicitClosureRecordedDisposition} must be restricted to non-runtime level-5 class-table summary rows.`,
+    );
+  }
+  return levelFiveClassTableSummaryClosure;
+}
+
 function profileOwnerBoundary(profileId) {
   const matched = ownerProfilePrefixes.find(([prefix]) =>
     profileId.startsWith(prefix),
@@ -4634,7 +4660,9 @@ function levelReportSummary(input) {
 }
 
 function ownerBoundaryForMiningRow(row, ownerEvidence) {
-  if (row.rowKind === "class-table-summary") return "build-progression";
+  if (row.rowKind === "class-table-summary") {
+    return "build-progression";
+  }
   if (buildSheetRowKinds.has(row.rowKind)) return "character-build-to-sheet";
   if (buildBattleRowKinds.has(row.rowKind)) return "character-build-to-battle";
   if (sheetSpellAccessRowKinds.has(row.rowKind)) {
@@ -4713,6 +4741,9 @@ function scenarioLaneForRow(row) {
   }
   if (row.sdkInventoryDisposition === "future-owner-before-sdk") {
     return "future-owner-before-sdk";
+  }
+  if (row.sdkInventoryDisposition === explicitClosureRecordedDisposition) {
+    return "explicit-closure";
   }
   if (row.sdkInventoryDisposition === "explicit-closure-needed") {
     return "explicit-closure";
@@ -4857,6 +4888,13 @@ function scenarioSuggestion(group) {
     return "Review lower-owner evidence and either add a build/sheet SDK assertion for user-reachable state or retain an explicit closure with the local RAW anchor.";
   }
   if (group.lane === "explicit-closure") {
+    if (
+      group.sdkInventoryDispositions.includes(
+        explicitClosureRecordedDisposition,
+      )
+    ) {
+      return "Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row.";
+    }
     return "Keep this generated non-runtime class-table closure tied to the local class table row.";
   }
   if (group.lane === "future-owner-before-sdk") {
@@ -5162,6 +5200,9 @@ function sdkInventoryDisposition(row, proposedOwnerBoundary) {
     return "seed-scenario-present";
   }
   if (row.supportSnapshot.finalDisposition === "non-runtime") {
+    if (isLevelFiveClassTableSummaryRow(row)) {
+      return explicitClosureRecordedDisposition;
+    }
     return "explicit-closure-needed";
   }
   if (proposedOwnerBoundary === "future-runtime-owner-before-sdk") {
@@ -5212,6 +5253,12 @@ function projectMiningRow(row, ownerEvidence) {
   );
   const { proposedOwnerBoundary } = ownerBoundary;
   const disposition = sdkInventoryDisposition(row, proposedOwnerBoundary);
+  const recordedClosure = levelFiveClassTableSummaryRecordedClosureEvidence(
+    row,
+    disposition,
+  );
+  const ownerBoundaryEvidence =
+    recordedClosure ?? ownerBoundary.ownerBoundaryEvidence;
   return {
     rowId: row.rowId,
     levelBand: row.levelBand,
@@ -5230,17 +5277,20 @@ function projectMiningRow(row, ownerEvidence) {
       proposedOwnerBoundary,
       disposition,
     ),
-    ...(ownerBoundary.ownerBoundaryEvidence === undefined
+    ...(ownerBoundaryEvidence === undefined
       ? {}
       : {
-          ownerBoundaryEvidence: ownerBoundary.ownerBoundaryEvidence,
+          ownerBoundaryEvidence,
         }),
     ...(seedScenario === undefined
       ? {}
       : {
           existingSdkScenario: seedScenario,
         }),
-    nextAction: row.nextAction,
+    nextAction:
+      recordedClosure === undefined
+        ? row.nextAction
+        : "SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state.",
   };
 }
 
@@ -5584,6 +5634,12 @@ function renderInventory(inventory) {
     "- Scenario groups are implementation planning groups, not coverage evidence.",
     "  A row is not covered until a deterministic SDK test or explicit closure",
     "  asserts its RAW-facing obligation.",
+    "- `explicit-closure-recorded` means the level-5 class-table summary row has",
+    "  recorded SDK-scope table-only closure evidence from",
+    "  `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`; no SDK",
+    "  scenario or runtime state is expected for the summary row itself.",
+    "  `explicit-closure-needed` remains the unresolved generated disposition",
+    "  for non-runtime rows without a task-recorded SDK closure.",
     "- Supported class-feature owner boundaries are classified from",
     "  `unit-claims.jsonl` profile ids and unit-level owner-evidence rows.",
     "  `multi-owner-sdk-split` means the SDK scenario must assert each profile at",

@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L5FULL-CLOSE-01-LEVEL5-CLASS-TABLES",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Explicitly close the twelve level-5 class-table summary rows"
     },
     {
@@ -413,7 +413,7 @@ closing or implementing the row.
 | # | Task | Lane | Unit(s) | Rows | Current state | Output | Acceptance | SRD anchors |
 | ---: | --- | --- | --- | ---: | --- | --- | --- | --- |
 | 1 | `L5FULL-SEED-01-EXISTING-LEVEL5-SEEDS` | seed-present | `monk_extra_attack`, `monk_stunning_strike`, `rogue_cunning_strike`, `sorcerer_sorcerous_restoration`, `haste`, `protection_from_energy` | 6 | Existing SDK seeds recorded. | Verify seed coverage remains linked to SDK inventory. | `sdk-raw-integration-inventory:check` still reports six level-5 seed rows. | See SDK inventory seed rows. |
-| 2 | `L5FULL-CLOSE-01-LEVEL5-CLASS-TABLES` | explicit-closure | twelve `class_*` level-5 table summaries | 12 | `explicit-closure-needed`, `build-progression`, resolved; progression deltas audited separately. | Record SDK-scope table-only closure citing `L5_PROGRESSION_DELTA_AUDIT.md`. | No class-table summary remains an SDK completion blocker, and no duplicate per-class Proficiency Bonus, Spell Slot, Pact Slot, Weapon Mastery, or feature-resource state is introduced. | See accounting table for twelve class anchors and `L5_PROGRESSION_DELTA_AUDIT.md`. |
+| 2 | `L5FULL-CLOSE-01-LEVEL5-CLASS-TABLES` | explicit-closure | twelve `class_*` level-5 table summaries | 12 | `explicit-closure-recorded`, `build-progression`, resolved; progression deltas audited separately. | Preserve SDK-scope table-only closure citing `L5_PROGRESSION_DELTA_AUDIT.md`. | No class-table summary remains an SDK completion blocker, and no duplicate per-class Proficiency Bonus, Spell Slot, Pact Slot, Weapon Mastery, or feature-resource state is introduced. | See accounting table for twelve class anchors and `L5_PROGRESSION_DELTA_AUDIT.md`. |
 | 3 | `L5FULL-SDK-01-COUNTERSPELL` | battle-spell-sdk | `counterspell` | 3 | `sdk-scenario-needed`, resolved. | Add SDK RAW scenario or class-access assertions. | Scenario covers Sorcerer, Warlock, Wizard access rows and supported runtime behavior. | .references/srd-5.2.1/Classes/Sorcerer.md:302<br>.references/srd-5.2.1/Classes/Warlock.md:380<br>.references/srd-5.2.1/Classes/Wizard.md:241 |
 | 4 | `L5FULL-SDK-02-DISPEL-MAGIC` | battle-spell-sdk | `dispel_magic` | 6 | `sdk-scenario-needed`, resolved. | Add SDK RAW scenario or class-access assertions. | Scenario covers all six class access rows and supported subset semantics. | .references/srd-5.2.1/Classes/Bard.md:219<br>.references/srd-5.2.1/Classes/Cleric.md:210<br>.references/srd-5.2.1/Classes/Druid.md:256<br>.references/srd-5.2.1/Classes/Sorcerer.md:304<br>.references/srd-5.2.1/Classes/Warlock.md:381<br>.references/srd-5.2.1/Classes/Wizard.md:242 |
 | 5 | `L5FULL-SDK-03-FIREBALL` | battle-spell-sdk | `fireball` | 2 | `sdk-scenario-needed`, resolved. | Add SDK RAW scenario or class-access assertions. | Scenario covers Sorcerer and Wizard access rows and supported runtime behavior. | .references/srd-5.2.1/Classes/Sorcerer.md:306<br>.references/srd-5.2.1/Classes/Wizard.md:244 |

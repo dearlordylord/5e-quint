@@ -400,11 +400,12 @@ Current generated findings:
   level 5/spell level 3.
 - The current level-5 SDK dispositions are: 6 seed scenarios present, 35 SDK
   scenarios needed, 6 SDK-scenario-or-owner-closure reviews, 36 unresolved
-  closure reviews, 12 explicit non-runtime closures, and 43
+  closure reviews, 12 recorded explicit non-runtime closures, and 43
   future-owner-before-SDK rows.
 - Across all level 1-5 rows, the current SDK dispositions are: 70 seed scenarios
   present, 434 SDK scenarios needed, 6 SDK-scenario-or-owner-closure reviews,
-  144 unresolved closure reviews, 11 table-only closures, 60 explicit
+  144 unresolved closure reviews, 11 table-only closures, 48 explicit
+  non-runtime closures still needing task closure, 12 recorded explicit
   non-runtime closures, and 45 future-owner-before-SDK rows.
 - The inventory now separates resolved owner boundaries from review buckets:
   626 rows are resolved and 144 are `unresolved-review`; level-5/spell-level-3
