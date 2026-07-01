@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L5FULL-SEED-01-EXISTING-LEVEL5-SEEDS",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Verify existing level-5 SDK seed scenario rows"
     },
     {
