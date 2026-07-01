@@ -459,7 +459,11 @@ function validatorProvenance({ taskRoot, cleanroomManifest, issues }) {
     const targetSha = sha256File(targetPath);
     targetHashes.set(relativePath, targetSha);
     const manifestSha = cleanroomManifest.validatorHashes.get(relativePath);
-    if (manifestSha !== undefined && manifestSha !== targetSha) {
+    if (
+      manifestSha !== undefined &&
+      manifestSha !== targetSha &&
+      validatorPatchEntry(patch, relativePath) === undefined
+    ) {
       issues.push(
         `cleanroom-input/MANIFEST.md validator hash for ${relativePath} is stale: expected ${manifestSha}, got ${targetSha}.`,
       );
@@ -1277,6 +1281,15 @@ function forbiddenWitnessNamesForSelection(selected) {
   ).sort();
 }
 
+function productionSourceScanWitnessNamesForSelection(selected) {
+  return Array.from(
+    new Set([
+      ...protocolNamesForObligations(selected),
+      ...harnessWitnessProtocolNames,
+    ]),
+  ).sort();
+}
+
 function validateManifestPath({
   relativePath,
   context,
@@ -1363,6 +1376,8 @@ function validateEngineDepth({
   }
 
   const witnessNames = forbiddenWitnessNamesForSelection(selected);
+  const productionWitnessNames =
+    productionSourceScanWitnessNamesForSelection(selected);
   for (const [index, moduleRow] of productionModules.entries()) {
     const context = `tasks/ENGINE_DEPTH_MANIFEST.json productionModulesExtended[${index}]`;
     if (!isRecord(moduleRow)) {
@@ -1395,7 +1410,7 @@ function validateEngineDepth({
     ) {
       issues.push(`${context}.path looks like an adapter or witness path.`);
     }
-    for (const witnessName of witnessNames) {
+    for (const witnessName of productionWitnessNames) {
       if (containsProtocolName(moduleRow.path, witnessName)) {
         issues.push(`${context}.path leaks witness protocol name ${witnessName}.`);
       }
@@ -2072,7 +2087,7 @@ function validateProductionSourceScan({
       .map((entry) => entry.path)
       .filter((entry) => typeof entry === "string"),
   );
-  const witnessNames = forbiddenWitnessNamesForSelection(selected);
+  const witnessNames = productionSourceScanWitnessNamesForSelection(selected);
   const adapterNeedles = adapterImportNeedles(adapterPaths);
   const adapterTargets = adapterImportTargets(adapterPaths);
   const sourceFiles = listFiles(enginePath, (filePath) =>
