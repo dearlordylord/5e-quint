@@ -101,7 +101,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 208;
-const expectedLevelOneTwoSeedScenarioRows = 75;
+const expectedLevelOneTwoSeedScenarioRows = 76;
 const handBuiltSourceSeedRowIds = new Set([
   "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
   "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -522,6 +522,69 @@ const seededSdkScenarioRows = [
           '"warlock_eldritch_invocations"',
           '"eldritch_invocations"',
           '"eldritch_mind"',
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "class_bard",
+    className: "Bard",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Bard Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    sourceProof: "legal-build-sheet-owner",
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Bard.md:69-92",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-57",
+    ],
+    rowId:
+      "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-bard-spellcasting-access"',
+      "bardSpellAccessDraftPlan",
+      'battle: { tag: "withoutBattle" }',
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+      "fixture.sheet.build",
+      'sourceUnitId: "class_bard"',
+      'spellcastingAbility: "cha"',
+      "cantrips: bardSpellAccessCantrips",
+      "spellbook: []",
+      "preparedSpells: bardSpellAccessPreparedSpells",
+      'spellcastingFocuses: ["musical_instrument"]',
+      "slotPools",
+      "characterSheetSpellSlots(fixture.sheet)",
+      "characterSheetPactSlots(fixture.sheet)",
+    ],
+    helperNeedles: [
+      {
+        anchor: "const bardSpellAccessCantrips =",
+        needles: ['"dancing_lights"', "viciousMockerySpellId"],
+      },
+      {
+        anchor: "const bardSpellAccessPreparedSpells =",
+        needles: [
+          '"charm_person"',
+          '"color_spray"',
+          "dissonantWhispersSpellId",
+          "healingWordSpellId",
+        ],
+      },
+      {
+        anchor: "const bardSpellAccessDraftPlan =",
+        needles: [
+          'label: "Bard Spellcasting spell access"',
+          'classUnitId: "class_bard"',
+          "level: 1",
+          '"class_skill_proficiency_choice"',
+          '"class_tool_proficiency_choice"',
+          '"class_cantrip_choices"',
+          "...bardSpellAccessCantrips",
+          '"class_prepared_spell_choices"',
+          "...bardSpellAccessPreparedSpells",
+          'legalUnitChoice("class_bard", "class_equipment_choice", "option_b")',
+          'legalUnitChoice("class_bard", "equipment_purchase", "weapon_dagger")',
         ],
       },
     ],

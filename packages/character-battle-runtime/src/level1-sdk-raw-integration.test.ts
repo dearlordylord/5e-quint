@@ -434,6 +434,78 @@ const warlockPactMagicCreationDraftPlan = {
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
+const bardSpellAccessCantrips = [
+  "dancing_lights",
+  viciousMockerySpellId,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+const bardSpellAccessPreparedSpells = [
+  "charm_person",
+  "color_spray",
+  dissonantWhispersSpellId,
+  healingWordSpellId,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+
+const bardSpellAccessDraftPlan = {
+  label: "Bard Spellcasting spell access",
+  classUnitId: "class_bard",
+  level: 1,
+  backgroundUnitId: "background_criminal",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 8,
+    dex: 14,
+    con: 13,
+    int: 10,
+    wis: 12,
+    cha: 15,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_bard",
+      "class_skill_proficiency_choice",
+      "arcana",
+      "performance",
+      "persuasion",
+    ),
+    legalUnitChoice(
+      "class_bard",
+      "class_tool_proficiency_choice",
+      "tool:tool_drum",
+      "tool:tool_flute",
+      "tool:tool_lute",
+    ),
+    legalUnitChoice(
+      "class_bard",
+      "class_cantrip_choices",
+      ...bardSpellAccessCantrips,
+    ),
+    legalUnitChoice(
+      "class_bard",
+      "class_prepared_spell_choices",
+      ...bardSpellAccessPreparedSpells,
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_ability_score_increase",
+      "two_and_one:dex:con",
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_tool_choice",
+      "thieves_tools",
+    ),
+    legalUnitChoice("class_bard", "class_equipment_choice", "option_b"),
+    legalUnitChoice(
+      "background_criminal",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalUnitChoice("class_bard", "equipment_purchase", "weapon_dagger"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 describe("level 1 SDK RAW integration", () => {
   test("Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {
     const fixture = createLegalSourceCharacterFixture({
@@ -687,6 +759,49 @@ describe("level 1 SDK RAW integration", () => {
         count: 1,
       },
     });
+  });
+
+  test("Bard Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-bard-spellcasting-access",
+      draftPlan: bardSpellAccessDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-bard-spellcasting-access",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_bard"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(fixture.build.spellcasting?.sources).toEqual([
+      {
+        sourceUnitId: "class_bard",
+        spellcastingAbility: "cha",
+        cantrips: bardSpellAccessCantrips,
+        spellbook: [],
+        preparedSpells: bardSpellAccessPreparedSpells,
+        spellcastingFocuses: ["musical_instrument"],
+      },
+    ]);
+    expect(fixture.build.spellcasting?.slotPools).toEqual({
+      spellcasting: {
+        kind: "spellcasting",
+        slots: [{ spellLevel: 1, count: 2 }],
+      },
+    });
+    expect(characterSheetSpellSlots(fixture.sheet)).toEqual([
+      { spellLevel: 1, count: 2, expended: 0 },
+    ]);
+    expect(characterSheetPactSlots(fixture.sheet)).toBeUndefined();
   });
 
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {

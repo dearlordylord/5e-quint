@@ -14440,6 +14440,14 @@
       "category": "spell access/list pressure",
       "className": "Bard",
       "concept": "Bard Spellcasting",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:69-92",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-57"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -14447,7 +14455,7 @@
       "proposedOwnerBoundary": "character-sheet-spell-access",
       "rowId": "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
       "rowKind": "spell-access",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 92,
         "lineStart": 69,
@@ -50854,7 +50862,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 68,
+        "groupCount": 69,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -50866,7 +50874,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 75,
+        "rowCount": 76,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -50875,12 +50883,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 7,
+        "groupCount": 6,
         "lane": "sheet-spell-access-sdk",
         "ownerTaskIds": [
           "L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE"
         ],
-        "rowCount": 7,
+        "rowCount": 6,
         "rowFamily": "source-row",
         "taskFamily": "sheet-spell-access-sdk"
       },
@@ -50926,16 +50934,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 68,
+        "groupCount": 69,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 75,
+        "rowCount": 76,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 94,
+        "groupCount": 93,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -50946,7 +50954,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 230,
+        "rowCount": 229,
         "rowFamily": "source-row"
       }
     ],
@@ -51185,6 +51193,25 @@
       "rowKind": "class-feature-grant",
       "sourceBuildPath": "direct-character-build",
       "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_bard",
+      "classification": "legal build-sheet owner proof",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+      "rowKey": "level-1:Bard:class_bard",
+      "rowKind": "spell-access",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
       "wholeWidthSourceLifecycleProof": false
     },
     {
@@ -58252,9 +58279,9 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 423,
+      "sdk-scenario-needed": 422,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 81,
+      "seed-scenario-present": 82,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
@@ -58268,15 +58295,15 @@
       "character-sheet-sdk": 6,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 68,
-      "sheet-spell-access-sdk": 7,
+      "seed-present": 69,
+      "sheet-spell-access-sdk": 6,
       "spell-effect-owner-review": 22
     },
     "levelOneTwoCampaignGroupsByRowFamily": {
       "closure-review-row": 22,
       "explicit-closure-row": 24,
-      "seed-row": 68,
-      "source-row": 94
+      "seed-row": 69,
+      "source-row": 93
     },
     "levelOneTwoCampaignRows": 400,
     "levelOneTwoCampaignRowsByLane": {
@@ -58288,30 +58315,30 @@
       "character-sheet-sdk": 6,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 75,
-      "sheet-spell-access-sdk": 7,
+      "seed-present": 76,
+      "sheet-spell-access-sdk": 6,
       "spell-effect-owner-review": 71
     },
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 71,
       "explicit-closure-row": 24,
-      "seed-row": 75,
-      "source-row": 230
+      "seed-row": 76,
+      "source-row": 229
     },
-    "levelOneTwoSeedMigrationAuditRows": 75,
+    "levelOneTwoSeedMigrationAuditRows": 76,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 59,
       "hand-built build needing migration": 7,
-      "legal build-sheet owner proof": 8,
+      "legal build-sheet owner proof": 9,
       "legal creation owner proof": 1
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 9,
+      "not-real-sheet-battle": 10,
       "real-sheet-battle": 66
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
       "direct-character-build": 7,
-      "legal-creation-draft-finalize": 68
+      "legal-creation-draft-finalize": 69
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 59,
     "scenarioGroups": 412,
@@ -58327,8 +58354,8 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 74,
-      "sheet-spell-access-sdk": 12,
+      "seed-present": 75,
+      "sheet-spell-access-sdk": 11,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
     },
@@ -65438,6 +65465,63 @@
     },
     {
       "candidateUnitIds": [
+        "class_bard"
+      ],
+      "categories": [
+        "spell access/list pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-bard-class-bard",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-sheet-spell-access"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Bard:class_bard\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:69",
+        ".references/srd-5.2.1/Classes/Bard.md:69-92",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-57"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-access"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "class_bard",
+          "className": "Bard",
+          "concept": "Bard Spellcasting",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-sheet-spell-access",
+          "rowId": "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 92,
+            "lineStart": 69,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard Spellcasting"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "fighter_second_wind"
       ],
       "categories": [
@@ -69042,61 +69126,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "class_bard"
-      ],
-      "categories": [
-        "spell access/list pressure"
-      ],
-      "classNames": [
-        "Bard"
-      ],
-      "groupId": "l15-sdk-raw-03:sheet-spell-access-sdk:bard:spell-access",
-      "lane": "sheet-spell-access-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-sheet-spell-access"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"sheet-spell-access-sdk\",\"Bard\",\"spell-access\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:69"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-access"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "class_bard",
-          "className": "Bard",
-          "concept": "Bard Spellcasting",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-sheet-spell-access",
-          "rowId": "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 92,
-            "lineStart": 69,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard Spellcasting"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create the sheet through class or subclass spell access and assert known/prepared/list/slot facts; leave spell effects to the spell-unit scenario groups.",
       "taskId": "L15-SDK-RAW-03"
     },
     {
@@ -88173,6 +88202,73 @@
         "kind: \"pactMagic\"",
         "slotLevel: 1",
         "count: 1"
+      ]
+    },
+    {
+      "candidateUnitId": "class_bard",
+      "className": "Bard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:69-92",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-57"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const bardSpellAccessCantrips =",
+          "needles": [
+            "\"dancing_lights\"",
+            "viciousMockerySpellId"
+          ]
+        },
+        {
+          "anchor": "const bardSpellAccessPreparedSpells =",
+          "needles": [
+            "\"charm_person\"",
+            "\"color_spray\"",
+            "dissonantWhispersSpellId",
+            "healingWordSpellId"
+          ]
+        },
+        {
+          "anchor": "const bardSpellAccessDraftPlan =",
+          "needles": [
+            "label: \"Bard Spellcasting spell access\"",
+            "classUnitId: \"class_bard\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_tool_proficiency_choice\"",
+            "\"class_cantrip_choices\"",
+            "...bardSpellAccessCantrips",
+            "\"class_prepared_spell_choices\"",
+            "...bardSpellAccessPreparedSpells",
+            "legalUnitChoice(\"class_bard\", \"class_equipment_choice\", \"option_b\")",
+            "legalUnitChoice(\"class_bard\", \"equipment_purchase\", \"weapon_dagger\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+      "rowKey": "level-1:Bard:class_bard",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-bard-spellcasting-access\"",
+        "bardSpellAccessDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+        "fixture.sheet.build",
+        "sourceUnitId: \"class_bard\"",
+        "spellcastingAbility: \"cha\"",
+        "cantrips: bardSpellAccessCantrips",
+        "spellbook: []",
+        "preparedSpells: bardSpellAccessPreparedSpells",
+        "spellcastingFocuses: [\"musical_instrument\"]",
+        "slotPools",
+        "characterSheetSpellSlots(fixture.sheet)",
+        "characterSheetPactSlots(fixture.sheet)"
       ]
     },
     {
