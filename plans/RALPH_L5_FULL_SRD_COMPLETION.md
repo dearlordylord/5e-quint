@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "L5FULL-FUT-03-BEACON-OF-HOPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Beacon of Hope"
     },
     {
