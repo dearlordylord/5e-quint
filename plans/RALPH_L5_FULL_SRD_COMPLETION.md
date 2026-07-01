@@ -187,7 +187,7 @@
     {
       "number": 31,
       "id": "L5FULL-FUT-15-PHANTOM-STEED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile future-owner closure for Phantom Steed"
     },
     {

@@ -1094,18 +1094,19 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
     const claim = row.candidateUnitId
       ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
       : undefined;
+    const battleReadinessClosure = battleReadinessClosureFromUnitClaim(claim);
+    if (
+      row.rowKind === "spell-unit-pressure" &&
+      battleReadinessClosure !== undefined
+    ) {
+      return "catalog-only/dead-for-now";
+    }
     if (
       row.rowKind === "spell-unit-pressure" &&
       (spellUnitExecutableFollowUps.has(row.candidateUnitId) ||
         claimFollowUpTasks(claim).length > 0)
     ) {
       return "catalog-authored-executable-follow-up";
-    }
-    if (
-      row.rowKind === "spell-unit-pressure" &&
-      battleReadinessClosureFromUnitClaim(claim) !== undefined
-    ) {
-      return "catalog-only/dead-for-now";
     }
     if (
       row.rowKind === "spell-unit-pressure" &&
@@ -1194,6 +1195,13 @@ function nextAction(
     );
     if (spellUnitClassification?.kind === "catalog-only-closure") {
       return spellUnitClassification.reason;
+    }
+    const claim = row.candidateUnitId
+      ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
+      : undefined;
+    const battleReadinessClosure = battleReadinessClosureFromUnitClaim(claim);
+    if (battleReadinessClosure !== undefined) {
+      return battleReadinessClosure.reason;
     }
     return "Decide whether to admit/support, or keep catalog-only closure counted.";
   }

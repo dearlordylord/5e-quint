@@ -6987,9 +6987,19 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Phantom Steed",
-      "finalDisposition": "catalog-authored-executable-follow-up",
+      "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-3",
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE, L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT, L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE: L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE owns Promote spell-created mount occurrence creation from typed spawned-creature facts, caller-supplied unoccupied placement, Riding Horse catalog stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace on spell end. Required output: Supported-profile or profile-subset-supported Phantom Steed claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for mount lifecycle/control without copying Riding Horse stat-block data or dispatching on Phantom Steed identity.; L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT owns Promote the saddle, bit, and bridle created by the spell as object/equipment occurrences that vanish when carried more than 10 feet from the steed, consuming explicit distance and carried-state witnesses. Required output: Supported-profile or profile-subset-supported object/equipment cleanup claim with focused tests after an object/equipment occurrence owner exists; no Phantom Steed-local inventory ledger or duplicated equipment state.; L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE owns Promote the 13 miles/hour travel fact through a table travel owner that consumes the typed mount travel fact without deriving route, terrain, pace choice, or map distance in battle runtime. Required output: Runtime-detached or supported travel-owner claim with focused tests after table travel facts are represented; no battle-map travel state or authored spell identity dispatch.",
+      "nextAction": "Phantom Steed remains closed at an explicit split owner boundary: mount lifecycle/control must model spell-created mount identity, caller-supplied unoccupied placement, Riding Horse stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace; object cleanup must model saddle/bit/bridle distance-vanish; table travel must model the 13 miles/hour fact. These owners must consume typed Surface/profile facts and explicit table witnesses without duplicating Riding Horse data, table geometry, travel state, equipment state, or authored-identity dispatch in generic runtime code.",
+      "ownerBoundaryEvidence": {
+        "closure": {
+          "kind": "companion-control-boundary",
+          "owner": "split spell-created mount lifecycle/control, created-equipment object cleanup, and table travel owners",
+          "reason": "Phantom Steed remains closed at an explicit split owner boundary: mount lifecycle/control must model spell-created mount identity, caller-supplied unoccupied placement, Riding Horse stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace; object cleanup must model saddle/bit/bridle distance-vanish; table travel must model the 13 miles/hour fact. These owners must consume typed Surface/profile facts and explicit table witnesses without duplicating Riding Horse data, table geometry, travel state, equipment state, or authored-identity dispatch in generic runtime code.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "source": "battle-readiness-closure"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_phantom_steed",
@@ -7008,7 +7018,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "companion-control-boundary",
@@ -7021,7 +7031,7 @@
           "state": "not-installed",
           "unitId": "phantom_steed"
         },
-        "finalDisposition": "catalog-authored-executable-follow-up",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -51334,9 +51344,19 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Phantom Steed",
-      "finalDisposition": "catalog-authored-executable-follow-up",
+      "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-3",
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE, L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT, L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE: L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE owns Promote spell-created mount occurrence creation from typed spawned-creature facts, caller-supplied unoccupied placement, Riding Horse catalog stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace on spell end. Required output: Supported-profile or profile-subset-supported Phantom Steed claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for mount lifecycle/control without copying Riding Horse stat-block data or dispatching on Phantom Steed identity.; L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT owns Promote the saddle, bit, and bridle created by the spell as object/equipment occurrences that vanish when carried more than 10 feet from the steed, consuming explicit distance and carried-state witnesses. Required output: Supported-profile or profile-subset-supported object/equipment cleanup claim with focused tests after an object/equipment occurrence owner exists; no Phantom Steed-local inventory ledger or duplicated equipment state.; L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE owns Promote the 13 miles/hour travel fact through a table travel owner that consumes the typed mount travel fact without deriving route, terrain, pace choice, or map distance in battle runtime. Required output: Runtime-detached or supported travel-owner claim with focused tests after table travel facts are represented; no battle-map travel state or authored spell identity dispatch.",
+      "nextAction": "Phantom Steed remains closed at an explicit split owner boundary: mount lifecycle/control must model spell-created mount identity, caller-supplied unoccupied placement, Riding Horse stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace; object cleanup must model saddle/bit/bridle distance-vanish; table travel must model the 13 miles/hour fact. These owners must consume typed Surface/profile facts and explicit table witnesses without duplicating Riding Horse data, table geometry, travel state, equipment state, or authored-identity dispatch in generic runtime code.",
+      "ownerBoundaryEvidence": {
+        "closure": {
+          "kind": "companion-control-boundary",
+          "owner": "split spell-created mount lifecycle/control, created-equipment object cleanup, and table travel owners",
+          "reason": "Phantom Steed remains closed at an explicit split owner boundary: mount lifecycle/control must model spell-created mount identity, caller-supplied unoccupied placement, Riding Horse stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace; object cleanup must model saddle/bit/bridle distance-vanish; table travel must model the 13 miles/hour fact. These owners must consume typed Surface/profile facts and explicit table witnesses without duplicating Riding Horse data, table geometry, travel state, equipment state, or authored-identity dispatch in generic runtime code.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "source": "battle-readiness-closure"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_phantom_steed",
@@ -51355,7 +51375,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "companion-control-boundary",
@@ -51368,7 +51388,7 @@
           "state": "not-installed",
           "unitId": "phantom_steed"
         },
-        "finalDisposition": "catalog-authored-executable-follow-up",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
