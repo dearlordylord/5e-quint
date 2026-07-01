@@ -71,15 +71,15 @@ as follows.
 | `sdk-scenario-needed` | 35 | Runtime/support owner is resolved; add SDK RAW integration scenarios. |
 | `sdk-scenario-or-owner-closure-needed` | 6 | Owner evidence exists, but SDK must choose scenario coverage or explicit SDK closure. |
 | `explicit-closure-recorded` | 12 | Class-table summary rows have recorded SDK-scope table-only closure through `L5_PROGRESSION_DELTA_AUDIT.md`. |
-| `future-owner-before-sdk` | 44 | Row is closed from current runtime/SDK scope until a future durable owner exists. |
-| `closure-review-needed` | 35 | Owner boundary remains unresolved for SDK accounting. |
+| `future-owner-before-sdk` | 45 | Row is closed from current runtime/SDK scope until a future durable owner exists. |
+| `closure-review-needed` | 34 | Owner boundary remains unresolved for SDK accounting. |
 
 Owner-boundary status:
 
 | Owner-boundary status | Rows |
 | --- | ---: |
-| resolved | 103 |
-| unresolved-review | 35 |
+| resolved | 104 |
+| unresolved-review | 34 |
 
 ## Progression Delta Closure
 
@@ -121,7 +121,7 @@ label.
 | `gaseous_form` | 3 | `catalog-installed-owner-evidence-required`; battle-runtime-required; follow-up `L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME` | `future-owner-before-sdk` | Keep out of SDK scenarios until the typed mist-cloud effect owner is promoted or the checker records an explicit future-owner closure matching the mining follow-up. | `L5FULL-FUT-11-GASEOUS-FORM` |
 | `phantom_steed` | 1 | `catalog-authored-executable-follow-up`; battle-runtime-required; split follow-ups for mount lifecycle, created equipment, and table travel | `future-owner-before-sdk` | Keep out of SDK scenarios until the split mount/equipment/travel owners are promoted or the checker records an explicit future-owner closure matching the mining follow-ups. | `L5FULL-FUT-15-PHANTOM-STEED` |
 
-These four rows remain inside the 44-row `future-owner-before-sdk` bucket. The
+These four rows remain inside the 45-row `future-owner-before-sdk` bucket. The
 Ralph tasks above must reconcile the generated artifacts before preserving the
 closure; they are not ordinary no-op closure tasks.
 
@@ -139,7 +139,7 @@ closure; they are not ordinary no-op closure tasks.
 | `druid_wild_resurgence` | Druid Wild Resurgence | class-feature-grant | .references/srd-5.2.1/Classes/Druid.md:138 | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now | future-runtime-owner-before-sdk | future-owner-before-sdk | battle-readiness-closure |
 | `class_druid` | Druid level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Druid.md:36 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
 | `fighter_extra_attack` | Fighter Extra Attack | class-feature-grant | .references/srd-5.2.1/Classes/Fighter.md:94 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | sdk-scenario-or-owner-closure-needed | unit-profile-owner-evidence |
-| `fighter_tactical_shift` | Fighter Tactical Shift | class-feature-grant | .references/srd-5.2.1/Classes/Fighter.md:98 | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now | class-feature-closure-review | closure-review-needed | battle-readiness-closure |
+| `fighter_tactical_shift` | Fighter Tactical Shift | class-feature-grant | .references/srd-5.2.1/Classes/Fighter.md:98 | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now | future-runtime-owner-before-sdk | future-owner-before-sdk | battle-readiness-closure |
 | `class_fighter` | Fighter level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Fighter.md:35 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
 | `monk_extra_attack` | Monk Extra Attack | class-feature-grant | .references/srd-5.2.1/Classes/Monk.md:120 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | seed-scenario-present | unit-profile-owner-evidence |
 | `monk_stunning_strike` | Monk Stunning Strike | class-feature-grant | .references/srd-5.2.1/Classes/Monk.md:124 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | seed-scenario-present | unit-profile-owner-evidence |
@@ -217,8 +217,8 @@ Each row maps to `plans/RALPH_L5_FULL_SRD_COMPLETION.md`.
 | Existing SDK seeds | 6 | Verify existing level-5 seed scenarios and keep their evidence discoverable. |
 | Explicit class-table closure | 12 | Preserve the recorded SDK-scope table-only closure for the twelve class-table summaries. |
 | Owner review for supported feature rows | 6 | Decide per Unit whether to add an SDK scenario or mark SDK closure. |
-| Feature owner review | 1 | Resolve Fighter Tactical Shift owner boundary before SDK admission. |
-| Future owner before SDK | 44 | Preserve current runtime-detached closure; do not add SDK scenarios until the durable owner exists. |
+| Feature owner review | 0 | No level-5 class-feature closure-review rows remain before SDK admission. |
+| Future owner before SDK | 45 | Preserve current runtime-detached closure; do not add SDK scenarios until the durable owner exists. |
 | Artifact reconciliation before preserving future-owner closure | 4 | Reconcile `gaseous_form` and `phantom_steed` mining-vs-SDK disposition text before treating their future-owner closures as durable. This overlaps the future-owner bucket and does not change the 138-row denominator. |
 | Battle spell SDK scenarios | 35 | Add one SDK scenario group per supported spell identity/access slice. |
 | Spell-effect owner review | 36 | Resolve owner boundary or precise closure for twelve spell identities before SDK admission. |

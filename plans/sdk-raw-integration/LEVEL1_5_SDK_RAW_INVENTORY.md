@@ -38,10 +38,10 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 143 |
+| closure-review-needed | 142 |
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
-| future-owner-before-sdk | 46 |
+| future-owner-before-sdk | 47 |
 | sdk-scenario-needed | 401 |
 | sdk-scenario-or-owner-closure-needed | 6 |
 | seed-scenario-present | 103 |
@@ -58,8 +58,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-creation | 29 |
 | character-sheet | 8 |
 | character-sheet-spell-access | 12 |
-| class-feature-closure-review | 3 |
-| future-runtime-owner-before-sdk | 46 |
+| class-feature-closure-review | 2 |
+| future-runtime-owner-before-sdk | 47 |
 | multi-owner-sdk-split | 10 |
 | spell-effect-owner-review | 140 |
 | table-only-closure | 11 |
@@ -68,8 +68,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 627 |
-| unresolved-review | 143 |
+| resolved | 628 |
+| unresolved-review | 142 |
 
 ### Scenario Groups by Task
 
@@ -92,8 +92,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-creation-sdk | 29 |
 | character-sheet-sdk | 7 |
 | explicit-closure | 60 |
-| feature-owner-review | 3 |
-| future-owner-before-sdk | 25 |
+| feature-owner-review | 2 |
+| future-owner-before-sdk | 26 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
 | seed-present | 103 |
@@ -105,9 +105,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 35 |
+| closure-review-needed | 34 |
 | explicit-closure-recorded | 12 |
-| future-owner-before-sdk | 44 |
+| future-owner-before-sdk | 45 |
 | sdk-scenario-needed | 2 |
 | sdk-scenario-or-owner-closure-needed | 6 |
 | seed-scenario-present | 39 |
@@ -119,16 +119,15 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | build-progression | 12 |
 | character-battle-to-battle | 46 |
 | character-sheet | 1 |
-| class-feature-closure-review | 1 |
-| future-runtime-owner-before-sdk | 44 |
+| future-runtime-owner-before-sdk | 45 |
 | spell-effect-owner-review | 34 |
 
 ### Level 5 Completion Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 103 |
-| unresolved-review | 35 |
+| resolved | 104 |
+| unresolved-review | 34 |
 
 ### Level 5 Scenario Groups by Lane
 
@@ -136,8 +135,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | --- | ---: |
 | battle-spell-sdk | 1 |
 | explicit-closure | 12 |
-| feature-owner-review | 1 |
-| future-owner-before-sdk | 23 |
+| future-owner-before-sdk | 24 |
 | owner-review | 6 |
 | seed-present | 39 |
 | spell-effect-owner-review | 12 |
@@ -274,7 +272,6 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Sorcerer | `class_sorcerer` | Sorcerer level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Warlock | `class_warlock` | Warlock level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Wizard | `class_wizard` | Wizard level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
-| L15-SDK-RAW-07 | feature-owner-review | 1 | level-5 | Fighter | `fighter_tactical_shift` | Fighter Tactical Shift | Resolve the feature's real owner boundary from focused evidence before implementation: build/sheet for persistent facts and resources, or character-battle plus battle resolution only when the feature is battle-executable. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 2 | spell-level-3 | Cleric, Wizard | `animate_dead` | Cleric spell list Animate Dead<br>Wizard spell list Animate Dead | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Bard | `bard_font_of_inspiration` | Bard Font of Inspiration | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | spell-level-3 | Cleric | `beacon_of_hope` | Cleric spell list Beacon of Hope | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
@@ -286,6 +283,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Cleric, Druid, Sorcerer | `daylight` | Cleric spell list Daylight<br>Druid spell list Daylight<br>Sorcerer spell list Daylight | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Druid | `druid_wild_resurgence` | Druid Wild Resurgence | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard | `fear` | Bard spell list Fear<br>Sorcerer spell list Fear<br>Warlock spell list Fear<br>Wizard spell list Fear | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
+| L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Fighter | `fighter_tactical_shift` | Fighter Tactical Shift | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Sorcerer, Warlock, Wizard | `gaseous_form` | Sorcerer spell list Gaseous Form<br>Warlock spell list Gaseous Form<br>Wizard spell list Gaseous Form | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Cleric, Warlock, Wizard | `magic_circle` | Cleric spell list Magic Circle<br>Warlock spell list Magic Circle<br>Wizard spell list Magic Circle | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 2 | spell-level-3 | Cleric, Druid | `meld_into_stone` | Cleric spell list Meld into Stone<br>Druid spell list Meld into Stone | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
@@ -419,7 +417,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Druid spell list Water Walk | `water_walk` | `.references/srd-5.2.1/Classes/Druid.md:264` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution. |
 | spell-level-3 | Druid spell list Wind Wall | `wind_wall` | `.references/srd-5.2.1/Classes/Druid.md:265` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers. |
 | level-5 | Fighter Extra Attack | `fighter_extra_attack` | `.references/srd-5.2.1/Classes/Fighter.md:94` | catalog-installed-owner-evidence-present | not-applicable | character-battle-to-battle | resolved | sdk-scenario-or-owner-closure-needed |  | Owner-specific operational evidence is classified and present. |
-| level-5 | Fighter Tactical Shift | `fighter_tactical_shift` | `.references/srd-5.2.1/Classes/Fighter.md:98` | catalog-only/dead-for-now | not-applicable | class-feature-closure-review | unresolved-review | closure-review-needed |  | SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity. |
+| level-5 | Fighter Tactical Shift | `fighter_tactical_shift` | `.references/srd-5.2.1/Classes/Fighter.md:98` | catalog-only/dead-for-now | not-applicable | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity. |
 | level-5 | Fighter level 5 feature table row | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:35` | non-runtime | not-applicable | build-progression | resolved | explicit-closure-recorded |  | SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state. |
 | level-5 | Monk Extra Attack | `monk_extra_attack` | `.references/srd-5.2.1/Classes/Monk.md:120` | catalog-installed-owner-evidence-present | not-applicable | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Extra Attack | Owner-specific operational evidence is classified and present. |
 | level-5 | Monk Stunning Strike | `monk_stunning_strike` | `.references/srd-5.2.1/Classes/Monk.md:124` | catalog-installed-owner-evidence-present | not-applicable | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Stunning Strike | Owner-specific operational evidence is classified and present. |

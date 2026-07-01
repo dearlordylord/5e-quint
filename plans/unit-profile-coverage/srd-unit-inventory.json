@@ -18947,7 +18947,7 @@
       "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
         "source": "unit-claim",
-        "kind": "outside-battle-runtime",
+        "kind": "resource-option-rider-boundary",
         "owner": "future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners",
         "reason": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity."
       },

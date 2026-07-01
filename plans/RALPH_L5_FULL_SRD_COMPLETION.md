@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "L5FULL-FEAT-02-FIGHTER-TACTICAL-SHIFT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Fighter Tactical Shift"
     },
     {
@@ -427,7 +427,7 @@ closing or implementing the row.
 | 13 | `L5FULL-SDK-11-SLEET-STORM` | battle-spell-sdk | `sleet_storm` | 3 | `sdk-scenario-needed`, resolved. | Add SDK RAW scenario or class-access assertions. | Scenario covers Druid, Sorcerer, Wizard access rows and supported subset semantics. | .references/srd-5.2.1/Classes/Druid.md:261<br>.references/srd-5.2.1/Classes/Sorcerer.md:314<br>.references/srd-5.2.1/Classes/Wizard.md:258 |
 | 14 | `L5FULL-SDK-12-SLOW` | battle-spell-sdk | `slow` | 3 | `sdk-scenario-needed`, resolved. | Add SDK RAW scenario or class-access assertions. | Scenario covers Bard, Sorcerer, Wizard access rows and supported runtime behavior. | .references/srd-5.2.1/Classes/Bard.md:228<br>.references/srd-5.2.1/Classes/Sorcerer.md:315<br>.references/srd-5.2.1/Classes/Wizard.md:259 |
 | 15 | `L5FULL-FEAT-01-CLERIC-SEAR-UNDEAD` | future-owner-before-sdk | `cleric_sear_undead` | 1 | resolved future owner before SDK. | Preserve Turn Undead resource-option rider closure. | No SDK scenario is added before the future Turn Undead Channel Divinity option execution owner exists, and no duplicate Channel Divinity or Sear Undead action, resource, or target state is introduced. | .references/srd-5.2.1/Classes/Cleric.md:110 |
-| 16 | `L5FULL-FEAT-02-FIGHTER-TACTICAL-SHIFT` | feature-owner-review | `fighter_tactical_shift` | 1 | `closure-review-needed`, unresolved. | Decide SDK closure vs future Second Wind movement owner prerequisite. | Row is no longer unresolved-review without adding duplicate Second Wind or movement state. | .references/srd-5.2.1/Classes/Fighter.md:98 |
+| 16 | `L5FULL-FEAT-02-FIGHTER-TACTICAL-SHIFT` | future-owner-before-sdk | `fighter_tactical_shift` | 1 | resolved future owner before SDK. | Preserve Second Wind activation movement-rider closure. | No SDK scenario is added before the future Second Wind activation rider owner exists, and no duplicate Second Wind pool, turn Movement budget, or Opportunity Attack state is introduced. | .references/srd-5.2.1/Classes/Fighter.md:98 |
 | 17 | `L5FULL-FUT-01-ANIMATE-DEAD` | future-owner-before-sdk | `animate_dead` | 2 | resolved future owner before SDK. | Preserve companion-control closure. | No SDK scenario is added before the durable reanimated companion owner exists. | .references/srd-5.2.1/Classes/Cleric.md:204<br>.references/srd-5.2.1/Classes/Wizard.md:237 |
 | 18 | `L5FULL-FUT-02-BARD-FONT-OF-INSPIRATION` | future-owner-before-sdk | `bard_font_of_inspiration` | 1 | resolved future owner before SDK. | Preserve Character Sheet resource-recovery closure. | No duplicate Bardic Inspiration resource state is introduced. | .references/srd-5.2.1/Classes/Bard.md:113 |
 | 19 | `L5FULL-FUT-03-BEACON-OF-HOPE` | future-owner-before-sdk | `beacon_of_hope` | 1 | resolved future owner before SDK. | Preserve active spell-effect owner closure. | No SDK scenario is added before healing-maximization and save-mode owner exists. | .references/srd-5.2.1/Classes/Cleric.md:205 |
