@@ -1290,7 +1290,7 @@
       "nextAction": "SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-battle-runtime",
+          "kind": "resource-option-rider-boundary",
           "owner": "future Turn Undead Channel Divinity option execution owner",
           "reason": "SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule.",
           "source": "unit-claim",
@@ -1298,11 +1298,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "class-feature-closure-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/cleric:level-5:class-feature-grant:cleric_sear_undead",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 113,
         "lineStart": 110,
@@ -1316,7 +1316,7 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
+          "kind": "resource-option-rider-boundary",
           "owner": "future Turn Undead Channel Divinity option execution owner",
           "reason": "SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule.",
           "source": "unit-claim",
@@ -8328,61 +8328,6 @@
     },
     {
       "candidateUnitIds": [
-        "cleric_sear_undead"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-07:feature-owner-review:cleric-sear-undead",
-      "lane": "feature-owner-review",
-      "levelBands": [
-        "level-5"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "class-feature-closure-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"feature-owner-review\",\"cleric_sear_undead\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:110"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "cleric_sear_undead",
-          "className": "Cleric",
-          "concept": "Cleric Sear Undead",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "class-feature-closure-review",
-          "rowId": "srd521:classes/cleric:level-5:class-feature-grant:cleric_sear_undead",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 113,
-            "lineStart": 110,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric Sear Undead"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the feature's real owner boundary from focused evidence before implementation: build/sheet for persistent facts and resources, or character-battle plus battle resolution only when the feature is battle-executable.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "fighter_tactical_shift"
       ],
       "categories": [
@@ -8831,6 +8776,61 @@
       ],
       "sampleConcepts": [
         "Druid spell list Call Lightning"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "cleric_sear_undead"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:cleric-sear-undead",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "level-5"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"cleric_sear_undead\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:110"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "cleric_sear_undead",
+          "className": "Cleric",
+          "concept": "Cleric Sear Undead",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/cleric:level-5:class-feature-grant:cleric_sear_undead",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 113,
+            "lineStart": 110,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric Sear Undead"
       ],
       "sdkInventoryDispositions": [
         "future-owner-before-sdk"
@@ -20662,7 +20662,7 @@
       "nextAction": "SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-battle-runtime",
+          "kind": "resource-option-rider-boundary",
           "owner": "future Turn Undead Channel Divinity option execution owner",
           "reason": "SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule.",
           "source": "unit-claim",
@@ -20670,11 +20670,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "class-feature-closure-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/cleric:level-5:class-feature-grant:cleric_sear_undead",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 113,
         "lineStart": 110,
@@ -20688,7 +20688,7 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
+          "kind": "resource-option-rider-boundary",
           "owner": "future Turn Undead Channel Divinity option execution owner",
           "reason": "SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule.",
           "source": "unit-claim",
@@ -57752,18 +57752,18 @@
       "build-progression": 12,
       "character-battle-to-battle": 46,
       "character-sheet": 1,
-      "class-feature-closure-review": 2,
-      "future-runtime-owner-before-sdk": 43,
+      "class-feature-closure-review": 1,
+      "future-runtime-owner-before-sdk": 44,
       "spell-effect-owner-review": 34
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 102,
-      "unresolved-review": 36
+      "resolved": 103,
+      "unresolved-review": 35
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 36,
+      "closure-review-needed": 35,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 43,
+      "future-owner-before-sdk": 44,
       "sdk-scenario-needed": 2,
       "sdk-scenario-or-owner-closure-needed": 6,
       "seed-scenario-present": 39
@@ -57772,8 +57772,8 @@
     "level5ScenarioGroupsByLane": {
       "battle-spell-sdk": 1,
       "explicit-closure": 12,
-      "feature-owner-review": 2,
-      "future-owner-before-sdk": 22,
+      "feature-owner-review": 1,
+      "future-owner-before-sdk": 23,
       "owner-review": 6,
       "seed-present": 39,
       "spell-effect-owner-review": 12
@@ -57799,15 +57799,15 @@
       "character-creation": 29,
       "character-sheet": 8,
       "character-sheet-spell-access": 12,
-      "class-feature-closure-review": 4,
-      "future-runtime-owner-before-sdk": 45,
+      "class-feature-closure-review": 3,
+      "future-runtime-owner-before-sdk": 46,
       "multi-owner-sdk-split": 10,
       "spell-effect-owner-review": 140,
       "table-only-closure": 11
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 626,
-      "unresolved-review": 144
+      "resolved": 627,
+      "unresolved-review": 143
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -57823,10 +57823,10 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 144,
+      "closure-review-needed": 143,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 45,
+      "future-owner-before-sdk": 46,
       "sdk-scenario-needed": 401,
       "sdk-scenario-or-owner-closure-needed": 6,
       "seed-scenario-present": 103,
@@ -57842,8 +57842,8 @@
       "character-creation-sdk": 29,
       "character-sheet-sdk": 7,
       "explicit-closure": 60,
-      "feature-owner-review": 4,
-      "future-owner-before-sdk": 24,
+      "feature-owner-review": 3,
+      "future-owner-before-sdk": 25,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
       "seed-present": 103,
@@ -82609,61 +82609,6 @@
     },
     {
       "candidateUnitIds": [
-        "cleric_sear_undead"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-07:feature-owner-review:cleric-sear-undead",
-      "lane": "feature-owner-review",
-      "levelBands": [
-        "level-5"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "class-feature-closure-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"feature-owner-review\",\"cleric_sear_undead\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:110"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "cleric_sear_undead",
-          "className": "Cleric",
-          "concept": "Cleric Sear Undead",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "class-feature-closure-review",
-          "rowId": "srd521:classes/cleric:level-5:class-feature-grant:cleric_sear_undead",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 113,
-            "lineStart": 110,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric Sear Undead"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the feature's real owner boundary from focused evidence before implementation: build/sheet for persistent facts and resources, or character-battle plus battle resolution only when the feature is battle-executable.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "fighter_tactical_shift"
       ],
       "categories": [
@@ -83112,6 +83057,61 @@
       ],
       "sampleConcepts": [
         "Druid spell list Call Lightning"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "cleric_sear_undead"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:cleric-sear-undead",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "level-5"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"cleric_sear_undead\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:110"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "cleric_sear_undead",
+          "className": "Cleric",
+          "concept": "Cleric Sear Undead",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/cleric:level-5:class-feature-grant:cleric_sear_undead",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 113,
+            "lineStart": 110,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric Sear Undead"
       ],
       "sdkInventoryDispositions": [
         "future-owner-before-sdk"

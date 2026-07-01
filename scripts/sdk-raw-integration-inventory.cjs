@@ -108,6 +108,7 @@ const tableOnlySpellClosureKinds = new Set(["social-knowledge-effect"]);
 const characterCreationClosureKinds = new Set(["selection-grant-container"]);
 const futureFeatureClosureKinds = new Set([
   "character-fact-and-runtime-detached-split",
+  "resource-option-rider-boundary",
 ]);
 const ownerProfilePrefixes = [
   ["character-creation.", "character-creation"],

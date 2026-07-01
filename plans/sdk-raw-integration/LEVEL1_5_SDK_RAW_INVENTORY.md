@@ -38,10 +38,10 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 144 |
+| closure-review-needed | 143 |
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
-| future-owner-before-sdk | 45 |
+| future-owner-before-sdk | 46 |
 | sdk-scenario-needed | 401 |
 | sdk-scenario-or-owner-closure-needed | 6 |
 | seed-scenario-present | 103 |
@@ -58,8 +58,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-creation | 29 |
 | character-sheet | 8 |
 | character-sheet-spell-access | 12 |
-| class-feature-closure-review | 4 |
-| future-runtime-owner-before-sdk | 45 |
+| class-feature-closure-review | 3 |
+| future-runtime-owner-before-sdk | 46 |
 | multi-owner-sdk-split | 10 |
 | spell-effect-owner-review | 140 |
 | table-only-closure | 11 |
@@ -68,8 +68,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 626 |
-| unresolved-review | 144 |
+| resolved | 627 |
+| unresolved-review | 143 |
 
 ### Scenario Groups by Task
 
@@ -92,8 +92,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-creation-sdk | 29 |
 | character-sheet-sdk | 7 |
 | explicit-closure | 60 |
-| feature-owner-review | 4 |
-| future-owner-before-sdk | 24 |
+| feature-owner-review | 3 |
+| future-owner-before-sdk | 25 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
 | seed-present | 103 |
@@ -105,9 +105,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 36 |
+| closure-review-needed | 35 |
 | explicit-closure-recorded | 12 |
-| future-owner-before-sdk | 43 |
+| future-owner-before-sdk | 44 |
 | sdk-scenario-needed | 2 |
 | sdk-scenario-or-owner-closure-needed | 6 |
 | seed-scenario-present | 39 |
@@ -119,16 +119,16 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | build-progression | 12 |
 | character-battle-to-battle | 46 |
 | character-sheet | 1 |
-| class-feature-closure-review | 2 |
-| future-runtime-owner-before-sdk | 43 |
+| class-feature-closure-review | 1 |
+| future-runtime-owner-before-sdk | 44 |
 | spell-effect-owner-review | 34 |
 
 ### Level 5 Completion Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 102 |
-| unresolved-review | 36 |
+| resolved | 103 |
+| unresolved-review | 35 |
 
 ### Level 5 Scenario Groups by Lane
 
@@ -136,8 +136,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | --- | ---: |
 | battle-spell-sdk | 1 |
 | explicit-closure | 12 |
-| feature-owner-review | 2 |
-| future-owner-before-sdk | 22 |
+| feature-owner-review | 1 |
+| future-owner-before-sdk | 23 |
 | owner-review | 6 |
 | seed-present | 39 |
 | spell-effect-owner-review | 12 |
@@ -274,7 +274,6 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Sorcerer | `class_sorcerer` | Sorcerer level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Warlock | `class_warlock` | Warlock level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Wizard | `class_wizard` | Wizard level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
-| L15-SDK-RAW-07 | feature-owner-review | 1 | level-5 | Cleric | `cleric_sear_undead` | Cleric Sear Undead | Resolve the feature's real owner boundary from focused evidence before implementation: build/sheet for persistent facts and resources, or character-battle plus battle resolution only when the feature is battle-executable. |
 | L15-SDK-RAW-07 | feature-owner-review | 1 | level-5 | Fighter | `fighter_tactical_shift` | Fighter Tactical Shift | Resolve the feature's real owner boundary from focused evidence before implementation: build/sheet for persistent facts and resources, or character-battle plus battle resolution only when the feature is battle-executable. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 2 | spell-level-3 | Cleric, Wizard | `animate_dead` | Cleric spell list Animate Dead<br>Wizard spell list Animate Dead | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Bard | `bard_font_of_inspiration` | Bard Font of Inspiration | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
@@ -282,6 +281,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Bard, Cleric, Wizard | `bestow_curse` | Bard spell list Bestow Curse<br>Cleric spell list Bestow Curse<br>Wizard spell list Bestow Curse | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 2 | spell-level-3 | Sorcerer, Wizard | `blink` | Sorcerer spell list Blink<br>Wizard spell list Blink | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | spell-level-3 | Druid | `call_lightning` | Druid spell list Call Lightning | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
+| L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Cleric | `cleric_sear_undead` | Cleric Sear Undead | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | spell-level-3 | Druid | `conjure_animals` | Druid spell list Conjure Animals | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Cleric, Druid, Sorcerer | `daylight` | Cleric spell list Daylight<br>Druid spell list Daylight<br>Sorcerer spell list Daylight | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Druid | `druid_wild_resurgence` | Druid Wild Resurgence | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
@@ -382,7 +382,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Bard spell list Stinking Cloud | `stinking_cloud` | `.references/srd-5.2.1/Classes/Bard.md:231` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers. |
 | spell-level-3 | Bard spell list Tiny Hut | `tiny_hut` | `.references/srd-5.2.1/Classes/Bard.md:232` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication. |
 | spell-level-3 | Bard spell list Tongues | `tongues` | `.references/srd-5.2.1/Classes/Bard.md:233` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell. |
-| level-5 | Cleric Sear Undead | `cleric_sear_undead` | `.references/srd-5.2.1/Classes/Cleric.md:110` | catalog-only/dead-for-now | not-applicable | class-feature-closure-review | unresolved-review | closure-review-needed |  | SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule. |
+| level-5 | Cleric Sear Undead | `cleric_sear_undead` | `.references/srd-5.2.1/Classes/Cleric.md:110` | catalog-only/dead-for-now | not-applicable | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule. |
 | level-5 | Cleric level 5 feature table row | `class_cleric` | `.references/srd-5.2.1/Classes/Cleric.md:39` | non-runtime | not-applicable | build-progression | resolved | explicit-closure-recorded |  | SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state. |
 | spell-level-3 | Cleric spell list Animate Dead | `animate_dead` | `.references/srd-5.2.1/Classes/Cleric.md:204` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Animate Dead's represented runtime behavior is closed at the companion-control boundary: a future reanimated companion owner must model Skeleton/Zombie combatant creation from corpse-or-bones targets, control-window ownership, Bonus Action command fan-out, default Dodge-and-avoid behavior, autonomous task following, 24-hour control expiry, higher-slot reassertion, and stat-block action execution without authored-identity dispatch in generic runtime code. |
 | spell-level-3 | Cleric spell list Beacon of Hope | `beacon_of_hope` | `.references/srd-5.2.1/Classes/Cleric.md:205` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Beacon of Hope's battle-relevant behavior is closed outside the current promoted battle-runtime boundary: a future active spell-effect owner must admit selected targets without authored-identity dispatch, carry Concentration expiry, maximize later healing received by affected targets, project Advantage onto affected targets' Wisdom Saving Throws, and project Advantage onto affected targets' Death Saving Throws. |

@@ -145,6 +145,7 @@ const battleReadinessClosureKind = Object.freeze({
   outsideRuntimePresentationExploration:
     "outside-runtime-presentation-exploration",
   outsideBattleRuntime: "outside-battle-runtime",
+  resourceOptionRiderBoundary: "resource-option-rider-boundary",
   characterFactRuntimeDetachedSplit:
     "character-fact-and-runtime-detached-split",
 });

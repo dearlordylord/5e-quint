@@ -7325,7 +7325,7 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
+          "kind": "resource-option-rider-boundary",
           "owner": "future Turn Undead Channel Divinity option execution owner",
           "reason": "SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule.",
           "source": "unit-claim",
