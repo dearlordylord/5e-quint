@@ -489,20 +489,34 @@ const headingByNumber = new Map(headings.map((heading, index) => [
     endLine: index + 1 < headings.length ? lineNumber(headings[index + 1].offset) - 1 : text.split("\n").length,
   },
 ]))
+const lines = text.split("\n")
+const queueRowByNumber = new Map()
+for (let i = 0; i < lines.length; i += 1) {
+  const line = lines[i]
+  if (!line.startsWith("|")) continue
+  const cells = line.split("|")
+  if (cells.length < 3) continue
+  const number = Number(cells[1]?.trim())
+  if (!Number.isInteger(number)) continue
+  queueRowByNumber.set(number, {
+    startLine: i + 1,
+    endLine: i + 1,
+  })
+}
 
 for (const task of index.tasks) {
   if (!Number.isInteger(task.number) || typeof task.id !== "string" || typeof task.status !== "string" || typeof task.title !== "string") {
     throw new Error("invalid task metadata: " + JSON.stringify(task))
   }
-  const heading = headingByNumber.get(task.number)
+  const heading = headingByNumber.get(task.number) ?? queueRowByNumber.get(task.number)
   if (!heading) {
-    throw new Error("missing markdown heading for task " + task.number + " (" + task.id + ")")
+    throw new Error("missing markdown heading or queue row for task " + task.number + " (" + task.id + ")")
   }
   console.log([task.number, task.id, task.status, heading.startLine, heading.endLine, task.title].join("\t"))
 }
 NODE
 
-  [[ -s "$task_index" ]] || die "no task headings found in plan snapshot: $plan_snapshot"
+  [[ -s "$task_index" ]] || die "no task headings or queue rows found in plan snapshot: $plan_snapshot"
 }
 
 refresh_plan_snapshot() {
