@@ -12585,7 +12585,11 @@
       "concept": "Barbarian Rage",
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders",
-        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:33-35",
+          ".references/srd-5.2.1/Classes/Barbarian.md:56-78"
+        ]
       },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
@@ -51082,21 +51086,22 @@
     },
     {
       "candidateUnitId": "barbarian_rage",
-      "classification": "hand-built build needing migration",
+      "classification": "already legal creation path",
       "className": "Barbarian",
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
       "levelBand": "level-1",
-      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
-      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
       "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
       "rowKey": "level-1:Barbarian:barbarian_rage",
       "rowKind": "class-feature-grant",
-      "sourceBuildPath": "direct-character-build",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-battle-handoff",
       "usesRealSheetBattleHandoff": true,
-      "wholeWidthSourceLifecycleProof": false
+      "wholeWidthSourceLifecycleProof": true
     },
     {
       "candidateUnitId": "barbarian_unarmored_defense",
@@ -58495,8 +58500,8 @@
     },
     "levelOneTwoSeedMigrationAuditRows": 80,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 63,
-      "hand-built build needing migration": 7,
+      "already legal creation path": 64,
+      "hand-built build needing migration": 6,
       "legal build-sheet owner proof": 9,
       "legal creation owner proof": 1
     },
@@ -58505,10 +58510,10 @@
       "real-sheet-battle": 70
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "direct-character-build": 7,
-      "legal-creation-draft-finalize": 73
+      "direct-character-build": 6,
+      "legal-creation-draft-finalize": 74
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 63,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 64,
     "scenarioGroups": 414,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 20,
@@ -65162,7 +65167,9 @@
       ],
       "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Barbarian:barbarian_rage\"]",
       "rawSources": [
-        ".references/srd-5.2.1/Classes/Barbarian.md:56"
+        ".references/srd-5.2.1/Classes/Barbarian.md:33-35",
+        ".references/srd-5.2.1/Classes/Barbarian.md:56",
+        ".references/srd-5.2.1/Classes/Barbarian.md:56-78"
       ],
       "rowCount": 1,
       "rowKinds": [
@@ -88333,13 +88340,38 @@
       "evidenceNeedles": [],
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders",
-        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:33-35",
+          ".references/srd-5.2.1/Classes/Barbarian.md:56-78"
+        ]
       },
-      "helperNeedles": [],
+      "helperNeedles": [
+        {
+          "anchor": "const barbarianBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_barbarian\"",
+            "\"class_skill_proficiency_choice\"",
+            "\"barbarian_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_barbarian\", \"class_equipment_choice\", \"option_b\")",
+            "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
+            "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
+            "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
+          ],
+          "path": "packages/character-battle-runtime/src/sdk-integration-test-support.ts"
+        }
+      ],
       "levelBand": "level-1",
       "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
       "rowKey": "level-1:Barbarian:barbarian_rage",
       "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-barbarian-rage\"",
+        "barbarianBuildSheetDraftPlan",
+        "battleIdText: \"battle:l1-sdk-rage\"",
+        "discoverCreationHoles({ draft: fixture.draft, unitLibrary })",
+        "fixture.sheet.build",
         "barbarianRageUnitId"
       ]
     },

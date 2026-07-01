@@ -108,7 +108,6 @@ const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 210;
 const expectedLevelOneTwoSeedScenarioRows = 80;
 const handBuiltSourceSeedRowIds = new Set([
-  "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
   "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
   "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
   "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
@@ -436,7 +435,21 @@ const seededSdkScenarioRows = [
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
       "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
-    tracerNeedles: ["barbarianRageUnitId"],
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Barbarian.md:33-35",
+      ".references/srd-5.2.1/Classes/Barbarian.md:56-78",
+    ],
+    sourceProof: legalBuildBattleHandoffSourceProof,
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-barbarian-rage"',
+      "barbarianBuildSheetDraftPlan",
+      'battleIdText: "battle:l1-sdk-rage"',
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary })",
+      "fixture.sheet.build",
+      "barbarianRageUnitId",
+    ],
+    helperNeedles: barbarianBuildSheetScenarioHelperNeedles,
   },
   {
     candidateUnitId: "barbarian_danger_sense",

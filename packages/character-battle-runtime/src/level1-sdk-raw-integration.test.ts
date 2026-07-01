@@ -1147,31 +1147,34 @@ describe("level 1 SDK RAW integration", () => {
   });
 
   test("Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders", () => {
-    const state = battleFromSheets({
-      battleIdText: "battle:l1-sdk-rage",
-      characters: [
-        characterSheet({
-          characterIdText: "character:l1-sdk-rage",
-          build: levelOneSingleClassBuild({
-            classUnitId: "class_barbarian",
-            weaponUnitId: "weapon_longsword",
-            abilityScores: {
-              str: 16,
-              dex: 14,
-              con: 14,
-              int: 10,
-              wis: 10,
-              cha: 10,
-            },
-          }),
-          combatantId: barbarianId,
-          initiative: 20,
-        }),
-      ],
-      monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
-      ],
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-barbarian-rage",
+      draftPlan: barbarianBuildSheetDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-rage",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l1-sdk-rage",
+        combatantId: barbarianId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      },
     });
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    const state = fixture.state;
     const act = unitFeatureActForUnitId(
       state,
       barbarianId,

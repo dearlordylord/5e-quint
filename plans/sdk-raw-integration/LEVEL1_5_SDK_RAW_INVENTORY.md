@@ -281,27 +281,27 @@ Character Sheet and battle handoff.
 
 | Classification | Rows |
 | --- | ---: |
-| already legal creation path | 63 |
-| hand-built build needing migration | 7 |
+| already legal creation path | 64 |
+| hand-built build needing migration | 6 |
 | legal build-sheet owner proof | 9 |
 | legal creation owner proof | 1 |
 
 | Source build path | Rows |
 | --- | ---: |
-| direct-character-build | 7 |
-| legal-creation-draft-finalize | 73 |
+| direct-character-build | 6 |
+| legal-creation-draft-finalize | 74 |
 
 | Real sheet/battle handoff | Rows |
 | --- | ---: |
 | not-real-sheet-battle | 10 |
 | real-sheet-battle | 70 |
 
-Whole-width source lifecycle seed rows: 63/80.
+Whole-width source lifecycle seed rows: 64/80.
 
 | Band | Class | Unit | Row kind | Classification | Source build path | Real sheet/battle handoff | Whole-width source lifecycle proof | Next action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | level-1 | Barbarian | `class_barbarian` | class-container | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
-| level-1 | Barbarian | `barbarian_rage` | class-feature-grant | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
+| level-1 | Barbarian | `barbarian_rage` | class-feature-grant | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | level-1 | Barbarian | `barbarian_unarmored_defense` | class-feature-grant | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
 | level-1 | Barbarian | `class_barbarian` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
 | level-1 | Barbarian | `class_barbarian` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
