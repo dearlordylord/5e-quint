@@ -8027,7 +8027,7 @@
                 "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+                "title": "Battle marked-damage spell riders for attack-roll damage, Concentration duration, and zero-Hit-Point transfer timing"
               }
             ],
             "profileId": "spell.invocation-marked-damage-rider",
@@ -8093,7 +8093,7 @@
                 "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+                "title": "Battle marked-damage spell riders for attack-roll damage, Concentration duration, and zero-Hit-Point transfer timing"
               }
             ],
             "profileId": "spell.invocation-marked-damage-rider",
@@ -10745,8 +10745,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 4",
         "metrics": {
-          "denominator": 59,
-          "numerator": 59,
+          "denominator": 61,
+          "numerator": 61,
           "percent": "100%"
         },
         "rows": [
@@ -10776,6 +10776,24 @@
             "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json",
             "status": "installed",
             "unitId": "barbarian_weapon_mastery"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_barbarian",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json",
+            "status": "installed",
+            "unitId": "barbarian_danger_sense"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_barbarian",
+            "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/barbarian_reckless_attack.json",
+            "status": "installed",
+            "unitId": "barbarian_reckless_attack"
           },
           {
             "kind": "class_feature",
@@ -11283,7 +11301,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 59
+          "installed": 61
         }
       },
       {
@@ -11360,8 +11378,8 @@
       }
     ],
     "metrics": {
-      "denominator": 105,
-      "numerator": 105,
+      "denominator": 107,
+      "numerator": 107,
       "percent": "100%"
     },
     "openBlockerCount": 0

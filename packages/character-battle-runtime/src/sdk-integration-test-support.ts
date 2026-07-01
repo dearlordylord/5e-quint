@@ -57,6 +57,7 @@ import { DieRollResult, Hp } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
+  type StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
@@ -218,6 +219,7 @@ export type LegalSourceCharacterFixtureInput = {
   readonly sheet: {
     readonly characterIdText: string;
     readonly hitPoints: LegalSourceSheetHitPoints;
+    readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
   };
   readonly battle: LegalSourceBattlePlan;
 };
@@ -370,6 +372,7 @@ export function createLegalSourceCharacterSheet(input: {
   readonly characterIdText: string;
   readonly build: CharacterBuild;
   readonly hitPoints: LegalSourceSheetHitPoints;
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
 }): CharacterSheet {
   const maximumHp = Number(
     requireRight(characterBuildHitPoints(input.build, unitLibrary)).maximum,
@@ -386,6 +389,13 @@ export function createLegalSourceCharacterSheet(input: {
       hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
+      ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+        ? {}
+        : {
+            druidWildShapeKnownFormStatBlockIds:
+              input.druidWildShapeKnownFormStatBlockIds,
+            statBlockCatalog,
+          }),
     }),
   );
 }
@@ -421,6 +431,12 @@ export function createLegalSourceCharacterFixture(
     characterIdText: input.sheet.characterIdText,
     build: finalized.build,
     hitPoints: input.sheet.hitPoints,
+    ...(input.sheet.druidWildShapeKnownFormStatBlockIds === undefined
+      ? {}
+      : {
+          druidWildShapeKnownFormStatBlockIds:
+            input.sheet.druidWildShapeKnownFormStatBlockIds,
+        }),
   });
 
   if (input.battle.tag === "withoutBattle") {

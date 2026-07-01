@@ -7154,7 +7154,7 @@
             "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+            "title": "Battle marked-damage spell riders for attack-roll damage, Concentration duration, and zero-Hit-Point transfer timing"
           }
         ],
         "profileId": "spell.invocation-marked-damage-rider",
@@ -10867,7 +10867,7 @@
                   "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+                  "title": "Battle marked-damage spell riders for attack-roll damage, Concentration duration, and zero-Hit-Point transfer timing"
                 }
               ],
               "profileId": "spell.invocation-marked-damage-rider",
@@ -10933,7 +10933,7 @@
                   "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+                  "title": "Battle marked-damage spell riders for attack-roll damage, Concentration duration, and zero-Hit-Point transfer timing"
                 }
               ],
               "profileId": "spell.invocation-marked-damage-rider",

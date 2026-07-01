@@ -4,6 +4,7 @@ import {
   battleTablePositionId,
   breakBattleConcentration,
   cantripSpellInvocationRef,
+  activeDruidWildShapeForm,
   combatantId,
   discoverBattleActs,
   endTurn,
@@ -25,6 +26,7 @@ import {
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
+  characterBuildDruidWildShapeFacts,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   characterBuildArmorTraining,
@@ -54,6 +56,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   characterSheetArmorClassState,
+  characterSheetDruidWildShapeKnownForms,
   characterSheetResources,
   characterSheetPactSlots,
   characterSheetSpellSlots,
@@ -134,6 +137,10 @@ type ThunderwaveSavingThrowOutcomeHole = BattleSpellSavingThrowOutcomeHole & {
     readonly postSaveAreaEffect: { readonly kind: "thunderwave" };
   };
 };
+type DruidWildShapeAssumeFormSubject = Extract<
+  Extract<BattleSubject, { readonly tag: "druidWildShape" }>,
+  { readonly action: "assumeForm" }
+>;
 
 const fighterId = combatantId("combatant:l1-sdk-fighter");
 const legalFighterId = combatantId("combatant:l1-sdk-legal-fighter");
@@ -278,6 +285,7 @@ const animalFriendshipBeastId = combatantId(
 const animalFriendshipNonBeastId = combatantId(
   "combatant:l1-sdk-animal-friendship-non-beast",
 );
+const druidWildShapeDruidId = combatantId("combatant:l2-sdk-druid-wild-shape");
 const thunderwaveUnsecuredObjectId = battleObjectId(
   "object:l1-sdk-thunderwave-unsecured",
 );
@@ -313,6 +321,7 @@ const hexSpellId = "hex";
 const huntersMarkSpellId = "hunters_mark";
 const cureWoundsSpellId = "cure_wounds";
 const rangerFavoredEnemyUnitId = "ranger_favored_enemy";
+const druidWildShapeUnitId = "druid_wild_shape";
 const burningHandsSpellId = "burning_hands";
 const fireBoltSpellId = "fire_bolt";
 const rayOfFrostSpellId = "ray_of_frost";
@@ -335,6 +344,12 @@ const animalFriendshipDurationTicks = requireRight(
   elapsedTimeTicksFromHours(24),
 );
 const huntersMarkDurationTicks = requireRight(elapsedTimeTicksFromHours(1));
+const levelTwoDruidWildShapeKnownFormIds = [
+  "stat_block_rat",
+  "stat_block_riding_horse",
+  "stat_block_spider",
+  "stat_block_wolf",
+] as const;
 
 const barbarianBuildSheetDraftPlan = {
   label: "Barbarian build-sheet projection",
@@ -391,6 +406,69 @@ const barbarianDangerSenseDraftPlan = {
   ...barbarianBuildSheetDraftPlan,
   label: "Barbarian Danger Sense battle feature",
   level: 2,
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const druidWildShapeDraftPlan = {
+  label: "Druid Wild Shape multi-owner split",
+  classUnitId: "class_druid",
+  level: 2,
+  backgroundUnitId: "background_criminal",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 8,
+    dex: 13,
+    con: 14,
+    int: 10,
+    wis: 15,
+    cha: 12,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_druid",
+      "class_skill_proficiency_choice",
+      "nature",
+      "perception",
+    ),
+    legalUnitChoice(
+      "class_druid",
+      "class_cantrip_choices",
+      produceFlameSpellId,
+      poisonSpraySpellId,
+    ),
+    legalUnitChoice(
+      "class_druid",
+      "class_prepared_spell_choices",
+      animalFriendshipSpellId,
+      cureWoundsSpellId,
+      "entangle",
+      "faerie_fire",
+      healingWordSpellId,
+    ),
+    legalUnitChoice(
+      "druid_primal_order",
+      "primal_order",
+      "warden",
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_ability_score_increase",
+      "two_and_one:dex:con",
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_tool_choice",
+      "thieves_tools",
+    ),
+    legalUnitChoice("class_druid", "class_equipment_choice", "option_b"),
+    legalUnitChoice(
+      "background_criminal",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalUnitChoice("class_druid", "equipment_purchase", "weapon_dagger"),
+  ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
 const warlockPactMagicCreationDraftPlan = {
@@ -789,6 +867,158 @@ describe("level 1 SDK RAW integration", () => {
         dangerSenseBarbarianId,
       ).save.targetRollModes,
     ).toEqual([]);
+  });
+
+  test("Druid Wild Shape splits legal level-2 creation facts, sheet known forms, battle form use, and active-form handoff closure", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l2-sdk-druid-wild-shape",
+      draftPlan: druidWildShapeDraftPlan,
+      sheet: {
+        characterIdText: "character:l2-sdk-druid-wild-shape",
+        hitPoints: { tag: "maximum" },
+        druidWildShapeKnownFormStatBlockIds: levelTwoDruidWildShapeKnownFormIds,
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l2-sdk-druid-wild-shape",
+        combatantId: druidWildShapeDruidId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+        ],
+      },
+    });
+
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_druid"),
+      advancements: [
+        {
+          classUnitId: classUnitId("class_druid"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    });
+    expect(characterBuildUnitRefs(fixture.build, unitLibrary)).toContainEqual({
+      unitId: druidWildShapeUnitId,
+    });
+    expect(
+      requireRight(
+        characterBuildDruidWildShapeFacts({
+          build: fixture.build,
+          unitLibrary,
+        }),
+      ),
+    ).toEqual({
+      unitId: druidWildShapeUnitId,
+      useCount: {
+        maximum: resourceCount(2),
+        shortRestRefill: resourceCount(1),
+        longRestRefillsAll: true,
+      },
+      duration: { unit: "hour", amount: 1 },
+      knownFormRoster: {
+        creatureType: "beast",
+        count: 4,
+        maxChallengeRating: 0.25,
+        flySpeed: "forbidden",
+        longRestReplacementCount: 1,
+      },
+    });
+
+    expect(characterSheetDruidWildShapeKnownForms(fixture.sheet)).toEqual({
+      statBlockIds: levelTwoDruidWildShapeKnownFormIds,
+    });
+    expect(characterSheetResources(fixture.sheet, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          unitId: druidWildShapeUnitId,
+          count: 2,
+          expended: 0,
+        }),
+      ]),
+    });
+
+    const active = requireResolved(
+      resolveDruidWildShapeWithoutLoadoutEquipment(
+        fixture.state,
+        druidWildShapeAct(fixture.state, {
+          action: "assumeForm",
+          formStatBlockId: "stat_block_rat",
+        }),
+      ),
+    );
+    const activeDruid = requireCharacterCombatant(
+      active.state,
+      druidWildShapeDruidId,
+    );
+    expect(activeDruidWildShapeForm(activeDruid)?.id).toBe("stat_block_rat");
+    expect(activeDruid.tempHp).toBe(Hp(2));
+    expect(characterResources(activeDruid)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: druidWildShapeUnitId }),
+          usesRemaining: 1,
+        }),
+      ]),
+    );
+    expect(
+      settleCharacterSheetFromBattle({
+        sheet: fixture.sheet,
+        state: active.state,
+        combatant: activeDruid,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff while Wild Shape is active is blocked; dismiss or resolve reversion before Character Sheet handoff.",
+      },
+    });
+
+    const monsterTurn = requireResolved(
+      endTurn({ state: active.state, actorId: druidWildShapeDruidId }),
+    ).state;
+    const nextDruidTurn = requireResolved(
+      endTurn({ state: monsterTurn, actorId: monsterId }),
+    ).state;
+    const dismissed = requireResolved(
+      resolveBattleSubject({
+        state: nextDruidTurn,
+        subject: druidWildShapeAct(nextDruidTurn, { action: "dismiss" }),
+        fills: [],
+      }),
+    );
+    const dismissedDruid = requireCharacterCombatant(
+      dismissed.state,
+      druidWildShapeDruidId,
+    );
+    expect(activeDruidWildShapeForm(dismissedDruid)).toBeNull();
+
+    const settled = requireRight(
+      settleCharacterSheetFromBattle({
+        sheet: fixture.sheet,
+        state: dismissed.state,
+        combatant: dismissedDruid,
+        unitLibrary,
+      }),
+    );
+    expect(settled.resourceExpenditures).toEqual([
+      {
+        tag: "useCountResource",
+        unitId: druidWildShapeUnitId,
+        expended: resourceCount(1),
+      },
+    ]);
+    expect(characterSheetDruidWildShapeKnownForms(settled)).toEqual({
+      statBlockIds: levelTwoDruidWildShapeKnownFormIds,
+    });
   });
 
   test("legal Fighter source fixture creates a level 1 sheet and battle combatant", () => {
@@ -9364,6 +9594,56 @@ function martialArtsBonusUnarmedStrikeAct(
     throw new Error("Expected Martial Arts Bonus Action Unarmed Strike act.");
   }
   return act;
+}
+
+function druidWildShapeAct(
+  state: BattleState,
+  input:
+    | {
+        readonly action: "assumeForm";
+        readonly formStatBlockId: DruidWildShapeAssumeFormSubject["formStatBlockId"];
+      }
+    | { readonly action: "dismiss" },
+): Extract<BattleSubject, { readonly tag: "druidWildShape" }> {
+  const subject = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "druidWildShape" &&
+      candidate.subject.action === input.action &&
+      (input.action === "dismiss" ||
+        (candidate.subject.action === "assumeForm" &&
+          candidate.subject.formStatBlockId === input.formStatBlockId)),
+  )?.subject;
+  if (subject?.tag !== "druidWildShape") {
+    throw new Error(`Expected Druid Wild Shape ${input.action} act.`);
+  }
+  return subject;
+}
+
+function resolveDruidWildShapeWithoutLoadoutEquipment(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "druidWildShape" }>,
+): BattleResolutionResult {
+  const needsDisposition = resolveBattleSubject({
+    state,
+    subject,
+    fills: [],
+  });
+  const hole = requireHole(needsDisposition, "wildShapeEquipmentDisposition");
+  expect(hole.candidates).toEqual([]);
+  return resolveBattleSubject({
+    state,
+    subject,
+    fills: [
+      {
+        kind: "wildShapeEquipmentDisposition",
+        holeId: hole.holeId,
+        value: {
+          formLimbs: { kind: "canHandleObjects" },
+          choices: [],
+        },
+      },
+    ],
+  });
 }
 
 function requireThunderwaveSavingThrowHole(

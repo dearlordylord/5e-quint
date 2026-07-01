@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L12-SH12-MULTI-OWNER-FIRST-SLICE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split the first multi-owner feature SDK slice"
     },
     {
@@ -348,7 +348,7 @@ Reviewer-loop convergence:
 | 9 | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE - Add the first sheet spell-access SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | sheet-spell-access-sdk | One spell-access scenario group from legal creation through sheet. |
 | 10 | L12-SH10-BATTLE-FEATURE-FIRST-SLICE - Add the first battle-feature SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | battle-feature-sdk | One battle feature scenario group from sheet to reducer behavior. |
 | 11 | L12-SH11-BATTLE-SPELL-FIRST-SLICE - Add the first battle-spell SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | battle-spell-sdk | One spell scenario group sharing an execution path across classes. |
-| 12 | L12-SH12-MULTI-OWNER-FIRST-SLICE - Split the first multi-owner feature SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | multi-owner-feature-sdk | One multi-owner group split into legal source scenario and explicit owner follow-ups. |
+| 12 | L12-SH12-MULTI-OWNER-FIRST-SLICE - Split the first multi-owner feature SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | multi-owner-feature-sdk | One multi-owner group split into legal source scenario and explicit owner follow-ups. |
 | 13 | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY - Close the first spell-effect owner review family | ready-for-research | L12-SH04-GROUPING-GENERATOR-GATE | closure-review | First spell-effect owner-review family classified as table-only, existing owner sufficient, or follow-up implementation. |
 | 14 | L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS - Add the first small QNT harness pressure witness | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | QNT/harness-pressure | Small deterministic source-side witness or existing obligation strengthening. |
 | 15 | L12-SH15-NEXT-BATCH-SPLIT - Expand the next one-session task batches | blocked | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS | planning | Add the next runnable one-session tasks for remaining L1/L2 groups after seed migrations. |
@@ -880,7 +880,7 @@ Plan Impact:
 
 ### Task 12 - L12-SH12-MULTI-OWNER-FIRST-SLICE
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
