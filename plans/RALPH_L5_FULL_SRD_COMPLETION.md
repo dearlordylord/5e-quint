@@ -169,7 +169,7 @@
     {
       "number": 28,
       "id": "L5FULL-FUT-12-MAGIC-CIRCLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Magic Circle"
     },
     {
