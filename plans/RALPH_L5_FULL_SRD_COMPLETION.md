@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "L5FULL-FUT-06-CALL-LIGHTNING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Call Lightning"
     },
     {
