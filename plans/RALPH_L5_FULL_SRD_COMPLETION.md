@@ -175,7 +175,7 @@
     {
       "number": 29,
       "id": "L5FULL-FUT-13-MELD-INTO-STONE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Meld into Stone"
     },
     {
