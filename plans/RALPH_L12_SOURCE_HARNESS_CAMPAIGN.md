@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L12-SH01-DENOMINATOR-FORMAT-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify the L1/L2 source denominator and Ralph format"
     },
     {
@@ -291,7 +291,7 @@ Reviewer-loop convergence:
 
 | # | Task | Status | Depends on | Lane | Expected output |
 | ---: | --- | --- | --- | --- | --- |
-| 1 | L12-SH01-DENOMINATOR-FORMAT-GATE - Verify the L1/L2 source denominator and Ralph format | ready-for-research | none | fixture/enabling | Static denominator and plan-format verification, with durable corrections if inventory drifted. |
+| 1 | L12-SH01-DENOMINATOR-FORMAT-GATE - Verify the L1/L2 source denominator and Ralph format | done | none | fixture/enabling | Static denominator and plan-format verification, with durable corrections if inventory drifted. |
 | 2 | L12-SH02-LEGAL-FIXTURE-SEAM - Implement the legal source-side lifecycle fixture seam | blocked | L12-SH01-DENOMINATOR-FORMAT-GATE | fixture/enabling | Shared legal fixture helpers for L1/L2 source lifecycle scenarios. |
 | 3 | L12-SH03-SEED-MIGRATION-AUDIT - Audit existing seed rows for legal lifecycle proof | blocked | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH02-LEGAL-FIXTURE-SEAM | seed-present | Classification of all 64 L1/L2 seed rows and first safe migrations if small. |
 | 4 | L12-SH04-GROUPING-GENERATOR-GATE - Generate the L1/L2 campaign grouping gate | blocked | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH03-SEED-MIGRATION-AUDIT | fixture/enabling | Generated or checked group assignment evidence for 400 rows and 207 groups. |
@@ -312,7 +312,7 @@ Reviewer-loop convergence:
 
 ### Task 1 - L12-SH01-DENOMINATOR-FORMAT-GATE
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
