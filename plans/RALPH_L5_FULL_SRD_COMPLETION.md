@@ -205,7 +205,7 @@
     {
       "number": 34,
       "id": "L5FULL-FUT-18-SPIRIT-GUARDIANS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Spirit Guardians"
     },
     {
