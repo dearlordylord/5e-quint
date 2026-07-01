@@ -108,7 +108,6 @@ const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 210;
 const expectedLevelOneTwoSeedScenarioRows = 80;
 const handBuiltSourceSeedRowIds = new Set([
-  "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
   "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
   "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
 ]);
@@ -553,7 +552,26 @@ const seededSdkScenarioRows = [
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
       "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
-    tracerNeedles: ["rogueSneakAttackUnitId"],
+    sourceProof: legalBuildBattleHandoffSourceProof,
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-sneak-attack"',
+      "rogueSneakAttackDraftPlan",
+      'battle: { tag: "withoutBattle" }',
+      "discoverCreationHoles({ draft: rogueFixture.draft, unitLibrary }).length",
+      "rogueFixture.sheet.build",
+      "rogueSneakAttackUnitId",
+    ],
+    helperNeedles: [
+      {
+        anchor: "const rogueSneakAttackDraftPlan =",
+        needles: [
+          "legalLoadoutChoice(",
+          "rogueSneakAttackWeaponUnitId",
+          '"wielded_one_handed"',
+        ],
+      },
+    ],
   },
   {
     candidateUnitId: "sorcerer_innate_sorcery",

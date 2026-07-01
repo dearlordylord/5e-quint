@@ -51891,21 +51891,22 @@
     },
     {
       "candidateUnitId": "rogue_sneak_attack",
-      "classification": "hand-built build needing migration",
+      "classification": "already legal creation path",
       "className": "Rogue",
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
       "levelBand": "level-1",
-      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
-      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
       "rowId": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
       "rowKey": "level-1:Rogue:rogue_sneak_attack",
       "rowKind": "class-feature-grant",
-      "sourceBuildPath": "direct-character-build",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-battle-handoff",
       "usesRealSheetBattleHandoff": true,
-      "wholeWidthSourceLifecycleProof": false
+      "wholeWidthSourceLifecycleProof": true
     },
     {
       "candidateUnitId": "sorcerer_innate_sorcery",
@@ -58502,8 +58503,8 @@
     },
     "levelOneTwoSeedMigrationAuditRows": 80,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 67,
-      "hand-built build needing migration": 3,
+      "already legal creation path": 68,
+      "hand-built build needing migration": 2,
       "legal build-sheet owner proof": 9,
       "legal creation owner proof": 1
     },
@@ -58512,10 +58513,10 @@
       "real-sheet-battle": 70
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "direct-character-build": 3,
-      "legal-creation-draft-finalize": 77
+      "direct-character-build": 2,
+      "legal-creation-draft-finalize": 78
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 67,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 68,
     "scenarioGroups": 414,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 20,
@@ -88495,11 +88496,26 @@
         "label": "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
-      "helperNeedles": [],
+      "helperNeedles": [
+        {
+          "anchor": "const rogueSneakAttackDraftPlan =",
+          "needles": [
+            "legalLoadoutChoice(",
+            "rogueSneakAttackWeaponUnitId",
+            "\"wielded_one_handed\""
+          ]
+        }
+      ],
       "levelBand": "level-1",
       "rowId": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
       "rowKey": "level-1:Rogue:rogue_sneak_attack",
       "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-sneak-attack\"",
+        "rogueSneakAttackDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "discoverCreationHoles({ draft: rogueFixture.draft, unitLibrary }).length",
+        "rogueFixture.sheet.build",
         "rogueSneakAttackUnitId"
       ]
     },

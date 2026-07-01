@@ -102,6 +102,7 @@ import {
   characterSheet,
   createLegalSourceCharacterFixture,
   damageRollFillWithGroups,
+  legalLoadoutChoice,
   legalUnitChoice,
   monsterBattleInput,
   ordinaryAttackDamageFills,
@@ -295,6 +296,7 @@ const barbarianDangerSenseUnitId = "barbarian_danger_sense";
 const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 const monkMartialArtsUnitId = "monk_martial_arts";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
+const rogueSneakAttackWeaponUnitId = "weapon_dagger";
 const rogueSneakAttackName = "Dagger";
 const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 const dissonantWhispersSpellId = "dissonant_whispers";
@@ -603,6 +605,77 @@ const monkMartialArtsDraftPlan = {
       "option_b",
     ),
     legalUnitChoice("class_monk", "equipment_purchase", "weapon_dagger"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const rogueSneakAttackDraftPlan = {
+  label: "Rogue Sneak Attack battle feature",
+  classUnitId: "class_rogue",
+  level: 1,
+  backgroundUnitId: "background_criminal",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 8,
+    dex: 15,
+    con: 14,
+    int: 10,
+    wis: 12,
+    cha: 13,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_rogue",
+      "class_skill_proficiency_choice",
+      "acrobatics",
+      "insight",
+      "investigation",
+      "perception",
+    ),
+    legalUnitChoice(
+      "rogue_expertise",
+      "class_feature_proficiency_choice",
+      "sleight_of_hand",
+      "stealth",
+    ),
+    legalUnitChoice(
+      "rogue_thieves_cant",
+      "class_feature_language_choice",
+      "Elvish",
+    ),
+    legalUnitChoice(
+      "rogue_weapon_mastery",
+      "weapon_mastery_options",
+      rogueSneakAttackWeaponUnitId,
+      "weapon_shortsword",
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_ability_score_increase",
+      "two_and_one:dex:con",
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_tool_choice",
+      "thieves_tools",
+    ),
+    legalUnitChoice("class_rogue", "class_equipment_choice", "option_b"),
+    legalUnitChoice(
+      "background_criminal",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalUnitChoice(
+      "class_rogue",
+      "equipment_purchase",
+      rogueSneakAttackWeaponUnitId,
+    ),
+    legalLoadoutChoice(
+      rogueSneakAttackWeaponUnitId,
+      "weapon",
+      "wielded_one_handed",
+    ),
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
@@ -1291,26 +1364,30 @@ describe("level 1 SDK RAW integration", () => {
   });
 
   test("Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use", () => {
+    const rogueFixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-sneak-attack",
+      draftPlan: rogueSneakAttackDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-sneak-attack",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+    expect(rogueFixture.tag).toBe("withoutBattle");
+    if (rogueFixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: rogueFixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(rogueFixture.sheet.build).toEqual(rogueFixture.build);
+
     const state = battleFromSheets({
       battleIdText: "battle:l1-sdk-sneak-attack",
       characters: [
-        characterSheet({
-          characterIdText: "character:l1-sdk-sneak-attack",
-          build: levelOneSingleClassBuild({
-            classUnitId: "class_rogue",
-            weaponUnitId: "weapon_dagger",
-            abilityScores: {
-              str: 10,
-              dex: 16,
-              con: 14,
-              int: 10,
-              wis: 10,
-              cha: 10,
-            },
-          }),
+        {
+          sheet: rogueFixture.sheet,
           combatantId: rogueId,
           initiative: 20,
-        }),
+        },
         characterSheet({
           characterIdText: "character:l1-sdk-sneak-attack-ally",
           build: levelOneSingleClassBuild({
@@ -1388,7 +1465,7 @@ describe("level 1 SDK RAW integration", () => {
       }),
     );
 
-    expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));
+    expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(4));
     expect(
       resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn,
     ).toEqual([{ attackerId: rogueId, unitId: rogueSneakAttackUnitId }]);

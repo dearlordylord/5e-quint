@@ -48,6 +48,7 @@ import {
   SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
   SRD_ROGUE_CLASS_UNIT_ID,
   PHASE1_SHIELD_UNIT_ID,
+  PHASE1_WEAPON_DAGGER_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
@@ -447,6 +448,14 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     {
       slot: LOADOUT_WEAPON_SLOT,
       unitId: PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+      optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
+      label: "Wielded one-handed",
+      buildSlot: "weapon",
+      grip: "one_handed",
+    },
+    {
+      slot: LOADOUT_WEAPON_SLOT,
+      unitId: PHASE1_WEAPON_DAGGER_UNIT_ID,
       optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
       label: "Wielded one-handed",
       buildSlot: "weapon",
