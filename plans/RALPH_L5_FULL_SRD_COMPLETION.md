@@ -181,7 +181,7 @@
     {
       "number": 30,
       "id": "L5FULL-FUT-14-PALADIN-FAITHFUL-STEED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Paladin Faithful Steed"
     },
     {
