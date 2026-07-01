@@ -16,9 +16,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-5 mined rows | 770 |
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
-| Existing level-5 SDK seed scenario rows | 28 |
-| Scenario groups | 426 |
-| Level 5 scenario groups | 87 |
+| Existing level-5 SDK seed scenario rows | 30 |
+| Scenario groups | 427 |
+| Level 5 scenario groups | 88 |
 
 ### All Level 1-5 Rows by Level Band
 
@@ -42,9 +42,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 412 |
+| sdk-scenario-needed | 410 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 92 |
+| seed-scenario-present | 94 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -79,14 +79,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-04 | 33 |
 | L15-SDK-RAW-05 | 107 |
 | L15-SDK-RAW-06 | 25 |
-| L15-SDK-RAW-07 | 87 |
+| L15-SDK-RAW-07 | 88 |
 
 ### Scenario Groups by Lane
 
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 76 |
+| battle-spell-sdk | 75 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -96,7 +96,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
-| seed-present | 92 |
+| seed-present | 94 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -108,9 +108,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 36 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 43 |
-| sdk-scenario-needed | 13 |
+| sdk-scenario-needed | 11 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 28 |
+| seed-scenario-present | 30 |
 
 ### Level 5 Completion Rows by Proposed Owner Boundary
 
@@ -134,12 +134,12 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Lane | Groups |
 | --- | ---: |
-| battle-spell-sdk | 5 |
+| battle-spell-sdk | 4 |
 | explicit-closure | 12 |
 | feature-owner-review | 2 |
 | future-owner-before-sdk | 22 |
 | owner-review | 6 |
-| seed-present | 28 |
+| seed-present | 30 |
 | spell-effect-owner-review | 12 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -245,12 +245,13 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern` / `spell-level-3:Sorcerer:hypnotic_pattern`: level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control
 - `srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern` / `spell-level-3:Warlock:hypnotic_pattern`: level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern` / `spell-level-3:Wizard:hypnotic_pattern`: level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control
+- `srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt` / `spell-level-3:Sorcerer:lightning_bolt`: level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage
+- `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt` / `spell-level-3:Wizard:lightning_bolt`: level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage
 
 ## Level 5 Scenario Groups
 
 | Task | Lane | Rows | Bands | Classes | Units | Sample concepts | Suggested scenario |
 | --- | --- | ---: | --- | --- | --- | --- | --- |
-| L15-SDK-RAW-07 | battle-spell-sdk | 2 | spell-level-3 | Sorcerer, Wizard | `lightning_bolt` | Sorcerer spell list Lightning Bolt<br>Wizard spell list Lightning Bolt | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 2 | spell-level-3 | Bard, Cleric | `mass_healing_word` | Bard spell list Mass Healing Word<br>Cleric spell list Mass Healing Word | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 3 | spell-level-3 | Cleric, Druid, Sorcerer | `protection_from_energy` | Cleric spell list Protection from Energy<br>Druid spell list Protection from Energy<br>Sorcerer spell list Protection from Energy | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 3 | spell-level-3 | Druid, Sorcerer, Wizard | `sleet_storm` | Druid spell list Sleet Storm<br>Sorcerer spell list Sleet Storm<br>Wizard spell list Sleet Storm | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
@@ -313,6 +314,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `fly` | Sorcerer spell list Fly | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `haste` | Sorcerer spell list Haste | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `hypnotic_pattern` | Sorcerer spell list Hypnotic Pattern | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `lightning_bolt` | Sorcerer spell list Lightning Bolt | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Warlock | `counterspell` | Warlock spell list Counterspell | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Warlock | `dispel_magic` | Warlock spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Warlock | `fly` | Warlock spell list Fly | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
@@ -324,6 +326,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `glyph_of_warding` | Wizard spell list Glyph of Warding | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `haste` | Wizard spell list Haste | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `hypnotic_pattern` | Wizard spell list Hypnotic Pattern | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `lightning_bolt` | Wizard spell list Lightning Bolt | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `protection_from_energy` | Wizard spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 4 | spell-level-3 | Bard, Cleric, Sorcerer, Wizard | `clairvoyance` | Bard spell list Clairvoyance<br>Cleric spell list Clairvoyance<br>Sorcerer spell list Clairvoyance<br>Wizard spell list Clairvoyance | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 1 | spell-level-3 | Cleric | `create_food_and_water` | Cleric spell list Create Food and Water | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
@@ -427,7 +430,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Sorcerer spell list Gaseous Form | `gaseous_form` | `.references/srd-5.2.1/Classes/Sorcerer.md:308` | catalog-installed-owner-evidence-required | battle-runtime-required | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance. |
 | spell-level-3 | Sorcerer spell list Haste | `haste` | `.references/srd-5.2.1/Classes/Sorcerer.md:309` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Haste | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Sorcerer.md:310` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control | Owner-specific operational evidence is classified and present. |
-| spell-level-3 | Sorcerer spell list Lightning Bolt | `lightning_bolt` | `.references/srd-5.2.1/Classes/Sorcerer.md:311` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Sorcerer spell list Lightning Bolt | `lightning_bolt` | `.references/srd-5.2.1/Classes/Sorcerer.md:311` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Sorcerer.md:312` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
 | spell-level-3 | Sorcerer spell list Protection from Energy | `protection_from_energy` | `.references/srd-5.2.1/Classes/Sorcerer.md:313` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Sleet Storm | `sleet_storm` | `.references/srd-5.2.1/Classes/Sorcerer.md:314` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
@@ -464,7 +467,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Wizard spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Wizard.md:247` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Haste | `haste` | `.references/srd-5.2.1/Classes/Wizard.md:248` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Haste | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Wizard.md:249` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control | Owner-specific operational evidence is classified and present. |
-| spell-level-3 | Wizard spell list Lightning Bolt | `lightning_bolt` | `.references/srd-5.2.1/Classes/Wizard.md:250` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Wizard spell list Lightning Bolt | `lightning_bolt` | `.references/srd-5.2.1/Classes/Wizard.md:250` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Magic Circle | `magic_circle` | `.references/srd-5.2.1/Classes/Wizard.md:251` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name. |
 | spell-level-3 | Wizard spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Wizard.md:252` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
 | spell-level-3 | Wizard spell list Nondetection | `nondetection` | `.references/srd-5.2.1/Classes/Wizard.md:253` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers. |

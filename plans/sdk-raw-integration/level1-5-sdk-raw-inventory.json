@@ -4751,6 +4751,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Lightning Bolt",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -4758,7 +4762,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 311,
         "lineStart": 311,
@@ -6691,6 +6695,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Lightning Bolt",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -6698,7 +6706,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 250,
         "lineStart": 250,
@@ -7549,79 +7557,6 @@
     }
   ],
   "level5ScenarioGroups": [
-    {
-      "candidateUnitIds": [
-        "lightning_bolt"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:lightning-bolt",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"lightning_bolt\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md:311",
-        ".references/srd-5.2.1/Classes/Wizard.md:250"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "lightning_bolt",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Lightning Bolt",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 311,
-            "lineStart": 311,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "lightning_bolt",
-          "className": "Wizard",
-          "concept": "Wizard spell list Lightning Bolt",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 250,
-            "lineStart": 250,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Sorcerer spell list Lightning Bolt",
-        "Wizard spell list Lightning Bolt"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
     {
       "candidateUnitIds": [
         "mass_healing_word"
@@ -11538,6 +11473,61 @@
     },
     {
       "candidateUnitIds": [
+        "lightning_bolt"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-sorcerer-lightning-bolt",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Sorcerer:lightning_bolt\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:311"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "lightning_bolt",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Lightning Bolt",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 311,
+            "lineStart": 311,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Lightning Bolt"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "counterspell"
       ],
       "categories": [
@@ -12134,6 +12124,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Hypnotic Pattern"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "lightning_bolt"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-wizard-lightning-bolt",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Wizard:lightning_bolt\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:250"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "lightning_bolt",
+          "className": "Wizard",
+          "concept": "Wizard spell list Lightning Bolt",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 250,
+            "lineStart": 250,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Lightning Bolt"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -41579,6 +41624,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Lightning Bolt",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -41586,7 +41635,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 311,
         "lineStart": 311,
@@ -50693,6 +50742,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Lightning Bolt",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -50700,7 +50753,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 250,
         "lineStart": 250,
@@ -57417,21 +57470,21 @@
       "closure-review-needed": 36,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 43,
-      "sdk-scenario-needed": 13,
+      "sdk-scenario-needed": 11,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 28
+      "seed-scenario-present": 30
     },
-    "level5ScenarioGroups": 87,
+    "level5ScenarioGroups": 88,
     "level5ScenarioGroupsByLane": {
-      "battle-spell-sdk": 5,
+      "battle-spell-sdk": 4,
       "explicit-closure": 12,
       "feature-owner-review": 2,
       "future-owner-before-sdk": 22,
       "owner-review": 6,
-      "seed-present": 28,
+      "seed-present": 30,
       "spell-effect-owner-review": 12
     },
-    "level5SeedScenarioRows": 28,
+    "level5SeedScenarioRows": 30,
     "levelOneFiveMinedRows": 770,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -57480,16 +57533,16 @@
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 412,
+      "sdk-scenario-needed": 410,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 92,
+      "seed-scenario-present": 94,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 426,
+    "scenarioGroups": 427,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 76,
+      "battle-spell-sdk": 75,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -57499,7 +57552,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 92,
+      "seed-present": 94,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -57509,7 +57562,7 @@
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
-      "L15-SDK-RAW-07": 87
+      "L15-SDK-RAW-07": 88
     }
   },
   "scenarioGroups": [
@@ -81529,79 +81582,6 @@
     },
     {
       "candidateUnitIds": [
-        "lightning_bolt"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:lightning-bolt",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"lightning_bolt\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md:311",
-        ".references/srd-5.2.1/Classes/Wizard.md:250"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "lightning_bolt",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Lightning Bolt",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 311,
-            "lineStart": 311,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "lightning_bolt",
-          "className": "Wizard",
-          "concept": "Wizard spell list Lightning Bolt",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 250,
-            "lineStart": 250,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Sorcerer spell list Lightning Bolt",
-        "Wizard spell list Lightning Bolt"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "mass_healing_word"
       ],
       "categories": [
@@ -85516,6 +85496,61 @@
     },
     {
       "candidateUnitIds": [
+        "lightning_bolt"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-sorcerer-lightning-bolt",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Sorcerer:lightning_bolt\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:311"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "lightning_bolt",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Lightning Bolt",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 311,
+            "lineStart": 311,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Lightning Bolt"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "counterspell"
       ],
       "categories": [
@@ -86112,6 +86147,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Hypnotic Pattern"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "lightning_bolt"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-wizard-lightning-bolt",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Wizard:lightning_bolt\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:250"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "lightning_bolt",
+          "className": "Wizard",
+          "concept": "Wizard spell list Lightning Bolt",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 250,
+            "lineStart": 250,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Lightning Bolt"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -92364,6 +92454,44 @@
       "tracerNeedles": [
         "hypnoticPatternSpellId",
         "hypnoticPatternWizardId",
+        "levelFiveWizardBuild",
+        "\"class_wizard\""
+      ]
+    },
+    {
+      "candidateUnitId": "lightning_bolt",
+      "className": "Sorcerer",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
+      "rowKey": "spell-level-3:Sorcerer:lightning_bolt",
+      "tracerNeedles": [
+        "lightningBoltSpellId",
+        "lightningBoltSorcererId",
+        "levelFiveSorcererBuild",
+        "\"class_sorcerer\""
+      ]
+    },
+    {
+      "candidateUnitId": "lightning_bolt",
+      "className": "Wizard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
+      "rowKey": "spell-level-3:Wizard:lightning_bolt",
+      "tracerNeedles": [
+        "lightningBoltSpellId",
+        "lightningBoltWizardId",
         "levelFiveWizardBuild",
         "\"class_wizard\""
       ]

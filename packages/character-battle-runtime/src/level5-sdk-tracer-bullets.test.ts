@@ -42,6 +42,7 @@ import {
   attackRollFill,
   attackSubject,
   attackTargetFill,
+  areaSavingThrowOutcomeFill,
   battleFromSheets,
   characterResources,
   characterSheet,
@@ -125,6 +126,18 @@ const hypnoticPatternWarlockId = combatantId(
 const hypnoticPatternWizardId = combatantId(
   "combatant:l5-tracer-hypnotic-pattern-wizard",
 );
+const lightningBoltSorcererId = combatantId(
+  "combatant:l5-tracer-lightning-bolt-sorcerer",
+);
+const lightningBoltWizardId = combatantId(
+  "combatant:l5-tracer-lightning-bolt-wizard",
+);
+const lightningBoltFailedSaveTargetId = combatantId(
+  "combatant:l5-tracer-lightning-bolt-failed-save-target",
+);
+const lightningBoltSuccessfulSaveTargetId = combatantId(
+  "combatant:l5-tracer-lightning-bolt-successful-save-target",
+);
 
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
@@ -141,6 +154,7 @@ const fireballSpellId = "fireball";
 const flySpellId = "fly";
 const glyphOfWardingSpellId = "glyph_of_warding";
 const hypnoticPatternSpellId = "hypnotic_pattern";
+const lightningBoltSpellId = "lightning_bolt";
 const counterspellCastLevel = 3;
 const dispelMagicCastLevel = 3;
 const fireballCastLevel = 3;
@@ -148,6 +162,7 @@ const flyCastLevel = 3;
 const hasteCastLevel = 3;
 const glyphOfWardingCastLevel = 3;
 const hypnoticPatternCastLevel = 3;
+const lightningBoltCastLevel = 3;
 const flySpeedFeet = 60;
 const magicMissileSpellId = "magic_missile";
 const magicMissileTriggerSlotLevel = 1;
@@ -157,6 +172,16 @@ const fireballDamageTotal = fireballDamageRollResults.reduce(
   (total, roll) => total + roll,
   0,
 );
+const lightningBoltDamageDiceCount = 8;
+const lightningBoltDamageRollResults = Array.from(
+  { length: lightningBoltDamageDiceCount },
+  () => 2,
+);
+const lightningBoltDamageTotal = lightningBoltDamageRollResults.reduce(
+  (total, roll) => total + roll,
+  0,
+);
+const lightningBoltHalfDamageTotal = Math.floor(lightningBoltDamageTotal / 2);
 type CounterspellClassAccessCase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly reactorId: CombatantId;
@@ -189,6 +214,11 @@ type GlyphOfWardingClassAccessCase = {
   readonly build: CharacterBuild;
 };
 type HypnoticPatternClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
+};
+type LightningBoltClassAccessCase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly casterId: CombatantId;
   readonly build: CharacterBuild;
@@ -1291,6 +1321,147 @@ describe("level 5 SDK tracer bullets", () => {
     }
   });
 
+  test("Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage", () => {
+    const lightningBoltCases = [
+      {
+        sourceUnitId: "class_sorcerer",
+        casterId: lightningBoltSorcererId,
+        build: levelFiveSorcererBuild({
+          preparedSpells: [lightningBoltSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_wizard",
+        casterId: lightningBoltWizardId,
+        build: levelFiveWizardBuild({
+          preparedSpells: [lightningBoltSpellId],
+        }),
+      },
+    ] as const satisfies ReadonlyArray<LightningBoltClassAccessCase>;
+
+    for (const lightningBoltCase of lightningBoltCases) {
+      expectLightningBoltClassAccess(lightningBoltCase);
+
+      const state = battleFromSheets({
+        battleIdText: `battle:l5-tracer-lightning-bolt-${lightningBoltCase.sourceUnitId}`,
+        characters: [
+          characterSheet({
+            characterIdText: `character:l5-tracer-lightning-bolt-${lightningBoltCase.sourceUnitId}`,
+            build: lightningBoltCase.build,
+            combatantId: lightningBoltCase.casterId,
+            initiative: 20,
+          }),
+        ],
+        monsters: [
+          monsterBattleInput(
+            lightningBoltFailedSaveTargetId,
+            10,
+            srdStatBlock("stat_block_sphinx_of_wonder"),
+          ),
+          monsterBattleInput(
+            lightningBoltSuccessfulSaveTargetId,
+            9,
+            srdStatBlock("stat_block_sphinx_of_wonder"),
+          ),
+        ],
+      });
+      const act = spellSlotActForProcedure(
+        state,
+        lightningBoltSpellId,
+        lightningBoltCastLevel,
+        "saveGatedDamage",
+      );
+      const savingThrow = requireHoleFromList(
+        act.initialHoles,
+        "savingThrowOutcome",
+      );
+
+      expect(savingThrow).toMatchObject({
+        label: "Lightning Bolt self-origin Line Saving Throw outcomes",
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        spell: expect.objectContaining({
+          procedure: "saveGatedDamage",
+          resource: { tag: "spellSlot", slotLevel: lightningBoltCastLevel },
+          targeting: { kind: "selfOriginLine", lengthFeet: 100, widthFeet: 5 },
+          damage: {
+            expr: { dice: lightningBoltDamageDiceCount, dieSize: 6 },
+            damageType: "lightning",
+          },
+          successDamage: "half",
+          rangeFeet: 0,
+        }),
+      });
+
+      const saveFill = areaSavingThrowOutcomeFill(
+        savingThrow,
+        lightningBoltCase.casterId,
+        [
+          { targetId: lightningBoltFailedSaveTargetId, succeeded: false },
+          { targetId: lightningBoltSuccessfulSaveTargetId, succeeded: true },
+        ],
+      );
+      const damageRoll = requireHole(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [saveFill],
+        }),
+        "rolledDice",
+      );
+      const failedSaveTargetBeforeDamage = requireCombatant(
+        state,
+        lightningBoltFailedSaveTargetId,
+      );
+      const successfulSaveTargetBeforeDamage = requireCombatant(
+        state,
+        lightningBoltSuccessfulSaveTargetId,
+      );
+      const resolved = requireResolved(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            saveFill,
+            damageRollFillWithGroups(damageRoll, [
+              lightningBoltDamageRollResults,
+            ]),
+          ],
+        }),
+      );
+      const caster = requireCharacterCombatant(
+        resolved.state,
+        lightningBoltCase.casterId,
+      );
+
+      expect(
+        Number(
+          requireCombatant(resolved.state, lightningBoltFailedSaveTargetId).hp,
+        ),
+      ).toBe(Number(failedSaveTargetBeforeDamage.hp) - lightningBoltDamageTotal);
+      expect(
+        Number(
+          requireCombatant(
+            resolved.state,
+            lightningBoltSuccessfulSaveTargetId,
+          ).hp,
+        ),
+      ).toBe(
+        Number(successfulSaveTargetBeforeDamage.hp) -
+          lightningBoltHalfDamageTotal,
+      );
+      expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+      expect(caster.origin.spellcasting?.spellSlots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            spellLevel: lightningBoltCastLevel,
+            expended: 1,
+          }),
+        ]),
+      );
+    }
+  });
+
   test("Sorcerous Restoration uses the sheet rest lifecycle to recover half level rounded down once per Long Rest", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
@@ -1574,6 +1745,31 @@ function expectHypnoticPatternClassAccess(input: {
       slots: expect.arrayContaining([
         expect.objectContaining({
           spellLevel: hypnoticPatternCastLevel,
+          count: 2,
+        }),
+      ]),
+    },
+  });
+}
+
+function expectLightningBoltClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly build: CharacterBuild;
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([lightningBoltSpellId]),
+      }),
+    ]),
+  );
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({
+          spellLevel: lightningBoltCastLevel,
           count: 2,
         }),
       ]),

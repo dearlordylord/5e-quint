@@ -3999,6 +3999,38 @@ const seededSdkScenarioRows = [
       '"class_wizard"',
     ],
   },
+  {
+    candidateUnitId: "lightning_bolt",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
+    tracerNeedles: [
+      "lightningBoltSpellId",
+      "lightningBoltSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "lightning_bolt",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
+    tracerNeedles: [
+      "lightningBoltSpellId",
+      "lightningBoltWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
 ];
 
 function animalFriendshipSdkHelperNeedles() {

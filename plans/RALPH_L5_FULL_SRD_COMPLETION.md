@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L5FULL-SDK-08-LIGHTNING-BOLT",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Lightning Bolt"
     },
     {
