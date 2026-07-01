@@ -496,7 +496,7 @@ const bardSpellAccessDraftPlan = {
   label: "Bard Spellcasting spell access",
   classUnitId: "class_bard",
   level: 1,
-  backgroundUnitId: "background_criminal",
+  backgroundUnitId: "background_acolyte",
   speciesUnitId: "species_orc",
   languageOptionIds: ["Dwarvish", "Goblin"],
   alignmentOptionId: "lawful_good",
@@ -534,23 +534,28 @@ const bardSpellAccessDraftPlan = {
       ...bardSpellAccessPreparedSpells,
     ),
     legalUnitChoice(
-      "background_criminal",
+      "background_acolyte",
       "background_ability_score_increase",
-      "two_and_one:dex:con",
+      "two_and_one:int:cha",
     ),
     legalUnitChoice(
-      "background_criminal",
+      "background_acolyte",
       "background_tool_choice",
-      "thieves_tools",
+      "calligraphers_supplies",
     ),
     legalUnitChoice("class_bard", "class_equipment_choice", "option_b"),
     legalUnitChoice(
-      "background_criminal",
+      "background_acolyte",
       "background_equipment_choice",
       "option_b",
     ),
     legalUnitChoice("class_bard", "equipment_purchase", "weapon_dagger"),
   ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const bardicInspirationDraftPlan = {
+  ...bardSpellAccessDraftPlan,
+  label: "Bardic Inspiration battle feature",
 } as const satisfies LegalSourceCharacterDraftPlan;
 
 describe("level 1 SDK RAW integration", () => {
@@ -1335,25 +1340,31 @@ describe("level 1 SDK RAW integration", () => {
   });
 
   test("Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action", () => {
+    const bardFixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-bardic-inspiration",
+      draftPlan: bardicInspirationDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-bardic-inspiration",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(bardFixture.tag).toBe("withoutBattle");
+    if (bardFixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: bardFixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(bardFixture.sheet.build).toEqual(bardFixture.build);
+
     const state = battleFromSheets({
       battleIdText: "battle:l1-sdk-bardic-inspiration",
       characters: [
-        characterSheet({
-          characterIdText: "character:l1-sdk-bardic-inspiration",
-          build: levelOneSingleClassBuild({
-            classUnitId: "class_bard",
-            abilityScores: {
-              str: 10,
-              dex: 14,
-              con: 14,
-              int: 10,
-              wis: 10,
-              cha: 16,
-            },
-          }),
+        {
+          sheet: bardFixture.sheet,
           combatantId: bardId,
           initiative: 20,
-        }),
+        },
         characterSheet({
           characterIdText: "character:l1-sdk-bardic-inspiration-ally",
           build: levelOneSingleClassBuild({

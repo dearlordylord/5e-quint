@@ -281,22 +281,22 @@ Character Sheet and battle handoff.
 
 | Classification | Rows |
 | --- | ---: |
-| already legal creation path | 64 |
-| hand-built build needing migration | 6 |
+| already legal creation path | 65 |
+| hand-built build needing migration | 5 |
 | legal build-sheet owner proof | 9 |
 | legal creation owner proof | 1 |
 
 | Source build path | Rows |
 | --- | ---: |
-| direct-character-build | 6 |
-| legal-creation-draft-finalize | 74 |
+| direct-character-build | 5 |
+| legal-creation-draft-finalize | 75 |
 
 | Real sheet/battle handoff | Rows |
 | --- | ---: |
 | not-real-sheet-battle | 10 |
 | real-sheet-battle | 70 |
 
-Whole-width source lifecycle seed rows: 64/80.
+Whole-width source lifecycle seed rows: 65/80.
 
 | Band | Class | Unit | Row kind | Classification | Source build path | Real sheet/battle handoff | Whole-width source lifecycle proof | Next action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -312,7 +312,7 @@ Whole-width source lifecycle seed rows: 64/80.
 | level-1 | Barbarian | `class_barbarian` | equipment-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | level-1 | Barbarian | `barbarian_weapon_mastery` | mastery-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | level-2 | Barbarian | `barbarian_danger_sense` | class-feature-grant | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
-| level-1 | Bard | `bard_bardic_inspiration` | class-feature-grant | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
+| level-1 | Bard | `bard_bardic_inspiration` | class-feature-grant | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | level-1 | Bard | `class_bard` | spell-access | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
 | spell-level-0 | Bard | `vicious_mockery` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Bard | `animal_friendship` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |

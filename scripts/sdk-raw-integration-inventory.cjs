@@ -108,7 +108,6 @@ const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 210;
 const expectedLevelOneTwoSeedScenarioRows = 80;
 const handBuiltSourceSeedRowIds = new Set([
-  "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
   "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
   "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
   "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
