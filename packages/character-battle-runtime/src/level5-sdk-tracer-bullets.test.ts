@@ -36,6 +36,7 @@ import {
 } from "@dnd/character-sheet-runtime";
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Hp, movementFeet, resourceCount } from "@dnd/shared/types";
 import type {
   DamageType,
@@ -175,6 +176,15 @@ const sleetStormWizardId = combatantId(
 const sleetStormTargetId = combatantId(
   "combatant:l5-tracer-sleet-storm-target",
 );
+const slowBardId = combatantId("combatant:l5-tracer-slow-bard");
+const slowSorcererId = combatantId("combatant:l5-tracer-slow-sorcerer");
+const slowWizardId = combatantId("combatant:l5-tracer-slow-wizard");
+const slowFailedSaveTargetId = combatantId(
+  "combatant:l5-tracer-slow-failed-save-target",
+);
+const slowSuccessfulSaveTargetId = combatantId(
+  "combatant:l5-tracer-slow-successful-save-target",
+);
 
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
@@ -194,6 +204,7 @@ const hypnoticPatternSpellId = "hypnotic_pattern";
 const lightningBoltSpellId = "lightning_bolt";
 const massHealingWordSpellId = "mass_healing_word";
 const sleetStormSpellId = "sleet_storm";
+const slowSpellId = "slow";
 const counterspellCastLevel = 3;
 const dispelMagicCastLevel = 3;
 const fireballCastLevel = 3;
@@ -205,6 +216,10 @@ const lightningBoltCastLevel = 3;
 const massHealingWordCastLevel = 3;
 const protectionFromEnergyCastLevel = 3;
 const sleetStormCastLevel = 3;
+const slowCastLevel = 3;
+const slowCubeSideFeet = 40;
+const slowMaxTargets = 6;
+const slowDurationTicks = elapsedTimeTicks(10);
 const flySpeedFeet = 60;
 const magicMissileSpellId = "magic_missile";
 const magicMissileTriggerSlotLevel = 1;
@@ -289,6 +304,11 @@ type SleetStormClassAccessCase = {
   readonly casterId: CombatantId;
   readonly build: CharacterBuild;
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockRecord["id"][];
+};
+type SlowClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
 };
 type CastBonusActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -1054,6 +1074,207 @@ describe("level 5 SDK tracer bullets", () => {
         ),
       ).toBe(false);
       expect(battleObscurementZones(ended)).toEqual([]);
+    }
+  });
+
+  test("Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties", () => {
+    const slowCases = [
+      {
+        sourceUnitId: "class_bard",
+        casterId: slowBardId,
+        build: levelFiveBardBuild({
+          preparedSpells: [slowSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_sorcerer",
+        casterId: slowSorcererId,
+        build: levelFiveSorcererBuild({
+          preparedSpells: [slowSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_wizard",
+        casterId: slowWizardId,
+        build: levelFiveWizardBuild({
+          preparedSpells: [slowSpellId],
+        }),
+      },
+    ] as const satisfies ReadonlyArray<SlowClassAccessCase>;
+
+    for (const slowCase of slowCases) {
+      expectSlowClassAccess(slowCase);
+
+      const state = battleFromSheets({
+        battleIdText: `battle:l5-tracer-slow-${slowCase.sourceUnitId}`,
+        characters: [
+          characterSheet({
+            characterIdText: `character:l5-tracer-slow-${slowCase.sourceUnitId}`,
+            build: slowCase.build,
+            combatantId: slowCase.casterId,
+            initiative: 20,
+          }),
+        ],
+        monsters: [
+          monsterBattleInput(
+            slowFailedSaveTargetId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+          monsterBattleInput(
+            slowSuccessfulSaveTargetId,
+            9,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      });
+      const beforeCast = snapshotBattle(state);
+      const beforeFailedSaveTarget = requireSnapshotCombatant(
+        beforeCast,
+        slowFailedSaveTargetId,
+      );
+      const beforeSuccessfulSaveTarget = requireSnapshotCombatant(
+        beforeCast,
+        slowSuccessfulSaveTargetId,
+      );
+      const act = spellSlotActForProcedure(
+        state,
+        slowSpellId,
+        slowCastLevel,
+        "slowActivePenalties",
+      );
+      const savingThrow = requireHoleFromList(
+        act.initialHoles,
+        "savingThrowOutcome",
+      );
+
+      expect(act.subject).toMatchObject({
+        tag: "actionSpell",
+        actorId: slowCase.casterId,
+        invocation: {
+          tag: "spellSlot",
+          spellId: slowSpellId,
+          slotLevel: slowCastLevel,
+          procedure: "slowActivePenalties",
+        },
+        mode: { tag: "cast" },
+      });
+      expect(savingThrow).toMatchObject({
+        label: "Slow point-origin Cube Saving Throw outcomes",
+        ability: "wis",
+        dc: { kind: "caster_spell_save_dc" },
+        spell: expect.objectContaining({
+          procedure: "slowActivePenalties",
+          resource: { tag: "spellSlot", slotLevel: slowCastLevel },
+          targeting: {
+            kind: "pointOriginCube",
+            sideFeet: movementFeet(slowCubeSideFeet),
+          },
+          maxTargets: slowMaxTargets,
+          rangeFeet: movementFeet(120),
+          durationTicks: slowDurationTicks,
+        }),
+      });
+
+      const resolved = requireResolved(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            slowSavingThrowOutcomeFill({
+              hole: savingThrow,
+              casterId: slowCase.casterId,
+              outcomes: [
+                { targetId: slowFailedSaveTargetId, succeeded: false },
+                { targetId: slowSuccessfulSaveTargetId, succeeded: true },
+              ],
+            }),
+          ],
+        }),
+      );
+      const caster = requireCharacterCombatant(
+        resolved.state,
+        slowCase.casterId,
+      );
+      const failedSaveTarget = requireCombatant(
+        resolved.state,
+        slowFailedSaveTargetId,
+      );
+      const successfulSaveTarget = requireCombatant(
+        resolved.state,
+        slowSuccessfulSaveTargetId,
+      );
+      const afterCast = snapshotBattle(resolved.state);
+      const afterFailedSaveTarget = requireSnapshotCombatant(
+        afterCast,
+        slowFailedSaveTargetId,
+      );
+      const afterSuccessfulSaveTarget = requireSnapshotCombatant(
+        afterCast,
+        slowSuccessfulSaveTargetId,
+      );
+
+      expect(caster).toMatchObject({
+        concentration: {
+          sourceSpellId: slowSpellId,
+          effectKind: "spellEffect",
+        },
+      });
+      expect(caster.origin.spellcasting?.spellSlots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            spellLevel: slowCastLevel,
+            expended: 1,
+          }),
+        ]),
+      );
+      expect(failedSaveTarget.activeEffects).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: "slowActivePenalties",
+            sourceSpellId: slowSpellId,
+            sourceCombatantId: slowCase.casterId,
+            save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+            expiresAt: {
+              kind: "concentration",
+              combatantId: slowCase.casterId,
+              durationTicks: slowDurationTicks,
+            },
+          }),
+        ]),
+      );
+      expect(
+        successfulSaveTarget.activeEffects.some(
+          (effect) =>
+            effect.kind === "slowActivePenalties" &&
+            effect.sourceSpellId === slowSpellId,
+        ),
+      ).toBe(false);
+      expect(Number(afterFailedSaveTarget.movement.speedFeet)).toBe(
+        Number(beforeFailedSaveTarget.movement.speedFeet) / 2,
+      );
+      expect(Number(afterFailedSaveTarget.armorClass)).toBe(
+        Number(beforeFailedSaveTarget.armorClass) - 2,
+      );
+      expect(Number(afterSuccessfulSaveTarget.movement.speedFeet)).toBe(
+        Number(beforeSuccessfulSaveTarget.movement.speedFeet),
+      );
+      expect(Number(afterSuccessfulSaveTarget.armorClass)).toBe(
+        Number(beforeSuccessfulSaveTarget.armorClass),
+      );
+
+      const failedTargetTurn = requireResolved(
+        endTurn({ state: resolved.state, actorId: slowCase.casterId }),
+      ).state;
+      expect(snapshotBattle(failedTargetTurn).currentActorId).toBe(
+        slowFailedSaveTargetId,
+      );
+      expect(
+        failedTargetTurn.currentTurnResources.actionOrBonusActionExclusion,
+      ).toEqual({
+        kind: "restricted",
+        choice: "notChosen",
+      });
     }
   });
 
@@ -2403,10 +2624,7 @@ function expectProtectionFromEnergyClassAccess(input: {
     "chosenDamageResistance",
   );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
-  const damageType = requireHoleFromList(
-    act.initialHoles,
-    "damageTypeChoice",
-  );
+  const damageType = requireHoleFromList(act.initialHoles, "damageTypeChoice");
 
   expect(act.subject).toMatchObject({
     tag: "actionSpell",
@@ -2509,6 +2727,31 @@ function expectSleetStormClassAccess(input: {
       },
       rangeFeet: movementFeet(150),
     }),
+  });
+}
+
+function expectSlowClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly build: CharacterBuild;
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([slowSpellId]),
+      }),
+    ]),
+  );
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({
+          spellLevel: slowCastLevel,
+          count: 2,
+        }),
+      ]),
+    },
   });
 }
 
@@ -2662,6 +2905,47 @@ function hypnoticPatternSavingThrowOutcomeFill(input: {
       outcomes: input.outcomes,
     },
   };
+}
+
+function slowSavingThrowOutcomeFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>;
+  readonly casterId: CombatantId;
+  readonly outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[];
+}): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: input.hole.holeId,
+    value: {
+      area: {
+        kind: "slowArea",
+        originAnchorId: input.casterId,
+        affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
+        cubeSideFeet: slowCubeSideFeet,
+        affectedCreatureWitnesses: input.outcomes.map((outcome) => ({
+          targetId: outcome.targetId,
+          inCube: true,
+          chosenByCaster: true,
+        })),
+      },
+      outcomes: input.outcomes,
+    },
+  };
+}
+
+function requireSnapshotCombatant(
+  snapshot: ReturnType<typeof snapshotBattle>,
+  combatantIdValue: CombatantId,
+): ReturnType<typeof snapshotBattle>["combatants"][number] {
+  const combatant = snapshot.combatants.find(
+    (candidate) => candidate.combatantId === combatantIdValue,
+  );
+  if (combatant === undefined) {
+    throw new Error(`Expected snapshot combatant ${combatantIdValue}.`);
+  }
+  return combatant;
 }
 
 function ongoingSpellTargetWithinRangeFact(input: {

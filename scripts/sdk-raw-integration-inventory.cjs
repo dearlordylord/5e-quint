@@ -3770,6 +3770,54 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "slow",
+    className: "Bard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
+    tracerNeedles: [
+      "slowSpellId",
+      "slowBardId",
+      "levelFiveBardBuild",
+      '"class_bard"',
+    ],
+  },
+  {
+    candidateUnitId: "slow",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
+    tracerNeedles: [
+      "slowSpellId",
+      "slowSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "slow",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
+    tracerNeedles: [
+      "slowSpellId",
+      "slowWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
+  {
     candidateUnitId: "counterspell",
     className: "Sorcerer",
     levelBand: "spell-level-3",

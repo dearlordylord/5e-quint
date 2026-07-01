@@ -949,6 +949,10 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Slow",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -956,7 +960,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 228,
         "lineStart": 228,
@@ -4969,6 +4973,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Slow",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -4976,7 +4984,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 315,
         "lineStart": 315,
@@ -7196,6 +7204,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Slow",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -7203,7 +7215,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 259,
         "lineStart": 259,
@@ -7647,97 +7659,6 @@
       "sampleConcepts": [
         "Bard spell list Mass Healing Word",
         "Cleric spell list Mass Healing Word"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "slow"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:slow",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"slow\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:228",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:315",
-        ".references/srd-5.2.1/Classes/Wizard.md:259"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "slow",
-          "className": "Bard",
-          "concept": "Bard spell list Slow",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 228,
-            "lineStart": 228,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "slow",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Slow",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 315,
-            "lineStart": 315,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "slow",
-          "className": "Wizard",
-          "concept": "Wizard spell list Slow",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 259,
-            "lineStart": 259,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Slow",
-        "Sorcerer spell list Slow",
-        "Wizard spell list Slow"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -10820,6 +10741,61 @@
     },
     {
       "candidateUnitIds": [
+        "slow"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-bard-slow",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Bard:slow\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:228"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "slow",
+          "className": "Bard",
+          "concept": "Bard spell list Slow",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 228,
+            "lineStart": 228,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Slow"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "dispel_magic"
       ],
       "categories": [
@@ -11645,6 +11621,61 @@
     },
     {
       "candidateUnitIds": [
+        "slow"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-sorcerer-slow",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Sorcerer:slow\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:315"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "slow",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Slow",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 315,
+            "lineStart": 315,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Slow"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "counterspell"
       ],
       "categories": [
@@ -12406,6 +12437,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Sleet Storm"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "slow"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-wizard-slow",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Wizard:slow\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:259"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "slow",
+          "className": "Wizard",
+          "concept": "Wizard spell list Slow",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 259,
+            "lineStart": 259,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Slow"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -19218,6 +19304,10 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Slow",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -19225,7 +19315,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 228,
         "lineStart": 228,
@@ -42014,6 +42104,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Slow",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -42021,7 +42115,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 315,
         "lineStart": 315,
@@ -51415,6 +51509,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Slow",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -51422,7 +51520,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 259,
         "lineStart": 259,
@@ -57666,21 +57764,21 @@
       "closure-review-needed": 36,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 43,
-      "sdk-scenario-needed": 5,
+      "sdk-scenario-needed": 2,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 36
+      "seed-scenario-present": 39
     },
-    "level5ScenarioGroups": 92,
+    "level5ScenarioGroups": 94,
     "level5ScenarioGroupsByLane": {
-      "battle-spell-sdk": 2,
+      "battle-spell-sdk": 1,
       "explicit-closure": 12,
       "feature-owner-review": 2,
       "future-owner-before-sdk": 22,
       "owner-review": 6,
-      "seed-present": 36,
+      "seed-present": 39,
       "spell-effect-owner-review": 12
     },
-    "level5SeedScenarioRows": 36,
+    "level5SeedScenarioRows": 39,
     "levelOneFiveMinedRows": 770,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -57729,16 +57827,16 @@
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 404,
+      "sdk-scenario-needed": 401,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 100,
+      "seed-scenario-present": 103,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 431,
+    "scenarioGroups": 433,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 73,
+      "battle-spell-sdk": 72,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -57748,7 +57846,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 100,
+      "seed-present": 103,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -57758,7 +57856,7 @@
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
-      "L15-SDK-RAW-07": 92
+      "L15-SDK-RAW-07": 94
     }
   },
   "scenarioGroups": [
@@ -81851,97 +81949,6 @@
     },
     {
       "candidateUnitIds": [
-        "slow"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:slow",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"slow\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:228",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:315",
-        ".references/srd-5.2.1/Classes/Wizard.md:259"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "slow",
-          "className": "Bard",
-          "concept": "Bard spell list Slow",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 228,
-            "lineStart": 228,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "slow",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Slow",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 315,
-            "lineStart": 315,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "slow",
-          "className": "Wizard",
-          "concept": "Wizard spell list Slow",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 259,
-            "lineStart": 259,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Slow",
-        "Sorcerer spell list Slow",
-        "Wizard spell list Slow"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "class_barbarian"
       ],
       "categories": [
@@ -85015,6 +85022,61 @@
     },
     {
       "candidateUnitIds": [
+        "slow"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-bard-slow",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Bard:slow\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:228"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "slow",
+          "className": "Bard",
+          "concept": "Bard spell list Slow",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 228,
+            "lineStart": 228,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Slow"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "dispel_magic"
       ],
       "categories": [
@@ -85840,6 +85902,61 @@
     },
     {
       "candidateUnitIds": [
+        "slow"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-sorcerer-slow",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Sorcerer:slow\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:315"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "slow",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Slow",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 315,
+            "lineStart": 315,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Slow"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "counterspell"
       ],
       "categories": [
@@ -86601,6 +86718,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Sleet Storm"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "slow"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-wizard-slow",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Wizard:slow\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:259"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "slow",
+          "className": "Wizard",
+          "concept": "Wizard spell list Slow",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 259,
+            "lineStart": 259,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Slow"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -92515,6 +92687,63 @@
       "tracerNeedles": [
         "sleetStormSpellId",
         "sleetStormWizardId",
+        "levelFiveWizardBuild",
+        "\"class_wizard\""
+      ]
+    },
+    {
+      "candidateUnitId": "slow",
+      "className": "Bard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
+      "rowKey": "spell-level-3:Bard:slow",
+      "tracerNeedles": [
+        "slowSpellId",
+        "slowBardId",
+        "levelFiveBardBuild",
+        "\"class_bard\""
+      ]
+    },
+    {
+      "candidateUnitId": "slow",
+      "className": "Sorcerer",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
+      "rowKey": "spell-level-3:Sorcerer:slow",
+      "tracerNeedles": [
+        "slowSpellId",
+        "slowSorcererId",
+        "levelFiveSorcererBuild",
+        "\"class_sorcerer\""
+      ]
+    },
+    {
+      "candidateUnitId": "slow",
+      "className": "Wizard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
+      "rowKey": "spell-level-3:Wizard:slow",
+      "tracerNeedles": [
+        "slowSpellId",
+        "slowWizardId",
         "levelFiveWizardBuild",
         "\"class_wizard\""
       ]

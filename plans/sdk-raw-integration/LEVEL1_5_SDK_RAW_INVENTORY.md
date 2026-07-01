@@ -16,9 +16,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-5 mined rows | 770 |
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
-| Existing level-5 SDK seed scenario rows | 36 |
-| Scenario groups | 431 |
-| Level 5 scenario groups | 92 |
+| Existing level-5 SDK seed scenario rows | 39 |
+| Scenario groups | 433 |
+| Level 5 scenario groups | 94 |
 
 ### All Level 1-5 Rows by Level Band
 
@@ -42,9 +42,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 404 |
+| sdk-scenario-needed | 401 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 100 |
+| seed-scenario-present | 103 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -79,14 +79,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-04 | 33 |
 | L15-SDK-RAW-05 | 107 |
 | L15-SDK-RAW-06 | 25 |
-| L15-SDK-RAW-07 | 92 |
+| L15-SDK-RAW-07 | 94 |
 
 ### Scenario Groups by Lane
 
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 73 |
+| battle-spell-sdk | 72 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -96,7 +96,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
-| seed-present | 100 |
+| seed-present | 103 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -108,9 +108,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 36 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 43 |
-| sdk-scenario-needed | 5 |
+| sdk-scenario-needed | 2 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 36 |
+| seed-scenario-present | 39 |
 
 ### Level 5 Completion Rows by Proposed Owner Boundary
 
@@ -134,12 +134,12 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Lane | Groups |
 | --- | ---: |
-| battle-spell-sdk | 2 |
+| battle-spell-sdk | 1 |
 | explicit-closure | 12 |
 | feature-owner-review | 2 |
 | future-owner-before-sdk | 22 |
 | owner-review | 6 |
-| seed-present | 36 |
+| seed-present | 39 |
 | spell-effect-owner-review | 12 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -230,6 +230,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm` / `spell-level-3:Druid:sleet_storm`: level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards
 - `srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm` / `spell-level-3:Sorcerer:sleet_storm`: level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm` / `spell-level-3:Wizard:sleet_storm`: level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards
+- `srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow` / `spell-level-3:Bard:slow`: level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties
+- `srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow` / `spell-level-3:Sorcerer:slow`: level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties
+- `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow` / `spell-level-3:Wizard:slow`: level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties
 - `srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_counterspell` / `spell-level-3:Sorcerer:counterspell`: level5-sdk-tracer-bullets: Counterspell
 - `srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_counterspell` / `spell-level-3:Warlock:counterspell`: level5-sdk-tracer-bullets: Counterspell
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_counterspell` / `spell-level-3:Wizard:counterspell`: level5-sdk-tracer-bullets: Counterspell
@@ -259,7 +262,6 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Task | Lane | Rows | Bands | Classes | Units | Sample concepts | Suggested scenario |
 | --- | --- | ---: | --- | --- | --- | --- | --- |
 | L15-SDK-RAW-07 | battle-spell-sdk | 2 | spell-level-3 | Bard, Cleric | `mass_healing_word` | Bard spell list Mass Healing Word<br>Cleric spell list Mass Healing Word | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
-| L15-SDK-RAW-07 | battle-spell-sdk | 3 | spell-level-3 | Bard, Sorcerer, Wizard | `slow` | Bard spell list Slow<br>Sorcerer spell list Slow<br>Wizard spell list Slow | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Barbarian | `class_barbarian` | Barbarian level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Bard | `class_bard` | Bard level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Cleric | `class_cleric` | Cleric level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
@@ -309,6 +311,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `dispel_magic` | Bard spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `glyph_of_warding` | Bard spell list Glyph of Warding | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `hypnotic_pattern` | Bard spell list Hypnotic Pattern | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `slow` | Bard spell list Slow | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Cleric | `dispel_magic` | Cleric spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Cleric | `glyph_of_warding` | Cleric spell list Glyph of Warding | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Cleric | `protection_from_energy` | Cleric spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
@@ -324,6 +327,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `lightning_bolt` | Sorcerer spell list Lightning Bolt | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `protection_from_energy` | Sorcerer spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `sleet_storm` | Sorcerer spell list Sleet Storm | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `slow` | Sorcerer spell list Slow | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Warlock | `counterspell` | Warlock spell list Counterspell | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Warlock | `dispel_magic` | Warlock spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Warlock | `fly` | Warlock spell list Fly | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
@@ -338,6 +342,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `lightning_bolt` | Wizard spell list Lightning Bolt | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `protection_from_energy` | Wizard spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `sleet_storm` | Wizard spell list Sleet Storm | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `slow` | Wizard spell list Slow | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 4 | spell-level-3 | Bard, Cleric, Sorcerer, Wizard | `clairvoyance` | Bard spell list Clairvoyance<br>Cleric spell list Clairvoyance<br>Sorcerer spell list Clairvoyance<br>Wizard spell list Clairvoyance | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 1 | spell-level-3 | Cleric | `create_food_and_water` | Cleric spell list Create Food and Water | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard | `major_image` | Bard spell list Major Image<br>Sorcerer spell list Major Image<br>Warlock spell list Major Image<br>Wizard spell list Major Image | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
@@ -371,7 +376,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Bard spell list Nondetection | `nondetection` | `.references/srd-5.2.1/Classes/Bard.md:225` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers. |
 | spell-level-3 | Bard spell list Plant Growth | `plant_growth` | `.references/srd-5.2.1/Classes/Bard.md:226` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy. |
 | spell-level-3 | Bard spell list Sending | `sending` | `.references/srd-5.2.1/Classes/Bard.md:227` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state. |
-| spell-level-3 | Bard spell list Slow | `slow` | `.references/srd-5.2.1/Classes/Bard.md:228` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Bard spell list Slow | `slow` | `.references/srd-5.2.1/Classes/Bard.md:228` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Bard spell list Speak with Dead | `speak_with_dead` | `.references/srd-5.2.1/Classes/Bard.md:229` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation. |
 | spell-level-3 | Bard spell list Speak with Plants | `speak_with_plants` | `.references/srd-5.2.1/Classes/Bard.md:230` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain. |
 | spell-level-3 | Bard spell list Stinking Cloud | `stinking_cloud` | `.references/srd-5.2.1/Classes/Bard.md:231` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers. |
@@ -444,7 +449,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Sorcerer spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Sorcerer.md:312` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
 | spell-level-3 | Sorcerer spell list Protection from Energy | `protection_from_energy` | `.references/srd-5.2.1/Classes/Sorcerer.md:313` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Protection from Energy | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Sleet Storm | `sleet_storm` | `.references/srd-5.2.1/Classes/Sorcerer.md:314` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards | Owner-specific operational evidence is classified and present. |
-| spell-level-3 | Sorcerer spell list Slow | `slow` | `.references/srd-5.2.1/Classes/Sorcerer.md:315` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Sorcerer spell list Slow | `slow` | `.references/srd-5.2.1/Classes/Sorcerer.md:315` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Stinking Cloud | `stinking_cloud` | `.references/srd-5.2.1/Classes/Sorcerer.md:316` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers. |
 | spell-level-3 | Sorcerer spell list Tongues | `tongues` | `.references/srd-5.2.1/Classes/Sorcerer.md:317` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell. |
 | spell-level-3 | Sorcerer spell list Vampiric Touch | `vampiric_touch` | `.references/srd-5.2.1/Classes/Sorcerer.md:318` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers. |
@@ -486,7 +491,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Wizard spell list Remove Curse | `remove_curse` | `.references/srd-5.2.1/Classes/Wizard.md:256` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects. |
 | spell-level-3 | Wizard spell list Sending | `sending` | `.references/srd-5.2.1/Classes/Wizard.md:257` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state. |
 | spell-level-3 | Wizard spell list Sleet Storm | `sleet_storm` | `.references/srd-5.2.1/Classes/Wizard.md:258` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards | Owner-specific operational evidence is classified and present. |
-| spell-level-3 | Wizard spell list Slow | `slow` | `.references/srd-5.2.1/Classes/Wizard.md:259` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Wizard spell list Slow | `slow` | `.references/srd-5.2.1/Classes/Wizard.md:259` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Speak with Dead | `speak_with_dead` | `.references/srd-5.2.1/Classes/Wizard.md:260` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation. |
 | spell-level-3 | Wizard spell list Stinking Cloud | `stinking_cloud` | `.references/srd-5.2.1/Classes/Wizard.md:261` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers. |
 | spell-level-3 | Wizard spell list Tiny Hut | `tiny_hut` | `.references/srd-5.2.1/Classes/Wizard.md:262` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication. |
