@@ -19,13 +19,13 @@
     {
       "number": 3,
       "id": "L12-SH03-SEED-MIGRATION-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit existing seed rows for legal lifecycle proof"
     },
     {
       "number": 4,
       "id": "L12-SH04-GROUPING-GENERATOR-GATE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Generate the L1/L2 campaign grouping gate"
     },
     {
@@ -99,6 +99,48 @@
       "id": "L12-SH16-CLEANROOM-GATE-PLAN",
       "status": "blocked",
       "title": "Prepare the later cleanroom replay gate"
+    },
+    {
+      "number": 17,
+      "id": "L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE",
+      "status": "ready-for-research",
+      "title": "Migrate the Barbarian Rage seed to legal source creation"
+    },
+    {
+      "number": 18,
+      "id": "L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION",
+      "status": "ready-for-research",
+      "title": "Migrate the Bardic Inspiration seed to legal source creation"
+    },
+    {
+      "number": 19,
+      "id": "L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND",
+      "status": "ready-for-research",
+      "title": "Migrate the Fighter Second Wind seed to legal source creation"
+    },
+    {
+      "number": 20,
+      "id": "L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS",
+      "status": "ready-for-research",
+      "title": "Migrate the Monk Martial Arts seed to legal source creation"
+    },
+    {
+      "number": 21,
+      "id": "L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK",
+      "status": "ready-for-research",
+      "title": "Migrate the Rogue Sneak Attack seed to legal source creation"
+    },
+    {
+      "number": 22,
+      "id": "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
+      "status": "ready-for-research",
+      "title": "Migrate the Sorcerer Innate Sorcery seed to legal source creation"
+    },
+    {
+      "number": 23,
+      "id": "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS",
+      "status": "ready-for-research",
+      "title": "Migrate the Sorcerer Burning Hands seed to legal source creation"
     }
   ]
 }
@@ -181,13 +223,16 @@ Campaign assignment by lane:
 | battle-feature-sdk | 6 | 6 | `sdk-scenario-needed` | Task 10, then Task 15 follow-ups |
 | battle-spell-sdk | 83 | 32 | `sdk-scenario-needed` | Task 11, then Task 15 follow-ups |
 | multi-owner-feature-sdk | 6 | 6 | `sdk-scenario-needed` | Task 12, then Task 15 follow-ups |
-| seed-present | 64 | 64 | `seed-scenario-present` | Task 3 migration audit, then Task 15 follow-ups |
+| seed-present | 64 | 64 | `seed-scenario-present` | Task 3 migration audit, Tasks 17-23 seed migrations, then Task 15 follow-ups |
 | explicit-closure | 24 | 24 | `explicit-closure-needed` | Task 4 grouping gate and Task 15 follow-ups |
 | spell-effect-owner-review | 71 | 22 | `closure-review-needed` | Task 13, then Task 15 follow-ups |
 
 Every L1/L2 row in the four active dispositions is assigned by the table above.
-Tasks 5-14 are first representative slices. Task 15 must preserve the remaining
-desired work as concrete Ralph tasks in the index, DAG, and task details.
+Tasks 5-14 are first representative slices. Task 3's seed audit found 57
+whole-width lifecycle seed rows and seven direct-build seed rows needing
+migration; Tasks 17-23 carry those row-specific migrations. Task 15 must
+preserve the remaining desired work as concrete Ralph tasks in the index, DAG,
+and task details.
 
 ## Source Artifacts
 
@@ -293,8 +338,8 @@ Reviewer-loop convergence:
 | ---: | --- | --- | --- | --- | --- |
 | 1 | L12-SH01-DENOMINATOR-FORMAT-GATE - Verify the L1/L2 source denominator and Ralph format | done | none | fixture/enabling | Static denominator and plan-format verification, with durable corrections if inventory drifted. |
 | 2 | L12-SH02-LEGAL-FIXTURE-SEAM - Implement the legal source-side lifecycle fixture seam | done | L12-SH01-DENOMINATOR-FORMAT-GATE | fixture/enabling | Shared legal fixture helpers for L1/L2 source lifecycle scenarios. |
-| 3 | L12-SH03-SEED-MIGRATION-AUDIT - Audit existing seed rows for legal lifecycle proof | ready-for-research | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH02-LEGAL-FIXTURE-SEAM | seed-present | Classification of all 64 L1/L2 seed rows and first safe migrations if small. |
-| 4 | L12-SH04-GROUPING-GENERATOR-GATE - Generate the L1/L2 campaign grouping gate | blocked | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH03-SEED-MIGRATION-AUDIT | fixture/enabling | Generated or checked group assignment evidence for 400 rows and 207 groups. |
+| 3 | L12-SH03-SEED-MIGRATION-AUDIT - Audit existing seed rows for legal lifecycle proof | done | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH02-LEGAL-FIXTURE-SEAM | seed-present | Classification of all 64 L1/L2 seed rows and first safe migrations if small. |
+| 4 | L12-SH04-GROUPING-GENERATOR-GATE - Generate the L1/L2 campaign grouping gate | ready-for-research | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH03-SEED-MIGRATION-AUDIT | fixture/enabling | Generated or checked group assignment evidence for 400 rows and 207 groups. |
 | 5 | L12-SH05-CREATION-SDK-FIRST-SLICE - Add the first character-creation SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | character-creation-sdk | One legal creation scenario group using the shared fixture seam. |
 | 6 | L12-SH06-BUILD-SHEET-FIRST-SLICE - Add the first build-to-sheet SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | build-sheet-sdk | One class-wide build-sheet projection group. |
 | 7 | L12-SH07-BUILD-BATTLE-FIRST-SLICE - Add the first build-to-battle SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | build-battle-sdk | One build-battle handoff scenario group. |
@@ -305,8 +350,15 @@ Reviewer-loop convergence:
 | 12 | L12-SH12-MULTI-OWNER-FIRST-SLICE - Split the first multi-owner feature SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | multi-owner-feature-sdk | One multi-owner group split into legal source scenario and explicit owner follow-ups. |
 | 13 | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY - Close the first spell-effect owner review family | blocked | L12-SH04-GROUPING-GENERATOR-GATE | closure-review | First spell-effect owner-review family classified as table-only, existing owner sufficient, or follow-up implementation. |
 | 14 | L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS - Add the first small QNT harness pressure witness | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | QNT/harness-pressure | Small deterministic source-side witness or existing obligation strengthening. |
-| 15 | L12-SH15-NEXT-BATCH-SPLIT - Expand the next one-session task batches | blocked | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS | planning | Add the next runnable one-session tasks for remaining L1/L2 groups. |
+| 15 | L12-SH15-NEXT-BATCH-SPLIT - Expand the next one-session task batches | blocked | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS | planning | Add the next runnable one-session tasks for remaining L1/L2 groups after seed migrations. |
 | 16 | L12-SH16-CLEANROOM-GATE-PLAN - Prepare the later cleanroom replay gate | blocked | L12-SH15-NEXT-BATCH-SPLIT | later cleanroom gate | Cleanroom replay gate plan after source-side harness stabilizes. |
+| 17 | L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE - Migrate the Barbarian Rage seed to legal source creation | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `barbarian_rage` seed uses legal creation and remains a real sheet/battle handoff scenario. |
+| 18 | L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION - Migrate the Bardic Inspiration seed to legal source creation | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `bard_bardic_inspiration` seed uses legal creation and remains a real sheet/battle handoff scenario. |
+| 19 | L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND - Migrate the Fighter Second Wind seed to legal source creation | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `fighter_second_wind` seed uses legal creation and remains a real sheet/battle handoff scenario. |
+| 20 | L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS - Migrate the Monk Martial Arts seed to legal source creation | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `monk_martial_arts` seed uses legal creation and remains a real sheet/battle handoff scenario. |
+| 21 | L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK - Migrate the Rogue Sneak Attack seed to legal source creation | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `rogue_sneak_attack` seed uses legal creation and remains a real sheet/battle handoff scenario. |
+| 22 | L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY - Migrate the Sorcerer Innate Sorcery seed to legal source creation | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `sorcerer_innate_sorcery` seed uses legal creation and remains a real sheet/battle handoff scenario. |
+| 23 | L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS - Migrate the Sorcerer Burning Hands seed to legal source creation | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | Sorcerer `burning_hands` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 
 ## Task Details
 
@@ -417,7 +469,7 @@ Plan Impact:
 
 ### Task 3 - L12-SH03-SEED-MIGRATION-AUDIT
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -461,17 +513,12 @@ Validation:
 
 Plan Impact:
 
-- `update-required` if any seed classification creates, removes, or reorders
-  follow-up migration tasks.
+- `applied`; this task adds Tasks 17-23 for the seven direct-build seed rows
+  discovered by the generated audit.
 
 ### Task 4 - L12-SH04-GROUPING-GENERATOR-GATE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH01-DENOMINATOR-FORMAT-GATE` and
-`L12-SH03-SEED-MIGRATION-AUDIT`.
+Status: `ready-for-research`
 
 Input:
 
@@ -1022,15 +1069,16 @@ Status: `blocked`
 
 Blocker Type: dependency
 
-Blocker Detail: Waits for Tasks 3 and 5-14 to produce fixture, grouping,
-representative implementation, closure, and QNT evidence.
+Blocker Detail: Waits for Tasks 3, 5-14, and 17-23 to produce fixture,
+grouping, representative implementation, seed migration, closure, and QNT
+evidence.
 
 Input:
 
-- This plan after Tasks 3 and 5-14 land.
+- This plan after Tasks 3, 5-14, and 17-23 land.
 - Generated L1/L2 campaign grouping from Task 4.
 - Seed audit output from Task 3.
-- Task closeouts and plan-impact notes from Tasks 5-14.
+- Task closeouts and plan-impact notes from Tasks 5-14 and 17-23.
 
 Research required before editing:
 
@@ -1119,6 +1167,317 @@ Plan Impact:
 
 - `update-required` if cleanroom readiness requires additional source-side
   tasks before replay can begin.
+
+### Task 17 - L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- Generated seed audit row:
+  `srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage`
+
+Research required before editing:
+
+- Read the Barbarian Rage SRD source anchors named by the inventory row.
+- Check `UBIQUITOUS_LANGUAGE.md` for resource, resistance, and attack-damage
+  terminology.
+- Inspect the current direct `levelOneSingleClassBuild` setup for the
+  Barbarian Rage seed.
+
+Output:
+
+- Replace the represented Barbarian source build with a legal creation path
+  through the shared fixture seam or equivalent draft/fill/finalize helper.
+- Preserve the existing real Character Sheet and battle handoff assertions.
+
+Acceptance:
+
+- The Barbarian Rage audit row is no longer classified as
+  `hand-built build needing migration`.
+- The scenario still proves Rage spending, damage bonus, and Resistance through
+  sheet-to-battle projection.
+- No production runtime behavior changes.
+
+Validation:
+
+- `pnpm sdk-raw-integration-inventory:check`
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Barbarian Rage projects from a level-1 sheet"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless migration reveals additional seed rows or fixture work.
+
+### Task 18 - L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- Generated seed audit row:
+  `srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration`
+
+Research required before editing:
+
+- Read the Bardic Inspiration SRD source anchors named by the inventory row.
+- Check `UBIQUITOUS_LANGUAGE.md` for resource and Bonus Action terminology.
+- Inspect the current direct `levelOneSingleClassBuild` setup for the Bardic
+  Inspiration seed.
+
+Output:
+
+- Replace the represented Bard source build with a legal creation path through
+  the shared fixture seam or equivalent draft/fill/finalize helper.
+- Preserve the existing ally target and battle-resolution assertions.
+
+Acceptance:
+
+- The Bardic Inspiration audit row is no longer classified as
+  `hand-built build needing migration`.
+- The scenario still proves d6 die creation, Charisma-derived use spending, and
+  Bonus Action spending through sheet-to-battle projection.
+- No production runtime behavior changes.
+
+Validation:
+
+- `pnpm sdk-raw-integration-inventory:check`
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Bardic Inspiration grants a level-1 d6 die"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless migration reveals additional seed rows or fixture work.
+
+### Task 19 - L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- Generated seed audit row:
+  `srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind`
+
+Research required before editing:
+
+- Read the Fighter Second Wind SRD source anchors named by the inventory row.
+- Check `UBIQUITOUS_LANGUAGE.md` for Hit Points, resource, and Bonus Action
+  terminology.
+- Inspect the current direct `levelOneSingleClassBuild` setup for the Fighter
+  Second Wind seed.
+
+Output:
+
+- Replace the represented Fighter source build with a legal creation path
+  through the shared fixture seam or equivalent draft/fill/finalize helper.
+- Preserve the existing damaged-sheet setup and battle healing assertions.
+
+Acceptance:
+
+- The Fighter Second Wind audit row is no longer classified as
+  `hand-built build needing migration`.
+- The scenario still proves healing and Bonus Action use spending through
+  sheet-to-battle projection.
+- No production runtime behavior changes.
+
+Validation:
+
+- `pnpm sdk-raw-integration-inventory:check`
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Fighter Second Wind heals through sheet projection"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless migration reveals additional seed rows or fixture work.
+
+### Task 20 - L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- Generated seed audit row:
+  `srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts`
+
+Research required before editing:
+
+- Read the Monk Martial Arts SRD source anchors named by the inventory row.
+- Check `UBIQUITOUS_LANGUAGE.md` for Unarmed Strike, attack, and Bonus Action
+  terminology.
+- Inspect the current direct `levelOneSingleClassBuild` setup for the Monk
+  Martial Arts seed.
+
+Output:
+
+- Replace the represented Monk source build with a legal creation path through
+  the shared fixture seam or equivalent draft/fill/finalize helper.
+- Preserve the existing Unarmed Strike battle assertions.
+
+Acceptance:
+
+- The Monk Martial Arts audit row is no longer classified as
+  `hand-built build needing migration`.
+- The scenario still proves the Martial Arts die and Dexterity projection for
+  the Bonus Action Unarmed Strike.
+- No production runtime behavior changes.
+
+Validation:
+
+- `pnpm sdk-raw-integration-inventory:check`
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless migration reveals additional seed rows or fixture work.
+
+### Task 21 - L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- Generated seed audit row:
+  `srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack`
+
+Research required before editing:
+
+- Read the Rogue Sneak Attack SRD source anchors named by the inventory row.
+- Check `UBIQUITOUS_LANGUAGE.md` for Attack Damage Rider and attack-roll
+  terminology.
+- Inspect the current direct `levelOneSingleClassBuild` setup for the Rogue
+  Sneak Attack seed.
+
+Output:
+
+- Replace the represented Rogue source build with a legal creation path through
+  the shared fixture seam or equivalent draft/fill/finalize helper.
+- Preserve the existing ally-position evidence and Dagger damage-rider
+  assertions.
+
+Acceptance:
+
+- The Rogue Sneak Attack audit row is no longer classified as
+  `hand-built build needing migration`.
+- The scenario still proves the level-1 Dagger damage rider and once-per-turn
+  use recording through sheet-to-battle projection.
+- No production runtime behavior changes.
+
+Validation:
+
+- `pnpm sdk-raw-integration-inventory:check`
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Rogue Sneak Attack projects as a level-1 Dagger damage rider"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless migration reveals additional seed rows or fixture work.
+
+### Task 22 - L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- Generated seed audit row:
+  `srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery`
+
+Research required before editing:
+
+- Read the Sorcerer Innate Sorcery SRD source anchors named by the inventory
+  row.
+- Check `UBIQUITOUS_LANGUAGE.md` for spellcasting, resource, and duration
+  terminology.
+- Inspect the current direct `levelOneSingleClassBuild` setup for the Sorcerer
+  Innate Sorcery seed.
+
+Output:
+
+- Replace the represented Sorcerer source build with a legal creation path
+  through the shared fixture seam or equivalent draft/fill/finalize helper.
+- Preserve the existing spell-bonus and Sorcerous Burst follow-on assertions.
+
+Acceptance:
+
+- The Sorcerer Innate Sorcery audit row is no longer classified as
+  `hand-built build needing migration`.
+- The scenario still proves use spending, one-minute duration, and Sorcerer
+  spell-bonus projection through sheet-to-battle projection.
+- No production runtime behavior changes.
+
+Validation:
+
+- `pnpm sdk-raw-integration-inventory:check`
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Sorcerer Innate Sorcery spends a use"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless migration reveals additional seed rows or fixture work.
+
+### Task 23 - L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS
+
+Status: `ready-for-research`
+
+Input:
+
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- Generated seed audit row:
+  `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands`
+
+Research required before editing:
+
+- Read the Sorcerer Burning Hands SRD source anchors named by the inventory
+  row.
+- Check `UBIQUITOUS_LANGUAGE.md` for Spell Invocation, Saving Throw, and damage
+  terminology.
+- Inspect `levelOneSorcererBurningHandsBuild` and the existing legal Sorcerer
+  spell-access helper family.
+
+Output:
+
+- Replace `levelOneSorcererBurningHandsBuild` as the represented source build
+  with a legal Sorcerer creation path through the shared fixture seam or
+  equivalent draft/fill/finalize helper.
+- Preserve the existing Burning Hands battle assertions and slot-spend checks.
+
+Acceptance:
+
+- The Sorcerer Burning Hands audit row is no longer classified as
+  `hand-built build needing migration`.
+- The scenario still proves self-origin cone save-gated Fire damage and spell
+  slot spending through sheet-to-battle projection.
+- No production runtime behavior changes.
+
+Validation:
+
+- `pnpm sdk-raw-integration-inventory:check`
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Sorcerer Burning Hands resolves from a level-1 sheet"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless migration reveals additional seed rows or fixture work.
 
 ## Verification Matrix
 

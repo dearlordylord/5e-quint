@@ -87,6 +87,22 @@ const levelOneFiveBands = new Set([
   "spell-level-2",
   "spell-level-3",
 ]);
+const levelOneTwoSourceHarnessBands = new Set([
+  "level-1",
+  "level-2",
+  "spell-level-0",
+  "spell-level-1",
+]);
+const expectedLevelOneTwoSeedScenarioRows = 64;
+const handBuiltSourceSeedRowIds = new Set([
+  "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
+  "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+  "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
+  "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+  "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
+  "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+  "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
+]);
 
 const buildSheetRowKinds = new Set([
   "class-container",
@@ -5042,6 +5058,135 @@ function assertSeedScenarios(seedScenarioSources, rows) {
   );
 }
 
+function seedScenarioEvidenceText(seed, seedScenarioSources) {
+  const seedSourceText = seedScenarioSources.get(seed.path);
+  if (seedSourceText === undefined) return "";
+  const title = seedScenarioTitle(seed);
+  const scenarioText = seedScenarioSourceText(seedSourceText, title) ?? "";
+  const helperTexts = (seed.helperNeedles ?? []).map(
+    (helper) => seedHelperSourceText(seedSourceText, helper.anchor) ?? "",
+  );
+  const calledHelperPattern = new RegExp(
+    `\\b(${[
+      "assertLevelOne[A-Z]\\w*",
+      "finalizedLevelOne[A-Z]\\w*Build",
+      "levelOne[A-Z]\\w*Build",
+    ].join("|")})\\s*\\(`,
+    "g",
+  );
+  const calledHelperTexts = Array.from(
+    scenarioText.matchAll(calledHelperPattern),
+  ).map(([, name]) => {
+    return seedHelperSourceText(seedSourceText, `function ${name}`) ?? "";
+  });
+  return [scenarioText, ...helperTexts, ...calledHelperTexts].join("\n");
+}
+
+function sourceBuildPathForSeed(seed) {
+  return handBuiltSourceSeedRowIds.has(seed.rowId)
+    ? "direct-character-build"
+    : "legal-creation-draft-finalize";
+}
+
+function seedMigrationClassification(seed, usesRealSheetBattleHandoff) {
+  if (!usesRealSheetBattleHandoff) {
+    return (seed.evidenceNeedles ?? []).length > 0
+      ? "lower-level focused seed only"
+      : "should remain explicit closure";
+  }
+  return sourceBuildPathForSeed(seed) === "direct-character-build"
+    ? "hand-built build needing migration"
+    : "already legal creation path";
+}
+
+function seedMigrationAuditReason(classification) {
+  if (classification === "already legal creation path") {
+    return "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.";
+  }
+  if (classification === "hand-built build needing migration") {
+    return "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.";
+  }
+  if (classification === "lower-level focused seed only") {
+    return "The seed is useful focused evidence but does not exercise a real character sheet to battle handoff.";
+  }
+  return "The row should stay explicit SDK-scope closure rather than lifecycle proof.";
+}
+
+function seedMigrationNextAction(classification) {
+  if (classification === "already legal creation path") {
+    return "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.";
+  }
+  if (classification === "hand-built build needing migration") {
+    return "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.";
+  }
+  if (classification === "lower-level focused seed only") {
+    return "Retain as focused evidence; add a separate SDK lifecycle scenario before counting whole-width coverage.";
+  }
+  return "Retain explicit closure with its owner reason; do not count as SDK lifecycle coverage.";
+}
+
+function buildLevelOneTwoSeedMigrationAudit(seedScenarioSources, miningRows) {
+  const rowsById = new Map(miningRows.map((row) => [row.rowId, row]));
+  const auditRows = seededSdkScenarioRows
+    .filter((seed) => levelOneTwoSourceHarnessBands.has(seed.levelBand))
+    .map((seed) => {
+      const evidenceText = seedScenarioEvidenceText(seed, seedScenarioSources);
+      const usesRealSheetBattleHandoff =
+        evidenceText.includes("battleFromSheets(") &&
+        evidenceText.includes("characterSheet({");
+      const classification = seedMigrationClassification(
+        seed,
+        usesRealSheetBattleHandoff,
+      );
+      const wholeWidthSourceLifecycleProof =
+        classification === "already legal creation path" &&
+        usesRealSheetBattleHandoff;
+      const miningRow = rowsById.get(seed.rowId);
+      return {
+        rowId: seed.rowId,
+        rowKey: seedScenarioRowKey(seed),
+        levelBand: seed.levelBand,
+        rowKind: miningRow?.rowKind,
+        className: seed.className,
+        candidateUnitId: seed.candidateUnitId,
+        classification,
+        sourceBuildPath: sourceBuildPathForSeed(seed),
+        usesRealSheetBattleHandoff,
+        wholeWidthSourceLifecycleProof,
+        reason: seedMigrationAuditReason(classification),
+        nextAction: seedMigrationNextAction(classification),
+        existingSdkScenario: {
+          label: seed.label,
+          path: toRepoPath(root, seed.path),
+        },
+      };
+    })
+    .sort((left, right) => left.rowId.localeCompare(right.rowId));
+  assertLevelOneTwoSeedMigrationAudit(auditRows);
+  return auditRows;
+}
+
+function assertLevelOneTwoSeedMigrationAudit(auditRows) {
+  if (auditRows.length !== expectedLevelOneTwoSeedScenarioRows) {
+    throw new Error(
+      `Expected ${expectedLevelOneTwoSeedScenarioRows} L1/L2 seed migration audit rows, found ${auditRows.length}.`,
+    );
+  }
+  const directBuildLifecycleRows = auditRows.filter(
+    (row) =>
+      row.sourceBuildPath === "direct-character-build" &&
+      row.wholeWidthSourceLifecycleProof,
+  );
+  if (directBuildLifecycleRows.length > 0) {
+    throw new Error(
+      [
+        "Direct CharacterBuild seed rows must not count as whole-width source lifecycle proof.",
+        ...directBuildLifecycleRows.map((row) => `- ${row.rowId}`),
+      ].join("\n"),
+    );
+  }
+}
+
 function spellLevelFromLevelBand(levelBand) {
   const match = /^spell-level-(\d+)$/.exec(levelBand);
   return match == null ? undefined : Number(match[1]);
@@ -5270,6 +5415,8 @@ function buildInventory() {
   assertLocalRawSources(miningRows);
   assertSeedScenarios(seedScenarioSources, miningRows);
   assertSurfaceClassSpellAccessCoversMinedRows(miningRows);
+  const levelOneTwoSeedMigrationAuditRows =
+    buildLevelOneTwoSeedMigrationAudit(seedScenarioSources, miningRows);
   const levelOneFourRows = miningRows.filter(
     (row) => row.levelBand !== "level-5" && row.levelBand !== "spell-level-3",
   );
@@ -5293,7 +5440,7 @@ function buildInventory() {
   );
 
   return stable({
-    schemaVersion: 4,
+    schemaVersion: 5,
     generatedBy: "scripts/sdk-raw-integration-inventory.cjs",
     sourceArtifacts: {
       plan: toRepoPath(root, paths.plan),
@@ -5361,6 +5508,25 @@ function buildInventory() {
       levelOneFiveRowsByOwnerBoundaryStatus: countValues(
         miningRows.map((row) => row.ownerBoundaryStatus),
       ),
+      levelOneTwoSeedMigrationAuditRows:
+        levelOneTwoSeedMigrationAuditRows.length,
+      levelOneTwoSeedMigrationAuditRowsByClassification: countValues(
+        levelOneTwoSeedMigrationAuditRows.map((row) => row.classification),
+      ),
+      levelOneTwoSeedMigrationAuditRowsBySourceBuildPath: countValues(
+        levelOneTwoSeedMigrationAuditRows.map((row) => row.sourceBuildPath),
+      ),
+      levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff: countValues(
+        levelOneTwoSeedMigrationAuditRows.map((row) =>
+          row.usesRealSheetBattleHandoff
+            ? "real-sheet-battle"
+            : "not-real-sheet-battle",
+        ),
+      ),
+      levelOneTwoWholeWidthSourceLifecycleSeedRows:
+        levelOneTwoSeedMigrationAuditRows.filter(
+          (row) => row.wholeWidthSourceLifecycleProof,
+        ).length,
       scenarioGroups: scenarioGroups.length,
       scenarioGroupsByTask: countValues(
         scenarioGroups.map((group) => group.taskId),
@@ -5388,6 +5554,7 @@ function buildInventory() {
     levelReports,
     level4CumulativeFrontierUnits: level4FrontierUnits,
     seededSdkScenarioRows: seededSdkScenarioRecords,
+    levelOneTwoSeedMigrationAuditRows,
     levelOneFiveRows: miningRows,
     scenarioGroups,
     level5ScenarioGroups,
@@ -5467,9 +5634,27 @@ function renderScenarioGroupRows(groups) {
   });
 }
 
+function renderSeedMigrationAuditRows(rows) {
+  return rows.map((row) => {
+    const cells = [
+      row.levelBand,
+      row.className,
+      `\`${row.candidateUnitId}\``,
+      row.rowKind ?? "",
+      row.classification,
+      row.sourceBuildPath,
+      row.usesRealSheetBattleHandoff ? "yes" : "no",
+      row.wholeWidthSourceLifecycleProof ? "yes" : "no",
+      row.nextAction,
+    ];
+    return `| ${cells.map(md).join(" | ")} |`;
+  });
+}
+
 function renderInventory(inventory) {
   const level5Rows = inventory.level5CompletionRows;
   const level5ScenarioGroups = inventory.level5ScenarioGroups;
+  const seedMigrationAuditRows = inventory.levelOneTwoSeedMigrationAuditRows;
   return `${[
     "# Level 1-5 SDK RAW Inventory",
     "",
@@ -5563,6 +5748,38 @@ function renderInventory(inventory) {
       (row) =>
         `- \`${row.rowId}\` / \`${row.rowKey}\`: ${row.existingSdkScenario.label}`,
     ),
+    "",
+    "## L1/L2 Seed Migration Audit",
+    "",
+    "This section is generated from the tracked seed scenario declarations and",
+    "their checked test/helper text. A seed counts as whole-width source",
+    "lifecycle proof only when the represented source character is created",
+    "through the legal creation path and then projected through real",
+    "Character Sheet and battle handoff.",
+    "",
+    "| Classification | Rows |",
+    "| --- | ---: |",
+    ...renderCountRows(
+      inventory.metrics.levelOneTwoSeedMigrationAuditRowsByClassification,
+    ),
+    "",
+    "| Source build path | Rows |",
+    "| --- | ---: |",
+    ...renderCountRows(
+      inventory.metrics.levelOneTwoSeedMigrationAuditRowsBySourceBuildPath,
+    ),
+    "",
+    "| Real sheet/battle handoff | Rows |",
+    "| --- | ---: |",
+    ...renderCountRows(
+      inventory.metrics.levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff,
+    ),
+    "",
+    `Whole-width source lifecycle seed rows: ${inventory.metrics.levelOneTwoWholeWidthSourceLifecycleSeedRows}/${inventory.metrics.levelOneTwoSeedMigrationAuditRows}.`,
+    "",
+    "| Band | Class | Unit | Row kind | Classification | Source build path | Real sheet/battle handoff | Whole-width source lifecycle proof | Next action |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    ...renderSeedMigrationAuditRows(seedMigrationAuditRows),
     "",
     "## Level 5 Scenario Groups",
     "",

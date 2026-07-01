@@ -223,6 +223,97 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste` / `spell-level-3:Wizard:haste`: level5-sdk-tracer-bullets: Haste
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy` / `spell-level-3:Wizard:protection_from_energy`: level5-sdk-tracer-bullets: Protection from Energy
 
+## L1/L2 Seed Migration Audit
+
+This section is generated from the tracked seed scenario declarations and
+their checked test/helper text. A seed counts as whole-width source
+lifecycle proof only when the represented source character is created
+through the legal creation path and then projected through real
+Character Sheet and battle handoff.
+
+| Classification | Rows |
+| --- | ---: |
+| already legal creation path | 57 |
+| hand-built build needing migration | 7 |
+
+| Source build path | Rows |
+| --- | ---: |
+| direct-character-build | 7 |
+| legal-creation-draft-finalize | 57 |
+
+| Real sheet/battle handoff | Rows |
+| --- | ---: |
+| real-sheet-battle | 64 |
+
+Whole-width source lifecycle seed rows: 57/64.
+
+| Band | Class | Unit | Row kind | Classification | Source build path | Real sheet/battle handoff | Whole-width source lifecycle proof | Next action |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| level-1 | Barbarian | `barbarian_rage` | class-feature-grant | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
+| level-1 | Bard | `bard_bardic_inspiration` | class-feature-grant | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
+| spell-level-0 | Bard | `vicious_mockery` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Bard | `animal_friendship` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Bard | `cure_wounds` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Bard | `dissonant_whispers` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Bard | `healing_word` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Cleric | `sacred_flame` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Cleric | `thaumaturgy` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Cleric | `bless` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Cleric | `cure_wounds` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Cleric | `guiding_bolt` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Cleric | `healing_word` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Cleric | `inflict_wounds` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Cleric | `sanctuary` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Cleric | `shield_of_faith` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Druid | `poison_spray` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Druid | `produce_flame` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Druid | `shillelagh` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Druid | `animal_friendship` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Druid | `cure_wounds` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Druid | `healing_word` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| level-1 | Fighter | `fighter_second_wind` | class-feature-grant | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
+| level-1 | Monk | `monk_martial_arts` | class-feature-grant | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
+| spell-level-1 | Paladin | `bless` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Paladin | `cure_wounds` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Paladin | `shield_of_faith` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| level-1 | Ranger | `ranger_favored_enemy` | class-feature-grant | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Ranger | `animal_friendship` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Ranger | `cure_wounds` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Ranger | `hunters_mark` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| level-1 | Rogue | `rogue_sneak_attack` | class-feature-grant | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
+| level-1 | Sorcerer | `sorcerer_innate_sorcery` | class-feature-grant | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
+| spell-level-0 | Sorcerer | `acid_splash` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Sorcerer | `chill_touch` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Sorcerer | `fire_bolt` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Sorcerer | `poison_spray` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Sorcerer | `ray_of_frost` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Sorcerer | `shocking_grasp` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Sorcerer | `sorcerous_burst` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Sorcerer | `burning_hands` | spell-unit-pressure | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
+| spell-level-1 | Sorcerer | `chromatic_orb` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Sorcerer | `false_life` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Sorcerer | `mage_armor` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Sorcerer | `magic_missile` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Sorcerer | `ray_of_sickness` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Sorcerer | `thunderwave` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Warlock | `chill_touch` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Warlock | `eldritch_blast` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Warlock | `poison_spray` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Warlock | `hex` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Wizard | `acid_splash` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Wizard | `chill_touch` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Wizard | `fire_bolt` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Wizard | `poison_spray` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Wizard | `ray_of_frost` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-0 | Wizard | `shocking_grasp` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Wizard | `burning_hands` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Wizard | `chromatic_orb` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Wizard | `false_life` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Wizard | `mage_armor` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Wizard | `magic_missile` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Wizard | `ray_of_sickness` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| spell-level-1 | Wizard | `thunderwave` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+
 ## Level 5 Scenario Groups
 
 | Task | Lane | Rows | Bands | Classes | Units | Sample concepts | Suggested scenario |

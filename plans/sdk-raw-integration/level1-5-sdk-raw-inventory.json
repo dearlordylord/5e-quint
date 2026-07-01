@@ -50651,6 +50651,1160 @@
       }
     }
   ],
+  "levelOneTwoSeedMigrationAuditRows": [
+    {
+      "candidateUnitId": "barbarian_rage",
+      "classification": "hand-built build needing migration",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian Rage projects from a level-1 sheet, spends a use, and applies damage and Resistance riders",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
+      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
+      "rowKey": "level-1:Barbarian:barbarian_rage",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "direct-character-build",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "bard_bardic_inspiration",
+      "classification": "hand-built build needing migration",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
+      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "rowId": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+      "rowKey": "level-1:Bard:bard_bardic_inspiration",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "direct-character-build",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "vicious_mockery",
+      "classification": "already legal creation path",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard Vicious Mockery cantrip resolves from a level-1 sheet as a Wisdom save with Psychic damage and next Attack Roll Disadvantage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
+      "rowKey": "spell-level-0:Bard:vicious_mockery",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "animal_friendship",
+      "classification": "already legal creation path",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_animal_friendship",
+      "rowKey": "spell-level-1:Bard:animal_friendship",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "cure_wounds",
+      "classification": "already legal creation path",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds",
+      "rowKey": "spell-level-1:Bard:cure_wounds",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "dissonant_whispers",
+      "classification": "already legal creation path",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard Dissonant Whispers resolves from a level-1 sheet as a Wisdom save with Psychic damage and forced Reaction movement",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers",
+      "rowKey": "spell-level-1:Bard:dissonant_whispers",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "healing_word",
+      "classification": "already legal creation path",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word",
+      "rowKey": "spell-level-1:Bard:healing_word",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "sacred_flame",
+      "classification": "already legal creation path",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Sacred Flame cantrip resolves from a level-1 sheet as a Dexterity save with Radiant damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
+      "rowKey": "spell-level-0:Cleric:sacred_flame",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "thaumaturgy",
+      "classification": "already legal creation path",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Thaumaturgy Booming Voice cantrip resolves from a level-1 sheet with Advantage on Charisma (Intimidation) Ability Checks",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
+      "rowKey": "spell-level-0:Cleric:thaumaturgy",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "bless",
+      "classification": "already legal creation path",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
+      "rowKey": "spell-level-1:Cleric:bless",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "cure_wounds",
+      "classification": "already legal creation path",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_cure_wounds",
+      "rowKey": "spell-level-1:Cleric:cure_wounds",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "guiding_bolt",
+      "classification": "already legal creation path",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Guiding Bolt resolves from a level-1 sheet as a ranged Spell Attack with Advantage on the next Attack Roll against the target before the caster's next turn ends",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt",
+      "rowKey": "spell-level-1:Cleric:guiding_bolt",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "healing_word",
+      "classification": "already legal creation path",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word",
+      "rowKey": "spell-level-1:Cleric:healing_word",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "inflict_wounds",
+      "classification": "already legal creation path",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Inflict Wounds resolves from a level-1 sheet as a Constitution save with Necrotic damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds",
+      "rowKey": "spell-level-1:Cleric:inflict_wounds",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "sanctuary",
+      "classification": "already legal creation path",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Sanctuary resolves from a level-1 sheet as a one-minute Bonus Action ward with a Wisdom save interdiction",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
+      "rowKey": "spell-level-1:Cleric:sanctuary",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "shield_of_faith",
+      "classification": "already legal creation path",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
+      "rowKey": "spell-level-1:Cleric:shield_of_faith",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "poison_spray",
+      "classification": "already legal creation path",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
+      "rowKey": "spell-level-0:Druid:poison_spray",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "produce_flame",
+      "classification": "already legal creation path",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Produce Flame cantrip resolves from a level-1 sheet as held light and a ranged hurl without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
+      "rowKey": "spell-level-0:Druid:produce_flame",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "shillelagh",
+      "classification": "already legal creation path",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Shillelagh cantrip resolves from a level-1 sheet as a Bonus Action Quarterstaff weapon override",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh",
+      "rowKey": "spell-level-0:Druid:shillelagh",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "animal_friendship",
+      "classification": "already legal creation path",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship",
+      "rowKey": "spell-level-1:Druid:animal_friendship",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "cure_wounds",
+      "classification": "already legal creation path",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds",
+      "rowKey": "spell-level-1:Druid:cure_wounds",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "healing_word",
+      "classification": "already legal creation path",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Druid Healing Word resolve from level-1 sheets as Bonus Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word",
+      "rowKey": "spell-level-1:Druid:healing_word",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "fighter_second_wind",
+      "classification": "hand-built build needing migration",
+      "className": "Fighter",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Fighter Second Wind heals through sheet projection and spends one Bonus Action use",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
+      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "rowId": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
+      "rowKey": "level-1:Fighter:fighter_second_wind",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "direct-character-build",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "monk_martial_arts",
+      "classification": "hand-built build needing migration",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
+      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+      "rowKey": "level-1:Monk:monk_martial_arts",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "direct-character-build",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "bless",
+      "classification": "already legal creation path",
+      "className": "Paladin",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Bless resolve from level-1 prepared spell-list choices as Concentration Attack Roll and Saving Throw active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
+      "rowKey": "spell-level-1:Paladin:bless",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "cure_wounds",
+      "classification": "already legal creation path",
+      "className": "Paladin",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_cure_wounds",
+      "rowKey": "spell-level-1:Paladin:cure_wounds",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "shield_of_faith",
+      "classification": "already legal creation path",
+      "className": "Paladin",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric and Paladin Shield of Faith resolve from level-1 prepared spell-list choices as Bonus Action Concentration Armor Class active effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith",
+      "rowKey": "spell-level-1:Paladin:shield_of_faith",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "ranger_favored_enemy",
+      "classification": "already legal creation path",
+      "className": "Ranger",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Ranger Favored Enemy casts Hunter's Mark from a level-1 sheet without spending a Spell Slot and restores its free-cast pool on Long Rest",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
+      "rowKey": "level-1:Ranger:ranger_favored_enemy",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "animal_friendship",
+      "classification": "already legal creation path",
+      "className": "Ranger",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Druid, and Ranger Animal Friendship resolve from level-1 spell-list choices as Beast-only Wisdom save Charmed effects",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship",
+      "rowKey": "spell-level-1:Ranger:animal_friendship",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "cure_wounds",
+      "classification": "already legal creation path",
+      "className": "Ranger",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, Druid, Paladin, and Ranger Cure Wounds resolve from level-1 prepared spell-list choices as Magic Action Hit Point restoration",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds",
+      "rowKey": "spell-level-1:Ranger:cure_wounds",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "hunters_mark",
+      "classification": "already legal creation path",
+      "className": "Ranger",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Ranger Hunter's Mark resolves from a level-1 prepared spell-list choice through a Spell Slot",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
+      "rowKey": "spell-level-1:Ranger:hunters_mark",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "rogue_sneak_attack",
+      "classification": "hand-built build needing migration",
+      "className": "Rogue",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
+      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "rowId": "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
+      "rowKey": "level-1:Rogue:rogue_sneak_attack",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "direct-character-build",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "sorcerer_innate_sorcery",
+      "classification": "hand-built build needing migration",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
+      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "rowId": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
+      "rowKey": "level-1:Sorcerer:sorcerer_innate_sorcery",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "direct-character-build",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "acid_splash",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
+      "rowKey": "spell-level-0:Sorcerer:acid_splash",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "chill_touch",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
+      "rowKey": "spell-level-0:Sorcerer:chill_touch",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "fire_bolt",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
+      "rowKey": "spell-level-0:Sorcerer:fire_bolt",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "poison_spray",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+      "rowKey": "spell-level-0:Sorcerer:poison_spray",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "ray_of_frost",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
+      "rowKey": "spell-level-0:Sorcerer:ray_of_frost",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "shocking_grasp",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Shocking Grasp cantrips resolve from level-1 sheets as melee spell attacks with Lightning damage and Opportunity Attack denial",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
+      "rowKey": "spell-level-0:Sorcerer:shocking_grasp",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "sorcerous_burst",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer Sorcerous Burst cantrip resolves from a level-1 sheet with selected exploding Damage Type damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
+      "rowKey": "spell-level-0:Sorcerer:sorcerous_burst",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "burning_hands",
+      "classification": "hand-built build needing migration",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer Burning Hands resolves from a level-1 sheet, applies Fire damage, and spends a spell slot",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
+      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
+      "rowKey": "spell-level-1:Sorcerer:burning_hands",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "direct-character-build",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "chromatic_orb",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Chromatic Orb resolve from level-1 spell access with chosen damage and one duplicate-dice leap",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb",
+      "rowKey": "spell-level-1:Sorcerer:chromatic_orb",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "false_life",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life",
+      "rowKey": "spell-level-1:Sorcerer:false_life",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "mage_armor",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor",
+      "rowKey": "spell-level-1:Sorcerer:mage_armor",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "magic_missile",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile",
+      "rowKey": "spell-level-1:Sorcerer:magic_missile",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "ray_of_sickness",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Sickness resolve from level-1 spell access as Poison damage plus a turn-scoped Poisoned rider",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness",
+      "rowKey": "spell-level-1:Sorcerer:ray_of_sickness",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "thunderwave",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
+      "rowKey": "spell-level-1:Sorcerer:thunderwave",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "chill_touch",
+      "classification": "already legal creation path",
+      "className": "Warlock",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch",
+      "rowKey": "spell-level-0:Warlock:chill_touch",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "eldritch_blast",
+      "classification": "already legal creation path",
+      "className": "Warlock",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Warlock Eldritch Blast cantrip resolves from a level-1 sheet as a ranged one-beam Spell Attack sequence without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
+      "rowKey": "spell-level-0:Warlock:eldritch_blast",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "poison_spray",
+      "classification": "already legal creation path",
+      "className": "Warlock",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid and Warlock Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+      "rowKey": "spell-level-0:Warlock:poison_spray",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "hex",
+      "classification": "already legal creation path",
+      "className": "Warlock",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Warlock Hex resolves from a level-1 sheet through Pact Magic as a marked Necrotic rider and chosen Ability Check Disadvantage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
+      "rowKey": "spell-level-1:Warlock:hex",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "acid_splash",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
+      "rowKey": "spell-level-0:Wizard:acid_splash",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "chill_touch",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
+      "rowKey": "spell-level-0:Wizard:chill_touch",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "fire_bolt",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
+      "rowKey": "spell-level-0:Wizard:fire_bolt",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "poison_spray",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Poison Spray cantrips resolve from level-1 sheets as ranged spell attacks with Poison damage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+      "rowKey": "spell-level-0:Wizard:poison_spray",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "ray_of_frost",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Frost cantrips resolve from level-1 sheets as ranged spell attacks with Cold damage and Speed reduction",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
+      "rowKey": "spell-level-0:Wizard:ray_of_frost",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "shocking_grasp",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Shocking Grasp cantrips resolve from level-1 sheets as melee spell attacks with Lightning damage and Opportunity Attack denial",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-0",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
+      "rowKey": "spell-level-0:Wizard:shocking_grasp",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "burning_hands",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Wizard Burning Hands resolves from a level-1 spellbook sheet, applies Fire damage, and spends a spell slot",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands",
+      "rowKey": "spell-level-1:Wizard:burning_hands",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "chromatic_orb",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Chromatic Orb resolve from level-1 spell access with chosen damage and one duplicate-dice leap",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
+      "rowKey": "spell-level-1:Wizard:chromatic_orb",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "false_life",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard False Life resolve from level-1 spell access as self Temporary Hit Points",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life",
+      "rowKey": "spell-level-1:Wizard:false_life",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "mage_armor",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Mage Armor resolve from level-1 spell access as an 8-hour base AC effect",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor",
+      "rowKey": "spell-level-1:Wizard:mage_armor",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "magic_missile",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Magic Missile resolve from level-1 spell access with split dart allocation",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile",
+      "rowKey": "spell-level-1:Wizard:magic_missile",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "ray_of_sickness",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Ray of Sickness resolve from level-1 spell access as Poison damage plus a turn-scoped Poisoned rider",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness",
+      "rowKey": "spell-level-1:Wizard:ray_of_sickness",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "thunderwave",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
+      "rowKey": "spell-level-1:Wizard:thunderwave",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    }
+  ],
   "levelReports": [
     {
       "frontierRows": [
@@ -56586,6 +57740,19 @@
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
+    "levelOneTwoSeedMigrationAuditRows": 64,
+    "levelOneTwoSeedMigrationAuditRowsByClassification": {
+      "already legal creation path": 57,
+      "hand-built build needing migration": 7
+    },
+    "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
+      "real-sheet-battle": 64
+    },
+    "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
+      "direct-character-build": 7,
+      "legal-creation-draft-finalize": 57
+    },
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 57,
     "scenarioGroups": 411,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
@@ -85776,7 +86943,7 @@
       "taskId": "L15-SDK-RAW-07"
     }
   ],
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "scope": {
     "grain": "Level 1-4 source artifacts are cumulative unique-unit full-support reports. Level 5 and spell-level-3 use mined source rows so completion can target exact RAW anchors.",
     "levelBands": [
