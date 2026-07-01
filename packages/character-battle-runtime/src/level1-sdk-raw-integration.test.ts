@@ -31,6 +31,7 @@ import {
   createCharacterDraft,
   creationChoiceOptionId,
   creationHoleId,
+  discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
   loadoutEquipmentUnitId,
@@ -81,6 +82,7 @@ import {
   battleFromSheets,
   characterResources,
   characterSheet,
+  createLegalSourceCharacterFixture,
   damageRollFillWithGroups,
   monsterBattleInput,
   ordinaryAttackDamageFills,
@@ -95,6 +97,7 @@ import {
   spellSlotActForProcedure,
   unitLibrary,
 } from "./sdk-integration-test-support.ts";
+import { fighterLifecycleDraftPlan } from "./fighter-character-lifecycle-test-support.ts";
 
 type SavingThrowOutcomeHole = Extract<
   BattleHole,
@@ -115,6 +118,7 @@ type ThunderwaveSavingThrowOutcomeHole = BattleSpellSavingThrowOutcomeHole & {
 };
 
 const fighterId = combatantId("combatant:l1-sdk-fighter");
+const legalFighterId = combatantId("combatant:l1-sdk-legal-fighter");
 const barbarianId = combatantId("combatant:l1-sdk-barbarian");
 const bardId = combatantId("combatant:l1-sdk-bard");
 const dissonantWhispersBardId = combatantId(
@@ -307,6 +311,41 @@ const animalFriendshipDurationTicks = requireRight(
 const huntersMarkDurationTicks = requireRight(elapsedTimeTicksFromHours(1));
 
 describe("level 1 SDK RAW integration", () => {
+  test("legal Fighter source fixture creates a level 1 sheet and battle combatant", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-legal-fighter",
+      draftPlan: fighterLifecycleDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-legal-fighter",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l1-sdk-legal-fighter",
+        combatantId: legalFighterId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      },
+    });
+
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression.advancements).toEqual([]);
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(
+      requireCharacterCombatant(fixture.state, legalFighterId).origin.characterId,
+    ).toBe("character:l1-sdk-legal-fighter");
+  });
+
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
     const state = battleFromSheets({
       battleIdText: "battle:l1-sdk-second-wind",

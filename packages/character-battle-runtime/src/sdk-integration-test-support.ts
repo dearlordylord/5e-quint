@@ -19,6 +19,7 @@ import {
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
+  characterBuildHitPoints,
   characterDraftId,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
@@ -29,15 +30,22 @@ import {
   discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
+  loadoutEquipmentUnitId,
   progressionOptionId,
   sorcererMetamagicOptionId,
+  unitChoiceSourceUnitId,
   type CharacterBuild,
   type CharacterDraft,
+  type CharacterDraftChoicePath,
   type CharacterProgression,
   type CreationBatchFillResult,
   type CreationChoiceOptionId,
   type CreationFill,
+  type CreationFinalizationResult,
   type CreationHole,
+  type ChoiceCreationHoleSource,
+  type LoadoutSlot,
+  type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
 import {
   characterSheetId,
@@ -157,6 +165,280 @@ export function characterSheet(input: {
           : { resourceExpenditures: input.resourceExpenditures }),
       }),
     ),
+  };
+}
+
+export type LegalSourceCharacterLevel = 1 | 2;
+
+export type LegalSourceChoicePreference =
+  | {
+      readonly tag: "specific";
+      readonly source: ChoiceCreationHoleSource;
+      readonly optionIds: readonly [
+        CreationChoiceOptionId,
+        ...CreationChoiceOptionId[],
+      ];
+    }
+  | {
+      readonly tag: "anyAvailable";
+      readonly source: ChoiceCreationHoleSource;
+    };
+
+export type LegalSourceCharacterDraftPlan = {
+  readonly label: string;
+  readonly classUnitId: UnitRecord["id"];
+  readonly level: LegalSourceCharacterLevel;
+  readonly backgroundUnitId: UnitRecord["id"];
+  readonly speciesUnitId: UnitRecord["id"];
+  readonly languageOptionIds: readonly [string, string];
+  readonly alignmentOptionId: string;
+  readonly abilityScores: Parameters<typeof abilityScoreAssignment>[0];
+  readonly sourcePreferences: readonly LegalSourceChoicePreference[];
+};
+
+export type LegalSourceSheetHitPoints =
+  | { readonly tag: "maximum" }
+  | { readonly tag: "current"; readonly currentHp: number };
+
+export type LegalSourceBattlePlan =
+  | { readonly tag: "withoutBattle" }
+  | {
+      readonly tag: "withBattle";
+      readonly battleIdText: string;
+      readonly combatantId: CombatantId;
+      readonly initiative: number;
+      readonly monsters: readonly Parameters<
+        typeof battleCreatureInitFromStatBlock
+      >[0][];
+    };
+
+export type LegalSourceCharacterFixtureInput = {
+  readonly draftIdText: string;
+  readonly draftPlan: LegalSourceCharacterDraftPlan;
+  readonly sheet: {
+    readonly characterIdText: string;
+    readonly hitPoints: LegalSourceSheetHitPoints;
+  };
+  readonly battle: LegalSourceBattlePlan;
+};
+
+export type LegalSourceCharacterFixture =
+  | {
+      readonly tag: "withoutBattle";
+      readonly draft: CharacterDraft;
+      readonly build: CharacterBuild;
+      readonly sheet: CharacterSheet;
+    }
+  | {
+      readonly tag: "withBattle";
+      readonly draft: CharacterDraft;
+      readonly build: CharacterBuild;
+      readonly sheet: CharacterSheet;
+      readonly state: BattleState;
+      readonly combatantId: CombatantId;
+    };
+
+export type LegalSourceFinalizedCharacterDraft = {
+  readonly draft: CharacterDraft;
+  readonly build: CharacterBuild;
+};
+
+const legalSourceFixtureFillPassLimit = 12;
+
+export function legalDraftChoice(
+  path: CharacterDraftChoicePath,
+  firstOptionId: string,
+  ...restOptionIds: readonly string[]
+): LegalSourceChoicePreference {
+  return {
+    tag: "specific",
+    source: { tag: "draft", path },
+    optionIds: legalSpecificOptionIds(firstOptionId, restOptionIds),
+  };
+}
+
+export function legalUnitChoice(
+  unitId: UnitRecord["id"],
+  choiceKey: UnitChoiceKey,
+  firstOptionId: string,
+  ...restOptionIds: readonly string[]
+): LegalSourceChoicePreference {
+  return {
+    tag: "specific",
+    source: {
+      tag: "unitChoice",
+      unitId: requireRight(unitChoiceSourceUnitId(unitId)),
+      choiceKey,
+    },
+    optionIds: legalSpecificOptionIds(firstOptionId, restOptionIds),
+  };
+}
+
+export function legalAnyUnitChoice(
+  unitId: UnitRecord["id"],
+  choiceKey: UnitChoiceKey,
+): LegalSourceChoicePreference {
+  return {
+    tag: "anyAvailable",
+    source: {
+      tag: "unitChoice",
+      unitId: requireRight(unitChoiceSourceUnitId(unitId)),
+      choiceKey,
+    },
+  };
+}
+
+export function legalLoadoutChoice(
+  equipmentUnitId: UnitRecord["id"],
+  slot: LoadoutSlot,
+  firstOptionId: string,
+  ...restOptionIds: readonly string[]
+): LegalSourceChoicePreference {
+  return {
+    tag: "specific",
+    source: {
+      tag: "loadout",
+      equipmentUnitId: requireRight(loadoutEquipmentUnitId(equipmentUnitId)),
+      slot,
+    },
+    optionIds: legalSpecificOptionIds(firstOptionId, restOptionIds),
+  };
+}
+
+export function legalAnyLoadoutChoice(
+  equipmentUnitId: UnitRecord["id"],
+  slot: LoadoutSlot,
+): LegalSourceChoicePreference {
+  return {
+    tag: "anyAvailable",
+    source: {
+      tag: "loadout",
+      equipmentUnitId: requireRight(loadoutEquipmentUnitId(equipmentUnitId)),
+      slot,
+    },
+  };
+}
+
+export function createLegalSourceCharacterDraft(input: {
+  readonly draftIdText: string;
+}): CharacterDraft {
+  return createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId(input.draftIdText),
+  });
+}
+
+export function finalizeLegalSourceCharacterDraft(input: {
+  readonly draft: CharacterDraft;
+  readonly plan: LegalSourceCharacterDraftPlan;
+}): LegalSourceFinalizedCharacterDraft {
+  let draft = input.draft;
+
+  for (let pass = 0; pass < legalSourceFixtureFillPassLimit; pass += 1) {
+    const holes = discoverCreationHoles({ draft, unitLibrary });
+    if (holes.length === 0) {
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+      if (result.tag !== "ready") {
+        throw new Error(
+          `${input.plan.label} fixture finalization failed: ${creationFinalizationResultSummary(
+            result,
+          )}`,
+        );
+      }
+      return { draft, build: result.build };
+    }
+
+    draft = requireAcceptedCreationBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: holes.map((hole) => legalSourceCreationFill(hole, input.plan)),
+      }),
+      input.plan.label,
+    );
+  }
+
+  throw new Error(
+    `${input.plan.label} fixture still has creation holes after iterative fills: ${JSON.stringify(
+      discoverCreationHoles({ draft, unitLibrary }).map(creationHoleSummary),
+    )}`,
+  );
+}
+
+export function createLegalSourceCharacterSheet(input: {
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly hitPoints: LegalSourceSheetHitPoints;
+}): CharacterSheet {
+  const maximumHp = Number(
+    requireRight(characterBuildHitPoints(input.build, unitLibrary)).maximum,
+  );
+  const currentHp =
+    input.hitPoints.tag === "maximum" ? maximumHp : input.hitPoints.currentHp;
+
+  return requireRight(
+    createFreshCharacterSheet({
+      characterId: characterSheetId(input.characterIdText),
+      build: input.build,
+      currentHp: Hp(currentHp),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
+    }),
+  );
+}
+
+export function startLegalSourceCharacterBattle(input: {
+  readonly sheet: CharacterSheet;
+  readonly battle: Extract<LegalSourceBattlePlan, { readonly tag: "withBattle" }>;
+}): BattleState {
+  return battleFromSheets({
+    battleIdText: input.battle.battleIdText,
+    characters: [
+      {
+        sheet: input.sheet,
+        combatantId: input.battle.combatantId,
+        initiative: input.battle.initiative,
+      },
+    ],
+    monsters: input.battle.monsters,
+  });
+}
+
+export function createLegalSourceCharacterFixture(
+  input: LegalSourceCharacterFixtureInput,
+): LegalSourceCharacterFixture {
+  const draft = createLegalSourceCharacterDraft({
+    draftIdText: input.draftIdText,
+  });
+  const finalized = finalizeLegalSourceCharacterDraft({
+    draft,
+    plan: input.draftPlan,
+  });
+  const sheet = createLegalSourceCharacterSheet({
+    characterIdText: input.sheet.characterIdText,
+    build: finalized.build,
+    hitPoints: input.sheet.hitPoints,
+  });
+
+  if (input.battle.tag === "withoutBattle") {
+    return {
+      tag: "withoutBattle",
+      draft: finalized.draft,
+      build: finalized.build,
+      sheet,
+    };
+  }
+
+  return {
+    tag: "withBattle",
+    draft: finalized.draft,
+    build: finalized.build,
+    sheet,
+    state: startLegalSourceCharacterBattle({ sheet, battle: input.battle }),
+    combatantId: input.battle.combatantId,
   };
 }
 
@@ -373,6 +655,178 @@ function levelFiveWizardProgression(): CharacterProgression {
   };
 }
 
+function legalSourceCreationFill(
+  hole: CreationHole,
+  plan: LegalSourceCharacterDraftPlan,
+): CreationFill {
+  if (hole.kind === "abilityScores") {
+    return {
+      kind: "abilityScores",
+      holeId: hole.holeId,
+      method: "standardArray",
+      value: requireRight(abilityScoreAssignment(plan.abilityScores)),
+    };
+  }
+
+  const preference = legalSourceChoicePreference(hole.source, plan);
+  if (preference === undefined) {
+    throw new Error(
+      `${plan.label} fixture has no preference for ${creationHoleSummary(
+        hole,
+      )}.`,
+    );
+  }
+
+  const optionIds = hole.options.map((option) => option.optionId);
+  const selectedOptionIds =
+    preference.tag === "anyAvailable"
+      ? optionIds.slice(0, choiceCardinalityBounds(hole.cardinality).max)
+      : preference.optionIds;
+  const holeOptionIds = new Set(optionIds);
+  const missingOptionIds = selectedOptionIds.filter(
+    (optionId) => !holeOptionIds.has(optionId),
+  );
+  if (missingOptionIds.length > 0) {
+    throw new Error(
+      `${plan.label} fixture ${creationSourceSummary(
+        hole.source,
+      )} is missing preferred options ${JSON.stringify(missingOptionIds)}.`,
+    );
+  }
+
+  const bounds = choiceCardinalityBounds(hole.cardinality);
+  if (
+    selectedOptionIds.length < bounds.min ||
+    selectedOptionIds.length > bounds.max
+  ) {
+    throw new Error(
+      `${plan.label} fixture ${creationSourceSummary(
+        hole.source,
+      )} expected ${bounds.min}-${bounds.max} options, received ${selectedOptionIds.length}.`,
+    );
+  }
+
+  return {
+    kind: "choice",
+    holeId: hole.holeId,
+    optionIds: selectedOptionIds,
+  };
+}
+
+function legalSpecificOptionIds(
+  firstOptionId: string,
+  restOptionIds: readonly string[],
+): readonly [CreationChoiceOptionId, ...CreationChoiceOptionId[]] {
+  return [
+    creationChoiceOptionId(firstOptionId),
+    ...restOptionIds.map(creationChoiceOptionId),
+  ];
+}
+
+function legalSourceChoicePreference(
+  source: ChoiceCreationHoleSource,
+  plan: LegalSourceCharacterDraftPlan,
+): LegalSourceChoicePreference | undefined {
+  const defaultPreference = legalSourceDefaultChoicePreference(source, plan);
+  if (defaultPreference !== undefined) return defaultPreference;
+  return plan.sourcePreferences.find((preference) =>
+    creationSourcesMatch(preference.source, source),
+  );
+}
+
+function legalSourceDefaultChoicePreference(
+  source: ChoiceCreationHoleSource,
+  plan: LegalSourceCharacterDraftPlan,
+): LegalSourceChoicePreference | undefined {
+  if (source.tag !== "draft") return undefined;
+
+  if (source.path === "draft.progression.initial") {
+    return {
+      tag: "specific",
+      source,
+      optionIds: [progressionOptionId(legalSourceProgression(plan))],
+    };
+  }
+  if (source.path === "draft.background") {
+    return {
+      tag: "specific",
+      source,
+      optionIds: [creationChoiceOptionId(plan.backgroundUnitId)],
+    };
+  }
+  if (source.path === "draft.species") {
+    return {
+      tag: "specific",
+      source,
+      optionIds: [creationChoiceOptionId(plan.speciesUnitId)],
+    };
+  }
+  if (source.path === "draft.languages") {
+    const [firstLanguage, secondLanguage] = plan.languageOptionIds;
+    return {
+      tag: "specific",
+      source,
+      optionIds: [
+        creationChoiceOptionId(firstLanguage),
+        creationChoiceOptionId(secondLanguage),
+      ],
+    };
+  }
+  if (source.path === "draft.alignment") {
+    return {
+      tag: "specific",
+      source,
+      optionIds: [creationChoiceOptionId(plan.alignmentOptionId)],
+    };
+  }
+
+  return undefined;
+}
+
+function legalSourceProgression(
+  plan: LegalSourceCharacterDraftPlan,
+): CharacterProgression {
+  const unitId = classUnitId(plan.classUnitId);
+  return {
+    startingClass: unitId,
+    advancements:
+      plan.level === 1
+        ? []
+        : [{ classUnitId: unitId, hitPointRule: { tag: "fixedHigherLevelGain" } }],
+  };
+}
+
+function creationSourcesMatch(
+  left: ChoiceCreationHoleSource,
+  right: ChoiceCreationHoleSource,
+): boolean {
+  if (left.tag !== right.tag) return false;
+  if (left.tag === "draft" && right.tag === "draft") {
+    return left.path === right.path;
+  }
+  if (left.tag === "unitChoice" && right.tag === "unitChoice") {
+    return left.unitId === right.unitId && left.choiceKey === right.choiceKey;
+  }
+  if (left.tag === "loadout" && right.tag === "loadout") {
+    return left.equipmentUnitId === right.equipmentUnitId && left.slot === right.slot;
+  }
+  return false;
+}
+
+function creationHoleSummary(hole: CreationHole): string {
+  return `${hole.kind}:${String(hole.holeId)}:${creationSourceSummary(
+    hole.source,
+  )}`;
+}
+
+function creationSourceSummary(source: CreationHole["source"]): string {
+  if (source.tag === "draft") return `draft:${source.path}`;
+  if (source.tag === "unitChoice") {
+    return `unitChoice:${source.unitId}:${source.choiceKey}`;
+  }
+  return `loadout:${source.equipmentUnitId}:${source.slot}`;
+}
+
 function levelFiveWizardCreationFill(
   hole: CreationHole,
   choices: LevelFiveWizardChoices,
@@ -578,10 +1032,11 @@ function levelFiveWizardUnitChoicePreferredOptionIds(
 
 function requireAcceptedCreationBatch(
   result: CreationBatchFillResult,
+  label = "SDK integration",
 ): CharacterDraft {
   if (result.tag !== "accepted") {
     throw new Error(
-      `Expected character-creation fill batch to be accepted, received ${creationBatchResultSummary(result)}`,
+      `${label} expected character-creation fill batch to be accepted, received ${creationBatchResultSummary(result)}`,
     );
   }
   return result.draft;
@@ -594,7 +1049,7 @@ function creationBatchResultSummary(result: CreationBatchFillResult): string {
 }
 
 function creationFinalizationResultSummary(
-  result: ReturnType<typeof finalizeCharacterDraft>,
+  result: CreationFinalizationResult,
 ): string {
   if (result.tag === "ready") {
     return "ready";

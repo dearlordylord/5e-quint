@@ -13,13 +13,13 @@
     {
       "number": 2,
       "id": "L12-SH02-LEGAL-FIXTURE-SEAM",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement the legal source-side lifecycle fixture seam"
     },
     {
       "number": 3,
       "id": "L12-SH03-SEED-MIGRATION-AUDIT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Audit existing seed rows for legal lifecycle proof"
     },
     {
@@ -292,8 +292,8 @@ Reviewer-loop convergence:
 | # | Task | Status | Depends on | Lane | Expected output |
 | ---: | --- | --- | --- | --- | --- |
 | 1 | L12-SH01-DENOMINATOR-FORMAT-GATE - Verify the L1/L2 source denominator and Ralph format | done | none | fixture/enabling | Static denominator and plan-format verification, with durable corrections if inventory drifted. |
-| 2 | L12-SH02-LEGAL-FIXTURE-SEAM - Implement the legal source-side lifecycle fixture seam | ready-for-research | L12-SH01-DENOMINATOR-FORMAT-GATE | fixture/enabling | Shared legal fixture helpers for L1/L2 source lifecycle scenarios. |
-| 3 | L12-SH03-SEED-MIGRATION-AUDIT - Audit existing seed rows for legal lifecycle proof | blocked | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH02-LEGAL-FIXTURE-SEAM | seed-present | Classification of all 64 L1/L2 seed rows and first safe migrations if small. |
+| 2 | L12-SH02-LEGAL-FIXTURE-SEAM - Implement the legal source-side lifecycle fixture seam | done | L12-SH01-DENOMINATOR-FORMAT-GATE | fixture/enabling | Shared legal fixture helpers for L1/L2 source lifecycle scenarios. |
+| 3 | L12-SH03-SEED-MIGRATION-AUDIT - Audit existing seed rows for legal lifecycle proof | ready-for-research | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH02-LEGAL-FIXTURE-SEAM | seed-present | Classification of all 64 L1/L2 seed rows and first safe migrations if small. |
 | 4 | L12-SH04-GROUPING-GENERATOR-GATE - Generate the L1/L2 campaign grouping gate | blocked | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH03-SEED-MIGRATION-AUDIT | fixture/enabling | Generated or checked group assignment evidence for 400 rows and 207 groups. |
 | 5 | L12-SH05-CREATION-SDK-FIRST-SLICE - Add the first character-creation SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | character-creation-sdk | One legal creation scenario group using the shared fixture seam. |
 | 6 | L12-SH06-BUILD-SHEET-FIRST-SLICE - Add the first build-to-sheet SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | build-sheet-sdk | One class-wide build-sheet projection group. |
@@ -363,11 +363,7 @@ Plan Impact:
 
 ### Task 2 - L12-SH02-LEGAL-FIXTURE-SEAM
 
-Status: `ready-for-research`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH01-DENOMINATOR-FORMAT-GATE`.
+Status: `done`
 
 Input:
 
@@ -421,12 +417,7 @@ Plan Impact:
 
 ### Task 3 - L12-SH03-SEED-MIGRATION-AUDIT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH01-DENOMINATOR-FORMAT-GATE` and
-`L12-SH02-LEGAL-FIXTURE-SEAM`.
+Status: `ready-for-research`
 
 Input:
 

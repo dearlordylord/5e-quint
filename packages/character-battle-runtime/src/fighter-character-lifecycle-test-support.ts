@@ -1,12 +1,7 @@
 import {
-  battleCombatantSide,
-  battleCreatureInitFromStatBlock,
-  battleId,
   combatantId,
   discoverBattleActs,
-  initiativeScore,
   resolveBattleSubject,
-  startBattle,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -15,43 +10,26 @@ import {
   type BattleSubject,
 } from "@dnd/battle-runtime";
 import {
-  abilityScoreAssignment,
   characterBuildHitPoints,
-  characterDraftId,
-  creationChoiceOptionId,
-  createCharacterDraft,
-  discoverCreationHoles,
-  fillCreationHoles,
-  finalizeCharacterDraft,
-  loadoutEquipmentUnitId,
-  loadoutSourceHoleIdText,
-  parseCreationHoleId,
-  unitChoiceKey,
-  unitChoiceSourceHoleIdText,
-  unitChoiceSourceUnitId,
-  type AbilityScoreAssignment,
   type CharacterBuild,
   type CharacterDraft,
-  type CreationFill,
-  type LoadoutSlot,
 } from "@dnd/character-creation-runtime";
-import {
-  characterSheetId,
-  createFreshCharacterSheet,
-  type CharacterSheet,
-} from "@dnd/character-sheet-runtime";
-import { DieRollResult, Hp } from "@dnd/shared/types";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
-import {
-  buildUnitCatalog,
-  srdUnitCollection,
-} from "@dnd/surface/surface/unit-catalog";
+import type { CharacterSheet } from "@dnd/character-sheet-runtime";
+import { DieRollResult } from "@dnd/shared/types";
 import { Either } from "effect";
 
-import { characterSheetBattleInit } from "./index.ts";
+import {
+  createLegalSourceCharacterDraft,
+  createLegalSourceCharacterSheet,
+  finalizeLegalSourceCharacterDraft,
+  legalLoadoutChoice,
+  legalUnitChoice,
+  monsterBattleInput,
+  srdStatBlock,
+  startLegalSourceCharacterBattle,
+  unitLibrary,
+  type LegalSourceCharacterDraftPlan,
+} from "./sdk-integration-test-support.ts";
 
 export type FighterCharacterBattleCombatant = BattleCreatureState & {
   readonly origin: Extract<
@@ -67,21 +45,7 @@ type AttackBattleSubject = Extract<
 type BattleAct = ReturnType<typeof discoverBattleActs>[number];
 type AttackBattleAct = BattleAct & { readonly subject: AttackBattleSubject };
 
-const unitCatalogResult = buildUnitCatalog({
-  collections: [srdUnitCollection],
-});
-const statBlockCatalogResult = buildStatBlockCatalog({
-  collections: [srdStatBlockCollection],
-});
-if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
-  throw new Error("Fighter character lifecycle test catalogs must build.");
-}
-
-export const fighterLifecycleUnitLibrary = unitCatalogResult.catalog;
-const fighterLifecycleStatBlockCatalog = statBlockCatalogResult.catalog;
-const fighterLifecycleCharacterId = characterSheetId(
-  "character:fighter-lifecycle",
-);
+export const fighterLifecycleUnitLibrary = unitLibrary;
 export const fighterLifecycleCharacterCombatantId = combatantId(
   "combatant:fighter-lifecycle-character",
 );
@@ -91,115 +55,83 @@ const fighterLifecycleSkeletonCombatantId = combatantId(
 export const fighterLifecycleSheetMaximumHp = 12;
 export const fighterLifecycleSettledHp = 8;
 
+export const fighterLifecycleDraftPlan = {
+  label: "Fighter lifecycle",
+  classUnitId: "class_fighter",
+  level: 1,
+  backgroundUnitId: "background_soldier",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 15,
+    dex: 14,
+    con: 13,
+    int: 8,
+    wis: 10,
+    cha: 12,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_fighter",
+      "class_skill_proficiency_choice",
+      "perception",
+      "survival",
+    ),
+    legalUnitChoice(
+      "fighter_fighting_style",
+      "class_feature_feat_choice",
+      "defense",
+    ),
+    legalUnitChoice(
+      "fighter_weapon_mastery",
+      "weapon_mastery_options",
+      "weapon_longsword",
+      "weapon_spear",
+      "weapon_flail",
+    ),
+    legalUnitChoice(
+      "background_soldier",
+      "background_ability_score_increase",
+      "two_and_one:str:con",
+    ),
+    legalUnitChoice(
+      "background_soldier",
+      "background_tool_choice",
+      "tool_dice_set",
+    ),
+    legalUnitChoice("class_fighter", "class_equipment_choice", "option_c"),
+    legalUnitChoice(
+      "background_soldier",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalUnitChoice(
+      "class_fighter",
+      "equipment_purchase",
+      "armor_chain_mail",
+      "weapon_longsword",
+      "equipment_shield",
+    ),
+    legalLoadoutChoice("armor_chain_mail", "armor", "worn"),
+    legalLoadoutChoice("equipment_shield", "shield", "wielded"),
+    legalLoadoutChoice("weapon_longsword", "weapon", "wielded_one_handed"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 export function createFighterLifecycleDraft(): CharacterDraft {
-  return createCharacterDraft({
-    unitLibrary: fighterLifecycleUnitLibrary,
-    draftId: characterDraftId("draft:fighter-lifecycle"),
+  return createLegalSourceCharacterDraft({
+    draftIdText: "draft:fighter-lifecycle",
   });
 }
 
 export function finalizeFighterLifecycleDraft(
   draft: CharacterDraft,
 ): CharacterBuild {
-  const afterInitial = requireAcceptedCreationBatch(
-    fillCreationHoles({
-      draft,
-      unitLibrary: fighterLifecycleUnitLibrary,
-      expectedRevision: draft.revision,
-      fills: initialManifestFills(),
-    }),
-  );
-  const afterChoices = requireAcceptedCreationBatch(
-    fillCreationHoles({
-      draft: afterInitial,
-      unitLibrary: fighterLifecycleUnitLibrary,
-      expectedRevision: afterInitial.revision,
-      fills: [
-        choiceFill(
-          unitChoiceHoleId("class_fighter", "class_skill_proficiency_choice"),
-          "perception",
-          "survival",
-        ),
-        choiceFill(
-          unitChoiceHoleId(
-            "fighter_fighting_style",
-            "class_feature_feat_choice",
-          ),
-          "defense",
-        ),
-        choiceFill(
-          unitChoiceHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
-          "weapon_longsword",
-          "weapon_spear",
-          "weapon_flail",
-        ),
-        choiceFill(
-          unitChoiceHoleId(
-            "background_soldier",
-            "background_ability_score_increase",
-          ),
-          "two_and_one:str:con",
-        ),
-        choiceFill(
-          unitChoiceHoleId("background_soldier", "background_tool_choice"),
-          "tool_dice_set",
-        ),
-        choiceFill(
-          unitChoiceHoleId("class_fighter", "class_equipment_choice"),
-          "option_c",
-        ),
-        choiceFill(
-          unitChoiceHoleId("background_soldier", "background_equipment_choice"),
-          "option_b",
-        ),
-      ],
-    }),
-  );
-  const afterPurchase = requireAcceptedCreationBatch(
-    fillCreationHoles({
-      draft: afterChoices,
-      unitLibrary: fighterLifecycleUnitLibrary,
-      expectedRevision: afterChoices.revision,
-      fills: [
-        choiceFill(
-          unitChoiceHoleId("class_fighter", "equipment_purchase"),
-          "armor_chain_mail",
-          "weapon_longsword",
-          "equipment_shield",
-        ),
-      ],
-    }),
-  );
-  const completeDraft = requireAcceptedCreationBatch(
-    fillCreationHoles({
-      draft: afterPurchase,
-      unitLibrary: fighterLifecycleUnitLibrary,
-      expectedRevision: afterPurchase.revision,
-      fills: [
-        choiceFill(loadoutHoleId("armor_chain_mail", "armor"), "worn"),
-        choiceFill(loadoutHoleId("equipment_shield", "shield"), "wielded"),
-        choiceFill(
-          loadoutHoleId("weapon_longsword", "weapon"),
-          "wielded_one_handed",
-        ),
-      ],
-    }),
-  );
-  const remainingHoles = discoverCreationHoles({
-    draft: completeDraft,
-    unitLibrary: fighterLifecycleUnitLibrary,
-  });
-  if (remainingHoles.length > 0) {
-    throw new Error("Expected Fighter lifecycle draft to have no open holes.");
-  }
-  const finalization = finalizeCharacterDraft({
-    draft: completeDraft,
-    unitLibrary: fighterLifecycleUnitLibrary,
-  });
-  if (finalization.tag !== "ready") {
-    throw new Error(`Expected ready Fighter build, received ${finalization.tag}.`);
-  }
-  return finalization.build;
+  return finalizeLegalSourceCharacterDraft({
+    draft,
+    plan: fighterLifecycleDraftPlan,
+  }).build;
 }
 
 export function createFighterLifecycleSheet(
@@ -209,51 +141,33 @@ export function createFighterLifecycleSheet(
   if (maximumHp !== fighterLifecycleSheetMaximumHp) {
     throw new Error("Expected Fighter lifecycle build to have 12 HP.");
   }
-  return requireRight(
-    createFreshCharacterSheet({
-      characterId: fighterLifecycleCharacterId,
-      build,
-      currentHp: Hp(maximumHp),
-      tempHp: Hp(0),
-      hitPointMaximumReduction: Hp(0),
-      conditions: [],
-      unitLibrary: fighterLifecycleUnitLibrary,
-    }),
-  );
+  return createLegalSourceCharacterSheet({
+    characterIdText: "character:fighter-lifecycle",
+    build,
+    hitPoints: { tag: "maximum" },
+  });
 }
 
 export function startFighterLifecycleBattle(sheet: CharacterSheet): {
   readonly state: BattleState;
   readonly combatant: FighterCharacterBattleCombatant;
 } {
-  const characterInit = requireRight(
-    characterSheetBattleInit({
-      sheet,
-      unitLibrary: fighterLifecycleUnitLibrary,
-      statBlockCatalog: fighterLifecycleStatBlockCatalog,
+  const state = startLegalSourceCharacterBattle({
+    sheet,
+    battle: {
+      tag: "withBattle",
+      battleIdText: "battle:fighter-lifecycle",
       combatantId: fighterLifecycleCharacterCombatantId,
-      displayName: "Fighter Lifecycle",
-      initiative: initiativeScore(10),
-      side: battleCombatantSide("party"),
-    }),
-  );
-  const state = requireRight(
-    startBattle({
-      battleId: battleId("battle:fighter-lifecycle"),
-      combatants: [
-        characterInit,
-        battleCreatureInitFromStatBlock({
-          combatantId: fighterLifecycleSkeletonCombatantId,
-          statBlock:
-            fighterLifecycleStatBlockCatalog.requireStatBlock(
-              "stat_block_skeleton",
-            ),
-          initiative: initiativeScore(20),
-          side: battleCombatantSide("monsters"),
-        }),
+      initiative: 10,
+      monsters: [
+        monsterBattleInput(
+          fighterLifecycleSkeletonCombatantId,
+          20,
+          srdStatBlock("stat_block_skeleton"),
+        ),
       ],
-    }),
-  );
+    },
+  });
   const combatant = requireFighterCharacterCombatant(
     state.combatants.get(fighterLifecycleCharacterCombatantId),
   );
@@ -332,32 +246,6 @@ export function battleStateWithCombatant(
 export function requireRight<A, E>(either: Either.Either<A, E>): A {
   if (Either.isRight(either)) return either.right;
   throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
-}
-
-function initialManifestFills(): readonly CreationFill[] {
-  return [
-    choiceFill(
-      "cc:draft:draft.progression.initial",
-      "13:class_fighter:level_1:maximum_hit_die",
-    ),
-    choiceFill("cc:draft:draft.background", "background_soldier"),
-    choiceFill("cc:draft:draft.species", "species_orc"),
-    {
-      kind: "abilityScores",
-      holeId: draftHoleId("cc:draft:draft.abilityScoreGeneration"),
-      method: "standardArray",
-      value: abilityScores({
-        str: 15,
-        dex: 14,
-        con: 13,
-        int: 8,
-        wis: 10,
-        cha: 12,
-      }),
-    },
-    choiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
-    choiceFill("cc:draft:draft.alignment", "lawful_good"),
-  ];
 }
 
 function requireSkeletonShortswordAct(state: BattleState): AttackBattleAct {
@@ -459,60 +347,6 @@ function rolledDiceGroup(
       ...rest.map((dieResult) => DieRollResult(dieResult)),
     ],
   };
-}
-
-function abilityScores(
-  scores: Parameters<typeof abilityScoreAssignment>[0],
-): AbilityScoreAssignment {
-  return requireRight(abilityScoreAssignment(scores));
-}
-
-function choiceFill(
-  holeId: string,
-  ...optionIds: readonly string[]
-): CreationFill {
-  return {
-    kind: "choice",
-    holeId: draftHoleId(holeId),
-    optionIds: optionIds.map(creationChoiceOptionId),
-  };
-}
-
-function draftHoleId(
-  holeId: string,
-): NonNullable<ReturnType<typeof parseCreationHoleId>> {
-  const parsed = parseCreationHoleId(holeId);
-  if (parsed === null) {
-    throw new Error(`Expected supported creation hole id: ${holeId}`);
-  }
-  return parsed;
-}
-
-function unitChoiceHoleId(unitId: string, choiceKey: string): string {
-  return unitChoiceSourceHoleIdText({
-    tag: "unitChoice",
-    unitId: requireRight(unitChoiceSourceUnitId(unitId)),
-    choiceKey: requireRight(unitChoiceKey(choiceKey)),
-  });
-}
-
-function loadoutHoleId(equipmentUnitId: string, slot: LoadoutSlot): string {
-  return loadoutSourceHoleIdText({
-    tag: "loadout",
-    equipmentUnitId: requireRight(loadoutEquipmentUnitId(equipmentUnitId)),
-    slot,
-  });
-}
-
-function requireAcceptedCreationBatch(
-  result: ReturnType<typeof fillCreationHoles>,
-): CharacterDraft {
-  if (result.tag !== "accepted") {
-    throw new Error(
-      `Expected accepted character-creation fill batch, received ${JSON.stringify(result.issues)}`,
-    );
-  }
-  return result.draft;
 }
 
 function requireHoleFromList<K extends BattleHole["kind"]>(
