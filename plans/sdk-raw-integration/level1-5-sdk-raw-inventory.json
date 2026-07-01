@@ -12653,6 +12653,13 @@
       "category": "class feature",
       "className": "Barbarian",
       "concept": "Barbarian Unarmored Defense",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:80-82"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -12685,7 +12692,7 @@
       "proposedOwnerBoundary": "character-sheet",
       "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 83,
         "lineStart": 80,
@@ -50805,12 +50812,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 7,
+        "groupCount": 6,
         "lane": "character-sheet-sdk",
         "ownerTaskIds": [
           "L12-SH08-SHEET-SDK-FIRST-SLICE"
         ],
-        "rowCount": 7,
+        "rowCount": 6,
         "rowFamily": "source-row",
         "taskFamily": "character-sheet-sdk"
       },
@@ -50847,7 +50854,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 67,
+        "groupCount": 68,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -50859,7 +50866,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 74,
+        "rowCount": 75,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -50919,16 +50926,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 67,
+        "groupCount": 68,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 74,
+        "rowCount": 75,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 95,
+        "groupCount": 94,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -50939,7 +50946,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 231,
+        "rowCount": 230,
         "rowFamily": "source-row"
       }
     ],
@@ -50989,6 +50996,25 @@
       "rowKind": "class-feature-grant",
       "sourceBuildPath": "direct-character-build",
       "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "barbarian_unarmored_defense",
+      "classification": "legal build-sheet owner proof",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+      "rowKey": "level-1:Barbarian:barbarian_unarmored_defense",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
       "wholeWidthSourceLifecycleProof": false
     },
     {
@@ -58226,9 +58252,9 @@
       "closure-review-needed": 144,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 424,
+      "sdk-scenario-needed": 423,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 80,
+      "seed-scenario-present": 81,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
@@ -58239,18 +58265,18 @@
       "build-battle-sdk": 11,
       "build-sheet-sdk": 12,
       "character-creation-sdk": 14,
-      "character-sheet-sdk": 7,
+      "character-sheet-sdk": 6,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 67,
+      "seed-present": 68,
       "sheet-spell-access-sdk": 7,
       "spell-effect-owner-review": 22
     },
     "levelOneTwoCampaignGroupsByRowFamily": {
       "closure-review-row": 22,
       "explicit-closure-row": 24,
-      "seed-row": 67,
-      "source-row": 95
+      "seed-row": 68,
+      "source-row": 94
     },
     "levelOneTwoCampaignRows": 400,
     "levelOneTwoCampaignRowsByLane": {
@@ -58259,33 +58285,33 @@
       "build-battle-sdk": 15,
       "build-sheet-sdk": 93,
       "character-creation-sdk": 14,
-      "character-sheet-sdk": 7,
+      "character-sheet-sdk": 6,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 74,
+      "seed-present": 75,
       "sheet-spell-access-sdk": 7,
       "spell-effect-owner-review": 71
     },
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 71,
       "explicit-closure-row": 24,
-      "seed-row": 74,
-      "source-row": 231
+      "seed-row": 75,
+      "source-row": 230
     },
-    "levelOneTwoSeedMigrationAuditRows": 74,
+    "levelOneTwoSeedMigrationAuditRows": 75,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 59,
       "hand-built build needing migration": 7,
-      "legal build-sheet owner proof": 7,
+      "legal build-sheet owner proof": 8,
       "legal creation owner proof": 1
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 8,
+      "not-real-sheet-battle": 9,
       "real-sheet-battle": 66
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
       "direct-character-build": 7,
-      "legal-creation-draft-finalize": 67
+      "legal-creation-draft-finalize": 68
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 59,
     "scenarioGroups": 412,
@@ -58295,13 +58321,13 @@
       "build-battle-sdk": 11,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 28,
-      "character-sheet-sdk": 7,
+      "character-sheet-sdk": 6,
       "explicit-closure": 60,
       "feature-owner-review": 4,
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 73,
+      "seed-present": 74,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -64131,61 +64157,6 @@
     },
     {
       "candidateUnitIds": [
-        "barbarian_unarmored_defense"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Barbarian"
-      ],
-      "groupId": "l15-sdk-raw-03:character-sheet-sdk:barbarian-unarmored-defense",
-      "lane": "character-sheet-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-sheet"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"character-sheet-sdk\",\"barbarian_unarmored_defense\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Barbarian.md:80"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "barbarian_unarmored_defense",
-          "className": "Barbarian",
-          "concept": "Barbarian Unarmored Defense",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-sheet",
-          "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 83,
-            "lineStart": 80,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Barbarian Unarmored Defense"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create the sheet through the build path and assert the SRD-facing resource, rest, recovery, derived stat, or persistent sheet projection at the sheet owner.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
         "monk_unarmored_defense"
       ],
       "categories": [
@@ -65112,6 +65083,62 @@
       ],
       "sampleConcepts": [
         "Barbarian Rage"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "barbarian_unarmored_defense"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Barbarian"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-barbarian-barbarian-unarmored-defense",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-sheet"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Barbarian:barbarian_unarmored_defense\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Barbarian.md:80",
+        ".references/srd-5.2.1/Classes/Barbarian.md:80-82"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "barbarian_unarmored_defense",
+          "className": "Barbarian",
+          "concept": "Barbarian Unarmored Defense",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-sheet",
+          "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 83,
+            "lineStart": 80,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Barbarian Unarmored Defense"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -87953,6 +87980,49 @@
         "snapshotCombatant(fixture.state, barbarianId)",
         "armorClass: 16",
         "attackSubject(fixture.state, barbarianId, \"Longsword\")"
+      ]
+    },
+    {
+      "candidateUnitId": "barbarian_unarmored_defense",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:80-82"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const barbarianBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_barbarian\"",
+            "\"class_skill_proficiency_choice\"",
+            "\"barbarian_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_barbarian\", \"class_equipment_choice\", \"option_b\")",
+            "legalAnyUnitChoice(\"class_barbarian\", \"equipment_purchase\")",
+            "legalAnyLoadoutChoice(\"equipment_shield\", \"shield\")",
+            "legalAnyLoadoutChoice(\"weapon_longsword\", \"weapon\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+      "rowKey": "level-1:Barbarian:barbarian_unarmored_defense",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-barbarian-unarmored-defense-sheet\"",
+        "barbarianBuildSheetDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "characterSheetArmorClassState({",
+        "source: \"unarmored_defense\"",
+        "sourceUnitId: \"barbarian_unarmored_defense\"",
+        "abilityModifiers: [\"dex\", \"con\"]",
+        "currentArmorClass(armorClassState)",
+        "toBe(16)"
       ]
     },
     {

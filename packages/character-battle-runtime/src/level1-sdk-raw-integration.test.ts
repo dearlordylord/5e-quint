@@ -52,6 +52,7 @@ import {
   type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
 import {
+  characterSheetArmorClassState,
   characterSheetResources,
   characterSheetPactSlots,
   characterSheetSpellSlots,
@@ -59,6 +60,7 @@ import {
   finishLongRest,
   startLongRest,
 } from "@dnd/character-sheet-runtime";
+import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   elapsedTimeTicksFromHours,
@@ -573,6 +575,43 @@ describe("level 1 SDK RAW integration", () => {
         actorId: barbarianId,
       },
     );
+  });
+
+  test("Barbarian Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-barbarian-unarmored-defense-sheet",
+      draftPlan: barbarianBuildSheetDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-barbarian-unarmored-defense-sheet",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(fixture.sheet.build).toEqual(fixture.build);
+
+    const armorClassState = requireRight(
+      characterSheetArmorClassState({
+        build: fixture.sheet.build,
+        unitLibrary,
+      }),
+    );
+    expect(armorClassState.base).toMatchObject({
+      kind: "ability_sum",
+      source: "unarmored_defense",
+      sourceUnitId: "barbarian_unarmored_defense",
+      abilityModifiers: ["dex", "con"],
+    });
+    expect(armorClassState.bonuses).toContainEqual({
+      kind: "shield",
+      bonus: 2,
+      handUse: "shield",
+      trainingRequired: "shield",
+      sourceUnitId: "equipment_shield",
+    });
+    expect(currentArmorClass(armorClassState)).toBe(16);
   });
 
   test("legal Fighter source fixture creates a level 1 sheet and battle combatant", () => {

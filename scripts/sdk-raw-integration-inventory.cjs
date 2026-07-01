@@ -101,7 +101,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 208;
-const expectedLevelOneTwoSeedScenarioRows = 74;
+const expectedLevelOneTwoSeedScenarioRows = 75;
 const handBuiltSourceSeedRowIds = new Set([
   "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
   "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -330,6 +330,21 @@ const barbarianBuildBattleScenarioRows = [
   helperNeedles: barbarianBuildSheetScenarioHelperNeedles,
   ...row,
 }));
+const barbarianUnarmoredDefenseSheetScenarioLabel =
+  "level1-sdk-raw-integration: Barbarian Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet";
+const barbarianUnarmoredDefenseSheetScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-barbarian-unarmored-defense-sheet"',
+  "barbarianBuildSheetDraftPlan",
+  'battle: { tag: "withoutBattle" }',
+  "fixture.sheet.build",
+  "characterSheetArmorClassState({",
+  'source: "unarmored_defense"',
+  'sourceUnitId: "barbarian_unarmored_defense"',
+  'abilityModifiers: ["dex", "con"]',
+  "currentArmorClass(armorClassState)",
+  "toBe(16)",
+];
 const barbarianBuildSheetScenarioRows = [
   {
     rowId:
@@ -381,6 +396,19 @@ const barbarianBuildSheetScenarioRows = [
 const seededSdkScenarioRows = [
   ...barbarianBuildSheetScenarioRows,
   ...barbarianBuildBattleScenarioRows,
+  {
+    candidateUnitId: "barbarian_unarmored_defense",
+    className: "Barbarian",
+    levelBand: "level-1",
+    label: barbarianUnarmoredDefenseSheetScenarioLabel,
+    path: barbarianBuildSheetScenarioPath,
+    rowId:
+      "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:80-82"],
+    sourceProof: "legal-build-sheet-owner",
+    tracerNeedles: barbarianUnarmoredDefenseSheetScenarioNeedles,
+    helperNeedles: barbarianBuildSheetScenarioHelperNeedles,
+  },
   {
     candidateUnitId: "barbarian_rage",
     className: "Barbarian",
