@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 144 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 434 |
+| sdk-scenario-needed | 433 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 70 |
+| seed-scenario-present | 71 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -88,14 +88,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | battle-spell-sdk | 83 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
-| character-creation-sdk | 29 |
+| character-creation-sdk | 28 |
 | character-sheet-sdk | 7 |
 | explicit-closure | 60 |
 | feature-owner-review | 4 |
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
-| seed-present | 70 |
+| seed-present | 71 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -158,6 +158,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts` / `level-1:Monk:monk_martial_arts`: level1-sdk-raw-integration: Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity
 - `srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack` / `level-1:Rogue:rogue_sneak_attack`: level1-sdk-raw-integration: Rogue Sneak Attack projects as a level-1 Dagger damage rider and records once-per-turn use
 - `srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery` / `level-1:Sorcerer:sorcerer_innate_sorcery`: level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses
+- `srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic` / `level-1:Warlock:class_warlock`: level1-sdk-raw-integration: Warlock Pact Magic creation finalizes level-1 cantrips, prepared spells, and Pact Slots
 - `srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery` / `spell-level-0:Bard:vicious_mockery`: level1-sdk-raw-integration: Bard Vicious Mockery cantrip resolves from a level-1 sheet as a Wisdom save with Psychic damage and next Attack Roll Disadvantage
 - `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers` / `spell-level-1:Bard:dissonant_whispers`: level1-sdk-raw-integration: Bard Dissonant Whispers resolves from a level-1 sheet as a Wisdom save with Psychic damage and forced Reaction movement
 - `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash` / `spell-level-0:Sorcerer:acid_splash`: level1-sdk-raw-integration: Sorcerer and Wizard Acid Splash cantrips resolve from level-1 sheets as a point-origin Sphere Dexterity save without spending slots
@@ -236,8 +237,8 @@ Rows/groups assigned: 400/207.
 | --- | --- | ---: | ---: | --- |
 | closure-review-row | closure-review-needed | 71 | 22 | spell-effect-owner-review |
 | explicit-closure-row | explicit-closure-needed | 24 | 24 | explicit-closure |
-| seed-row | seed-scenario-present | 64 | 64 | seed-present |
-| source-row | sdk-scenario-needed | 241 | 97 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
+| seed-row | seed-scenario-present | 65 | 65 | seed-present |
+| source-row | sdk-scenario-needed | 240 | 96 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
 
 | Lane | SDK disposition | Row family | Rows | Groups | Task family | Owner tasks | Follow-up tasks |
 | --- | --- | --- | ---: | ---: | --- | --- | --- |
@@ -245,11 +246,11 @@ Rows/groups assigned: 400/207.
 | battle-spell-sdk | sdk-scenario-needed | source-row | 83 | 32 | battle-spell-sdk | `L12-SH11-BATTLE-SPELL-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | build-battle-sdk | sdk-scenario-needed | source-row | 17 | 12 | build-battle-sdk | `L12-SH07-BUILD-BATTLE-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | build-sheet-sdk | sdk-scenario-needed | source-row | 100 | 12 | build-sheet-sdk | `L12-SH06-BUILD-SHEET-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| character-creation-sdk | sdk-scenario-needed | source-row | 15 | 15 | character-creation-sdk | `L12-SH05-CREATION-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| character-creation-sdk | sdk-scenario-needed | source-row | 14 | 14 | character-creation-sdk | `L12-SH05-CREATION-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | character-sheet-sdk | sdk-scenario-needed | source-row | 7 | 7 | character-sheet-sdk | `L12-SH08-SHEET-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | explicit-closure | explicit-closure-needed | explicit-closure-row | 24 | 24 | explicit-closure | `L12-SH04-GROUPING-GENERATOR-GATE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | multi-owner-feature-sdk | sdk-scenario-needed | source-row | 6 | 6 | multi-owner-feature-sdk | `L12-SH12-MULTI-OWNER-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| seed-present | seed-scenario-present | seed-row | 64 | 64 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| seed-present | seed-scenario-present | seed-row | 65 | 65 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | sheet-spell-access-sdk | sdk-scenario-needed | source-row | 7 | 7 | sheet-spell-access-sdk | `L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | spell-effect-owner-review | closure-review-needed | closure-review-row | 71 | 22 | spell-effect-owner-review | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
 
@@ -265,17 +266,19 @@ Character Sheet and battle handoff.
 | --- | ---: |
 | already legal creation path | 57 |
 | hand-built build needing migration | 7 |
+| legal creation owner proof | 1 |
 
 | Source build path | Rows |
 | --- | ---: |
 | direct-character-build | 7 |
-| legal-creation-draft-finalize | 57 |
+| legal-creation-draft-finalize | 58 |
 
 | Real sheet/battle handoff | Rows |
 | --- | ---: |
+| not-real-sheet-battle | 1 |
 | real-sheet-battle | 64 |
 
-Whole-width source lifecycle seed rows: 57/64.
+Whole-width source lifecycle seed rows: 57/65.
 
 | Band | Class | Unit | Row kind | Classification | Source build path | Real sheet/battle handoff | Whole-width source lifecycle proof | Next action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -326,6 +329,7 @@ Whole-width source lifecycle seed rows: 57/64.
 | spell-level-1 | Sorcerer | `magic_missile` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Sorcerer | `ray_of_sickness` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Sorcerer | `thunderwave` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| level-1 | Warlock | `class_warlock` | class-feature-grant | legal creation owner proof | legal-creation-draft-finalize | no | no | Keep as source creation seed; add sheet or battle assertions only for rows owned by those boundaries. |
 | spell-level-0 | Warlock | `chill_touch` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Warlock | `eldritch_blast` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Warlock | `poison_spray` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |

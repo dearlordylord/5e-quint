@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L12-SH05-CREATION-SDK-FIRST-SLICE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the first character-creation SDK slice"
     },
     {
@@ -204,9 +204,9 @@ The frozen L1/L2 source harness denominator comes from
 | --- | ---: |
 | L1/L2 diagnostic product-readiness rows | 400 |
 | L1/L2 scenario groups | 207 |
-| Existing L1/L2 seed rows | 64 |
-| `sdk-scenario-needed` rows | 241 |
-| `seed-scenario-present` rows | 64 |
+| Existing L1/L2 seed rows | 65 |
+| `sdk-scenario-needed` rows | 240 |
+| `seed-scenario-present` rows | 65 |
 | `explicit-closure-needed` rows | 24 |
 | `closure-review-needed` rows | 71 |
 
@@ -215,7 +215,7 @@ Campaign assignment by lane:
 | Lane | Rows | Groups | Disposition | Initial owner in this plan |
 | --- | ---: | ---: | --- | --- |
 | fixture/enabling | 0 | 0 | enabling work | Tasks 1-4 |
-| character-creation-sdk | 15 | 15 | `sdk-scenario-needed` | Task 5, then Task 15 follow-ups |
+| character-creation-sdk | 14 | 14 | `sdk-scenario-needed` | Task 15 follow-ups |
 | build-sheet-sdk | 100 | 12 | `sdk-scenario-needed` | Task 6, then Task 15 follow-ups |
 | build-battle-sdk | 17 | 12 | `sdk-scenario-needed` | Task 7, then Task 15 follow-ups |
 | character-sheet-sdk | 7 | 7 | `sdk-scenario-needed` | Task 8, then Task 15 follow-ups |
@@ -223,14 +223,15 @@ Campaign assignment by lane:
 | battle-feature-sdk | 6 | 6 | `sdk-scenario-needed` | Task 10, then Task 15 follow-ups |
 | battle-spell-sdk | 83 | 32 | `sdk-scenario-needed` | Task 11, then Task 15 follow-ups |
 | multi-owner-feature-sdk | 6 | 6 | `sdk-scenario-needed` | Task 12, then Task 15 follow-ups |
-| seed-present | 64 | 64 | `seed-scenario-present` | Task 3 migration audit, Tasks 17-23 seed migrations, then Task 15 follow-ups |
+| seed-present | 65 | 65 | `seed-scenario-present` | Task 3 migration audit, Tasks 17-23 seed migrations, Task 5 creation-owner seed, then Task 15 follow-ups |
 | explicit-closure | 24 | 24 | `explicit-closure-needed` | Task 4 grouping gate and Task 15 follow-ups |
 | spell-effect-owner-review | 71 | 22 | `closure-review-needed` | Task 13, then Task 15 follow-ups |
 
 Every L1/L2 row in the four active dispositions is assigned by the table above.
-Tasks 5-14 are first representative slices. Task 3's seed audit found 57
-whole-width lifecycle seed rows and seven direct-build seed rows needing
-migration; Tasks 17-23 carry those row-specific migrations. Task 15 must
+Tasks 6-14 are remaining first representative slices. The campaign now has 65
+seed-present rows: 57 whole-width lifecycle seed rows, seven direct-build seed
+rows needing migration, and one character-creation owner proof. Tasks 17-23
+carry the row-specific direct-build migrations. Task 15 must
 preserve the remaining desired work as concrete Ralph tasks in the index, DAG,
 and task details.
 
@@ -338,9 +339,9 @@ Reviewer-loop convergence:
 | ---: | --- | --- | --- | --- | --- |
 | 1 | L12-SH01-DENOMINATOR-FORMAT-GATE - Verify the L1/L2 source denominator and Ralph format | done | none | fixture/enabling | Static denominator and plan-format verification, with durable corrections if inventory drifted. |
 | 2 | L12-SH02-LEGAL-FIXTURE-SEAM - Implement the legal source-side lifecycle fixture seam | done | L12-SH01-DENOMINATOR-FORMAT-GATE | fixture/enabling | Shared legal fixture helpers for L1/L2 source lifecycle scenarios. |
-| 3 | L12-SH03-SEED-MIGRATION-AUDIT - Audit existing seed rows for legal lifecycle proof | done | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH02-LEGAL-FIXTURE-SEAM | seed-present | Classification of all 64 L1/L2 seed rows and first safe migrations if small. |
+| 3 | L12-SH03-SEED-MIGRATION-AUDIT - Audit existing seed rows for legal lifecycle proof | done | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH02-LEGAL-FIXTURE-SEAM | seed-present | Classification of the original 64 L1/L2 seed rows and first safe migrations if small. |
 | 4 | L12-SH04-GROUPING-GENERATOR-GATE - Generate the L1/L2 campaign grouping gate | done | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH03-SEED-MIGRATION-AUDIT | fixture/enabling | Generated or checked group assignment evidence for 400 rows and 207 groups. |
-| 5 | L12-SH05-CREATION-SDK-FIRST-SLICE - Add the first character-creation SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | character-creation-sdk | One legal creation scenario group using the shared fixture seam. |
+| 5 | L12-SH05-CREATION-SDK-FIRST-SLICE - Add the first character-creation SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | character-creation-sdk | Warlock Pact Magic creation scenario group using the shared fixture seam. |
 | 6 | L12-SH06-BUILD-SHEET-FIRST-SLICE - Add the first build-to-sheet SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | build-sheet-sdk | One class-wide build-sheet projection group. |
 | 7 | L12-SH07-BUILD-BATTLE-FIRST-SLICE - Add the first build-to-battle SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | build-battle-sdk | One build-battle handoff scenario group. |
 | 8 | L12-SH08-SHEET-SDK-FIRST-SLICE - Add the first character-sheet SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | character-sheet-sdk | One sheet-owned runtime projection scenario group. |
@@ -382,7 +383,7 @@ Research required before editing:
   headings, runnable statuses, blocked metadata, DAG auto-unblock rules, and
   `Plan Impact` requirements.
 - Recompute the L1/L2 denominator from the inventory: 400 rows, 207 scenario
-  groups, 64 seed rows, and lane assignments.
+  groups, current seed rows, and lane assignments.
 - Confirm the denominator still contains only `sdk-scenario-needed`,
   `seed-scenario-present`, `explicit-closure-needed`, and
   `closure-review-needed`.
@@ -481,7 +482,7 @@ Input:
 
 Research required before editing:
 
-- Enumerate the 64 L1/L2 `seed-scenario-present` rows.
+- Enumerate the original 64 L1/L2 `seed-scenario-present` rows.
 - Classify each seed as `already legal creation path`,
   `hand-built build needing migration`, `lower-level focused seed only`, or
   `should remain explicit closure`.
@@ -497,7 +498,7 @@ Output:
 
 Acceptance:
 
-- Existing 64 seed rows are not double-counted as whole-width source lifecycle
+- Original 64 seed rows are not double-counted as whole-width source lifecycle
   proof unless they use legal creation and real sheet/battle handoff.
 - Direct `CharacterBuild` seed helpers are identified for migration or retained
   only as legacy focused seeds with an explicit reason.
@@ -563,7 +564,7 @@ Plan Impact:
 
 ### Task 5 - L12-SH05-CREATION-SDK-FIRST-SLICE
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -1455,8 +1456,8 @@ with non-mutating checks:
   sections.
 - Confirm no task is blocked without `Blocker Type` and `Blocker Detail`.
 - Confirm the denominator table assigns all 400 L1/L2 rows:
-  - 241 `sdk-scenario-needed`
-  - 64 `seed-scenario-present`
+  - 240 `sdk-scenario-needed`
+  - 65 `seed-scenario-present`
   - 24 `explicit-closure-needed`
   - 71 `closure-review-needed`
 - Run `git diff --check`.

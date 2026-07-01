@@ -101,7 +101,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 207;
-const expectedLevelOneTwoSeedScenarioRows = 64;
+const expectedLevelOneTwoSeedScenarioRows = 65;
 const handBuiltSourceSeedRowIds = new Set([
   "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
   "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -318,6 +318,58 @@ const seededSdkScenarioRows = [
     rowId:
       "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
     tracerNeedles: ["sorcererInnateSorceryUnitId", "sorcerousBurstSpellId"],
+  },
+  {
+    candidateUnitId: "class_warlock",
+    className: "Warlock",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Warlock Pact Magic creation finalizes level-1 cantrips, prepared spells, and Pact Slots",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    sourceProof: "legal-creation-owner",
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Warlock.md:68-91",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-25",
+    ],
+    rowId:
+      "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-warlock-pact-magic-creation"',
+      "warlockPactMagicCreationDraftPlan",
+      'battle: { tag: "withoutBattle" }',
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+      'sourceUnitId: "class_warlock"',
+      'spellcastingAbility: "cha"',
+      "cantrips: [eldritchBlastSpellId, \"prestidigitation\"]",
+      "preparedSpells: [hexSpellId, \"charm_person\"]",
+      'spellcastingFocuses: ["arcane_focus"]',
+      "pactMagic: {",
+      'kind: "pactMagic"',
+      "slotLevel: 1",
+      "count: 1",
+    ],
+    helperNeedles: [
+      {
+        anchor: "const warlockPactMagicCreationDraftPlan =",
+        needles: [
+          'label: "Warlock Pact Magic creation"',
+          'classUnitId: "class_warlock"',
+          "level: 1",
+          "legalUnitChoice(",
+          '"class_warlock"',
+          '"class_cantrip_choices"',
+          "eldritchBlastSpellId",
+          '"prestidigitation"',
+          '"class_prepared_spell_choices"',
+          "hexSpellId",
+          '"charm_person"',
+          '"warlock_eldritch_invocations"',
+          '"eldritch_invocations"',
+          '"eldritch_mind"',
+        ],
+      },
+    ],
   },
   {
     candidateUnitId: "vicious_mockery",
@@ -5363,6 +5415,9 @@ function sourceBuildPathForSeed(seed) {
 }
 
 function seedMigrationClassification(seed, usesRealSheetBattleHandoff) {
+  if (seed.sourceProof === "legal-creation-owner") {
+    return "legal creation owner proof";
+  }
   if (!usesRealSheetBattleHandoff) {
     return (seed.evidenceNeedles ?? []).length > 0
       ? "lower-level focused seed only"
@@ -5374,6 +5429,9 @@ function seedMigrationClassification(seed, usesRealSheetBattleHandoff) {
 }
 
 function seedMigrationAuditReason(classification) {
+  if (classification === "legal creation owner proof") {
+    return "The represented source character build is finalized through character creation at the row owner boundary; battle handoff is not required for this owner.";
+  }
   if (classification === "already legal creation path") {
     return "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.";
   }
@@ -5387,6 +5445,9 @@ function seedMigrationAuditReason(classification) {
 }
 
 function seedMigrationNextAction(classification) {
+  if (classification === "legal creation owner proof") {
+    return "Keep as source creation seed; add sheet or battle assertions only for rows owned by those boundaries.";
+  }
   if (classification === "already legal creation path") {
     return "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.";
   }
@@ -5425,6 +5486,9 @@ function buildLevelOneTwoSeedMigrationAudit(seedScenarioSources, miningRows) {
         candidateUnitId: seed.candidateUnitId,
         classification,
         sourceBuildPath: sourceBuildPathForSeed(seed),
+        ...(seed.sourceProof === undefined
+          ? {}
+          : { sourceProof: seed.sourceProof }),
         usesRealSheetBattleHandoff,
         wholeWidthSourceLifecycleProof,
         reason: seedMigrationAuditReason(classification),
@@ -5560,9 +5624,10 @@ function seedHelperSourceText(tracerText, anchor) {
   const anchorIndex = tracerText.indexOf(anchor);
   if (anchorIndex === -1) return undefined;
   const rest = tracerText.slice(anchorIndex);
-  const endMatch = /\nfunction\s+\w|\ntype\s+\w|\nconst\s+\w|\nclass\s+\w/.exec(
-    rest.slice(1),
-  );
+  const endMatch =
+    /\nfunction\s+\w|\ntype\s+\w|\nconst\s+\w|\nclass\s+\w|\ndescribe\(/.exec(
+      rest.slice(1),
+    );
   return endMatch === null ? rest : rest.slice(0, endMatch.index + 1);
 }
 

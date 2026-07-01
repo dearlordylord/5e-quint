@@ -84,6 +84,7 @@ import {
   characterSheet,
   createLegalSourceCharacterFixture,
   damageRollFillWithGroups,
+  legalUnitChoice,
   monsterBattleInput,
   ordinaryAttackDamageFills,
   requireCharacterCombatant,
@@ -96,6 +97,7 @@ import {
   srdStatBlock,
   spellSlotActForProcedure,
   unitLibrary,
+  type LegalSourceCharacterDraftPlan,
 } from "./sdk-integration-test-support.ts";
 import { fighterLifecycleDraftPlan } from "./fighter-character-lifecycle-test-support.ts";
 
@@ -310,6 +312,66 @@ const animalFriendshipDurationTicks = requireRight(
 );
 const huntersMarkDurationTicks = requireRight(elapsedTimeTicksFromHours(1));
 
+const warlockPactMagicCreationDraftPlan = {
+  label: "Warlock Pact Magic creation",
+  classUnitId: "class_warlock",
+  level: 1,
+  backgroundUnitId: "background_criminal",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 8,
+    dex: 14,
+    con: 13,
+    int: 10,
+    wis: 12,
+    cha: 15,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_warlock",
+      "class_skill_proficiency_choice",
+      "arcana",
+      "history",
+    ),
+    legalUnitChoice(
+      "class_warlock",
+      "class_cantrip_choices",
+      eldritchBlastSpellId,
+      "prestidigitation",
+    ),
+    legalUnitChoice(
+      "class_warlock",
+      "class_prepared_spell_choices",
+      hexSpellId,
+      "charm_person",
+    ),
+    legalUnitChoice(
+      "warlock_eldritch_invocations",
+      "eldritch_invocations",
+      "eldritch_mind",
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_ability_score_increase",
+      "two_and_one:dex:con",
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_tool_choice",
+      "thieves_tools",
+    ),
+    legalUnitChoice("class_warlock", "class_equipment_choice", "option_b"),
+    legalUnitChoice(
+      "background_criminal",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalUnitChoice("class_warlock", "equipment_purchase", "weapon_dagger"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 describe("level 1 SDK RAW integration", () => {
   test("legal Fighter source fixture creates a level 1 sheet and battle combatant", () => {
     const fixture = createLegalSourceCharacterFixture({
@@ -344,6 +406,46 @@ describe("level 1 SDK RAW integration", () => {
     expect(
       requireCharacterCombatant(fixture.state, legalFighterId).origin.characterId,
     ).toBe("character:l1-sdk-legal-fighter");
+  });
+
+  test("Warlock Pact Magic creation finalizes level-1 cantrips, prepared spells, and Pact Slots", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-warlock-pact-magic-creation",
+      draftPlan: warlockPactMagicCreationDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-warlock-pact-magic-creation",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_warlock"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(fixture.build.spellcasting?.sources).toEqual([
+      {
+        sourceUnitId: "class_warlock",
+        spellcastingAbility: "cha",
+        cantrips: [eldritchBlastSpellId, "prestidigitation"],
+        spellbook: [],
+        preparedSpells: [hexSpellId, "charm_person"],
+        spellcastingFocuses: ["arcane_focus"],
+      },
+    ]);
+    expect(fixture.build.spellcasting?.slotPools).toEqual({
+      pactMagic: {
+        kind: "pactMagic",
+        slotLevel: 1,
+        count: 1,
+      },
+    });
   });
 
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
