@@ -108,7 +108,6 @@ const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 210;
 const expectedLevelOneTwoSeedScenarioRows = 80;
 const handBuiltSourceSeedRowIds = new Set([
-  "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
   "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
   "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
   "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
@@ -534,7 +533,16 @@ const seededSdkScenarioRows = [
       "level1-sdk-raw-integration: Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity",
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId: "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
-    tracerNeedles: ["monkMartialArtsUnitId"],
+    sourceProof: legalBuildBattleHandoffSourceProof,
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-martial-arts"',
+      "monkMartialArtsDraftPlan",
+      'battleIdText: "battle:l1-sdk-martial-arts"',
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+      "fixture.sheet.build",
+      "monkMartialArtsUnitId",
+    ],
   },
   {
     candidateUnitId: "rogue_sneak_attack",

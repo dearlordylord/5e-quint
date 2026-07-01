@@ -281,22 +281,22 @@ Character Sheet and battle handoff.
 
 | Classification | Rows |
 | --- | ---: |
-| already legal creation path | 66 |
-| hand-built build needing migration | 4 |
+| already legal creation path | 67 |
+| hand-built build needing migration | 3 |
 | legal build-sheet owner proof | 9 |
 | legal creation owner proof | 1 |
 
 | Source build path | Rows |
 | --- | ---: |
-| direct-character-build | 4 |
-| legal-creation-draft-finalize | 76 |
+| direct-character-build | 3 |
+| legal-creation-draft-finalize | 77 |
 
 | Real sheet/battle handoff | Rows |
 | --- | ---: |
 | not-real-sheet-battle | 10 |
 | real-sheet-battle | 70 |
 
-Whole-width source lifecycle seed rows: 66/80.
+Whole-width source lifecycle seed rows: 67/80.
 
 | Band | Class | Unit | Row kind | Classification | Source build path | Real sheet/battle handoff | Whole-width source lifecycle proof | Next action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -337,7 +337,7 @@ Whole-width source lifecycle seed rows: 66/80.
 | spell-level-1 | Druid | `cure_wounds` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Druid | `healing_word` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | level-1 | Fighter | `fighter_second_wind` | class-feature-grant | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
-| level-1 | Monk | `monk_martial_arts` | class-feature-grant | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
+| level-1 | Monk | `monk_martial_arts` | class-feature-grant | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Paladin | `bless` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Paladin | `cure_wounds` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Paladin | `shield_of_faith` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |

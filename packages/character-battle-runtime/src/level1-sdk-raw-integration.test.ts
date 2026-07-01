@@ -558,6 +558,54 @@ const bardicInspirationDraftPlan = {
   label: "Bardic Inspiration battle feature",
 } as const satisfies LegalSourceCharacterDraftPlan;
 
+const monkMartialArtsDraftPlan = {
+  label: "Monk Martial Arts battle feature",
+  classUnitId: "class_monk",
+  level: 1,
+  backgroundUnitId: "background_soldier",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 10,
+    dex: 14,
+    con: 13,
+    int: 8,
+    wis: 15,
+    cha: 12,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_monk",
+      "class_skill_proficiency_choice",
+      "acrobatics",
+      "stealth",
+    ),
+    legalUnitChoice(
+      "class_monk",
+      "class_tool_proficiency_choice",
+      "tool:tool_lute",
+    ),
+    legalUnitChoice(
+      "background_soldier",
+      "background_ability_score_increase",
+      "two_and_one:dex:con",
+    ),
+    legalUnitChoice(
+      "background_soldier",
+      "background_tool_choice",
+      "tool_dice_set",
+    ),
+    legalUnitChoice("class_monk", "class_equipment_choice", "option_b"),
+    legalUnitChoice(
+      "background_soldier",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalUnitChoice("class_monk", "equipment_purchase", "weapon_dagger"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 describe("level 1 SDK RAW integration", () => {
   test("Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {
     const fixture = createLegalSourceCharacterFixture({
@@ -2881,34 +2929,35 @@ describe("level 1 SDK RAW integration", () => {
   });
 
   test("Monk Martial Arts projects a level-1 Bonus Action Unarmed Strike using the Martial Arts die and Dexterity", () => {
-    const state = battleFromSheets({
-      battleIdText: "battle:l1-sdk-martial-arts",
-      characters: [
-        characterSheet({
-          characterIdText: "character:l1-sdk-martial-arts",
-          build: levelOneSingleClassBuild({
-            classUnitId: "class_monk",
-            abilityScores: {
-              str: 10,
-              dex: 16,
-              con: 14,
-              int: 10,
-              wis: 16,
-              cha: 10,
-            },
-          }),
-          combatantId: monkId,
-          initiative: 20,
-        }),
-      ],
-      monsters: [
-        monsterBattleInput(
-          monsterId,
-          10,
-          srdStatBlock("stat_block_goblin_warrior"),
-        ),
-      ],
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-martial-arts",
+      draftPlan: monkMartialArtsDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-martial-arts",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l1-sdk-martial-arts",
+        combatantId: monkId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_goblin_warrior"),
+          ),
+        ],
+      },
     });
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.sheet.build).toEqual(fixture.build);
+
+    const state = fixture.state;
     expect(
       requireCharacterCombatant(state, monkId).origin.characterUnitRefs,
     ).toEqual(
