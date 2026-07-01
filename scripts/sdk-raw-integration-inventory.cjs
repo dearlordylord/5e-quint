@@ -3935,6 +3935,70 @@ const seededSdkScenarioRows = [
       '"class_wizard"',
     ],
   },
+  {
+    candidateUnitId: "hypnotic_pattern",
+    className: "Bard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
+    tracerNeedles: [
+      "hypnoticPatternSpellId",
+      "hypnoticPatternBardId",
+      "levelFiveBardBuild",
+      '"class_bard"',
+    ],
+  },
+  {
+    candidateUnitId: "hypnotic_pattern",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
+    tracerNeedles: [
+      "hypnoticPatternSpellId",
+      "hypnoticPatternSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "hypnotic_pattern",
+    className: "Warlock",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
+    tracerNeedles: [
+      "hypnoticPatternSpellId",
+      "hypnoticPatternWarlockId",
+      "levelFiveWarlockBuild",
+      '"class_warlock"',
+    ],
+  },
+  {
+    candidateUnitId: "hypnotic_pattern",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",
+    tracerNeedles: [
+      "hypnoticPatternSpellId",
+      "hypnoticPatternWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
 ];
 
 function animalFriendshipSdkHelperNeedles() {

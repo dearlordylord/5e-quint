@@ -627,6 +627,10 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Hypnotic Pattern",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -634,7 +638,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 222,
         "lineStart": 222,
@@ -4696,6 +4700,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Hypnotic Pattern",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -4703,7 +4711,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 310,
         "lineStart": 310,
@@ -5567,6 +5575,10 @@
       "category": "spell Unit pressure",
       "className": "Warlock",
       "concept": "Warlock spell list Hypnotic Pattern",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -5574,7 +5586,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 385,
         "lineStart": 385,
@@ -6628,6 +6640,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Hypnotic Pattern",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -6635,7 +6651,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 249,
         "lineStart": 249,
@@ -7533,115 +7549,6 @@
     }
   ],
   "level5ScenarioGroups": [
-    {
-      "candidateUnitIds": [
-        "hypnotic_pattern"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Sorcerer",
-        "Warlock",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:hypnotic-pattern",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"hypnotic_pattern\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:222",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:310",
-        ".references/srd-5.2.1/Classes/Warlock.md:385",
-        ".references/srd-5.2.1/Classes/Wizard.md:249"
-      ],
-      "rowCount": 4,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "hypnotic_pattern",
-          "className": "Bard",
-          "concept": "Bard spell list Hypnotic Pattern",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 222,
-            "lineStart": 222,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "hypnotic_pattern",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Hypnotic Pattern",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 310,
-            "lineStart": 310,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "hypnotic_pattern",
-          "className": "Warlock",
-          "concept": "Warlock spell list Hypnotic Pattern",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 385,
-            "lineStart": 385,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "candidateUnitId": "hypnotic_pattern",
-          "className": "Wizard",
-          "concept": "Wizard spell list Hypnotic Pattern",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 249,
-            "lineStart": 249,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Hypnotic Pattern",
-        "Sorcerer spell list Hypnotic Pattern",
-        "Warlock spell list Hypnotic Pattern",
-        "Wizard spell list Hypnotic Pattern"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
     {
       "candidateUnitIds": [
         "lightning_bolt"
@@ -11081,6 +10988,61 @@
     },
     {
       "candidateUnitIds": [
+        "hypnotic_pattern"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-bard-hypnotic-pattern",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Bard:hypnotic_pattern\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:222"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "hypnotic_pattern",
+          "className": "Bard",
+          "concept": "Bard spell list Hypnotic Pattern",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 222,
+            "lineStart": 222,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Hypnotic Pattern"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "dispel_magic"
       ],
       "categories": [
@@ -11521,6 +11483,61 @@
     },
     {
       "candidateUnitIds": [
+        "hypnotic_pattern"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-sorcerer-hypnotic-pattern",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Sorcerer:hypnotic_pattern\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:310"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "hypnotic_pattern",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Hypnotic Pattern",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 310,
+            "lineStart": 310,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Hypnotic Pattern"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "counterspell"
       ],
       "categories": [
@@ -11677,6 +11694,61 @@
       ],
       "sampleConcepts": [
         "Warlock spell list Fly"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "hypnotic_pattern"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Warlock"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-warlock-hypnotic-pattern",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Warlock:hypnotic_pattern\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Warlock.md:385"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "hypnotic_pattern",
+          "className": "Warlock",
+          "concept": "Warlock spell list Hypnotic Pattern",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 385,
+            "lineStart": 385,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Warlock spell list Hypnotic Pattern"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -12007,6 +12079,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Haste"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "hypnotic_pattern"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-wizard-hypnotic-pattern",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Wizard:hypnotic_pattern\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:249"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "hypnotic_pattern",
+          "className": "Wizard",
+          "concept": "Wizard spell list Hypnotic Pattern",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 249,
+            "lineStart": 249,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Hypnotic Pattern"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -18552,6 +18679,10 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Hypnotic Pattern",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -18559,7 +18690,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 222,
         "lineStart": 222,
@@ -41397,6 +41528,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Hypnotic Pattern",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -41404,7 +41539,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 310,
         "lineStart": 310,
@@ -44579,6 +44714,10 @@
       "category": "spell Unit pressure",
       "className": "Warlock",
       "concept": "Warlock spell list Hypnotic Pattern",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -44586,7 +44725,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 385,
         "lineStart": 385,
@@ -50503,6 +50642,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Hypnotic Pattern",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -50510,7 +50653,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 249,
         "lineStart": 249,
@@ -57274,21 +57417,21 @@
       "closure-review-needed": 36,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 43,
-      "sdk-scenario-needed": 17,
+      "sdk-scenario-needed": 13,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 24
+      "seed-scenario-present": 28
     },
-    "level5ScenarioGroups": 84,
+    "level5ScenarioGroups": 87,
     "level5ScenarioGroupsByLane": {
-      "battle-spell-sdk": 6,
+      "battle-spell-sdk": 5,
       "explicit-closure": 12,
       "feature-owner-review": 2,
       "future-owner-before-sdk": 22,
       "owner-review": 6,
-      "seed-present": 24,
+      "seed-present": 28,
       "spell-effect-owner-review": 12
     },
-    "level5SeedScenarioRows": 24,
+    "level5SeedScenarioRows": 28,
     "levelOneFiveMinedRows": 770,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -57337,16 +57480,16 @@
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 416,
+      "sdk-scenario-needed": 412,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 88,
+      "seed-scenario-present": 92,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 423,
+    "scenarioGroups": 426,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 77,
+      "battle-spell-sdk": 76,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -57356,7 +57499,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 88,
+      "seed-present": 92,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -57366,7 +57509,7 @@
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
-      "L15-SDK-RAW-07": 84
+      "L15-SDK-RAW-07": 87
     }
   },
   "scenarioGroups": [
@@ -81386,115 +81529,6 @@
     },
     {
       "candidateUnitIds": [
-        "hypnotic_pattern"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Sorcerer",
-        "Warlock",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:hypnotic-pattern",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"hypnotic_pattern\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:222",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:310",
-        ".references/srd-5.2.1/Classes/Warlock.md:385",
-        ".references/srd-5.2.1/Classes/Wizard.md:249"
-      ],
-      "rowCount": 4,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "hypnotic_pattern",
-          "className": "Bard",
-          "concept": "Bard spell list Hypnotic Pattern",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 222,
-            "lineStart": 222,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "hypnotic_pattern",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Hypnotic Pattern",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 310,
-            "lineStart": 310,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "hypnotic_pattern",
-          "className": "Warlock",
-          "concept": "Warlock spell list Hypnotic Pattern",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 385,
-            "lineStart": 385,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "candidateUnitId": "hypnotic_pattern",
-          "className": "Wizard",
-          "concept": "Wizard spell list Hypnotic Pattern",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 249,
-            "lineStart": 249,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Hypnotic Pattern",
-        "Sorcerer spell list Hypnotic Pattern",
-        "Warlock spell list Hypnotic Pattern",
-        "Wizard spell list Hypnotic Pattern"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "lightning_bolt"
       ],
       "categories": [
@@ -84932,6 +84966,61 @@
     },
     {
       "candidateUnitIds": [
+        "hypnotic_pattern"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-bard-hypnotic-pattern",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Bard:hypnotic_pattern\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:222"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "hypnotic_pattern",
+          "className": "Bard",
+          "concept": "Bard spell list Hypnotic Pattern",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 222,
+            "lineStart": 222,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Hypnotic Pattern"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "dispel_magic"
       ],
       "categories": [
@@ -85372,6 +85461,61 @@
     },
     {
       "candidateUnitIds": [
+        "hypnotic_pattern"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-sorcerer-hypnotic-pattern",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Sorcerer:hypnotic_pattern\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:310"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "hypnotic_pattern",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Hypnotic Pattern",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 310,
+            "lineStart": 310,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Hypnotic Pattern"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "counterspell"
       ],
       "categories": [
@@ -85528,6 +85672,61 @@
       ],
       "sampleConcepts": [
         "Warlock spell list Fly"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "hypnotic_pattern"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Warlock"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-warlock-hypnotic-pattern",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Warlock:hypnotic_pattern\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Warlock.md:385"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "hypnotic_pattern",
+          "className": "Warlock",
+          "concept": "Warlock spell list Hypnotic Pattern",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 385,
+            "lineStart": 385,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Warlock spell list Hypnotic Pattern"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -85858,6 +86057,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Haste"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "hypnotic_pattern"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-wizard-hypnotic-pattern",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Wizard:hypnotic_pattern\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:249"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "hypnotic_pattern",
+          "className": "Wizard",
+          "concept": "Wizard spell list Hypnotic Pattern",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 249,
+            "lineStart": 249,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Hypnotic Pattern"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -92034,6 +92288,82 @@
       "tracerNeedles": [
         "glyphOfWardingSpellId",
         "glyphOfWardingWizardId",
+        "levelFiveWizardBuild",
+        "\"class_wizard\""
+      ]
+    },
+    {
+      "candidateUnitId": "hypnotic_pattern",
+      "className": "Bard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
+      "rowKey": "spell-level-3:Bard:hypnotic_pattern",
+      "tracerNeedles": [
+        "hypnoticPatternSpellId",
+        "hypnoticPatternBardId",
+        "levelFiveBardBuild",
+        "\"class_bard\""
+      ]
+    },
+    {
+      "candidateUnitId": "hypnotic_pattern",
+      "className": "Sorcerer",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
+      "rowKey": "spell-level-3:Sorcerer:hypnotic_pattern",
+      "tracerNeedles": [
+        "hypnoticPatternSpellId",
+        "hypnoticPatternSorcererId",
+        "levelFiveSorcererBuild",
+        "\"class_sorcerer\""
+      ]
+    },
+    {
+      "candidateUnitId": "hypnotic_pattern",
+      "className": "Warlock",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
+      "rowKey": "spell-level-3:Warlock:hypnotic_pattern",
+      "tracerNeedles": [
+        "hypnoticPatternSpellId",
+        "hypnoticPatternWarlockId",
+        "levelFiveWarlockBuild",
+        "\"class_warlock\""
+      ]
+    },
+    {
+      "candidateUnitId": "hypnotic_pattern",
+      "className": "Wizard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",
+      "rowKey": "spell-level-3:Wizard:hypnotic_pattern",
+      "tracerNeedles": [
+        "hypnoticPatternSpellId",
+        "hypnoticPatternWizardId",
         "levelFiveWizardBuild",
         "\"class_wizard\""
       ]

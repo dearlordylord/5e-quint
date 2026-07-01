@@ -113,6 +113,18 @@ const glyphOfWardingClericId = combatantId(
 const glyphOfWardingWizardId = combatantId(
   "combatant:l5-tracer-glyph-of-warding-wizard",
 );
+const hypnoticPatternBardId = combatantId(
+  "combatant:l5-tracer-hypnotic-pattern-bard",
+);
+const hypnoticPatternSorcererId = combatantId(
+  "combatant:l5-tracer-hypnotic-pattern-sorcerer",
+);
+const hypnoticPatternWarlockId = combatantId(
+  "combatant:l5-tracer-hypnotic-pattern-warlock",
+);
+const hypnoticPatternWizardId = combatantId(
+  "combatant:l5-tracer-hypnotic-pattern-wizard",
+);
 
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
@@ -128,12 +140,14 @@ const continualFlameSpellId = "continual_flame";
 const fireballSpellId = "fireball";
 const flySpellId = "fly";
 const glyphOfWardingSpellId = "glyph_of_warding";
+const hypnoticPatternSpellId = "hypnotic_pattern";
 const counterspellCastLevel = 3;
 const dispelMagicCastLevel = 3;
 const fireballCastLevel = 3;
 const flyCastLevel = 3;
 const hasteCastLevel = 3;
 const glyphOfWardingCastLevel = 3;
+const hypnoticPatternCastLevel = 3;
 const flySpeedFeet = 60;
 const magicMissileSpellId = "magic_missile";
 const magicMissileTriggerSlotLevel = 1;
@@ -170,6 +184,11 @@ type FlyClassAccessCase = {
   readonly build: CharacterBuild;
 };
 type GlyphOfWardingClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
+};
+type HypnoticPatternClassAccessCase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly casterId: CombatantId;
   readonly build: CharacterBuild;
@@ -595,7 +614,10 @@ describe("level 5 SDK tracer bullets", () => {
         }),
       ]);
 
-      const ended = breakBattleConcentration(resolved.state, hasteCase.casterId);
+      const ended = breakBattleConcentration(
+        resolved.state,
+        hasteCase.casterId,
+      );
       const lethargic = requireCombatant(ended, hasteCase.casterId);
 
       expect(hasCondition(lethargic.conditions, "incapacitated")).toBe(true);
@@ -1140,6 +1162,135 @@ describe("level 5 SDK tracer bullets", () => {
     }
   });
 
+  test("Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control", () => {
+    const hypnoticPatternCases = [
+      {
+        sourceUnitId: "class_bard",
+        casterId: hypnoticPatternBardId,
+        build: levelFiveBardBuild({
+          preparedSpells: [hypnoticPatternSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_sorcerer",
+        casterId: hypnoticPatternSorcererId,
+        build: levelFiveSorcererBuild({
+          preparedSpells: [hypnoticPatternSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_warlock",
+        casterId: hypnoticPatternWarlockId,
+        build: levelFiveWarlockBuild({
+          preparedSpells: [hypnoticPatternSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_wizard",
+        casterId: hypnoticPatternWizardId,
+        build: levelFiveWizardBuild({
+          preparedSpells: [hypnoticPatternSpellId],
+        }),
+      },
+    ] as const satisfies ReadonlyArray<HypnoticPatternClassAccessCase>;
+
+    for (const hypnoticPatternCase of hypnoticPatternCases) {
+      expectHypnoticPatternClassAccess(hypnoticPatternCase);
+
+      const state = battleFromSheets({
+        battleIdText: `battle:l5-tracer-hypnotic-pattern-${hypnoticPatternCase.sourceUnitId}`,
+        characters: [
+          characterSheet({
+            characterIdText: `character:l5-tracer-hypnotic-pattern-${hypnoticPatternCase.sourceUnitId}`,
+            build: hypnoticPatternCase.build,
+            combatantId: hypnoticPatternCase.casterId,
+            initiative: 20,
+          }),
+        ],
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_goblin_warrior"),
+          ),
+        ],
+      });
+      const act = spellSlotActForProcedure(
+        state,
+        hypnoticPatternSpellId,
+        hypnoticPatternCastLevel,
+        "hypnoticPattern",
+      );
+      const savingThrow = requireHoleFromList(
+        act.initialHoles,
+        "savingThrowOutcome",
+      );
+
+      expect(savingThrow).toMatchObject({
+        label: "Hypnotic Pattern point-origin Cube Saving Throw outcomes",
+        ability: "wis",
+        dc: { kind: "caster_spell_save_dc" },
+        spell: expect.objectContaining({
+          procedure: "hypnoticPattern",
+          resource: { tag: "spellSlot", slotLevel: hypnoticPatternCastLevel },
+          targeting: { kind: "pointOriginCube", sideFeet: 30 },
+          rangeFeet: 120,
+        }),
+      });
+
+      const resolved = requireResolved(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            hypnoticPatternSavingThrowOutcomeFill({
+              casterId: hypnoticPatternCase.casterId,
+              hole: savingThrow,
+              outcomes: [{ targetId: monsterId, succeeded: false }],
+            }),
+          ],
+        }),
+      );
+      const caster = requireCharacterCombatant(
+        resolved.state,
+        hypnoticPatternCase.casterId,
+      );
+      const target = requireCombatant(resolved.state, monsterId);
+
+      expect(snapshotBattle(resolved.state).combatants).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: hypnoticPatternCase.casterId,
+            concentrating: true,
+          }),
+          expect.objectContaining({
+            combatantId: monsterId,
+            conditions: expect.arrayContaining(["charmed", "incapacitated"]),
+            movement: expect.objectContaining({ speedFeet: 0 }),
+          }),
+        ]),
+      );
+      expect(target.activeEffects).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: "hypnoticPatternControl",
+            sourceSpellId: hypnoticPatternSpellId,
+            sourceCombatantId: hypnoticPatternCase.casterId,
+          }),
+        ]),
+      );
+      expect(caster.origin.spellcasting?.spellSlots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            spellLevel: hypnoticPatternCastLevel,
+            expended: 1,
+          }),
+        ]),
+      );
+      expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+    }
+  });
+
   test("Sorcerous Restoration uses the sheet rest lifecycle to recover half level rounded down once per Long Rest", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
@@ -1395,6 +1546,41 @@ function expectGlyphOfWardingClassAccess(input: {
   });
 }
 
+function expectHypnoticPatternClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly build: CharacterBuild;
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([hypnoticPatternSpellId]),
+      }),
+    ]),
+  );
+  if (input.sourceUnitId === "class_warlock") {
+    expect(input.build.spellcasting?.slotPools).toMatchObject({
+      pactMagic: {
+        kind: "pactMagic",
+        slotLevel: hypnoticPatternCastLevel,
+        count: 2,
+      },
+    });
+    return;
+  }
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({
+          spellLevel: hypnoticPatternCastLevel,
+          count: 2,
+        }),
+      ]),
+    },
+  });
+}
+
 function trackedObjectSpellLightEmitter(input: {
   readonly objectId: ReturnType<typeof battleObjectId>;
   readonly sourceCombatantId: CombatantId;
@@ -1471,6 +1657,34 @@ function fireballSavingThrowOutcomeFill(input: {
         originAnchorId: input.casterId,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts: input.objectIgnitionFacts,
+      },
+      outcomes: input.outcomes,
+    },
+  };
+}
+
+function hypnoticPatternSavingThrowOutcomeFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>;
+  readonly casterId: CombatantId;
+  readonly outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[];
+}): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: input.hole.holeId,
+    value: {
+      area: {
+        kind: "hypnoticPatternArea",
+        originAnchorId: input.casterId,
+        affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
+        cubeSideFeet: 30,
+        affectedCreatureWitnesses: input.outcomes.map((outcome) => ({
+          targetId: outcome.targetId,
+          inCube: true,
+          canSeePattern: true,
+        })),
       },
       outcomes: input.outcomes,
     },
