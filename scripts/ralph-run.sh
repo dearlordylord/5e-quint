@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # @file scripts/ralph-run.sh
-# @brief Run a Ralph fresh-context task harness for a plan file.
+# @brief Drive Ralph task execution from a plan snapshot.
 # @description
-#   Creates Ralph integration/task worktrees, launches implementation and
-#   review agents, records run artifacts, and reconciles accepted task results.
+#   Operator entrypoint for Ralph runs. Owns branch/worktree lifecycle, quiet
+#   model process supervision, and run evidence under `.ralph/runs/<run-id>`.
 set -Eeuo pipefail
 
 usage() {
@@ -949,6 +949,19 @@ cleanup_active_worktrees() {
   fi
 }
 
+remove_array_value() {
+  local array_name="$1"
+  local needle="$2"
+  local item
+  local -a retained=()
+  local -n values="$array_name"
+
+  for item in "${values[@]}"; do
+    [[ "$item" == "$needle" ]] || retained+=("$item")
+  done
+  values=("${retained[@]}")
+}
+
 cleanup() {
   local status=$?
 
@@ -1014,13 +1027,13 @@ write_run_report() {
 
   {
     printf '# Ralph Run Report\n\n'
-    printf -- '- Run id: `%s`\n' "$run_id"
-    printf -- '- Exit status: `%s`\n' "$status"
-    printf -- '- Branch: `%s`\n' "$branch"
-    printf -- '- HEAD: `%s`\n' "$head"
-    printf -- '- Base: `%s` `%s`\n' "$base_ref" "$base_sha"
-    printf -- '- Output branch: `%s`\n' "$output_branch"
-    printf -- '- Main worktree clean: `%s`\n' "$clean"
+    printf '%s\n' "- Run id: \`$run_id\`"
+    printf '%s\n' "- Exit status: \`$status\`"
+    printf '%s\n' "- Branch: \`$branch\`"
+    printf '%s\n' "- HEAD: \`$head\`"
+    printf '%s\n' "- Base: \`$base_ref\` \`$base_sha\`"
+    printf '%s\n' "- Output branch: \`$output_branch\`"
+    printf '%s\n' "- Main worktree clean: \`$clean\`"
     printf '\n## Last Error\n\n'
     if [[ -s "$last_error_file" ]]; then
       sed -n '1,80p' "$last_error_file"
@@ -1046,7 +1059,7 @@ write_process_snapshot() {
   local output_file="$1"
   {
     printf '# Ralph Process Snapshot\n\n'
-    printf 'Generated: `%s`\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf '%s\n\n' "Generated: \`$(date -u +%Y-%m-%dT%H:%M:%SZ)\`"
     printf '## Ralph / Codex / OpenCode\n\n'
     ps -eo pid,ppid,etimes,stat,cmd |
       rg 'ralph-run|codex exec|opencode run' |
@@ -2605,8 +2618,8 @@ run_task_attempt() {
   if [[ "$keep_worktrees" == false ]]; then
     git worktree remove --force "$implementation_worktree" >/dev/null 2>&1 || true
     git branch -D "$implementation_branch" >/dev/null 2>&1 || true
-    active_worktrees=("${active_worktrees[@]/$implementation_worktree/}")
-    task_branches=("${task_branches[@]/$implementation_branch/}")
+    remove_array_value active_worktrees "$implementation_worktree"
+    remove_array_value task_branches "$implementation_branch"
     rmdir "$(dirname "$implementation_worktree")" >/dev/null 2>&1 || true
   fi
 
