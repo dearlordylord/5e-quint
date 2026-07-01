@@ -12,6 +12,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
+  type BattleObjectIgnitionDisposition,
   type BattleResolutionResult,
   type BattleState,
   type BattleTrackedOngoingSpellLightEmitter,
@@ -95,6 +96,9 @@ const dispelMagicSorcererId = combatantId(
 );
 const dispelMagicWarlockId = combatantId("combatant:l5-tracer-dispel-warlock");
 const dispelMagicWizardId = combatantId("combatant:l5-tracer-dispel-wizard");
+const fireballSorcererId = combatantId("combatant:l5-tracer-fireball-sorcerer");
+const fireballWizardId = combatantId("combatant:l5-tracer-fireball-wizard");
+const fireballTargetId = combatantId("combatant:l5-tracer-fireball-target");
 
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
@@ -107,10 +111,18 @@ const protectionFromEnergySpellId = "protection_from_energy";
 const counterspellSpellId = "counterspell";
 const dispelMagicSpellId = "dispel_magic";
 const continualFlameSpellId = "continual_flame";
+const fireballSpellId = "fireball";
 const counterspellCastLevel = 3;
 const dispelMagicCastLevel = 3;
+const fireballCastLevel = 3;
 const magicMissileSpellId = "magic_missile";
 const magicMissileTriggerSlotLevel = 1;
+const fireballObjectId = battleObjectId("object:l5-tracer-fireball-kindling");
+const fireballDamageRollResults = [4, 4, 4, 4, 4, 4, 4, 4] as const;
+const fireballDamageTotal = fireballDamageRollResults.reduce(
+  (total, roll) => total + roll,
+  0,
+);
 type CounterspellClassAccessCase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly reactorId: CombatantId;
@@ -121,6 +133,11 @@ type DispelMagicClassAccessCase = {
   readonly casterId: CombatantId;
   readonly build: CharacterBuild;
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockRecord["id"][];
+};
+type FireballClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
 };
 type OngoingSpellTargetChoiceFill = Extract<
   BattleFill,
@@ -782,6 +799,120 @@ describe("level 5 SDK tracer bullets", () => {
     }
   });
 
+  test("Fireball projects Sorcerer and Wizard access and resolves point-origin Sphere Fire damage with unattended object ignition", () => {
+    const fireballCases = [
+      {
+        sourceUnitId: "class_sorcerer",
+        casterId: fireballSorcererId,
+        build: levelFiveSorcererBuild({
+          preparedSpells: [fireballSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_wizard",
+        casterId: fireballWizardId,
+        build: levelFiveWizardBuild({
+          preparedSpells: [fireballSpellId],
+        }),
+      },
+    ] as const satisfies ReadonlyArray<FireballClassAccessCase>;
+
+    for (const fireballCase of fireballCases) {
+      expectFireballClassAccess(fireballCase);
+
+      const state = battleFromSheets({
+        battleIdText: `battle:l5-tracer-fireball-${fireballCase.sourceUnitId}`,
+        characters: [
+          characterSheet({
+            characterIdText: `character:l5-tracer-fireball-${fireballCase.sourceUnitId}`,
+            build: fireballCase.build,
+            combatantId: fireballCase.casterId,
+            initiative: 20,
+          }),
+        ],
+        monsters: [
+          monsterBattleInput(
+            fireballTargetId,
+            10,
+            srdStatBlock("stat_block_sphinx_of_wonder"),
+          ),
+        ],
+      });
+      const act = spellSlotActForProcedure(
+        state,
+        fireballSpellId,
+        fireballCastLevel,
+        "saveGatedDamage",
+      );
+      const savingThrow = requireHoleFromList(
+        act.initialHoles,
+        "savingThrowOutcome",
+      );
+
+      expect(savingThrow).toMatchObject({
+        label: "Fireball point-origin Sphere Saving Throw outcomes",
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+      });
+
+      const saveFill = fireballSavingThrowOutcomeFill({
+        casterId: fireballCase.casterId,
+        hole: savingThrow,
+        outcomes: [{ targetId: fireballTargetId, succeeded: false }],
+        objectIgnitionFacts: [
+          {
+            objectId: fireballObjectId,
+            disposition: { kind: "flammableUnattended" },
+          },
+        ],
+      });
+      const damageRoll = requireHole(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [saveFill],
+        }),
+        "rolledDice",
+      );
+      const targetBeforeDamage = requireCombatant(state, fireballTargetId);
+      const resolved = requireResolved(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            saveFill,
+            damageRollFillWithGroups(damageRoll, [fireballDamageRollResults]),
+          ],
+        }),
+      );
+      const caster = requireCharacterCombatant(
+        resolved.state,
+        fireballCase.casterId,
+      );
+
+      expect(
+        Number(requireCombatant(resolved.state, fireballTargetId).hp),
+      ).toBe(Number(targetBeforeDamage.hp) - fireballDamageTotal);
+      expect(resolved.objectIgnitions).toEqual([
+        {
+          kind: "startsBurning",
+          objectId: fireballObjectId,
+          sourceCombatantId: fireballCase.casterId,
+          sourceSpellId: fireballSpellId,
+        },
+      ]);
+      expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+      expect(caster.origin.spellcasting?.spellSlots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            spellLevel: fireballCastLevel,
+            expended: 1,
+          }),
+        ]),
+      );
+    }
+  });
+
   test("Sorcerous Restoration uses the sheet rest lifecycle to recover half level rounded down once per Long Rest", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
@@ -927,6 +1058,31 @@ function expectDispelMagicClassAccess(input: {
   });
 }
 
+function expectFireballClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly build: CharacterBuild;
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([fireballSpellId]),
+      }),
+    ]),
+  );
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({
+          spellLevel: fireballCastLevel,
+          count: 2,
+        }),
+      ]),
+    },
+  });
+}
+
 function trackedObjectSpellLightEmitter(input: {
   readonly objectId: ReturnType<typeof battleObjectId>;
   readonly sourceCombatantId: CombatantId;
@@ -979,6 +1135,33 @@ function ongoingSpellTargetFill(input: {
         target: input.target,
       }),
     ],
+  };
+}
+
+function fireballSavingThrowOutcomeFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>;
+  readonly casterId: CombatantId;
+  readonly outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[];
+  readonly objectIgnitionFacts: readonly {
+    readonly objectId: ReturnType<typeof battleObjectId>;
+    readonly disposition: BattleObjectIgnitionDisposition;
+  }[];
+}): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: input.hole.holeId,
+    value: {
+      area: {
+        kind: "fireballArea",
+        originAnchorId: input.casterId,
+        affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
+        objectIgnitionFacts: input.objectIgnitionFacts,
+      },
+      outcomes: input.outcomes,
+    },
   };
 }
 
