@@ -3659,6 +3659,51 @@ const seededSdkScenarioRows = [
       "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy",
     tracerNeedles: ["protectionFromEnergySpellId"],
   },
+  {
+    candidateUnitId: "counterspell",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Counterspell",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_counterspell",
+    tracerNeedles: [
+      "counterspellSpellId",
+      "counterspellSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "counterspell",
+    className: "Warlock",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Counterspell",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_counterspell",
+    tracerNeedles: [
+      "counterspellSpellId",
+      "counterspellWarlockId",
+      "levelFiveWarlockBuild",
+      '"class_warlock"',
+    ],
+  },
+  {
+    candidateUnitId: "counterspell",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Counterspell",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_counterspell",
+    tracerNeedles: [
+      "counterspellSpellId",
+      "counterspellWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
 ];
 
 function animalFriendshipSdkHelperNeedles() {

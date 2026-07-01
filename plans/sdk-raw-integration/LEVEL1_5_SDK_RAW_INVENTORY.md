@@ -16,9 +16,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-5 mined rows | 770 |
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
-| Existing level-5 SDK seed scenario rows | 6 |
-| Scenario groups | 411 |
-| Level 5 scenario groups | 72 |
+| Existing level-5 SDK seed scenario rows | 9 |
+| Scenario groups | 413 |
+| Level 5 scenario groups | 74 |
 
 ### All Level 1-5 Rows by Level Band
 
@@ -42,9 +42,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 434 |
+| sdk-scenario-needed | 431 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 70 |
+| seed-scenario-present | 73 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -79,14 +79,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-04 | 33 |
 | L15-SDK-RAW-05 | 107 |
 | L15-SDK-RAW-06 | 25 |
-| L15-SDK-RAW-07 | 72 |
+| L15-SDK-RAW-07 | 74 |
 
 ### Scenario Groups by Lane
 
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 83 |
+| battle-spell-sdk | 82 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -96,7 +96,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
-| seed-present | 70 |
+| seed-present | 73 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -108,9 +108,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 36 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 43 |
-| sdk-scenario-needed | 35 |
+| sdk-scenario-needed | 32 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 6 |
+| seed-scenario-present | 9 |
 
 ### Level 5 Completion Rows by Proposed Owner Boundary
 
@@ -134,12 +134,12 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Lane | Groups |
 | --- | ---: |
-| battle-spell-sdk | 12 |
+| battle-spell-sdk | 11 |
 | explicit-closure | 12 |
 | feature-owner-review | 2 |
 | future-owner-before-sdk | 22 |
 | owner-review | 6 |
-| seed-present | 6 |
+| seed-present | 9 |
 | spell-effect-owner-review | 12 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -223,12 +223,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration` / `level-5:Sorcerer:sorcerer_sorcerous_restoration`: level5-sdk-tracer-bullets: Sorcerous Restoration
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste` / `spell-level-3:Wizard:haste`: level5-sdk-tracer-bullets: Haste
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy` / `spell-level-3:Wizard:protection_from_energy`: level5-sdk-tracer-bullets: Protection from Energy
+- `srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_counterspell` / `spell-level-3:Sorcerer:counterspell`: level5-sdk-tracer-bullets: Counterspell
+- `srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_counterspell` / `spell-level-3:Warlock:counterspell`: level5-sdk-tracer-bullets: Counterspell
+- `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_counterspell` / `spell-level-3:Wizard:counterspell`: level5-sdk-tracer-bullets: Counterspell
 
 ## Level 5 Scenario Groups
 
 | Task | Lane | Rows | Bands | Classes | Units | Sample concepts | Suggested scenario |
 | --- | --- | ---: | --- | --- | --- | --- | --- |
-| L15-SDK-RAW-07 | battle-spell-sdk | 3 | spell-level-3 | Sorcerer, Warlock, Wizard | `counterspell` | Sorcerer spell list Counterspell<br>Warlock spell list Counterspell<br>Wizard spell list Counterspell | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 6 | spell-level-3 | Bard, Cleric, Druid, Sorcerer, Warlock, Wizard | `dispel_magic` | Bard spell list Dispel Magic<br>Cleric spell list Dispel Magic<br>Druid spell list Dispel Magic<br>Sorcerer spell list Dispel Magic<br>Warlock spell list Dispel Magic<br>Wizard spell list Dispel Magic | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 2 | spell-level-3 | Sorcerer, Wizard | `fireball` | Sorcerer spell list Fireball<br>Wizard spell list Fireball | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 3 | spell-level-3 | Sorcerer, Warlock, Wizard | `fly` | Sorcerer spell list Fly<br>Warlock spell list Fly<br>Wizard spell list Fly | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
@@ -286,6 +288,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Monk | `monk_stunning_strike` | Monk Stunning Strike | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Rogue | `rogue_cunning_strike` | Rogue Cunning Strike | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Sorcerer | `sorcerer_sorcerous_restoration` | Sorcerer Sorcerous Restoration | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `counterspell` | Sorcerer spell list Counterspell | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Warlock | `counterspell` | Warlock spell list Counterspell | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `counterspell` | Wizard spell list Counterspell | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `haste` | Wizard spell list Haste | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `protection_from_energy` | Wizard spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 4 | spell-level-3 | Bard, Cleric, Sorcerer, Wizard | `clairvoyance` | Bard spell list Clairvoyance<br>Cleric spell list Clairvoyance<br>Sorcerer spell list Clairvoyance<br>Wizard spell list Clairvoyance | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
@@ -381,7 +386,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | level-5 | Sorcerer level 5 feature table row | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:39` | non-runtime | not-applicable | build-progression | resolved | explicit-closure-recorded |  | SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state. |
 | spell-level-3 | Sorcerer spell list Blink | `blink` | `.references/srd-5.2.1/Classes/Sorcerer.md:300` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity. |
 | spell-level-3 | Sorcerer spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Sorcerer.md:301` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
-| spell-level-3 | Sorcerer spell list Counterspell | `counterspell` | `.references/srd-5.2.1/Classes/Sorcerer.md:302` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Sorcerer spell list Counterspell | `counterspell` | `.references/srd-5.2.1/Classes/Sorcerer.md:302` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Counterspell | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Daylight | `daylight` | `.references/srd-5.2.1/Classes/Sorcerer.md:303` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers. |
 | spell-level-3 | Sorcerer spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Sorcerer.md:304` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Fear | `fear` | `.references/srd-5.2.1/Classes/Sorcerer.md:305` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers. |
@@ -401,7 +406,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Sorcerer spell list Water Breathing | `water_breathing` | `.references/srd-5.2.1/Classes/Sorcerer.md:319` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state. |
 | spell-level-3 | Sorcerer spell list Water Walk | `water_walk` | `.references/srd-5.2.1/Classes/Sorcerer.md:320` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution. |
 | level-5 | Warlock level 5 feature table row | `class_warlock` | `.references/srd-5.2.1/Classes/Warlock.md:39` | non-runtime | not-applicable | build-progression | resolved | explicit-closure-recorded |  | SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state. |
-| spell-level-3 | Warlock spell list Counterspell | `counterspell` | `.references/srd-5.2.1/Classes/Warlock.md:380` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Warlock spell list Counterspell | `counterspell` | `.references/srd-5.2.1/Classes/Warlock.md:380` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Counterspell | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Warlock spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Warlock.md:381` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Warlock spell list Fear | `fear` | `.references/srd-5.2.1/Classes/Warlock.md:382` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers. |
 | spell-level-3 | Warlock spell list Fly | `fly` | `.references/srd-5.2.1/Classes/Warlock.md:383` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
@@ -418,7 +423,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Wizard spell list Bestow Curse | `bestow_curse` | `.references/srd-5.2.1/Classes/Wizard.md:238` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity. |
 | spell-level-3 | Wizard spell list Blink | `blink` | `.references/srd-5.2.1/Classes/Wizard.md:239` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity. |
 | spell-level-3 | Wizard spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Wizard.md:240` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
-| spell-level-3 | Wizard spell list Counterspell | `counterspell` | `.references/srd-5.2.1/Classes/Wizard.md:241` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Wizard spell list Counterspell | `counterspell` | `.references/srd-5.2.1/Classes/Wizard.md:241` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Counterspell | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Wizard.md:242` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Fear | `fear` | `.references/srd-5.2.1/Classes/Wizard.md:243` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers. |
 | spell-level-3 | Wizard spell list Fireball | `fireball` | `.references/srd-5.2.1/Classes/Wizard.md:244` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |

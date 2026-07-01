@@ -607,7 +607,9 @@ function creationFinalizationResultSummary(
   return `invalid with issues ${JSON.stringify(result.issues)}`;
 }
 
-export function levelFiveSorcererBuild(): CharacterBuild {
+export function levelFiveSorcererBuild(
+  input: { readonly preparedSpells?: readonly UnitRecord["id"][] } = {},
+): CharacterBuild {
   return levelFiveBaseBuild({
     classUnitId: "class_sorcerer",
     abilityScores: { str: 8, dex: 14, con: 14, int: 10, wis: 10, cha: 16 },
@@ -634,7 +636,7 @@ export function levelFiveSorcererBuild(): CharacterBuild {
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
-          preparedSpells: [],
+          preparedSpells: input.preparedSpells ?? [],
           spellcastingFocuses: ["arcane_focus"],
         },
       ],
@@ -646,6 +648,34 @@ export function levelFiveSorcererBuild(): CharacterBuild {
             { spellLevel: 2, count: 3 },
             { spellLevel: 3, count: 2 },
           ],
+        },
+      },
+    },
+  });
+}
+
+export function levelFiveWarlockBuild(input: {
+  readonly preparedSpells: readonly UnitRecord["id"][];
+}): CharacterBuild {
+  return levelFiveBaseBuild({
+    classUnitId: "class_warlock",
+    abilityScores: { str: 8, dex: 14, con: 14, int: 10, wis: 10, cha: 16 },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_warlock",
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: input.preparedSpells,
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        pactMagic: {
+          kind: "pactMagic",
+          slotLevel: 3,
+          count: 2,
         },
       },
     },

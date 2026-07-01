@@ -2,11 +2,14 @@ import {
   breakBattleConcentration,
   combatantId,
   endTurn,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptProcedureChoice,
   type BattleResolutionResult,
   type BattleState,
   type CombatantId,
@@ -20,9 +23,14 @@ import {
   finishShortRest,
   startShortRest,
 } from "@dnd/character-sheet-runtime";
+import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { Hp, resourceCount } from "@dnd/shared/types";
-import type { DamageType, StatBlockRecord } from "@dnd/surface/surface/types";
+import { Hp, movementFeet, resourceCount } from "@dnd/shared/types";
+import type {
+  DamageType,
+  StatBlockRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -36,6 +44,7 @@ import {
   knownWillingSpellTargetFill,
   levelFiveMartialBuild,
   levelFiveSorcererBuild,
+  levelFiveWarlockBuild,
   levelFiveWizardBuild,
   monsterBattleInput,
   ordinaryAttackDamageFills,
@@ -59,6 +68,18 @@ const rogueAllyId = combatantId("combatant:l5-tracer-rogue-ally");
 const wizardId = combatantId("combatant:l5-tracer-wizard");
 const wardedId = combatantId("combatant:l5-tracer-warded");
 const monsterId = combatantId("combatant:l5-tracer-monster");
+const counterspellSorcererId = combatantId(
+  "combatant:l5-tracer-counterspell-sorcerer",
+);
+const counterspellWarlockId = combatantId(
+  "combatant:l5-tracer-counterspell-warlock",
+);
+const counterspellWizardId = combatantId(
+  "combatant:l5-tracer-counterspell-wizard",
+);
+const counterspellTriggeringWizardId = combatantId(
+  "combatant:l5-tracer-counterspell-triggering-wizard",
+);
 
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
@@ -68,6 +89,15 @@ const rogueCunningStrikeUnitId = "rogue_cunning_strike";
 const sorcererFontOfMagicUnitId = "sorcerer_font_of_magic";
 const hasteSpellId = "haste";
 const protectionFromEnergySpellId = "protection_from_energy";
+const counterspellSpellId = "counterspell";
+const counterspellCastLevel = 3;
+const magicMissileSpellId = "magic_missile";
+const magicMissileTriggerSlotLevel = 1;
+type CounterspellClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly reactorId: CombatantId;
+  readonly build: CharacterBuild;
+};
 
 describe("level 5 SDK tracer bullets", () => {
   test("Extra Attack projects a level-5 martial character through sheet handoff and opens exactly one added attack slot", () => {
@@ -495,6 +525,108 @@ describe("level 5 SDK tracer bullets", () => {
     );
   });
 
+  test("Counterspell projects Sorcerer, Warlock, and Wizard access and interrupts a spell-cast Reaction", () => {
+    const counterspellCases = [
+      {
+        sourceUnitId: "class_sorcerer",
+        reactorId: counterspellSorcererId,
+        build: levelFiveSorcererBuild({
+          preparedSpells: [counterspellSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_warlock",
+        reactorId: counterspellWarlockId,
+        build: levelFiveWarlockBuild({
+          preparedSpells: [counterspellSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_wizard",
+        reactorId: counterspellWizardId,
+        build: levelFiveWizardBuild({
+          preparedSpells: [counterspellSpellId],
+        }),
+      },
+    ] as const satisfies ReadonlyArray<CounterspellClassAccessCase>;
+
+    for (const counterspellCase of counterspellCases) {
+      expectCounterspellClassAccess(counterspellCase);
+
+      const state = battleFromSheets({
+        battleIdText: `battle:l5-tracer-counterspell-${counterspellCase.sourceUnitId}`,
+        characters: [
+          characterSheet({
+            characterIdText: `character:l5-tracer-counterspell-trigger-${counterspellCase.sourceUnitId}`,
+            build: levelFiveWizardBuild({
+              preparedSpells: [magicMissileSpellId],
+            }),
+            combatantId: counterspellTriggeringWizardId,
+            initiative: 20,
+          }),
+          characterSheet({
+            characterIdText: `character:l5-tracer-counterspell-${counterspellCase.sourceUnitId}`,
+            build: counterspellCase.build,
+            combatantId: counterspellCase.reactorId,
+            initiative: 15,
+          }),
+        ],
+        monsters: [],
+      });
+      const awaitingCounterspell = startCounterspellableMagicMissile({
+        state,
+        casterId: counterspellTriggeringWizardId,
+        targetId: counterspellCase.reactorId,
+        reactorId: counterspellCase.reactorId,
+      });
+      const choice = requireCounterspellChoice(
+        awaitingCounterspell,
+        counterspellCase.reactorId,
+      );
+
+      const resolved = requireResolved(
+        resolveBattleInterrupt({
+          state: awaitingCounterspell.state,
+          fill: interruptDecisionFill(
+            requireHoleFromList(
+              awaitingCounterspell.holes,
+              "interruptDecision",
+            ),
+            counterspellDecision(counterspellCase.reactorId, choice, []),
+          ),
+        }),
+      );
+      const reactor = requireCharacterCombatant(
+        resolved.state,
+        counterspellCase.reactorId,
+      );
+      const triggeringCaster = requireCharacterCombatant(
+        resolved.state,
+        counterspellTriggeringWizardId,
+      );
+
+      expect(resolved.snapshot.pendingInterrupt).toBeNull();
+      expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+      expect(reactor.reactionAvailable).toBe(false);
+      expect(reactor.origin.spellcasting?.spellSlots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            spellLevel: counterspellCastLevel,
+            expended: 1,
+          }),
+        ]),
+      );
+      expect(triggeringCaster.origin.spellcasting?.spellSlots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            spellLevel: magicMissileTriggerSlotLevel,
+            expended: 0,
+          }),
+        ]),
+      );
+    }
+  });
+
   test("Sorcerous Restoration uses the sheet rest lifecycle to recover half level rounded down once per Long Rest", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
@@ -569,6 +701,186 @@ describe("level 5 SDK tracer bullets", () => {
     });
   });
 });
+
+function expectCounterspellClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly build: CharacterBuild;
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([counterspellSpellId]),
+      }),
+    ]),
+  );
+  if (input.sourceUnitId === "class_warlock") {
+    expect(input.build.spellcasting?.slotPools).toMatchObject({
+      pactMagic: {
+        kind: "pactMagic",
+        slotLevel: counterspellCastLevel,
+        count: 2,
+      },
+    });
+    return;
+  }
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({ spellLevel: counterspellCastLevel, count: 2 }),
+      ]),
+    },
+  });
+}
+
+function startCounterspellableMagicMissile(input: {
+  readonly state: BattleState;
+  readonly casterId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly reactorId: CombatantId;
+}): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  const act = spellSlotActForProcedure(
+    input.state,
+    magicMissileSpellId,
+    magicMissileTriggerSlotLevel,
+    "repeatedDamageAllocation",
+  );
+  if (act.subject.actorId !== input.casterId) {
+    throw new Error("Expected Magic Missile action from triggering caster.");
+  }
+  const allocation = requireHoleFromList(
+    act.initialHoles,
+    "spellTargetAllocation",
+  );
+  const result = resolveBattleSubject({
+    state: input.state,
+    subject: act.subject,
+    fills: [
+      magicMissileTargetAllocationFill({
+        hole: allocation,
+        casterId: input.casterId,
+        targetId: input.targetId,
+        dartCount: allocation.allocationCount,
+      }),
+      spellCastReactionFactsFill([
+        counterspellTriggerFact({
+          reactorId: input.reactorId,
+          casterId: input.casterId,
+        }),
+      ]),
+    ],
+  });
+  expect(result).toMatchObject({
+    tag: "needsHoles",
+    snapshot: { pendingInterrupt: { trigger: "spellCast" } },
+  });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected Counterspell Reaction window.");
+  }
+  return result;
+}
+
+function magicMissileTargetAllocationFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>;
+  readonly casterId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly dartCount: number;
+}): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }> {
+  return {
+    kind: "spellTargetAllocation",
+    holeId: input.hole.holeId,
+    value: {
+      allocations: [{ targetId: input.targetId, count: input.dartCount }],
+    },
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: input.casterId,
+        targetId: input.targetId,
+        spellId: magicMissileSpellId,
+      },
+    ],
+  };
+}
+
+type CounterspellTriggerFact = Extract<
+  Extract<
+    BattleFill,
+    { readonly kind: "targetSpatialFacts" }
+  >["spatialFacts"][number],
+  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+>;
+
+function counterspellTriggerFact(input: {
+  readonly reactorId: CombatantId;
+  readonly casterId: CombatantId;
+}): CounterspellTriggerFact {
+  return {
+    kind: "counterspellTriggerCasterVisibleWithinRange",
+    reactorId: input.reactorId,
+    casterId: input.casterId,
+    spellId: counterspellSpellId,
+    rangeFeet: movementFeet(60),
+  };
+}
+
+function spellCastReactionFactsFill(
+  facts: readonly CounterspellTriggerFact[],
+): Extract<BattleFill, { readonly kind: "targetSpatialFacts" }> {
+  return {
+    kind: "targetSpatialFacts",
+    holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+    spatialFacts: facts,
+  };
+}
+
+type CounterspellReactionChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "castTriggeredReactionSpell" }
+>;
+
+function requireCounterspellChoice(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+  reactorId: CombatantId,
+): CounterspellReactionChoice {
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
+    (candidate): candidate is CounterspellReactionChoice =>
+      candidate.kind === "castTriggeredReactionSpell" &&
+      candidate.reactorId === reactorId &&
+      candidate.invocation.tag === "spellSlot" &&
+      candidate.invocation.spellId === counterspellSpellId &&
+      candidate.invocation.procedure === "counterspell" &&
+      Number(candidate.invocation.slotLevel) === counterspellCastLevel,
+  );
+  if (choice === undefined) {
+    throw new Error("Expected Counterspell Reaction choice.");
+  }
+  return choice;
+}
+
+function counterspellDecision(
+  reactorId: CombatantId,
+  choice: CounterspellReactionChoice,
+  fills: readonly BattleFill[],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
+  return {
+    kind: "resolve",
+    responderId: reactorId,
+    choice: {
+      kind: "castTriggeredReactionSpell",
+      invocation: choice.invocation,
+      fills,
+    },
+  };
+}
+
+function interruptDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "interruptDecision" }> {
+  return { kind: "interruptDecision", holeId: hole.holeId, value };
+}
 
 function elementalTouchStatBlock(damageType: "fire" | "cold"): StatBlockRecord {
   const base = srdStatBlock("stat_block_goblin_warrior");
