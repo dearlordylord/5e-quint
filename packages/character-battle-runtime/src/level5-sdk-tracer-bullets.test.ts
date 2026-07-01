@@ -1,6 +1,8 @@
 import {
+  battleAreaId,
   battleObjectId,
   battleSpellEffectOccurrenceId,
+  battleObscurementZones,
   breakBattleConcentration,
   combatantId,
   discoverBattleActs,
@@ -10,6 +12,7 @@ import {
   snapshotBattle,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type AvailableBattleAct,
+  type BattleActiveEffect,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -20,6 +23,7 @@ import {
   type BattleTrackedOngoingSpellLightEmitter,
   type CombatantId,
   type SpellSlotProcedure,
+  spellId,
 } from "@dnd/battle-runtime";
 import {
   CHARACTER_SHEET_SHORT_REST_TICKS,
@@ -161,6 +165,16 @@ const protectionFromEnergyDruidId = combatantId(
 const protectionFromEnergySorcererId = combatantId(
   "combatant:l5-tracer-protection-from-energy-sorcerer",
 );
+const sleetStormDruidId = combatantId("combatant:l5-tracer-sleet-storm-druid");
+const sleetStormSorcererId = combatantId(
+  "combatant:l5-tracer-sleet-storm-sorcerer",
+);
+const sleetStormWizardId = combatantId(
+  "combatant:l5-tracer-sleet-storm-wizard",
+);
+const sleetStormTargetId = combatantId(
+  "combatant:l5-tracer-sleet-storm-target",
+);
 
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
@@ -179,6 +193,7 @@ const glyphOfWardingSpellId = "glyph_of_warding";
 const hypnoticPatternSpellId = "hypnotic_pattern";
 const lightningBoltSpellId = "lightning_bolt";
 const massHealingWordSpellId = "mass_healing_word";
+const sleetStormSpellId = "sleet_storm";
 const counterspellCastLevel = 3;
 const dispelMagicCastLevel = 3;
 const fireballCastLevel = 3;
@@ -189,9 +204,13 @@ const hypnoticPatternCastLevel = 3;
 const lightningBoltCastLevel = 3;
 const massHealingWordCastLevel = 3;
 const protectionFromEnergyCastLevel = 3;
+const sleetStormCastLevel = 3;
 const flySpeedFeet = 60;
 const magicMissileSpellId = "magic_missile";
 const magicMissileTriggerSlotLevel = 1;
+const sleetStormAreaId = battleAreaId("area:l5-tracer-sleet-storm-cylinder");
+const syntheticSleetStormTargetConcentrationSpellId =
+  "synthetic_l5_tracer_sleet_storm_target_concentration";
 const fireballObjectId = battleObjectId("object:l5-tracer-fireball-kindling");
 const fireballDamageRollResults = [4, 4, 4, 4, 4, 4, 4, 4] as const;
 const fireballDamageTotal = fireballDamageRollResults.reduce(
@@ -260,6 +279,12 @@ type MassHealingWordClassAccessCase = {
   readonly build: CharacterBuild;
 };
 type ProtectionFromEnergyClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockRecord["id"][];
+};
+type SleetStormClassAccessCase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly casterId: CombatantId;
   readonly build: CharacterBuild;
@@ -767,6 +792,269 @@ describe("level 5 SDK tracer bullets", () => {
     expect(nonmatching.afterDamageHp).toBe(
       Hp(Number(nonmatching.beforeDamageHp) - 8),
     );
+  });
+
+  test("Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards", () => {
+    const sleetStormCases: readonly SleetStormClassAccessCase[] = [
+      {
+        sourceUnitId: "class_druid",
+        casterId: sleetStormDruidId,
+        build: levelFiveDruidBuild({
+          preparedSpells: [sleetStormSpellId],
+        }),
+        druidWildShapeKnownFormStatBlockIds:
+          levelFiveDruidWildShapeKnownFormStatBlockIds,
+      },
+      {
+        sourceUnitId: "class_sorcerer",
+        casterId: sleetStormSorcererId,
+        build: levelFiveSorcererBuild({
+          preparedSpells: [sleetStormSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_wizard",
+        casterId: sleetStormWizardId,
+        build: levelFiveWizardBuild({
+          preparedSpells: [sleetStormSpellId],
+        }),
+      },
+    ];
+
+    for (const sleetStormCase of sleetStormCases) {
+      expectSleetStormClassAccess(sleetStormCase);
+
+      const druidWildShapeKnownFormStatBlockIds =
+        sleetStormCase.druidWildShapeKnownFormStatBlockIds;
+      const state = stateWithSleetStormTargetConcentration(
+        battleFromSheets({
+          battleIdText: `battle:l5-tracer-sleet-storm-${sleetStormCase.sourceUnitId}`,
+          characters: [
+            characterSheet({
+              characterIdText: `character:l5-tracer-sleet-storm-${sleetStormCase.sourceUnitId}`,
+              build: sleetStormCase.build,
+              combatantId: sleetStormCase.casterId,
+              initiative: 20,
+              ...(druidWildShapeKnownFormStatBlockIds === undefined
+                ? {}
+                : {
+                    druidWildShapeKnownFormStatBlockIds:
+                      druidWildShapeKnownFormStatBlockIds,
+                  }),
+            }),
+          ],
+          monsters: [
+            monsterBattleInput(
+              sleetStormTargetId,
+              10,
+              srdStatBlock("stat_block_sphinx_of_wonder"),
+            ),
+          ],
+        }),
+      );
+      const act = spellSlotActForProcedure(
+        state,
+        sleetStormSpellId,
+        sleetStormCastLevel,
+        "sleetStormAreaHazard",
+      );
+      const area = requireHoleFromList(act.initialHoles, "spellAreaChoice");
+
+      expect(act.subject).toMatchObject({
+        tag: "actionSpell",
+        actorId: sleetStormCase.casterId,
+        invocation: {
+          tag: "spellSlot",
+          spellId: sleetStormSpellId,
+          slotLevel: sleetStormCastLevel,
+          procedure: "sleetStormAreaHazard",
+        },
+        mode: { tag: "cast" },
+      });
+      expect(area).toMatchObject({
+        label: "Sleet Storm area",
+        area: {
+          kind: "pointOriginCylinder",
+          radiusFeet: movementFeet(20),
+          heightFeet: movementFeet(40),
+        },
+        spell: expect.objectContaining({
+          procedure: "sleetStormAreaHazard",
+          resource: { tag: "spellSlot", slotLevel: sleetStormCastLevel },
+          ability: "dex",
+          dc: { kind: "caster_spell_save_dc" },
+          targeting: {
+            kind: "pointOriginCylinder",
+            radiusFeet: movementFeet(20),
+            heightFeet: movementFeet(40),
+          },
+          rangeFeet: movementFeet(150),
+        }),
+      });
+
+      const cast = requireResolved(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [sleetStormAreaChoiceFill(area)],
+        }),
+      );
+      const caster = requireCharacterCombatant(
+        cast.state,
+        sleetStormCase.casterId,
+      );
+
+      expect(caster).toMatchObject({
+        concentration: {
+          sourceSpellId: sleetStormSpellId,
+          effectKind: "spellEffect",
+        },
+        activeEffects: expect.arrayContaining([
+          expect.objectContaining({
+            kind: "sleetStormAreaHazard",
+            sourceSpellId: sleetStormSpellId,
+            sourceCombatantId: sleetStormCase.casterId,
+            areaId: sleetStormAreaId,
+            radiusFeet: movementFeet(20),
+            heightFeet: movementFeet(40),
+            save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
+          }),
+        ]),
+      });
+      expect(caster.origin.spellcasting?.spellSlots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            spellLevel: sleetStormCastLevel,
+            expended: 1,
+          }),
+        ]),
+      );
+
+      const targetTurn = requireResolved(
+        endTurn({ state: cast.state, actorId: sleetStormCase.casterId }),
+      ).state;
+      expect(battleObscurementZones(targetTurn)).toEqual([
+        expect.objectContaining({
+          kind: "spellObscurementZone",
+          sourceSpellId: sleetStormSpellId,
+          sourceCombatantId: sleetStormCase.casterId,
+          obscurement: "heavilyObscured",
+          area: {
+            kind: "pointOriginCylinder",
+            areaId: sleetStormAreaId,
+            radiusFeet: movementFeet(20),
+            heightFeet: movementFeet(40),
+          },
+        }),
+      ]);
+
+      const moveSubject = {
+        tag: "runtimeCommand" as const,
+        actorId: sleetStormTargetId,
+        command: "move" as const,
+      };
+      const moveHole = requireHole(
+        resolveBattleSubject({
+          state: targetTurn,
+          subject: moveSubject,
+          fills: [],
+        }),
+        "movement",
+      );
+      const moved = requireResolved(
+        resolveBattleSubject({
+          state: targetTurn,
+          subject: moveSubject,
+          fills: [
+            movementFill(moveHole, {
+              movementCostFeet: 15,
+              provokedOpportunityAttacks: [],
+              areaDifficultTerrain: {
+                kind: "areaDifficultTerrain",
+                sources: [
+                  {
+                    kind: "sleetStormHazard",
+                    sourceCombatantId: sleetStormCase.casterId,
+                    sourceSpellId: sleetStormSpellId,
+                    areaId: sleetStormAreaId,
+                  },
+                ],
+                totalDistanceFeet: movementFeet(10),
+                difficultTerrainDistanceFeet: movementFeet(5),
+              },
+            }),
+          ],
+        }),
+      );
+
+      expect(requireCombatant(moved.state, sleetStormTargetId)).toMatchObject({
+        movementSpentFeet: movementFeet(15),
+      });
+
+      const entrySaveSubject = sleetStormAreaHazardSaveSubject(
+        sleetStormCase.casterId,
+      );
+      const entrySave = requireHole(
+        resolveBattleSubject({
+          state: moved.state,
+          subject: entrySaveSubject,
+          fills: [],
+        }),
+        "savingThrowOutcome",
+      );
+
+      expect(entrySave).toMatchObject({
+        label: "sleet_storm entry DEX save",
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        sleetStormAreaHazard: {
+          trigger: "entersArea",
+          areaId: sleetStormAreaId,
+          sourceCombatantId: sleetStormCase.casterId,
+          sourceSpellId: sleetStormSpellId,
+        },
+      });
+
+      const failedSave = requireResolved(
+        resolveBattleSubject({
+          state: moved.state,
+          subject: entrySaveSubject,
+          fills: [
+            savingThrowOutcomeFill(entrySave, [
+              { targetId: sleetStormTargetId, succeeded: false },
+            ]),
+          ],
+        }),
+      );
+      const targetAfterSave = requireCombatant(
+        failedSave.state,
+        sleetStormTargetId,
+      );
+
+      expect(hasCondition(targetAfterSave.conditions, "prone")).toBe(true);
+      expect(targetAfterSave.concentration).toBeNull();
+      expect(
+        targetAfterSave.activeEffects.some(
+          (effect) =>
+            "sourceSpellId" in effect &&
+            effect.sourceSpellId ===
+              syntheticSleetStormTargetConcentrationSpellId,
+        ),
+      ).toBe(false);
+
+      const ended = breakBattleConcentration(
+        failedSave.state,
+        sleetStormCase.casterId,
+      );
+      expect(
+        requireCombatant(ended, sleetStormCase.casterId).activeEffects.some(
+          (effect) =>
+            effect.kind === "sleetStormAreaHazard" &&
+            effect.sourceSpellId === sleetStormSpellId,
+        ),
+      ).toBe(false);
+      expect(battleObscurementZones(ended)).toEqual([]);
+    }
   });
 
   test("Counterspell projects Sorcerer, Warlock, and Wizard access and interrupts a spell-cast Reaction", () => {
@@ -2141,6 +2429,89 @@ function expectProtectionFromEnergyClassAccess(input: {
   ]);
 }
 
+function expectSleetStormClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockRecord["id"][];
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([sleetStormSpellId]),
+      }),
+    ]),
+  );
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({
+          spellLevel: sleetStormCastLevel,
+          count: 2,
+        }),
+      ]),
+    },
+  });
+
+  const state = battleFromSheets({
+    battleIdText: `battle:l5-tracer-sleet-storm-access-${input.sourceUnitId}`,
+    characters: [
+      characterSheet({
+        characterIdText: `character:l5-tracer-sleet-storm-access-${input.sourceUnitId}`,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+        ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+          ? {}
+          : {
+              druidWildShapeKnownFormStatBlockIds:
+                input.druidWildShapeKnownFormStatBlockIds,
+            }),
+      }),
+    ],
+    monsters: [],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    sleetStormSpellId,
+    sleetStormCastLevel,
+    "sleetStormAreaHazard",
+  );
+  const area = requireHoleFromList(act.initialHoles, "spellAreaChoice");
+
+  expect(act.subject).toMatchObject({
+    tag: "actionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: sleetStormSpellId,
+      slotLevel: sleetStormCastLevel,
+      procedure: "sleetStormAreaHazard",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(area).toMatchObject({
+    label: "Sleet Storm area",
+    area: {
+      kind: "pointOriginCylinder",
+      radiusFeet: movementFeet(20),
+      heightFeet: movementFeet(40),
+    },
+    spell: expect.objectContaining({
+      procedure: "sleetStormAreaHazard",
+      resource: { tag: "spellSlot", slotLevel: sleetStormCastLevel },
+      targeting: {
+        kind: "pointOriginCylinder",
+        radiusFeet: movementFeet(20),
+        heightFeet: movementFeet(40),
+      },
+      rangeFeet: movementFeet(150),
+    }),
+  });
+}
+
 function bonusActionSpellSlotActForProcedure(
   state: BattleState,
   casterId: CombatantId,
@@ -2656,4 +3027,92 @@ function protectionFromEnergyDamageTypeChoiceFill(
   >,
 ): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
   return { kind: "damageTypeChoice", holeId: hole.holeId, value };
+}
+
+function stateWithSleetStormTargetConcentration(
+  state: BattleState,
+): BattleState {
+  const target = requireCombatant(state, sleetStormTargetId);
+  const concentrationEffect: BattleActiveEffect = {
+    kind: "spellArmorClassBonus",
+    sourceSpellId: syntheticSleetStormTargetConcentrationSpellId,
+    sourceCombatantId: sleetStormTargetId,
+    bonus: 1,
+    negatedSpellIds: [],
+    expiresAt: {
+      kind: "concentration",
+      combatantId: sleetStormTargetId,
+    },
+  };
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(sleetStormTargetId, {
+      ...target,
+      concentration: {
+        sourceSpellId: syntheticSleetStormTargetConcentrationSpellId,
+        effectKind: "spellEffect",
+      },
+      activeEffects: [...target.activeEffects, concentrationEffect],
+    }),
+  };
+}
+
+function sleetStormAreaChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "sleetStormCylinderArea", areaId: sleetStormAreaId },
+  };
+}
+
+function movementFill(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  value: {
+    readonly movementCostFeet: number;
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
+    readonly areaDifficultTerrain?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["areaDifficultTerrain"];
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: value.provokedOpportunityAttacks,
+      ...(value.areaDifficultTerrain === undefined
+        ? {}
+        : { areaDifficultTerrain: value.areaDifficultTerrain }),
+    },
+  };
+}
+
+function sleetStormAreaHazardSaveSubject(
+  sourceCombatantId: CombatantId,
+): Extract<
+  AvailableBattleAct["subject"],
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "sleetStormAreaHazardSave";
+  }
+> {
+  return {
+    tag: "runtimeCommand",
+    actorId: sleetStormTargetId,
+    command: "sleetStormAreaHazardSave",
+    areaMembershipTrigger: {
+      kind: "firstEntryOnTurn",
+      sourceCombatantId,
+      sourceSpellId: spellId(sleetStormSpellId),
+      areaId: sleetStormAreaId,
+    },
+  };
 }

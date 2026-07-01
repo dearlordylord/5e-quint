@@ -3721,6 +3721,55 @@ const seededSdkScenarioRows = [
     tracerNeedles: ["protectionFromEnergySpellId"],
   },
   {
+    candidateUnitId: "sleet_storm",
+    className: "Druid",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
+    tracerNeedles: [
+      "sleetStormSpellId",
+      "sleetStormDruidId",
+      "levelFiveDruidBuild",
+      "levelFiveDruidWildShapeKnownFormStatBlockIds",
+      '"class_druid"',
+    ],
+  },
+  {
+    candidateUnitId: "sleet_storm",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm",
+    tracerNeedles: [
+      "sleetStormSpellId",
+      "sleetStormSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "sleet_storm",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
+    tracerNeedles: [
+      "sleetStormSpellId",
+      "sleetStormWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
+  {
     candidateUnitId: "counterspell",
     className: "Sorcerer",
     levelBand: "spell-level-3",

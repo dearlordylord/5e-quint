@@ -2974,6 +2974,10 @@
       "category": "spell Unit pressure",
       "className": "Druid",
       "concept": "Druid spell list Sleet Storm",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -2981,7 +2985,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 261,
         "lineStart": 261,
@@ -4914,6 +4918,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Sleet Storm",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -4921,7 +4929,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 314,
         "lineStart": 314,
@@ -7137,6 +7145,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Sleet Storm",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -7144,7 +7156,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 258,
         "lineStart": 258,
@@ -7635,97 +7647,6 @@
       "sampleConcepts": [
         "Bard spell list Mass Healing Word",
         "Cleric spell list Mass Healing Word"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "sleet_storm"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Druid",
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:sleet-storm",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"sleet_storm\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Druid.md:261",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:314",
-        ".references/srd-5.2.1/Classes/Wizard.md:258"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "sleet_storm",
-          "className": "Druid",
-          "concept": "Druid spell list Sleet Storm",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 261,
-            "lineStart": 261,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "candidateUnitId": "sleet_storm",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Sleet Storm",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 314,
-            "lineStart": 314,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "sleet_storm",
-          "className": "Wizard",
-          "concept": "Wizard spell list Sleet Storm",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 258,
-            "lineStart": 258,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Druid spell list Sleet Storm",
-        "Sorcerer spell list Sleet Storm",
-        "Wizard spell list Sleet Storm"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -11174,6 +11095,61 @@
     },
     {
       "candidateUnitIds": [
+        "sleet_storm"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-druid-sleet-storm",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Druid:sleet_storm\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:261"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "sleet_storm",
+          "className": "Druid",
+          "concept": "Druid spell list Sleet Storm",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 261,
+            "lineStart": 261,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid spell list Sleet Storm"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "counterspell"
       ],
       "categories": [
@@ -11605,6 +11581,61 @@
       ],
       "sampleConcepts": [
         "Sorcerer spell list Protection from Energy"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "sleet_storm"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-sorcerer-sleet-storm",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Sorcerer:sleet_storm\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:314"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "sleet_storm",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Sleet Storm",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 314,
+            "lineStart": 314,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Sleet Storm"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -12320,6 +12351,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Protection from Energy"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "sleet_storm"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-wizard-sleet-storm",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Wizard:sleet_storm\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:258"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "sleet_storm",
+          "className": "Wizard",
+          "concept": "Wizard spell list Sleet Storm",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 258,
+            "lineStart": 258,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Sleet Storm"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -27618,6 +27704,10 @@
       "category": "spell Unit pressure",
       "className": "Druid",
       "concept": "Druid spell list Sleet Storm",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -27625,7 +27715,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 261,
         "lineStart": 261,
@@ -41873,6 +41963,10 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Sleet Storm",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -41880,7 +41974,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 314,
         "lineStart": 314,
@@ -51270,6 +51364,10 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Sleet Storm",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -51277,7 +51375,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 258,
         "lineStart": 258,
@@ -57568,21 +57666,21 @@
       "closure-review-needed": 36,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 43,
-      "sdk-scenario-needed": 8,
+      "sdk-scenario-needed": 5,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 33
+      "seed-scenario-present": 36
     },
-    "level5ScenarioGroups": 90,
+    "level5ScenarioGroups": 92,
     "level5ScenarioGroupsByLane": {
-      "battle-spell-sdk": 3,
+      "battle-spell-sdk": 2,
       "explicit-closure": 12,
       "feature-owner-review": 2,
       "future-owner-before-sdk": 22,
       "owner-review": 6,
-      "seed-present": 33,
+      "seed-present": 36,
       "spell-effect-owner-review": 12
     },
-    "level5SeedScenarioRows": 33,
+    "level5SeedScenarioRows": 36,
     "levelOneFiveMinedRows": 770,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -57631,16 +57729,16 @@
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 407,
+      "sdk-scenario-needed": 404,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 97,
+      "seed-scenario-present": 100,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 429,
+    "scenarioGroups": 431,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 74,
+      "battle-spell-sdk": 73,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -57650,7 +57748,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 97,
+      "seed-present": 100,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -57660,7 +57758,7 @@
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
-      "L15-SDK-RAW-07": 90
+      "L15-SDK-RAW-07": 92
     }
   },
   "scenarioGroups": [
@@ -81753,97 +81851,6 @@
     },
     {
       "candidateUnitIds": [
-        "sleet_storm"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Druid",
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:sleet-storm",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"sleet_storm\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Druid.md:261",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:314",
-        ".references/srd-5.2.1/Classes/Wizard.md:258"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "sleet_storm",
-          "className": "Druid",
-          "concept": "Druid spell list Sleet Storm",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 261,
-            "lineStart": 261,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "candidateUnitId": "sleet_storm",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Sleet Storm",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 314,
-            "lineStart": 314,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "sleet_storm",
-          "className": "Wizard",
-          "concept": "Wizard spell list Sleet Storm",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 258,
-            "lineStart": 258,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Druid spell list Sleet Storm",
-        "Sorcerer spell list Sleet Storm",
-        "Wizard spell list Sleet Storm"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "slow"
       ],
       "categories": [
@@ -85283,6 +85290,61 @@
     },
     {
       "candidateUnitIds": [
+        "sleet_storm"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-druid-sleet-storm",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Druid:sleet_storm\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:261"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "sleet_storm",
+          "className": "Druid",
+          "concept": "Druid spell list Sleet Storm",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 261,
+            "lineStart": 261,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid spell list Sleet Storm"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "counterspell"
       ],
       "categories": [
@@ -85714,6 +85776,61 @@
       ],
       "sampleConcepts": [
         "Sorcerer spell list Protection from Energy"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "sleet_storm"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-sorcerer-sleet-storm",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Sorcerer:sleet_storm\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:314"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "sleet_storm",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Sleet Storm",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 314,
+            "lineStart": 314,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Sleet Storm"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -86429,6 +86546,61 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Protection from Energy"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "sleet_storm"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-wizard-sleet-storm",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Wizard:sleet_storm\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:258"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "sleet_storm",
+          "className": "Wizard",
+          "concept": "Wizard spell list Sleet Storm",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 258,
+            "lineStart": 258,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Sleet Storm"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -92287,6 +92459,64 @@
       "rowKey": "spell-level-3:Wizard:protection_from_energy",
       "tracerNeedles": [
         "protectionFromEnergySpellId"
+      ]
+    },
+    {
+      "candidateUnitId": "sleet_storm",
+      "className": "Druid",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
+      "rowKey": "spell-level-3:Druid:sleet_storm",
+      "tracerNeedles": [
+        "sleetStormSpellId",
+        "sleetStormDruidId",
+        "levelFiveDruidBuild",
+        "levelFiveDruidWildShapeKnownFormStatBlockIds",
+        "\"class_druid\""
+      ]
+    },
+    {
+      "candidateUnitId": "sleet_storm",
+      "className": "Sorcerer",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm",
+      "rowKey": "spell-level-3:Sorcerer:sleet_storm",
+      "tracerNeedles": [
+        "sleetStormSpellId",
+        "sleetStormSorcererId",
+        "levelFiveSorcererBuild",
+        "\"class_sorcerer\""
+      ]
+    },
+    {
+      "candidateUnitId": "sleet_storm",
+      "className": "Wizard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
+      "rowKey": "spell-level-3:Wizard:sleet_storm",
+      "tracerNeedles": [
+        "sleetStormSpellId",
+        "sleetStormWizardId",
+        "levelFiveWizardBuild",
+        "\"class_wizard\""
       ]
     },
     {
