@@ -3704,6 +3704,96 @@ const seededSdkScenarioRows = [
       '"class_wizard"',
     ],
   },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Bard",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicBardId",
+      "levelFiveBardBuild",
+      '"class_bard"',
+    ],
+  },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Cleric",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicClericId",
+      "levelFiveClericBuild",
+      '"class_cleric"',
+    ],
+  },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Druid",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicDruidId",
+      "levelFiveDruidBuild",
+      '"class_druid"',
+    ],
+  },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Warlock",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicWarlockId",
+      "levelFiveWarlockBuild",
+      '"class_warlock"',
+    ],
+  },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
 ];
 
 function animalFriendshipSdkHelperNeedles() {

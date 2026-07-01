@@ -1,4 +1,6 @@
 import {
+  battleObjectId,
+  battleSpellEffectOccurrenceId,
   breakBattleConcentration,
   combatantId,
   endTurn,
@@ -12,6 +14,7 @@ import {
   type BattleInterruptProcedureChoice,
   type BattleResolutionResult,
   type BattleState,
+  type BattleTrackedOngoingSpellLightEmitter,
   type CombatantId,
 } from "@dnd/battle-runtime";
 import {
@@ -42,6 +45,10 @@ import {
   characterSheet,
   damageRollFillWithGroups,
   knownWillingSpellTargetFill,
+  levelFiveBardBuild,
+  levelFiveClericBuild,
+  levelFiveDruidWildShapeKnownFormStatBlockIds,
+  levelFiveDruidBuild,
   levelFiveMartialBuild,
   levelFiveSorcererBuild,
   levelFiveWarlockBuild,
@@ -80,6 +87,14 @@ const counterspellWizardId = combatantId(
 const counterspellTriggeringWizardId = combatantId(
   "combatant:l5-tracer-counterspell-triggering-wizard",
 );
+const dispelMagicBardId = combatantId("combatant:l5-tracer-dispel-bard");
+const dispelMagicClericId = combatantId("combatant:l5-tracer-dispel-cleric");
+const dispelMagicDruidId = combatantId("combatant:l5-tracer-dispel-druid");
+const dispelMagicSorcererId = combatantId(
+  "combatant:l5-tracer-dispel-sorcerer",
+);
+const dispelMagicWarlockId = combatantId("combatant:l5-tracer-dispel-warlock");
+const dispelMagicWizardId = combatantId("combatant:l5-tracer-dispel-wizard");
 
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
@@ -90,7 +105,10 @@ const sorcererFontOfMagicUnitId = "sorcerer_font_of_magic";
 const hasteSpellId = "haste";
 const protectionFromEnergySpellId = "protection_from_energy";
 const counterspellSpellId = "counterspell";
+const dispelMagicSpellId = "dispel_magic";
+const continualFlameSpellId = "continual_flame";
 const counterspellCastLevel = 3;
+const dispelMagicCastLevel = 3;
 const magicMissileSpellId = "magic_missile";
 const magicMissileTriggerSlotLevel = 1;
 type CounterspellClassAccessCase = {
@@ -98,6 +116,19 @@ type CounterspellClassAccessCase = {
   readonly reactorId: CombatantId;
   readonly build: CharacterBuild;
 };
+type DispelMagicClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockRecord["id"][];
+};
+type OngoingSpellTargetChoiceFill = Extract<
+  BattleFill,
+  { readonly kind: "ongoingSpellTargetChoice" }
+>;
+type OngoingSpellTarget = OngoingSpellTargetChoiceFill["value"];
+type OngoingSpellTargetWithinRangeFact =
+  OngoingSpellTargetChoiceFill["spatialFacts"][number];
 
 describe("level 5 SDK tracer bullets", () => {
   test("Extra Attack projects a level-5 martial character through sheet handoff and opens exactly one added attack slot", () => {
@@ -627,6 +658,130 @@ describe("level 5 SDK tracer bullets", () => {
     }
   });
 
+  test("Dispel Magic projects Bard, Cleric, Druid, Sorcerer, Warlock, and Wizard access and ends a tracked ongoing spell effect", () => {
+    const dispelMagicCases: readonly DispelMagicClassAccessCase[] = [
+      {
+        sourceUnitId: "class_bard",
+        casterId: dispelMagicBardId,
+        build: levelFiveBardBuild({ preparedSpells: [dispelMagicSpellId] }),
+      },
+      {
+        sourceUnitId: "class_cleric",
+        casterId: dispelMagicClericId,
+        build: levelFiveClericBuild({ preparedSpells: [dispelMagicSpellId] }),
+      },
+      {
+        sourceUnitId: "class_druid",
+        casterId: dispelMagicDruidId,
+        build: levelFiveDruidBuild({ preparedSpells: [dispelMagicSpellId] }),
+        druidWildShapeKnownFormStatBlockIds:
+          levelFiveDruidWildShapeKnownFormStatBlockIds,
+      },
+      {
+        sourceUnitId: "class_sorcerer",
+        casterId: dispelMagicSorcererId,
+        build: levelFiveSorcererBuild({
+          preparedSpells: [dispelMagicSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_warlock",
+        casterId: dispelMagicWarlockId,
+        build: levelFiveWarlockBuild({
+          preparedSpells: [dispelMagicSpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_wizard",
+        casterId: dispelMagicWizardId,
+        build: levelFiveWizardBuild({
+          preparedSpells: [dispelMagicSpellId],
+        }),
+      },
+    ];
+
+    for (const dispelMagicCase of dispelMagicCases) {
+      expectDispelMagicClassAccess(dispelMagicCase);
+
+      const druidWildShapeKnownFormStatBlockIds =
+        dispelMagicCase.druidWildShapeKnownFormStatBlockIds;
+      const objectId = battleObjectId(
+        `object:l5-tracer-dispel-${dispelMagicCase.sourceUnitId}`,
+      );
+      const baseState = battleFromSheets({
+        battleIdText: `battle:l5-tracer-dispel-${dispelMagicCase.sourceUnitId}`,
+        characters: [
+          characterSheet({
+            characterIdText: `character:l5-tracer-dispel-${dispelMagicCase.sourceUnitId}`,
+            build: dispelMagicCase.build,
+            combatantId: dispelMagicCase.casterId,
+            initiative: 20,
+            ...(druidWildShapeKnownFormStatBlockIds === undefined
+              ? {}
+              : {
+                  druidWildShapeKnownFormStatBlockIds:
+                    druidWildShapeKnownFormStatBlockIds,
+                }),
+          }),
+        ],
+        monsters: [],
+      });
+      const state: BattleState = {
+        ...baseState,
+        lightEmitters: [
+          trackedObjectSpellLightEmitter({
+            objectId,
+            sourceCombatantId: dispelMagicCase.casterId,
+          }),
+        ],
+      };
+      const act = spellSlotActForProcedure(
+        state,
+        dispelMagicSpellId,
+        dispelMagicCastLevel,
+        "ongoingSpellEnd",
+      );
+      const target = requireHoleFromList(
+        act.initialHoles,
+        "ongoingSpellTargetChoice",
+      );
+
+      expect(target).toMatchObject({
+        requiresTableSpatialFact: true,
+        choices: expect.arrayContaining([{ kind: "object", objectId }]),
+      });
+
+      const resolved = requireResolved(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            ongoingSpellTargetFill({
+              hole: target,
+              casterId: dispelMagicCase.casterId,
+              target: { kind: "object", objectId },
+            }),
+          ],
+        }),
+      );
+      const caster = requireCharacterCombatant(
+        resolved.state,
+        dispelMagicCase.casterId,
+      );
+
+      expect(resolved.state.lightEmitters).toEqual([]);
+      expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+      expect(caster.origin.spellcasting?.spellSlots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            spellLevel: dispelMagicCastLevel,
+            expended: 1,
+          }),
+        ]),
+      );
+    }
+  });
+
   test("Sorcerous Restoration uses the sheet rest lifecycle to recover half level rounded down once per Long Rest", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
@@ -728,10 +883,116 @@ function expectCounterspellClassAccess(input: {
     spellcasting: {
       kind: "spellcasting",
       slots: expect.arrayContaining([
-        expect.objectContaining({ spellLevel: counterspellCastLevel, count: 2 }),
+        expect.objectContaining({
+          spellLevel: counterspellCastLevel,
+          count: 2,
+        }),
       ]),
     },
   });
+}
+
+function expectDispelMagicClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly build: CharacterBuild;
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([dispelMagicSpellId]),
+      }),
+    ]),
+  );
+  if (input.sourceUnitId === "class_warlock") {
+    expect(input.build.spellcasting?.slotPools).toMatchObject({
+      pactMagic: {
+        kind: "pactMagic",
+        slotLevel: dispelMagicCastLevel,
+        count: 2,
+      },
+    });
+    return;
+  }
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({
+          spellLevel: dispelMagicCastLevel,
+          count: 2,
+        }),
+      ]),
+    },
+  });
+}
+
+function trackedObjectSpellLightEmitter(input: {
+  readonly objectId: ReturnType<typeof battleObjectId>;
+  readonly sourceCombatantId: CombatantId;
+}): BattleTrackedOngoingSpellLightEmitter {
+  return {
+    kind: "spellLightEmitter",
+    sourceSpellId: continualFlameSpellId,
+    sourceCombatantId: input.sourceCombatantId,
+    sourceEffectId: battleSpellEffectOccurrenceId(
+      `${input.sourceCombatantId}:${continualFlameSpellId}:${input.objectId}:l5-tracer`,
+    ),
+    sourceSpellLevel: spellEffectLevel(2),
+    attachment: { kind: "object", objectId: input.objectId },
+    emission: {
+      kind: "brightAndDim",
+      brightRadiusFeet: movementFeet(20),
+      dimAdditionalFeet: movementFeet(20),
+    },
+    opaqueCoverInteraction: { kind: "blocksEmission" },
+    expiresAt: { kind: "untilDispelled" },
+  };
+}
+
+function spellEffectLevel(
+  value: number,
+): BattleTrackedOngoingSpellLightEmitter["sourceSpellLevel"] {
+  if (!Number.isInteger(value) || value < 0 || value > 9) {
+    throw new Error(`Invalid spell effect level test fixture: ${value}.`);
+  }
+  // BattleSpellEffectLevel is a number brand erased at runtime; the guard above
+  // enforces the same integer 0-9 range used by the battle-runtime parser.
+  return value as BattleTrackedOngoingSpellLightEmitter["sourceSpellLevel"];
+}
+
+function ongoingSpellTargetFill(input: {
+  readonly hole: Extract<
+    BattleHole,
+    { readonly kind: "ongoingSpellTargetChoice" }
+  >;
+  readonly casterId: CombatantId;
+  readonly target: OngoingSpellTarget;
+}): OngoingSpellTargetChoiceFill {
+  return {
+    kind: "ongoingSpellTargetChoice",
+    holeId: input.hole.holeId,
+    value: input.target,
+    spatialFacts: [
+      ongoingSpellTargetWithinRangeFact({
+        casterId: input.casterId,
+        target: input.target,
+      }),
+    ],
+  };
+}
+
+function ongoingSpellTargetWithinRangeFact(input: {
+  readonly casterId: CombatantId;
+  readonly target: OngoingSpellTarget;
+}): OngoingSpellTargetWithinRangeFact {
+  return {
+    kind: "ongoingSpellTargetWithinRange",
+    casterId: input.casterId,
+    spellId: dispelMagicSpellId,
+    target: input.target,
+    rangeFeet: movementFeet(120),
+  };
 }
 
 function startCounterspellableMagicMissile(input: {
@@ -782,7 +1043,10 @@ function startCounterspellableMagicMissile(input: {
 }
 
 function magicMissileTargetAllocationFill(input: {
-  readonly hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>;
+  readonly hole: Extract<
+    BattleHole,
+    { readonly kind: "spellTargetAllocation" }
+  >;
   readonly casterId: CombatantId;
   readonly targetId: CombatantId;
   readonly dartCount: number;
