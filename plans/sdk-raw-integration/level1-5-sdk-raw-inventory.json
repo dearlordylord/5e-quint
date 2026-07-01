@@ -51727,21 +51727,22 @@
     },
     {
       "candidateUnitId": "fighter_second_wind",
-      "classification": "hand-built build needing migration",
+      "classification": "already legal creation path",
       "className": "Fighter",
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Fighter Second Wind heals through sheet projection and spends one Bonus Action use",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
       "levelBand": "level-1",
-      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
-      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
       "rowId": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
       "rowKey": "level-1:Fighter:fighter_second_wind",
       "rowKind": "class-feature-grant",
-      "sourceBuildPath": "direct-character-build",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-battle-handoff",
       "usesRealSheetBattleHandoff": true,
-      "wholeWidthSourceLifecycleProof": false
+      "wholeWidthSourceLifecycleProof": true
     },
     {
       "candidateUnitId": "monk_martial_arts",
@@ -58500,8 +58501,8 @@
     },
     "levelOneTwoSeedMigrationAuditRows": 80,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 65,
-      "hand-built build needing migration": 5,
+      "already legal creation path": 66,
+      "hand-built build needing migration": 4,
       "legal build-sheet owner proof": 9,
       "legal creation owner proof": 1
     },
@@ -58510,10 +58511,10 @@
       "real-sheet-battle": 70
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "direct-character-build": 5,
-      "legal-creation-draft-finalize": 75
+      "direct-character-build": 4,
+      "legal-creation-draft-finalize": 76
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 65,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 66,
     "scenarioGroups": 414,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 20,
@@ -88455,6 +88456,11 @@
       "rowId": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
       "rowKey": "level-1:Fighter:fighter_second_wind",
       "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-second-wind\"",
+        "fighterLifecycleDraftPlan",
+        "hitPoints: { tag: \"current\", currentHp: 4 }",
+        "battleIdText: \"battle:l1-sdk-second-wind\"",
         "fighterSecondWindUnitId"
       ]
     },

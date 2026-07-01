@@ -1095,24 +1095,31 @@ describe("level 1 SDK RAW integration", () => {
   });
 
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
-    const state = battleFromSheets({
-      battleIdText: "battle:l1-sdk-second-wind",
-      characters: [
-        characterSheet({
-          characterIdText: "character:l1-sdk-second-wind",
-          build: levelOneSingleClassBuild({
-            classUnitId: "class_fighter",
-            weaponUnitId: "weapon_longsword",
-          }),
-          combatantId: fighterId,
-          initiative: 20,
-          currentHp: 4,
-        }),
-      ],
-      monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
-      ],
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-second-wind",
+      draftPlan: fighterLifecycleDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-second-wind",
+        hitPoints: { tag: "current", currentHp: 4 },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l1-sdk-second-wind",
+        combatantId: fighterId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      },
     });
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+
+    const state = fixture.state;
     const act = unitFeatureActForUnitId(
       state,
       fighterId,

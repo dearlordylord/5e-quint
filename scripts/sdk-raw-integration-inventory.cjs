@@ -108,7 +108,6 @@ const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 210;
 const expectedLevelOneTwoSeedScenarioRows = 80;
 const handBuiltSourceSeedRowIds = new Set([
-  "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
   "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
   "srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack",
   "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
@@ -517,7 +516,15 @@ const seededSdkScenarioRows = [
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
       "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",
-    tracerNeedles: ["fighterSecondWindUnitId"],
+    sourceProof: legalBuildBattleHandoffSourceProof,
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-second-wind"',
+      "fighterLifecycleDraftPlan",
+      'hitPoints: { tag: "current", currentHp: 4 }',
+      'battleIdText: "battle:l1-sdk-second-wind"',
+      "fighterSecondWindUnitId",
+    ],
   },
   {
     candidateUnitId: "monk_martial_arts",
