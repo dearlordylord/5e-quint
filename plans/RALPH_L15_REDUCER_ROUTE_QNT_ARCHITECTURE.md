@@ -265,10 +265,9 @@ Task 1 must recompute this number after any branch-scope or driver changes.
 - `plans/unit-profile-coverage/LEVEL1_3_FULL_SUPPORT.md`
 - `plans/unit-profile-coverage/LEVEL1_4_FULL_SUPPORT.md`
 - `plans/unit-profile-coverage/level1-7-mining-audit.json`
-- `plans/RALPH_L5_LANE_A_CLASS_FEATURES.md`
-- `plans/RALPH_L5_LANE_B_SPELL3_AUTHORED_CLOSURE.md`
-- `plans/RALPH_L5_LANE_C_SPELL3_MISSING_AUTHORED_1.md`
-- `plans/RALPH_L5_LANE_D_SPELL3_MISSING_AUTHORED_2.md`
+- `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`
+- `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`
+- `plans/RALPH_L5_FULL_SRD_COMPLETION.md`
 - `packages/battle-runtime/*.mbt.qnt`
 - `packages/battle-runtime/*.route.mbt.qnt`
 - `packages/battle-runtime/battle-runtime-reducer-route.qnt`

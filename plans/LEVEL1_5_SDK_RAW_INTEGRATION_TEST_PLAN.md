@@ -88,10 +88,9 @@ the control surface for progress.
 - `scripts/sdk-raw-integration-inventory.cjs`
 - `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
 - `plans/sdk-raw-integration/LEVEL1_5_SDK_RAW_INVENTORY.md`
-- `plans/RALPH_L5_LANE_A_CLASS_FEATURES.md`
-- `plans/RALPH_L5_LANE_B_SPELL3_AUTHORED_CLOSURE.md`
-- `plans/RALPH_L5_LANE_C_SPELL3_MISSING_AUTHORED_1.md`
-- `plans/RALPH_L5_LANE_D_SPELL3_MISSING_AUTHORED_2.md`
+- `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`
+- `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`
+- `plans/RALPH_L5_FULL_SRD_COMPLETION.md`
 - package READMEs and focused tests in `packages/character-creation-runtime/`,
   `packages/character-sheet-runtime/`,
   `packages/character-battle-runtime/`, and `packages/battle-runtime/`
