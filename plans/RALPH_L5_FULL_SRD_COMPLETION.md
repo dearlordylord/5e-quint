@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L5FULL-SDK-07-HYPNOTIC-PATTERN",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Hypnotic Pattern"
     },
     {
