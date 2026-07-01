@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L5FULL-SDK-04-FLY",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Fly"
     },
     {

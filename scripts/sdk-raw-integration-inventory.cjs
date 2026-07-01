@@ -3824,6 +3824,54 @@ const seededSdkScenarioRows = [
       '"class_wizard"',
     ],
   },
+  {
+    candidateUnitId: "fly",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fly",
+    tracerNeedles: [
+      "flySpellId",
+      "flySorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "fly",
+    className: "Warlock",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_fly",
+    tracerNeedles: [
+      "flySpellId",
+      "flyWarlockId",
+      "levelFiveWarlockBuild",
+      '"class_warlock"',
+    ],
+  },
+  {
+    candidateUnitId: "fly",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_fly",
+    tracerNeedles: [
+      "flySpellId",
+      "flyWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
 ];
 
 function animalFriendshipSdkHelperNeedles() {

@@ -99,6 +99,9 @@ const dispelMagicWizardId = combatantId("combatant:l5-tracer-dispel-wizard");
 const fireballSorcererId = combatantId("combatant:l5-tracer-fireball-sorcerer");
 const fireballWizardId = combatantId("combatant:l5-tracer-fireball-wizard");
 const fireballTargetId = combatantId("combatant:l5-tracer-fireball-target");
+const flySorcererId = combatantId("combatant:l5-tracer-fly-sorcerer");
+const flyWarlockId = combatantId("combatant:l5-tracer-fly-warlock");
+const flyWizardId = combatantId("combatant:l5-tracer-fly-wizard");
 
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
@@ -112,9 +115,12 @@ const counterspellSpellId = "counterspell";
 const dispelMagicSpellId = "dispel_magic";
 const continualFlameSpellId = "continual_flame";
 const fireballSpellId = "fireball";
+const flySpellId = "fly";
 const counterspellCastLevel = 3;
 const dispelMagicCastLevel = 3;
 const fireballCastLevel = 3;
+const flyCastLevel = 3;
+const flySpeedFeet = 60;
 const magicMissileSpellId = "magic_missile";
 const magicMissileTriggerSlotLevel = 1;
 const fireballObjectId = battleObjectId("object:l5-tracer-fireball-kindling");
@@ -135,6 +141,11 @@ type DispelMagicClassAccessCase = {
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockRecord["id"][];
 };
 type FireballClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
+};
+type FlyClassAccessCase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly casterId: CombatantId;
   readonly build: CharacterBuild;
@@ -913,6 +924,115 @@ describe("level 5 SDK tracer bullets", () => {
     }
   });
 
+  test("Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed", () => {
+    const flyCases = [
+      {
+        sourceUnitId: "class_sorcerer",
+        casterId: flySorcererId,
+        build: levelFiveSorcererBuild({
+          preparedSpells: [flySpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_warlock",
+        casterId: flyWarlockId,
+        build: levelFiveWarlockBuild({
+          preparedSpells: [flySpellId],
+        }),
+      },
+      {
+        sourceUnitId: "class_wizard",
+        casterId: flyWizardId,
+        build: levelFiveWizardBuild({
+          preparedSpells: [flySpellId],
+        }),
+      },
+    ] as const satisfies ReadonlyArray<FlyClassAccessCase>;
+
+    for (const flyCase of flyCases) {
+      expectFlyClassAccess(flyCase);
+
+      const state = battleFromSheets({
+        battleIdText: `battle:l5-tracer-fly-${flyCase.sourceUnitId}`,
+        characters: [
+          characterSheet({
+            characterIdText: `character:l5-tracer-fly-${flyCase.sourceUnitId}`,
+            build: flyCase.build,
+            combatantId: flyCase.casterId,
+            initiative: 20,
+          }),
+        ],
+        monsters: [],
+      });
+      const act = spellSlotActForProcedure(
+        state,
+        flySpellId,
+        flyCastLevel,
+        "scalarBuff",
+      );
+      const target = requireHoleFromList(act.initialHoles, "targetChoice");
+
+      expect(target.choices).toContain(flyCase.casterId);
+
+      const resolved = requireResolved(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            knownWillingSpellTargetFill(
+              target,
+              flySpellId,
+              flyCase.casterId,
+              flyCase.casterId,
+            ),
+          ],
+        }),
+      );
+      const caster = requireCharacterCombatant(
+        resolved.state,
+        flyCase.casterId,
+      );
+
+      expect(resolved.snapshot.combatants).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: flyCase.casterId,
+            concentrating: true,
+            movement: expect.objectContaining({
+              speedKinds: expect.arrayContaining([
+                expect.objectContaining({
+                  kind: "fly",
+                  speedFeet: flySpeedFeet,
+                  remainingFeet: flySpeedFeet,
+                }),
+              ]),
+            }),
+          }),
+        ]),
+      );
+      expect(caster.activeEffects).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: "specialSpeedGrant",
+            sourceSpellId: flySpellId,
+            sourceCombatantId: flyCase.casterId,
+            speedKind: "fly",
+            speed: { kind: "fixed", speedFeet: movementFeet(flySpeedFeet) },
+            hover: true,
+          }),
+        ]),
+      );
+      expect(caster.origin.spellcasting?.spellSlots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            spellLevel: flyCastLevel,
+            expended: 1,
+          }),
+        ]),
+      );
+    }
+  });
+
   test("Sorcerous Restoration uses the sheet rest lifecycle to recover half level rounded down once per Long Rest", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
@@ -1076,6 +1196,41 @@ function expectFireballClassAccess(input: {
       slots: expect.arrayContaining([
         expect.objectContaining({
           spellLevel: fireballCastLevel,
+          count: 2,
+        }),
+      ]),
+    },
+  });
+}
+
+function expectFlyClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly build: CharacterBuild;
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([flySpellId]),
+      }),
+    ]),
+  );
+  if (input.sourceUnitId === "class_warlock") {
+    expect(input.build.spellcasting?.slotPools).toMatchObject({
+      pactMagic: {
+        kind: "pactMagic",
+        slotLevel: flyCastLevel,
+        count: 2,
+      },
+    });
+    return;
+  }
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({
+          spellLevel: flyCastLevel,
           count: 2,
         }),
       ]),
