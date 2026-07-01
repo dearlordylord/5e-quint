@@ -223,6 +223,36 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste` / `spell-level-3:Wizard:haste`: level5-sdk-tracer-bullets: Haste
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy` / `spell-level-3:Wizard:protection_from_energy`: level5-sdk-tracer-bullets: Protection from Energy
 
+## L1/L2 Campaign Grouping
+
+This grouping is generated from the inventory rows and scenario group
+projection. It covers only the active L1/L2 source-harness dispositions
+and keeps the SRD provenance/license fact at the collection boundary:
+`srd-5.2.1-local-corpus` / `redistributable-srd`.
+
+Rows/groups assigned: 400/207.
+
+| Row family | SDK disposition | Rows | Groups | Lanes |
+| --- | --- | ---: | ---: | --- |
+| closure-review-row | closure-review-needed | 71 | 22 | spell-effect-owner-review |
+| explicit-closure-row | explicit-closure-needed | 24 | 24 | explicit-closure |
+| seed-row | seed-scenario-present | 64 | 64 | seed-present |
+| source-row | sdk-scenario-needed | 241 | 97 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
+
+| Lane | SDK disposition | Row family | Rows | Groups | Task family | Owner tasks | Follow-up tasks |
+| --- | --- | --- | ---: | ---: | --- | --- | --- |
+| battle-feature-sdk | sdk-scenario-needed | source-row | 6 | 6 | battle-feature-sdk | `L12-SH10-BATTLE-FEATURE-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| battle-spell-sdk | sdk-scenario-needed | source-row | 83 | 32 | battle-spell-sdk | `L12-SH11-BATTLE-SPELL-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| build-battle-sdk | sdk-scenario-needed | source-row | 17 | 12 | build-battle-sdk | `L12-SH07-BUILD-BATTLE-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| build-sheet-sdk | sdk-scenario-needed | source-row | 100 | 12 | build-sheet-sdk | `L12-SH06-BUILD-SHEET-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| character-creation-sdk | sdk-scenario-needed | source-row | 15 | 15 | character-creation-sdk | `L12-SH05-CREATION-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| character-sheet-sdk | sdk-scenario-needed | source-row | 7 | 7 | character-sheet-sdk | `L12-SH08-SHEET-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| explicit-closure | explicit-closure-needed | explicit-closure-row | 24 | 24 | explicit-closure | `L12-SH04-GROUPING-GENERATOR-GATE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| multi-owner-feature-sdk | sdk-scenario-needed | source-row | 6 | 6 | multi-owner-feature-sdk | `L12-SH12-MULTI-OWNER-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| seed-present | seed-scenario-present | seed-row | 64 | 64 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| sheet-spell-access-sdk | sdk-scenario-needed | source-row | 7 | 7 | sheet-spell-access-sdk | `L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| spell-effect-owner-review | closure-review-needed | closure-review-row | 71 | 22 | spell-effect-owner-review | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
+
 ## L1/L2 Seed Migration Audit
 
 This section is generated from the tracked seed scenario declarations and

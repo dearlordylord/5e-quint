@@ -25,67 +25,67 @@
     {
       "number": 4,
       "id": "L12-SH04-GROUPING-GENERATOR-GATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Generate the L1/L2 campaign grouping gate"
     },
     {
       "number": 5,
       "id": "L12-SH05-CREATION-SDK-FIRST-SLICE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add the first character-creation SDK slice"
     },
     {
       "number": 6,
       "id": "L12-SH06-BUILD-SHEET-FIRST-SLICE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add the first build-to-sheet SDK slice"
     },
     {
       "number": 7,
       "id": "L12-SH07-BUILD-BATTLE-FIRST-SLICE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add the first build-to-battle SDK slice"
     },
     {
       "number": 8,
       "id": "L12-SH08-SHEET-SDK-FIRST-SLICE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add the first character-sheet SDK slice"
     },
     {
       "number": 9,
       "id": "L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add the first sheet spell-access SDK slice"
     },
     {
       "number": 10,
       "id": "L12-SH10-BATTLE-FEATURE-FIRST-SLICE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add the first battle-feature SDK slice"
     },
     {
       "number": 11,
       "id": "L12-SH11-BATTLE-SPELL-FIRST-SLICE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add the first battle-spell SDK slice"
     },
     {
       "number": 12,
       "id": "L12-SH12-MULTI-OWNER-FIRST-SLICE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Split the first multi-owner feature SDK slice"
     },
     {
       "number": 13,
       "id": "L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Close the first spell-effect owner review family"
     },
     {
       "number": 14,
       "id": "L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add the first small QNT harness pressure witness"
     },
     {
@@ -339,17 +339,17 @@ Reviewer-loop convergence:
 | 1 | L12-SH01-DENOMINATOR-FORMAT-GATE - Verify the L1/L2 source denominator and Ralph format | done | none | fixture/enabling | Static denominator and plan-format verification, with durable corrections if inventory drifted. |
 | 2 | L12-SH02-LEGAL-FIXTURE-SEAM - Implement the legal source-side lifecycle fixture seam | done | L12-SH01-DENOMINATOR-FORMAT-GATE | fixture/enabling | Shared legal fixture helpers for L1/L2 source lifecycle scenarios. |
 | 3 | L12-SH03-SEED-MIGRATION-AUDIT - Audit existing seed rows for legal lifecycle proof | done | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH02-LEGAL-FIXTURE-SEAM | seed-present | Classification of all 64 L1/L2 seed rows and first safe migrations if small. |
-| 4 | L12-SH04-GROUPING-GENERATOR-GATE - Generate the L1/L2 campaign grouping gate | ready-for-research | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH03-SEED-MIGRATION-AUDIT | fixture/enabling | Generated or checked group assignment evidence for 400 rows and 207 groups. |
-| 5 | L12-SH05-CREATION-SDK-FIRST-SLICE - Add the first character-creation SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | character-creation-sdk | One legal creation scenario group using the shared fixture seam. |
-| 6 | L12-SH06-BUILD-SHEET-FIRST-SLICE - Add the first build-to-sheet SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | build-sheet-sdk | One class-wide build-sheet projection group. |
-| 7 | L12-SH07-BUILD-BATTLE-FIRST-SLICE - Add the first build-to-battle SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | build-battle-sdk | One build-battle handoff scenario group. |
-| 8 | L12-SH08-SHEET-SDK-FIRST-SLICE - Add the first character-sheet SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | character-sheet-sdk | One sheet-owned runtime projection scenario group. |
-| 9 | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE - Add the first sheet spell-access SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | sheet-spell-access-sdk | One spell-access scenario group from legal creation through sheet. |
-| 10 | L12-SH10-BATTLE-FEATURE-FIRST-SLICE - Add the first battle-feature SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | battle-feature-sdk | One battle feature scenario group from sheet to reducer behavior. |
-| 11 | L12-SH11-BATTLE-SPELL-FIRST-SLICE - Add the first battle-spell SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | battle-spell-sdk | One spell scenario group sharing an execution path across classes. |
-| 12 | L12-SH12-MULTI-OWNER-FIRST-SLICE - Split the first multi-owner feature SDK slice | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | multi-owner-feature-sdk | One multi-owner group split into legal source scenario and explicit owner follow-ups. |
-| 13 | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY - Close the first spell-effect owner review family | blocked | L12-SH04-GROUPING-GENERATOR-GATE | closure-review | First spell-effect owner-review family classified as table-only, existing owner sufficient, or follow-up implementation. |
-| 14 | L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS - Add the first small QNT harness pressure witness | blocked | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | QNT/harness-pressure | Small deterministic source-side witness or existing obligation strengthening. |
+| 4 | L12-SH04-GROUPING-GENERATOR-GATE - Generate the L1/L2 campaign grouping gate | done | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH03-SEED-MIGRATION-AUDIT | fixture/enabling | Generated or checked group assignment evidence for 400 rows and 207 groups. |
+| 5 | L12-SH05-CREATION-SDK-FIRST-SLICE - Add the first character-creation SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | character-creation-sdk | One legal creation scenario group using the shared fixture seam. |
+| 6 | L12-SH06-BUILD-SHEET-FIRST-SLICE - Add the first build-to-sheet SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | build-sheet-sdk | One class-wide build-sheet projection group. |
+| 7 | L12-SH07-BUILD-BATTLE-FIRST-SLICE - Add the first build-to-battle SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | build-battle-sdk | One build-battle handoff scenario group. |
+| 8 | L12-SH08-SHEET-SDK-FIRST-SLICE - Add the first character-sheet SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | character-sheet-sdk | One sheet-owned runtime projection scenario group. |
+| 9 | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE - Add the first sheet spell-access SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | sheet-spell-access-sdk | One spell-access scenario group from legal creation through sheet. |
+| 10 | L12-SH10-BATTLE-FEATURE-FIRST-SLICE - Add the first battle-feature SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | battle-feature-sdk | One battle feature scenario group from sheet to reducer behavior. |
+| 11 | L12-SH11-BATTLE-SPELL-FIRST-SLICE - Add the first battle-spell SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | battle-spell-sdk | One spell scenario group sharing an execution path across classes. |
+| 12 | L12-SH12-MULTI-OWNER-FIRST-SLICE - Split the first multi-owner feature SDK slice | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | multi-owner-feature-sdk | One multi-owner group split into legal source scenario and explicit owner follow-ups. |
+| 13 | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY - Close the first spell-effect owner review family | ready-for-research | L12-SH04-GROUPING-GENERATOR-GATE | closure-review | First spell-effect owner-review family classified as table-only, existing owner sufficient, or follow-up implementation. |
+| 14 | L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS - Add the first small QNT harness pressure witness | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | QNT/harness-pressure | Small deterministic source-side witness or existing obligation strengthening. |
 | 15 | L12-SH15-NEXT-BATCH-SPLIT - Expand the next one-session task batches | blocked | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS | planning | Add the next runnable one-session tasks for remaining L1/L2 groups after seed migrations. |
 | 16 | L12-SH16-CLEANROOM-GATE-PLAN - Prepare the later cleanroom replay gate | blocked | L12-SH15-NEXT-BATCH-SPLIT | later cleanroom gate | Cleanroom replay gate plan after source-side harness stabilizes. |
 | 17 | L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE - Migrate the Barbarian Rage seed to legal source creation | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `barbarian_rage` seed uses legal creation and remains a real sheet/battle handoff scenario. |
@@ -518,7 +518,7 @@ Plan Impact:
 
 ### Task 4 - L12-SH04-GROUPING-GENERATOR-GATE
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -558,17 +558,12 @@ Validation:
 
 Plan Impact:
 
-- `update-required` if generated grouping changes the initial lane table or
-  suggests different task boundaries.
+- `applied`; the generated grouping matched the initial lane table and unblocks
+  Tasks 5-14 without changing their task boundaries.
 
 ### Task 5 - L12-SH05-CREATION-SDK-FIRST-SLICE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH02-LEGAL-FIXTURE-SEAM` and
-`L12-SH04-GROUPING-GENERATOR-GATE`.
+Status: `ready-for-research`
 
 Input:
 
@@ -612,12 +607,7 @@ Plan Impact:
 
 ### Task 6 - L12-SH06-BUILD-SHEET-FIRST-SLICE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH02-LEGAL-FIXTURE-SEAM` and
-`L12-SH04-GROUPING-GENERATOR-GATE`.
+Status: `ready-for-research`
 
 Input:
 
@@ -662,12 +652,7 @@ Plan Impact:
 
 ### Task 7 - L12-SH07-BUILD-BATTLE-FIRST-SLICE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH02-LEGAL-FIXTURE-SEAM` and
-`L12-SH04-GROUPING-GENERATOR-GATE`.
+Status: `ready-for-research`
 
 Input:
 
@@ -712,12 +697,7 @@ Plan Impact:
 
 ### Task 8 - L12-SH08-SHEET-SDK-FIRST-SLICE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH02-LEGAL-FIXTURE-SEAM` and
-`L12-SH04-GROUPING-GENERATOR-GATE`.
+Status: `ready-for-research`
 
 Input:
 
@@ -760,12 +740,7 @@ Plan Impact:
 
 ### Task 9 - L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH02-LEGAL-FIXTURE-SEAM` and
-`L12-SH04-GROUPING-GENERATOR-GATE`.
+Status: `ready-for-research`
 
 Input:
 
@@ -809,12 +784,7 @@ Plan Impact:
 
 ### Task 10 - L12-SH10-BATTLE-FEATURE-FIRST-SLICE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH02-LEGAL-FIXTURE-SEAM` and
-`L12-SH04-GROUPING-GENERATOR-GATE`.
+Status: `ready-for-research`
 
 Input:
 
@@ -859,12 +829,7 @@ Plan Impact:
 
 ### Task 11 - L12-SH11-BATTLE-SPELL-FIRST-SLICE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH02-LEGAL-FIXTURE-SEAM` and
-`L12-SH04-GROUPING-GENERATOR-GATE`.
+Status: `ready-for-research`
 
 Input:
 
@@ -914,12 +879,7 @@ Plan Impact:
 
 ### Task 12 - L12-SH12-MULTI-OWNER-FIRST-SLICE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH02-LEGAL-FIXTURE-SEAM` and
-`L12-SH04-GROUPING-GENERATOR-GATE`.
+Status: `ready-for-research`
 
 Input:
 
@@ -963,11 +923,7 @@ Plan Impact:
 
 ### Task 13 - L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH04-GROUPING-GENERATOR-GATE`.
+Status: `ready-for-research`
 
 Input:
 
@@ -1012,12 +968,7 @@ Plan Impact:
 
 ### Task 14 - L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH02-LEGAL-FIXTURE-SEAM` and
-`L12-SH04-GROUPING-GENERATOR-GATE`.
+Status: `ready-for-research`
 
 Input:
 

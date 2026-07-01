@@ -93,6 +93,14 @@ const levelOneTwoSourceHarnessBands = new Set([
   "spell-level-0",
   "spell-level-1",
 ]);
+const levelOneTwoCampaignActiveDispositions = new Set([
+  "sdk-scenario-needed",
+  "seed-scenario-present",
+  "explicit-closure-needed",
+  "closure-review-needed",
+]);
+const expectedLevelOneTwoCampaignRows = 400;
+const expectedLevelOneTwoCampaignGroups = 207;
 const expectedLevelOneTwoSeedScenarioRows = 64;
 const handBuiltSourceSeedRowIds = new Set([
   "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
@@ -137,6 +145,113 @@ const ownerPathPrefixes = [
   ["packages/character-battle-runtime/", "character-battle-runtime"],
   ["packages/battle-runtime/", "character-battle-to-battle"],
 ];
+
+const levelOneTwoCampaignRowFamilyByDisposition = new Map([
+  ["sdk-scenario-needed", "source-row"],
+  ["seed-scenario-present", "seed-row"],
+  ["explicit-closure-needed", "explicit-closure-row"],
+  ["closure-review-needed", "closure-review-row"],
+]);
+
+const levelOneTwoCampaignLaneOwnership = new Map([
+  [
+    "character-creation-sdk",
+    {
+      taskFamily: "character-creation-sdk",
+      ownerTaskIds: ["L12-SH05-CREATION-SDK-FIRST-SLICE"],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "build-sheet-sdk",
+    {
+      taskFamily: "build-sheet-sdk",
+      ownerTaskIds: ["L12-SH06-BUILD-SHEET-FIRST-SLICE"],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "build-battle-sdk",
+    {
+      taskFamily: "build-battle-sdk",
+      ownerTaskIds: ["L12-SH07-BUILD-BATTLE-FIRST-SLICE"],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "character-sheet-sdk",
+    {
+      taskFamily: "character-sheet-sdk",
+      ownerTaskIds: ["L12-SH08-SHEET-SDK-FIRST-SLICE"],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "sheet-spell-access-sdk",
+    {
+      taskFamily: "sheet-spell-access-sdk",
+      ownerTaskIds: ["L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE"],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "battle-feature-sdk",
+    {
+      taskFamily: "battle-feature-sdk",
+      ownerTaskIds: ["L12-SH10-BATTLE-FEATURE-FIRST-SLICE"],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "battle-spell-sdk",
+    {
+      taskFamily: "battle-spell-sdk",
+      ownerTaskIds: ["L12-SH11-BATTLE-SPELL-FIRST-SLICE"],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "multi-owner-feature-sdk",
+    {
+      taskFamily: "multi-owner-feature-sdk",
+      ownerTaskIds: ["L12-SH12-MULTI-OWNER-FIRST-SLICE"],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "seed-present",
+    {
+      taskFamily: "seed-present",
+      ownerTaskIds: [
+        "L12-SH03-SEED-MIGRATION-AUDIT",
+        "L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE",
+        "L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION",
+        "L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND",
+        "L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS",
+        "L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK",
+        "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
+        "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS",
+      ],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "explicit-closure",
+    {
+      taskFamily: "explicit-closure",
+      ownerTaskIds: ["L12-SH04-GROUPING-GENERATOR-GATE"],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "spell-effect-owner-review",
+    {
+      taskFamily: "spell-effect-owner-review",
+      ownerTaskIds: ["L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY"],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+]);
 
 const seededSdkScenarioRows = [
   {
@@ -4954,6 +5069,165 @@ function buildScenarioGroups(rows) {
     .sort((left, right) => left.groupId.localeCompare(right.groupId));
 }
 
+function levelOneTwoCampaignRowFamily(disposition) {
+  const rowFamily = levelOneTwoCampaignRowFamilyByDisposition.get(disposition);
+  if (rowFamily !== undefined) return rowFamily;
+  throw new Error(`Unassigned L1/L2 campaign disposition ${disposition}`);
+}
+
+function levelOneTwoCampaignGroupDisposition(group) {
+  if (group.sdkInventoryDispositions.length === 1) {
+    return group.sdkInventoryDispositions[0];
+  }
+  throw new Error(
+    `L1/L2 campaign group ${group.groupId} mixes SDK dispositions: ${group.sdkInventoryDispositions.join(", ")}`,
+  );
+}
+
+function assertLevelOneTwoCampaignGrouping(rows, groups) {
+  const rowsWithoutAssignment = rows.filter(
+    (row) =>
+      !levelOneTwoCampaignActiveDispositions.has(
+        row.sdkInventoryDisposition,
+      ) ||
+      !levelOneTwoCampaignRowFamilyByDisposition.has(
+        row.sdkInventoryDisposition,
+      ) ||
+      !levelOneTwoCampaignLaneOwnership.has(scenarioLaneForRow(row)),
+  );
+  if (rowsWithoutAssignment.length !== 0) {
+    throw new Error(
+      [
+        `Unassigned L1/L2 campaign rows: ${rowsWithoutAssignment.length}`,
+        ...rowsWithoutAssignment
+          .slice(0, 20)
+          .map(
+            (row) =>
+              `${row.rowId} disposition=${row.sdkInventoryDisposition} lane=${scenarioLaneForRow(row)}`,
+          ),
+      ].join("\n"),
+    );
+  }
+
+  const groupsWithoutAssignment = groups.filter((group) => {
+    const disposition = levelOneTwoCampaignGroupDisposition(group);
+    return (
+      !levelOneTwoCampaignActiveDispositions.has(disposition) ||
+      !levelOneTwoCampaignRowFamilyByDisposition.has(disposition) ||
+      !levelOneTwoCampaignLaneOwnership.has(group.lane)
+    );
+  });
+  if (groupsWithoutAssignment.length !== 0) {
+    throw new Error(
+      [
+        `Unassigned L1/L2 campaign groups: ${groupsWithoutAssignment.length}`,
+        ...groupsWithoutAssignment
+          .slice(0, 20)
+          .map(
+            (group) =>
+              `${group.groupId} dispositions=${group.sdkInventoryDispositions.join(", ")} lane=${group.lane}`,
+          ),
+      ].join("\n"),
+    );
+  }
+
+  if (rows.length !== expectedLevelOneTwoCampaignRows) {
+    throw new Error(
+      `Expected ${expectedLevelOneTwoCampaignRows} L1/L2 campaign rows, found ${rows.length}.`,
+    );
+  }
+  if (groups.length !== expectedLevelOneTwoCampaignGroups) {
+    throw new Error(
+      `Expected ${expectedLevelOneTwoCampaignGroups} L1/L2 campaign groups, found ${groups.length}.`,
+    );
+  }
+}
+
+function buildLevelOneTwoCampaignGrouping(rows, scenarioGroups) {
+  const campaignRows = rows.filter((row) =>
+    levelOneTwoSourceHarnessBands.has(row.levelBand),
+  );
+  const campaignGroups = scenarioGroups.filter((group) =>
+    group.levelBands.every((levelBand) =>
+      levelOneTwoSourceHarnessBands.has(levelBand),
+    ),
+  );
+  assertLevelOneTwoCampaignGrouping(campaignRows, campaignGroups);
+
+  const rowCountByLane = countValues(
+    campaignRows.map((row) => scenarioLaneForRow(row)),
+  );
+  const groupCountByLane = countValues(campaignGroups.map((group) => group.lane));
+  const rowCountByFamily = countValues(
+    campaignRows.map((row) =>
+      levelOneTwoCampaignRowFamily(row.sdkInventoryDisposition),
+    ),
+  );
+  const groupCountByFamily = countValues(
+    campaignGroups.map((group) =>
+      levelOneTwoCampaignRowFamily(
+        levelOneTwoCampaignGroupDisposition(group),
+      ),
+    ),
+  );
+
+  const lanes = Array.from(levelOneTwoCampaignLaneOwnership.entries())
+    .filter(([lane]) => rowCountByLane[lane] !== undefined)
+    .map(([lane, ownership]) => {
+      const laneRows = campaignRows.filter(
+        (row) => scenarioLaneForRow(row) === lane,
+      );
+      const dispositions = uniqueSorted(
+        laneRows.map((row) => row.sdkInventoryDisposition),
+      );
+      if (dispositions.length !== 1) {
+        throw new Error(
+          `L1/L2 campaign lane ${lane} mixes SDK dispositions: ${dispositions.join(", ")}`,
+        );
+      }
+      const disposition = dispositions[0];
+      return {
+        lane,
+        disposition,
+        rowFamily: levelOneTwoCampaignRowFamily(disposition),
+        rowCount: rowCountByLane[lane],
+        groupCount: groupCountByLane[lane] ?? 0,
+        taskFamily: ownership.taskFamily,
+        ownerTaskIds: ownership.ownerTaskIds,
+        followUpTaskIds: ownership.followUpTaskIds,
+      };
+    })
+    .sort((left, right) => left.lane.localeCompare(right.lane));
+
+  const rowFamilies = Array.from(levelOneTwoCampaignRowFamilyByDisposition)
+    .map(([disposition, rowFamily]) => ({
+      rowFamily,
+      disposition,
+      rowCount: rowCountByFamily[rowFamily] ?? 0,
+      groupCount: groupCountByFamily[rowFamily] ?? 0,
+      lanes: lanes
+        .filter((lane) => lane.disposition === disposition)
+        .map((lane) => lane.lane),
+    }))
+    .sort((left, right) => left.rowFamily.localeCompare(right.rowFamily));
+
+  return {
+    sourceCorpus: {
+      kind: "srd-5.2.1-local-corpus",
+      licenseScope: "redistributable-srd",
+      sourcePathPrefix: ".references/srd-5.2.1/",
+    },
+    levelBands: Array.from(levelOneTwoSourceHarnessBands),
+    activeDispositions: Array.from(levelOneTwoCampaignActiveDispositions),
+    totals: {
+      rowCount: campaignRows.length,
+      groupCount: campaignGroups.length,
+    },
+    rowFamilies,
+    lanes,
+  };
+}
+
 function assertLocalRawSources(rows) {
   const invalidRows = rows.filter(
     (row) =>
@@ -5428,6 +5702,10 @@ function buildInventory() {
   );
   const scenarioGroups = buildScenarioGroups(miningRows);
   assertUniqueScenarioGroupIds(scenarioGroups);
+  const levelOneTwoCampaignGrouping = buildLevelOneTwoCampaignGrouping(
+    miningRows,
+    scenarioGroups,
+  );
   const level5ScenarioGroups = scenarioGroups.filter((group) =>
     group.levelBands.some(
       (levelBand) => levelBand === "level-5" || levelBand === "spell-level-3",
@@ -5527,6 +5805,34 @@ function buildInventory() {
         levelOneTwoSeedMigrationAuditRows.filter(
           (row) => row.wholeWidthSourceLifecycleProof,
         ).length,
+      levelOneTwoCampaignRows:
+        levelOneTwoCampaignGrouping.totals.rowCount,
+      levelOneTwoCampaignGroups:
+        levelOneTwoCampaignGrouping.totals.groupCount,
+      levelOneTwoCampaignRowsByRowFamily: Object.fromEntries(
+        levelOneTwoCampaignGrouping.rowFamilies.map((family) => [
+          family.rowFamily,
+          family.rowCount,
+        ]),
+      ),
+      levelOneTwoCampaignGroupsByRowFamily: Object.fromEntries(
+        levelOneTwoCampaignGrouping.rowFamilies.map((family) => [
+          family.rowFamily,
+          family.groupCount,
+        ]),
+      ),
+      levelOneTwoCampaignRowsByLane: Object.fromEntries(
+        levelOneTwoCampaignGrouping.lanes.map((lane) => [
+          lane.lane,
+          lane.rowCount,
+        ]),
+      ),
+      levelOneTwoCampaignGroupsByLane: Object.fromEntries(
+        levelOneTwoCampaignGrouping.lanes.map((lane) => [
+          lane.lane,
+          lane.groupCount,
+        ]),
+      ),
       scenarioGroups: scenarioGroups.length,
       scenarioGroupsByTask: countValues(
         scenarioGroups.map((group) => group.taskId),
@@ -5555,6 +5861,7 @@ function buildInventory() {
     level4CumulativeFrontierUnits: level4FrontierUnits,
     seededSdkScenarioRows: seededSdkScenarioRecords,
     levelOneTwoSeedMigrationAuditRows,
+    levelOneTwoCampaignGrouping,
     levelOneFiveRows: miningRows,
     scenarioGroups,
     level5ScenarioGroups,
@@ -5634,6 +5941,35 @@ function renderScenarioGroupRows(groups) {
   });
 }
 
+function renderLevelOneTwoCampaignLaneRows(grouping) {
+  return grouping.lanes.map((lane) => {
+    const cells = [
+      lane.lane,
+      lane.disposition,
+      lane.rowFamily,
+      lane.rowCount,
+      lane.groupCount,
+      lane.taskFamily,
+      lane.ownerTaskIds.map((taskId) => `\`${taskId}\``).join("<br>"),
+      lane.followUpTaskIds.map((taskId) => `\`${taskId}\``).join("<br>"),
+    ];
+    return `| ${cells.map(md).join(" | ")} |`;
+  });
+}
+
+function renderLevelOneTwoCampaignRowFamilyRows(grouping) {
+  return grouping.rowFamilies.map((family) => {
+    const cells = [
+      family.rowFamily,
+      family.disposition,
+      family.rowCount,
+      family.groupCount,
+      family.lanes.join(", "),
+    ];
+    return `| ${cells.map(md).join(" | ")} |`;
+  });
+}
+
 function renderSeedMigrationAuditRows(rows) {
   return rows.map((row) => {
     const cells = [
@@ -5655,6 +5991,7 @@ function renderInventory(inventory) {
   const level5Rows = inventory.level5CompletionRows;
   const level5ScenarioGroups = inventory.level5ScenarioGroups;
   const seedMigrationAuditRows = inventory.levelOneTwoSeedMigrationAuditRows;
+  const levelOneTwoCampaignGrouping = inventory.levelOneTwoCampaignGrouping;
   return `${[
     "# Level 1-5 SDK RAW Inventory",
     "",
@@ -5748,6 +6085,23 @@ function renderInventory(inventory) {
       (row) =>
         `- \`${row.rowId}\` / \`${row.rowKey}\`: ${row.existingSdkScenario.label}`,
     ),
+    "",
+    "## L1/L2 Campaign Grouping",
+    "",
+    "This grouping is generated from the inventory rows and scenario group",
+    "projection. It covers only the active L1/L2 source-harness dispositions",
+    "and keeps the SRD provenance/license fact at the collection boundary:",
+    `\`${levelOneTwoCampaignGrouping.sourceCorpus.kind}\` / \`${levelOneTwoCampaignGrouping.sourceCorpus.licenseScope}\`.`,
+    "",
+    `Rows/groups assigned: ${levelOneTwoCampaignGrouping.totals.rowCount}/${levelOneTwoCampaignGrouping.totals.groupCount}.`,
+    "",
+    "| Row family | SDK disposition | Rows | Groups | Lanes |",
+    "| --- | --- | ---: | ---: | --- |",
+    ...renderLevelOneTwoCampaignRowFamilyRows(levelOneTwoCampaignGrouping),
+    "",
+    "| Lane | SDK disposition | Row family | Rows | Groups | Task family | Owner tasks | Follow-up tasks |",
+    "| --- | --- | --- | ---: | ---: | --- | --- | --- |",
+    ...renderLevelOneTwoCampaignLaneRows(levelOneTwoCampaignGrouping),
     "",
     "## L1/L2 Seed Migration Audit",
     "",
