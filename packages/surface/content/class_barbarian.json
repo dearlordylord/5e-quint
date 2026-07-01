@@ -23,6 +23,14 @@
       "unitId": "barbarian_weapon_mastery"
     },
     {
+      "level": 2,
+      "unitId": "barbarian_danger_sense"
+    },
+    {
+      "level": 2,
+      "unitId": "barbarian_reckless_attack"
+    },
+    {
       "level": 3,
       "unitId": "barbarian_primal_knowledge"
     },

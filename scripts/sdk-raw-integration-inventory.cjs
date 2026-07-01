@@ -101,7 +101,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 208;
-const expectedLevelOneTwoSeedScenarioRows = 76;
+const expectedLevelOneTwoSeedScenarioRows = 77;
 const handBuiltSourceSeedRowIds = new Set([
   "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
   "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
@@ -419,6 +419,53 @@ const seededSdkScenarioRows = [
     rowId:
       "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage",
     tracerNeedles: ["barbarianRageUnitId"],
+  },
+  {
+    candidateUnitId: "barbarian_danger_sense",
+    className: "Barbarian",
+    levelBand: "level-2",
+    label:
+      "level1-sdk-raw-integration: Barbarian Danger Sense battle feature projects from legal level-2 sheet into Dexterity Saving Throw holes",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/barbarian:level-2:class-feature-grant:barbarian_danger_sense",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:90-92"],
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l2-sdk-barbarian-danger-sense"',
+      "barbarianDangerSenseDraftPlan",
+      'battle: { tag: "withoutBattle" }',
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+      "characterBuildUnitRefs(fixture.build, unitLibrary)",
+      "barbarianDangerSenseUnitId",
+      "dangerSenseSacredFlameBattle(fixture.sheet)",
+      "sacredFlameSavingThrowForTarget(",
+      'ability: "dex"',
+      'rollMode: "advantage"',
+      'succeeded: true',
+      '"incapacitated"',
+      "targetRollModes",
+    ],
+    helperNeedles: [
+      {
+        anchor: "function dangerSenseSacredFlameBattle",
+        needles: [
+          "battleFromSheets({",
+          "characterSheet({",
+          "finalizedLevelOneClericSacredFlameBuild()",
+          "battleCombatantSide(\"monsters\")",
+        ],
+      },
+      {
+        anchor: "function sacredFlameSavingThrowForTarget",
+        needles: [
+          "cantripCastActionSpellAct(",
+          "requireHoleFromList(act.initialHoles, \"targetChoice\")",
+          "spellTargetFill(",
+          '"savingThrowOutcome"',
+        ],
+      },
+    ],
   },
   {
     candidateUnitId: "bard_bardic_inspiration",

@@ -33,6 +33,7 @@ import {
   PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
+  SRD_BARBARIAN_CLASS_UNIT_ID,
   SRD_BARD_CLASS_UNIT_ID,
   SRD_CLERIC_CLASS_UNIT_ID,
   SRD_DRUID_CLASS_UNIT_ID,
@@ -186,6 +187,7 @@ const SUPPORTED_PROGRESSIONS = [
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map((classUnitId) =>
     supportedSameClassProgression(classUnitId, 3),
   ),
+  supportedSameClassSecondLevelProgression(SRD_BARBARIAN_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_BARD_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_CLERIC_CLASS_UNIT_ID),

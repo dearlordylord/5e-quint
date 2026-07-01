@@ -1,5 +1,6 @@
 import {
   battleObjectId,
+  battleCombatantSide,
   battleTablePositionId,
   breakBattleConcentration,
   cantripSpellInvocationRef,
@@ -59,9 +60,13 @@ import {
   completeLongRest,
   finishLongRest,
   startLongRest,
+  type CharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
-import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  applyCondition,
+  hasCondition,
+} from "@dnd/shared-algebras/conditions-algebra";
 import {
   elapsedTimeTicksFromHours,
   elapsedTimeTicksFromMinutes,
@@ -133,6 +138,9 @@ type ThunderwaveSavingThrowOutcomeHole = BattleSpellSavingThrowOutcomeHole & {
 const fighterId = combatantId("combatant:l1-sdk-fighter");
 const legalFighterId = combatantId("combatant:l1-sdk-legal-fighter");
 const barbarianId = combatantId("combatant:l1-sdk-barbarian");
+const dangerSenseBarbarianId = combatantId(
+  "combatant:l2-sdk-danger-sense-barbarian",
+);
 const bardId = combatantId("combatant:l1-sdk-bard");
 const dissonantWhispersBardId = combatantId(
   "combatant:l1-sdk-dissonant-whispers-bard",
@@ -273,6 +281,7 @@ const thunderwaveUnsecuredObjectId = battleObjectId(
 
 const fighterSecondWindUnitId = "fighter_second_wind";
 const barbarianRageUnitId = "barbarian_rage";
+const barbarianDangerSenseUnitId = "barbarian_danger_sense";
 const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 const monkMartialArtsUnitId = "monk_martial_arts";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
@@ -372,6 +381,12 @@ const barbarianBuildSheetDraftPlan = {
     legalAnyLoadoutChoice("equipment_shield", "shield"),
     legalAnyLoadoutChoice("weapon_longsword", "weapon"),
   ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const barbarianDangerSenseDraftPlan = {
+  ...barbarianBuildSheetDraftPlan,
+  label: "Barbarian Danger Sense battle feature",
+  level: 2,
 } as const satisfies LegalSourceCharacterDraftPlan;
 
 const warlockPactMagicCreationDraftPlan = {
@@ -684,6 +699,92 @@ describe("level 1 SDK RAW integration", () => {
       sourceUnitId: "equipment_shield",
     });
     expect(currentArmorClass(armorClassState)).toBe(16);
+  });
+
+  test("Barbarian Danger Sense battle feature projects from legal level-2 sheet into Dexterity Saving Throw holes", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l2-sdk-barbarian-danger-sense",
+      draftPlan: barbarianDangerSenseDraftPlan,
+      sheet: {
+        characterIdText: "character:l2-sdk-barbarian-danger-sense",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_barbarian"),
+      advancements: [
+        {
+          classUnitId: classUnitId("class_barbarian"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    });
+    expect(characterBuildUnitRefs(fixture.build, unitLibrary)).toContainEqual({
+      unitId: barbarianDangerSenseUnitId,
+    });
+
+    const state = dangerSenseSacredFlameBattle(fixture.sheet);
+    const sacredFlame = sacredFlameSavingThrowForTarget(
+      state,
+      dangerSenseBarbarianId,
+    );
+
+    expect(
+      requireCharacterCombatant(state, dangerSenseBarbarianId).origin
+        .characterUnitRefs,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ unitId: barbarianDangerSenseUnitId }),
+      ]),
+    );
+    expect(sacredFlame.save).toMatchObject({
+      label: "Sacred Flame Saving Throw outcome",
+      ability: "dex",
+      targetRollModes: [
+        { targetId: dangerSenseBarbarianId, rollMode: "advantage" },
+      ],
+    });
+
+    const successfulSave = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: sacredFlame.subject,
+        fills: [
+          sacredFlame.targetFill,
+          savingThrowOutcomeFill(sacredFlame.save, [
+            { targetId: dangerSenseBarbarianId, succeeded: true },
+          ]),
+        ],
+      }),
+    );
+    expect(
+      requireCombatant(successfulSave.state, dangerSenseBarbarianId).hp,
+    ).toBe(requireCombatant(state, dangerSenseBarbarianId).hp);
+
+    const incapacitatedState = withCombatantCondition(
+      state,
+      dangerSenseBarbarianId,
+      "incapacitated",
+    );
+    expect(
+      hasCondition(
+        requireCombatant(incapacitatedState, dangerSenseBarbarianId).conditions,
+        "incapacitated",
+      ),
+    ).toBe(true);
+    expect(
+      sacredFlameSavingThrowForTarget(
+        incapacitatedState,
+        dangerSenseBarbarianId,
+      ).save.targetRollModes,
+    ).toEqual([]);
   });
 
   test("legal Fighter source fixture creates a level 1 sheet and battle combatant", () => {
@@ -8694,6 +8795,100 @@ function unitFeatureActForUnitId(
     throw new Error(`Expected ${unitId} unit feature act.`);
   }
   return act;
+}
+
+function dangerSenseSacredFlameBattle(
+  dangerSenseSheet: CharacterSheet,
+): BattleState {
+  return withCombatantSide(
+    battleFromSheets({
+      battleIdText: "battle:l2-sdk-barbarian-danger-sense",
+      characters: [
+        characterSheet({
+          characterIdText: "character:l2-sdk-danger-sense-cleric",
+          build: finalizedLevelOneClericSacredFlameBuild(),
+          combatantId: sacredFlameClericId,
+          initiative: 20,
+        }),
+        {
+          sheet: dangerSenseSheet,
+          combatantId: dangerSenseBarbarianId,
+          initiative: 10,
+        },
+      ],
+      monsters: [],
+    }),
+    dangerSenseBarbarianId,
+    battleCombatantSide("monsters"),
+  );
+}
+
+function sacredFlameSavingThrowForTarget(
+  state: BattleState,
+  targetId: CombatantId,
+): {
+  readonly subject: CastActionSpellSubject;
+  readonly targetFill: Extract<BattleFill, { readonly kind: "targetChoice" }>;
+  readonly save: SavingThrowOutcomeHole;
+} {
+  const act = cantripCastActionSpellAct(
+    state,
+    sacredFlameClericId,
+    sacredFlameSpellId,
+    "saveGatedDamage",
+  );
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  expect(target).toMatchObject({
+    choices: expect.arrayContaining([targetId]),
+  });
+  const targetFill = spellTargetFill(
+    target,
+    sacredFlameSpellId,
+    sacredFlameClericId,
+    targetId,
+  );
+  const save = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "savingThrowOutcome",
+  );
+  return { subject: act.subject, targetFill, save };
+}
+
+function withCombatantSide(
+  state: BattleState,
+  combatantId: CombatantId,
+  side: ReturnType<typeof battleCombatantSide>,
+): BattleState {
+  const combatant = requireCombatant(state, combatantId);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(combatantId, {
+      ...combatant,
+      side,
+    }),
+  };
+}
+
+function withCombatantCondition(
+  state: BattleState,
+  combatantId: CombatantId,
+  condition: Parameters<typeof applyCondition>[1],
+): BattleState {
+  const combatant = requireCombatant(state, combatantId);
+  if (combatant.positiveHpUnconscious !== null) {
+    throw new Error("Expected a positive-HP conscious combatant.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(combatantId, {
+      ...combatant,
+      conditions: applyCondition(combatant.conditions, condition),
+    }),
+  };
 }
 
 function cantripCastActionSpellAct(

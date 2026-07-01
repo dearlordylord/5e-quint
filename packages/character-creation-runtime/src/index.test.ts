@@ -832,6 +832,7 @@ describe("character creation hole discovery", () => {
         [
           "15:class_barbarian:level_1:maximum_hit_die",
           "15:class_barbarian|15:class_barbarian|15:class_barbarian:level_3:fixed_hp_gain",
+          "15:class_barbarian|15:class_barbarian:level_2:fixed_hp_gain",
           "10:class_bard:level_1:maximum_hit_die",
           "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
           "10:class_bard|10:class_bard:level_2:fixed_hp_gain",

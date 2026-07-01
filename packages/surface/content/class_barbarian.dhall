@@ -22,6 +22,8 @@ let barbarian =
         [ { level = 1, unitId = "barbarian_rage" }
         , { level = 1, unitId = "barbarian_unarmored_defense" }
         , { level = 1, unitId = "barbarian_weapon_mastery" }
+        , { level = 2, unitId = "barbarian_danger_sense" }
+        , { level = 2, unitId = "barbarian_reckless_attack" }
         , { level = 3, unitId = "barbarian_primal_knowledge" }
         , { level = 4, unitId = "barbarian_ability_score_improvement_l4" }
         ]

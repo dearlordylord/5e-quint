@@ -48,6 +48,7 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
 // Background origin facts, SRD species admission, and the remaining
 // manifest-owned languages/alignment/equipment projections.
 export const PHASE1_CLASS_FIGHTER_UNIT_ID = "class_fighter";
+export const SRD_BARBARIAN_CLASS_UNIT_ID = "class_barbarian";
 export const SRD_BARD_CLASS_UNIT_ID = "class_bard";
 export const SRD_CLERIC_CLASS_UNIT_ID = "class_cleric";
 export const SRD_DRUID_CLASS_UNIT_ID = "class_druid";
@@ -58,7 +59,7 @@ export const SRD_SORCERER_CLASS_UNIT_ID = "class_sorcerer";
 export const SRD_PALADIN_CLASS_UNIT_ID = "class_paladin";
 export const SRD_RANGER_CLASS_UNIT_ID = "class_ranger";
 export const SRD_LEVEL_ONE_CLASS_UNIT_IDS = [
-  "class_barbarian",
+  SRD_BARBARIAN_CLASS_UNIT_ID,
   SRD_BARD_CLASS_UNIT_ID,
   SRD_CLERIC_CLASS_UNIT_ID,
   SRD_DRUID_CLASS_UNIT_ID,
