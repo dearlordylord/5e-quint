@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L5FULL-SDK-06-HASTE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Haste"
     },
     {

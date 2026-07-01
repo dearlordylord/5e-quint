@@ -16,7 +16,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-5 mined rows | 770 |
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
-| Existing level-5 SDK seed scenario rows | 23 |
+| Existing level-5 SDK seed scenario rows | 24 |
 | Scenario groups | 423 |
 | Level 5 scenario groups | 84 |
 
@@ -42,9 +42,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 417 |
+| sdk-scenario-needed | 416 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 87 |
+| seed-scenario-present | 88 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -86,7 +86,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 78 |
+| battle-spell-sdk | 77 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -96,7 +96,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
-| seed-present | 87 |
+| seed-present | 88 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -108,9 +108,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 36 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 43 |
-| sdk-scenario-needed | 18 |
+| sdk-scenario-needed | 17 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 23 |
+| seed-scenario-present | 24 |
 
 ### Level 5 Completion Rows by Proposed Owner Boundary
 
@@ -134,12 +134,12 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Lane | Groups |
 | --- | ---: |
-| battle-spell-sdk | 7 |
+| battle-spell-sdk | 6 |
 | explicit-closure | 12 |
 | feature-owner-review | 2 |
 | future-owner-before-sdk | 22 |
 | owner-review | 6 |
-| seed-present | 23 |
+| seed-present | 24 |
 | spell-effect-owner-review | 12 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -222,6 +222,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/rogue:level-5:class-feature-grant:rogue_cunning_strike` / `level-5:Rogue:rogue_cunning_strike`: level5-sdk-tracer-bullets: Cunning Strike
 - `srd521:classes/sorcerer:level-5:class-feature-grant:sorcerer_sorcerous_restoration` / `level-5:Sorcerer:sorcerer_sorcerous_restoration`: level5-sdk-tracer-bullets: Sorcerous Restoration
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_haste` / `spell-level-3:Wizard:haste`: level5-sdk-tracer-bullets: Haste
+- `srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_haste` / `spell-level-3:Sorcerer:haste`: level5-sdk-tracer-bullets: Haste
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy` / `spell-level-3:Wizard:protection_from_energy`: level5-sdk-tracer-bullets: Protection from Energy
 - `srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_counterspell` / `spell-level-3:Sorcerer:counterspell`: level5-sdk-tracer-bullets: Counterspell
 - `srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_counterspell` / `spell-level-3:Warlock:counterspell`: level5-sdk-tracer-bullets: Counterspell
@@ -245,7 +246,6 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Task | Lane | Rows | Bands | Classes | Units | Sample concepts | Suggested scenario |
 | --- | --- | ---: | --- | --- | --- | --- | --- |
-| L15-SDK-RAW-07 | battle-spell-sdk | 1 | spell-level-3 | Sorcerer | `haste` | Sorcerer spell list Haste | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard | `hypnotic_pattern` | Bard spell list Hypnotic Pattern<br>Sorcerer spell list Hypnotic Pattern<br>Warlock spell list Hypnotic Pattern<br>Wizard spell list Hypnotic Pattern | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 2 | spell-level-3 | Sorcerer, Wizard | `lightning_bolt` | Sorcerer spell list Lightning Bolt<br>Wizard spell list Lightning Bolt | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 2 | spell-level-3 | Bard, Cleric | `mass_healing_word` | Bard spell list Mass Healing Word<br>Cleric spell list Mass Healing Word | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
@@ -307,6 +307,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `dispel_magic` | Sorcerer spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `fireball` | Sorcerer spell list Fireball | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `fly` | Sorcerer spell list Fly | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Sorcerer | `haste` | Sorcerer spell list Haste | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Warlock | `counterspell` | Warlock spell list Counterspell | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Warlock | `dispel_magic` | Warlock spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Warlock | `fly` | Warlock spell list Fly | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
@@ -417,7 +418,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Sorcerer spell list Fireball | `fireball` | `.references/srd-5.2.1/Classes/Sorcerer.md:306` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Fireball | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Fly | `fly` | `.references/srd-5.2.1/Classes/Sorcerer.md:307` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Gaseous Form | `gaseous_form` | `.references/srd-5.2.1/Classes/Sorcerer.md:308` | catalog-installed-owner-evidence-required | battle-runtime-required | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance. |
-| spell-level-3 | Sorcerer spell list Haste | `haste` | `.references/srd-5.2.1/Classes/Sorcerer.md:309` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Sorcerer spell list Haste | `haste` | `.references/srd-5.2.1/Classes/Sorcerer.md:309` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Haste | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Sorcerer.md:310` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Lightning Bolt | `lightning_bolt` | `.references/srd-5.2.1/Classes/Sorcerer.md:311` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Sorcerer.md:312` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |

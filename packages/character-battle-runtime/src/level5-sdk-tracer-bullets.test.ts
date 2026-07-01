@@ -103,6 +103,7 @@ const fireballTargetId = combatantId("combatant:l5-tracer-fireball-target");
 const flySorcererId = combatantId("combatant:l5-tracer-fly-sorcerer");
 const flyWarlockId = combatantId("combatant:l5-tracer-fly-warlock");
 const flyWizardId = combatantId("combatant:l5-tracer-fly-wizard");
+const hasteSorcererId = combatantId("combatant:l5-tracer-haste-sorcerer");
 const glyphOfWardingBardId = combatantId(
   "combatant:l5-tracer-glyph-of-warding-bard",
 );
@@ -131,6 +132,7 @@ const counterspellCastLevel = 3;
 const dispelMagicCastLevel = 3;
 const fireballCastLevel = 3;
 const flyCastLevel = 3;
+const hasteCastLevel = 3;
 const glyphOfWardingCastLevel = 3;
 const flySpeedFeet = 60;
 const magicMissileSpellId = "magic_missile";
@@ -153,6 +155,11 @@ type DispelMagicClassAccessCase = {
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockRecord["id"][];
 };
 type FireballClassAccessCase = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly casterId: CombatantId;
+  readonly build: CharacterBuild;
+};
+type HasteClassAccessCase = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly casterId: CombatantId;
   readonly build: CharacterBuild;
@@ -467,116 +474,147 @@ describe("level 5 SDK tracer bullets", () => {
   });
 
   test("Haste casts from a level-5 spellcaster sheet and projects speed, AC, Dexterity save, action, slot, and lethargy behavior", () => {
-    const state = battleFromSheets({
-      battleIdText: "battle:l5-tracer-haste",
-      characters: [
-        characterSheet({
-          characterIdText: "character:l5-tracer-haste",
-          build: levelFiveWizardBuild({ preparedSpells: [hasteSpellId] }),
-          combatantId: wizardId,
-          initiative: 20,
+    const hasteCases = [
+      {
+        sourceUnitId: "class_sorcerer",
+        casterId: hasteSorcererId,
+        build: levelFiveSorcererBuild({
+          preparedSpells: [hasteSpellId],
         }),
-      ],
-      monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
-      ],
-    });
-    const act = spellSlotActForProcedure(
-      state,
-      hasteSpellId,
-      3,
-      "hastePositive",
-    );
-    const target = requireHoleFromList(act.initialHoles, "targetChoice");
-    const resolved = requireResolved(
-      resolveBattleSubject({
-        state,
-        subject: act.subject,
-        fills: [
-          knownWillingSpellTargetFill(target, hasteSpellId, wizardId, wizardId),
+      },
+      {
+        sourceUnitId: "class_wizard",
+        casterId: wizardId,
+        build: levelFiveWizardBuild({ preparedSpells: [hasteSpellId] }),
+      },
+    ] as const satisfies ReadonlyArray<HasteClassAccessCase>;
+
+    for (const hasteCase of hasteCases) {
+      expectHasteClassAccess(hasteCase);
+
+      const state = battleFromSheets({
+        battleIdText: `battle:l5-tracer-haste-${hasteCase.sourceUnitId}`,
+        characters: [
+          characterSheet({
+            characterIdText: `character:l5-tracer-haste-${hasteCase.sourceUnitId}`,
+            build: hasteCase.build,
+            combatantId: hasteCase.casterId,
+            initiative: 20,
+          }),
         ],
-      }),
-    );
-    const caster = requireCharacterCombatant(resolved.state, wizardId);
-
-    expect(resolved.snapshot.combatants).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          combatantId: wizardId,
-          concentrating: true,
-          armorClass: 14,
-          movement: expect.objectContaining({ speedFeet: 60 }),
-        }),
-      ]),
-    );
-    expect(caster.origin.spellcasting?.spellSlots).toEqual([
-      { spellLevel: 1, count: 4, expended: 0 },
-      { spellLevel: 2, count: 3, expended: 0 },
-      { spellLevel: 3, count: 2, expended: 1 },
-    ]);
-    expect(caster.activeEffects).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          kind: "speedRatio",
-          sourceSpellId: hasteSpellId,
-        }),
-        expect.objectContaining({
-          kind: "spellArmorClassBonus",
-          sourceSpellId: hasteSpellId,
-        }),
-        expect.objectContaining({
-          kind: "savingThrowRollMode",
-          sourceSpellId: hasteSpellId,
-          ability: "dex",
-          mode: "advantage",
-        }),
-        expect.objectContaining({
-          kind: "spellGrantedActionResource",
-          sourceSpellId: hasteSpellId,
-        }),
-      ]),
-    );
-    expect(resolved.state.currentTurnResources.actionResources).toEqual([
-      expect.objectContaining({
-        kind: "action",
-        source: "spellEffect",
-        sourceOwnerId: wizardId,
-        sourceSpellId: hasteSpellId,
-        restriction: {
-          kind: "allow_only",
-          actions: [
-            {
-              action: "attack",
-              attackLimit: { kind: "attack_count", count: 1 },
-            },
-            { action: "dash" },
-            { action: "disengage" },
-            { action: "hide" },
-            { action: "utilize" },
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      });
+      const act = spellSlotActForProcedure(
+        state,
+        hasteSpellId,
+        hasteCastLevel,
+        "hastePositive",
+      );
+      const target = requireHoleFromList(act.initialHoles, "targetChoice");
+      const resolved = requireResolved(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            knownWillingSpellTargetFill(
+              target,
+              hasteSpellId,
+              hasteCase.casterId,
+              hasteCase.casterId,
+            ),
           ],
-        },
-      }),
-    ]);
-
-    const ended = breakBattleConcentration(resolved.state, wizardId);
-    const lethargic = requireCombatant(ended, wizardId);
-
-    expect(hasCondition(lethargic.conditions, "incapacitated")).toBe(true);
-    expect(snapshotBattle(ended).combatants).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          combatantId: wizardId,
-          movement: expect.objectContaining({ speedFeet: 0 }),
         }),
-      ]),
-    );
-    expect(
-      lethargic.activeEffects.some(
-        (effect) =>
-          effect.kind === "spellGrantedActionResource" &&
-          effect.sourceSpellId === hasteSpellId,
-      ),
-    ).toBe(false);
+      );
+      const caster = requireCharacterCombatant(
+        resolved.state,
+        hasteCase.casterId,
+      );
+
+      expect(resolved.snapshot.combatants).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: hasteCase.casterId,
+            concentrating: true,
+            armorClass: 14,
+            movement: expect.objectContaining({ speedFeet: 60 }),
+          }),
+        ]),
+      );
+      expect(caster.origin.spellcasting?.spellSlots).toEqual([
+        { spellLevel: 1, count: 4, expended: 0 },
+        { spellLevel: 2, count: 3, expended: 0 },
+        { spellLevel: hasteCastLevel, count: 2, expended: 1 },
+      ]);
+      expect(caster.activeEffects).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: "speedRatio",
+            sourceSpellId: hasteSpellId,
+          }),
+          expect.objectContaining({
+            kind: "spellArmorClassBonus",
+            sourceSpellId: hasteSpellId,
+          }),
+          expect.objectContaining({
+            kind: "savingThrowRollMode",
+            sourceSpellId: hasteSpellId,
+            ability: "dex",
+            mode: "advantage",
+          }),
+          expect.objectContaining({
+            kind: "spellGrantedActionResource",
+            sourceSpellId: hasteSpellId,
+          }),
+        ]),
+      );
+      expect(resolved.state.currentTurnResources.actionResources).toEqual([
+        expect.objectContaining({
+          kind: "action",
+          source: "spellEffect",
+          sourceOwnerId: hasteCase.casterId,
+          sourceSpellId: hasteSpellId,
+          restriction: {
+            kind: "allow_only",
+            actions: [
+              {
+                action: "attack",
+                attackLimit: { kind: "attack_count", count: 1 },
+              },
+              { action: "dash" },
+              { action: "disengage" },
+              { action: "hide" },
+              { action: "utilize" },
+            ],
+          },
+        }),
+      ]);
+
+      const ended = breakBattleConcentration(resolved.state, hasteCase.casterId);
+      const lethargic = requireCombatant(ended, hasteCase.casterId);
+
+      expect(hasCondition(lethargic.conditions, "incapacitated")).toBe(true);
+      expect(snapshotBattle(ended).combatants).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: hasteCase.casterId,
+            movement: expect.objectContaining({ speedFeet: 0 }),
+          }),
+        ]),
+      );
+      expect(
+        lethargic.activeEffects.some(
+          (effect) =>
+            effect.kind === "spellGrantedActionResource" &&
+            effect.sourceSpellId === hasteSpellId,
+        ),
+      ).toBe(false);
+    }
   });
 
   test("Protection from Energy casts through sheet projection and halves only the chosen damage type", () => {
@@ -1265,6 +1303,31 @@ function expectFireballClassAccess(input: {
       slots: expect.arrayContaining([
         expect.objectContaining({
           spellLevel: fireballCastLevel,
+          count: 2,
+        }),
+      ]),
+    },
+  });
+}
+
+function expectHasteClassAccess(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly build: CharacterBuild;
+}): void {
+  expect(input.build.spellcasting?.sources).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sourceUnitId: input.sourceUnitId,
+        preparedSpells: expect.arrayContaining([hasteSpellId]),
+      }),
+    ]),
+  );
+  expect(input.build.spellcasting?.slotPools).toMatchObject({
+    spellcasting: {
+      kind: "spellcasting",
+      slots: expect.arrayContaining([
+        expect.objectContaining({
+          spellLevel: hasteCastLevel,
           count: 2,
         }),
       ]),

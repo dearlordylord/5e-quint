@@ -3650,6 +3650,21 @@ const seededSdkScenarioRows = [
     tracerNeedles: ["hasteSpellId"],
   },
   {
+    candidateUnitId: "haste",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Haste",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_haste",
+    tracerNeedles: [
+      "hasteSpellId",
+      "hasteSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
     candidateUnitId: "protection_from_energy",
     className: "Wizard",
     levelBand: "spell-level-3",
