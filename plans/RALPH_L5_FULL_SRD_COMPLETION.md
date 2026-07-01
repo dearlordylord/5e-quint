@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "L5FULL-FUT-01-ANIMATE-DEAD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Animate Dead"
     },
     {
