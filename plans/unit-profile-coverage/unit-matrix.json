@@ -37145,6 +37145,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
+          "reason": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity."
+        },
         "followUpTasks": [
           {
             "id": "L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME",
@@ -37154,6 +37159,7 @@
             "title": "Gaseous Form Mist-Cloud Runtime"
           }
         ],
+        "futureProfileOwner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
         "reason": "Gaseous Form is authored and installed as an SRD Surface Spell Definition with Action Spell Slot casting, Touch range, V/S/M gauze components, Concentration up to 1 hour, willing touched creature targeting with one additional target per slot level above 3, and a typed spell-effect mist-cloud form for the target plus its worn and carried objects. The form facts include replacement movement as the target's only movement method: 10-foot Fly Speed with hover; table/spatial ownership for occupying another creature's space, passing through narrow openings, and treating liquids as solid surfaces; Bludgeoning, Piercing, and Slashing Resistance; Prone Immunity; Strength, Dexterity, and Constitution Saving Throw Advantage; no talking; no object manipulation, object dropping, use, or interaction; no attacks; no spellcasting; zero-Hit-Point ending; Magic-action self-ending; and normal spell-end cleanup. No promoted battle-runtime profile is claimed because these form facts require a future mist-cloud form Spell Effect owner and table/spatial witnesses rather than generic spell-id dispatch.",
         "tag": "unsupported-profile"
       },

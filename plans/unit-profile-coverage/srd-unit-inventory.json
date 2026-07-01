@@ -294,12 +294,12 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 110,
-      "numerator": 106,
-      "percent": "96.4%",
+      "numerator": 109,
+      "percent": "99.1%",
       "rowsByStatus": {
-        "accepted-no-battle-effect": 69,
+        "accepted-no-battle-effect": 72,
         "accepted": 37,
-        "battle-runtime-required": 4
+        "battle-runtime-required": 1
       }
     },
     "levelFourSpellBattleReadiness": {
@@ -371,11 +371,11 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 501,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 207,
+      "catalog-only/dead-for-now": 210,
       "level-5-7-follow-up-required": 22,
       "catalog-authored-review-required": 49,
       "missing-authored-record": 32,
-      "catalog-installed-owner-evidence-required": 4,
+      "catalog-installed-owner-evidence-required": 1,
       "catalog-authored-executable-follow-up": 1
     },
     "spellPressureRowsByDisposition": {
@@ -383,15 +383,13 @@
       "catalog-only/dead-for-now": 118
     },
     "levelThreeSpellPressureRowsByDisposition": {
-      "catalog-only/dead-for-now": 69,
+      "catalog-only/dead-for-now": 72,
       "catalog-installed-owner-evidence-present": 37,
-      "catalog-installed-owner-evidence-required": 3,
       "catalog-authored-executable-follow-up": 1
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
-      "catalog-only/dead-for-now": 33,
-      "catalog-installed-owner-evidence-present": 37,
-      "catalog-installed-owner-evidence-required": 3
+      "catalog-only/dead-for-now": 36,
+      "catalog-installed-owner-evidence-present": 37
     },
     "levelFourSpellPressureRowsByDisposition": {
       "catalog-authored-review-required": 49,
@@ -30939,7 +30937,7 @@
       "detail": "Gaseous Form (Transmutation; C)",
       "candidateUnitId": "gaseous_form",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -30951,7 +30949,13 @@
         "unitId": "gaseous_form"
       },
       "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
+        "reason": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -30960,12 +30964,12 @@
         },
         {
           "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-          "status": "owner evidence required"
+          "evidence": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
+          "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_haste",
@@ -34366,7 +34370,7 @@
       "detail": "Gaseous Form (Transmutation; C)",
       "candidateUnitId": "gaseous_form",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -34378,7 +34382,13 @@
         "unitId": "gaseous_form"
       },
       "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
+        "reason": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -34387,12 +34397,12 @@
         },
         {
           "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-          "status": "owner evidence required"
+          "evidence": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
+          "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
@@ -39811,7 +39821,7 @@
       "detail": "Gaseous Form (Transmutation; C)",
       "candidateUnitId": "gaseous_form",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -39823,7 +39833,13 @@
         "unitId": "gaseous_form"
       },
       "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
+        "reason": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -39832,12 +39848,12 @@
         },
         {
           "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-          "status": "owner evidence required"
+          "evidence": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
+          "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",

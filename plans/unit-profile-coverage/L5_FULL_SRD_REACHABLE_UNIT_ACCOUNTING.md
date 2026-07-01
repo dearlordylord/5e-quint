@@ -111,19 +111,21 @@ tasks.
 
 ## Artifact Reconciliation Findings
 
-Generated artifacts agree on the 138-row denominator and SDK bucket counts, but
-two spell identities need explicit reconciliation because the mining audit's
-runtime-follow-up language is stronger than the SDK queue's future-owner closure
-label.
+Generated artifacts agree on the 138-row denominator and SDK bucket counts.
+`gaseous_form` now records an explicit mining closure matching the SDK
+future-owner lane, while `phantom_steed` still needs reconciliation because the
+mining audit's runtime-follow-up language is stronger than the SDK queue's
+future-owner closure label.
 
 | Unit | Rows | Mining disposition | SDK disposition | Accounting decision | Ralph task |
 | --- | ---: | --- | --- | --- | --- |
-| `gaseous_form` | 3 | `catalog-installed-owner-evidence-required`; battle-runtime-required; follow-up `L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME` | `future-owner-before-sdk` | Keep out of SDK scenarios until the typed mist-cloud effect owner is promoted or the checker records an explicit future-owner closure matching the mining follow-up. | `L5FULL-FUT-11-GASEOUS-FORM` |
+| `gaseous_form` | 3 | `catalog-only/dead-for-now`; accepted-no-battle-effect; closure `table-spatial-derivation: future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner` | `future-owner-before-sdk` | Explicit future-owner closure is now recorded; keep out of SDK scenarios until the typed mist-cloud effect owner is promoted. The structured follow-up task remains on the Unit claim. | `L5FULL-FUT-11-GASEOUS-FORM` |
 | `phantom_steed` | 1 | `catalog-authored-executable-follow-up`; battle-runtime-required; split follow-ups for mount lifecycle, created equipment, and table travel | `future-owner-before-sdk` | Keep out of SDK scenarios until the split mount/equipment/travel owners are promoted or the checker records an explicit future-owner closure matching the mining follow-ups. | `L5FULL-FUT-15-PHANTOM-STEED` |
 
-These four rows remain inside the 45-row `future-owner-before-sdk` bucket. The
-Ralph tasks above must reconcile the generated artifacts before preserving the
-closure; they are not ordinary no-op closure tasks.
+These four rows remain inside the 45-row `future-owner-before-sdk` bucket.
+`gaseous_form` is reconciled by `L5FULL-FUT-11-GASEOUS-FORM`; the
+`phantom_steed` row still needs its later artifact-reconciliation task before
+that closure is durable.
 
 ## Character-Level 5 Rows
 
@@ -179,7 +181,7 @@ This table groups the 110 class-list rows into their 42 spell identities. The
 | `fear` | Fear | Bard, Sorcerer, Warlock, Wizard | 4 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | Bard .references/srd-5.2.1/Classes/Bard.md:220<br>Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:305<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:382<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:243 |
 | `fireball` | Fireball | Sorcerer, Wizard | 2 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:306<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:244 |
 | `fly` | Fly | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:307<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:383<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:245 |
-| `gaseous_form` | Gaseous Form | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | unsupported-profile | catalog-installed-owner-evidence-required | battle-runtime-required | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:308<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:384<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:246 |
+| `gaseous_form` | Gaseous Form | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:308<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:384<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:246 |
 | `glyph_of_warding` | Glyph of Warding | Bard, Cleric, Wizard | 3 | authored-record-present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | Bard .references/srd-5.2.1/Classes/Bard.md:221<br>Cleric .references/srd-5.2.1/Classes/Cleric.md:211<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:247 |
 | `haste` | Haste | Sorcerer, Wizard | 2 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:309<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:248 |
 | `hypnotic_pattern` | Hypnotic Pattern | Bard, Sorcerer, Warlock, Wizard | 4 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Bard .references/srd-5.2.1/Classes/Bard.md:222<br>Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:310<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:385<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:249 |
@@ -219,7 +221,7 @@ Each row maps to `plans/RALPH_L5_FULL_SRD_COMPLETION.md`.
 | Owner review for supported feature rows | 6 | Decide per Unit whether to add an SDK scenario or mark SDK closure. |
 | Feature owner review | 0 | No level-5 class-feature closure-review rows remain before SDK admission. |
 | Future owner before SDK | 45 | Preserve current runtime-detached closure; do not add SDK scenarios until the durable owner exists. |
-| Artifact reconciliation before preserving future-owner closure | 4 | Reconcile `gaseous_form` and `phantom_steed` mining-vs-SDK disposition text before treating their future-owner closures as durable. This overlaps the future-owner bucket and does not change the 138-row denominator. |
+| Artifact reconciliation before preserving future-owner closure | 1 | Reconcile `phantom_steed` mining-vs-SDK disposition text before treating its future-owner closure as durable. This overlaps the future-owner bucket and does not change the 138-row denominator. |
 | Battle spell SDK scenarios | 35 | Add one SDK scenario group per supported spell identity/access slice. |
 | Spell-effect owner review | 36 | Resolve owner boundary or precise closure for twelve spell identities before SDK admission. |
 

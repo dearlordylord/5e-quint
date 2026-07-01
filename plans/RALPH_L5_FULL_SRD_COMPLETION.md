@@ -163,7 +163,7 @@
     {
       "number": 27,
       "id": "L5FULL-FUT-11-GASEOUS-FORM",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile future-owner closure for Gaseous Form"
     },
     {

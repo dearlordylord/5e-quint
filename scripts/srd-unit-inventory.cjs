@@ -1782,7 +1782,19 @@ function installedSpellUnitOwnerClassification(
       missingConstruct: claim.issue,
     };
   }
+  const battleReadinessClosure =
+    claim?.tag === "unsupported-profile" &&
+    isBattleReadinessClosure(claim.battleReadinessClosure)
+      ? claim.battleReadinessClosure
+      : undefined;
   const followUpTasks = claimFollowUpTasks(claim);
+  if (battleReadinessClosure && isInstalled) {
+    return {
+      kind: "catalog-only-closure",
+      owner: battleReadinessClosure.owner,
+      reason: battleReadinessClosure.reason ?? claim.reason,
+    };
+  }
   if (claim?.tag === "unsupported-profile" && followUpTasks.length > 0) {
     return {
       kind: "evidence-required",
@@ -1790,14 +1802,11 @@ function installedSpellUnitOwnerClassification(
       requirement: followUpTaskRequirement(followUpTasks),
     };
   }
-  if (
-    claim?.tag === "unsupported-profile" &&
-    isBattleReadinessClosure(claim.battleReadinessClosure)
-  ) {
+  if (battleReadinessClosure) {
     return {
       kind: "catalog-only-closure",
-      owner: claim.battleReadinessClosure.owner,
-      reason: claim.battleReadinessClosure.reason ?? claim.reason,
+      owner: battleReadinessClosure.owner,
+      reason: battleReadinessClosure.reason ?? claim.reason,
     };
   }
   if (claim?.tag === "unsupported-profile") {
