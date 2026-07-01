@@ -362,6 +362,10 @@ It does not reopen the older L5 Surface/runtime lanes. Those lane files are
 done and are historical implementation records. This queue owns the remaining
 SDK RAW integration and SDK-scope closure work for the 138 row frontier.
 
+After this queue is closed and its generated refresh task lands, run the
+follow-on ultra-golden MCP queue:
+`plans/RALPH_L5_ULTRA_GOLDEN_MCP_COMPLETION.md`.
+
 ## Ralph Task-Base Check
 
 Every Ralph task must run the task-base check before research or edits:
