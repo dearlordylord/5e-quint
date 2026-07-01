@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# @file scripts/sync-active-plan-to-ralph.sh
+# @brief Sync the active plan into a live Ralph launcher worktree.
+# @description
+#   Copies plans/ACTIVE_PLAN.md to the active Ralph integration branch,
+#   commits the synced plan, and reports the target worktree details.
 set -euo pipefail
 
 usage() {
@@ -36,7 +41,7 @@ while [[ $# -gt 0 ]]; do
       COMMIT_MESSAGE="${2:?missing value for --message}"
       shift 2
       ;;
-    -h|--help)
+    -h | --help)
       usage
       exit 0
       ;;

@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# @file scripts/ralph-run.sh
+# @brief Run a Ralph fresh-context task harness for a plan file.
+# @description
+#   Creates Ralph integration/task worktrees, launches implementation and
+#   review agents, records run artifacts, and reconciles accepted task results.
 set -Eeuo pipefail
 
 usage() {
@@ -234,7 +239,7 @@ while [[ $# -gt 0 ]]; do
       output_branch="$2"
       shift 2
       ;;
-    --commit-to-base|--commit-to-master)
+    --commit-to-base | --commit-to-master)
       commit_to_base=true
       shift
       ;;
@@ -317,7 +322,7 @@ while [[ $# -gt 0 ]]; do
       skip_decider=true
       shift
       ;;
-    -h|--help)
+    -h | --help)
       usage
       exit 0
       ;;
@@ -346,7 +351,7 @@ require_cmd rg
 load_openrouter_key_from_dotenv
 
 case "$implementation_runner" in
-  codex|opencode|claude)
+  codex | opencode | claude)
     ;;
   *)
     die "--implementation-runner must be codex, opencode, or claude"
@@ -561,7 +566,8 @@ auto_unblock_blocked_tasks() {
   local target_file="$1"
 
   local unblocked_tasks
-  unblocked_tasks="$(node - "$target_file" <<'NODE'
+  unblocked_tasks="$(
+    node - "$target_file" <<'NODE'
 const fs = require("fs")
 
 const path = process.argv[2]
@@ -981,7 +987,7 @@ wait_with_heartbeat() {
     if ! kill -0 "$pid" >/dev/null 2>&1; then
       break
     fi
-    elapsed=$(( $(date +%s) - start ))
+    elapsed=$(($(date +%s) - start))
     log_bytes=0
     output_bytes=0
     [[ -f "$log_file" ]] && log_bytes="$(wc -c <"$log_file" 2>/dev/null || printf '0')"
@@ -1354,7 +1360,7 @@ run_implementation_pipeline() {
     implementer_role="Implementer (running on Claude Code)"
   fi
 
-  while (( round_limit == 0 || round <= round_limit )); do
+  while ((round_limit == 0 || round <= round_limit)); do
     local round_prefix="$attempt_root/$slug-round-$round"
     local implementer_prompt="$round_prefix-implementer.prompt.md"
     local implementer_log="$round_prefix-implementer.log"
@@ -1397,7 +1403,7 @@ run_implementation_pipeline() {
     if [[ "$verdict" == "accept" ]]; then
       break
     fi
-    if (( round_limit != 0 && round >= round_limit )); then
+    if ((round_limit != 0 && round >= round_limit)); then
       note "task" "implementation-review-safety-cap task=$task_no round=$round limit=$round_limit verdict=$verdict"
       break
     fi
@@ -1598,7 +1604,8 @@ run_codex_implementer() {
     fi
     set -e
     if [[ "$status" -ne 0 ]] && codex_log_has_remote_compaction_failure "$log_file"; then
-      local failed_session_file="$session_file.compaction-failed.$(date -u +%Y%m%dT%H%M%SZ)"
+      local failed_session_file
+      failed_session_file="$session_file.compaction-failed.$(date -u +%Y%m%dT%H%M%SZ)"
       mv "$session_file" "$failed_session_file"
       {
         printf '\n[ralph] codex resume failed during remote compaction; archived session in %s\n' "$failed_session_file"
@@ -1731,7 +1738,7 @@ bootstrap_worktree_install() {
     "node_modules" \
     "packages/mcp/node_modules"; do
     if [[ -e "$workspace/$path" || -L "$workspace/$path" ]]; then
-      rm -rf "$workspace/$path"
+      rm -rf -- "${workspace:?}/$path"
     fi
     mkdir -p "$(dirname "$workspace/$path")"
     ln -s "$install_source_root/$path" "$workspace/$path"
@@ -1741,7 +1748,7 @@ bootstrap_worktree_install() {
     [[ -n "$path" ]] || continue
     [[ -e "$install_source_root/$path" || -L "$install_source_root/$path" ]] || continue
     if [[ -e "$workspace/$path" || -L "$workspace/$path" ]]; then
-      rm -rf "$workspace/$path"
+      rm -rf -- "${workspace:?}/$path"
     fi
     mkdir -p "$(dirname "$workspace/$path")"
     ln -s "$install_source_root/$path" "$workspace/$path"
@@ -2598,8 +2605,8 @@ run_task_attempt() {
   if [[ "$keep_worktrees" == false ]]; then
     git worktree remove --force "$implementation_worktree" >/dev/null 2>&1 || true
     git branch -D "$implementation_branch" >/dev/null 2>&1 || true
-    active_worktrees=("${active_worktrees[@]/$implementation_worktree}")
-    task_branches=("${task_branches[@]/$implementation_branch}")
+    active_worktrees=("${active_worktrees[@]/$implementation_worktree/}")
+    task_branches=("${task_branches[@]/$implementation_branch/}")
     rmdir "$(dirname "$implementation_worktree")" >/dev/null 2>&1 || true
   fi
 
@@ -2633,7 +2640,7 @@ while true; do
 
   if [[ "$chooser_status" -eq 1 ]]; then
     completed_count="$(completed_task_count)"
-    if (( completed_count < min_completed_tasks )); then
+    if ((completed_count < min_completed_tasks)); then
       printf 'no next task after %s completed task(s), below RALPH_MIN_COMPLETED_TASKS=%s\n' \
         "$completed_count" "$min_completed_tasks" >"$last_error_file"
       note "run" "fatal-workload-underflow iteration=$iteration completed=$completed_count min=$min_completed_tasks"
@@ -2648,17 +2655,17 @@ while true; do
   fi
 
   IFS=$'\t' read -r task_no task_id status task_start task_end task_title <<<"$task_row"
-  if (( ${task_attempts["$task_no"]:-0} >= max_task_attempts )); then
+  if ((${task_attempts["$task_no"]:-0} >= max_task_attempts)); then
     printf 'task %s (%s) hit the per-run attempt limit (%s) without landing; refusing to rerun indefinitely\n' \
       "$task_no" "$task_id" "$max_task_attempts" >"$last_error_file"
     note "run" "fatal-task-attempt-limit iteration=$iteration task=$task_no id=$task_id limit=$max_task_attempts"
     append_history "$iteration" "$task_no" "$task_id" "${task_attempts["$task_no"]}" "fatal-task-attempt-limit" "-" "attempt limit reached"
     exit 1
   fi
-  task_attempts["$task_no"]=$(( ${task_attempts["$task_no"]:-0} + 1 ))
+  task_attempts["$task_no"]=$((${task_attempts["$task_no"]:-0} + 1))
   attempt_no="${task_attempts[$task_no]}"
   final_attempt=false
-  if (( attempt_no >= max_task_attempts )); then
+  if ((attempt_no >= max_task_attempts)); then
     final_attempt=true
   fi
 
