@@ -145,7 +145,7 @@
     {
       "number": 24,
       "id": "L5FULL-FUT-08-DAYLIGHT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Daylight"
     },
     {
