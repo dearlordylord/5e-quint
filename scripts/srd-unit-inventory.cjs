@@ -443,6 +443,12 @@ const spellUnitMissingClassifications = new Map([
       kind: "catalog-only-closure",
       reason:
         "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners.",
+      battleReadinessClosure: {
+        kind: "inventory-survival-adjudication",
+        owner: "future consumable inventory and survival adjudication owner",
+        reason:
+          "Goodberry is closed outside promoted battle runtime for this source-harness pass: .references/srd-5.2.1/Spells/Descriptions-E-L.md:871-882 defines a 24-hour Spell Definition that creates ten duration-limited berries in the caster's hand, a later Bonus Action eating boundary, 1 Hit Point restoration, one-day nourishment, and uneaten-berry disappearance; .references/srd-5.2.1/Classes/Druid.md:213 and .references/srd-5.2.1/Classes/Ranger.md:172 are spell-list access rows. Those facts require represented consumable item instances, holder/count state, expiry, later item use, Hit Point restoration from a consumed item, and nourishment/survival adjudication. No current promoted owner carries that inventory/survival state, so the battle Spell Invocation reducers must not add a Goodberry-specific counter or duplicate the missing inventory source of truth.",
+      },
     },
   ],
   [
@@ -2988,7 +2994,9 @@ function spellUnitMissingClassificationForRow(row) {
 function battleReadinessClosureFromSpellUnitMissingClassification(row) {
   const classification = spellUnitMissingClassificationForRow(row);
   if (
-    classification?.kind !== "needs-surface-widening" ||
+    classification === undefined ||
+    (classification.kind !== "needs-surface-widening" &&
+      classification.kind !== "catalog-only-closure") ||
     !isBattleReadinessClosure(classification.battleReadinessClosure)
   ) {
     return undefined;
@@ -2999,7 +3007,8 @@ function battleReadinessClosureFromSpellUnitMissingClassification(row) {
     owner: classification.battleReadinessClosure.owner,
     reason:
       classification.battleReadinessClosure.reason ??
-      classification.missingConstruct,
+      classification.missingConstruct ??
+      classification.reason,
   };
 }
 

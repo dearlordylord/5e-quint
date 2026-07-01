@@ -24949,14 +24949,20 @@
       "levelBand": "spell-level-1",
       "nextAction": "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "inventory-survival-adjudication",
+          "owner": "future consumable inventory and survival adjudication owner",
+          "reason": "Goodberry is closed outside promoted battle runtime for this source-harness pass: .references/srd-5.2.1/Spells/Descriptions-E-L.md:871-882 defines a 24-hour Spell Definition that creates ten duration-limited berries in the caster's hand, a later Bonus Action eating boundary, 1 Hit Point restoration, one-day nourishment, and uneaten-berry disappearance; .references/srd-5.2.1/Classes/Druid.md:213 and .references/srd-5.2.1/Classes/Ranger.md:172 are spell-list access rows. Those facts require represented consumable item instances, holder/count state, expiry, later item use, Hit Point restoration from a consumed item, and nourishment/survival adjudication. No current promoted owner carries that inventory/survival state, so the battle Spell Invocation reducers must not add a Goodberry-specific counter or duplicate the missing inventory source of truth.",
+          "source": "spell-unit-missing-classification",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 213,
         "lineStart": 213,
@@ -24971,7 +24977,11 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "inventory-survival-adjudication",
+          "owner": "future consumable inventory and survival adjudication owner",
+          "reason": "Goodberry is closed outside promoted battle runtime for this source-harness pass: .references/srd-5.2.1/Spells/Descriptions-E-L.md:871-882 defines a 24-hour Spell Definition that creates ten duration-limited berries in the caster's hand, a later Bonus Action eating boundary, 1 Hit Point restoration, one-day nourishment, and uneaten-berry disappearance; .references/srd-5.2.1/Classes/Druid.md:213 and .references/srd-5.2.1/Classes/Ranger.md:172 are spell-list access rows. Those facts require represented consumable item instances, holder/count state, expiry, later item use, Hit Point restoration from a consumed item, and nourishment/survival adjudication. No current promoted owner carries that inventory/survival state, so the battle Spell Invocation reducers must not add a Goodberry-specific counter or duplicate the missing inventory source of truth.",
+          "source": "spell-unit-missing-classification",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
@@ -33849,14 +33859,20 @@
       "levelBand": "spell-level-1",
       "nextAction": "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "inventory-survival-adjudication",
+          "owner": "future consumable inventory and survival adjudication owner",
+          "reason": "Goodberry is closed outside promoted battle runtime for this source-harness pass: .references/srd-5.2.1/Spells/Descriptions-E-L.md:871-882 defines a 24-hour Spell Definition that creates ten duration-limited berries in the caster's hand, a later Bonus Action eating boundary, 1 Hit Point restoration, one-day nourishment, and uneaten-berry disappearance; .references/srd-5.2.1/Classes/Druid.md:213 and .references/srd-5.2.1/Classes/Ranger.md:172 are spell-list access rows. Those facts require represented consumable item instances, holder/count state, expiry, later item use, Hit Point restoration from a consumed item, and nourishment/survival adjudication. No current promoted owner carries that inventory/survival state, so the battle Spell Invocation reducers must not add a Goodberry-specific counter or duplicate the missing inventory source of truth.",
+          "source": "spell-unit-missing-classification",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 172,
         "lineStart": 172,
@@ -33871,7 +33887,11 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "inventory-survival-adjudication",
+          "owner": "future consumable inventory and survival adjudication owner",
+          "reason": "Goodberry is closed outside promoted battle runtime for this source-harness pass: .references/srd-5.2.1/Spells/Descriptions-E-L.md:871-882 defines a 24-hour Spell Definition that creates ten duration-limited berries in the caster's hand, a later Bonus Action eating boundary, 1 Hit Point restoration, one-day nourishment, and uneaten-berry disappearance; .references/srd-5.2.1/Classes/Druid.md:213 and .references/srd-5.2.1/Classes/Ranger.md:172 are spell-list access rows. Those facts require represented consumable item instances, holder/count state, expiry, later item use, Hit Point restoration from a consumed item, and nourishment/survival adjudication. No current promoted owner carries that inventory/survival state, so the battle Spell Invocation reducers must not add a Goodberry-specific counter or duplicate the missing inventory source of truth.",
+          "source": "spell-unit-missing-classification",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
@@ -50790,7 +50810,8 @@
       "sdk-scenario-needed",
       "seed-scenario-present",
       "explicit-closure-needed",
-      "closure-review-needed"
+      "closure-review-needed",
+      "table-only-closure-needed"
     ],
     "lanes": [
       {
@@ -50945,14 +50966,28 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 22,
+        "groupCount": 21,
         "lane": "spell-effect-owner-review",
         "ownerTaskIds": [
           "L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY"
         ],
-        "rowCount": 71,
+        "rowCount": 69,
         "rowFamily": "closure-review-row",
         "taskFamily": "spell-effect-owner-review"
+      },
+      {
+        "disposition": "table-only-closure-needed",
+        "followUpTaskIds": [
+          "L12-SH15-NEXT-BATCH-SPLIT"
+        ],
+        "groupCount": 1,
+        "lane": "table-only-closure",
+        "ownerTaskIds": [
+          "L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY"
+        ],
+        "rowCount": 2,
+        "rowFamily": "table-only-closure-row",
+        "taskFamily": "table-only-closure"
       }
     ],
     "levelBands": [
@@ -50964,11 +50999,11 @@
     "rowFamilies": [
       {
         "disposition": "closure-review-needed",
-        "groupCount": 22,
+        "groupCount": 21,
         "lanes": [
           "spell-effect-owner-review"
         ],
-        "rowCount": 71,
+        "rowCount": 69,
         "rowFamily": "closure-review-row"
       },
       {
@@ -51004,6 +51039,15 @@
         ],
         "rowCount": 225,
         "rowFamily": "source-row"
+      },
+      {
+        "disposition": "table-only-closure-needed",
+        "groupCount": 1,
+        "lanes": [
+          "table-only-closure"
+        ],
+        "rowCount": 2,
+        "rowFamily": "table-only-closure-row"
       }
     ],
     "sourceCorpus": {
@@ -58375,12 +58419,12 @@
       "class-feature-closure-review": 4,
       "future-runtime-owner-before-sdk": 45,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 140,
-      "table-only-closure": 11
+      "spell-effect-owner-review": 138,
+      "table-only-closure": 13
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 626,
-      "unresolved-review": 144
+      "resolved": 628,
+      "unresolved-review": 142
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -58396,13 +58440,13 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 144,
+      "closure-review-needed": 142,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
       "sdk-scenario-needed": 418,
       "sdk-scenario-or-owner-closure-needed": 6,
       "seed-scenario-present": 86,
-      "table-only-closure-needed": 11
+      "table-only-closure-needed": 13
     },
     "levelOneFourRows": 632,
     "levelOneTwoCampaignGroups": 210,
@@ -58417,13 +58461,15 @@
       "multi-owner-feature-sdk": 6,
       "seed-present": 73,
       "sheet-spell-access-sdk": 6,
-      "spell-effect-owner-review": 22
+      "spell-effect-owner-review": 21,
+      "table-only-closure": 1
     },
     "levelOneTwoCampaignGroupsByRowFamily": {
-      "closure-review-row": 22,
+      "closure-review-row": 21,
       "explicit-closure-row": 24,
       "seed-row": 73,
-      "source-row": 91
+      "source-row": 91,
+      "table-only-closure-row": 1
     },
     "levelOneTwoCampaignRows": 400,
     "levelOneTwoCampaignRowsByLane": {
@@ -58437,13 +58483,15 @@
       "multi-owner-feature-sdk": 6,
       "seed-present": 80,
       "sheet-spell-access-sdk": 6,
-      "spell-effect-owner-review": 71
+      "spell-effect-owner-review": 69,
+      "table-only-closure": 2
     },
     "levelOneTwoCampaignRowsByRowFamily": {
-      "closure-review-row": 71,
+      "closure-review-row": 69,
       "explicit-closure-row": 24,
       "seed-row": 80,
-      "source-row": 225
+      "source-row": 225,
+      "table-only-closure-row": 2
     },
     "levelOneTwoSeedMigrationAuditRows": 80,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
@@ -58476,8 +58524,8 @@
       "owner-review": 6,
       "seed-present": 79,
       "sheet-spell-access-sdk": 11,
-      "spell-effect-owner-review": 46,
-      "table-only-closure": 4
+      "spell-effect-owner-review": 45,
+      "table-only-closure": 5
     },
     "scenarioGroupsByTask": {
       "L15-SDK-RAW-03": 177,
@@ -70584,79 +70632,6 @@
     },
     {
       "candidateUnitIds": [
-        "goodberry"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Druid",
-        "Ranger"
-      ],
-      "groupId": "l15-sdk-raw-03:spell-effect-owner-review:goodberry",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"spell-effect-owner-review\",\"goodberry\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Druid.md:213",
-        ".references/srd-5.2.1/Classes/Ranger.md:172"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "goodberry",
-          "className": "Druid",
-          "concept": "Druid spell list Goodberry",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 213,
-            "lineStart": 213,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "candidateUnitId": "goodberry",
-          "className": "Ranger",
-          "concept": "Ranger spell list Goodberry",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 172,
-            "lineStart": 172,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Druid spell list Goodberry",
-        "Ranger spell list Goodberry"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
         "identify"
       ],
       "categories": [
@@ -71762,6 +71737,79 @@
         "closure-review-needed"
       ],
       "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "goodberry"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Druid",
+        "Ranger"
+      ],
+      "groupId": "l15-sdk-raw-03:table-only-closure:goodberry",
+      "lane": "table-only-closure",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "table-only-closure"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"table-only-closure\",\"goodberry\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:213",
+        ".references/srd-5.2.1/Classes/Ranger.md:172"
+      ],
+      "rowCount": 2,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "goodberry",
+          "className": "Druid",
+          "concept": "Druid spell list Goodberry",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 213,
+            "lineStart": 213,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "candidateUnitId": "goodberry",
+          "className": "Ranger",
+          "concept": "Ranger spell list Goodberry",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 172,
+            "lineStart": 172,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid spell list Goodberry",
+        "Ranger spell list Goodberry"
+      ],
+      "sdkInventoryDispositions": [
+        "table-only-closure-needed"
+      ],
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-owned closure evidence.",
       "taskId": "L15-SDK-RAW-03"
     },
     {
@@ -80971,7 +81019,7 @@
       "sdkInventoryDispositions": [
         "table-only-closure-needed"
       ],
-      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded social/knowledge closure evidence.",
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-owned closure evidence.",
       "taskId": "L15-SDK-RAW-05"
     },
     {
@@ -81062,7 +81110,7 @@
       "sdkInventoryDispositions": [
         "table-only-closure-needed"
       ],
-      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded social/knowledge closure evidence.",
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-owned closure evidence.",
       "taskId": "L15-SDK-RAW-05"
     },
     {
@@ -81171,7 +81219,7 @@
       "sdkInventoryDispositions": [
         "table-only-closure-needed"
       ],
-      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded social/knowledge closure evidence.",
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-owned closure evidence.",
       "taskId": "L15-SDK-RAW-05"
     },
     {
@@ -81262,7 +81310,7 @@
       "sdkInventoryDispositions": [
         "table-only-closure-needed"
       ],
-      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded social/knowledge closure evidence.",
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-owned closure evidence.",
       "taskId": "L15-SDK-RAW-05"
     },
     {

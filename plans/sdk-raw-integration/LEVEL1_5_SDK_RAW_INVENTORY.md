@@ -38,13 +38,13 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 144 |
+| closure-review-needed | 142 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
 | sdk-scenario-needed | 418 |
 | sdk-scenario-or-owner-closure-needed | 6 |
 | seed-scenario-present | 86 |
-| table-only-closure-needed | 11 |
+| table-only-closure-needed | 13 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
 
@@ -60,15 +60,15 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | class-feature-closure-review | 4 |
 | future-runtime-owner-before-sdk | 45 |
 | multi-owner-sdk-split | 10 |
-| spell-effect-owner-review | 140 |
-| table-only-closure | 11 |
+| spell-effect-owner-review | 138 |
+| table-only-closure | 13 |
 
 ### All Level 1-5 Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 626 |
-| unresolved-review | 144 |
+| resolved | 628 |
+| unresolved-review | 142 |
 
 ### Scenario Groups by Task
 
@@ -97,8 +97,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | owner-review | 6 |
 | seed-present | 79 |
 | sheet-spell-access-sdk | 11 |
-| spell-effect-owner-review | 46 |
-| table-only-closure | 4 |
+| spell-effect-owner-review | 45 |
+| table-only-closure | 5 |
 
 ### Level 5 Completion Rows by SDK Disposition
 
@@ -250,10 +250,11 @@ Rows/groups assigned: 400/210.
 
 | Row family | SDK disposition | Rows | Groups | Lanes |
 | --- | --- | ---: | ---: | --- |
-| closure-review-row | closure-review-needed | 71 | 22 | spell-effect-owner-review |
+| closure-review-row | closure-review-needed | 69 | 21 | spell-effect-owner-review |
 | explicit-closure-row | explicit-closure-needed | 24 | 24 | explicit-closure |
 | seed-row | seed-scenario-present | 80 | 73 | seed-present |
 | source-row | sdk-scenario-needed | 225 | 91 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
+| table-only-closure-row | table-only-closure-needed | 2 | 1 | table-only-closure |
 
 | Lane | SDK disposition | Row family | Rows | Groups | Task family | Owner tasks | Follow-up tasks |
 | --- | --- | --- | ---: | ---: | --- | --- | --- |
@@ -267,7 +268,8 @@ Rows/groups assigned: 400/210.
 | multi-owner-feature-sdk | sdk-scenario-needed | source-row | 6 | 6 | multi-owner-feature-sdk | `L12-SH12-MULTI-OWNER-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | seed-present | seed-scenario-present | seed-row | 80 | 73 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | sheet-spell-access-sdk | sdk-scenario-needed | source-row | 6 | 6 | sheet-spell-access-sdk | `L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| spell-effect-owner-review | closure-review-needed | closure-review-row | 71 | 22 | spell-effect-owner-review | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| spell-effect-owner-review | closure-review-needed | closure-review-row | 69 | 21 | spell-effect-owner-review | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| table-only-closure | table-only-closure-needed | table-only-closure-row | 2 | 1 | table-only-closure | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
 
 ## L1/L2 Seed Migration Audit
 
@@ -613,8 +615,9 @@ Whole-width source lifecycle seed rows: 63/80.
   its real owner instead of pretending the feature has one owner. Unsupported
   class-feature rows use exact row owner evidence when present; otherwise
   closure rows are classified only by typed closure kind.
-- `table-only-closure` means a spell row has recorded social/knowledge
-  closure evidence that is table-owned rather than SDK-executable.
+- `table-only-closure` means a spell row has recorded table-owned
+  closure evidence, such as social/knowledge or inventory/survival
+  adjudication, rather than an SDK-executable owner.
   `spell-effect-owner-review` means the row lacks recorded closure evidence
   or has a recorded closure kind that is not typed enough to split
   future-owner from table-only closure.

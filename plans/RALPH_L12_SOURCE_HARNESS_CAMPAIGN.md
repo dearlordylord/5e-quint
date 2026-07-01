@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close the first spell-effect owner review family"
     },
     {
@@ -208,7 +208,8 @@ The frozen L1/L2 source harness denominator comes from
 | `sdk-scenario-needed` rows | 240 |
 | `seed-scenario-present` rows | 65 |
 | `explicit-closure-needed` rows | 24 |
-| `closure-review-needed` rows | 71 |
+| `closure-review-needed` rows | 69 |
+| `table-only-closure-needed` rows | 2 |
 
 Campaign assignment by lane:
 
@@ -225,9 +226,10 @@ Campaign assignment by lane:
 | multi-owner-feature-sdk | 6 | 6 | `sdk-scenario-needed` | Task 12, then Task 15 follow-ups |
 | seed-present | 65 | 65 | `seed-scenario-present` | Task 3 migration audit, Tasks 17-23 seed migrations, Task 5 creation-owner seed, then Task 15 follow-ups |
 | explicit-closure | 24 | 24 | `explicit-closure-needed` | Task 4 grouping gate and Task 15 follow-ups |
-| spell-effect-owner-review | 71 | 22 | `closure-review-needed` | Task 13, then Task 15 follow-ups |
+| spell-effect-owner-review | 69 | 21 | `closure-review-needed` | Task 13, then Task 15 follow-ups |
+| table-only-closure | 2 | 1 | `table-only-closure-needed` | Task 13, then Task 15 follow-ups |
 
-Every L1/L2 row in the four active dispositions is assigned by the table above.
+Every L1/L2 row in the five active dispositions is assigned by the table above.
 Tasks 6-14 are remaining first representative slices. The campaign now has 65
 seed-present rows: 57 whole-width lifecycle seed rows, seven direct-build seed
 rows needing migration, and one character-creation owner proof. Tasks 17-23
@@ -349,7 +351,7 @@ Reviewer-loop convergence:
 | 10 | L12-SH10-BATTLE-FEATURE-FIRST-SLICE - Add the first battle-feature SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | battle-feature-sdk | One battle feature scenario group from sheet to reducer behavior. |
 | 11 | L12-SH11-BATTLE-SPELL-FIRST-SLICE - Add the first battle-spell SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | battle-spell-sdk | One spell scenario group sharing an execution path across classes. |
 | 12 | L12-SH12-MULTI-OWNER-FIRST-SLICE - Split the first multi-owner feature SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | multi-owner-feature-sdk | One multi-owner group split into legal source scenario and explicit owner follow-ups. |
-| 13 | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY - Close the first spell-effect owner review family | ready-for-research | L12-SH04-GROUPING-GENERATOR-GATE | closure-review | First spell-effect owner-review family classified as table-only, existing owner sufficient, or follow-up implementation. |
+| 13 | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY - Close the first spell-effect owner review family | done | L12-SH04-GROUPING-GENERATOR-GATE | closure-review | Goodberry spell-list pressure family classified as table-only inventory/survival closure. |
 | 14 | L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS - Add the first small QNT harness pressure witness | ready-for-research | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | QNT/harness-pressure | Small deterministic source-side witness or existing obligation strengthening. |
 | 15 | L12-SH15-NEXT-BATCH-SPLIT - Expand the next one-session task batches | blocked | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS | planning | Add the next runnable one-session tasks for remaining L1/L2 groups after seed migrations. |
 | 16 | L12-SH16-CLEANROOM-GATE-PLAN - Prepare the later cleanroom replay gate | blocked | L12-SH15-NEXT-BATCH-SPLIT | later cleanroom gate | Cleanroom replay gate plan after source-side harness stabilizes. |
@@ -924,7 +926,7 @@ Plan Impact:
 
 ### Task 13 - L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -948,6 +950,9 @@ Output:
 - Closure evidence for the selected family, or concrete follow-up tasks for
   missing owners.
 - Inventory/profile updates if closure status changes.
+- Goodberry's two spell-list pressure rows are recorded as
+  `table-only-closure-needed` inventory/survival closure; remaining
+  `spell-effect-owner-review` scope is 69 rows across 21 groups.
 
 Acceptance:
 
@@ -1459,5 +1464,6 @@ with non-mutating checks:
   - 240 `sdk-scenario-needed`
   - 65 `seed-scenario-present`
   - 24 `explicit-closure-needed`
-  - 71 `closure-review-needed`
+  - 69 `closure-review-needed`
+  - 2 `table-only-closure-needed`
 - Run `git diff --check`.

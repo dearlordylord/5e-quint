@@ -98,6 +98,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "seed-scenario-present",
   "explicit-closure-needed",
   "closure-review-needed",
+  "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 210;
@@ -128,7 +129,10 @@ const futureSpellClosureKinds = new Set([
   "table-spatial-derivation",
   "companion-control-boundary",
 ]);
-const tableOnlySpellClosureKinds = new Set(["social-knowledge-effect"]);
+const tableOnlySpellClosureKinds = new Set([
+  "social-knowledge-effect",
+  "inventory-survival-adjudication",
+]);
 const characterCreationClosureKinds = new Set(["selection-grant-container"]);
 const futureFeatureClosureKinds = new Set([
   "character-fact-and-runtime-detached-split",
@@ -151,6 +155,7 @@ const levelOneTwoCampaignRowFamilyByDisposition = new Map([
   ["seed-scenario-present", "seed-row"],
   ["explicit-closure-needed", "explicit-closure-row"],
   ["closure-review-needed", "closure-review-row"],
+  ["table-only-closure-needed", "table-only-closure-row"],
 ]);
 
 const levelOneTwoCampaignLaneOwnership = new Map([
@@ -247,6 +252,14 @@ const levelOneTwoCampaignLaneOwnership = new Map([
     "spell-effect-owner-review",
     {
       taskFamily: "spell-effect-owner-review",
+      ownerTaskIds: ["L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY"],
+      followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "table-only-closure",
+    {
+      taskFamily: "table-only-closure",
       ownerTaskIds: ["L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY"],
       followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
     },
@@ -5502,7 +5515,7 @@ function scenarioSuggestion(group) {
     return "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.";
   }
   if (group.lane === "table-only-closure") {
-    return "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded social/knowledge closure evidence.";
+    return "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-owned closure evidence.";
   }
   if (group.lane === "sheet-build-closure") {
     return "Review lower-owner evidence and either add a build/sheet SDK assertion for user-reachable state or retain an explicit closure with the local RAW anchor.";
@@ -6704,8 +6717,9 @@ function renderInventory(inventory) {
     "  its real owner instead of pretending the feature has one owner. Unsupported",
     "  class-feature rows use exact row owner evidence when present; otherwise",
     "  closure rows are classified only by typed closure kind.",
-    "- `table-only-closure` means a spell row has recorded social/knowledge",
-    "  closure evidence that is table-owned rather than SDK-executable.",
+    "- `table-only-closure` means a spell row has recorded table-owned",
+    "  closure evidence, such as social/knowledge or inventory/survival",
+    "  adjudication, rather than an SDK-executable owner.",
     "  `spell-effect-owner-review` means the row lacks recorded closure evidence",
     "  or has a recorded closure kind that is not typed enough to split",
     "  future-owner from table-only closure.",

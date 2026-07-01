@@ -111,10 +111,17 @@ spell-list pressures are product readiness accepted/no-battle-effect pressure
 and remain outside strict support accounting because no executable Unit matrix
 row exists.
 
+Task 13 records this decision as checker-visible
+`spell-unit-missing-classification` battle-readiness closure for the two
+spell-list pressure rows, using the `inventory-survival-adjudication` closure
+kind. That closure is not a Unit claim, support profile, or runtime admission
+claim; it only makes the existing no-runtime-profile decision auditable in
+generated inventories while `goodberry` remains unauthored and not installed.
+
 ## Promotion Gate
 
-Do not promote this pressure into a Unit claim or strict-support closure until
-the base Unit gates are true:
+Do not promote this pressure into a Unit claim, support profile, or executable
+runtime closure until the base Unit gates are true:
 
 - a SRD-provenance `goodberry` Surface UnitRecord exists;
 - the UnitRecord is admitted into the relevant catalog boundary;
