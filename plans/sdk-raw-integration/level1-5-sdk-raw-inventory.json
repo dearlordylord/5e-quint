@@ -13379,11 +13379,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/barbarian:level-2:class-table-summary:barbarian_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 36,
         "lineStart": 36,
@@ -14734,11 +14742,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/bard:level-2:class-table-summary:bard_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 37,
         "lineStart": 37,
@@ -19501,11 +19517,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/cleric:level-2:class-table-summary:cleric_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 36,
         "lineStart": 36,
@@ -23942,11 +23966,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/druid:level-2:class-table-summary:druid_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 33,
         "lineStart": 33,
@@ -28296,11 +28328,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/fighter:level-2:class-table-summary:fighter_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 32,
         "lineStart": 32,
@@ -29733,11 +29773,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/monk:level-2:class-table-summary:monk_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 33,
         "lineStart": 33,
@@ -31072,11 +31120,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/paladin:level-2:class-table-summary:paladin_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 36,
         "lineStart": 36,
@@ -33579,11 +33635,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/ranger:level-2:class-table-summary:ranger_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 36,
         "lineStart": 36,
@@ -36221,11 +36285,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/rogue:level-2:class-table-summary:rogue_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 37,
         "lineStart": 37,
@@ -37550,11 +37622,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/sorcerer:level-2:class-table-summary:sorcerer_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 36,
         "lineStart": 36,
@@ -42630,11 +42710,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/warlock:level-2:class-table-summary:warlock_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 36,
         "lineStart": 36,
@@ -45666,11 +45754,19 @@
       "finalDisposition": "non-runtime",
       "levelBand": "level-2",
       "nextAction": "No runtime work; keep classification as explicit closure.",
+      "ownerBoundaryEvidence": {
+        "closureKind": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "rawAnchor": "projected-from-row.source",
+        "reason": "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.",
+        "source": "level-two-class-table-summary-closure",
+        "taskId": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
+      },
       "ownerBoundaryStatus": "resolved",
       "proposedOwnerBoundary": "build-progression",
       "rowId": "srd521:classes/wizard:level-2:class-table-summary:wizard_level_2_feature_table_row",
       "rowKind": "class-table-summary",
-      "sdkInventoryDisposition": "explicit-closure-needed",
+      "sdkInventoryDisposition": "explicit-closure-present",
       "source": {
         "lineEnd": 36,
         "lineStart": 36,
@@ -51566,30 +51662,17 @@
         "taskFamily": "character-sheet-sdk"
       },
       {
-        "disposition": "explicit-closure-needed",
-        "followUpTaskIds": [
-          "L12-SH15-NEXT-BATCH-SPLIT"
-        ],
-        "groupCount": 12,
-        "lane": "explicit-closure",
-        "ownerTaskIds": [
-          "L12-SH04-GROUPING-GENERATOR-GATE"
-        ],
-        "rowCount": 12,
-        "rowFamily": "explicit-closure-row",
-        "taskFamily": "explicit-closure"
-      },
-      {
         "disposition": "explicit-closure-present",
         "followUpTaskIds": [
           "L12-SH40-REMAINING-BATCH-SPLIT"
         ],
-        "groupCount": 12,
+        "groupCount": 24,
         "lane": "explicit-closure-present",
         "ownerTaskIds": [
-          "L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE"
+          "L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE",
+          "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE"
         ],
-        "rowCount": 12,
+        "rowCount": 24,
         "rowFamily": "closed-explicit-closure-row",
         "taskFamily": "explicit-closure"
       },
@@ -51680,11 +51763,11 @@
     "rowFamilies": [
       {
         "disposition": "explicit-closure-present",
-        "groupCount": 12,
+        "groupCount": 24,
         "lanes": [
           "explicit-closure-present"
         ],
-        "rowCount": 12,
+        "rowCount": 24,
         "rowFamily": "closed-explicit-closure-row"
       },
       {
@@ -51698,11 +51781,9 @@
       },
       {
         "disposition": "explicit-closure-needed",
-        "groupCount": 12,
-        "lanes": [
-          "explicit-closure"
-        ],
-        "rowCount": 12,
+        "groupCount": 0,
+        "lanes": [],
+        "rowCount": 0,
         "rowFamily": "explicit-closure-row"
       },
       {
@@ -60512,8 +60593,8 @@
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
       "closure-review-needed": 140,
-      "explicit-closure-needed": 48,
-      "explicit-closure-present": 12,
+      "explicit-closure-needed": 36,
+      "explicit-closure-present": 24,
       "future-owner-before-sdk": 45,
       "sdk-scenario-needed": 347,
       "sdk-scenario-or-owner-closure-needed": 6,
@@ -60529,8 +60610,7 @@
       "build-sheet-sdk": 7,
       "character-creation-sdk": 10,
       "character-sheet-sdk": 3,
-      "explicit-closure": 12,
-      "explicit-closure-present": 12,
+      "explicit-closure-present": 24,
       "multi-owner-feature-sdk": 5,
       "seed-present": 99,
       "sheet-spell-access-sdk": 3,
@@ -60538,9 +60618,9 @@
       "table-only-closure": 2
     },
     "levelOneTwoCampaignGroupsByRowFamily": {
-      "closed-explicit-closure-row": 12,
+      "closed-explicit-closure-row": 24,
       "closure-review-row": 20,
-      "explicit-closure-row": 12,
+      "explicit-closure-row": 0,
       "seed-row": 99,
       "source-row": 67,
       "table-only-closure-row": 2
@@ -60553,8 +60633,7 @@
       "build-sheet-sdk": 50,
       "character-creation-sdk": 10,
       "character-sheet-sdk": 3,
-      "explicit-closure": 12,
-      "explicit-closure-present": 12,
+      "explicit-closure-present": 24,
       "multi-owner-feature-sdk": 5,
       "seed-present": 151,
       "sheet-spell-access-sdk": 3,
@@ -60562,9 +60641,9 @@
       "table-only-closure": 4
     },
     "levelOneTwoCampaignRowsByRowFamily": {
-      "closed-explicit-closure-row": 12,
+      "closed-explicit-closure-row": 24,
       "closure-review-row": 67,
-      "explicit-closure-row": 12,
+      "explicit-closure-row": 0,
       "seed-row": 151,
       "source-row": 154,
       "table-only-closure-row": 4
@@ -60591,8 +60670,8 @@
       "build-sheet-sdk": 19,
       "character-creation-sdk": 24,
       "character-sheet-sdk": 3,
-      "explicit-closure": 48,
-      "explicit-closure-present": 12,
+      "explicit-closure": 36,
+      "explicit-closure-present": 24,
       "feature-owner-review": 4,
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 8,
@@ -74741,8 +74820,8 @@
       "classNames": [
         "Barbarian"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:barbarian:class-table-summary:class-barbarian",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:barbarian:class-table-summary:class-barbarian",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -74752,7 +74831,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Barbarian\",\"class-table-summary\",\"class_barbarian\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Barbarian\",\"class-table-summary\",\"class_barbarian\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Barbarian.md:36"
       ],
@@ -74769,7 +74848,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/barbarian:level-2:class-table-summary:barbarian_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 36,
             "lineStart": 36,
@@ -74781,9 +74860,9 @@
         "Barbarian level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
@@ -74796,8 +74875,8 @@
       "classNames": [
         "Bard"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:bard:class-table-summary:class-bard",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:bard:class-table-summary:class-bard",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -74807,7 +74886,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Bard\",\"class-table-summary\",\"class_bard\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Bard\",\"class-table-summary\",\"class_bard\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Bard.md:37"
       ],
@@ -74824,7 +74903,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/bard:level-2:class-table-summary:bard_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 37,
             "lineStart": 37,
@@ -74836,9 +74915,9 @@
         "Bard level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
@@ -74851,8 +74930,8 @@
       "classNames": [
         "Cleric"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:cleric:class-table-summary:class-cleric",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:cleric:class-table-summary:class-cleric",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -74862,7 +74941,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Cleric\",\"class-table-summary\",\"class_cleric\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Cleric\",\"class-table-summary\",\"class_cleric\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Cleric.md:36"
       ],
@@ -74879,7 +74958,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/cleric:level-2:class-table-summary:cleric_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 36,
             "lineStart": 36,
@@ -74891,9 +74970,9 @@
         "Cleric level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
@@ -74906,8 +74985,8 @@
       "classNames": [
         "Druid"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:druid:class-table-summary:class-druid",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:druid:class-table-summary:class-druid",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -74917,7 +74996,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Druid\",\"class-table-summary\",\"class_druid\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Druid\",\"class-table-summary\",\"class_druid\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Druid.md:33"
       ],
@@ -74934,7 +75013,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/druid:level-2:class-table-summary:druid_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 33,
             "lineStart": 33,
@@ -74946,9 +75025,9 @@
         "Druid level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
@@ -74961,8 +75040,8 @@
       "classNames": [
         "Fighter"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:fighter:class-table-summary:class-fighter",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:fighter:class-table-summary:class-fighter",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -74972,7 +75051,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Fighter\",\"class-table-summary\",\"class_fighter\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Fighter\",\"class-table-summary\",\"class_fighter\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Fighter.md:32"
       ],
@@ -74989,7 +75068,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/fighter:level-2:class-table-summary:fighter_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 32,
             "lineStart": 32,
@@ -75001,9 +75080,9 @@
         "Fighter level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
@@ -75016,8 +75095,8 @@
       "classNames": [
         "Monk"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:monk:class-table-summary:class-monk",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:monk:class-table-summary:class-monk",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -75027,7 +75106,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Monk\",\"class-table-summary\",\"class_monk\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Monk\",\"class-table-summary\",\"class_monk\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Monk.md:33"
       ],
@@ -75044,7 +75123,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/monk:level-2:class-table-summary:monk_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 33,
             "lineStart": 33,
@@ -75056,9 +75135,9 @@
         "Monk level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
@@ -75071,8 +75150,8 @@
       "classNames": [
         "Paladin"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:paladin:class-table-summary:class-paladin",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:paladin:class-table-summary:class-paladin",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -75082,7 +75161,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Paladin\",\"class-table-summary\",\"class_paladin\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Paladin\",\"class-table-summary\",\"class_paladin\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Paladin.md:36"
       ],
@@ -75099,7 +75178,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/paladin:level-2:class-table-summary:paladin_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 36,
             "lineStart": 36,
@@ -75111,9 +75190,9 @@
         "Paladin level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
@@ -75126,8 +75205,8 @@
       "classNames": [
         "Ranger"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:ranger:class-table-summary:class-ranger",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:ranger:class-table-summary:class-ranger",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -75137,7 +75216,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Ranger\",\"class-table-summary\",\"class_ranger\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Ranger\",\"class-table-summary\",\"class_ranger\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Ranger.md:36"
       ],
@@ -75154,7 +75233,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/ranger:level-2:class-table-summary:ranger_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 36,
             "lineStart": 36,
@@ -75166,9 +75245,9 @@
         "Ranger level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
@@ -75181,8 +75260,8 @@
       "classNames": [
         "Rogue"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:rogue:class-table-summary:class-rogue",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:rogue:class-table-summary:class-rogue",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -75192,7 +75271,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Rogue\",\"class-table-summary\",\"class_rogue\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Rogue\",\"class-table-summary\",\"class_rogue\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Rogue.md:37"
       ],
@@ -75209,7 +75288,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/rogue:level-2:class-table-summary:rogue_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 37,
             "lineStart": 37,
@@ -75221,9 +75300,9 @@
         "Rogue level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
@@ -75236,8 +75315,8 @@
       "classNames": [
         "Sorcerer"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:sorcerer:class-table-summary:class-sorcerer",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:sorcerer:class-table-summary:class-sorcerer",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -75247,7 +75326,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Sorcerer\",\"class-table-summary\",\"class_sorcerer\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Sorcerer\",\"class-table-summary\",\"class_sorcerer\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Sorcerer.md:36"
       ],
@@ -75264,7 +75343,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/sorcerer:level-2:class-table-summary:sorcerer_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 36,
             "lineStart": 36,
@@ -75276,9 +75355,9 @@
         "Sorcerer level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
@@ -75291,8 +75370,8 @@
       "classNames": [
         "Warlock"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:warlock:class-table-summary:class-warlock",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:warlock:class-table-summary:class-warlock",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -75302,7 +75381,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Warlock\",\"class-table-summary\",\"class_warlock\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Warlock\",\"class-table-summary\",\"class_warlock\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Warlock.md:36"
       ],
@@ -75319,7 +75398,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/warlock:level-2:class-table-summary:warlock_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 36,
             "lineStart": 36,
@@ -75331,9 +75410,9 @@
         "Warlock level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
@@ -75346,8 +75425,8 @@
       "classNames": [
         "Wizard"
       ],
-      "groupId": "l15-sdk-raw-04:explicit-closure:wizard:class-table-summary:class-wizard",
-      "lane": "explicit-closure",
+      "groupId": "l15-sdk-raw-04:explicit-closure-present:wizard:class-table-summary:class-wizard",
+      "lane": "explicit-closure-present",
       "levelBands": [
         "level-2"
       ],
@@ -75357,7 +75436,7 @@
       "proposedOwnerBoundaries": [
         "build-progression"
       ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure\",\"Wizard\",\"class-table-summary\",\"class_wizard\"]",
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"explicit-closure-present\",\"Wizard\",\"class-table-summary\",\"class_wizard\"]",
       "rawSources": [
         ".references/srd-5.2.1/Classes/Wizard.md:36"
       ],
@@ -75374,7 +75453,7 @@
           "ownerBoundaryStatus": "resolved",
           "proposedOwnerBoundary": "build-progression",
           "rowId": "srd521:classes/wizard:level-2:class-table-summary:wizard_level_2_feature_table_row",
-          "sdkInventoryDisposition": "explicit-closure-needed",
+          "sdkInventoryDisposition": "explicit-closure-present",
           "source": {
             "lineEnd": 36,
             "lineStart": 36,
@@ -75386,9 +75465,9 @@
         "Wizard level 2 feature table row"
       ],
       "sdkInventoryDispositions": [
-        "explicit-closure-needed"
+        "explicit-closure-present"
       ],
-      "suggestedScenario": "Keep this generated non-runtime class-table closure tied to the local class table row.",
+      "suggestedScenario": "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.",
       "taskId": "L15-SDK-RAW-04"
     },
     {
