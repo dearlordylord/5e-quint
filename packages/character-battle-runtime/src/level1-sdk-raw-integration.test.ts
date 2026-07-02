@@ -153,6 +153,13 @@ type DruidWildShapeAssumeFormSubject = Extract<
   Extract<BattleSubject, { readonly tag: "druidWildShape" }>,
   { readonly action: "assumeForm" }
 >;
+type BonusActionStandardActionSubject = Extract<
+  BattleSubject,
+  { readonly tag: "bonusActionStandardAction" }
+>;
+type BonusActionStandardActionAct = AvailableBattleAct & {
+  readonly subject: BonusActionStandardActionSubject;
+};
 
 const fighterId = combatantId("combatant:l1-sdk-fighter");
 const legalFighterId = combatantId("combatant:l1-sdk-legal-fighter");
@@ -332,6 +339,7 @@ const barbarianRecklessAttackUnitId = "barbarian_reckless_attack";
 const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 const monkMartialArtsUnitId = "monk_martial_arts";
 const monkMartialArtsWeaponUnitId = "weapon_dagger";
+const rogueCunningActionUnitId = "rogue_cunning_action";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const rogueSneakAttackWeaponUnitId = "weapon_dagger";
 const rogueSneakAttackName = "Dagger";
@@ -1189,6 +1197,12 @@ const rogueSneakAttackDraftPlan = {
       "wielded_one_handed",
     ),
   ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const rogueCunningActionDraftPlan = {
+  ...rogueSneakAttackDraftPlan,
+  label: "Rogue Cunning Action battle feature",
+  level: 2,
 } as const satisfies LegalSourceCharacterDraftPlan;
 
 const sorcererInnateSorceryDraftPlan = {
@@ -4003,6 +4017,85 @@ describe("level 1 SDK RAW integration", () => {
     expect(
       resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn,
     ).toEqual([{ attackerId: rogueId, unitId: rogueSneakAttackUnitId }]);
+  });
+
+  test("Rogue Cunning Action projects level-2 Dash, Disengage, and Hide alternate costs from legal creation", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l2-sdk-cunning-action",
+      draftPlan: rogueCunningActionDraftPlan,
+      sheet: {
+        characterIdText: "character:l2-sdk-cunning-action",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l2-sdk-cunning-action",
+        combatantId: rogueId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+        ],
+      },
+    });
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.sheet.build).toEqual(fixture.build);
+
+    const state = fixture.state;
+    expect(
+      requireCharacterCombatant(state, rogueId).origin.characterUnitRefs,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: rogueCunningActionUnitId,
+          supportProfiles: expect.arrayContaining([
+            {
+              kind: "alternateActionCost",
+              from: {
+                kind: "standardAction",
+                actions: ["dash", "disengage", "hide"],
+              },
+              to: { kind: "bonusAction" },
+            },
+          ]),
+        }),
+      ]),
+    );
+
+    const dashAct = bonusActionStandardActionAct(
+      state,
+      rogueId,
+      rogueCunningActionUnitId,
+      "dash",
+    );
+    expect(dashAct.summary).toBe("Dash as a Bonus Action.");
+    const dashed = requireResolved(
+      resolveBattleSubject({ state, subject: dashAct.subject, fills: [] }),
+    );
+    expect(snapshotBattle(dashed.state).turn).toMatchObject({
+      bonusActionAvailable: false,
+      actionResources: [{ kind: "action", source: "turn" }],
+      dashMovementBonusFeet: 30,
+    });
+
+    const disengageAct = bonusActionStandardActionAct(
+      state,
+      rogueId,
+      rogueCunningActionUnitId,
+      "disengage",
+    );
+    expect(disengageAct.summary).toBe("Disengage as a Bonus Action.");
+    const disengaged = requireResolved(
+      resolveBattleSubject({ state, subject: disengageAct.subject, fills: [] }),
+    );
+    expect(snapshotBattle(disengaged.state).turn).toMatchObject({
+      bonusActionAvailable: false,
+      actionResources: [{ kind: "action", source: "turn" }],
+      disengaged: true,
+    });
   });
 
   test("Bardic Inspiration grants a level-1 d6 die, spends a Charisma-derived use, and spends the Bonus Action", () => {
@@ -13512,6 +13605,25 @@ function martialArtsBonusUnarmedStrikeAct(
   );
   if (act === undefined) {
     throw new Error("Expected Martial Arts Bonus Action Unarmed Strike act.");
+  }
+  return act;
+}
+
+function bonusActionStandardActionAct(
+  state: BattleState,
+  actorId: CombatantId,
+  sourceUnitId: UnitRecord["id"],
+  action: BonusActionStandardActionSubject["action"],
+): BonusActionStandardActionAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is BonusActionStandardActionAct =>
+      candidate.subject.tag === "bonusActionStandardAction" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.sourceUnitId === sourceUnitId &&
+      candidate.subject.action === action,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected ${action} as a Bonus Action act.`);
   }
   return act;
 }

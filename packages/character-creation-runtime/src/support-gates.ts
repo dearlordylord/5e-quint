@@ -210,6 +210,7 @@ const SUPPORTED_PROGRESSIONS = [
   supportedSameClassSecondLevelProgression(SRD_MONK_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_PALADIN_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_RANGER_CLASS_UNIT_ID),
+  supportedSameClassSecondLevelProgression(SRD_ROGUE_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_SORCERER_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
   supportedSameClassProgression(WIDTH_CLASS_WIZARD_UNIT_ID, 4),

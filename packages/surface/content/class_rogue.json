@@ -6,7 +6,7 @@
     "kind": "trained"
   },
   "className": "rogue",
-  "description": "SRD Rogue class creation facts, subclass selection, Steady Aim, and level 4-5 feature grants.",
+  "description": "SRD Rogue class creation facts, Cunning Action, subclass selection, Steady Aim, and level 4-5 feature grants.",
   "featureGrants": [
     {
       "level": 1,
@@ -23,6 +23,10 @@
     {
       "level": 1,
       "unitId": "rogue_weapon_mastery"
+    },
+    {
+      "level": 2,
+      "unitId": "rogue_cunning_action"
     },
     {
       "level": 3,
@@ -108,7 +112,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Rogue.md:3-25,33-36,38-39,57-79,85-150"
+    "section": "Classes/Rogue.md:3-25,33-36,38-39,57-83,85-150"
   },
   "savingThrowProficiencies": [
     "dex",
