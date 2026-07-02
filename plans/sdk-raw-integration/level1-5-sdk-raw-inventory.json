@@ -13295,6 +13295,13 @@
       "category": "class feature",
       "className": "Barbarian",
       "concept": "Barbarian Reckless Attack",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian Reckless Attack battle feature projects from legal level-2 sheet into first Strength Attack Roll Advantage and reciprocal incoming Advantage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:94-96"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-2",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -13325,7 +13332,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/barbarian:level-2:class-feature-grant:barbarian_reckless_attack",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 97,
         "lineStart": 94,
@@ -51048,12 +51055,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 5,
+        "groupCount": 4,
         "lane": "battle-feature-sdk",
         "ownerTaskIds": [
           "L12-SH10-BATTLE-FEATURE-FIRST-SLICE"
         ],
-        "rowCount": 5,
+        "rowCount": 4,
         "rowFamily": "source-row",
         "taskFamily": "battle-feature-sdk"
       },
@@ -51160,7 +51167,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 78,
+        "groupCount": 79,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -51172,7 +51179,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 112,
+        "rowCount": 113,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51246,16 +51253,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 78,
+        "groupCount": 79,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 112,
+        "rowCount": 113,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 82,
+        "groupCount": 81,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51266,7 +51273,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 193,
+        "rowCount": 192,
         "rowFamily": "source-row"
       },
       {
@@ -51514,6 +51521,25 @@
       "rowKey": "level-2:Barbarian:barbarian_danger_sense",
       "rowKind": "class-feature-grant",
       "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "barbarian_reckless_attack",
+      "classification": "already legal creation path",
+      "className": "Barbarian",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian Reckless Attack battle feature projects from legal level-2 sheet into first Strength Attack Roll Advantage and reciprocal incoming Advantage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-2",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/barbarian:level-2:class-feature-grant:barbarian_reckless_attack",
+      "rowKey": "level-2:Barbarian:barbarian_reckless_attack",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-battle-handoff",
       "usesRealSheetBattleHandoff": true,
       "wholeWidthSourceLifecycleProof": true
     },
@@ -59284,15 +59310,15 @@
       "closure-review-needed": 142,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 386,
+      "sdk-scenario-needed": 385,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 118,
+      "seed-scenario-present": 119,
       "table-only-closure-needed": 13
     },
     "levelOneFourRows": 632,
     "levelOneTwoCampaignGroups": 206,
     "levelOneTwoCampaignGroupsByLane": {
-      "battle-feature-sdk": 5,
+      "battle-feature-sdk": 4,
       "battle-spell-sdk": 31,
       "build-battle-sdk": 9,
       "build-sheet-sdk": 9,
@@ -59300,7 +59326,7 @@
       "character-sheet-sdk": 5,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 78,
+      "seed-present": 79,
       "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 21,
       "table-only-closure": 1
@@ -59308,13 +59334,13 @@
     "levelOneTwoCampaignGroupsByRowFamily": {
       "closure-review-row": 21,
       "explicit-closure-row": 24,
-      "seed-row": 78,
-      "source-row": 82,
+      "seed-row": 79,
+      "source-row": 81,
       "table-only-closure-row": 1
     },
     "levelOneTwoCampaignRows": 400,
     "levelOneTwoCampaignRowsByLane": {
-      "battle-feature-sdk": 5,
+      "battle-feature-sdk": 4,
       "battle-spell-sdk": 80,
       "build-battle-sdk": 13,
       "build-sheet-sdk": 67,
@@ -59322,7 +59348,7 @@
       "character-sheet-sdk": 5,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 112,
+      "seed-present": 113,
       "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 69,
       "table-only-closure": 2
@@ -59330,27 +59356,27 @@
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 69,
       "explicit-closure-row": 24,
-      "seed-row": 112,
-      "source-row": 193,
+      "seed-row": 113,
+      "source-row": 192,
       "table-only-closure-row": 2
     },
-    "levelOneTwoSeedMigrationAuditRows": 112,
+    "levelOneTwoSeedMigrationAuditRows": 113,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 72,
+      "already legal creation path": 73,
       "legal build-sheet owner proof": 37,
       "legal creation owner proof": 3
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
       "not-real-sheet-battle": 40,
-      "real-sheet-battle": 72
+      "real-sheet-battle": 73
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 112
+      "legal-creation-draft-finalize": 113
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 72,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 73,
     "scenarioGroups": 410,
     "scenarioGroupsByLane": {
-      "battle-feature-sdk": 20,
+      "battle-feature-sdk": 19,
       "battle-spell-sdk": 82,
       "build-battle-sdk": 9,
       "build-sheet-sdk": 21,
@@ -59361,7 +59387,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 84,
+      "seed-present": 85,
       "sheet-spell-access-sdk": 10,
       "spell-effect-owner-review": 45,
       "table-only-closure": 5
@@ -72519,61 +72545,6 @@
     },
     {
       "candidateUnitIds": [
-        "barbarian_reckless_attack"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Barbarian"
-      ],
-      "groupId": "l15-sdk-raw-04:battle-feature-sdk:barbarian-reckless-attack",
-      "lane": "battle-feature-sdk",
-      "levelBands": [
-        "level-2"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"battle-feature-sdk\",\"barbarian_reckless_attack\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Barbarian.md:94"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "barbarian_reckless_attack",
-          "className": "Barbarian",
-          "concept": "Barbarian Reckless Attack",
-          "levelBand": "level-2",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/barbarian:level-2:class-feature-grant:barbarian_reckless_attack",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 97,
-            "lineStart": 94,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Barbarian Reckless Attack"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Build or sheet the class at the required level, project to battle, discover/resolve the feature act or trigger, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-04"
-    },
-    {
-      "candidateUnitIds": [
         "fighter_action_surge"
       ],
       "categories": [
@@ -74326,6 +74297,62 @@
       ],
       "sampleConcepts": [
         "Barbarian Danger Sense"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-04"
+    },
+    {
+      "candidateUnitIds": [
+        "barbarian_reckless_attack"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Barbarian"
+      ],
+      "groupId": "l15-sdk-raw-04:seed-present:level-2-barbarian-barbarian-reckless-attack",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-2"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-04\",\"seed-present\",\"level-2:Barbarian:barbarian_reckless_attack\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Barbarian.md:94",
+        ".references/srd-5.2.1/Classes/Barbarian.md:94-96"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "barbarian_reckless_attack",
+          "className": "Barbarian",
+          "concept": "Barbarian Reckless Attack",
+          "levelBand": "level-2",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/barbarian:level-2:class-feature-grant:barbarian_reckless_attack",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 97,
+            "lineStart": 94,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Barbarian Reckless Attack"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -90828,6 +90855,44 @@
         "succeeded: true",
         "\"incapacitated\"",
         "targetRollModes"
+      ]
+    },
+    {
+      "candidateUnitId": "barbarian_reckless_attack",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Barbarian Reckless Attack battle feature projects from legal level-2 sheet into first Strength Attack Roll Advantage and reciprocal incoming Advantage",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Barbarian.md:94-96"
+        ]
+      },
+      "helperNeedles": [],
+      "levelBand": "level-2",
+      "rowId": "srd521:classes/barbarian:level-2:class-feature-grant:barbarian_reckless_attack",
+      "rowKey": "level-2:Barbarian:barbarian_reckless_attack",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l2-sdk-barbarian-reckless-attack\"",
+        "barbarianRecklessAttackDraftPlan",
+        "draftIdText: \"draft:l2-sdk-reckless-attack-fighter\"",
+        "fighterLifecycleDraftPlan",
+        "battleIdText: \"battle:l2-sdk-barbarian-reckless-attack\"",
+        "battleFromSheets({",
+        "withCombatantSide(",
+        "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+        "characterBuildUnitRefs(fixture.build, unitLibrary)",
+        "barbarianRecklessAttackUnitId",
+        "attackSubject(",
+        "recklessAttackBarbarianId",
+        "\"Longsword\"",
+        "ongoingFeatureActivations",
+        "rollMode: \"advantage\"",
+        "activatedOngoingFeatureUnitId: barbarianRecklessAttackUnitId",
+        "opponentTurn",
+        "recklessAttackFighterId",
+        "activeOngoingFeatureOccurrences"
       ]
     },
     {

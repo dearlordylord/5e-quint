@@ -153,6 +153,12 @@ const barbarianId = combatantId("combatant:l1-sdk-barbarian");
 const dangerSenseBarbarianId = combatantId(
   "combatant:l2-sdk-danger-sense-barbarian",
 );
+const recklessAttackBarbarianId = combatantId(
+  "combatant:l2-sdk-reckless-attack-barbarian",
+);
+const recklessAttackFighterId = combatantId(
+  "combatant:l2-sdk-reckless-attack-fighter",
+);
 const bardId = combatantId("combatant:l1-sdk-bard");
 const clericId = combatantId("combatant:l1-sdk-cleric");
 const dissonantWhispersBardId = combatantId(
@@ -299,6 +305,7 @@ const thunderwaveUnsecuredObjectId = battleObjectId(
 const fighterSecondWindUnitId = "fighter_second_wind";
 const barbarianRageUnitId = "barbarian_rage";
 const barbarianDangerSenseUnitId = "barbarian_danger_sense";
+const barbarianRecklessAttackUnitId = "barbarian_reckless_attack";
 const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 const monkMartialArtsUnitId = "monk_martial_arts";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
@@ -379,6 +386,12 @@ const barbarianBuildSheetDraftPlan = sharedBarbarianBuildSheetDraftPlan;
 const barbarianDangerSenseDraftPlan = {
   ...barbarianBuildSheetDraftPlan,
   label: "Barbarian Danger Sense battle feature",
+  level: 2,
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const barbarianRecklessAttackDraftPlan = {
+  ...barbarianBuildSheetDraftPlan,
+  label: "Barbarian Reckless Attack battle feature",
   level: 2,
 } as const satisfies LegalSourceCharacterDraftPlan;
 
@@ -1282,6 +1295,221 @@ describe("level 1 SDK RAW integration", () => {
         dangerSenseBarbarianId,
       ).save.targetRollModes,
     ).toEqual([]);
+  });
+
+  test("Barbarian Reckless Attack battle feature projects from legal level-2 sheet into first Strength Attack Roll Advantage and reciprocal incoming Advantage", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l2-sdk-barbarian-reckless-attack",
+      draftPlan: barbarianRecklessAttackDraftPlan,
+      sheet: {
+        characterIdText: "character:l2-sdk-barbarian-reckless-attack",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_barbarian"),
+      advancements: [
+        {
+          classUnitId: classUnitId("class_barbarian"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    });
+    expect(characterBuildUnitRefs(fixture.build, unitLibrary)).toContainEqual({
+      unitId: barbarianRecklessAttackUnitId,
+    });
+
+    const fighterSheet = createLegalSourceCharacterSheet({
+      characterIdText: "character:l2-sdk-reckless-attack-fighter",
+      build: createLegalSourceCharacterFixture({
+        draftIdText: "draft:l2-sdk-reckless-attack-fighter",
+        draftPlan: fighterLifecycleDraftPlan,
+        sheet: {
+          characterIdText: "character:l2-sdk-reckless-attack-fighter-build",
+          hitPoints: { tag: "maximum" },
+        },
+        battle: { tag: "withoutBattle" },
+      }).build,
+      hitPoints: { tag: "maximum" },
+    });
+    const state = withCombatantSide(
+      battleFromSheets({
+        battleIdText: "battle:l2-sdk-barbarian-reckless-attack",
+        characters: [
+          {
+            sheet: fixture.sheet,
+            combatantId: recklessAttackBarbarianId,
+            initiative: 20,
+          },
+          {
+            sheet: fighterSheet,
+            combatantId: recklessAttackFighterId,
+            initiative: 10,
+          },
+        ],
+        monsters: [],
+      }),
+      recklessAttackFighterId,
+      battleCombatantSide("monsters"),
+    );
+    const barbarian = requireCharacterCombatant(
+      state,
+      recklessAttackBarbarianId,
+    );
+    expect(barbarian.origin.characterUnitRefs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ unitId: barbarianRecklessAttackUnitId }),
+      ]),
+    );
+    expect([...barbarian.origin.ongoingFeatureProfiles.keys()]).toContain(
+      barbarianRecklessAttackUnitId,
+    );
+    expect([...barbarian.origin.ongoingFeatureProfiles.values()]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: barbarianRecklessAttackUnitId }),
+          rollModifiers: expect.arrayContaining([
+            expect.objectContaining({
+              mode: "advantage",
+              affects: "rollsAgainstSelf",
+              on: "attackRoll",
+            }),
+          ]),
+        }),
+      ]),
+    );
+    expect(
+      discoverBattleActs(state).some(
+        (candidate) =>
+          candidate.subject.tag === "unitFeature" &&
+          candidate.subject.actorId === recklessAttackBarbarianId &&
+          candidate.subject.unitId === barbarianRecklessAttackUnitId,
+      ),
+    ).toBe(false);
+
+    const subject = attackSubject(
+      state,
+      recklessAttackBarbarianId,
+      "Longsword",
+    );
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      recklessAttackBarbarianId,
+      recklessAttackFighterId,
+      "Longsword",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    expect(roll).toMatchObject({
+      ongoingFeatureActivations: [
+        expect.objectContaining({
+          unitId: barbarianRecklessAttackUnitId,
+          rollMode: "advantage",
+        }),
+      ],
+    });
+
+    const recklessAttackRoll = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill,
+        attackRollFill(roll, {
+          total: 1,
+          naturalD20: 1,
+          rollMode: "advantage",
+          activatedOngoingFeatureUnitId: barbarianRecklessAttackUnitId,
+        }),
+      ],
+    });
+    if (
+      recklessAttackRoll.tag !== "resolved" &&
+      recklessAttackRoll.tag !== "needsHoles"
+    ) {
+      throw new Error(
+        `Expected Reckless Attack roll to resolve or reach damage roll, received ${recklessAttackRoll.tag}.`,
+      );
+    }
+    const recklessAttackState = recklessAttackRoll.state;
+    expect(
+      requireCharacterCombatant(recklessAttackState, recklessAttackBarbarianId)
+        .activeOngoingFeatureOccurrences,
+    ).toEqual(
+      new Map([
+        [
+          barbarianRecklessAttackUnitId,
+          expect.objectContaining({ kind: "turnBoundary" }),
+        ],
+      ]),
+    );
+
+    const opponentTurn = requireResolved(
+      endTurn({
+        state: recklessAttackState,
+        actorId: recklessAttackBarbarianId,
+      }),
+    ).state;
+    expect(
+      requireCharacterCombatant(opponentTurn, recklessAttackBarbarianId)
+        .activeOngoingFeatureOccurrences,
+    ).toEqual(
+      new Map([
+        [
+          barbarianRecklessAttackUnitId,
+          expect.objectContaining({ kind: "turnBoundary" }),
+        ],
+      ]),
+    );
+    const incomingSubject = attackSubject(
+      opponentTurn,
+      recklessAttackFighterId,
+      "Longsword",
+    );
+    const incomingTarget = requireHole(
+      resolveBattleSubject({
+        state: opponentTurn,
+        subject: incomingSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const incomingTargetFill = attackTargetFill(
+      incomingTarget,
+      recklessAttackFighterId,
+      recklessAttackBarbarianId,
+      "Longsword",
+    );
+    expect(
+      requireHole(
+        resolveBattleSubject({
+          state: opponentTurn,
+          subject: incomingSubject,
+          fills: [incomingTargetFill],
+        }),
+        "attackRoll",
+      ),
+    ).toMatchObject({ rollMode: "advantage" });
+
+    const nextBarbarianTurn = requireResolved(
+      endTurn({ state: opponentTurn, actorId: recklessAttackFighterId }),
+    ).state;
+    expect(
+      requireCharacterCombatant(nextBarbarianTurn, recklessAttackBarbarianId)
+        .activeOngoingFeatureOccurrences,
+    ).toEqual(new Map());
   });
 
   test("Druid Wild Shape splits legal level-2 creation facts, sheet known forms, battle form use, and active-form handoff closure", () => {

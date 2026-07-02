@@ -1306,6 +1306,7 @@ export function attackRollFill(
     readonly total: number;
     readonly naturalD20: number;
     readonly rollMode?: "advantage" | "disadvantage" | "normal";
+    readonly activatedOngoingFeatureUnitId?: string;
   },
 ): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   return {
@@ -1315,6 +1316,12 @@ export function attackRollFill(
       total: value.total,
       naturalD20: DieRollResult(value.naturalD20),
       ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
+      ...(value.activatedOngoingFeatureUnitId === undefined
+        ? {}
+        : {
+            activatedOngoingFeatureUnitId:
+              value.activatedOngoingFeatureUnitId,
+          }),
     },
   };
 }

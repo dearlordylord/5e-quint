@@ -106,7 +106,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 206;
-const expectedLevelOneTwoSeedScenarioRows = 112;
+const expectedLevelOneTwoSeedScenarioRows = 113;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -1202,6 +1202,40 @@ const seededSdkScenarioRows = [
           '"savingThrowOutcome"',
         ],
       },
+    ],
+  },
+  {
+    candidateUnitId: "barbarian_reckless_attack",
+    className: "Barbarian",
+    levelBand: "level-2",
+    label:
+      "level1-sdk-raw-integration: Barbarian Reckless Attack battle feature projects from legal level-2 sheet into first Strength Attack Roll Advantage and reciprocal incoming Advantage",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rowId:
+      "srd521:classes/barbarian:level-2:class-feature-grant:barbarian_reckless_attack",
+    rawSources: [".references/srd-5.2.1/Classes/Barbarian.md:94-96"],
+    sourceProof: legalBuildBattleHandoffSourceProof,
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l2-sdk-barbarian-reckless-attack"',
+      "barbarianRecklessAttackDraftPlan",
+      'draftIdText: "draft:l2-sdk-reckless-attack-fighter"',
+      "fighterLifecycleDraftPlan",
+      'battleIdText: "battle:l2-sdk-barbarian-reckless-attack"',
+      "battleFromSheets({",
+      "withCombatantSide(",
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+      "characterBuildUnitRefs(fixture.build, unitLibrary)",
+      "barbarianRecklessAttackUnitId",
+      "attackSubject(",
+      "recklessAttackBarbarianId",
+      '"Longsword"',
+      "ongoingFeatureActivations",
+      'rollMode: "advantage"',
+      "activatedOngoingFeatureUnitId: barbarianRecklessAttackUnitId",
+      "opponentTurn",
+      "recklessAttackFighterId",
+      "activeOngoingFeatureOccurrences",
     ],
   },
   {
