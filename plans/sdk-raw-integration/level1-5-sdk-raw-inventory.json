@@ -3265,6 +3265,10 @@
       "category": "class feature",
       "className": "Fighter",
       "concept": "Fighter Extra Attack",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Fighter Extra Attack",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -3295,7 +3299,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 97,
         "lineStart": 94,
@@ -10086,61 +10090,6 @@
     },
     {
       "candidateUnitIds": [
-        "fighter_extra_attack"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Fighter"
-      ],
-      "groupId": "l15-sdk-raw-07:owner-review:fighter-extra-attack",
-      "lane": "owner-review",
-      "levelBands": [
-        "level-5"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"owner-review\",\"fighter_extra_attack\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Fighter.md:94"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "fighter_extra_attack",
-          "className": "Fighter",
-          "concept": "Fighter Extra Attack",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
-          "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
-          "source": {
-            "lineEnd": 97,
-            "lineStart": 94,
-            "path": ".references/srd-5.2.1/Classes/Fighter.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Fighter Extra Attack"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-or-owner-closure-needed"
-      ],
-      "suggestedScenario": "Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "paladin_extra_attack"
       ],
       "categories": [
@@ -10407,6 +10356,61 @@
       ],
       "sampleConcepts": [
         "Barbarian Fast Movement"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "fighter_extra_attack"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Fighter"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:level-5-fighter-fighter-extra-attack",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-5"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"level-5:Fighter:fighter_extra_attack\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Fighter.md:94"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "fighter_extra_attack",
+          "className": "Fighter",
+          "concept": "Fighter Extra Attack",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 97,
+            "lineStart": 94,
+            "path": ".references/srd-5.2.1/Classes/Fighter.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Fighter Extra Attack"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -29234,6 +29238,10 @@
       "category": "class feature",
       "className": "Fighter",
       "concept": "Fighter Extra Attack",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Fighter Extra Attack",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -29264,7 +29272,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 97,
         "lineStart": 94,
@@ -57884,19 +57892,19 @@
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 45,
       "sdk-scenario-needed": 2,
-      "sdk-scenario-or-owner-closure-needed": 4,
-      "seed-scenario-present": 41
+      "sdk-scenario-or-owner-closure-needed": 3,
+      "seed-scenario-present": 42
     },
     "level5ScenarioGroups": 94,
     "level5ScenarioGroupsByLane": {
       "battle-spell-sdk": 1,
       "explicit-closure": 12,
       "future-owner-before-sdk": 24,
-      "owner-review": 4,
-      "seed-present": 41,
+      "owner-review": 3,
+      "seed-present": 42,
       "spell-effect-owner-review": 12
     },
-    "level5SeedScenarioRows": 41,
+    "level5SeedScenarioRows": 42,
     "levelOneFiveMinedRows": 770,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -57946,8 +57954,8 @@
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 47,
       "sdk-scenario-needed": 401,
-      "sdk-scenario-or-owner-closure-needed": 4,
-      "seed-scenario-present": 105,
+      "sdk-scenario-or-owner-closure-needed": 3,
+      "seed-scenario-present": 106,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
@@ -57963,8 +57971,8 @@
       "feature-owner-review": 2,
       "future-owner-before-sdk": 26,
       "multi-owner-feature-sdk": 9,
-      "owner-review": 4,
-      "seed-present": 105,
+      "owner-review": 3,
+      "seed-present": 106,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -84425,61 +84433,6 @@
     },
     {
       "candidateUnitIds": [
-        "fighter_extra_attack"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Fighter"
-      ],
-      "groupId": "l15-sdk-raw-07:owner-review:fighter-extra-attack",
-      "lane": "owner-review",
-      "levelBands": [
-        "level-5"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"owner-review\",\"fighter_extra_attack\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Fighter.md:94"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "fighter_extra_attack",
-          "className": "Fighter",
-          "concept": "Fighter Extra Attack",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
-          "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
-          "source": {
-            "lineEnd": 97,
-            "lineStart": 94,
-            "path": ".references/srd-5.2.1/Classes/Fighter.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Fighter Extra Attack"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-or-owner-closure-needed"
-      ],
-      "suggestedScenario": "Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "paladin_extra_attack"
       ],
       "categories": [
@@ -84746,6 +84699,61 @@
       ],
       "sampleConcepts": [
         "Barbarian Fast Movement"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "fighter_extra_attack"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Fighter"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:level-5-fighter-fighter-extra-attack",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-5"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"level-5:Fighter:fighter_extra_attack\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Fighter.md:94"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "fighter_extra_attack",
+          "className": "Fighter",
+          "concept": "Fighter Extra Attack",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 97,
+            "lineStart": 94,
+            "path": ".references/srd-5.2.1/Classes/Fighter.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Fighter Extra Attack"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -92631,6 +92639,31 @@
       "rowKey": "level-5:Barbarian:barbarian_fast_movement",
       "tracerNeedles": [
         "barbarianFastMovementUnitId"
+      ]
+    },
+    {
+      "candidateUnitId": "fighter_extra_attack",
+      "className": "Fighter",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Fighter Extra Attack",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function assertLevelFiveExtraAttackHandoff",
+          "needles": [
+            "resolveWeaponAttackMiss({",
+            "source: \"classFeatureExtraAttack\"",
+            "sourceUnitId: input.sourceUnitId"
+          ]
+        }
+      ],
+      "levelBand": "level-5",
+      "rowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
+      "rowKey": "level-5:Fighter:fighter_extra_attack",
+      "tracerNeedles": [
+        "fighterExtraAttackUnitId"
       ]
     },
     {

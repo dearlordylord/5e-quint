@@ -275,6 +275,7 @@ describe("character-creation Surface records", () => {
           { level: 1, unitId: "fighter_weapon_mastery" },
           { level: 2, unitId: "fighter_action_surge" },
           { level: 2, unitId: "fighter_tactical_mind" },
+          { level: 5, unitId: "fighter_extra_attack" },
         ]),
       },
     });

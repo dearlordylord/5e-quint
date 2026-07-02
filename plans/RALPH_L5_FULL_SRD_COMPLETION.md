@@ -247,7 +247,7 @@
     {
       "number": 41,
       "id": "L5FULL-OWN-03-FIGHTER-EXTRA-ATTACK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose SDK scenario or SDK closure for Fighter Extra Attack"
     },
     {

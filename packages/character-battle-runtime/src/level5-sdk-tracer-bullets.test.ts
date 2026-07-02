@@ -91,6 +91,9 @@ const extraAttackBarbarianId = combatantId(
 const fastMovementBarbarianId = combatantId(
   "combatant:l5-tracer-fast-movement-barbarian",
 );
+const extraAttackFighterId = combatantId(
+  "combatant:l5-tracer-extra-attack-fighter",
+);
 const extraAttackMonkId = combatantId("combatant:l5-tracer-extra-attack-monk");
 const monkId = combatantId("combatant:l5-tracer-monk");
 const rogueId = combatantId("combatant:l5-tracer-rogue");
@@ -201,6 +204,7 @@ const slowSuccessfulSaveTargetId = combatantId(
 
 const barbarianExtraAttackUnitId = "barbarian_extra_attack";
 const barbarianFastMovementUnitId = "barbarian_fast_movement";
+const fighterExtraAttackUnitId = "fighter_extra_attack";
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
 const monkStunningStrikeUnitId = "monk_stunning_strike";
@@ -353,6 +357,26 @@ describe("level 5 SDK tracer bullets", () => {
       characterIdText: "character:l5-tracer-extra-attack-barbarian",
       classUnitId: "class_barbarian",
       sourceUnitId: barbarianExtraAttackUnitId,
+      weaponUnitId: "weapon_longsword",
+      attackName: "Longsword",
+      abilityScores: {
+        str: 16,
+        dex: 10,
+        con: 14,
+        int: 10,
+        wis: 10,
+        cha: 10,
+      },
+    });
+  });
+
+  test("Fighter Extra Attack projects through sheet handoff and opens exactly one added attack slot", () => {
+    assertLevelFiveExtraAttackHandoff({
+      actorId: extraAttackFighterId,
+      battleIdText: "battle:l5-tracer-extra-attack-fighter",
+      characterIdText: "character:l5-tracer-extra-attack-fighter",
+      classUnitId: "class_fighter",
+      sourceUnitId: fighterExtraAttackUnitId,
       weaponUnitId: "weapon_longsword",
       attackName: "Longsword",
       abilityScores: {

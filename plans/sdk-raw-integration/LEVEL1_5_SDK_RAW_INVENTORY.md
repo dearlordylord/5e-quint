@@ -16,7 +16,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-5 mined rows | 770 |
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
-| Existing level-5 SDK seed scenario rows | 41 |
+| Existing level-5 SDK seed scenario rows | 42 |
 | Scenario groups | 433 |
 | Level 5 scenario groups | 94 |
 
@@ -43,8 +43,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 47 |
 | sdk-scenario-needed | 401 |
-| sdk-scenario-or-owner-closure-needed | 4 |
-| seed-scenario-present | 105 |
+| sdk-scenario-or-owner-closure-needed | 3 |
+| seed-scenario-present | 106 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -95,8 +95,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | feature-owner-review | 2 |
 | future-owner-before-sdk | 26 |
 | multi-owner-feature-sdk | 9 |
-| owner-review | 4 |
-| seed-present | 105 |
+| owner-review | 3 |
+| seed-present | 106 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -109,8 +109,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 45 |
 | sdk-scenario-needed | 2 |
-| sdk-scenario-or-owner-closure-needed | 4 |
-| seed-scenario-present | 41 |
+| sdk-scenario-or-owner-closure-needed | 3 |
+| seed-scenario-present | 42 |
 
 ### Level 5 Completion Rows by Proposed Owner Boundary
 
@@ -136,8 +136,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | battle-spell-sdk | 1 |
 | explicit-closure | 12 |
 | future-owner-before-sdk | 24 |
-| owner-review | 4 |
-| seed-present | 41 |
+| owner-review | 3 |
+| seed-present | 42 |
 | spell-effect-owner-review | 12 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -217,6 +217,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt` / `spell-level-0:Wizard:fire_bolt`: level1-sdk-raw-integration: Sorcerer and Wizard Fire Bolt cantrips resolve from level-1 sheets as ranged spell attacks without spending slots
 - `srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack` / `level-5:Barbarian:barbarian_extra_attack`: level5-sdk-tracer-bullets: Barbarian Extra Attack
 - `srd521:classes/barbarian:level-5:class-feature-grant:barbarian_fast_movement` / `level-5:Barbarian:barbarian_fast_movement`: level5-sdk-tracer-bullets: Barbarian Fast Movement
+- `srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack` / `level-5:Fighter:fighter_extra_attack`: level5-sdk-tracer-bullets: Fighter Extra Attack
 - `srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack` / `level-5:Monk:monk_extra_attack`: level5-sdk-tracer-bullets: Extra Attack
 - `srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike` / `level-5:Monk:monk_stunning_strike`: level5-sdk-tracer-bullets: Stunning Strike
 - `srd521:classes/rogue:level-5:class-feature-grant:rogue_cunning_strike` / `level-5:Rogue:rogue_cunning_strike`: level5-sdk-tracer-bullets: Cunning Strike
@@ -298,12 +299,12 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Sorcerer, Warlock, Wizard | `vampiric_touch` | Sorcerer spell list Vampiric Touch<br>Warlock spell list Vampiric Touch<br>Wizard spell list Vampiric Touch | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | spell-level-3 | Druid | `wind_wall` | Druid spell list Wind Wall | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Wizard | `wizard_memorize_spell` | Wizard Memorize Spell | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
-| L15-SDK-RAW-07 | owner-review | 1 | level-5 | Fighter | `fighter_extra_attack` | Fighter Extra Attack | Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure. |
 | L15-SDK-RAW-07 | owner-review | 1 | level-5 | Paladin | `paladin_extra_attack` | Paladin Extra Attack | Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure. |
 | L15-SDK-RAW-07 | owner-review | 1 | level-5 | Ranger | `ranger_extra_attack` | Ranger Extra Attack | Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure. |
 | L15-SDK-RAW-07 | owner-review | 1 | level-5 | Rogue | `rogue_uncanny_dodge` | Rogue Uncanny Dodge | Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Barbarian | `barbarian_extra_attack` | Barbarian Extra Attack | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Barbarian | `barbarian_fast_movement` | Barbarian Fast Movement | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | level-5 | Fighter | `fighter_extra_attack` | Fighter Extra Attack | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Monk | `monk_extra_attack` | Monk Extra Attack | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Monk | `monk_stunning_strike` | Monk Stunning Strike | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Rogue | `rogue_cunning_strike` | Rogue Cunning Strike | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
@@ -418,7 +419,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Druid spell list Water Breathing | `water_breathing` | `.references/srd-5.2.1/Classes/Druid.md:263` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state. |
 | spell-level-3 | Druid spell list Water Walk | `water_walk` | `.references/srd-5.2.1/Classes/Druid.md:264` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution. |
 | spell-level-3 | Druid spell list Wind Wall | `wind_wall` | `.references/srd-5.2.1/Classes/Druid.md:265` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers. |
-| level-5 | Fighter Extra Attack | `fighter_extra_attack` | `.references/srd-5.2.1/Classes/Fighter.md:94` | catalog-installed-owner-evidence-present | not-applicable | character-battle-to-battle | resolved | sdk-scenario-or-owner-closure-needed |  | Owner-specific operational evidence is classified and present. |
+| level-5 | Fighter Extra Attack | `fighter_extra_attack` | `.references/srd-5.2.1/Classes/Fighter.md:94` | catalog-installed-owner-evidence-present | not-applicable | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Fighter Extra Attack | Owner-specific operational evidence is classified and present. |
 | level-5 | Fighter Tactical Shift | `fighter_tactical_shift` | `.references/srd-5.2.1/Classes/Fighter.md:98` | catalog-only/dead-for-now | not-applicable | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity. |
 | level-5 | Fighter level 5 feature table row | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:35` | non-runtime | not-applicable | build-progression | resolved | explicit-closure-recorded |  | SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state. |
 | level-5 | Monk Extra Attack | `monk_extra_attack` | `.references/srd-5.2.1/Classes/Monk.md:120` | catalog-installed-owner-evidence-present | not-applicable | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Extra Attack | Owner-specific operational evidence is classified and present. |

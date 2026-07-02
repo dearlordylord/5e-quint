@@ -3647,6 +3647,26 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "fighter_extra_attack",
+    className: "Fighter",
+    levelBand: "level-5",
+    label: "level5-sdk-tracer-bullets: Fighter Extra Attack",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
+    tracerNeedles: ["fighterExtraAttackUnitId"],
+    helperNeedles: [
+      {
+        anchor: "function assertLevelFiveExtraAttackHandoff",
+        needles: [
+          "resolveWeaponAttackMiss({",
+          'source: "classFeatureExtraAttack"',
+          "sourceUnitId: input.sourceUnitId",
+        ],
+      },
+    ],
+  },
+  {
     candidateUnitId: "monk_extra_attack",
     className: "Monk",
     levelBand: "level-5",
