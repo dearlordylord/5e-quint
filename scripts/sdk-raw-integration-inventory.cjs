@@ -105,8 +105,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 210;
-const expectedLevelOneTwoSeedScenarioRows = 118;
+const expectedLevelOneTwoCampaignGroups = 212;
+const expectedLevelOneTwoSeedScenarioRows = 121;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -1451,7 +1451,7 @@ const seededSdkScenarioRows = [
         anchor: "const bardSpellAccessPreparedSpells =",
         needles: [
           '"charm_person"',
-          '"color_spray"',
+          "colorSpraySpellId",
           "dissonantWhispersSpellId",
           "healingWordSpellId",
         ],
@@ -3343,6 +3343,72 @@ const seededSdkScenarioRows = [
       "preparedSpells: expect.arrayContaining([charmPersonSpellId])",
     ],
     helperNeedles: charmPersonSdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "color_spray",
+    className: "Bard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Bard.md:165",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816",
+    ],
+    rowId:
+      "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
+    tracerNeedles: [
+      "const bardBuild = finalizedLevelOneBardColorSprayBuild();",
+      'sourceUnitId: "class_bard"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([colorSpraySpellId])",
+      "build: bardBuild,",
+      "casterId: colorSprayBardId,",
+      "expectedSpellSaveDc: 12,",
+    ],
+    helperNeedles: colorSpraySdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "color_spray",
+    className: "Sorcerer",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Sorcerer.md:247",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816",
+    ],
+    rowId:
+      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
+    tracerNeedles: [
+      "const sorcererBuild = finalizedLevelOneSorcererColorSprayBuild();",
+      'sourceUnitId: "class_sorcerer"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([colorSpraySpellId])",
+    ],
+    helperNeedles: colorSpraySdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "color_spray",
+    className: "Wizard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Wizard.md:166",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816",
+    ],
+    rowId:
+      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
+    tracerNeedles: [
+      "const wizardBuild = finalizedLevelOneWizardColorSprayBuild();",
+      'sourceUnitId: "class_wizard"',
+      'spellcastingAbility: "int"',
+      "preparedSpells: expect.arrayContaining([colorSpraySpellId])",
+    ],
+    helperNeedles: colorSpraySdkHelperNeedles(),
   },
   {
     candidateUnitId: "ranger_favored_enemy",
@@ -5420,6 +5486,61 @@ function charmPersonSdkHelperNeedles() {
         "value: { targetIds: [targetId] }",
         'kind: "spellTarget"',
         "spellId: charmPersonSpellId",
+      ],
+    },
+  ];
+}
+
+function colorSpraySdkHelperNeedles() {
+  return [
+    {
+      anchor: "function finalizedLevelOneBardColorSprayBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneBardBuild({",
+        'draftIdText: "draft:l1-sdk-bard-color-spray"',
+        'expectedBuildLabel: "Bard Color Spray"',
+        "colorSpraySpellId",
+      ],
+    },
+    {
+      anchor:
+        "function finalizedLevelOneSorcererColorSprayBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneSorcererBuild({",
+        'draftIdText: "draft:l1-sdk-sorcerer-color-spray"',
+        'expectedBuildLabel: "Sorcerer Color Spray"',
+        "colorSpraySpellId",
+      ],
+    },
+    {
+      anchor:
+        "function finalizedLevelOneWizardColorSprayBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneWizardBuild({",
+        'draftIdText: "draft:l1-sdk-wizard-color-spray"',
+        'expectedBuildLabel: "Wizard Color Spray"',
+        "colorSpraySpellId",
+      ],
+    },
+    {
+      anchor: "function assertLevelOneColorSpray",
+      needles: [
+        'srdStatBlock("stat_block_skeleton")',
+        "spellSlotActForProcedure(",
+        "colorSpraySpellId",
+        '"saveGatedCondition"',
+        "spellSaveDcForCaster(state, input.casterId)",
+        'label: "Color Spray self-origin Cone Saving Throw outcomes"',
+        'ability: "con"',
+        'targeting: { kind: "selfOriginCone", lengthFeet: 15 }',
+        'condition: "blinded"',
+        'expiresAt: "endOfCasterNextTurn"',
+        "areaSavingThrowOutcomeFill(save, input.casterId,",
+        "{ targetId: monsterId, succeeded: false }",
+        'hasCondition(blindedTarget.conditions, "blinded")',
+        "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+        "spellSlotUsesThisTurn",
+        "{ spellLevel: 1, count: 2, expended: 1 }",
       ],
     },
   ];

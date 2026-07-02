@@ -172,6 +172,7 @@ const animalFriendshipBardId = combatantId(
   "combatant:l1-sdk-animal-friendship-bard",
 );
 const charmPersonBardId = combatantId("combatant:l1-sdk-charm-person-bard");
+const colorSprayBardId = combatantId("combatant:l1-sdk-color-spray-bard");
 const baneBardId = combatantId("combatant:l1-sdk-bane-bard");
 const baneClericId = combatantId("combatant:l1-sdk-bane-cleric");
 const baneWarlockId = combatantId("combatant:l1-sdk-bane-warlock");
@@ -327,6 +328,7 @@ const blessSpellId = "bless";
 const shieldOfFaithSpellId = "shield_of_faith";
 const animalFriendshipSpellId = "animal_friendship";
 const charmPersonSpellId = "charm_person";
+const colorSpraySpellId = "color_spray";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
@@ -533,7 +535,7 @@ const bardSpellAccessCantrips = [
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const bardSpellAccessPreparedSpells = [
   "charm_person",
-  "color_spray",
+  colorSpraySpellId,
   dissonantWhispersSpellId,
   healingWordSpellId,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
@@ -3794,6 +3796,48 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
+  test("Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution", () => {
+    const bardBuild = finalizedLevelOneBardColorSprayBuild();
+    const sorcererBuild = finalizedLevelOneSorcererColorSprayBuild();
+    const wizardBuild = finalizedLevelOneWizardColorSprayBuild();
+
+    expect(bardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_bard",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([colorSpraySpellId]),
+        }),
+      ]),
+    );
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([colorSpraySpellId]),
+        }),
+      ]),
+    );
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          spellcastingAbility: "int",
+          preparedSpells: expect.arrayContaining([colorSpraySpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneColorSpray({
+      battleIdText: "battle:l1-sdk-color-spray-bard",
+      characterIdText: "character:l1-sdk-color-spray-bard",
+      build: bardBuild,
+      casterId: colorSprayBardId,
+      expectedSpellSaveDc: 12,
+    });
+  });
+
   test("Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention", () => {
     const sorcererBuild = finalizedLevelOneSorcererChillTouchBuild();
     const warlockBuild = finalizedLevelOneWarlockChillTouchBuild();
@@ -7035,6 +7079,114 @@ function assertLevelOneCharmPerson(input: {
   ]);
 }
 
+function assertLevelOneColorSpray(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        secondMonsterId,
+        8,
+        srdStatBlock("stat_block_skeleton"),
+      ),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    colorSpraySpellId,
+    1,
+    "saveGatedCondition",
+  );
+  const save = requireHoleFromList(act.initialHoles, "savingThrowOutcome");
+
+  expect(act.subject).toMatchObject({
+    tag: "actionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: colorSpraySpellId,
+      slotLevel: 1,
+      procedure: "saveGatedCondition",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(save).toMatchObject({
+    label: "Color Spray self-origin Cone Saving Throw outcomes",
+    ability: "con",
+    dc: { kind: "caster_spell_save_dc" },
+    spell: {
+      procedure: "saveGatedCondition",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      targeting: { kind: "selfOriginCone", lengthFeet: 15 },
+      effect: {
+        kind: "fixed",
+        condition: "blinded",
+        expiresAt: "endOfCasterNextTurn",
+        escape: null,
+        turnStartDamage: null,
+        repeatSave: null,
+      },
+      rangeFeet: movementFeet(0),
+    },
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        areaSavingThrowOutcomeFill(save, input.casterId, [
+          { targetId: monsterId, succeeded: false },
+          { targetId: secondMonsterId, succeeded: true },
+        ]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+  const blindedTarget = requireCombatant(resolved.state, monsterId);
+  const sparedTarget = requireCombatant(resolved.state, secondMonsterId);
+
+  expect(hasCondition(blindedTarget.conditions, "blinded")).toBe(true);
+  expect(hasCondition(sparedTarget.conditions, "blinded")).toBe(false);
+  expect(blindedTarget.activeEffects).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "spellCondition",
+        sourceSpellId: colorSpraySpellId,
+        sourceCombatantId: input.casterId,
+        condition: "blinded",
+        expiresAt: { kind: "endOfTurn", combatantId: input.casterId, round: 2 },
+      }),
+    ]),
+  );
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(caster.concentration).toBeNull();
+  expect(caster.activeEffects).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
 function assertLevelOneHuntersMark(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -9351,7 +9503,7 @@ function finalizedLevelOneBardDissonantWhispersBuild(): CharacterBuild {
     cantrips: ["dancing_lights", viciousMockerySpellId],
     preparedSpells: [
       "charm_person",
-      "color_spray",
+      colorSpraySpellId,
       dissonantWhispersSpellId,
       healingWordSpellId,
     ],
@@ -9365,7 +9517,7 @@ function finalizedLevelOneBardViciousMockeryBuild(): CharacterBuild {
     cantrips: ["dancing_lights", viciousMockerySpellId],
     preparedSpells: [
       "charm_person",
-      "color_spray",
+      colorSpraySpellId,
       healingWordSpellId,
       thunderwaveSpellId,
     ],
@@ -9379,7 +9531,7 @@ function finalizedLevelOneBardHealingWordBuild(): CharacterBuild {
     cantrips: ["dancing_lights", viciousMockerySpellId],
     preparedSpells: [
       "charm_person",
-      "color_spray",
+      colorSpraySpellId,
       dissonantWhispersSpellId,
       healingWordSpellId,
     ],
@@ -9393,7 +9545,7 @@ function finalizedLevelOneBardCureWoundsBuild(): CharacterBuild {
     cantrips: ["dancing_lights", viciousMockerySpellId],
     preparedSpells: [
       "charm_person",
-      "color_spray",
+      colorSpraySpellId,
       cureWoundsSpellId,
       healingWordSpellId,
     ],
@@ -9407,7 +9559,21 @@ function finalizedLevelOneBardCharmPersonBuild(): CharacterBuild {
     cantrips: ["dancing_lights", viciousMockerySpellId],
     preparedSpells: [
       charmPersonSpellId,
-      "color_spray",
+      colorSpraySpellId,
+      dissonantWhispersSpellId,
+      healingWordSpellId,
+    ],
+  });
+}
+
+function finalizedLevelOneBardColorSprayBuild(): CharacterBuild {
+  return finalizedLevelOneBardBuild({
+    draftIdText: "draft:l1-sdk-bard-color-spray",
+    expectedBuildLabel: "Bard Color Spray",
+    cantrips: ["dancing_lights", viciousMockerySpellId],
+    preparedSpells: [
+      charmPersonSpellId,
+      colorSpraySpellId,
       dissonantWhispersSpellId,
       healingWordSpellId,
     ],
@@ -9422,7 +9588,7 @@ function finalizedLevelOneBardAnimalFriendshipBuild(): CharacterBuild {
     preparedSpells: [
       animalFriendshipSpellId,
       "charm_person",
-      "color_spray",
+      colorSpraySpellId,
       healingWordSpellId,
     ],
   });
@@ -9436,7 +9602,7 @@ function finalizedLevelOneBardBaneBuild(): CharacterBuild {
     preparedSpells: [
       baneSpellId,
       "charm_person",
-      "color_spray",
+      colorSpraySpellId,
       healingWordSpellId,
     ],
   });
@@ -10434,6 +10600,20 @@ function finalizedLevelOneSorcererCharmPersonBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererColorSprayBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-color-spray",
+    expectedBuildLabel: "Sorcerer Color Spray",
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      shockingGraspSpellId,
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [colorSpraySpellId, burningHandsSpellId],
+  });
+}
+
 function finalizedLevelOneSorcererSorcerousBurstBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-sorcerous-burst",
@@ -10960,6 +11140,28 @@ function finalizedLevelOneWizardCharmPersonBuild(): CharacterBuild {
     ],
     preparedSpells: [
       charmPersonSpellId,
+      "detect_magic",
+      "mage_armor",
+      magicMissileSpellId,
+    ],
+  });
+}
+
+function finalizedLevelOneWizardColorSprayBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-color-spray",
+    expectedBuildLabel: "Wizard Color Spray",
+    cantrips: ["light", fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      colorSpraySpellId,
+      "detect_magic",
+      "mage_armor",
+      magicMissileSpellId,
+      "shield",
+      "sleep",
+    ],
+    preparedSpells: [
+      colorSpraySpellId,
       "detect_magic",
       "mage_armor",
       magicMissileSpellId,

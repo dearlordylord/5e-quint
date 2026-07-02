@@ -211,7 +211,7 @@
     {
       "number": 35,
       "id": "L12-SH35-BATTLE-SPELL-COLOR-SPRAY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the Color Spray battle-spell SDK group"
     },
     {
@@ -473,7 +473,7 @@ Reviewer-loop convergence:
 | 32 | L12-SH32-SHEET-MONK-UNARMORED-DEFENSE - Add the Monk Unarmored Defense sheet SDK group | done | L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | character-sheet-sdk | Monk Unarmored Defense projects Armor Class from legal creation and a fresh sheet. |
 | 33 | L12-SH33-BATTLE-FEATURE-RECKLESS-ATTACK - Add the Barbarian Reckless Attack battle-feature SDK group | done | L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | battle-feature-sdk | Barbarian Reckless Attack resolves from legal sheet-to-battle handoff through focused battle behavior. |
 | 34 | L12-SH34-BATTLE-SPELL-CHARM-PERSON - Add the Charm Person battle-spell SDK group | done | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | battle-spell-sdk | Charm Person resolves once through battle behavior and preserves class spell-access evidence for five access rows. |
-| 35 | L12-SH35-BATTLE-SPELL-COLOR-SPRAY - Add the Color Spray battle-spell SDK group | ready-for-research | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | battle-spell-sdk | Color Spray resolves once through battle behavior and preserves class spell-access evidence for three access rows. |
+| 35 | L12-SH35-BATTLE-SPELL-COLOR-SPRAY - Add the Color Spray battle-spell SDK group | done | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | battle-spell-sdk | Color Spray resolves once through battle behavior and preserves class spell-access evidence for three access rows. |
 | 36 | L12-SH36-MULTI-OWNER-DRUID-WILD-SHAPE - Split the Druid Wild Shape multi-owner SDK group | ready-for-research | L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | multi-owner-feature-sdk | Druid Wild Shape is split into legal source scenario evidence and explicit owner follow-ups. |
 | 37 | L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE - Close the level-1 class table summary family | ready-for-research | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH15-NEXT-BATCH-SPLIT | explicit-closure | Level-1 class table summary rows receive explicit non-runtime/table-summary closure evidence. |
 | 38 | L12-SH38-CLOSURE-ALARM - Close the Alarm spell-effect owner review group | ready-for-research | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH15-NEXT-BATCH-SPLIT | spell-effect-owner-review | Alarm spell-list pressure rows receive closure evidence or concrete future owner tasks. |
@@ -2045,7 +2045,7 @@ Plan Impact:
 
 ### Task 35 - L12-SH35-BATTLE-SPELL-COLOR-SPRAY
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

@@ -15783,6 +15783,14 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Color Spray",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:165",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -15790,7 +15798,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 165,
         "lineStart": 165,
@@ -38549,6 +38557,14 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Color Spray",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Sorcerer.md:247",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -38556,7 +38572,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 247,
         "lineStart": 247,
@@ -46638,6 +46654,14 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Color Spray",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Wizard.md:166",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -46645,7 +46669,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 166,
         "lineStart": 166,
@@ -51109,12 +51133,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 30,
+        "groupCount": 29,
         "lane": "battle-spell-sdk",
         "ownerTaskIds": [
           "L12-SH11-BATTLE-SPELL-FIRST-SLICE"
         ],
-        "rowCount": 75,
+        "rowCount": 72,
         "rowFamily": "source-row",
         "taskFamily": "battle-spell-sdk"
       },
@@ -51207,7 +51231,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 84,
+        "groupCount": 87,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -51219,7 +51243,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 118,
+        "rowCount": 121,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51293,16 +51317,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 84,
+        "groupCount": 87,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 118,
+        "rowCount": 121,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 80,
+        "groupCount": 79,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51313,7 +51337,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 187,
+        "rowCount": 184,
         "rowFamily": "source-row"
       },
       {
@@ -51332,7 +51356,7 @@
       "sourcePathPrefix": ".references/srd-5.2.1/"
     },
     "totals": {
-      "groupCount": 210,
+      "groupCount": 212,
       "rowCount": 400
     }
   },
@@ -51877,6 +51901,24 @@
       "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
       "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
       "rowKey": "spell-level-1:Bard:charm_person",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "color_spray",
+      "classification": "already legal creation path",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
+      "rowKey": "spell-level-1:Bard:color_spray",
       "rowKind": "spell-unit-pressure",
       "sourceBuildPath": "legal-creation-draft-finalize",
       "usesRealSheetBattleHandoff": true,
@@ -53042,6 +53084,24 @@
       "wholeWidthSourceLifecycleProof": true
     },
     {
+      "candidateUnitId": "color_spray",
+      "classification": "already legal creation path",
+      "className": "Sorcerer",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
+      "rowKey": "spell-level-1:Sorcerer:color_spray",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
       "candidateUnitId": "false_life",
       "classification": "already legal creation path",
       "className": "Sorcerer",
@@ -53415,6 +53475,24 @@
       "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
       "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb",
       "rowKey": "spell-level-1:Wizard:chromatic_orb",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "color_spray",
+      "classification": "already legal creation path",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
+      "rowKey": "spell-level-1:Wizard:color_spray",
       "rowKind": "spell-unit-pressure",
       "sourceBuildPath": "legal-creation-draft-finalize",
       "usesRealSheetBattleHandoff": true,
@@ -59440,23 +59518,23 @@
       "closure-review-needed": 142,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 380,
+      "sdk-scenario-needed": 377,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 124,
+      "seed-scenario-present": 127,
       "table-only-closure-needed": 13
     },
     "levelOneFourRows": 632,
-    "levelOneTwoCampaignGroups": 210,
+    "levelOneTwoCampaignGroups": 212,
     "levelOneTwoCampaignGroupsByLane": {
       "battle-feature-sdk": 4,
-      "battle-spell-sdk": 30,
+      "battle-spell-sdk": 29,
       "build-battle-sdk": 9,
       "build-sheet-sdk": 9,
       "character-creation-sdk": 12,
       "character-sheet-sdk": 5,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 84,
+      "seed-present": 87,
       "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 21,
       "table-only-closure": 1
@@ -59464,21 +59542,21 @@
     "levelOneTwoCampaignGroupsByRowFamily": {
       "closure-review-row": 21,
       "explicit-closure-row": 24,
-      "seed-row": 84,
-      "source-row": 80,
+      "seed-row": 87,
+      "source-row": 79,
       "table-only-closure-row": 1
     },
     "levelOneTwoCampaignRows": 400,
     "levelOneTwoCampaignRowsByLane": {
       "battle-feature-sdk": 4,
-      "battle-spell-sdk": 75,
+      "battle-spell-sdk": 72,
       "build-battle-sdk": 13,
       "build-sheet-sdk": 67,
       "character-creation-sdk": 12,
       "character-sheet-sdk": 5,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 118,
+      "seed-present": 121,
       "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 69,
       "table-only-closure": 2
@@ -59486,28 +59564,28 @@
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 69,
       "explicit-closure-row": 24,
-      "seed-row": 118,
-      "source-row": 187,
+      "seed-row": 121,
+      "source-row": 184,
       "table-only-closure-row": 2
     },
-    "levelOneTwoSeedMigrationAuditRows": 118,
+    "levelOneTwoSeedMigrationAuditRows": 121,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 78,
+      "already legal creation path": 81,
       "legal build-sheet owner proof": 37,
       "legal creation owner proof": 3
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
       "not-real-sheet-battle": 40,
-      "real-sheet-battle": 78
+      "real-sheet-battle": 81
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 118
+      "legal-creation-draft-finalize": 121
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 78,
-    "scenarioGroups": 414,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 81,
+    "scenarioGroups": 416,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 19,
-      "battle-spell-sdk": 81,
+      "battle-spell-sdk": 80,
       "build-battle-sdk": 9,
       "build-sheet-sdk": 21,
       "character-creation-sdk": 26,
@@ -59517,13 +59595,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 90,
+      "seed-present": 93,
       "sheet-spell-access-sdk": 10,
       "spell-effect-owner-review": 45,
       "table-only-closure": 5
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 177,
+      "L15-SDK-RAW-03": 179,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -59531,97 +59609,6 @@
     }
   },
   "scenarioGroups": [
-    {
-      "candidateUnitIds": [
-        "color_spray"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:color-spray",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"color_spray\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:165",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:247",
-        ".references/srd-5.2.1/Classes/Wizard.md:166"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "color_spray",
-          "className": "Bard",
-          "concept": "Bard spell list Color Spray",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 165,
-            "lineStart": 165,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "color_spray",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Color Spray",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 247,
-            "lineStart": 247,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "color_spray",
-          "className": "Wizard",
-          "concept": "Wizard spell list Color Spray",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 166,
-            "lineStart": 166,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Color Spray",
-        "Sorcerer spell list Color Spray",
-        "Wizard spell list Color Spray"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
     {
       "candidateUnitIds": [
         "command"
@@ -68117,6 +68104,62 @@
     },
     {
       "candidateUnitIds": [
+        "color_spray"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-bard-color-spray",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Bard:color_spray\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:165",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "color_spray",
+          "className": "Bard",
+          "concept": "Bard spell list Color Spray",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 165,
+            "lineStart": 165,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Color Spray"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "cure_wounds"
       ],
       "categories": [
@@ -69570,6 +69613,62 @@
     },
     {
       "candidateUnitIds": [
+        "color_spray"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-sorcerer-color-spray",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Sorcerer:color_spray\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:247",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "color_spray",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Color Spray",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 247,
+            "lineStart": 247,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Color Spray"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "false_life"
       ],
       "categories": [
@@ -70177,6 +70276,62 @@
       ],
       "sampleConcepts": [
         "Wizard spell list Chromatic Orb"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "color_spray"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-wizard-color-spray",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Wizard:color_spray\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:166",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "color_spray",
+          "className": "Wizard",
+          "concept": "Wizard spell list Color Spray",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 166,
+            "lineStart": 166,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard spell list Color Spray"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -91390,7 +91545,7 @@
           "anchor": "const bardSpellAccessPreparedSpells =",
           "needles": [
             "\"charm_person\"",
-            "\"color_spray\"",
+            "colorSpraySpellId",
             "dissonantWhispersSpellId",
             "healingWordSpellId"
           ]
@@ -93941,6 +94096,225 @@
         "sourceUnitId: \"class_wizard\"",
         "spellcastingAbility: \"int\"",
         "preparedSpells: expect.arrayContaining([charmPersonSpellId])"
+      ]
+    },
+    {
+      "candidateUnitId": "color_spray",
+      "className": "Bard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:165",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneBardColorSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneBardBuild({",
+            "draftIdText: \"draft:l1-sdk-bard-color-spray\"",
+            "expectedBuildLabel: \"Bard Color Spray\"",
+            "colorSpraySpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneSorcererColorSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneSorcererBuild({",
+            "draftIdText: \"draft:l1-sdk-sorcerer-color-spray\"",
+            "expectedBuildLabel: \"Sorcerer Color Spray\"",
+            "colorSpraySpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWizardColorSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWizardBuild({",
+            "draftIdText: \"draft:l1-sdk-wizard-color-spray\"",
+            "expectedBuildLabel: \"Wizard Color Spray\"",
+            "colorSpraySpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneColorSpray",
+          "needles": [
+            "srdStatBlock(\"stat_block_skeleton\")",
+            "spellSlotActForProcedure(",
+            "colorSpraySpellId",
+            "\"saveGatedCondition\"",
+            "spellSaveDcForCaster(state, input.casterId)",
+            "label: \"Color Spray self-origin Cone Saving Throw outcomes\"",
+            "ability: \"con\"",
+            "targeting: { kind: \"selfOriginCone\", lengthFeet: 15 }",
+            "condition: \"blinded\"",
+            "expiresAt: \"endOfCasterNextTurn\"",
+            "areaSavingThrowOutcomeFill(save, input.casterId,",
+            "{ targetId: monsterId, succeeded: false }",
+            "hasCondition(blindedTarget.conditions, \"blinded\")",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "spellSlotUsesThisTurn",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray",
+      "rowKey": "spell-level-1:Bard:color_spray",
+      "tracerNeedles": [
+        "const bardBuild = finalizedLevelOneBardColorSprayBuild();",
+        "sourceUnitId: \"class_bard\"",
+        "spellcastingAbility: \"cha\"",
+        "preparedSpells: expect.arrayContaining([colorSpraySpellId])",
+        "build: bardBuild,",
+        "casterId: colorSprayBardId,",
+        "expectedSpellSaveDc: 12,"
+      ]
+    },
+    {
+      "candidateUnitId": "color_spray",
+      "className": "Sorcerer",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Sorcerer.md:247",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneBardColorSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneBardBuild({",
+            "draftIdText: \"draft:l1-sdk-bard-color-spray\"",
+            "expectedBuildLabel: \"Bard Color Spray\"",
+            "colorSpraySpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneSorcererColorSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneSorcererBuild({",
+            "draftIdText: \"draft:l1-sdk-sorcerer-color-spray\"",
+            "expectedBuildLabel: \"Sorcerer Color Spray\"",
+            "colorSpraySpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWizardColorSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWizardBuild({",
+            "draftIdText: \"draft:l1-sdk-wizard-color-spray\"",
+            "expectedBuildLabel: \"Wizard Color Spray\"",
+            "colorSpraySpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneColorSpray",
+          "needles": [
+            "srdStatBlock(\"stat_block_skeleton\")",
+            "spellSlotActForProcedure(",
+            "colorSpraySpellId",
+            "\"saveGatedCondition\"",
+            "spellSaveDcForCaster(state, input.casterId)",
+            "label: \"Color Spray self-origin Cone Saving Throw outcomes\"",
+            "ability: \"con\"",
+            "targeting: { kind: \"selfOriginCone\", lengthFeet: 15 }",
+            "condition: \"blinded\"",
+            "expiresAt: \"endOfCasterNextTurn\"",
+            "areaSavingThrowOutcomeFill(save, input.casterId,",
+            "{ targetId: monsterId, succeeded: false }",
+            "hasCondition(blindedTarget.conditions, \"blinded\")",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "spellSlotUsesThisTurn",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray",
+      "rowKey": "spell-level-1:Sorcerer:color_spray",
+      "tracerNeedles": [
+        "const sorcererBuild = finalizedLevelOneSorcererColorSprayBuild();",
+        "sourceUnitId: \"class_sorcerer\"",
+        "spellcastingAbility: \"cha\"",
+        "preparedSpells: expect.arrayContaining([colorSpraySpellId])"
+      ]
+    },
+    {
+      "candidateUnitId": "color_spray",
+      "className": "Wizard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Sorcerer, and Wizard Color Spray spell-list choices share one self-origin Cone Constitution save Blinded battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Wizard.md:166",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:807-816"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneBardColorSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneBardBuild({",
+            "draftIdText: \"draft:l1-sdk-bard-color-spray\"",
+            "expectedBuildLabel: \"Bard Color Spray\"",
+            "colorSpraySpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneSorcererColorSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneSorcererBuild({",
+            "draftIdText: \"draft:l1-sdk-sorcerer-color-spray\"",
+            "expectedBuildLabel: \"Sorcerer Color Spray\"",
+            "colorSpraySpellId"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneWizardColorSprayBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneWizardBuild({",
+            "draftIdText: \"draft:l1-sdk-wizard-color-spray\"",
+            "expectedBuildLabel: \"Wizard Color Spray\"",
+            "colorSpraySpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneColorSpray",
+          "needles": [
+            "srdStatBlock(\"stat_block_skeleton\")",
+            "spellSlotActForProcedure(",
+            "colorSpraySpellId",
+            "\"saveGatedCondition\"",
+            "spellSaveDcForCaster(state, input.casterId)",
+            "label: \"Color Spray self-origin Cone Saving Throw outcomes\"",
+            "ability: \"con\"",
+            "targeting: { kind: \"selfOriginCone\", lengthFeet: 15 }",
+            "condition: \"blinded\"",
+            "expiresAt: \"endOfCasterNextTurn\"",
+            "areaSavingThrowOutcomeFill(save, input.casterId,",
+            "{ targetId: monsterId, succeeded: false }",
+            "hasCondition(blindedTarget.conditions, \"blinded\")",
+            "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+            "spellSlotUsesThisTurn",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray",
+      "rowKey": "spell-level-1:Wizard:color_spray",
+      "tracerNeedles": [
+        "const wizardBuild = finalizedLevelOneWizardColorSprayBuild();",
+        "sourceUnitId: \"class_wizard\"",
+        "spellcastingAbility: \"int\"",
+        "preparedSpells: expect.arrayContaining([colorSpraySpellId])"
       ]
     },
     {
