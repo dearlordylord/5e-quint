@@ -343,7 +343,7 @@
     {
       "number": 57,
       "id": "L5FULL-FINAL-01-GENERATED-REFRESH",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Refresh and verify generated level-5 full SRD accounting"
     }
   ]
