@@ -22969,6 +22969,13 @@
       "category": "class feature",
       "className": "Druid",
       "concept": "Druid Druidic",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druidic creation finalizes language and always-prepared spell access without battle behavior",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:81-86"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -22982,7 +22989,7 @@
       "proposedOwnerBoundary": "character-creation",
       "rowId": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 86,
         "lineStart": 81,
@@ -51082,12 +51089,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 13,
+        "groupCount": 12,
         "lane": "character-creation-sdk",
         "ownerTaskIds": [
           "L12-SH05-CREATION-SDK-FIRST-SLICE"
         ],
-        "rowCount": 13,
+        "rowCount": 12,
         "rowFamily": "source-row",
         "taskFamily": "character-creation-sdk"
       },
@@ -51138,7 +51145,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 76,
+        "groupCount": 77,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -51150,7 +51157,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 109,
+        "rowCount": 110,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51224,16 +51231,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 76,
+        "groupCount": 77,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 109,
+        "rowCount": 110,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 85,
+        "groupCount": 84,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51244,7 +51251,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 196,
+        "rowCount": 195,
         "rowFamily": "source-row"
       },
       {
@@ -52216,6 +52223,25 @@
       "rowKind": "class-container",
       "sourceBuildPath": "legal-creation-draft-finalize",
       "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "druid_druidic",
+      "classification": "legal creation owner proof",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druidic creation finalizes language and always-prepared spell access without battle behavior",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as source creation seed; add sheet or battle assertions only for rows owned by those boundaries.",
+      "reason": "The represented source character build is finalized through character creation at the row owner boundary; battle handoff is not required for this owner.",
+      "rowId": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+      "rowKey": "level-1:Druid:druid_druidic",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-creation-owner",
       "usesRealSheetBattleHandoff": false,
       "wholeWidthSourceLifecycleProof": false
     },
@@ -59205,9 +59231,9 @@
       "closure-review-needed": 142,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 389,
+      "sdk-scenario-needed": 388,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 115,
+      "seed-scenario-present": 116,
       "table-only-closure-needed": 13
     },
     "levelOneFourRows": 632,
@@ -59217,11 +59243,11 @@
       "battle-spell-sdk": 31,
       "build-battle-sdk": 9,
       "build-sheet-sdk": 9,
-      "character-creation-sdk": 13,
+      "character-creation-sdk": 12,
       "character-sheet-sdk": 6,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 76,
+      "seed-present": 77,
       "sheet-spell-access-sdk": 6,
       "spell-effect-owner-review": 21,
       "table-only-closure": 1
@@ -59229,8 +59255,8 @@
     "levelOneTwoCampaignGroupsByRowFamily": {
       "closure-review-row": 21,
       "explicit-closure-row": 24,
-      "seed-row": 76,
-      "source-row": 85,
+      "seed-row": 77,
+      "source-row": 84,
       "table-only-closure-row": 1
     },
     "levelOneTwoCampaignRows": 400,
@@ -59239,11 +59265,11 @@
       "battle-spell-sdk": 80,
       "build-battle-sdk": 13,
       "build-sheet-sdk": 67,
-      "character-creation-sdk": 13,
+      "character-creation-sdk": 12,
       "character-sheet-sdk": 6,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 109,
+      "seed-present": 110,
       "sheet-spell-access-sdk": 6,
       "spell-effect-owner-review": 69,
       "table-only-closure": 2
@@ -59251,22 +59277,22 @@
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 69,
       "explicit-closure-row": 24,
-      "seed-row": 109,
-      "source-row": 196,
+      "seed-row": 110,
+      "source-row": 195,
       "table-only-closure-row": 2
     },
-    "levelOneTwoSeedMigrationAuditRows": 109,
+    "levelOneTwoSeedMigrationAuditRows": 110,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 72,
       "legal build-sheet owner proof": 35,
-      "legal creation owner proof": 2
+      "legal creation owner proof": 3
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 37,
+      "not-real-sheet-battle": 38,
       "real-sheet-battle": 72
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 109
+      "legal-creation-draft-finalize": 110
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 72,
     "scenarioGroups": 411,
@@ -59275,14 +59301,14 @@
       "battle-spell-sdk": 82,
       "build-battle-sdk": 9,
       "build-sheet-sdk": 21,
-      "character-creation-sdk": 27,
+      "character-creation-sdk": 26,
       "character-sheet-sdk": 6,
       "explicit-closure": 60,
       "feature-owner-review": 4,
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 82,
+      "seed-present": 83,
       "sheet-spell-access-sdk": 11,
       "spell-effect-owner-review": 45,
       "table-only-closure": 5
@@ -63963,61 +63989,6 @@
     },
     {
       "candidateUnitIds": [
-        "druid_druidic"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Druid"
-      ],
-      "groupId": "l15-sdk-raw-03:character-creation-sdk:druid-druidic",
-      "lane": "character-creation-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-creation"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"character-creation-sdk\",\"druid_druidic\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Druid.md:81"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "druid_druidic",
-          "className": "Druid",
-          "concept": "Druid Druidic",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-creation",
-          "rowId": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 86,
-            "lineStart": 81,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Druid Druidic"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Finalize the build through character creation and assert the SRD-facing selected feature, option, proficiency, or retained Unit refs without claiming sheet or battle execution.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
         "druid_primal_order"
       ],
       "categories": [
@@ -66248,6 +66219,62 @@
         "Druid Tool Proficiencies",
         "Druid Weapon Proficiencies",
         "Druid class container"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "druid_druidic"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-druid-druid-druidic",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-creation"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Druid:druid_druidic\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:81",
+        ".references/srd-5.2.1/Classes/Druid.md:81-86"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "druid_druidic",
+          "className": "Druid",
+          "concept": "Druid Druidic",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-creation",
+          "rowId": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 86,
+            "lineStart": 81,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid Druidic"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -90281,6 +90308,71 @@
         "weaponProficiencies",
         "characterBuildArmorTraining(",
         "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "druid_druidic",
+      "className": "Druid",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druidic creation finalizes language and always-prepared spell access without battle behavior",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:81-86"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const druidicCreationDraftPlan =",
+          "needles": [
+            "label: \"Druidic creation\"",
+            "...druidBuildSheetDraftPlan"
+          ]
+        },
+        {
+          "anchor": "const druidBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_druid\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_cantrip_choices\"",
+            "...druidBuildSheetCantrips",
+            "\"class_prepared_spell_choices\"",
+            "...druidBuildSheetPreparedSpells",
+            "\"druid_primal_order\"",
+            "\"primal_order\"",
+            "\"magician\"",
+            "legalUnitChoice(\"class_druid\", \"class_equipment_choice\", \"option_b\")",
+            "legalUnitChoice(\"class_druid\", \"equipment_purchase\", \"weapon_dagger\")",
+            "legalLoadoutChoice(\"weapon_dagger\", \"weapon\", \"wielded_one_handed\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+      "rowKey": "level-1:Druid:druid_druidic",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-druidic-creation\"",
+        "druidicCreationDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+        "characterBuildFeatureUnitIds(fixture.build, unitLibrary)",
+        "\"druid_druidic\"",
+        "fixture.build.originLanguages",
+        "fixture.build.classFeatureLanguages",
+        "\"classFeatureLanguageGrant\"",
+        "\"Druidic\"",
+        "fixture.build.spellcasting?.sources",
+        "druidBuildSheetPreparedSpells",
+        ".not.toContain(\"speak_with_animals\")",
+        "unitLibrary.requireUnit(\"druid_druidic\")",
+        "\"grant_language\"",
+        "\"druidic\"",
+        "\"grant_spell_access\"",
+        "\"prepared\"",
+        "\"speak_with_animals\"",
+        "\"grant_hidden_language_messages\""
       ]
     },
     {

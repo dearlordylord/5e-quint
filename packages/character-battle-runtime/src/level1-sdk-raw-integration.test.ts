@@ -778,6 +778,11 @@ const druidBuildSheetDraftPlan = {
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
+const druidicCreationDraftPlan = {
+  ...druidBuildSheetDraftPlan,
+  label: "Druidic creation",
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 const bardicInspirationDraftPlan = {
   ...bardSpellAccessDraftPlan,
   label: "Bardic Inspiration battle feature",
@@ -1481,6 +1486,76 @@ describe("level 1 SDK RAW integration", () => {
     expect(
       requireRight(characterBuildArmorTraining(fixture.build, unitLibrary)),
     ).toEqual(expect.arrayContaining(["heavy"]));
+  });
+
+  test("Druidic creation finalizes language and always-prepared spell access without battle behavior", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-druidic-creation",
+      draftPlan: druidicCreationDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-druidic-creation",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_druid"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(characterBuildFeatureUnitIds(fixture.build, unitLibrary)).toEqual(
+      expect.arrayContaining(["druid_druidic"]),
+    );
+    expect(fixture.build.originLanguages).toEqual([
+      "Common",
+      "Dwarvish",
+      "Goblin",
+    ]);
+    expect(fixture.build.classFeatureLanguages).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "classFeatureLanguageGrant",
+          sourceUnitId: "druid_druidic",
+          language: "Druidic",
+        },
+      ]),
+    );
+    expect(fixture.build.spellcasting?.sources).toEqual([
+      expect.objectContaining({
+        sourceUnitId: "class_druid",
+        preparedSpells: druidBuildSheetPreparedSpells,
+      }),
+    ]);
+    expect(
+      fixture.build.spellcasting?.sources[0]?.preparedSpells,
+    ).not.toContain("speak_with_animals");
+    expect(unitLibrary.requireUnit("druid_druidic")).toMatchObject({
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: expect.arrayContaining([
+          expect.objectContaining({
+            kind: "grant_language",
+            languageId: "druidic",
+          }),
+          expect.objectContaining({
+            kind: "grant_spell_access",
+            mode: "prepared",
+            spellId: "speak_with_animals",
+          }),
+          expect.objectContaining({
+            kind: "grant_hidden_language_messages",
+            languageId: "druidic",
+          }),
+        ]),
+      },
+    });
   });
 
   test("Bard Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet", () => {

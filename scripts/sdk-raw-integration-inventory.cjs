@@ -106,7 +106,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 207;
-const expectedLevelOneTwoSeedScenarioRows = 109;
+const expectedLevelOneTwoSeedScenarioRows = 110;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -940,6 +940,39 @@ const druidBuildSheetScenarioRows = [
   ...row,
 }));
 
+const druidicCreationScenarioLabel =
+  "level1-sdk-raw-integration: Druidic creation finalizes language and always-prepared spell access without battle behavior";
+const druidicCreationScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-druidic-creation"',
+  "druidicCreationDraftPlan",
+  'battle: { tag: "withoutBattle" }',
+  "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+  "characterBuildFeatureUnitIds(fixture.build, unitLibrary)",
+  '"druid_druidic"',
+  "fixture.build.originLanguages",
+  "fixture.build.classFeatureLanguages",
+  '"classFeatureLanguageGrant"',
+  '"Druidic"',
+  "fixture.build.spellcasting?.sources",
+  "druidBuildSheetPreparedSpells",
+  '.not.toContain("speak_with_animals")',
+  'unitLibrary.requireUnit("druid_druidic")',
+  '"grant_language"',
+  '"druidic"',
+  '"grant_spell_access"',
+  '"prepared"',
+  '"speak_with_animals"',
+  '"grant_hidden_language_messages"',
+];
+const druidicCreationScenarioHelperNeedles = [
+  {
+    anchor: "const druidicCreationDraftPlan =",
+    needles: ['label: "Druidic creation"', "...druidBuildSheetDraftPlan"],
+  },
+  ...druidBuildSheetScenarioHelperNeedles,
+];
+
 const druidMulticlassBuildSheetScenarioLabel =
   "level1-sdk-raw-integration: Druid multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet";
 const druidMulticlassBuildSheetScenarioNeedles = [
@@ -1024,6 +1057,18 @@ const seededSdkScenarioRows = [
   },
   ...clericMulticlassBuildSheetScenarioRows,
   ...druidBuildSheetScenarioRows,
+  {
+    candidateUnitId: "druid_druidic",
+    className: "Druid",
+    levelBand: "level-1",
+    label: druidicCreationScenarioLabel,
+    path: barbarianBuildSheetScenarioPath,
+    rowId: "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:81-86"],
+    sourceProof: "legal-creation-owner",
+    tracerNeedles: druidicCreationScenarioNeedles,
+    helperNeedles: druidicCreationScenarioHelperNeedles,
+  },
   ...druidMulticlassBuildSheetScenarioRows,
   ...barbarianBuildBattleScenarioRows,
   ...bardBuildBattleScenarioRows,
