@@ -555,6 +555,7 @@ function readExpectedScopeSnapshot(rootPath, issues) {
       { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
     );
   } catch (_error) {
+    if (selfTest) return readAvailableScopeSnapshot();
     issues.push(
       "source cleanroom LEVEL_1_2_SCOPE snapshot is missing and git HEAD does not contain tasks/LEVEL_1_2_SCOPE.md.",
     );

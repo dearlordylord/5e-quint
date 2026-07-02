@@ -955,11 +955,18 @@ function defaultRouteConnectorPath(driverPath) {
 }
 
 function repoFileExists(repoRelativePath) {
-  return (
-    typeof repoRelativePath === "string" &&
-    repoRelativePath.trim() !== "" &&
-    fs.existsSync(path.join(root, repoRelativePath))
-  );
+  if (typeof repoRelativePath !== "string" || repoRelativePath.trim() === "") {
+    return false;
+  }
+  if (fs.existsSync(path.join(root, repoRelativePath))) return true;
+  if (repoRelativePath.startsWith("packages/")) {
+    const cleanroomPath = path.join(
+      "cleanroom-input/qnt",
+      path.relative("packages", repoRelativePath),
+    );
+    return fs.existsSync(path.join(root, cleanroomPath));
+  }
+  return false;
 }
 
 function nonEmptyString(value) {
