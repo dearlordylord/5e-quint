@@ -905,7 +905,7 @@
       "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -913,11 +913,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_sending",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 227,
         "lineStart": 227,
@@ -934,7 +934,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -2163,7 +2163,7 @@
       "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -2171,11 +2171,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_sending",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 218,
         "lineStart": 218,
@@ -2192,7 +2192,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -7177,7 +7177,7 @@
       "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -7185,11 +7185,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sending",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 257,
         "lineStart": 257,
@@ -7206,7 +7206,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -12887,97 +12887,6 @@
     },
     {
       "candidateUnitIds": [
-        "sending"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:sending",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"sending\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:227",
-        ".references/srd-5.2.1/Classes/Cleric.md:218",
-        ".references/srd-5.2.1/Classes/Wizard.md:257"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "sending",
-          "className": "Bard",
-          "concept": "Bard spell list Sending",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_sending",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 227,
-            "lineStart": 227,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "sending",
-          "className": "Cleric",
-          "concept": "Cleric spell list Sending",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_sending",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 218,
-            "lineStart": 218,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "sending",
-          "className": "Wizard",
-          "concept": "Wizard spell list Sending",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sending",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 257,
-            "lineStart": 257,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Sending",
-        "Cleric spell list Sending",
-        "Wizard spell list Sending"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "speak_with_dead"
       ],
       "categories": [
@@ -13624,6 +13533,97 @@
         "Cleric spell list Clairvoyance",
         "Sorcerer spell list Clairvoyance",
         "Wizard spell list Clairvoyance"
+      ],
+      "sdkInventoryDispositions": [
+        "table-only-closure-needed"
+      ],
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "sending"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Cleric",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:table-only-closure:sending",
+      "lane": "table-only-closure",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "table-only-closure"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"table-only-closure\",\"sending\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:227",
+        ".references/srd-5.2.1/Classes/Cleric.md:218",
+        ".references/srd-5.2.1/Classes/Wizard.md:257"
+      ],
+      "rowCount": 3,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "sending",
+          "className": "Bard",
+          "concept": "Bard spell list Sending",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_sending",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 227,
+            "lineStart": 227,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "sending",
+          "className": "Cleric",
+          "concept": "Cleric spell list Sending",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_sending",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 218,
+            "lineStart": 218,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "candidateUnitId": "sending",
+          "className": "Wizard",
+          "concept": "Wizard spell list Sending",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sending",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 257,
+            "lineStart": 257,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Sending",
+        "Cleric spell list Sending",
+        "Wizard spell list Sending"
       ],
       "sdkInventoryDispositions": [
         "table-only-closure-needed"
@@ -19336,7 +19336,7 @@
       "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -19344,11 +19344,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_sending",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 227,
         "lineStart": 227,
@@ -19365,7 +19365,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -23546,7 +23546,7 @@
       "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -23554,11 +23554,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_sending",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 218,
         "lineStart": 218,
@@ -23575,7 +23575,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -51558,7 +51558,7 @@
       "nextAction": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -51566,11 +51566,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sending",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 257,
         "lineStart": 257,
@@ -51587,7 +51587,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -57905,20 +57905,20 @@
       "character-battle-to-battle": 46,
       "character-sheet": 1,
       "future-runtime-owner-before-sdk": 54,
-      "spell-effect-owner-review": 21,
-      "table-only-closure": 4
+      "spell-effect-owner-review": 18,
+      "table-only-closure": 7
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 117,
-      "unresolved-review": 21
+      "resolved": 120,
+      "unresolved-review": 18
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 21,
+      "closure-review-needed": 18,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 54,
       "sdk-scenario-needed": 2,
       "seed-scenario-present": 45,
-      "table-only-closure-needed": 4
+      "table-only-closure-needed": 7
     },
     "level5ScenarioGroups": 94,
     "level5ScenarioGroupsByLane": {
@@ -57926,8 +57926,8 @@
       "explicit-closure": 12,
       "future-owner-before-sdk": 28,
       "seed-present": 45,
-      "spell-effect-owner-review": 7,
-      "table-only-closure": 1
+      "spell-effect-owner-review": 6,
+      "table-only-closure": 2
     },
     "level5SeedScenarioRows": 45,
     "levelOneFiveMinedRows": 770,
@@ -57953,12 +57953,12 @@
       "class-feature-closure-review": 2,
       "future-runtime-owner-before-sdk": 56,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 127,
-      "table-only-closure": 15
+      "spell-effect-owner-review": 124,
+      "table-only-closure": 18
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 641,
-      "unresolved-review": 129
+      "resolved": 644,
+      "unresolved-review": 126
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -57974,13 +57974,13 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 129,
+      "closure-review-needed": 126,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 56,
       "sdk-scenario-needed": 401,
       "seed-scenario-present": 109,
-      "table-only-closure-needed": 15
+      "table-only-closure-needed": 18
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 433,
@@ -57997,8 +57997,8 @@
       "multi-owner-feature-sdk": 9,
       "seed-present": 109,
       "sheet-spell-access-sdk": 12,
-      "spell-effect-owner-review": 41,
-      "table-only-closure": 5
+      "spell-effect-owner-review": 40,
+      "table-only-closure": 6
     },
     "scenarioGroupsByTask": {
       "L15-SDK-RAW-03": 174,
@@ -87241,97 +87241,6 @@
     },
     {
       "candidateUnitIds": [
-        "sending"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:sending",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"sending\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:227",
-        ".references/srd-5.2.1/Classes/Cleric.md:218",
-        ".references/srd-5.2.1/Classes/Wizard.md:257"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "sending",
-          "className": "Bard",
-          "concept": "Bard spell list Sending",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_sending",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 227,
-            "lineStart": 227,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "sending",
-          "className": "Cleric",
-          "concept": "Cleric spell list Sending",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_sending",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 218,
-            "lineStart": 218,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "sending",
-          "className": "Wizard",
-          "concept": "Wizard spell list Sending",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sending",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 257,
-            "lineStart": 257,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Sending",
-        "Cleric spell list Sending",
-        "Wizard spell list Sending"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "speak_with_dead"
       ],
       "categories": [
@@ -87978,6 +87887,97 @@
         "Cleric spell list Clairvoyance",
         "Sorcerer spell list Clairvoyance",
         "Wizard spell list Clairvoyance"
+      ],
+      "sdkInventoryDispositions": [
+        "table-only-closure-needed"
+      ],
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "sending"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Cleric",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:table-only-closure:sending",
+      "lane": "table-only-closure",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "table-only-closure"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"table-only-closure\",\"sending\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:227",
+        ".references/srd-5.2.1/Classes/Cleric.md:218",
+        ".references/srd-5.2.1/Classes/Wizard.md:257"
+      ],
+      "rowCount": 3,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "sending",
+          "className": "Bard",
+          "concept": "Bard spell list Sending",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_sending",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 227,
+            "lineStart": 227,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "sending",
+          "className": "Cleric",
+          "concept": "Cleric spell list Sending",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_sending",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 218,
+            "lineStart": 218,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "candidateUnitId": "sending",
+          "className": "Wizard",
+          "concept": "Wizard spell list Sending",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sending",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 257,
+            "lineStart": 257,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Sending",
+        "Cleric spell list Sending",
+        "Wizard spell list Sending"
       ],
       "sdkInventoryDispositions": [
         "table-only-closure-needed"

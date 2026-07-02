@@ -8760,7 +8760,7 @@
       "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
         "source": "unit-claim",
-        "kind": "outside-runtime-presentation-exploration",
+        "kind": "social-knowledge-effect",
         "owner": "runtime-detached table communication owner",
         "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state."
       },
@@ -12860,7 +12860,7 @@
       "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
         "source": "unit-claim",
-        "kind": "outside-runtime-presentation-exploration",
+        "kind": "social-knowledge-effect",
         "owner": "runtime-detached table communication owner",
         "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state."
       },
@@ -40338,7 +40338,7 @@
       "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
         "source": "unit-claim",
-        "kind": "outside-runtime-presentation-exploration",
+        "kind": "social-knowledge-effect",
         "owner": "runtime-detached table communication owner",
         "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state."
       },
