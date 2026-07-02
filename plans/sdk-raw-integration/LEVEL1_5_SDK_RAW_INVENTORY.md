@@ -38,10 +38,10 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 121 |
+| closure-review-needed | 119 |
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
-| future-owner-before-sdk | 58 |
+| future-owner-before-sdk | 60 |
 | sdk-scenario-needed | 401 |
 | seed-scenario-present | 109 |
 | table-only-closure-needed | 21 |
@@ -58,17 +58,17 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-sheet | 8 |
 | character-sheet-spell-access | 12 |
 | class-feature-closure-review | 2 |
-| future-runtime-owner-before-sdk | 58 |
+| future-runtime-owner-before-sdk | 60 |
 | multi-owner-sdk-split | 10 |
-| spell-effect-owner-review | 119 |
+| spell-effect-owner-review | 117 |
 | table-only-closure | 21 |
 
 ### All Level 1-5 Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 649 |
-| unresolved-review | 121 |
+| resolved | 651 |
+| unresolved-review | 119 |
 
 ### Scenario Groups by Task
 
@@ -92,20 +92,20 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-sheet-sdk | 7 |
 | explicit-closure | 60 |
 | feature-owner-review | 2 |
-| future-owner-before-sdk | 31 |
+| future-owner-before-sdk | 32 |
 | multi-owner-feature-sdk | 9 |
 | seed-present | 109 |
 | sheet-spell-access-sdk | 12 |
-| spell-effect-owner-review | 38 |
+| spell-effect-owner-review | 37 |
 | table-only-closure | 7 |
 
 ### Level 5 Completion Rows by SDK Disposition
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 13 |
+| closure-review-needed | 11 |
 | explicit-closure-recorded | 12 |
-| future-owner-before-sdk | 56 |
+| future-owner-before-sdk | 58 |
 | sdk-scenario-needed | 2 |
 | seed-scenario-present | 45 |
 | table-only-closure-needed | 10 |
@@ -117,16 +117,16 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | build-progression | 12 |
 | character-battle-to-battle | 46 |
 | character-sheet | 1 |
-| future-runtime-owner-before-sdk | 56 |
-| spell-effect-owner-review | 13 |
+| future-runtime-owner-before-sdk | 58 |
+| spell-effect-owner-review | 11 |
 | table-only-closure | 10 |
 
 ### Level 5 Completion Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 125 |
-| unresolved-review | 13 |
+| resolved | 127 |
+| unresolved-review | 11 |
 
 ### Level 5 Scenario Groups by Lane
 
@@ -134,9 +134,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | --- | ---: |
 | battle-spell-sdk | 1 |
 | explicit-closure | 12 |
-| future-owner-before-sdk | 29 |
+| future-owner-before-sdk | 30 |
 | seed-present | 45 |
-| spell-effect-owner-review | 4 |
+| spell-effect-owner-review | 3 |
 | table-only-closure | 3 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -303,6 +303,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | future-owner-before-sdk | 2 | spell-level-3 | Bard, Druid | `speak_with_plants` | Bard spell list Speak with Plants<br>Druid spell list Speak with Plants | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | spell-level-3 | Cleric | `spirit_guardians` | Cleric spell list Spirit Guardians | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Bard, Sorcerer, Wizard | `stinking_cloud` | Bard spell list Stinking Cloud<br>Sorcerer spell list Stinking Cloud<br>Wizard spell list Stinking Cloud | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
+| L15-SDK-RAW-07 | future-owner-before-sdk | 2 | spell-level-3 | Bard, Wizard | `tiny_hut` | Bard spell list Tiny Hut<br>Wizard spell list Tiny Hut | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Sorcerer, Warlock, Wizard | `vampiric_touch` | Sorcerer spell list Vampiric Touch<br>Warlock spell list Vampiric Touch<br>Wizard spell list Vampiric Touch | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | spell-level-3 | Druid | `wind_wall` | Druid spell list Wind Wall | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Wizard | `wizard_memorize_spell` | Wizard Memorize Spell | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
@@ -351,7 +352,6 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `protection_from_energy` | Wizard spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `sleet_storm` | Wizard spell list Sleet Storm | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `slow` | Wizard spell list Slow | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
-| L15-SDK-RAW-07 | spell-effect-owner-review | 2 | spell-level-3 | Bard, Wizard | `tiny_hut` | Bard spell list Tiny Hut<br>Wizard spell list Tiny Hut | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 5 | spell-level-3 | Bard, Cleric, Sorcerer, Warlock, Wizard | `tongues` | Bard spell list Tongues<br>Cleric spell list Tongues<br>Sorcerer spell list Tongues<br>Warlock spell list Tongues<br>Wizard spell list Tongues | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 3 | spell-level-3 | Druid, Sorcerer, Wizard | `water_breathing` | Druid spell list Water Breathing<br>Sorcerer spell list Water Breathing<br>Wizard spell list Water Breathing | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 3 | spell-level-3 | Cleric, Druid, Sorcerer | `water_walk` | Cleric spell list Water Walk<br>Druid spell list Water Walk<br>Sorcerer spell list Water Walk | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
@@ -383,7 +383,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Bard spell list Speak with Dead | `speak_with_dead` | `.references/srd-5.2.1/Classes/Bard.md:229` | catalog-only/dead-for-now | accepted-no-battle-effect | table-only-closure | resolved | table-only-closure-needed |  | Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation. |
 | spell-level-3 | Bard spell list Speak with Plants | `speak_with_plants` | `.references/srd-5.2.1/Classes/Bard.md:230` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain. |
 | spell-level-3 | Bard spell list Stinking Cloud | `stinking_cloud` | `.references/srd-5.2.1/Classes/Bard.md:231` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers. |
-| spell-level-3 | Bard spell list Tiny Hut | `tiny_hut` | `.references/srd-5.2.1/Classes/Bard.md:232` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication. |
+| spell-level-3 | Bard spell list Tiny Hut | `tiny_hut` | `.references/srd-5.2.1/Classes/Bard.md:232` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication. |
 | spell-level-3 | Bard spell list Tongues | `tongues` | `.references/srd-5.2.1/Classes/Bard.md:233` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell. |
 | level-5 | Cleric Sear Undead | `cleric_sear_undead` | `.references/srd-5.2.1/Classes/Cleric.md:110` | catalog-only/dead-for-now | not-applicable | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule. |
 | level-5 | Cleric level 5 feature table row | `class_cleric` | `.references/srd-5.2.1/Classes/Cleric.md:39` | non-runtime | not-applicable | build-progression | resolved | explicit-closure-recorded |  | SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state. |
@@ -497,7 +497,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Wizard spell list Slow | `slow` | `.references/srd-5.2.1/Classes/Wizard.md:259` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Speak with Dead | `speak_with_dead` | `.references/srd-5.2.1/Classes/Wizard.md:260` | catalog-only/dead-for-now | accepted-no-battle-effect | table-only-closure | resolved | table-only-closure-needed |  | Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation. |
 | spell-level-3 | Wizard spell list Stinking Cloud | `stinking_cloud` | `.references/srd-5.2.1/Classes/Wizard.md:261` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Stinking Cloud's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned 20-foot-radius Sphere cloud occurrence, project Heavily Obscured gas, resolve Constitution Saving Throws for creatures that start their turns in the Sphere, apply and clear the spell-scoped Poisoned condition at the end of the current turn, and deny Action and Bonus Action use only while Poisoned in this way. Table/spatial air movement ownership must supply area-membership start-turn witnesses, wind strength, and dispersal timing rather than duplicating map, weather, or area state inside generic Spell Invocation reducers. |
-| spell-level-3 | Wizard spell list Tiny Hut | `tiny_hut` | `.references/srd-5.2.1/Classes/Wizard.md:262` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication. |
+| spell-level-3 | Wizard spell list Tiny Hut | `tiny_hut` | `.references/srd-5.2.1/Classes/Wizard.md:262` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Tiny Hut supplies stationary shelter, creature and object passage, level-capped spell-boundary, weather/atmosphere, interior-light, color, and one-way visibility source facts, but promoted battle runtime does not own stationary Emanation placement, cast-time encapsulation and membership, initial-versus-later creature and object identity, passage through shelter boundaries, weather or atmosphere projection, interior light commands, color presentation, one-way visibility, or level-capped spell-boundary adjudication. |
 | spell-level-3 | Wizard spell list Tongues | `tongues` | `.references/srd-5.2.1/Classes/Wizard.md:263` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell. |
 | spell-level-3 | Wizard spell list Vampiric Touch | `vampiric_touch` | `.references/srd-5.2.1/Classes/Wizard.md:264` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers. |
 | spell-level-3 | Wizard spell list Water Breathing | `water_breathing` | `.references/srd-5.2.1/Classes/Wizard.md:265` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state. |

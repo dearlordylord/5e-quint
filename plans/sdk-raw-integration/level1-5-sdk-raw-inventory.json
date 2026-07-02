@@ -1192,11 +1192,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tiny_hut",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 232,
         "lineStart": 232,
@@ -7458,11 +7458,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tiny_hut",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 262,
         "lineStart": 262,
@@ -10284,6 +10284,79 @@
     },
     {
       "candidateUnitIds": [
+        "tiny_hut"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:tiny-hut",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"tiny_hut\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:232",
+        ".references/srd-5.2.1/Classes/Wizard.md:262"
+      ],
+      "rowCount": 2,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "tiny_hut",
+          "className": "Bard",
+          "concept": "Bard spell list Tiny Hut",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tiny_hut",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 232,
+            "lineStart": 232,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "tiny_hut",
+          "className": "Wizard",
+          "concept": "Wizard spell list Tiny Hut",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tiny_hut",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 262,
+            "lineStart": 262,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Tiny Hut",
+        "Wizard spell list Tiny Hut"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "vampiric_touch"
       ],
       "categories": [
@@ -12956,79 +13029,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "tiny_hut"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:tiny-hut",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"tiny_hut\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:232",
-        ".references/srd-5.2.1/Classes/Wizard.md:262"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "tiny_hut",
-          "className": "Bard",
-          "concept": "Bard spell list Tiny Hut",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tiny_hut",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 232,
-            "lineStart": 232,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "tiny_hut",
-          "className": "Wizard",
-          "concept": "Wizard spell list Tiny Hut",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tiny_hut",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 262,
-            "lineStart": 262,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Tiny Hut",
-        "Wizard spell list Tiny Hut"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
@@ -19623,11 +19623,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tiny_hut",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 232,
         "lineStart": 232,
@@ -51839,11 +51839,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tiny_hut",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 262,
         "lineStart": 262,
@@ -57904,18 +57904,18 @@
       "build-progression": 12,
       "character-battle-to-battle": 46,
       "character-sheet": 1,
-      "future-runtime-owner-before-sdk": 56,
-      "spell-effect-owner-review": 13,
+      "future-runtime-owner-before-sdk": 58,
+      "spell-effect-owner-review": 11,
       "table-only-closure": 10
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 125,
-      "unresolved-review": 13
+      "resolved": 127,
+      "unresolved-review": 11
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 13,
+      "closure-review-needed": 11,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 56,
+      "future-owner-before-sdk": 58,
       "sdk-scenario-needed": 2,
       "seed-scenario-present": 45,
       "table-only-closure-needed": 10
@@ -57924,9 +57924,9 @@
     "level5ScenarioGroupsByLane": {
       "battle-spell-sdk": 1,
       "explicit-closure": 12,
-      "future-owner-before-sdk": 29,
+      "future-owner-before-sdk": 30,
       "seed-present": 45,
-      "spell-effect-owner-review": 4,
+      "spell-effect-owner-review": 3,
       "table-only-closure": 3
     },
     "level5SeedScenarioRows": 45,
@@ -57951,14 +57951,14 @@
       "character-sheet": 8,
       "character-sheet-spell-access": 12,
       "class-feature-closure-review": 2,
-      "future-runtime-owner-before-sdk": 58,
+      "future-runtime-owner-before-sdk": 60,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 119,
+      "spell-effect-owner-review": 117,
       "table-only-closure": 21
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 649,
-      "unresolved-review": 121
+      "resolved": 651,
+      "unresolved-review": 119
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -57974,10 +57974,10 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 121,
+      "closure-review-needed": 119,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 58,
+      "future-owner-before-sdk": 60,
       "sdk-scenario-needed": 401,
       "seed-scenario-present": 109,
       "table-only-closure-needed": 21
@@ -57993,11 +57993,11 @@
       "character-sheet-sdk": 7,
       "explicit-closure": 60,
       "feature-owner-review": 2,
-      "future-owner-before-sdk": 31,
+      "future-owner-before-sdk": 32,
       "multi-owner-feature-sdk": 9,
       "seed-present": 109,
       "sheet-spell-access-sdk": 12,
-      "spell-effect-owner-review": 38,
+      "spell-effect-owner-review": 37,
       "table-only-closure": 7
     },
     "scenarioGroupsByTask": {
@@ -84638,6 +84638,79 @@
     },
     {
       "candidateUnitIds": [
+        "tiny_hut"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:tiny-hut",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"tiny_hut\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:232",
+        ".references/srd-5.2.1/Classes/Wizard.md:262"
+      ],
+      "rowCount": 2,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "tiny_hut",
+          "className": "Bard",
+          "concept": "Bard spell list Tiny Hut",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tiny_hut",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 232,
+            "lineStart": 232,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "tiny_hut",
+          "className": "Wizard",
+          "concept": "Wizard spell list Tiny Hut",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tiny_hut",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 262,
+            "lineStart": 262,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Tiny Hut",
+        "Wizard spell list Tiny Hut"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "vampiric_touch"
       ],
       "categories": [
@@ -87310,79 +87383,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "tiny_hut"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:tiny-hut",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"tiny_hut\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:232",
-        ".references/srd-5.2.1/Classes/Wizard.md:262"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "tiny_hut",
-          "className": "Bard",
-          "concept": "Bard spell list Tiny Hut",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tiny_hut",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 232,
-            "lineStart": 232,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "tiny_hut",
-          "className": "Wizard",
-          "concept": "Wizard spell list Tiny Hut",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tiny_hut",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 262,
-            "lineStart": 262,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Tiny Hut",
-        "Wizard spell list Tiny Hut"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
