@@ -799,11 +799,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_nondetection",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 225,
         "lineStart": 225,
@@ -6967,11 +6967,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_nondetection",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 253,
         "lineStart": 253,
@@ -9636,6 +9636,79 @@
       "sampleConcepts": [
         "Cleric spell list Meld into Stone",
         "Druid spell list Meld into Stone"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "nondetection"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:nondetection",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"nondetection\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:225",
+        ".references/srd-5.2.1/Classes/Wizard.md:253"
+      ],
+      "rowCount": 2,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "nondetection",
+          "className": "Bard",
+          "concept": "Bard spell list Nondetection",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_nondetection",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 225,
+            "lineStart": 225,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "nondetection",
+          "className": "Wizard",
+          "concept": "Wizard spell list Nondetection",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_nondetection",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 253,
+            "lineStart": 253,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Nondetection",
+        "Wizard spell list Nondetection"
       ],
       "sdkInventoryDispositions": [
         "future-owner-before-sdk"
@@ -12737,79 +12810,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "nondetection"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:nondetection",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"nondetection\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:225",
-        ".references/srd-5.2.1/Classes/Wizard.md:253"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "nondetection",
-          "className": "Bard",
-          "concept": "Bard spell list Nondetection",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_nondetection",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 225,
-            "lineStart": 225,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "nondetection",
-          "className": "Wizard",
-          "concept": "Wizard spell list Nondetection",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_nondetection",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 253,
-            "lineStart": 253,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Nondetection",
-        "Wizard spell list Nondetection"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
@@ -19230,11 +19230,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_nondetection",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 225,
         "lineStart": 225,
@@ -51348,11 +51348,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_nondetection",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 253,
         "lineStart": 253,
@@ -57904,18 +57904,18 @@
       "build-progression": 12,
       "character-battle-to-battle": 46,
       "character-sheet": 1,
-      "future-runtime-owner-before-sdk": 50,
-      "spell-effect-owner-review": 25,
+      "future-runtime-owner-before-sdk": 52,
+      "spell-effect-owner-review": 23,
       "table-only-closure": 4
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 113,
-      "unresolved-review": 25
+      "resolved": 115,
+      "unresolved-review": 23
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 25,
+      "closure-review-needed": 23,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 50,
+      "future-owner-before-sdk": 52,
       "sdk-scenario-needed": 2,
       "seed-scenario-present": 45,
       "table-only-closure-needed": 4
@@ -57924,9 +57924,9 @@
     "level5ScenarioGroupsByLane": {
       "battle-spell-sdk": 1,
       "explicit-closure": 12,
-      "future-owner-before-sdk": 26,
+      "future-owner-before-sdk": 27,
       "seed-present": 45,
-      "spell-effect-owner-review": 9,
+      "spell-effect-owner-review": 8,
       "table-only-closure": 1
     },
     "level5SeedScenarioRows": 45,
@@ -57951,14 +57951,14 @@
       "character-sheet": 8,
       "character-sheet-spell-access": 12,
       "class-feature-closure-review": 2,
-      "future-runtime-owner-before-sdk": 52,
+      "future-runtime-owner-before-sdk": 54,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 131,
+      "spell-effect-owner-review": 129,
       "table-only-closure": 15
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 637,
-      "unresolved-review": 133
+      "resolved": 639,
+      "unresolved-review": 131
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -57974,10 +57974,10 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 133,
+      "closure-review-needed": 131,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 52,
+      "future-owner-before-sdk": 54,
       "sdk-scenario-needed": 401,
       "seed-scenario-present": 109,
       "table-only-closure-needed": 15
@@ -57993,11 +57993,11 @@
       "character-sheet-sdk": 7,
       "explicit-closure": 60,
       "feature-owner-review": 2,
-      "future-owner-before-sdk": 28,
+      "future-owner-before-sdk": 29,
       "multi-owner-feature-sdk": 9,
       "seed-present": 109,
       "sheet-spell-access-sdk": 12,
-      "spell-effect-owner-review": 43,
+      "spell-effect-owner-review": 42,
       "table-only-closure": 5
     },
     "scenarioGroupsByTask": {
@@ -83999,6 +83999,79 @@
     },
     {
       "candidateUnitIds": [
+        "nondetection"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:nondetection",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"nondetection\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:225",
+        ".references/srd-5.2.1/Classes/Wizard.md:253"
+      ],
+      "rowCount": 2,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "nondetection",
+          "className": "Bard",
+          "concept": "Bard spell list Nondetection",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_nondetection",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 225,
+            "lineStart": 225,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "nondetection",
+          "className": "Wizard",
+          "concept": "Wizard spell list Nondetection",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_nondetection",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 253,
+            "lineStart": 253,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Nondetection",
+        "Wizard spell list Nondetection"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "paladin_faithful_steed"
       ],
       "categories": [
@@ -87091,79 +87164,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "nondetection"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:nondetection",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"nondetection\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:225",
-        ".references/srd-5.2.1/Classes/Wizard.md:253"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "nondetection",
-          "className": "Bard",
-          "concept": "Bard spell list Nondetection",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_nondetection",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 225,
-            "lineStart": 225,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "nondetection",
-          "className": "Wizard",
-          "concept": "Wizard spell list Nondetection",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_nondetection",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 253,
-            "lineStart": 253,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Nondetection",
-        "Wizard spell list Nondetection"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {

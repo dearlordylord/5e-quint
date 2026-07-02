@@ -113,6 +113,7 @@ const tableOnlySpellClosureKinds = new Set([
 ]);
 const reviewedPresentationExplorationFutureSpellUnitIds = new Set([
   "major_image",
+  "nondetection",
 ]);
 const characterCreationClosureKinds = new Set(["selection-grant-container"]);
 const futureFeatureClosureKinds = new Set([
