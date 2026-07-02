@@ -338,6 +338,22 @@ const shillelaghQuarterstaffItemId = characterEquipmentItemId({
   unitId: requireRight(characterEquipmentItemUnitId("weapon_quarterstaff")),
 });
 const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
+
+const sorcererCriminalBackground = {
+  unitId: "background_criminal",
+  abilityScoreIncrease: "two_and_one:dex:con",
+  toolChoice: "thieves_tools",
+  equipmentChoice: "option_b",
+} as const;
+const sorcererAcolyteCharismaBackground = {
+  unitId: "background_acolyte",
+  abilityScoreIncrease: "two_and_one:int:cha",
+  toolChoice: "calligraphers_supplies",
+  equipmentChoice: "option_b",
+} as const;
+type SorcererSourceBackground =
+  | typeof sorcererCriminalBackground
+  | typeof sorcererAcolyteCharismaBackground;
 const shillelaghDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 const thaumaturgyDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 const sanctuaryDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
@@ -1759,10 +1775,20 @@ describe("level 1 SDK RAW integration", () => {
   });
 
   test("Sorcerer Burning Hands resolves from a level-1 sheet, applies Fire damage, and spends a spell slot", () => {
+    const sorcererBuild = finalizedLevelOneSorcererBurningHandsBuild();
+
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          preparedSpells: expect.arrayContaining([burningHandsSpellId]),
+        }),
+      ]),
+    );
     assertLevelOneBurningHands({
       battleIdText: "battle:l1-sdk-burning-hands-sorcerer",
       characterIdText: "character:l1-sdk-burning-hands-sorcerer",
-      build: levelOneSorcererBurningHandsBuild(),
+      build: sorcererBuild,
       casterId: burningHandsCasterId,
       spellId: burningHandsSpellId,
     });
@@ -3130,6 +3156,12 @@ function assertLevelOneBurningHands(input: {
     1,
     "saveGatedDamage",
   );
+  const casterBeforeCast = requireCharacterCombatant(state, input.casterId);
+
+  expect(casterBeforeCast.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 0 },
+  ]);
+
   const save = requireHoleFromList(act.initialHoles, "savingThrowOutcome");
 
   expect(spellSaveDcForCaster(state, input.casterId)).toBe(13);
@@ -7429,43 +7461,6 @@ function levelOneEquipment(
   };
 }
 
-function levelOneSorcererBurningHandsBuild(): CharacterBuild {
-  return levelOneSingleClassBuild({
-    classUnitId: "class_sorcerer",
-    abilityScores: {
-      str: 8,
-      dex: 14,
-      con: 14,
-      int: 10,
-      wis: 10,
-      cha: 16,
-    },
-    spellcasting: {
-      sources: [
-        {
-          sourceUnitId: "class_sorcerer",
-          spellcastingAbility: "cha",
-          cantrips: [
-            "fire_bolt",
-            "light",
-            shockingGraspSpellId,
-            sorcerousBurstSpellId,
-          ],
-          spellbook: [],
-          preparedSpells: [burningHandsSpellId, "detect_magic"],
-          spellcastingFocuses: ["arcane_focus"],
-        },
-      ],
-      slotPools: {
-        spellcasting: {
-          kind: "spellcasting",
-          slots: [{ spellLevel: 1, count: 2 }],
-        },
-      },
-    },
-  });
-}
-
 function finalizedLevelOneBardDissonantWhispersBuild(): CharacterBuild {
   return finalizedLevelOneBardBuild({
     draftIdText: "draft:l1-sdk-bard-dissonant-whispers",
@@ -8473,6 +8468,21 @@ function finalizedLevelOneSorcererFireBoltBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererBurningHandsBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-burning-hands",
+    expectedBuildLabel: "Sorcerer Burning Hands",
+    background: sorcererAcolyteCharismaBackground,
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      shockingGraspSpellId,
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [burningHandsSpellId, "detect_magic"],
+  });
+}
+
 function finalizedLevelOneSorcererSorcerousBurstBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-sorcerous-burst",
@@ -8644,9 +8654,11 @@ function finalizedLevelOneSorcererMagicMissileBuild(): CharacterBuild {
 function finalizedLevelOneSorcererBuild(input: {
   readonly draftIdText: string;
   readonly expectedBuildLabel: string;
+  readonly background?: SorcererSourceBackground;
   readonly cantrips: readonly string[];
   readonly preparedSpells: readonly string[];
 }): CharacterBuild {
+  const background = input.background ?? sorcererCriminalBackground;
   const draft = createCharacterDraft({
     unitLibrary,
     draftId: characterDraftId(input.draftIdText),
@@ -8661,7 +8673,7 @@ function finalizedLevelOneSorcererBuild(input: {
           "cc:draft:draft.progression.initial",
           "14:class_sorcerer:level_1:maximum_hit_die",
         ),
-        creationChoiceFill("cc:draft:draft.background", "background_criminal"),
+        creationChoiceFill("cc:draft:draft.background", background.unitId),
         creationChoiceFill("cc:draft:draft.species", "species_orc"),
         {
           kind: "abilityScores",
@@ -8710,14 +8722,14 @@ function finalizedLevelOneSorcererBuild(input: {
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            background.unitId,
             "background_ability_score_increase",
           ),
-          "two_and_one:dex:con",
+          background.abilityScoreIncrease,
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
-          "thieves_tools",
+          testUnitChoiceHoleId(background.unitId, "background_tool_choice"),
+          background.toolChoice,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId("class_sorcerer", "class_equipment_choice"),
@@ -8725,10 +8737,10 @@ function finalizedLevelOneSorcererBuild(input: {
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            background.unitId,
             "background_equipment_choice",
           ),
-          "option_b",
+          background.equipmentChoice,
         ),
       ],
     }),
@@ -8746,7 +8758,20 @@ function finalizedLevelOneSorcererBuild(input: {
       ],
     }),
   );
-  const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
+  const afterLoadout = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        creationChoiceFill(
+          testLoadoutHoleId("weapon_dagger", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });
   if (result.tag !== "ready") {
     throw new Error(
       `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,

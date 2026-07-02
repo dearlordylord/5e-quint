@@ -281,22 +281,20 @@ Character Sheet and battle handoff.
 
 | Classification | Rows |
 | --- | ---: |
-| already legal creation path | 69 |
-| hand-built build needing migration | 1 |
+| already legal creation path | 70 |
 | legal build-sheet owner proof | 9 |
 | legal creation owner proof | 1 |
 
 | Source build path | Rows |
 | --- | ---: |
-| direct-character-build | 1 |
-| legal-creation-draft-finalize | 79 |
+| legal-creation-draft-finalize | 80 |
 
 | Real sheet/battle handoff | Rows |
 | --- | ---: |
 | not-real-sheet-battle | 10 |
 | real-sheet-battle | 70 |
 
-Whole-width source lifecycle seed rows: 69/80.
+Whole-width source lifecycle seed rows: 70/80.
 
 | Band | Class | Unit | Row kind | Classification | Source build path | Real sheet/battle handoff | Whole-width source lifecycle proof | Next action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -354,7 +352,7 @@ Whole-width source lifecycle seed rows: 69/80.
 | spell-level-0 | Sorcerer | `ray_of_frost` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Sorcerer | `shocking_grasp` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Sorcerer | `sorcerous_burst` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
-| spell-level-1 | Sorcerer | `burning_hands` | spell-unit-pressure | hand-built build needing migration | direct-character-build | yes | no | Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam. |
+| spell-level-1 | Sorcerer | `burning_hands` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Sorcerer | `chromatic_orb` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Sorcerer | `false_life` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Sorcerer | `mage_armor` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |

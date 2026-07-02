@@ -52054,21 +52054,21 @@
     },
     {
       "candidateUnitId": "burning_hands",
-      "classification": "hand-built build needing migration",
+      "classification": "already legal creation path",
       "className": "Sorcerer",
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer Burning Hands resolves from a level-1 sheet, applies Fire damage, and spends a spell slot",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
       "levelBand": "spell-level-1",
-      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
-      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
       "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
       "rowKey": "spell-level-1:Sorcerer:burning_hands",
       "rowKind": "spell-unit-pressure",
-      "sourceBuildPath": "direct-character-build",
+      "sourceBuildPath": "legal-creation-draft-finalize",
       "usesRealSheetBattleHandoff": true,
-      "wholeWidthSourceLifecycleProof": false
+      "wholeWidthSourceLifecycleProof": true
     },
     {
       "candidateUnitId": "chromatic_orb",
@@ -58503,8 +58503,7 @@
     },
     "levelOneTwoSeedMigrationAuditRows": 80,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 69,
-      "hand-built build needing migration": 1,
+      "already legal creation path": 70,
       "legal build-sheet owner proof": 9,
       "legal creation owner proof": 1
     },
@@ -58513,10 +58512,9 @@
       "real-sheet-battle": 70
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "direct-character-build": 1,
-      "legal-creation-draft-finalize": 79
+      "legal-creation-draft-finalize": 80
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 69,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 70,
     "scenarioGroups": 414,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 20,
@@ -88889,7 +88887,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -89013,7 +89012,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -89158,7 +89158,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -89973,7 +89974,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -92169,7 +92171,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -92311,7 +92314,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -92428,12 +92432,48 @@
         "label": "level1-sdk-raw-integration: Sorcerer Burning Hands resolves from a level-1 sheet, applies Fire damage, and spends a spell slot",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
-      "helperNeedles": [],
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneSorcererBurningHandsBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneSorcererBuild({",
+            "draftIdText: \"draft:l1-sdk-sorcerer-burning-hands\"",
+            "background: sorcererAcolyteCharismaBackground",
+            "preparedSpells: [burningHandsSpellId, \"detect_magic\"]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOneSorcererBuild(input:",
+          "needles": [
+            "const draft = createCharacterDraft({",
+            "fillCreationHoles({",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneBurningHands",
+          "needles": [
+            "saveGatedDamage",
+            "targeting: { kind: \"selfOriginCone\", lengthFeet: 15 }",
+            "damage: { expr: { dice: 3, dieSize: 6 }, damageType: \"fire\" }",
+            "successDamage: \"half\"",
+            "areaSavingThrowOutcomeFill(",
+            "{ spellLevel: 1, count: 2, expended: 0 }",
+            "{ spellLevel: 1, count: 2, expended: 1 }"
+          ]
+        }
+      ],
       "levelBand": "spell-level-1",
       "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
       "rowKey": "spell-level-1:Sorcerer:burning_hands",
       "tracerNeedles": [
-        "levelOneSorcererBurningHandsBuild",
+        "const sorcererBuild = finalizedLevelOneSorcererBurningHandsBuild();",
+        "sourceUnitId: \"class_sorcerer\"",
+        "preparedSpells: expect.arrayContaining([burningHandsSpellId])",
+        "build: sorcererBuild,",
+        "casterId: burningHandsCasterId,",
         "burningHandsSpellId"
       ]
     },
@@ -92490,7 +92530,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -92611,7 +92652,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -92723,7 +92765,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -92873,7 +92916,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -93093,7 +93137,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -93257,7 +93302,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -93383,7 +93429,8 @@
           "needles": [
             "const draft = createCharacterDraft({",
             "fillCreationHoles({",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "testLoadoutHoleId(\"weapon_dagger\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },

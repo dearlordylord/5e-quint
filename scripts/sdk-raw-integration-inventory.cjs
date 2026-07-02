@@ -107,9 +107,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 210;
 const expectedLevelOneTwoSeedScenarioRows = 80;
-const handBuiltSourceSeedRowIds = new Set([
-  "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
-]);
+const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
   "class-container",
@@ -943,7 +941,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -1064,7 +1063,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -1207,7 +1207,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -2010,7 +2011,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -2951,7 +2953,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -3091,7 +3094,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -3197,7 +3201,48 @@ const seededSdkScenarioRows = [
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
       "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
-    tracerNeedles: ["levelOneSorcererBurningHandsBuild", "burningHandsSpellId"],
+    tracerNeedles: [
+      "const sorcererBuild = finalizedLevelOneSorcererBurningHandsBuild();",
+      'sourceUnitId: "class_sorcerer"',
+      "preparedSpells: expect.arrayContaining([burningHandsSpellId])",
+      "build: sorcererBuild,",
+      "casterId: burningHandsCasterId,",
+      "burningHandsSpellId",
+    ],
+    helperNeedles: [
+      {
+        anchor:
+          "function finalizedLevelOneSorcererBurningHandsBuild(): CharacterBuild",
+        needles: [
+          "finalizedLevelOneSorcererBuild({",
+          'draftIdText: "draft:l1-sdk-sorcerer-burning-hands"',
+          "background: sorcererAcolyteCharismaBackground",
+          'preparedSpells: [burningHandsSpellId, "detect_magic"]',
+        ],
+      },
+      {
+        anchor: "function finalizedLevelOneSorcererBuild(input:",
+        needles: [
+          "const draft = createCharacterDraft({",
+          "fillCreationHoles({",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
+          "return result.build;",
+        ],
+      },
+      {
+        anchor: "function assertLevelOneBurningHands",
+        needles: [
+          "saveGatedDamage",
+          'targeting: { kind: "selfOriginCone", lengthFeet: 15 }',
+          'damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" }',
+          'successDamage: "half"',
+          "areaSavingThrowOutcomeFill(",
+          "{ spellLevel: 1, count: 2, expended: 0 }",
+          "{ spellLevel: 1, count: 2, expended: 1 }",
+        ],
+      },
+    ],
   },
   {
     candidateUnitId: "burning_hands",
@@ -3260,7 +3305,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -3378,7 +3424,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -3489,7 +3536,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -3637,7 +3685,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -3855,7 +3904,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -4016,7 +4066,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -4141,7 +4192,8 @@ const seededSdkScenarioRows = [
         needles: [
           "const draft = createCharacterDraft({",
           "fillCreationHoles({",
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
