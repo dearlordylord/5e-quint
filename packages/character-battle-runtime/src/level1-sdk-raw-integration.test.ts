@@ -584,6 +584,10 @@ const druidSpellAccessPreparedSpells = [
   "entangle",
   healingWordSpellId,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+const paladinSpellAccessPreparedSpells = [
+  blessSpellId,
+  cureWoundsSpellId,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const druidMulticlassProgression = {
   startingClass: classUnitId("class_fighter"),
   advancements: [
@@ -862,6 +866,61 @@ const druidBuildBattleDraftPlan = {
     legalLoadoutChoice("armor_leather", "armor", "worn"),
     legalLoadoutChoice("equipment_shield", "shield", "wielded"),
     legalLoadoutChoice("weapon_quarterstaff", "weapon", "wielded_one_handed"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const paladinSpellAccessDraftPlan = {
+  label: "Paladin Spellcasting spell access",
+  classUnitId: "class_paladin",
+  level: 1,
+  backgroundUnitId: "background_criminal",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 15,
+    dex: 10,
+    con: 13,
+    int: 8,
+    wis: 12,
+    cha: 14,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_paladin",
+      "class_skill_proficiency_choice",
+      "athletics",
+      "persuasion",
+    ),
+    legalUnitChoice(
+      "class_paladin",
+      "class_prepared_spell_choices",
+      ...paladinSpellAccessPreparedSpells,
+    ),
+    legalUnitChoice(
+      "paladin_weapon_mastery",
+      "weapon_mastery_options",
+      "weapon_longsword",
+      "weapon_spear",
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_ability_score_increase",
+      "two_and_one:dex:con",
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_tool_choice",
+      "thieves_tools",
+    ),
+    legalUnitChoice("class_paladin", "class_equipment_choice", "option_b"),
+    legalUnitChoice(
+      "background_criminal",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalUnitChoice("class_paladin", "equipment_purchase", "weapon_longsword"),
+    legalLoadoutChoice("weapon_longsword", "weapon", "wielded_one_handed"),
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
@@ -2194,6 +2253,49 @@ describe("level 1 SDK RAW integration", () => {
         spellbook: [],
         preparedSpells: druidSpellAccessPreparedSpells,
         spellcastingFocuses: ["druidic_focus"],
+      },
+    ]);
+    expect(fixture.build.spellcasting?.slotPools).toEqual({
+      spellcasting: {
+        kind: "spellcasting",
+        slots: [{ spellLevel: 1, count: 2 }],
+      },
+    });
+    expect(characterSheetSpellSlots(fixture.sheet)).toEqual([
+      { spellLevel: 1, count: 2, expended: 0 },
+    ]);
+    expect(characterSheetPactSlots(fixture.sheet)).toBeUndefined();
+  });
+
+  test("Paladin Spellcasting projects level-1 prepared spells and Spell Slots from legal creation to a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-paladin-spellcasting-access",
+      draftPlan: paladinSpellAccessDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-paladin-spellcasting-access",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_paladin"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(fixture.build.spellcasting?.sources).toEqual([
+      {
+        sourceUnitId: "class_paladin",
+        spellcastingAbility: "cha",
+        cantrips: [],
+        spellbook: [],
+        preparedSpells: paladinSpellAccessPreparedSpells,
+        spellcastingFocuses: ["holy_symbol"],
       },
     ]);
     expect(fixture.build.spellcasting?.slotPools).toEqual({

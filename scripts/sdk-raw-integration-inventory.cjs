@@ -114,7 +114,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 210;
-const expectedLevelOneTwoSeedScenarioRows = 146;
+const expectedLevelOneTwoSeedScenarioRows = 147;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -2294,6 +2294,60 @@ const seededSdkScenarioRows = [
           'legalUnitChoice("class_druid", "class_equipment_choice", "option_b")',
           'legalUnitChoice("class_druid", "equipment_purchase", "weapon_dagger")',
           'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "class_paladin",
+    className: "Paladin",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Paladin Spellcasting projects level-1 prepared spells and Spell Slots from legal creation to a fresh sheet",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    sourceProof: "legal-build-sheet-owner",
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+      ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-57",
+    ],
+    rowId: "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-paladin-spellcasting-access"',
+      "paladinSpellAccessDraftPlan",
+      'battle: { tag: "withoutBattle" }',
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+      "fixture.sheet.build",
+      'sourceUnitId: "class_paladin"',
+      'spellcastingAbility: "cha"',
+      "cantrips: []",
+      "spellbook: []",
+      "preparedSpells: paladinSpellAccessPreparedSpells",
+      'spellcastingFocuses: ["holy_symbol"]',
+      "slotPools",
+      "characterSheetSpellSlots(fixture.sheet)",
+      "characterSheetPactSlots(fixture.sheet)",
+    ],
+    helperNeedles: [
+      {
+        anchor: "const paladinSpellAccessPreparedSpells =",
+        needles: ["blessSpellId", "cureWoundsSpellId"],
+      },
+      {
+        anchor: "const paladinSpellAccessDraftPlan =",
+        needles: [
+          'label: "Paladin Spellcasting spell access"',
+          'classUnitId: "class_paladin"',
+          "level: 1",
+          '"class_skill_proficiency_choice"',
+          '"class_prepared_spell_choices"',
+          "...paladinSpellAccessPreparedSpells",
+          '"paladin_weapon_mastery"',
+          '"weapon_mastery_options"',
+          'legalUnitChoice("class_paladin", "class_equipment_choice", "option_b")',
+          'legalUnitChoice("class_paladin", "equipment_purchase", "weapon_longsword")',
+          'legalLoadoutChoice("weapon_longsword", "weapon", "wielded_one_handed")',
         ],
       },
     ],
