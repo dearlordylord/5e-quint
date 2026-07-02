@@ -265,7 +265,7 @@
     {
       "number": 44,
       "id": "L12-SH44-BUILD-SHEET-FIGHTER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the Fighter build-sheet SDK group"
     },
     {
@@ -606,7 +606,7 @@ Reviewer-loop convergence:
 | 41 | L12-SH41-WILD-SHAPE-FORM-ACTION-SHAPES - Split remaining Wild Shape form Stat Block action shapes | blocked | none | generic-stat-block-action-procedure | No current SRD 5.2.1 eligible Wild Shape Beast form exposes reachable non-attack action sections; keep future non-attack action shapes closed until a concrete form or generic Stat Block action owner demands them. |
 | 42 | L12-SH42-WILD-SHAPE-OBJECT-UTILIZE-TABLE - Split Wild Shape generic object and table-placement owners | blocked | none | generic-object-utilize-table-placement | Generic object-use, object retrieval, Utilize, and dropped-object table-placement work needs a concrete consumer or owner-design decision before implementation. |
 | 43 | L12-SH43-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-A27 - Decide Wild Shape active-form persistence past battle handoff | blocked | none | session-active-effect-persistence-owner-decision | Cross-session active Wild Shape persistence remains closed by ASSUMPTIONS.md A27 until the session active-effect persistence owner is decided. |
-| 44 | L12-SH44-BUILD-SHEET-FIGHTER - Add the Fighter build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-sheet-sdk | Fighter class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
+| 44 | L12-SH44-BUILD-SHEET-FIGHTER - Add the Fighter build-sheet SDK group | done | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-sheet-sdk | Fighter class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
 | 45 | L12-SH45-BUILD-SHEET-MONK - Add the Monk build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-sheet-sdk | Monk class container, core traits, proficiencies, tool choice, and multiclass entry traits prove through legal build-to-sheet projection. |
 | 46 | L12-SH46-BUILD-BATTLE-DRUID - Add the Druid build-battle SDK group | ready-for-research | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-battle-sdk | Druid starting equipment proves through legal build, fresh sheet, and battle combatant projection. |
 | 47 | L12-SH47-BUILD-BATTLE-FIGHTER - Add the Fighter build-battle SDK group | ready-for-research | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-battle-sdk | Fighter starting equipment and Weapon Mastery prove through legal build, fresh sheet, and battle combatant projection. |
@@ -2627,7 +2627,7 @@ Plan Impact:
 
 ### Task 44 - L12-SH44-BUILD-SHEET-FIGHTER
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
