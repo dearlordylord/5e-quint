@@ -115,6 +115,7 @@ const reviewedPresentationExplorationFutureSpellUnitIds = new Set([
   "major_image",
   "nondetection",
   "plant_growth",
+  "speak_with_plants",
 ]);
 const characterCreationClosureKinds = new Set(["selection-grant-container"]);
 const futureFeatureClosureKinds = new Set([

@@ -1078,11 +1078,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_plants",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 230,
         "lineStart": 230,
@@ -3050,11 +3050,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_speak_with_plants",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 262,
         "lineStart": 262,
@@ -10065,6 +10065,79 @@
     },
     {
       "candidateUnitIds": [
+        "speak_with_plants"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:speak-with-plants",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"speak_with_plants\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:230",
+        ".references/srd-5.2.1/Classes/Druid.md:262"
+      ],
+      "rowCount": 2,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "speak_with_plants",
+          "className": "Bard",
+          "concept": "Bard spell list Speak with Plants",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_plants",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 230,
+            "lineStart": 230,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "speak_with_plants",
+          "className": "Druid",
+          "concept": "Druid spell list Speak with Plants",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_speak_with_plants",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 262,
+            "lineStart": 262,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Speak with Plants",
+        "Druid spell list Speak with Plants"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "spirit_guardians"
       ],
       "categories": [
@@ -12883,79 +12956,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "speak_with_plants"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Druid"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:speak-with-plants",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"speak_with_plants\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:230",
-        ".references/srd-5.2.1/Classes/Druid.md:262"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "speak_with_plants",
-          "className": "Bard",
-          "concept": "Bard spell list Speak with Plants",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_plants",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 230,
-            "lineStart": 230,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "speak_with_plants",
-          "className": "Druid",
-          "concept": "Druid spell list Speak with Plants",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_speak_with_plants",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 262,
-            "lineStart": 262,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Speak with Plants",
-        "Druid spell list Speak with Plants"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
@@ -19509,11 +19509,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_plants",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 230,
         "lineStart": 230,
@@ -27942,11 +27942,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_speak_with_plants",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 262,
         "lineStart": 262,
@@ -57904,18 +57904,18 @@
       "build-progression": 12,
       "character-battle-to-battle": 46,
       "character-sheet": 1,
-      "future-runtime-owner-before-sdk": 54,
-      "spell-effect-owner-review": 15,
+      "future-runtime-owner-before-sdk": 56,
+      "spell-effect-owner-review": 13,
       "table-only-closure": 10
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 123,
-      "unresolved-review": 15
+      "resolved": 125,
+      "unresolved-review": 13
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 15,
+      "closure-review-needed": 13,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 54,
+      "future-owner-before-sdk": 56,
       "sdk-scenario-needed": 2,
       "seed-scenario-present": 45,
       "table-only-closure-needed": 10
@@ -57924,9 +57924,9 @@
     "level5ScenarioGroupsByLane": {
       "battle-spell-sdk": 1,
       "explicit-closure": 12,
-      "future-owner-before-sdk": 28,
+      "future-owner-before-sdk": 29,
       "seed-present": 45,
-      "spell-effect-owner-review": 5,
+      "spell-effect-owner-review": 4,
       "table-only-closure": 3
     },
     "level5SeedScenarioRows": 45,
@@ -57951,14 +57951,14 @@
       "character-sheet": 8,
       "character-sheet-spell-access": 12,
       "class-feature-closure-review": 2,
-      "future-runtime-owner-before-sdk": 56,
+      "future-runtime-owner-before-sdk": 58,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 121,
+      "spell-effect-owner-review": 119,
       "table-only-closure": 21
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 647,
-      "unresolved-review": 123
+      "resolved": 649,
+      "unresolved-review": 121
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -57974,10 +57974,10 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 123,
+      "closure-review-needed": 121,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 56,
+      "future-owner-before-sdk": 58,
       "sdk-scenario-needed": 401,
       "seed-scenario-present": 109,
       "table-only-closure-needed": 21
@@ -57993,11 +57993,11 @@
       "character-sheet-sdk": 7,
       "explicit-closure": 60,
       "feature-owner-review": 2,
-      "future-owner-before-sdk": 30,
+      "future-owner-before-sdk": 31,
       "multi-owner-feature-sdk": 9,
       "seed-present": 109,
       "sheet-spell-access-sdk": 12,
-      "spell-effect-owner-review": 39,
+      "spell-effect-owner-review": 38,
       "table-only-closure": 7
     },
     "scenarioGroupsByTask": {
@@ -84419,6 +84419,79 @@
     },
     {
       "candidateUnitIds": [
+        "speak_with_plants"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:speak-with-plants",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"speak_with_plants\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:230",
+        ".references/srd-5.2.1/Classes/Druid.md:262"
+      ],
+      "rowCount": 2,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "speak_with_plants",
+          "className": "Bard",
+          "concept": "Bard spell list Speak with Plants",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_plants",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 230,
+            "lineStart": 230,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "speak_with_plants",
+          "className": "Druid",
+          "concept": "Druid spell list Speak with Plants",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_speak_with_plants",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 262,
+            "lineStart": 262,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Speak with Plants",
+        "Druid spell list Speak with Plants"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "spirit_guardians"
       ],
       "categories": [
@@ -87237,79 +87310,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "speak_with_plants"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Druid"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:speak-with-plants",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"speak_with_plants\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:230",
-        ".references/srd-5.2.1/Classes/Druid.md:262"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "speak_with_plants",
-          "className": "Bard",
-          "concept": "Bard spell list Speak with Plants",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_plants",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 230,
-            "lineStart": 230,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "speak_with_plants",
-          "className": "Druid",
-          "concept": "Druid spell list Speak with Plants",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_speak_with_plants",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 262,
-            "lineStart": 262,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Speak with Plants",
-        "Druid spell list Speak with Plants"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
