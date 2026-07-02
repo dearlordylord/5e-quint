@@ -598,6 +598,15 @@ const fighterMulticlassProgression = {
     },
   ],
 } as const satisfies CharacterProgression;
+const monkMulticlassProgression = {
+  startingClass: classUnitId("class_fighter"),
+  advancements: [
+    {
+      classUnitId: classUnitId("class_monk"),
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+    },
+  ],
+} as const satisfies CharacterProgression;
 
 const bardSpellAccessDraftPlan = {
   label: "Bard Spellcasting spell access",
@@ -2043,7 +2052,7 @@ describe("level 1 SDK RAW integration", () => {
       requireRight(
         characterBuildArmorTraining(fixture.sheet.build, unitLibrary),
       ),
-    ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
+    ).toEqual(classFacts.armorTraining);
   });
 
   test("Bard build-battle handoff projects starting equipment into a battle combatant", () => {
@@ -2467,6 +2476,104 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
+  test("Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-monk-build-sheet",
+      draftPlan: monkMartialArtsDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-monk-build-sheet",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_monk"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+
+    const classFactsResult = readClassCreationFacts(
+      unitLibrary.requireUnit(fixture.sheet.build.progression.startingClass),
+    );
+    expect(classFactsResult.tag).toBe("readable");
+    if (classFactsResult.tag !== "readable") return;
+    const classFacts = classFactsResult.value;
+
+    expect(characterBuildUnitRefs(fixture.sheet.build)).toContainEqual({
+      unitId: fixture.sheet.build.progression.startingClass,
+    });
+    expect(classFacts.primaryAbilities).toEqual({
+      abilities: ["dex", "wis"],
+      kind: "all_of",
+    });
+    expect(
+      requireRight(characterBuildHitPoints(fixture.sheet.build, unitLibrary))
+        .hitDice,
+    ).toEqual([
+      {
+        classUnitId: fixture.sheet.build.progression.startingClass,
+        dieSize: classFacts.hitPointDie,
+        total: 1,
+      },
+    ]);
+    expect(
+      characterBuildFeatureUnitIds(fixture.sheet.build, unitLibrary),
+    ).toEqual(
+      expect.arrayContaining(
+        classFacts.featureGrants
+          .filter((grant) => grant.level <= 1)
+          .map((grant) => grant.unitId),
+      ),
+    );
+
+    const proficiencies = requireRight(
+      characterBuildProficiencies(fixture.sheet.build, unitLibrary),
+    );
+    expect(proficiencies.savingThrows).toEqual(
+      classFacts.savingThrowProficiencies,
+    );
+    expect(proficiencies.skills).toEqual(
+      expect.arrayContaining(
+        fixture.sheet.build.proficiencyChoices.flatMap((choice) =>
+          choice.kind === "skill" ? [choice.skill] : [],
+        ),
+      ),
+    );
+    expect(
+      selectedUnitChoiceOptionIds(
+        fixture.draft,
+        "class_monk",
+        "class_tool_proficiency_choice",
+      ),
+    ).toEqual(["tool:tool_lute"]);
+    expect(proficiencies.tools).toEqual(expect.arrayContaining(["tool_lute"]));
+    expect(proficiencies.weapon).toEqual(
+      expect.arrayContaining(
+        classFacts.weaponProficiencies.flatMap((proficiency) =>
+          proficiency.kind === "weapon_category" ? [proficiency.category] : [],
+        ),
+      ),
+    );
+    expect(proficiencies.weaponPropertyFilters).toEqual(
+      classFacts.weaponProficiencies.flatMap((proficiency) =>
+        proficiency.kind === "weapon_category_with_properties"
+          ? [proficiency]
+          : [],
+      ),
+    );
+    expect(
+      requireRight(
+        characterBuildArmorTraining(fixture.sheet.build, unitLibrary),
+      ),
+    ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
+  });
+
   test("Bard multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet", () => {
     const finalized = finalizedFighterToBardMulticlassBuild();
     const sheet = createLegalSourceCharacterSheet({
@@ -2509,6 +2616,9 @@ describe("level 1 SDK RAW integration", () => {
 
     const proficiencies = requireRight(
       characterBuildProficiencies(sheet.build, unitLibrary),
+    );
+    expect(proficiencies.savingThrows).not.toEqual(
+      expect.arrayContaining([...classFacts.savingThrowProficiencies]),
     );
     expect(
       selectedUnitChoiceOptionIds(
@@ -2719,6 +2829,62 @@ describe("level 1 SDK RAW integration", () => {
         { category: "shield", kind: "armor_category" },
       ],
     });
+  });
+
+  test("Monk multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet", () => {
+    const finalized = finalizedFighterToMonkMulticlassBuild();
+    const sheet = createLegalSourceCharacterSheet({
+      characterIdText: "character:l1-sdk-monk-multiclass-build-sheet",
+      build: finalized.build,
+      hitPoints: { tag: "maximum" },
+    });
+
+    expect(
+      discoverCreationHoles({ draft: finalized.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(finalized.build.progression).toEqual(monkMulticlassProgression);
+    expect(sheet.build).toEqual(finalized.build);
+
+    const classFactsResult = readClassCreationFacts(
+      unitLibrary.requireUnit("class_monk"),
+    );
+    expect(classFactsResult.tag).toBe("readable");
+    if (classFactsResult.tag !== "readable") return;
+    const classFacts = classFactsResult.value;
+
+    expect(
+      requireRight(characterBuildHitPoints(sheet.build, unitLibrary)).hitDice,
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          classUnitId: "class_monk",
+          dieSize: classFacts.hitPointDie,
+          total: 1,
+        },
+      ]),
+    );
+    expect(characterBuildFeatureUnitIds(sheet.build, unitLibrary)).toEqual(
+      expect.arrayContaining(
+        classFacts.featureGrants
+          .filter((grant) => grant.level <= 1)
+          .map((grant) => grant.unitId),
+      ),
+    );
+
+    const proficiencies = requireRight(
+      characterBuildProficiencies(sheet.build, unitLibrary),
+    );
+    expect(
+      selectedUnitChoiceOptionIds(
+        finalized.draft,
+        "class_monk",
+        "class_tool_proficiency_choice",
+      ),
+    ).toEqual([]);
+    expect(proficiencies.tools).not.toEqual(
+      expect.arrayContaining(["tool_lute"]),
+    );
+    expect(classFacts.multiclassProficiencies).toEqual({ kind: "none" });
   });
 
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
@@ -9849,6 +10015,146 @@ function finalizedWizardToFighterMulticlassBuild(): {
   if (result.tag !== "ready") {
     throw new Error(
       `Expected finalized Wizard to Fighter multiclass build, received ${creationFinalizationResultSummary(result)}`,
+    );
+  }
+  return { draft: afterLoadout, build: result.build };
+}
+
+function finalizedFighterToMonkMulticlassBuild(): {
+  readonly draft: CharacterDraft;
+  readonly build: CharacterBuild;
+} {
+  const draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId("draft:l1-sdk-monk-multiclass-build-sheet"),
+  });
+  const afterInitial = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        creationChoiceFill(
+          "cc:draft:draft.progression.initial",
+          progressionOptionId(monkMulticlassProgression),
+        ),
+        creationChoiceFill("cc:draft:draft.background", "background_soldier"),
+        creationChoiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: requireRight(
+            abilityScoreAssignment({
+              str: 15,
+              dex: 14,
+              con: 12,
+              int: 8,
+              wis: 13,
+              cha: 10,
+            }),
+          ),
+        },
+        creationChoiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        creationChoiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "class_fighter",
+            "class_skill_proficiency_choice",
+          ),
+          "perception",
+          "survival",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "fighter_fighting_style",
+            "class_feature_feat_choice",
+          ),
+          "defense",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "fighter_weapon_mastery",
+            "weapon_mastery_options",
+          ),
+          "weapon_longsword",
+          "weapon_spear",
+          "weapon_flail",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_soldier",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:str:con",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("background_soldier", "background_tool_choice"),
+          "tool_dice_set",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_fighter", "class_equipment_choice"),
+          "option_c",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_soldier",
+            "background_equipment_choice",
+          ),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_fighter", "equipment_purchase"),
+          "armor_chain_mail",
+          "weapon_longsword",
+          "equipment_shield",
+        ),
+      ],
+    }),
+  );
+  const afterLoadout = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        creationChoiceFill(
+          testLoadoutHoleId("armor_chain_mail", "armor"),
+          "worn",
+        ),
+        creationChoiceFill(
+          testLoadoutHoleId("equipment_shield", "shield"),
+          "wielded",
+        ),
+        creationChoiceFill(
+          testLoadoutHoleId("weapon_longsword", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized Fighter to Monk multiclass build, received ${creationFinalizationResultSummary(result)}`,
     );
   }
   return { draft: afterLoadout, build: result.build };

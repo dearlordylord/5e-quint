@@ -28754,6 +28754,13 @@
       "category": "class container",
       "className": "Monk",
       "concept": "Monk class container",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:3"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -28761,7 +28768,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/monk:level-1:class-container:monk_class_container",
       "rowKind": "class-container",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 27,
         "lineStart": 3,
@@ -28995,6 +29002,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Monk",
       "concept": "Monk Armor Training",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:13"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -29002,7 +29016,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/monk:level-1:core-trait:monk_armor_training",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 13,
         "lineStart": 13,
@@ -29038,6 +29052,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Monk",
       "concept": "Monk Hit Point Die",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:8"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -29045,7 +29066,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 8,
         "lineStart": 8,
@@ -29081,6 +29102,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Monk",
       "concept": "Monk Primary Ability",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:7"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -29088,7 +29116,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 7,
         "lineStart": 7,
@@ -29124,6 +29152,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Monk",
       "concept": "Monk Saving Throw Proficiencies",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:9"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -29131,7 +29166,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 9,
         "lineStart": 9,
@@ -29167,6 +29202,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Monk",
       "concept": "Monk Skill Proficiencies",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:10"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -29174,7 +29216,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 10,
         "lineStart": 10,
@@ -29210,6 +29252,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Monk",
       "concept": "Monk Tool Proficiencies",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:12"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -29217,7 +29266,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 12,
         "lineStart": 12,
@@ -29253,6 +29302,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Monk",
       "concept": "Monk Weapon Proficiencies",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:11"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -29260,7 +29316,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
       "rowKind": "core-trait",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 11,
         "lineStart": 11,
@@ -29339,6 +29395,13 @@
       "category": "character-creation or progression mechanic",
       "className": "Monk",
       "concept": "Monk multiclass entry traits",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:23-27"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -29346,7 +29409,7 @@
       "proposedOwnerBoundary": "character-build-to-sheet",
       "rowId": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
       "rowKind": "multiclass-entry",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 27,
         "lineStart": 23,
@@ -51368,12 +51431,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 8,
+        "groupCount": 7,
         "lane": "build-sheet-sdk",
         "ownerTaskIds": [
           "L12-SH06-BUILD-SHEET-FIRST-SLICE"
         ],
-        "rowCount": 59,
+        "rowCount": 50,
         "rowFamily": "source-row",
         "taskFamily": "build-sheet-sdk"
       },
@@ -51452,7 +51515,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 90,
+        "groupCount": 91,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -51464,7 +51527,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 131,
+        "rowCount": 140,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51547,16 +51610,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 90,
+        "groupCount": 91,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 131,
+        "rowCount": 140,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 77,
+        "groupCount": 76,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51567,7 +51630,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 174,
+        "rowCount": 165,
         "rowFamily": "source-row"
       },
       {
@@ -53143,6 +53206,25 @@
       "wholeWidthSourceLifecycleProof": false
     },
     {
+      "candidateUnitId": "class_monk",
+      "classification": "legal build-sheet owner proof",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/monk:level-1:class-container:monk_class_container",
+      "rowKey": "level-1:Monk:class_monk",
+      "rowKind": "class-container",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
       "candidateUnitId": "monk_martial_arts",
       "classification": "already legal creation path",
       "className": "Monk",
@@ -53175,6 +53257,158 @@
       "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
       "rowKey": "level-1:Monk:monk_unarmored_defense",
       "rowKind": "class-feature-grant",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "classification": "legal build-sheet owner proof",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_armor_training",
+      "rowKey": "level-1:Monk:class_monk",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "classification": "legal build-sheet owner proof",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
+      "rowKey": "level-1:Monk:class_monk",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "classification": "legal build-sheet owner proof",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
+      "rowKey": "level-1:Monk:class_monk",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "classification": "legal build-sheet owner proof",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
+      "rowKey": "level-1:Monk:class_monk",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "classification": "legal build-sheet owner proof",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
+      "rowKey": "level-1:Monk:class_monk",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "classification": "legal build-sheet owner proof",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
+      "rowKey": "level-1:Monk:class_monk",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "classification": "legal build-sheet owner proof",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
+      "rowKey": "level-1:Monk:class_monk",
+      "rowKind": "core-trait",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "classification": "legal build-sheet owner proof",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
+      "rowKey": "level-1:Monk:class_monk",
+      "rowKind": "multiclass-entry",
       "sourceBuildPath": "legal-creation-draft-finalize",
       "sourceProof": "legal-build-sheet-owner",
       "usesRealSheetBattleHandoff": false,
@@ -59959,9 +60193,9 @@
       "explicit-closure-needed": 48,
       "explicit-closure-present": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 367,
+      "sdk-scenario-needed": 358,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 137,
+      "seed-scenario-present": 146,
       "table-only-closure-needed": 15
     },
     "levelOneFourRows": 632,
@@ -59970,13 +60204,13 @@
       "battle-feature-sdk": 4,
       "battle-spell-sdk": 29,
       "build-battle-sdk": 9,
-      "build-sheet-sdk": 8,
+      "build-sheet-sdk": 7,
       "character-creation-sdk": 12,
       "character-sheet-sdk": 5,
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 90,
+      "seed-present": 91,
       "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 20,
       "table-only-closure": 2
@@ -59985,8 +60219,8 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 20,
       "explicit-closure-row": 12,
-      "seed-row": 90,
-      "source-row": 77,
+      "seed-row": 91,
+      "source-row": 76,
       "table-only-closure-row": 2
     },
     "levelOneTwoCampaignRows": 400,
@@ -59994,13 +60228,13 @@
       "battle-feature-sdk": 4,
       "battle-spell-sdk": 72,
       "build-battle-sdk": 12,
-      "build-sheet-sdk": 59,
+      "build-sheet-sdk": 50,
       "character-creation-sdk": 12,
       "character-sheet-sdk": 5,
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 131,
+      "seed-present": 140,
       "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 67,
       "table-only-closure": 4
@@ -60009,22 +60243,22 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 67,
       "explicit-closure-row": 12,
-      "seed-row": 131,
-      "source-row": 174,
+      "seed-row": 140,
+      "source-row": 165,
       "table-only-closure-row": 4
     },
-    "levelOneTwoSeedMigrationAuditRows": 131,
+    "levelOneTwoSeedMigrationAuditRows": 140,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 82,
-      "legal build-sheet owner proof": 46,
+      "legal build-sheet owner proof": 55,
       "legal creation owner proof": 3
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 49,
+      "not-real-sheet-battle": 58,
       "real-sheet-battle": 82
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 131
+      "legal-creation-draft-finalize": 140
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 82,
     "scenarioGroups": 417,
@@ -60032,7 +60266,7 @@
       "battle-feature-sdk": 19,
       "battle-spell-sdk": 80,
       "build-battle-sdk": 9,
-      "build-sheet-sdk": 20,
+      "build-sheet-sdk": 19,
       "character-creation-sdk": 26,
       "character-sheet-sdk": 5,
       "explicit-closure": 48,
@@ -60041,7 +60275,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 8,
       "owner-review": 6,
-      "seed-present": 96,
+      "seed-present": 97,
       "sheet-spell-access-sdk": 10,
       "spell-effect-owner-review": 44,
       "table-only-closure": 6
@@ -63027,199 +63261,6 @@
       ],
       "sampleConcepts": [
         "Barbarian multiclass entry traits"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Finalize the character build/sheet for this class slice and assert RAW-facing class, proficiency, selection, or derived sheet facts at the build/sheet owner.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "class_monk"
-      ],
-      "categories": [
-        "character-creation or progression mechanic",
-        "class container"
-      ],
-      "classNames": [
-        "Monk"
-      ],
-      "groupId": "l15-sdk-raw-03:build-sheet-sdk:monk",
-      "lane": "build-sheet-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-build-to-sheet"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"build-sheet-sdk\",\"Monk\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Monk.md:10",
-        ".references/srd-5.2.1/Classes/Monk.md:11",
-        ".references/srd-5.2.1/Classes/Monk.md:12",
-        ".references/srd-5.2.1/Classes/Monk.md:13",
-        ".references/srd-5.2.1/Classes/Monk.md:23",
-        ".references/srd-5.2.1/Classes/Monk.md:3",
-        ".references/srd-5.2.1/Classes/Monk.md:7",
-        ".references/srd-5.2.1/Classes/Monk.md:8",
-        ".references/srd-5.2.1/Classes/Monk.md:9"
-      ],
-      "rowCount": 9,
-      "rowKinds": [
-        "class-container",
-        "core-trait",
-        "multiclass-entry"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "class_monk",
-          "className": "Monk",
-          "concept": "Monk class container",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/monk:level-1:class-container:monk_class_container",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 27,
-            "lineStart": 3,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_monk",
-          "className": "Monk",
-          "concept": "Monk Armor Training",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/monk:level-1:core-trait:monk_armor_training",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 13,
-            "lineStart": 13,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_monk",
-          "className": "Monk",
-          "concept": "Monk Hit Point Die",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 8,
-            "lineStart": 8,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_monk",
-          "className": "Monk",
-          "concept": "Monk Primary Ability",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 7,
-            "lineStart": 7,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_monk",
-          "className": "Monk",
-          "concept": "Monk Saving Throw Proficiencies",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 9,
-            "lineStart": 9,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_monk",
-          "className": "Monk",
-          "concept": "Monk Skill Proficiencies",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 10,
-            "lineStart": 10,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_monk",
-          "className": "Monk",
-          "concept": "Monk Tool Proficiencies",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 12,
-            "lineStart": 12,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_monk",
-          "className": "Monk",
-          "concept": "Monk Weapon Proficiencies",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 11,
-            "lineStart": 11,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        },
-        {
-          "candidateUnitId": "class_monk",
-          "className": "Monk",
-          "concept": "Monk multiclass entry traits",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-sheet",
-          "rowId": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 27,
-            "lineStart": 23,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Monk Armor Training",
-        "Monk Hit Point Die",
-        "Monk Primary Ability",
-        "Monk Saving Throw Proficiencies",
-        "Monk Skill Proficiencies",
-        "Monk Tool Proficiencies",
-        "Monk Weapon Proficiencies",
-        "Monk class container"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -66848,6 +66889,200 @@
       ],
       "sampleConcepts": [
         "Fighter Weapon Mastery"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "class_monk"
+      ],
+      "categories": [
+        "character-creation or progression mechanic",
+        "class container"
+      ],
+      "classNames": [
+        "Monk"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-monk-class-monk",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-build-to-sheet"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Monk:class_monk\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Monk.md:10",
+        ".references/srd-5.2.1/Classes/Monk.md:11",
+        ".references/srd-5.2.1/Classes/Monk.md:12",
+        ".references/srd-5.2.1/Classes/Monk.md:13",
+        ".references/srd-5.2.1/Classes/Monk.md:23",
+        ".references/srd-5.2.1/Classes/Monk.md:23-27",
+        ".references/srd-5.2.1/Classes/Monk.md:3",
+        ".references/srd-5.2.1/Classes/Monk.md:7",
+        ".references/srd-5.2.1/Classes/Monk.md:8",
+        ".references/srd-5.2.1/Classes/Monk.md:9"
+      ],
+      "rowCount": 9,
+      "rowKinds": [
+        "class-container",
+        "core-trait",
+        "multiclass-entry"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "class_monk",
+          "className": "Monk",
+          "concept": "Monk class container",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/monk:level-1:class-container:monk_class_container",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 27,
+            "lineStart": 3,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_monk",
+          "className": "Monk",
+          "concept": "Monk Armor Training",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/monk:level-1:core-trait:monk_armor_training",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 13,
+            "lineStart": 13,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_monk",
+          "className": "Monk",
+          "concept": "Monk Hit Point Die",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 8,
+            "lineStart": 8,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_monk",
+          "className": "Monk",
+          "concept": "Monk Primary Ability",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 7,
+            "lineStart": 7,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_monk",
+          "className": "Monk",
+          "concept": "Monk Saving Throw Proficiencies",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 9,
+            "lineStart": 9,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_monk",
+          "className": "Monk",
+          "concept": "Monk Skill Proficiencies",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 10,
+            "lineStart": 10,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_monk",
+          "className": "Monk",
+          "concept": "Monk Tool Proficiencies",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 12,
+            "lineStart": 12,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_monk",
+          "className": "Monk",
+          "concept": "Monk Weapon Proficiencies",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 11,
+            "lineStart": 11,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_monk",
+          "className": "Monk",
+          "concept": "Monk multiclass entry traits",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-sheet",
+          "rowId": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 27,
+            "lineStart": 23,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Monk Armor Training",
+        "Monk Hit Point Die",
+        "Monk Primary Ability",
+        "Monk Saving Throw Proficiencies",
+        "Monk Skill Proficiencies",
+        "Monk Tool Proficiencies",
+        "Monk Weapon Proficiencies",
+        "Monk class container"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -91961,6 +92196,478 @@
         "selectedUnitChoiceOptionIds(",
         "\"fighter_weapon_mastery\"",
         "multiclassProficiencies"
+      ]
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "className": "Monk",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:3"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const monkMartialArtsDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_monk\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_tool_proficiency_choice\"",
+            "legalUnitChoice(\"class_monk\", \"class_equipment_choice\", \"option_b\")",
+            "\"equipment_purchase\"",
+            "legalLoadoutChoice("
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/monk:level-1:class-container:monk_class_container",
+      "rowKey": "level-1:Monk:class_monk",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-monk-build-sheet\"",
+        "monkMartialArtsDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildFeatureUnitIds(",
+        "featureGrants",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "\"class_tool_proficiency_choice\"",
+        "proficiencies.tools",
+        "weaponProficiencies",
+        "weaponPropertyFilters",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "className": "Monk",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:13"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const monkMartialArtsDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_monk\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_tool_proficiency_choice\"",
+            "legalUnitChoice(\"class_monk\", \"class_equipment_choice\", \"option_b\")",
+            "\"equipment_purchase\"",
+            "legalLoadoutChoice("
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_armor_training",
+      "rowKey": "level-1:Monk:class_monk",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-monk-build-sheet\"",
+        "monkMartialArtsDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildFeatureUnitIds(",
+        "featureGrants",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "\"class_tool_proficiency_choice\"",
+        "proficiencies.tools",
+        "weaponProficiencies",
+        "weaponPropertyFilters",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "className": "Monk",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:8"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const monkMartialArtsDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_monk\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_tool_proficiency_choice\"",
+            "legalUnitChoice(\"class_monk\", \"class_equipment_choice\", \"option_b\")",
+            "\"equipment_purchase\"",
+            "legalLoadoutChoice("
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
+      "rowKey": "level-1:Monk:class_monk",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-monk-build-sheet\"",
+        "monkMartialArtsDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildFeatureUnitIds(",
+        "featureGrants",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "\"class_tool_proficiency_choice\"",
+        "proficiencies.tools",
+        "weaponProficiencies",
+        "weaponPropertyFilters",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "className": "Monk",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:7"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const monkMartialArtsDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_monk\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_tool_proficiency_choice\"",
+            "legalUnitChoice(\"class_monk\", \"class_equipment_choice\", \"option_b\")",
+            "\"equipment_purchase\"",
+            "legalLoadoutChoice("
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
+      "rowKey": "level-1:Monk:class_monk",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-monk-build-sheet\"",
+        "monkMartialArtsDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildFeatureUnitIds(",
+        "featureGrants",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "\"class_tool_proficiency_choice\"",
+        "proficiencies.tools",
+        "weaponProficiencies",
+        "weaponPropertyFilters",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "className": "Monk",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:9"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const monkMartialArtsDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_monk\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_tool_proficiency_choice\"",
+            "legalUnitChoice(\"class_monk\", \"class_equipment_choice\", \"option_b\")",
+            "\"equipment_purchase\"",
+            "legalLoadoutChoice("
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
+      "rowKey": "level-1:Monk:class_monk",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-monk-build-sheet\"",
+        "monkMartialArtsDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildFeatureUnitIds(",
+        "featureGrants",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "\"class_tool_proficiency_choice\"",
+        "proficiencies.tools",
+        "weaponProficiencies",
+        "weaponPropertyFilters",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "className": "Monk",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:10"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const monkMartialArtsDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_monk\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_tool_proficiency_choice\"",
+            "legalUnitChoice(\"class_monk\", \"class_equipment_choice\", \"option_b\")",
+            "\"equipment_purchase\"",
+            "legalLoadoutChoice("
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
+      "rowKey": "level-1:Monk:class_monk",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-monk-build-sheet\"",
+        "monkMartialArtsDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildFeatureUnitIds(",
+        "featureGrants",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "\"class_tool_proficiency_choice\"",
+        "proficiencies.tools",
+        "weaponProficiencies",
+        "weaponPropertyFilters",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "className": "Monk",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:12"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const monkMartialArtsDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_monk\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_tool_proficiency_choice\"",
+            "legalUnitChoice(\"class_monk\", \"class_equipment_choice\", \"option_b\")",
+            "\"equipment_purchase\"",
+            "legalLoadoutChoice("
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
+      "rowKey": "level-1:Monk:class_monk",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-monk-build-sheet\"",
+        "monkMartialArtsDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildFeatureUnitIds(",
+        "featureGrants",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "\"class_tool_proficiency_choice\"",
+        "proficiencies.tools",
+        "weaponProficiencies",
+        "weaponPropertyFilters",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "className": "Monk",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:11"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const monkMartialArtsDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_monk\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_tool_proficiency_choice\"",
+            "legalUnitChoice(\"class_monk\", \"class_equipment_choice\", \"option_b\")",
+            "\"equipment_purchase\"",
+            "legalLoadoutChoice("
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
+      "rowKey": "level-1:Monk:class_monk",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-monk-build-sheet\"",
+        "monkMartialArtsDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "readClassCreationFacts(",
+        "characterBuildUnitRefs(",
+        "primaryAbilities",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildFeatureUnitIds(",
+        "featureGrants",
+        "characterBuildProficiencies(",
+        "savingThrowProficiencies",
+        "proficiencyChoices",
+        "\"class_tool_proficiency_choice\"",
+        "proficiencies.tools",
+        "weaponProficiencies",
+        "weaponPropertyFilters",
+        "characterBuildArmorTraining(",
+        "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "class_monk",
+      "className": "Monk",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:23-27"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const monkMulticlassProgression =",
+          "needles": [
+            "startingClass: classUnitId(\"class_fighter\")",
+            "classUnitId: classUnitId(\"class_monk\")",
+            "hitPointRule: { tag: \"fixedHigherLevelGain\" }"
+          ]
+        },
+        {
+          "anchor": "function finalizedFighterToMonkMulticlassBuild():",
+          "needles": [
+            "createCharacterDraft({",
+            "draftId: characterDraftId(\"draft:l1-sdk-monk-multiclass-build-sheet\")",
+            "progressionOptionId(monkMulticlassProgression)",
+            "\"class_fighter\"",
+            "\"fighter_fighting_style\"",
+            "\"fighter_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "testLoadoutHoleId(\"weapon_longsword\", \"weapon\")",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
+            "return { draft: afterLoadout, build: result.build };"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
+      "rowKey": "level-1:Monk:class_monk",
+      "tracerNeedles": [
+        "finalizedFighterToMonkMulticlassBuild()",
+        "createLegalSourceCharacterSheet({",
+        "characterIdText: \"character:l1-sdk-monk-multiclass-build-sheet\"",
+        "monkMulticlassProgression",
+        "readClassCreationFacts(",
+        "characterBuildHitPoints(",
+        ".hitDice",
+        "characterBuildFeatureUnitIds(",
+        "featureGrants",
+        "characterBuildProficiencies(",
+        "\"class_tool_proficiency_choice\"",
+        "proficiencies.tools",
+        "multiclassProficiencies",
+        "{ kind: \"none\" }"
       ]
     },
     {

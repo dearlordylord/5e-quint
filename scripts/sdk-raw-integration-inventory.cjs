@@ -114,7 +114,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 213;
-const expectedLevelOneTwoSeedScenarioRows = 131;
+const expectedLevelOneTwoSeedScenarioRows = 140;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -1198,6 +1198,91 @@ const fighterBuildSheetScenarioRows = [
   ...row,
 }));
 
+const monkBuildSheetScenarioLabel =
+  "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet";
+const monkBuildSheetScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-monk-build-sheet"',
+  "monkMartialArtsDraftPlan",
+  'battle: { tag: "withoutBattle" }',
+  "fixture.sheet.build",
+  "readClassCreationFacts(",
+  "characterBuildUnitRefs(",
+  "primaryAbilities",
+  "characterBuildHitPoints(",
+  ".hitDice",
+  "characterBuildFeatureUnitIds(",
+  "featureGrants",
+  "characterBuildProficiencies(",
+  "savingThrowProficiencies",
+  "proficiencyChoices",
+  '"class_tool_proficiency_choice"',
+  "proficiencies.tools",
+  "weaponProficiencies",
+  "weaponPropertyFilters",
+  "characterBuildArmorTraining(",
+  "armorTraining",
+];
+const monkBuildSheetScenarioHelperNeedles = [
+  {
+    anchor: "const monkMartialArtsDraftPlan =",
+    needles: [
+      'classUnitId: "class_monk"',
+      "level: 1",
+      '"class_skill_proficiency_choice"',
+      '"class_tool_proficiency_choice"',
+      'legalUnitChoice("class_monk", "class_equipment_choice", "option_b")',
+      '"equipment_purchase"',
+      "legalLoadoutChoice(",
+    ],
+  },
+];
+const monkBuildSheetScenarioRows = [
+  {
+    rowId: "srd521:classes/monk:level-1:class-container:monk_class_container",
+    rawSources: [".references/srd-5.2.1/Classes/Monk.md:3"],
+  },
+  {
+    rowId: "srd521:classes/monk:level-1:core-trait:monk_armor_training",
+    rawSources: [".references/srd-5.2.1/Classes/Monk.md:13"],
+  },
+  {
+    rowId: "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
+    rawSources: [".references/srd-5.2.1/Classes/Monk.md:8"],
+  },
+  {
+    rowId: "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
+    rawSources: [".references/srd-5.2.1/Classes/Monk.md:7"],
+  },
+  {
+    rowId:
+      "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Monk.md:9"],
+  },
+  {
+    rowId: "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Monk.md:10"],
+  },
+  {
+    rowId: "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Monk.md:12"],
+  },
+  {
+    rowId: "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Monk.md:11"],
+  },
+].map((row) => ({
+  candidateUnitId: "class_monk",
+  className: "Monk",
+  levelBand: "level-1",
+  label: monkBuildSheetScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: "legal-build-sheet-owner",
+  tracerNeedles: monkBuildSheetScenarioNeedles,
+  helperNeedles: monkBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
+
 const fighterMulticlassBuildSheetScenarioLabel =
   "level1-sdk-raw-integration: Fighter multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet";
 const fighterMulticlassBuildSheetScenarioNeedles = [
@@ -1264,6 +1349,67 @@ const fighterMulticlassBuildSheetScenarioRows = [
   sourceProof: "legal-build-sheet-owner",
   tracerNeedles: fighterMulticlassBuildSheetScenarioNeedles,
   helperNeedles: fighterMulticlassBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
+
+const monkMulticlassBuildSheetScenarioLabel =
+  "level1-sdk-raw-integration: Monk multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet";
+const monkMulticlassBuildSheetScenarioNeedles = [
+  "finalizedFighterToMonkMulticlassBuild()",
+  "createLegalSourceCharacterSheet({",
+  'characterIdText: "character:l1-sdk-monk-multiclass-build-sheet"',
+  "monkMulticlassProgression",
+  "readClassCreationFacts(",
+  "characterBuildHitPoints(",
+  ".hitDice",
+  "characterBuildFeatureUnitIds(",
+  "featureGrants",
+  "characterBuildProficiencies(",
+  '"class_tool_proficiency_choice"',
+  "proficiencies.tools",
+  "multiclassProficiencies",
+  '{ kind: "none" }',
+];
+const monkMulticlassBuildSheetScenarioHelperNeedles = [
+  {
+    anchor: "const monkMulticlassProgression =",
+    needles: [
+      'startingClass: classUnitId("class_fighter")',
+      'classUnitId: classUnitId("class_monk")',
+      'hitPointRule: { tag: "fixedHigherLevelGain" }',
+    ],
+  },
+  {
+    anchor: "function finalizedFighterToMonkMulticlassBuild():",
+    needles: [
+      "createCharacterDraft({",
+      'draftId: characterDraftId("draft:l1-sdk-monk-multiclass-build-sheet")',
+      "progressionOptionId(monkMulticlassProgression)",
+      '"class_fighter"',
+      '"fighter_fighting_style"',
+      '"fighter_weapon_mastery"',
+      '"weapon_mastery_options"',
+      'testLoadoutHoleId("weapon_longsword", "weapon")',
+      "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
+      "return { draft: afterLoadout, build: result.build };",
+    ],
+  },
+];
+const monkMulticlassBuildSheetScenarioRows = [
+  {
+    rowId:
+      "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
+    rawSources: [".references/srd-5.2.1/Classes/Monk.md:23-27"],
+  },
+].map((row) => ({
+  candidateUnitId: "class_monk",
+  className: "Monk",
+  levelBand: "level-1",
+  label: monkMulticlassBuildSheetScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: "legal-build-sheet-owner",
+  tracerNeedles: monkMulticlassBuildSheetScenarioNeedles,
+  helperNeedles: monkMulticlassBuildSheetScenarioHelperNeedles,
   ...row,
 }));
 
@@ -1383,6 +1529,8 @@ const seededSdkScenarioRows = [
   ...druidMulticlassBuildSheetScenarioRows,
   ...fighterBuildSheetScenarioRows,
   ...fighterMulticlassBuildSheetScenarioRows,
+  ...monkBuildSheetScenarioRows,
+  ...monkMulticlassBuildSheetScenarioRows,
   {
     candidateUnitId: "druid_wild_shape",
     className: "Druid",
