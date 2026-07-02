@@ -61,12 +61,18 @@ import {
 import {
   characterSheetArmorClassState,
   characterSheetDruidWildShapeKnownForms,
+  characterSheetId,
   characterSheetResources,
   characterSheetPactSlots,
   characterSheetSpellSlots,
+  CHARACTER_SHEET_SHORT_REST_TICKS,
   completeLongRest,
+  completeShortRest,
+  createFreshCharacterSheet,
   finishLongRest,
+  finishShortRest,
   startLongRest,
+  startShortRest,
   type CharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -86,6 +92,7 @@ import {
   movementDeltaFeet,
   movementFeet,
   resourceCount,
+  spellSlotLevel,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import {
@@ -588,6 +595,25 @@ const paladinSpellAccessPreparedSpells = [
   blessSpellId,
   cureWoundsSpellId,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+const wizardArcaneRecoveryCantrips = [
+  fireBoltSpellId,
+  rayOfFrostSpellId,
+  shockingGraspSpellId,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+const wizardArcaneRecoverySpellbook = [
+  "detect_magic",
+  "feather_fall",
+  mageArmorSpellId,
+  magicMissileSpellId,
+  "sleep",
+  thunderwaveSpellId,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+const wizardArcaneRecoveryPreparedSpells = [
+  "detect_magic",
+  mageArmorSpellId,
+  magicMissileSpellId,
+  thunderwaveSpellId,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const druidMulticlassProgression = {
   startingClass: classUnitId("class_fighter"),
   advancements: [
@@ -921,6 +947,65 @@ const paladinSpellAccessDraftPlan = {
     ),
     legalUnitChoice("class_paladin", "equipment_purchase", "weapon_longsword"),
     legalLoadoutChoice("weapon_longsword", "weapon", "wielded_one_handed"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const wizardArcaneRecoveryDraftPlan = {
+  label: "Wizard Arcane Recovery sheet projection",
+  classUnitId: "class_wizard",
+  level: 1,
+  backgroundUnitId: "background_criminal",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 8,
+    dex: 14,
+    con: 13,
+    int: 15,
+    wis: 10,
+    cha: 12,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_wizard",
+      "class_skill_proficiency_choice",
+      "arcana",
+      "history",
+    ),
+    legalUnitChoice(
+      "class_wizard",
+      "wizard_cantrip_choices",
+      ...wizardArcaneRecoveryCantrips,
+    ),
+    legalUnitChoice(
+      "class_wizard",
+      "wizard_spellbook_choices",
+      ...wizardArcaneRecoverySpellbook,
+    ),
+    legalUnitChoice(
+      "class_wizard",
+      "wizard_prepared_spell_choices",
+      ...wizardArcaneRecoveryPreparedSpells,
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_ability_score_increase",
+      "two_and_one:int:con",
+    ),
+    legalUnitChoice(
+      "background_criminal",
+      "background_tool_choice",
+      "thieves_tools",
+    ),
+    legalUnitChoice("class_wizard", "class_equipment_choice", "option_b"),
+    legalUnitChoice(
+      "background_criminal",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalUnitChoice("class_wizard", "equipment_purchase", "weapon_dagger"),
+    legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed"),
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
@@ -2345,6 +2430,73 @@ describe("level 1 SDK RAW integration", () => {
         }),
       ]),
     );
+  });
+
+  test("Wizard Arcane Recovery projects the Short Rest Spell Slot recovery fact from legal creation to a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-wizard-arcane-recovery-sheet",
+      draftPlan: wizardArcaneRecoveryDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-wizard-arcane-recovery-sheet",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_wizard"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(characterBuildFeatureUnitIds(fixture.build, unitLibrary)).toContain(
+      "wizard_arcane_recovery",
+    );
+    expect(fixture.sheet.restFeatureUses).toEqual([]);
+    expect(fixture.sheet.resourceExpenditures).toEqual([]);
+
+    const sheetWithExpendedSlot = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId(
+          "character:l1-sdk-wizard-arcane-recovery-spent-slot",
+        ),
+        build: fixture.build,
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        unitLibrary,
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
+        ],
+      }),
+    );
+    const completedShortRest = requireRight(
+      finishShortRest({
+        rest: requireRight(startShortRest({ sheet: sheetWithExpendedSlot })),
+        restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
+      }),
+    );
+    const rested = requireRight(
+      completeShortRest({
+        completion: completedShortRest,
+        unitLibrary,
+        arcaneRecovery: {
+          refundSpellSlots: [
+            { spellLevel: spellSlotLevel(1), count: resourceCount(1) },
+          ],
+        },
+      }),
+    );
+    expect(characterSheetSpellSlots(rested)).toEqual([
+      { spellLevel: 1, count: 2, expended: 0 },
+    ]);
+    expect(rested.restFeatureUses).toEqual([
+      { tag: "arcaneRecovery", usedSinceLongRest: true },
+    ]);
   });
 
   test("Bard build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {

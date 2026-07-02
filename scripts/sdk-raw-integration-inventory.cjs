@@ -114,7 +114,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 210;
-const expectedLevelOneTwoSeedScenarioRows = 148;
+const expectedLevelOneTwoSeedScenarioRows = 149;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -2392,6 +2392,60 @@ const seededSdkScenarioRows = [
           'legalUnitChoice("class_paladin", "class_equipment_choice", "option_b")',
           'legalUnitChoice("class_paladin", "equipment_purchase", "weapon_longsword")',
           'legalLoadoutChoice("weapon_longsword", "weapon", "wielded_one_handed")',
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "wizard_arcane_recovery",
+    className: "Wizard",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Wizard Arcane Recovery projects the Short Rest Spell Slot recovery fact from legal creation to a fresh sheet",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    sourceProof: "legal-build-sheet-owner",
+    rawSources: [".references/srd-5.2.1/Classes/Wizard.md:98-102"],
+    rowId:
+      "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-wizard-arcane-recovery-sheet"',
+      "wizardArcaneRecoveryDraftPlan",
+      'battle: { tag: "withoutBattle" }',
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+      "fixture.sheet.build",
+      "characterBuildFeatureUnitIds(fixture.build, unitLibrary)",
+      '"wizard_arcane_recovery"',
+      "fixture.sheet.restFeatureUses",
+      "fixture.sheet.resourceExpenditures",
+      "sheetWithExpendedSlot",
+      "spellSlotExpenditures",
+      "startShortRest({ sheet: sheetWithExpendedSlot })",
+      "finishShortRest({",
+      "CHARACTER_SHEET_SHORT_REST_TICKS",
+      "completeShortRest({",
+      "arcaneRecovery",
+      "refundSpellSlots",
+      "characterSheetSpellSlots(rested)",
+      'tag: "arcaneRecovery"',
+      "usedSinceLongRest: true",
+    ],
+    helperNeedles: [
+      {
+        anchor: "const wizardArcaneRecoveryDraftPlan =",
+        needles: [
+          'classUnitId: "class_wizard"',
+          "level: 1",
+          '"class_skill_proficiency_choice"',
+          '"wizard_cantrip_choices"',
+          "...wizardArcaneRecoveryCantrips",
+          '"wizard_spellbook_choices"',
+          "...wizardArcaneRecoverySpellbook",
+          '"wizard_prepared_spell_choices"',
+          "...wizardArcaneRecoveryPreparedSpells",
+          'legalUnitChoice("class_wizard", "class_equipment_choice", "option_b")',
+          'legalUnitChoice("class_wizard", "equipment_purchase", "weapon_dagger")',
+          'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
         ],
       },
     ],

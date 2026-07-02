@@ -44976,6 +44976,13 @@
       "category": "class feature",
       "className": "Wizard",
       "concept": "Wizard Arcane Recovery",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Wizard Arcane Recovery projects the Short Rest Spell Slot recovery fact from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Wizard.md:98-102"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -45008,7 +45015,7 @@
       "proposedOwnerBoundary": "character-sheet",
       "rowId": "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 103,
         "lineStart": 98,
@@ -51511,12 +51518,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 4,
+        "groupCount": 3,
         "lane": "character-sheet-sdk",
         "ownerTaskIds": [
           "L12-SH08-SHEET-SDK-FIRST-SLICE"
         ],
-        "rowCount": 4,
+        "rowCount": 3,
         "rowFamily": "source-row",
         "taskFamily": "character-sheet-sdk"
       },
@@ -51567,7 +51574,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 95,
+        "groupCount": 96,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -51579,7 +51586,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 147,
+        "rowCount": 148,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51662,16 +51669,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 95,
+        "groupCount": 96,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 147,
+        "rowCount": 148,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 69,
+        "groupCount": 68,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51682,7 +51689,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 158,
+        "rowCount": 157,
         "rowFamily": "source-row"
       },
       {
@@ -54195,6 +54202,25 @@
       "sourceBuildPath": "legal-creation-draft-finalize",
       "usesRealSheetBattleHandoff": true,
       "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "wizard_arcane_recovery",
+      "classification": "legal build-sheet owner proof",
+      "className": "Wizard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Wizard Arcane Recovery projects the Short Rest Spell Slot recovery fact from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+      "rowKey": "level-1:Wizard:wizard_arcane_recovery",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
     },
     {
       "candidateUnitId": "acid_splash",
@@ -60397,9 +60423,9 @@
       "explicit-closure-needed": 48,
       "explicit-closure-present": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 351,
+      "sdk-scenario-needed": 350,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 153,
+      "seed-scenario-present": 154,
       "table-only-closure-needed": 15
     },
     "levelOneFourRows": 632,
@@ -60410,11 +60436,11 @@
       "build-battle-sdk": 7,
       "build-sheet-sdk": 7,
       "character-creation-sdk": 10,
-      "character-sheet-sdk": 4,
+      "character-sheet-sdk": 3,
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 95,
+      "seed-present": 96,
       "sheet-spell-access-sdk": 3,
       "spell-effect-owner-review": 20,
       "table-only-closure": 2
@@ -60423,8 +60449,8 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 20,
       "explicit-closure-row": 12,
-      "seed-row": 95,
-      "source-row": 69,
+      "seed-row": 96,
+      "source-row": 68,
       "table-only-closure-row": 2
     },
     "levelOneTwoCampaignRows": 400,
@@ -60434,11 +60460,11 @@
       "build-battle-sdk": 10,
       "build-sheet-sdk": 50,
       "character-creation-sdk": 10,
-      "character-sheet-sdk": 4,
+      "character-sheet-sdk": 3,
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 147,
+      "seed-present": 148,
       "sheet-spell-access-sdk": 3,
       "spell-effect-owner-review": 67,
       "table-only-closure": 4
@@ -60447,22 +60473,22 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 67,
       "explicit-closure-row": 12,
-      "seed-row": 147,
-      "source-row": 158,
+      "seed-row": 148,
+      "source-row": 157,
       "table-only-closure-row": 4
     },
-    "levelOneTwoSeedMigrationAuditRows": 148,
+    "levelOneTwoSeedMigrationAuditRows": 149,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 85,
-      "legal build-sheet owner proof": 58,
+      "legal build-sheet owner proof": 59,
       "legal creation owner proof": 5
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 63,
+      "not-real-sheet-battle": 64,
       "real-sheet-battle": 85
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 148
+      "legal-creation-draft-finalize": 149
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 85,
     "scenarioGroups": 414,
@@ -60472,14 +60498,14 @@
       "build-battle-sdk": 7,
       "build-sheet-sdk": 19,
       "character-creation-sdk": 24,
-      "character-sheet-sdk": 4,
+      "character-sheet-sdk": 3,
       "explicit-closure": 48,
       "explicit-closure-present": 12,
       "feature-owner-review": 4,
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 8,
       "owner-review": 6,
-      "seed-present": 101,
+      "seed-present": 102,
       "sheet-spell-access-sdk": 8,
       "spell-effect-owner-review": 44,
       "table-only-closure": 6
@@ -64607,61 +64633,6 @@
     },
     {
       "candidateUnitIds": [
-        "wizard_arcane_recovery"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-03:character-sheet-sdk:wizard-arcane-recovery",
-      "lane": "character-sheet-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-sheet"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"character-sheet-sdk\",\"wizard_arcane_recovery\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Wizard.md:98"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "wizard_arcane_recovery",
-          "className": "Wizard",
-          "concept": "Wizard Arcane Recovery",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-sheet",
-          "rowId": "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 103,
-            "lineStart": 98,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Wizard Arcane Recovery"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create the sheet through the build path and assert the SRD-facing resource, rest, recovery, derived stat, or persistent sheet projection at the sheet owner.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
         "wizard_ritual_adept"
       ],
       "categories": [
@@ -67632,6 +67603,62 @@
       ],
       "sampleConcepts": [
         "Warlock Pact Magic"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "wizard_arcane_recovery"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-wizard-wizard-arcane-recovery",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-sheet"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Wizard:wizard_arcane_recovery\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Wizard.md:98",
+        ".references/srd-5.2.1/Classes/Wizard.md:98-102"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "wizard_arcane_recovery",
+          "className": "Wizard",
+          "concept": "Wizard Arcane Recovery",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-sheet",
+          "rowId": "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 103,
+            "lineStart": 98,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Wizard Arcane Recovery"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -94073,6 +94100,63 @@
         "count: resourceCount(5)",
         "expended: resourceCount(0)",
         "kind: \"charge_pool\""
+      ]
+    },
+    {
+      "candidateUnitId": "wizard_arcane_recovery",
+      "className": "Wizard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Wizard Arcane Recovery projects the Short Rest Spell Slot recovery fact from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Wizard.md:98-102"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const wizardArcaneRecoveryDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_wizard\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"wizard_cantrip_choices\"",
+            "...wizardArcaneRecoveryCantrips",
+            "\"wizard_spellbook_choices\"",
+            "...wizardArcaneRecoverySpellbook",
+            "\"wizard_prepared_spell_choices\"",
+            "...wizardArcaneRecoveryPreparedSpells",
+            "legalUnitChoice(\"class_wizard\", \"class_equipment_choice\", \"option_b\")",
+            "legalUnitChoice(\"class_wizard\", \"equipment_purchase\", \"weapon_dagger\")",
+            "legalLoadoutChoice(\"weapon_dagger\", \"weapon\", \"wielded_one_handed\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+      "rowKey": "level-1:Wizard:wizard_arcane_recovery",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-wizard-arcane-recovery-sheet\"",
+        "wizardArcaneRecoveryDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+        "fixture.sheet.build",
+        "characterBuildFeatureUnitIds(fixture.build, unitLibrary)",
+        "\"wizard_arcane_recovery\"",
+        "fixture.sheet.restFeatureUses",
+        "fixture.sheet.resourceExpenditures",
+        "sheetWithExpendedSlot",
+        "spellSlotExpenditures",
+        "startShortRest({ sheet: sheetWithExpendedSlot })",
+        "finishShortRest({",
+        "CHARACTER_SHEET_SHORT_REST_TICKS",
+        "completeShortRest({",
+        "arcaneRecovery",
+        "refundSpellSlots",
+        "characterSheetSpellSlots(rested)",
+        "tag: \"arcaneRecovery\"",
+        "usedSinceLongRest: true"
       ]
     },
     {
