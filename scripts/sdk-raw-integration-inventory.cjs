@@ -108,7 +108,6 @@ const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 210;
 const expectedLevelOneTwoSeedScenarioRows = 80;
 const handBuiltSourceSeedRowIds = new Set([
-  "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
   "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands",
 ]);
 
@@ -582,7 +581,39 @@ const seededSdkScenarioRows = [
     path: paths.seedScenarioFiles.level1BattleFeatures,
     rowId:
       "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
-    tracerNeedles: ["sorcererInnateSorceryUnitId", "sorcerousBurstSpellId"],
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-innate-sorcery"',
+      "sorcererInnateSorceryDraftPlan",
+      'tag: "withBattle"',
+      'battleIdText: "battle:l1-sdk-innate-sorcery"',
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+      "fixture.sheet.build",
+      "sorcererInnateSorceryUnitId",
+      "sorcerousBurstSpellId",
+    ],
+    helperNeedles: [
+      {
+        anchor: "const sorcererInnateSorceryDraftPlan =",
+        needles: [
+          'label: "Sorcerer Innate Sorcery battle feature"',
+          'classUnitId: "class_sorcerer"',
+          'backgroundUnitId: "background_acolyte"',
+          "legalUnitChoice(",
+          '"class_sorcerer"',
+          '"class_cantrip_choices"',
+          "sorcerousBurstSpellId",
+          '"class_prepared_spell_choices"',
+          "burningHandsSpellId",
+          '"background_acolyte"',
+          '"background_ability_score_increase"',
+          '"two_and_one:int:cha"',
+          "legalLoadoutChoice(",
+          '"weapon_dagger"',
+          '"wielded_one_handed"',
+        ],
+      },
+    ],
   },
   {
     candidateUnitId: "class_warlock",
@@ -6018,10 +6049,18 @@ function buildLevelOneTwoSeedMigrationAudit(seedScenarioSources, miningRows) {
     .filter((seed) => levelOneTwoSourceHarnessBands.has(seed.levelBand))
     .map((seed) => {
       const evidenceText = seedScenarioEvidenceText(seed, seedScenarioSources);
+      const seedSourceText = seedScenarioSources.get(seed.path);
+      const scenarioText =
+        seedSourceText === undefined
+          ? ""
+          : (seedScenarioSourceText(seedSourceText, seedScenarioTitle(seed)) ??
+            "");
       const usesRealSheetBattleHandoff =
         seed.sourceProof === legalBuildBattleHandoffSourceProof ||
         (evidenceText.includes("battleFromSheets(") &&
-          evidenceText.includes("characterSheet({"));
+          evidenceText.includes("characterSheet({")) ||
+        (scenarioText.includes("createLegalSourceCharacterFixture({") &&
+          scenarioText.includes('tag: "withBattle"'));
       const classification = seedMigrationClassification(
         seed,
         usesRealSheetBattleHandoff,

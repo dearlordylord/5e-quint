@@ -51910,21 +51910,21 @@
     },
     {
       "candidateUnitId": "sorcerer_innate_sorcery",
-      "classification": "hand-built build needing migration",
+      "classification": "already legal creation path",
       "className": "Sorcerer",
       "existingSdkScenario": {
         "label": "level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
       "levelBand": "level-1",
-      "nextAction": "Create a follow-up migration task to replace the direct CharacterBuild source helper with the legal source fixture seam.",
-      "reason": "The represented source character still comes from a direct CharacterBuild helper, so this seed is legacy focused coverage until migrated.",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
       "rowId": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
       "rowKey": "level-1:Sorcerer:sorcerer_innate_sorcery",
       "rowKind": "class-feature-grant",
-      "sourceBuildPath": "direct-character-build",
+      "sourceBuildPath": "legal-creation-draft-finalize",
       "usesRealSheetBattleHandoff": true,
-      "wholeWidthSourceLifecycleProof": false
+      "wholeWidthSourceLifecycleProof": true
     },
     {
       "candidateUnitId": "acid_splash",
@@ -58503,8 +58503,8 @@
     },
     "levelOneTwoSeedMigrationAuditRows": 80,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 68,
-      "hand-built build needing migration": 2,
+      "already legal creation path": 69,
+      "hand-built build needing migration": 1,
       "legal build-sheet owner proof": 9,
       "legal creation owner proof": 1
     },
@@ -58513,10 +58513,10 @@
       "real-sheet-battle": 70
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "direct-character-build": 2,
-      "legal-creation-draft-finalize": 78
+      "direct-character-build": 1,
+      "legal-creation-draft-finalize": 79
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 68,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 69,
     "scenarioGroups": 414,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 20,
@@ -88527,11 +88527,39 @@
         "label": "level1-sdk-raw-integration: Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses",
         "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
       },
-      "helperNeedles": [],
+      "helperNeedles": [
+        {
+          "anchor": "const sorcererInnateSorceryDraftPlan =",
+          "needles": [
+            "label: \"Sorcerer Innate Sorcery battle feature\"",
+            "classUnitId: \"class_sorcerer\"",
+            "backgroundUnitId: \"background_acolyte\"",
+            "legalUnitChoice(",
+            "\"class_sorcerer\"",
+            "\"class_cantrip_choices\"",
+            "sorcerousBurstSpellId",
+            "\"class_prepared_spell_choices\"",
+            "burningHandsSpellId",
+            "\"background_acolyte\"",
+            "\"background_ability_score_increase\"",
+            "\"two_and_one:int:cha\"",
+            "legalLoadoutChoice(",
+            "\"weapon_dagger\"",
+            "\"wielded_one_handed\""
+          ]
+        }
+      ],
       "levelBand": "level-1",
       "rowId": "srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery",
       "rowKey": "level-1:Sorcerer:sorcerer_innate_sorcery",
       "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-innate-sorcery\"",
+        "sorcererInnateSorceryDraftPlan",
+        "tag: \"withBattle\"",
+        "battleIdText: \"battle:l1-sdk-innate-sorcery\"",
+        "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+        "fixture.sheet.build",
         "sorcererInnateSorceryUnitId",
         "sorcerousBurstSpellId"
       ]

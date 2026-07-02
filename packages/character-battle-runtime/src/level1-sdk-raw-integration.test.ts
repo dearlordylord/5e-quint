@@ -679,6 +679,64 @@ const rogueSneakAttackDraftPlan = {
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
+const sorcererInnateSorceryDraftPlan = {
+  label: "Sorcerer Innate Sorcery battle feature",
+  classUnitId: "class_sorcerer",
+  level: 1,
+  backgroundUnitId: "background_acolyte",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 8,
+    dex: 14,
+    con: 13,
+    int: 10,
+    wis: 12,
+    cha: 15,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_sorcerer",
+      "class_skill_proficiency_choice",
+      "arcana",
+      "persuasion",
+    ),
+    legalUnitChoice(
+      "class_sorcerer",
+      "class_cantrip_choices",
+      fireBoltSpellId,
+      "light",
+      shockingGraspSpellId,
+      sorcerousBurstSpellId,
+    ),
+    legalUnitChoice(
+      "class_sorcerer",
+      "class_prepared_spell_choices",
+      burningHandsSpellId,
+      "detect_magic",
+    ),
+    legalUnitChoice(
+      "background_acolyte",
+      "background_ability_score_increase",
+      "two_and_one:int:cha",
+    ),
+    legalUnitChoice(
+      "background_acolyte",
+      "background_tool_choice",
+      "calligraphers_supplies",
+    ),
+    legalUnitChoice("class_sorcerer", "class_equipment_choice", "option_b"),
+    legalUnitChoice(
+      "background_acolyte",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalUnitChoice("class_sorcerer", "equipment_purchase", "weapon_dagger"),
+    legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 describe("level 1 SDK RAW integration", () => {
   test("Barbarian build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {
     const fixture = createLegalSourceCharacterFixture({
@@ -1595,53 +1653,35 @@ describe("level 1 SDK RAW integration", () => {
   });
 
   test("Sorcerer Innate Sorcery spends a use for one minute and projects Sorcerer spell bonuses", () => {
-    const state = battleFromSheets({
-      battleIdText: "battle:l1-sdk-innate-sorcery",
-      characters: [
-        characterSheet({
-          characterIdText: "character:l1-sdk-innate-sorcery",
-          build: levelOneSingleClassBuild({
-            classUnitId: "class_sorcerer",
-            abilityScores: {
-              str: 8,
-              dex: 14,
-              con: 14,
-              int: 10,
-              wis: 10,
-              cha: 16,
-            },
-            spellcasting: {
-              sources: [
-                {
-                  sourceUnitId: "class_sorcerer",
-                  spellcastingAbility: "cha",
-                  cantrips: [
-                    "fire_bolt",
-                    "light",
-                    "shocking_grasp",
-                    sorcerousBurstSpellId,
-                  ],
-                  spellbook: [],
-                  preparedSpells: ["burning_hands", "detect_magic"],
-                  spellcastingFocuses: ["arcane_focus"],
-                },
-              ],
-              slotPools: {
-                spellcasting: {
-                  kind: "spellcasting",
-                  slots: [{ spellLevel: 1, count: 2 }],
-                },
-              },
-            },
-          }),
-          combatantId: sorcererId,
-          initiative: 20,
-        }),
-      ],
-      monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
-      ],
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-innate-sorcery",
+      draftPlan: sorcererInnateSorceryDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-innate-sorcery",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l1-sdk-innate-sorcery",
+        combatantId: sorcererId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      },
     });
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.sheet.build).toEqual(fixture.build);
+
+    const state = fixture.state;
     const act = unitFeatureActForUnitId(
       state,
       sorcererId,
