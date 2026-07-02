@@ -2310,6 +2310,43 @@ describe("level 1 SDK RAW integration", () => {
     expect(characterSheetPactSlots(fixture.sheet)).toBeUndefined();
   });
 
+  test("Paladin Lay On Hands projects the level-1 healing pool from legal creation to a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-paladin-lay-on-hands-sheet",
+      draftPlan: paladinSpellAccessDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-paladin-lay-on-hands-sheet",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_paladin"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(fixture.sheet.resourceExpenditures).toEqual([]);
+    expect(
+      requireRight(characterSheetResources(fixture.sheet, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          tag: "layOnHandsHealingPool",
+          unitId: "paladin_lay_on_hands",
+          count: resourceCount(5),
+          expended: resourceCount(0),
+          resource: expect.objectContaining({ kind: "charge_pool" }),
+        }),
+      ]),
+    );
+  });
+
   test("Bard build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {
     const fixture = createLegalSourceCharacterFixture({
       draftIdText: "draft:l1-sdk-bard-build-sheet",

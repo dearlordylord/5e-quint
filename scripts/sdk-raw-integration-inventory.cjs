@@ -114,7 +114,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 210;
-const expectedLevelOneTwoSeedScenarioRows = 147;
+const expectedLevelOneTwoSeedScenarioRows = 148;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -2338,6 +2338,50 @@ const seededSdkScenarioRows = [
         anchor: "const paladinSpellAccessDraftPlan =",
         needles: [
           'label: "Paladin Spellcasting spell access"',
+          'classUnitId: "class_paladin"',
+          "level: 1",
+          '"class_skill_proficiency_choice"',
+          '"class_prepared_spell_choices"',
+          "...paladinSpellAccessPreparedSpells",
+          '"paladin_weapon_mastery"',
+          '"weapon_mastery_options"',
+          'legalUnitChoice("class_paladin", "class_equipment_choice", "option_b")',
+          'legalUnitChoice("class_paladin", "equipment_purchase", "weapon_longsword")',
+          'legalLoadoutChoice("weapon_longsword", "weapon", "wielded_one_handed")',
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "paladin_lay_on_hands",
+    className: "Paladin",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Paladin Lay On Hands projects the level-1 healing pool from legal creation to a fresh sheet",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    sourceProof: "legal-build-sheet-owner",
+    rawSources: [".references/srd-5.2.1/Classes/Paladin.md:58-65"],
+    rowId:
+      "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-paladin-lay-on-hands-sheet"',
+      "paladinSpellAccessDraftPlan",
+      'battle: { tag: "withoutBattle" }',
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+      "fixture.sheet.build",
+      "fixture.sheet.resourceExpenditures",
+      "characterSheetResources(fixture.sheet, unitLibrary)",
+      'tag: "layOnHandsHealingPool"',
+      'unitId: "paladin_lay_on_hands"',
+      "count: resourceCount(5)",
+      "expended: resourceCount(0)",
+      'kind: "charge_pool"',
+    ],
+    helperNeedles: [
+      {
+        anchor: "const paladinSpellAccessDraftPlan =",
+        needles: [
           'classUnitId: "class_paladin"',
           "level: 1",
           '"class_skill_proficiency_choice"',

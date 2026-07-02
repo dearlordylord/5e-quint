@@ -30355,6 +30355,13 @@
       "category": "class feature",
       "className": "Paladin",
       "concept": "Paladin Lay On Hands",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Paladin Lay On Hands projects the level-1 healing pool from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Paladin.md:58-65"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -30387,7 +30394,7 @@
       "proposedOwnerBoundary": "character-sheet",
       "rowId": "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 65,
         "lineStart": 58,
@@ -51504,12 +51511,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 5,
+        "groupCount": 4,
         "lane": "character-sheet-sdk",
         "ownerTaskIds": [
           "L12-SH08-SHEET-SDK-FIRST-SLICE"
         ],
-        "rowCount": 5,
+        "rowCount": 4,
         "rowFamily": "source-row",
         "taskFamily": "character-sheet-sdk"
       },
@@ -51560,7 +51567,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 94,
+        "groupCount": 95,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -51572,7 +51579,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 146,
+        "rowCount": 147,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51655,16 +51662,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 94,
+        "groupCount": 95,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 146,
+        "rowCount": 147,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 70,
+        "groupCount": 69,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51675,7 +51682,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 159,
+        "rowCount": 158,
         "rowFamily": "source-row"
       },
       {
@@ -53568,6 +53575,25 @@
       "rowId": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
       "rowKey": "level-1:Monk:class_monk",
       "rowKind": "multiclass-entry",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "paladin_lay_on_hands",
+      "classification": "legal build-sheet owner proof",
+      "className": "Paladin",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Paladin Lay On Hands projects the level-1 healing pool from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+      "rowKey": "level-1:Paladin:paladin_lay_on_hands",
+      "rowKind": "class-feature-grant",
       "sourceBuildPath": "legal-creation-draft-finalize",
       "sourceProof": "legal-build-sheet-owner",
       "usesRealSheetBattleHandoff": false,
@@ -60371,9 +60397,9 @@
       "explicit-closure-needed": 48,
       "explicit-closure-present": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 352,
+      "sdk-scenario-needed": 351,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 152,
+      "seed-scenario-present": 153,
       "table-only-closure-needed": 15
     },
     "levelOneFourRows": 632,
@@ -60384,11 +60410,11 @@
       "build-battle-sdk": 7,
       "build-sheet-sdk": 7,
       "character-creation-sdk": 10,
-      "character-sheet-sdk": 5,
+      "character-sheet-sdk": 4,
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 94,
+      "seed-present": 95,
       "sheet-spell-access-sdk": 3,
       "spell-effect-owner-review": 20,
       "table-only-closure": 2
@@ -60397,8 +60423,8 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 20,
       "explicit-closure-row": 12,
-      "seed-row": 94,
-      "source-row": 70,
+      "seed-row": 95,
+      "source-row": 69,
       "table-only-closure-row": 2
     },
     "levelOneTwoCampaignRows": 400,
@@ -60408,11 +60434,11 @@
       "build-battle-sdk": 10,
       "build-sheet-sdk": 50,
       "character-creation-sdk": 10,
-      "character-sheet-sdk": 5,
+      "character-sheet-sdk": 4,
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 146,
+      "seed-present": 147,
       "sheet-spell-access-sdk": 3,
       "spell-effect-owner-review": 67,
       "table-only-closure": 4
@@ -60421,22 +60447,22 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 67,
       "explicit-closure-row": 12,
-      "seed-row": 146,
-      "source-row": 159,
+      "seed-row": 147,
+      "source-row": 158,
       "table-only-closure-row": 4
     },
-    "levelOneTwoSeedMigrationAuditRows": 147,
+    "levelOneTwoSeedMigrationAuditRows": 148,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 85,
-      "legal build-sheet owner proof": 57,
+      "legal build-sheet owner proof": 58,
       "legal creation owner proof": 5
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 62,
+      "not-real-sheet-battle": 63,
       "real-sheet-battle": 85
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 147
+      "legal-creation-draft-finalize": 148
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 85,
     "scenarioGroups": 414,
@@ -60446,14 +60472,14 @@
       "build-battle-sdk": 7,
       "build-sheet-sdk": 19,
       "character-creation-sdk": 24,
-      "character-sheet-sdk": 5,
+      "character-sheet-sdk": 4,
       "explicit-closure": 48,
       "explicit-closure-present": 12,
       "feature-owner-review": 4,
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 8,
       "owner-review": 6,
-      "seed-present": 100,
+      "seed-present": 101,
       "sheet-spell-access-sdk": 8,
       "spell-effect-owner-review": 44,
       "table-only-closure": 6
@@ -64581,61 +64607,6 @@
     },
     {
       "candidateUnitIds": [
-        "paladin_lay_on_hands"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Paladin"
-      ],
-      "groupId": "l15-sdk-raw-03:character-sheet-sdk:paladin-lay-on-hands",
-      "lane": "character-sheet-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-sheet"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"character-sheet-sdk\",\"paladin_lay_on_hands\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Paladin.md:58"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "paladin_lay_on_hands",
-          "className": "Paladin",
-          "concept": "Paladin Lay On Hands",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-sheet",
-          "rowId": "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 65,
-            "lineStart": 58,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Paladin Lay On Hands"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create the sheet through the build path and assert the SRD-facing resource, rest, recovery, derived stat, or persistent sheet projection at the sheet owner.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
         "wizard_arcane_recovery"
       ],
       "categories": [
@@ -67381,6 +67352,62 @@
       ],
       "sampleConcepts": [
         "Paladin Spellcasting"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "paladin_lay_on_hands"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Paladin"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-paladin-paladin-lay-on-hands",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-sheet"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Paladin:paladin_lay_on_hands\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Paladin.md:58",
+        ".references/srd-5.2.1/Classes/Paladin.md:58-65"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "paladin_lay_on_hands",
+          "className": "Paladin",
+          "concept": "Paladin Lay On Hands",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-sheet",
+          "rowId": "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 65,
+            "lineStart": 58,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Paladin Lay On Hands"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -93999,6 +94026,53 @@
         "slotPools",
         "characterSheetSpellSlots(fixture.sheet)",
         "characterSheetPactSlots(fixture.sheet)"
+      ]
+    },
+    {
+      "candidateUnitId": "paladin_lay_on_hands",
+      "className": "Paladin",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Paladin Lay On Hands projects the level-1 healing pool from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Paladin.md:58-65"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const paladinSpellAccessDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_paladin\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_prepared_spell_choices\"",
+            "...paladinSpellAccessPreparedSpells",
+            "\"paladin_weapon_mastery\"",
+            "\"weapon_mastery_options\"",
+            "legalUnitChoice(\"class_paladin\", \"class_equipment_choice\", \"option_b\")",
+            "legalUnitChoice(\"class_paladin\", \"equipment_purchase\", \"weapon_longsword\")",
+            "legalLoadoutChoice(\"weapon_longsword\", \"weapon\", \"wielded_one_handed\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+      "rowKey": "level-1:Paladin:paladin_lay_on_hands",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-paladin-lay-on-hands-sheet\"",
+        "paladinSpellAccessDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+        "fixture.sheet.build",
+        "fixture.sheet.resourceExpenditures",
+        "characterSheetResources(fixture.sheet, unitLibrary)",
+        "tag: \"layOnHandsHealingPool\"",
+        "unitId: \"paladin_lay_on_hands\"",
+        "count: resourceCount(5)",
+        "expended: resourceCount(0)",
+        "kind: \"charge_pool\""
       ]
     },
     {
