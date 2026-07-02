@@ -106,7 +106,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 206;
-const expectedLevelOneTwoSeedScenarioRows = 111;
+const expectedLevelOneTwoSeedScenarioRows = 112;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -354,6 +354,39 @@ const barbarianUnarmoredDefenseSheetScenarioNeedles = [
   'abilityModifiers: ["dex", "con"]',
   "currentArmorClass(armorClassState)",
   "toBe(16)",
+];
+const monkUnarmoredDefenseSheetScenarioLabel =
+  "level1-sdk-raw-integration: Monk Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet";
+const monkUnarmoredDefenseSheetScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-monk-unarmored-defense-sheet"',
+  "monkUnarmoredDefenseDraftPlan",
+  'battle: { tag: "withoutBattle" }',
+  "fixture.sheet.build",
+  "fixture.sheet.build.abilityScores",
+  "fixture.sheet.build.equipment.loadout.armor",
+  "fixture.sheet.build.equipment.loadout.shield",
+  "characterSheetArmorClassState({",
+  "armorClassState.abilityModifiers.dex",
+  "armorClassState.abilityModifiers.wis",
+  'source: "unarmored_defense"',
+  'sourceUnitId: "monk_unarmored_defense"',
+  'abilityModifiers: ["dex", "wis"]',
+  "currentArmorClass(armorClassState)",
+  "toBe(15)",
+];
+const monkUnarmoredDefenseSheetScenarioHelperNeedles = [
+  {
+    anchor: "const monkUnarmoredDefenseDraftPlan =",
+    needles: [
+      "monkMartialArtsDraftPlan",
+      'label: "Monk Unarmored Defense sheet projection"',
+      "sourcePreferences:",
+      "legalLoadoutChoice",
+      '"weapon_dagger"',
+      '"wielded_one_handed"',
+    ],
+  },
 ];
 const barbarianBuildSheetScenarioRows = [
   {
@@ -1085,6 +1118,19 @@ const seededSdkScenarioRows = [
     sourceProof: "legal-build-sheet-owner",
     tracerNeedles: barbarianUnarmoredDefenseSheetScenarioNeedles,
     helperNeedles: barbarianBuildSheetScenarioHelperNeedles,
+  },
+  {
+    candidateUnitId: "monk_unarmored_defense",
+    className: "Monk",
+    levelBand: "level-1",
+    label: monkUnarmoredDefenseSheetScenarioLabel,
+    path: barbarianBuildSheetScenarioPath,
+    rowId:
+      "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+    rawSources: [".references/srd-5.2.1/Classes/Monk.md:72-74"],
+    sourceProof: "legal-build-sheet-owner",
+    tracerNeedles: monkUnarmoredDefenseSheetScenarioNeedles,
+    helperNeedles: monkUnarmoredDefenseSheetScenarioHelperNeedles,
   },
   {
     candidateUnitId: "barbarian_rage",

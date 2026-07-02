@@ -841,6 +841,15 @@ const monkMartialArtsDraftPlan = {
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
+const monkUnarmoredDefenseDraftPlan = {
+  ...monkMartialArtsDraftPlan,
+  label: "Monk Unarmored Defense sheet projection",
+  sourcePreferences: [
+    ...monkMartialArtsDraftPlan.sourcePreferences,
+    legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 const rogueSneakAttackDraftPlan = {
   label: "Rogue Sneak Attack battle feature",
   classUnitId: "class_rogue",
@@ -1148,6 +1157,45 @@ describe("level 1 SDK RAW integration", () => {
       sourceUnitId: "equipment_shield",
     });
     expect(currentArmorClass(armorClassState)).toBe(16);
+  });
+
+  test("Monk Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-monk-unarmored-defense-sheet",
+      draftPlan: monkUnarmoredDefenseDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-monk-unarmored-defense-sheet",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(fixture.sheet.build.abilityScores).toMatchObject({
+      dex: 16,
+      wis: 15,
+    });
+    expect(fixture.sheet.build.equipment.loadout.armor).toBeUndefined();
+    expect(fixture.sheet.build.equipment.loadout.shield).toBeUndefined();
+
+    const armorClassState = requireRight(
+      characterSheetArmorClassState({
+        build: fixture.sheet.build,
+        unitLibrary,
+      }),
+    );
+    expect(armorClassState.abilityModifiers.dex).toBe(abilityModifier(3));
+    expect(armorClassState.abilityModifiers.wis).toBe(abilityModifier(2));
+    expect(armorClassState.base).toMatchObject({
+      kind: "ability_sum",
+      source: "unarmored_defense",
+      sourceUnitId: "monk_unarmored_defense",
+      abilityModifiers: ["dex", "wis"],
+    });
+    expect(armorClassState.bonuses).toEqual([]);
+    expect(currentArmorClass(armorClassState)).toBe(15);
   });
 
   test("Barbarian Danger Sense battle feature projects from legal level-2 sheet into Dexterity Saving Throw holes", () => {

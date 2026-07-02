@@ -28688,6 +28688,13 @@
       "category": "class feature",
       "className": "Monk",
       "concept": "Monk Unarmored Defense",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:72-74"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -28720,7 +28727,7 @@
       "proposedOwnerBoundary": "character-sheet",
       "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 75,
         "lineStart": 72,
@@ -51111,12 +51118,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 6,
+        "groupCount": 5,
         "lane": "character-sheet-sdk",
         "ownerTaskIds": [
           "L12-SH08-SHEET-SDK-FIRST-SLICE"
         ],
-        "rowCount": 6,
+        "rowCount": 5,
         "rowFamily": "source-row",
         "taskFamily": "character-sheet-sdk"
       },
@@ -51153,7 +51160,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 77,
+        "groupCount": 78,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -51165,7 +51172,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 111,
+        "rowCount": 112,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51239,16 +51246,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 77,
+        "groupCount": 78,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 111,
+        "rowCount": 112,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 83,
+        "groupCount": 82,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51259,7 +51266,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 194,
+        "rowCount": 193,
         "rowFamily": "source-row"
       },
       {
@@ -52569,6 +52576,25 @@
       "sourceProof": "legal-build-battle-handoff",
       "usesRealSheetBattleHandoff": true,
       "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "monk_unarmored_defense",
+      "classification": "legal build-sheet owner proof",
+      "className": "Monk",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+      "rowKey": "level-1:Monk:monk_unarmored_defense",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
     },
     {
       "candidateUnitId": "bless",
@@ -59258,9 +59284,9 @@
       "closure-review-needed": 142,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 387,
+      "sdk-scenario-needed": 386,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 117,
+      "seed-scenario-present": 118,
       "table-only-closure-needed": 13
     },
     "levelOneFourRows": 632,
@@ -59271,10 +59297,10 @@
       "build-battle-sdk": 9,
       "build-sheet-sdk": 9,
       "character-creation-sdk": 12,
-      "character-sheet-sdk": 6,
+      "character-sheet-sdk": 5,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 77,
+      "seed-present": 78,
       "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 21,
       "table-only-closure": 1
@@ -59282,8 +59308,8 @@
     "levelOneTwoCampaignGroupsByRowFamily": {
       "closure-review-row": 21,
       "explicit-closure-row": 24,
-      "seed-row": 77,
-      "source-row": 83,
+      "seed-row": 78,
+      "source-row": 82,
       "table-only-closure-row": 1
     },
     "levelOneTwoCampaignRows": 400,
@@ -59293,10 +59319,10 @@
       "build-battle-sdk": 13,
       "build-sheet-sdk": 67,
       "character-creation-sdk": 12,
-      "character-sheet-sdk": 6,
+      "character-sheet-sdk": 5,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 111,
+      "seed-present": 112,
       "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 69,
       "table-only-closure": 2
@@ -59304,22 +59330,22 @@
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 69,
       "explicit-closure-row": 24,
-      "seed-row": 111,
-      "source-row": 194,
+      "seed-row": 112,
+      "source-row": 193,
       "table-only-closure-row": 2
     },
-    "levelOneTwoSeedMigrationAuditRows": 111,
+    "levelOneTwoSeedMigrationAuditRows": 112,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 72,
-      "legal build-sheet owner proof": 36,
+      "legal build-sheet owner proof": 37,
       "legal creation owner proof": 3
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 39,
+      "not-real-sheet-battle": 40,
       "real-sheet-battle": 72
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 111
+      "legal-creation-draft-finalize": 112
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 72,
     "scenarioGroups": 410,
@@ -59329,13 +59355,13 @@
       "build-battle-sdk": 9,
       "build-sheet-sdk": 21,
       "character-creation-sdk": 26,
-      "character-sheet-sdk": 6,
+      "character-sheet-sdk": 5,
       "explicit-closure": 60,
       "feature-owner-review": 4,
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 83,
+      "seed-present": 84,
       "sheet-spell-access-sdk": 10,
       "spell-effect-owner-review": 45,
       "table-only-closure": 5
@@ -64291,61 +64317,6 @@
     },
     {
       "candidateUnitIds": [
-        "monk_unarmored_defense"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Monk"
-      ],
-      "groupId": "l15-sdk-raw-03:character-sheet-sdk:monk-unarmored-defense",
-      "lane": "character-sheet-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-sheet"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"character-sheet-sdk\",\"monk_unarmored_defense\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Monk.md:72"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "monk_unarmored_defense",
-          "className": "Monk",
-          "concept": "Monk Unarmored Defense",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-sheet",
-          "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 75,
-            "lineStart": 72,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Monk Unarmored Defense"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create the sheet through the build path and assert the SRD-facing resource, rest, recovery, derived stat, or persistent sheet projection at the sheet owner.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
         "paladin_lay_on_hands"
       ],
       "categories": [
@@ -66433,6 +66404,62 @@
       ],
       "sampleConcepts": [
         "Monk Martial Arts"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "monk_unarmored_defense"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Monk"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-monk-monk-unarmored-defense",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-sheet"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Monk:monk_unarmored_defense\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Monk.md:72",
+        ".references/srd-5.2.1/Classes/Monk.md:72-74"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "monk_unarmored_defense",
+          "className": "Monk",
+          "concept": "Monk Unarmored Defense",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-sheet",
+          "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 75,
+            "lineStart": 72,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Monk Unarmored Defense"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -90663,6 +90690,52 @@
         "abilityModifiers: [\"dex\", \"con\"]",
         "currentArmorClass(armorClassState)",
         "toBe(16)"
+      ]
+    },
+    {
+      "candidateUnitId": "monk_unarmored_defense",
+      "className": "Monk",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Monk Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Monk.md:72-74"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const monkUnarmoredDefenseDraftPlan =",
+          "needles": [
+            "monkMartialArtsDraftPlan",
+            "label: \"Monk Unarmored Defense sheet projection\"",
+            "sourcePreferences:",
+            "legalLoadoutChoice",
+            "\"weapon_dagger\"",
+            "\"wielded_one_handed\""
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
+      "rowKey": "level-1:Monk:monk_unarmored_defense",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-monk-unarmored-defense-sheet\"",
+        "monkUnarmoredDefenseDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "fixture.sheet.build",
+        "fixture.sheet.build.abilityScores",
+        "fixture.sheet.build.equipment.loadout.armor",
+        "fixture.sheet.build.equipment.loadout.shield",
+        "characterSheetArmorClassState({",
+        "armorClassState.abilityModifiers.dex",
+        "armorClassState.abilityModifiers.wis",
+        "source: \"unarmored_defense\"",
+        "sourceUnitId: \"monk_unarmored_defense\"",
+        "abilityModifiers: [\"dex\", \"wis\"]",
+        "currentArmorClass(armorClassState)",
+        "toBe(15)"
       ]
     },
     {
