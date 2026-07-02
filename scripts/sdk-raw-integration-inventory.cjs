@@ -114,6 +114,7 @@ const tableOnlySpellClosureKinds = new Set([
 const reviewedPresentationExplorationFutureSpellUnitIds = new Set([
   "major_image",
   "nondetection",
+  "plant_growth",
 ]);
 const characterCreationClosureKinds = new Set(["selection-grant-container"]);
 const futureFeatureClosureKinds = new Set([
