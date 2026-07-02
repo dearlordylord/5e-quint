@@ -385,7 +385,7 @@
     {
       "number": 64,
       "id": "L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Promote Gaseous Form restrictions and cleanup"
     }
   ]
@@ -667,7 +667,7 @@ Reviewer-loop convergence:
 | 61 | L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE - Reconcile Rogue Second-Story Work owner evidence | done | L12-SH60-REMAINING-BATCH-SPLIT-2 | unit-profile/evidence | Reconcile Rogue Second-Story Work's supported character-sheet profile with the SDK inventory owner-evidence row. |
 | 62 | L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE - Promote Gaseous Form mist-cloud state admission | done | L12-SH60-REMAINING-BATCH-SPLIT-2 | battle-runtime/spell-effect-owner | Add the typed mist-cloud form active-effect admission and lifecycle skeleton without authored-identity dispatch. |
 | 63 | L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES - Promote Gaseous Form movement and passive projections | done | L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE | battle-runtime/spell-effect-owner | Project mist-cloud movement replacement, Dash budget, Resistance, Prone Immunity, and Saving Throw Advantage from the admitted active effect. |
-| 64 | L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP - Promote Gaseous Form restrictions and cleanup | blocked | L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES | battle-runtime/spell-effect-owner | Add mist-cloud action/object/speech restrictions, self-ending, zero-Hit-Point and spell-end cleanup, and table/spatial witness handling. |
+| 64 | L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP - Promote Gaseous Form restrictions and cleanup | ready-for-research | L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES | battle-runtime/spell-effect-owner | Add mist-cloud action/object/speech restrictions, self-ending, zero-Hit-Point and spell-end cleanup, and table/spatial witness handling. |
 
 ## Task Details
 
@@ -3614,7 +3614,7 @@ Plan Impact:
 
 ### Task 64 - L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
