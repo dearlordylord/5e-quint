@@ -424,7 +424,7 @@
       "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -432,11 +432,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_clairvoyance",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 218,
         "lineStart": 218,
@@ -453,7 +453,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -1572,7 +1572,7 @@
       "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -1580,11 +1580,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_clairvoyance",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 207,
         "lineStart": 207,
@@ -1601,7 +1601,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -4284,7 +4284,7 @@
       "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -4292,11 +4292,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_clairvoyance",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 301,
         "lineStart": 301,
@@ -4313,7 +4313,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -6274,7 +6274,7 @@
       "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -6282,11 +6282,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_clairvoyance",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 240,
         "lineStart": 240,
@@ -6303,7 +6303,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -12577,115 +12577,6 @@
     },
     {
       "candidateUnitIds": [
-        "clairvoyance"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:clairvoyance",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"clairvoyance\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:218",
-        ".references/srd-5.2.1/Classes/Cleric.md:207",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:301",
-        ".references/srd-5.2.1/Classes/Wizard.md:240"
-      ],
-      "rowCount": 4,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "clairvoyance",
-          "className": "Bard",
-          "concept": "Bard spell list Clairvoyance",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_clairvoyance",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 218,
-            "lineStart": 218,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "clairvoyance",
-          "className": "Cleric",
-          "concept": "Cleric spell list Clairvoyance",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_clairvoyance",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 207,
-            "lineStart": 207,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "clairvoyance",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Clairvoyance",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_clairvoyance",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 301,
-            "lineStart": 301,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "clairvoyance",
-          "className": "Wizard",
-          "concept": "Wizard spell list Clairvoyance",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_clairvoyance",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 240,
-            "lineStart": 240,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Clairvoyance",
-        "Cleric spell list Clairvoyance",
-        "Sorcerer spell list Clairvoyance",
-        "Wizard spell list Clairvoyance"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "create_food_and_water"
       ],
       "categories": [
@@ -13629,6 +13520,115 @@
         "closure-review-needed"
       ],
       "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "clairvoyance"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Cleric",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:table-only-closure:clairvoyance",
+      "lane": "table-only-closure",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "table-only-closure"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"table-only-closure\",\"clairvoyance\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:218",
+        ".references/srd-5.2.1/Classes/Cleric.md:207",
+        ".references/srd-5.2.1/Classes/Sorcerer.md:301",
+        ".references/srd-5.2.1/Classes/Wizard.md:240"
+      ],
+      "rowCount": 4,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "clairvoyance",
+          "className": "Bard",
+          "concept": "Bard spell list Clairvoyance",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_clairvoyance",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 218,
+            "lineStart": 218,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "clairvoyance",
+          "className": "Cleric",
+          "concept": "Cleric spell list Clairvoyance",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_clairvoyance",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 207,
+            "lineStart": 207,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "candidateUnitId": "clairvoyance",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Clairvoyance",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_clairvoyance",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 301,
+            "lineStart": 301,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "candidateUnitId": "clairvoyance",
+          "className": "Wizard",
+          "concept": "Wizard spell list Clairvoyance",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_clairvoyance",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 240,
+            "lineStart": 240,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Clairvoyance",
+        "Cleric spell list Clairvoyance",
+        "Sorcerer spell list Clairvoyance",
+        "Wizard spell list Clairvoyance"
+      ],
+      "sdkInventoryDispositions": [
+        "table-only-closure-needed"
+      ],
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
       "taskId": "L15-SDK-RAW-07"
     }
   ],
@@ -18855,7 +18855,7 @@
       "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -18863,11 +18863,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_clairvoyance",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 218,
         "lineStart": 218,
@@ -18884,7 +18884,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -22955,7 +22955,7 @@
       "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -22963,11 +22963,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_clairvoyance",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 207,
         "lineStart": 207,
@@ -22984,7 +22984,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -41491,7 +41491,7 @@
       "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -41499,11 +41499,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_clairvoyance",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 301,
         "lineStart": 301,
@@ -41520,7 +41520,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -50655,7 +50655,7 @@
       "nextAction": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -50663,11 +50663,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_clairvoyance",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 240,
         "lineStart": 240,
@@ -50684,7 +50684,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -57905,18 +57905,20 @@
       "character-battle-to-battle": 46,
       "character-sheet": 1,
       "future-runtime-owner-before-sdk": 45,
-      "spell-effect-owner-review": 34
+      "spell-effect-owner-review": 30,
+      "table-only-closure": 4
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 104,
-      "unresolved-review": 34
+      "resolved": 108,
+      "unresolved-review": 30
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 34,
+      "closure-review-needed": 30,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 45,
       "sdk-scenario-needed": 2,
-      "seed-scenario-present": 45
+      "seed-scenario-present": 45,
+      "table-only-closure-needed": 4
     },
     "level5ScenarioGroups": 94,
     "level5ScenarioGroupsByLane": {
@@ -57924,7 +57926,8 @@
       "explicit-closure": 12,
       "future-owner-before-sdk": 24,
       "seed-present": 45,
-      "spell-effect-owner-review": 12
+      "spell-effect-owner-review": 11,
+      "table-only-closure": 1
     },
     "level5SeedScenarioRows": 45,
     "levelOneFiveMinedRows": 770,
@@ -57950,12 +57953,12 @@
       "class-feature-closure-review": 2,
       "future-runtime-owner-before-sdk": 47,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 140,
-      "table-only-closure": 11
+      "spell-effect-owner-review": 136,
+      "table-only-closure": 15
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 628,
-      "unresolved-review": 142
+      "resolved": 632,
+      "unresolved-review": 138
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -57971,13 +57974,13 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 142,
+      "closure-review-needed": 138,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 47,
       "sdk-scenario-needed": 401,
       "seed-scenario-present": 109,
-      "table-only-closure-needed": 11
+      "table-only-closure-needed": 15
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 433,
@@ -57994,8 +57997,8 @@
       "multi-owner-feature-sdk": 9,
       "seed-present": 109,
       "sheet-spell-access-sdk": 12,
-      "spell-effect-owner-review": 46,
-      "table-only-closure": 4
+      "spell-effect-owner-review": 45,
+      "table-only-closure": 5
     },
     "scenarioGroupsByTask": {
       "L15-SDK-RAW-03": 174,
@@ -80351,7 +80354,7 @@
       "sdkInventoryDispositions": [
         "table-only-closure-needed"
       ],
-      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded social/knowledge closure evidence.",
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
       "taskId": "L15-SDK-RAW-05"
     },
     {
@@ -80442,7 +80445,7 @@
       "sdkInventoryDispositions": [
         "table-only-closure-needed"
       ],
-      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded social/knowledge closure evidence.",
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
       "taskId": "L15-SDK-RAW-05"
     },
     {
@@ -80551,7 +80554,7 @@
       "sdkInventoryDispositions": [
         "table-only-closure-needed"
       ],
-      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded social/knowledge closure evidence.",
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
       "taskId": "L15-SDK-RAW-05"
     },
     {
@@ -80642,7 +80645,7 @@
       "sdkInventoryDispositions": [
         "table-only-closure-needed"
       ],
-      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded social/knowledge closure evidence.",
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
       "taskId": "L15-SDK-RAW-05"
     },
     {
@@ -86928,115 +86931,6 @@
     },
     {
       "candidateUnitIds": [
-        "clairvoyance"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Sorcerer",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:clairvoyance",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"clairvoyance\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:218",
-        ".references/srd-5.2.1/Classes/Cleric.md:207",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:301",
-        ".references/srd-5.2.1/Classes/Wizard.md:240"
-      ],
-      "rowCount": 4,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "clairvoyance",
-          "className": "Bard",
-          "concept": "Bard spell list Clairvoyance",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_clairvoyance",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 218,
-            "lineStart": 218,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "clairvoyance",
-          "className": "Cleric",
-          "concept": "Cleric spell list Clairvoyance",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_clairvoyance",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 207,
-            "lineStart": 207,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "clairvoyance",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Clairvoyance",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_clairvoyance",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 301,
-            "lineStart": 301,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "clairvoyance",
-          "className": "Wizard",
-          "concept": "Wizard spell list Clairvoyance",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_clairvoyance",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 240,
-            "lineStart": 240,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Clairvoyance",
-        "Cleric spell list Clairvoyance",
-        "Sorcerer spell list Clairvoyance",
-        "Wizard spell list Clairvoyance"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "create_food_and_water"
       ],
       "categories": [
@@ -87980,6 +87874,115 @@
         "closure-review-needed"
       ],
       "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "clairvoyance"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Cleric",
+        "Sorcerer",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:table-only-closure:clairvoyance",
+      "lane": "table-only-closure",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "table-only-closure"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"table-only-closure\",\"clairvoyance\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:218",
+        ".references/srd-5.2.1/Classes/Cleric.md:207",
+        ".references/srd-5.2.1/Classes/Sorcerer.md:301",
+        ".references/srd-5.2.1/Classes/Wizard.md:240"
+      ],
+      "rowCount": 4,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "clairvoyance",
+          "className": "Bard",
+          "concept": "Bard spell list Clairvoyance",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_clairvoyance",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 218,
+            "lineStart": 218,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "clairvoyance",
+          "className": "Cleric",
+          "concept": "Cleric spell list Clairvoyance",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_clairvoyance",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 207,
+            "lineStart": 207,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "candidateUnitId": "clairvoyance",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Clairvoyance",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_clairvoyance",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 301,
+            "lineStart": 301,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "candidateUnitId": "clairvoyance",
+          "className": "Wizard",
+          "concept": "Wizard spell list Clairvoyance",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_clairvoyance",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 240,
+            "lineStart": 240,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Clairvoyance",
+        "Cleric spell list Clairvoyance",
+        "Sorcerer spell list Clairvoyance",
+        "Wizard spell list Clairvoyance"
+      ],
+      "sdkInventoryDispositions": [
+        "table-only-closure-needed"
+      ],
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
       "taskId": "L15-SDK-RAW-07"
     }
   ],

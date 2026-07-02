@@ -1103,7 +1103,7 @@
     },
     {
       "count": 12,
-      "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
+      "description": "The Unit claim records a runtime-detached presentation, exploration, table/perception, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
         "alarm",

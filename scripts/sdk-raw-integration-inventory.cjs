@@ -4,6 +4,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const { readJson, toRepoPath } = require("./unit-profile-coverage-io.cjs");
+const {
+  battleReadinessClosureKind,
+} = require("./unit-profile-coverage-config.cjs");
 const { stable } = require("./unit-profile-coverage-report.cjs");
 
 const root = process.env.SDK_RAW_INTEGRATION_ROOT ?? process.cwd();
@@ -100,11 +103,14 @@ const sheetSpellAccessRowKinds = new Set([
   "subclass-spell-access",
 ]);
 const futureSpellClosureKinds = new Set([
-  "outside-battle-runtime",
-  "table-spatial-derivation",
-  "companion-control-boundary",
+  battleReadinessClosureKind.outsideBattleRuntime,
+  battleReadinessClosureKind.tableSpatialDerivation,
+  battleReadinessClosureKind.companionControlBoundary,
 ]);
-const tableOnlySpellClosureKinds = new Set(["social-knowledge-effect"]);
+const tableOnlySpellClosureKinds = new Set([
+  battleReadinessClosureKind.socialKnowledgeEffect,
+  battleReadinessClosureKind.tablePerceptionExploration,
+]);
 const characterCreationClosureKinds = new Set(["selection-grant-container"]);
 const futureFeatureClosureKinds = new Set([
   "character-fact-and-runtime-detached-split",
@@ -5185,7 +5191,10 @@ function spellEffectOwnerResult(row) {
       },
     };
   }
-  if (closure.kind === "outside-runtime-presentation-exploration") {
+  if (
+    closure.kind ===
+    battleReadinessClosureKind.outsideRuntimePresentationExploration
+  ) {
     return {
       proposedOwnerBoundary: "spell-effect-owner-review",
       ownerBoundaryEvidence: {
@@ -5519,7 +5528,7 @@ function scenarioSuggestion(group) {
     return "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.";
   }
   if (group.lane === "table-only-closure") {
-    return "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded social/knowledge closure evidence.";
+    return "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.";
   }
   if (group.lane === "sheet-build-closure") {
     return "Review lower-owner evidence and either add a build/sheet SDK assertion for user-reachable state or retain an explicit closure with the local RAW anchor.";
@@ -6283,8 +6292,9 @@ function renderInventory(inventory) {
     "  its real owner instead of pretending the feature has one owner. Unsupported",
     "  class-feature rows use exact row owner evidence when present; otherwise",
     "  closure rows are classified only by typed closure kind.",
-    "- `table-only-closure` means a spell row has recorded social/knowledge",
-    "  closure evidence that is table-owned rather than SDK-executable.",
+    "- `table-only-closure` means a spell row has recorded social/knowledge,",
+    "  table/perception, or exploration closure evidence that is table-owned",
+    "  rather than SDK-executable.",
     "  `spell-effect-owner-review` means the row lacks recorded closure evidence",
     "  or has a recorded closure kind that is not typed enough to split",
     "  future-owner from table-only closure.",

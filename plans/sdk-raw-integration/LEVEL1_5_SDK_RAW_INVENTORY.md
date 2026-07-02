@@ -38,13 +38,13 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 142 |
+| closure-review-needed | 138 |
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 47 |
 | sdk-scenario-needed | 401 |
 | seed-scenario-present | 109 |
-| table-only-closure-needed | 11 |
+| table-only-closure-needed | 15 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
 
@@ -60,15 +60,15 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | class-feature-closure-review | 2 |
 | future-runtime-owner-before-sdk | 47 |
 | multi-owner-sdk-split | 10 |
-| spell-effect-owner-review | 140 |
-| table-only-closure | 11 |
+| spell-effect-owner-review | 136 |
+| table-only-closure | 15 |
 
 ### All Level 1-5 Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 628 |
-| unresolved-review | 142 |
+| resolved | 632 |
+| unresolved-review | 138 |
 
 ### Scenario Groups by Task
 
@@ -96,18 +96,19 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | multi-owner-feature-sdk | 9 |
 | seed-present | 109 |
 | sheet-spell-access-sdk | 12 |
-| spell-effect-owner-review | 46 |
-| table-only-closure | 4 |
+| spell-effect-owner-review | 45 |
+| table-only-closure | 5 |
 
 ### Level 5 Completion Rows by SDK Disposition
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 34 |
+| closure-review-needed | 30 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 45 |
 | sdk-scenario-needed | 2 |
 | seed-scenario-present | 45 |
+| table-only-closure-needed | 4 |
 
 ### Level 5 Completion Rows by Proposed Owner Boundary
 
@@ -117,14 +118,15 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-battle-to-battle | 46 |
 | character-sheet | 1 |
 | future-runtime-owner-before-sdk | 45 |
-| spell-effect-owner-review | 34 |
+| spell-effect-owner-review | 30 |
+| table-only-closure | 4 |
 
 ### Level 5 Completion Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 104 |
-| unresolved-review | 34 |
+| resolved | 108 |
+| unresolved-review | 30 |
 
 ### Level 5 Scenario Groups by Lane
 
@@ -134,7 +136,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure | 12 |
 | future-owner-before-sdk | 24 |
 | seed-present | 45 |
-| spell-effect-owner-review | 12 |
+| spell-effect-owner-review | 11 |
+| table-only-closure | 1 |
 
 ## Cumulative Level 1-4 Source Reports
 
@@ -343,7 +346,6 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `protection_from_energy` | Wizard spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `sleet_storm` | Wizard spell list Sleet Storm | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `slow` | Wizard spell list Slow | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
-| L15-SDK-RAW-07 | spell-effect-owner-review | 4 | spell-level-3 | Bard, Cleric, Sorcerer, Wizard | `clairvoyance` | Bard spell list Clairvoyance<br>Cleric spell list Clairvoyance<br>Sorcerer spell list Clairvoyance<br>Wizard spell list Clairvoyance | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 1 | spell-level-3 | Cleric | `create_food_and_water` | Cleric spell list Create Food and Water | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard | `major_image` | Bard spell list Major Image<br>Sorcerer spell list Major Image<br>Warlock spell list Major Image<br>Wizard spell list Major Image | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 2 | spell-level-3 | Bard, Wizard | `nondetection` | Bard spell list Nondetection<br>Wizard spell list Nondetection | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
@@ -355,6 +357,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | spell-effect-owner-review | 5 | spell-level-3 | Bard, Cleric, Sorcerer, Warlock, Wizard | `tongues` | Bard spell list Tongues<br>Cleric spell list Tongues<br>Sorcerer spell list Tongues<br>Warlock spell list Tongues<br>Wizard spell list Tongues | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 3 | spell-level-3 | Druid, Sorcerer, Wizard | `water_breathing` | Druid spell list Water Breathing<br>Sorcerer spell list Water Breathing<br>Wizard spell list Water Breathing | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 3 | spell-level-3 | Cleric, Druid, Sorcerer | `water_walk` | Cleric spell list Water Walk<br>Druid spell list Water Walk<br>Sorcerer spell list Water Walk | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
+| L15-SDK-RAW-07 | table-only-closure | 4 | spell-level-3 | Bard, Cleric, Sorcerer, Wizard | `clairvoyance` | Bard spell list Clairvoyance<br>Cleric spell list Clairvoyance<br>Sorcerer spell list Clairvoyance<br>Wizard spell list Clairvoyance | Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence. |
 
 ## Level 5 and Spell-Level-3 Completion Rows
 
@@ -366,7 +369,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | level-5 | Bard Font of Inspiration | `bard_font_of_inspiration` | `.references/srd-5.2.1/Classes/Bard.md:113` | catalog-only/dead-for-now | not-applicable | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state. |
 | level-5 | Bard level 5 feature table row | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:40` | non-runtime | not-applicable | build-progression | resolved | explicit-closure-recorded |  | SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state. |
 | spell-level-3 | Bard spell list Bestow Curse | `bestow_curse` | `.references/srd-5.2.1/Classes/Bard.md:217` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity. |
-| spell-level-3 | Bard spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Bard.md:218` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
+| spell-level-3 | Bard spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Bard.md:218` | catalog-only/dead-for-now | accepted-no-battle-effect | table-only-closure | resolved | table-only-closure-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
 | spell-level-3 | Bard spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Bard.md:219` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Dispel Magic | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Bard spell list Fear | `fear` | `.references/srd-5.2.1/Classes/Bard.md:220` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers. |
 | spell-level-3 | Bard spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Bard.md:221` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery | Owner-specific operational evidence is classified and present. |
@@ -387,7 +390,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Cleric spell list Animate Dead | `animate_dead` | `.references/srd-5.2.1/Classes/Cleric.md:204` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Animate Dead's represented runtime behavior is closed at the companion-control boundary: a future reanimated companion owner must model Skeleton/Zombie combatant creation from corpse-or-bones targets, control-window ownership, Bonus Action command fan-out, default Dodge-and-avoid behavior, autonomous task following, 24-hour control expiry, higher-slot reassertion, and stat-block action execution without authored-identity dispatch in generic runtime code. |
 | spell-level-3 | Cleric spell list Beacon of Hope | `beacon_of_hope` | `.references/srd-5.2.1/Classes/Cleric.md:205` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Beacon of Hope's battle-relevant behavior is closed outside the current promoted battle-runtime boundary: a future active spell-effect owner must admit selected targets without authored-identity dispatch, carry Concentration expiry, maximize later healing received by affected targets, project Advantage onto affected targets' Wisdom Saving Throws, and project Advantage onto affected targets' Death Saving Throws. |
 | spell-level-3 | Cleric spell list Bestow Curse | `bestow_curse` | `.references/srd-5.2.1/Classes/Cleric.md:206` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity. |
-| spell-level-3 | Cleric spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Cleric.md:207` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
+| spell-level-3 | Cleric spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Cleric.md:207` | catalog-only/dead-for-now | accepted-no-battle-effect | table-only-closure | resolved | table-only-closure-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
 | spell-level-3 | Cleric spell list Create Food and Water | `create_food_and_water` | `.references/srd-5.2.1/Classes/Cleric.md:208` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers. |
 | spell-level-3 | Cleric spell list Daylight | `daylight` | `.references/srd-5.2.1/Classes/Cleric.md:209` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers. |
 | spell-level-3 | Cleric spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Cleric.md:210` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Dispel Magic | Owner-specific operational evidence is classified and present. |
@@ -435,7 +438,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | level-5 | Sorcerer Sorcerous Restoration | `sorcerer_sorcerous_restoration` | `.references/srd-5.2.1/Classes/Sorcerer.md:127` | catalog-installed-owner-evidence-present | not-applicable | character-sheet | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Sorcerous Restoration | Owner-specific operational evidence is classified and present. |
 | level-5 | Sorcerer level 5 feature table row | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:39` | non-runtime | not-applicable | build-progression | resolved | explicit-closure-recorded |  | SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state. |
 | spell-level-3 | Sorcerer spell list Blink | `blink` | `.references/srd-5.2.1/Classes/Sorcerer.md:300` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity. |
-| spell-level-3 | Sorcerer spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Sorcerer.md:301` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
+| spell-level-3 | Sorcerer spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Sorcerer.md:301` | catalog-only/dead-for-now | accepted-no-battle-effect | table-only-closure | resolved | table-only-closure-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
 | spell-level-3 | Sorcerer spell list Counterspell | `counterspell` | `.references/srd-5.2.1/Classes/Sorcerer.md:302` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Counterspell | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Daylight | `daylight` | `.references/srd-5.2.1/Classes/Sorcerer.md:303` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers. |
 | spell-level-3 | Sorcerer spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Sorcerer.md:304` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Dispel Magic | Owner-specific operational evidence is classified and present. |
@@ -472,7 +475,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Wizard spell list Animate Dead | `animate_dead` | `.references/srd-5.2.1/Classes/Wizard.md:237` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Animate Dead's represented runtime behavior is closed at the companion-control boundary: a future reanimated companion owner must model Skeleton/Zombie combatant creation from corpse-or-bones targets, control-window ownership, Bonus Action command fan-out, default Dodge-and-avoid behavior, autonomous task following, 24-hour control expiry, higher-slot reassertion, and stat-block action execution without authored-identity dispatch in generic runtime code. |
 | spell-level-3 | Wizard spell list Bestow Curse | `bestow_curse` | `.references/srd-5.2.1/Classes/Wizard.md:238` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity. |
 | spell-level-3 | Wizard spell list Blink | `blink` | `.references/srd-5.2.1/Classes/Wizard.md:239` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity. |
-| spell-level-3 | Wizard spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Wizard.md:240` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
+| spell-level-3 | Wizard spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Wizard.md:240` | catalog-only/dead-for-now | accepted-no-battle-effect | table-only-closure | resolved | table-only-closure-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
 | spell-level-3 | Wizard spell list Counterspell | `counterspell` | `.references/srd-5.2.1/Classes/Wizard.md:241` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Counterspell | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Wizard.md:242` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Dispel Magic | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Fear | `fear` | `.references/srd-5.2.1/Classes/Wizard.md:243` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers. |
@@ -519,8 +522,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
   its real owner instead of pretending the feature has one owner. Unsupported
   class-feature rows use exact row owner evidence when present; otherwise
   closure rows are classified only by typed closure kind.
-- `table-only-closure` means a spell row has recorded social/knowledge
-  closure evidence that is table-owned rather than SDK-executable.
+- `table-only-closure` means a spell row has recorded social/knowledge,
+  table/perception, or exploration closure evidence that is table-owned
+  rather than SDK-executable.
   `spell-effect-owner-review` means the row lacks recorded closure evidence
   or has a recorded closure kind that is not typed enough to split
   future-owner from table-only closure.
