@@ -114,7 +114,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 211;
-const expectedLevelOneTwoSeedScenarioRows = 144;
+const expectedLevelOneTwoSeedScenarioRows = 145;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -1371,6 +1371,49 @@ const fighterBuildSheetScenarioRows = [
   ...row,
 }));
 
+const fighterFightingStyleCreationScenarioLabel =
+  "level1-sdk-raw-integration: Fighter Fighting Style creation finalizes the selected Defense feat into build facts";
+const fighterFightingStyleCreationScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-fighter-fighting-style-creation"',
+  "fighterFightingStyleCreationDraftPlan",
+  'battle: { tag: "withoutBattle" }',
+  "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+  "selectedUnitChoiceOptionIds(",
+  '"fighter_fighting_style"',
+  '"class_feature_feat_choice"',
+  '.toEqual(["defense"])',
+  "fixture.build.features",
+  '"selectedClassChoice"',
+  'selectedFromUnitId: "fighter_fighting_style"',
+  'unitId: "defense"',
+  "characterBuildFeatureUnitIds(fixture.build, unitLibrary)",
+  "characterBuildUnitRefs(fixture.build)",
+  'unitLibrary.requireUnit("fighter_fighting_style")',
+  '"grant_feat"',
+  'unitLibrary.requireUnit("defense")',
+  'category: "fighting_style"',
+  'kind: "feat"',
+];
+const fighterFightingStyleCreationScenarioHelperNeedles = [
+  {
+    anchor: "const fighterFightingStyleCreationDraftPlan =",
+    needles: [
+      'label: "Fighter Fighting Style creation"',
+      "...fighterLifecycleDraftPlan",
+    ],
+  },
+  {
+    path: paths.seedScenarioFiles.fighterLifecycleSupport,
+    anchor: "const fighterLifecycleDraftPlan =",
+    needles: [
+      '"fighter_fighting_style"',
+      '"class_feature_feat_choice"',
+      '"defense"',
+    ],
+  },
+];
+
 const monkBuildSheetScenarioLabel =
   "level1-sdk-raw-integration: Monk build-sheet projection derives level-1 class facts from legal creation and a fresh sheet";
 const monkBuildSheetScenarioNeedles = [
@@ -1713,6 +1756,19 @@ const seededSdkScenarioRows = [
     helperNeedles: druidPrimalOrderCreationScenarioHelperNeedles,
   },
   ...druidMulticlassBuildSheetScenarioRows,
+  {
+    candidateUnitId: "fighter_fighting_style",
+    className: "Fighter",
+    levelBand: "level-1",
+    label: fighterFightingStyleCreationScenarioLabel,
+    path: barbarianBuildSheetScenarioPath,
+    rowId:
+      "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:56-60"],
+    sourceProof: "legal-creation-owner",
+    tracerNeedles: fighterFightingStyleCreationScenarioNeedles,
+    helperNeedles: fighterFightingStyleCreationScenarioHelperNeedles,
+  },
   ...fighterBuildSheetScenarioRows,
   ...fighterMulticlassBuildSheetScenarioRows,
   ...monkBuildSheetScenarioRows,

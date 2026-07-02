@@ -885,6 +885,11 @@ const fighterBuildBattleDraftPlan = {
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
+const fighterFightingStyleCreationDraftPlan = {
+  ...fighterLifecycleDraftPlan,
+  label: "Fighter Fighting Style creation",
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 const bardicInspirationDraftPlan = {
   ...bardSpellAccessDraftPlan,
   label: "Bardic Inspiration battle feature",
@@ -1790,6 +1795,67 @@ describe("level 1 SDK RAW integration", () => {
     expect(
       requireCharacterCombatant(fixture.state, legalFighterId).origin.characterId,
     ).toBe("character:l1-sdk-legal-fighter");
+  });
+
+  test("Fighter Fighting Style creation finalizes the selected Defense feat into build facts", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-fighter-fighting-style-creation",
+      draftPlan: fighterFightingStyleCreationDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-fighter-fighting-style-creation",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_fighter"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(
+      selectedUnitChoiceOptionIds(
+        fixture.draft,
+        "fighter_fighting_style",
+        "class_feature_feat_choice",
+      ),
+    ).toEqual(["defense"]);
+    expect(fixture.build.features).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "selectedClassChoice",
+          selectedFromUnitId: "fighter_fighting_style",
+          unitId: "defense",
+        }),
+      ]),
+    );
+    expect(characterBuildFeatureUnitIds(fixture.build, unitLibrary)).toEqual(
+      expect.arrayContaining(["fighter_fighting_style"]),
+    );
+    expect(characterBuildUnitRefs(fixture.build)).toEqual(
+      expect.arrayContaining([{ unitId: "defense" }]),
+    );
+    expect(unitLibrary.requireUnit("fighter_fighting_style")).toMatchObject({
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: expect.arrayContaining([
+          expect.objectContaining({
+            category: "fighting_style",
+            kind: "grant_feat",
+          }),
+        ]),
+      },
+    });
+    expect(unitLibrary.requireUnit("defense")).toMatchObject({
+      category: "fighting_style",
+      kind: "feat",
+    });
   });
 
   test("Warlock Pact Magic creation finalizes level-1 cantrips, prepared spells, and Pact Slots", () => {
