@@ -229,7 +229,7 @@
     {
       "number": 38,
       "id": "L5FULL-FUT-22-WIZARD-MEMORIZE-SPELL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Wizard Memorize Spell"
     },
     {
