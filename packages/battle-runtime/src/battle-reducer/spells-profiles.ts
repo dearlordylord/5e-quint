@@ -92,6 +92,7 @@ import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { magicalDarknessPointOriginProfile } from "./spell-procedure-profiles/magical-darkness-point-origin.ts";
 import { mirrorImageHitInterceptionProfile } from "./spell-procedure-profiles/mirror-image-hit-interception.ts";
+import { mistCloudFormProfile } from "./spell-procedure-profiles/mist-cloud-form.ts";
 import { moonbeamProfile } from "./spell-procedure-profiles/moonbeam.ts";
 import { repeatedDamageAllocationProfile } from "./spell-procedure-profiles/repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
@@ -283,6 +284,9 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       creatureSizeChangeProfile.admit(spell, admissionContext),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      mistCloudFormProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       levitatedCreatureProfile.admit(spell, admissionContext),

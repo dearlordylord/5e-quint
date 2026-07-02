@@ -27,6 +27,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mist-cloud-form
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature unit-feature.metamagic-damage-dice-reroll
@@ -803,7 +804,10 @@ export type BattleOngoingSpellTargetWithinRangeFact = {
   readonly rangeFeet: MovementFeet;
 };
 type BattleConcentrationOrDurationExpiration =
-  | (Extract<BattleActiveEffectExpiration, { readonly kind: "concentration" }> & {
+  | (Extract<
+      BattleActiveEffectExpiration,
+      { readonly kind: "concentration" }
+    > & {
       readonly durationTicks: ElapsedTimeTicks;
     })
   | Extract<BattleActiveEffectExpiration, { readonly kind: "duration" }>;
@@ -2424,6 +2428,7 @@ export type TargetListSpellInvocation =
       SupportedSpellInvocation,
       { readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease" }
     >
+  | Extract<SupportedSpellInvocation, { readonly procedure: "mistCloudForm" }>
   | Extract<
       SupportedSpellInvocation,
       { readonly procedure: "levitatedCreature" }
@@ -2578,6 +2583,21 @@ export type CreatureSizeChangeSpellInvocation = {
   readonly activeEffect: Extract<
     BattleActiveEffect,
     { readonly kind: "spellCreatureSizeChange" }
+  >;
+  readonly rangeFeet: MovementFeet;
+};
+export type MistCloudFormSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "mistCloudForm";
+  readonly spell: SpellRecord;
+  readonly actionCost: "magicAction";
+  readonly targeting: SpellTargetListTargeting & {
+    readonly requiredTargetDisposition: "willing";
+  };
+  readonly activeEffect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellMistCloudForm" }
   >;
   readonly rangeFeet: MovementFeet;
 };
@@ -3742,6 +3762,7 @@ export type SupportedSpellInvocation =
   | RollModifierSpellInvocation
   | CreatureTypeProtectionSpellInvocation
   | CreatureSizeChangeSpellInvocation
+  | MistCloudFormSpellInvocation
   | LevitatedCreatureSpellInvocation
   | BlurAttackRollDefenseSpellInvocation
   | MirrorImageHitInterceptionSpellInvocation
@@ -3852,6 +3873,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "creatureTypeProtection"
       | "creatureSizeIncrease"
       | "creatureSizeDecrease"
+      | "mistCloudForm"
       | "levitatedCreature"
       | "blurAttackRollDefense"
       | "seeInvisibleObserverSight"
@@ -4845,6 +4867,7 @@ export type BattleSpellTargetListHole = {
         | "creatureTypeProtection"
         | "creatureSizeIncrease"
         | "creatureSizeDecrease"
+        | "mistCloudForm"
         | "levitatedCreature"
         | "conditionRemovalProtection"
         | "chosenDamageResistance"

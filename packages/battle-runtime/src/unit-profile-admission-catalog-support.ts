@@ -308,6 +308,8 @@ export const flameBladeUnitId = "flame_blade";
 export const flyUnitId = "fly";
 
 export const flamingSphereUnitId = "flaming_sphere";
+
+export const gaseousFormUnitId = "gaseous_form";
 export const spiritualWeaponUnitId = "spiritual_weapon";
 
 export const spikeGrowthUnitId = "spike_growth";

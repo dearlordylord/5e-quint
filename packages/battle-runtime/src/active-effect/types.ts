@@ -12,6 +12,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mist-cloud-form
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIST_CLOUD_FORM_STATE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-durable-occurrence
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-explosive-rune-release
@@ -155,6 +157,29 @@ export type SpellCreatureSizeChangeActiveEffect = BattleSpellEffectBase & {
   readonly kind: "spellCreatureSizeChange";
   readonly direction: SpellCreatureSizeChangeDirection;
   readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
+};
+export type SpellMistCloudFormEarlyEnd =
+  | { readonly kind: "targetDropsToZeroHitPoints" }
+  | { readonly kind: "targetMagicActionDismissal" }
+  | { readonly kind: "spellEnds" };
+export type SpellMistCloudFormActiveEffect = BattleSpellEffectBase & {
+  readonly kind: "spellMistCloudForm";
+  readonly transformedObjects: "wornAndCarried";
+  readonly earlyEnds: readonly [
+    Extract<
+      SpellMistCloudFormEarlyEnd,
+      { readonly kind: "targetDropsToZeroHitPoints" }
+    >,
+    Extract<
+      SpellMistCloudFormEarlyEnd,
+      { readonly kind: "targetMagicActionDismissal" }
+    >,
+    Extract<SpellMistCloudFormEarlyEnd, { readonly kind: "spellEnds" }>,
+  ];
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "concentration" }
+  > & { readonly durationTicks: ElapsedTimeTicks };
 };
 export type SpellLevitatedCreatureActiveEffect = BattleSpellEffectBase & {
   readonly kind: "spellLevitatedCreature";
@@ -1041,6 +1066,7 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | SpellCreatureSizeChangeActiveEffect
+  | SpellMistCloudFormActiveEffect
   | (BattleSpellEffectBase & {
       readonly kind: "thaumaturgyBoomingVoice";
       readonly expiresAt: Extract<

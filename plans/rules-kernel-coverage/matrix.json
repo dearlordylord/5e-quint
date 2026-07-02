@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 131,
-    "covered": 125,
+    "total": 132,
+    "covered": 126,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 100,
+      "battle": 101,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 125,
+      "covered": 126,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -331,6 +331,7 @@
       "profiles": [
         "spell.invocation-damage-save-or-attack",
         "spell.invocation-haste-positive",
+        "spell.invocation-mist-cloud-form",
         "spell.invocation-see-invisible-observer-sight",
         "spell.invocation-spiritual-weapon-attack-proxy",
         "spell.reaction-shield",
@@ -4484,6 +4485,39 @@
       "title": "Battle Haste spell-end lethargy applies Incapacitated plus separate Speed 0 until the target's next turn end"
     },
     {
+      "id": "BATTLE.SPELL.MIST_CLOUD_FORM_STATE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gaseous-form.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-mist-cloud-form"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core-examples.qnt"
+      ],
+      "reason": "This Task 62 slice admits the typed Surface mist-cloud transform shape without authored spell identity dispatch, spends Magic Action plus a level-3-or-higher Spell Slot, requires a willing touched creature target, stores a target-owned spellMistCloudForm active effect with source spell id, source combatant id, worn-and-carried object transformation, caster Concentration expiration for up to 1 hour, and explicit zero-Hit-Point, target Magic Action self-dismissal, and normal spell-end causes. It intentionally does not claim movement replacement, passive defenses, activity restrictions, spatial traversal, liquid-surface treatment, or full cleanup reducers; those are separate follow-up owners.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/mist-cloud-form.ts",
+        "packages/battle-runtime/src/active-effect/types.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Gaseous Form",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Duration",
+        "UBIQUITOUS_LANGUAGE.md#Spell Effect",
+        "UBIQUITOUS_LANGUAGE.md#Concentration",
+        "UBIQUITOUS_LANGUAGE.md#Magic Action",
+        "UBIQUITOUS_LANGUAGE.md#Hit Points"
+      ],
+      "title": "Battle Gaseous Form mist-cloud admission creates target-owned spell form state with caster Concentration and end-cause identity"
+    },
+    {
       "id": "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
       "kind": "composition",
       "parityWitnesses": [
@@ -7533,6 +7567,13 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.MIST_CLOUD_FORM_STATE",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "spell.invocation-mist-cloud-form"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING"
       ],
       "profileId": "spell.invocation-ongoing-spell-ending"
@@ -9928,6 +9969,22 @@
       "role": "proof-only"
     },
     {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core.qnt carries identity-free mist-cloud form admission facts for action casting time, Touch range, willing creature target, Concentration up to 1 hour, worn-and-carried object transformation, and the zero-Hit-Point, target Magic Action dismissal, and spell-end causes.",
+      "obligationIds": [
+        "BATTLE.SPELL.MIST_CLOUD_FORM_STATE"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core-examples.qnt is proof-only example evidence for mist-cloud form active-effect state admission and rejection when the target Magic Action self-end fact is absent.",
+      "obligationIds": [
+        "BATTLE.SPELL.MIST_CLOUD_FORM_STATE"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt is proof-only evidence for the Glyph durable occurrence completed-inscription, trigger-only cleanup rejection, movement-invalidation, explosive-rune release, and stored-spell release witness boundaries.",
       "obligationIds": [
         "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE",
@@ -10927,6 +10984,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-invocation-target-cardinality-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -14737,6 +14804,28 @@
         "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "set"
+      ],
+      "obligationId": "BATTLE.SPELL.MIST_CLOUD_FORM_STATE",
+      "proofOnly": [],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [],
@@ -14978,6 +15067,7 @@
     "spell.invocation-make-stable",
     "spell.invocation-marked-damage-rider",
     "spell.invocation-mirror-image-hit-interception",
+    "spell.invocation-mist-cloud-form",
     "spell.invocation-moonbeam-movable-zone",
     "spell.invocation-object-contact-damage",
     "spell.invocation-object-light",

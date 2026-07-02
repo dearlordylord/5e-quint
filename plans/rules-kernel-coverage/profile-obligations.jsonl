@@ -141,6 +141,7 @@
 {"profileId":"spell.invocation-object-contact-damage","obligationIds":["BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE"]}
 {"profileId":"spell.invocation-gust-of-wind-line","obligationIds":["BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE"]}
 {"profileId":"spell.invocation-creature-size-change","obligationIds":["BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE"]}
+{"profileId":"spell.invocation-mist-cloud-form","obligationIds":["BATTLE.SPELL.MIST_CLOUD_FORM_STATE","BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"spell.invocation-ongoing-spell-ending","obligationIds":["BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING"]}
 {"profileId":"unit-feature.metamagic-cast-governor-quickened","obligationIds":["BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"]}
 {"profileId":"unit-feature.metamagic-careful-save-protection","obligationIds":["BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION"]}

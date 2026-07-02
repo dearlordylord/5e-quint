@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 131
-- Covered obligations: 125
+- Total obligations: 132
+- Covered obligations: 126
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 125 |
+| covered | 126 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 100 |
+| battle | 101 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 4 |
@@ -36,7 +36,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `spell.invocation-feather-fall-mitigation`, `spell.invocation-forced-reaction-movement`, `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke`, `spell.reaction-shield`, `spell.readied-action-time-spell`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.reaction-roll-or-damage-reduction` |
 | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | _unit-feature profile-scoped owner rows below_ |
-| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.invocation-haste-positive`, `spell.invocation-see-invisible-observer-sight`, `spell.invocation-spiritual-weapon-attack-proxy`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
+| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.invocation-haste-positive`, `spell.invocation-mist-cloud-form`, `spell.invocation-see-invisible-observer-sight`, `spell.invocation-spiritual-weapon-attack-proxy`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | `BATTLE.SPELL.HIT_POINT_RESTORATION` | battle | covered | `spell.hit-point-restoration` |
 | `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` | battle | covered | `spell.invocation-direct-condition` |
 | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` | battle | covered | `spell.invocation-condition-save`, `spell.invocation-hideous-laughter-repeat-save-lifecycle`, `spell.invocation-hypnotic-pattern-control`, `spell.invocation-save-gated-condition-immunity` |
@@ -155,6 +155,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` | battle | covered | `spell.invocation-haste-positive` |
 | `BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE` | battle | covered | `spell.invocation-haste-positive` |
+| `BATTLE.SPELL.MIST_CLOUD_FORM_STATE` | battle | covered | `spell.invocation-mist-cloud-form` |
 | `BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE` | battle | covered | `spell.invocation-glyph-durable-occurrence` |
@@ -589,6 +590,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt` | mbt-fixture | _none_ |
 | `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt` | semantic-core | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` |
 | `packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt` | proof-only | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` |
+| `packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core.qnt` | semantic-core | `BATTLE.SPELL.MIST_CLOUD_FORM_STATE` |
+| `packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core-examples.qnt` | proof-only | `BATTLE.SPELL.MIST_CLOUD_FORM_STATE` |
 | `packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt` | proof-only | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE`, `BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE`, `BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION`, `BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE` |
 | `packages/battle-runtime/battle-runtime-reducer-route.qnt` | bridge | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
 | `packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt` | bridge | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
@@ -783,6 +786,8 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/spell-invocation-action-slot-core.qnt` | qnt-owner-role | semantic-core |
 | `packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt` | qnt-owner-role | semantic-core |
 | `packages/shared-algebras/proofs/rule-core/spell-invocation-target-cardinality-core.qnt` | qnt-owner-role | semantic-core |
+| `packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core-examples.qnt` | qnt-owner-role | proof-only |
+| `packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core.qnt` | qnt-owner-role | semantic-core |
 | `packages/shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core.qnt` | qnt-owner-role | semantic-core |
 | `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-examples.qnt` | qnt-owner-role | proof-only |
 | `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt` | qnt-owner-role | proof-only |
@@ -984,6 +989,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `filter`, `set-operators`, `membership` |  |  |
 | `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block` |  |  |
 | `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` | generation-subset-clean | `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `all-block`, `set`, `membership` |  |  |
+| `BATTLE.SPELL.MIST_CLOUD_FORM_STATE` | generation-subset-clean | `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `all-block`, `set` |  |  |
 
 ### Generator Readiness Backlog
 

@@ -55,6 +55,7 @@ import { magicWeaponEnhancementProfile } from "./magic-weapon-enhancement.ts";
 import { magicalDarknessPointOriginProfile } from "./magical-darkness-point-origin.ts";
 import { markedDamageRiderProfile } from "./marked-damage-rider.ts";
 import { mirrorImageHitInterceptionProfile } from "./mirror-image-hit-interception.ts";
+import { mistCloudFormProfile } from "./mist-cloud-form.ts";
 import { moonbeamProfile } from "./moonbeam.ts";
 import {
   objectContactDamageProfile,
@@ -123,6 +124,7 @@ function registeredSpellProcedureProfiles() {
     conditionImmunityAndTurnStartTemporaryHitPointsProfile,
     creatureSizeChangeProfile,
     creatureSizeDecreaseProfile,
+    mistCloudFormProfile,
     levitatedCreatureProfile,
     scalarBuffProfile,
     directHitPointRestorationProfile,
