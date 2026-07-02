@@ -241,7 +241,7 @@
     {
       "number": 40,
       "id": "L5FULL-OWN-02-BARBARIAN-FAST-MOVEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose SDK scenario or SDK closure for Barbarian Fast Movement"
     },
     {

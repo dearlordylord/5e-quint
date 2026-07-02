@@ -3622,6 +3622,31 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "barbarian_fast_movement",
+    className: "Barbarian",
+    levelBand: "level-5",
+    label: "level5-sdk-tracer-bullets: Barbarian Fast Movement",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_fast_movement",
+    tracerNeedles: ["barbarianFastMovementUnitId"],
+    helperNeedles: [
+      {
+        anchor: "function assertLevelFiveFastMovementHandoff",
+        needles: [
+          "PASSIVE_SPEED_BONUS_SUPPORT_PROFILE",
+          "const fastMovementDeltaFeet = movementDeltaFeet(10)",
+          "deltaFeet: fastMovementDeltaFeet",
+          'condition: {',
+          'kind: "notWearingArmor"',
+          'categories: ["heavy"]',
+          'action: "dash"',
+          "dashMovementBonusFeet",
+        ],
+      },
+    ],
+  },
+  {
     candidateUnitId: "monk_extra_attack",
     className: "Monk",
     levelBand: "level-5",

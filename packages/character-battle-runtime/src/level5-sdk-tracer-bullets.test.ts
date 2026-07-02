@@ -5,6 +5,7 @@ import {
   battleObscurementZones,
   breakBattleConcentration,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   combatantId,
   discoverBattleActs,
   endTurn,
@@ -38,7 +39,12 @@ import {
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { Hp, movementFeet, resourceCount } from "@dnd/shared/types";
+import {
+  Hp,
+  movementDeltaFeet,
+  movementFeet,
+  resourceCount,
+} from "@dnd/shared/types";
 import type {
   DamageType,
   StatBlockRecord,
@@ -81,6 +87,9 @@ import {
 
 const extraAttackBarbarianId = combatantId(
   "combatant:l5-tracer-extra-attack-barbarian",
+);
+const fastMovementBarbarianId = combatantId(
+  "combatant:l5-tracer-fast-movement-barbarian",
 );
 const extraAttackMonkId = combatantId("combatant:l5-tracer-extra-attack-monk");
 const monkId = combatantId("combatant:l5-tracer-monk");
@@ -191,6 +200,7 @@ const slowSuccessfulSaveTargetId = combatantId(
 );
 
 const barbarianExtraAttackUnitId = "barbarian_extra_attack";
+const barbarianFastMovementUnitId = "barbarian_fast_movement";
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
 const monkStunningStrikeUnitId = "monk_stunning_strike";
@@ -330,6 +340,12 @@ type OngoingSpellTargetWithinRangeFact =
   OngoingSpellTargetChoiceFill["spatialFacts"][number];
 
 describe("level 5 SDK tracer bullets", () => {
+  test("Barbarian Fast Movement projects through sheet handoff and increases Speed plus Dash without Heavy armor", () => {
+    assertLevelFiveFastMovementHandoff({
+      sourceUnitId: barbarianFastMovementUnitId,
+    });
+  });
+
   test("Barbarian Extra Attack projects through sheet handoff and opens exactly one added attack slot", () => {
     assertLevelFiveExtraAttackHandoff({
       actorId: extraAttackBarbarianId,
@@ -3251,6 +3267,99 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
     beforeDamageHp,
     afterDamageHp: requireCombatant(resolved.state, wardedId).hp,
   };
+}
+
+function assertLevelFiveFastMovementHandoff(input: {
+  readonly sourceUnitId: UnitRecord["id"];
+}): void {
+  const fastMovementDeltaFeet = movementDeltaFeet(10);
+  const expectedNotHeavyArmorSpeedFeet = movementFeet(40);
+  const expectedPostDashRemainingFeet = movementFeet(
+    expectedNotHeavyArmorSpeedFeet * 2,
+  );
+
+  const state = battleFromSheets({
+    battleIdText: "battle:l5-tracer-fast-movement-barbarian",
+    characters: [
+      characterSheet({
+        characterIdText: "character:l5-tracer-fast-movement-barbarian",
+        build: levelFiveMartialBuild({
+          classUnitId: "class_barbarian",
+          weaponUnitId: "weapon_longsword",
+          abilityScores: {
+            str: 16,
+            dex: 10,
+            con: 14,
+            int: 10,
+            wis: 10,
+            cha: 10,
+          },
+        }),
+        combatantId: fastMovementBarbarianId,
+        initiative: 20,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+
+  expect(
+    requireCharacterCombatant(state, fastMovementBarbarianId).origin
+      .characterUnitRefs,
+  ).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        unitId: input.sourceUnitId,
+        supportProfiles: expect.arrayContaining([
+          expect.objectContaining({
+            kind: PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
+            deltaFeet: fastMovementDeltaFeet,
+            condition: {
+              kind: "notWearingArmor",
+              categories: ["heavy"],
+            },
+          }),
+        ]),
+      }),
+    ]),
+  );
+
+  expect(snapshotBattle(state).combatants).toContainEqual(
+    expect.objectContaining({
+      combatantId: fastMovementBarbarianId,
+      movement: expect.objectContaining({
+        speedFeet: expectedNotHeavyArmorSpeedFeet,
+        remainingFeet: expectedNotHeavyArmorSpeedFeet,
+      }),
+    }),
+  );
+
+  const dashed = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: fastMovementBarbarianId,
+        action: "dash",
+        speedKind: "walk",
+      },
+      fills: [],
+    }),
+  );
+
+  expect(dashed.snapshot.turn.dashMovementBonusFeet).toBe(
+    expectedNotHeavyArmorSpeedFeet,
+  );
+  expect(dashed.snapshot.combatants).toContainEqual(
+    expect.objectContaining({
+      combatantId: fastMovementBarbarianId,
+      movement: expect.objectContaining({
+        speedFeet: expectedNotHeavyArmorSpeedFeet,
+        remainingFeet: expectedPostDashRemainingFeet,
+      }),
+    }),
+  );
 }
 
 function assertLevelFiveExtraAttackHandoff(input: {

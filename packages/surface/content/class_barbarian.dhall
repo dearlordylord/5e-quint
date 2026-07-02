@@ -17,7 +17,7 @@ let barbarian =
           { categories = [ "light", "medium", "shield" ], kind = "trained" }
       , className = "barbarian"
       , description =
-          "SRD Barbarian class creation facts plus level 1-4 progression and the level 5 Extra Attack grant."
+          "SRD Barbarian class creation facts plus level 1-4 progression and the level 5 Extra Attack and Fast Movement grants."
       , featureGrants =
         [ { level = 1, unitId = "barbarian_rage" }
         , { level = 1, unitId = "barbarian_unarmored_defense" }
@@ -25,6 +25,7 @@ let barbarian =
         , { level = 3, unitId = "barbarian_primal_knowledge" }
         , { level = 4, unitId = "barbarian_ability_score_improvement_l4" }
         , { level = 5, unitId = "barbarian_extra_attack" }
+        , { level = 5, unitId = "barbarian_fast_movement" }
         ]
       , hitPointDie = 12
       , id = "class_barbarian"
@@ -40,7 +41,7 @@ let barbarian =
       , primaryAbilities = { abilities = [ "str" ], kind = "all_of" }
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Barbarian.md:3-25,33-38,56-112"
+        , section = "Classes/Barbarian.md:3-25,33-38,56-116"
         }
       , savingThrowProficiencies = [ "str", "con" ]
       , skillProficiencyChoice =
