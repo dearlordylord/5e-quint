@@ -20,6 +20,7 @@ import { movementFeet, type SpellSlotLevel } from "@dnd/shared/types";
 import type { EffectAtom, SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
+import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
@@ -41,8 +42,18 @@ import {
   sameStringSet,
   scalarBuffSpellTargetCount,
 } from "../spells-profile-shared.ts";
+import {
+  MIST_CLOUD_FORM_CAN_HOVER,
+  MIST_CLOUD_FORM_CONDITION_IMMUNITIES,
+  MIST_CLOUD_FORM_DAMAGE_RESISTANCES,
+  MIST_CLOUD_FORM_FLY_SPEED_FEET,
+  MIST_CLOUD_FORM_SAVING_THROW_ADVANTAGE,
+} from "../mist-cloud-form-facts.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
+import {
+  combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
+  conditionHadNonSpellSourceBeforeSpellEffect,
+} from "../spell-condition-effects-helpers.ts";
 import {
   spellRequiresConcentration,
   spendSpellCastResources,
@@ -75,6 +86,10 @@ type MistCloudFormEffect = MistCloudFormInvocation["activeEffect"];
 type TransformTargetEffect = Extract<
   EffectAtom,
   { readonly kind: "transform_target" }
+>;
+type MistCloudFormShape = Extract<
+  TransformTargetEffect["newForm"],
+  { readonly kind: "spell_effect_mist_cloud" }
 >;
 
 function admitMistCloudForm(
@@ -150,6 +165,7 @@ function mistCloudFormSpellProjection(
     effect === undefined ||
     effect.kind !== "transform_target" ||
     effect.newForm.kind !== "spell_effect_mist_cloud" ||
+    !mistCloudFormMovementAndPassivesAreComplete(effect.newForm) ||
     effect.newForm.transformedObjects !== "worn_and_carried" ||
     !mistCloudFormRevertTriggersAreComplete(effect.revertTriggers)
   ) {
@@ -179,6 +195,29 @@ function mistCloudFormSpellProjection(
           },
         },
       };
+}
+
+function mistCloudFormMovementAndPassivesAreComplete(
+  form: MistCloudFormShape,
+): boolean {
+  return (
+    form.movement.kind === "replace_all_movement_methods" &&
+    form.movement.speedKind === "fly" &&
+    form.movement.feet === Number(MIST_CLOUD_FORM_FLY_SPEED_FEET) &&
+    form.movement.hover === MIST_CLOUD_FORM_CAN_HOVER &&
+    sameStringSet(
+      form.passive.damageResistances,
+      MIST_CLOUD_FORM_DAMAGE_RESISTANCES,
+    ) &&
+    sameStringSet(
+      form.passive.conditionImmunities,
+      MIST_CLOUD_FORM_CONDITION_IMMUNITIES,
+    ) &&
+    sameStringSet(
+      form.passive.savingThrowAdvantage,
+      MIST_CLOUD_FORM_SAVING_THROW_ADVANTAGE,
+    )
+  );
 }
 
 function mistCloudFormRevertTriggersAreComplete(
@@ -383,12 +422,27 @@ function applyMistCloudFormEffect(
       target.activeEffects,
       nextEffect,
     );
+    const replacedMistCloudEffects = [
+      ...replacement.displacedEffects,
+      nextEffect,
+    ];
+    const activeEffects = [
+      ...replacement.activeEffects.filter(
+        (effect) =>
+          !isMistCloudFormConditionImmunityEffectForSource(
+            effect,
+            replacedMistCloudEffects,
+          ),
+      ),
+      ...mistCloudFormConditionImmunityEffects(target, nextEffect),
+    ];
+    const nextTarget = battleCreatureWithSpellActiveEffects(
+      target,
+      activeEffects,
+    );
     const withReplacement = {
       ...nextState,
-      combatants: new Map(nextState.combatants).set(targetId, {
-        ...target,
-        activeEffects: replacement.activeEffects,
-      }),
+      combatants: new Map(nextState.combatants).set(targetId, nextTarget),
     };
     const combatants = replacement.displacedEffects.reduce<
       ReadonlyMap<CombatantId, BattleCreatureState>
@@ -405,6 +459,40 @@ function applyMistCloudFormEffect(
     );
     return { ...withReplacement, combatants };
   }, state);
+}
+
+function mistCloudFormConditionImmunityEffects(
+  target: BattleCreatureState,
+  effect: MistCloudFormEffect,
+): readonly BattleActiveEffect[] {
+  return MIST_CLOUD_FORM_CONDITION_IMMUNITIES.map((condition) => ({
+    kind: "conditionImmunity",
+    sourceSpellId: effect.sourceSpellId,
+    sourceCombatantId: effect.sourceCombatantId,
+    condition,
+    conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
+      target,
+      condition,
+    ),
+    expiresAt: effect.expiresAt,
+  }));
+}
+
+function isMistCloudFormConditionImmunityEffectForSource(
+  effect: BattleActiveEffect,
+  mistCloudFormEffects: readonly MistCloudFormEffect[],
+): boolean {
+  return (
+    effect.kind === "conditionImmunity" &&
+    MIST_CLOUD_FORM_CONDITION_IMMUNITIES.some(
+      (condition) => condition === effect.condition,
+    ) &&
+    mistCloudFormEffects.some(
+      (mistCloudFormEffect) =>
+        effect.sourceSpellId === mistCloudFormEffect.sourceSpellId &&
+        effect.sourceCombatantId === mistCloudFormEffect.sourceCombatantId,
+    )
+  );
 }
 
 function activeEffectsWithMistCloudFormReplaced(

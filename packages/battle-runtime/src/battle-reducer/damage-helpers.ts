@@ -26,6 +26,7 @@ import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import type { CombatantId } from "../identity.ts";
+import { MIST_CLOUD_FORM_DAMAGE_RESISTANCES } from "./mist-cloud-form-facts.ts";
 import type {
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
@@ -918,6 +919,7 @@ function targetHasRuntimeDamageResistance(
   damageType: DamageType,
 ): boolean {
   return (
+    mistCloudFormGrantsDamageResistance(target, damageType) ||
     target.activeEffects.some(
       (effect) =>
         effect.kind === "damageResistance" && effect.damageType === damageType,
@@ -929,6 +931,20 @@ function targetHasRuntimeDamageResistance(
         ongoingFeatureProfileForSourceKey(target, key)?.resistances.includes(
           damageType,
         ) === true,
+    )
+  );
+}
+
+function mistCloudFormGrantsDamageResistance(
+  target: BattleCreatureState,
+  damageType: DamageType,
+): boolean {
+  return (
+    target.activeEffects.some(
+      (effect) => effect.kind === "spellMistCloudForm",
+    ) &&
+    MIST_CLOUD_FORM_DAMAGE_RESISTANCES.some(
+      (resistance) => resistance === damageType,
     )
   );
 }

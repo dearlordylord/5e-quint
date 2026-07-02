@@ -20,6 +20,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIST_CLOUD_FORM_STATE
 
 import { Match } from "effect";
 import {
@@ -120,6 +121,7 @@ import {
 } from "./domain-constants.ts";
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import { MIST_CLOUD_FORM_SAVING_THROW_ADVANTAGE } from "./mist-cloud-form-facts.ts";
 import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeStrengthRollMode,
@@ -1258,18 +1260,35 @@ function activeSavingThrowRollModeProjections(
   state: BattleState,
   ability: Ability,
 ): readonly BattleSavingThrowRollModeProjection[] {
-  return [...state.combatants].flatMap(([targetId, target]) =>
-    target.activeEffects
+  return [...state.combatants].flatMap(([targetId, target]) => [
+    ...mistCloudFormSavingThrowRollModeProjections(target, targetId, ability),
+    ...target.activeEffects
       .filter(
         (
           effect,
         ): effect is Extract<
           BattleActiveEffect,
           { readonly kind: "savingThrowRollMode" }
-        > => effect.kind === "savingThrowRollMode" && effect.ability === ability,
+        > =>
+          effect.kind === "savingThrowRollMode" && effect.ability === ability,
       )
       .map((effect) => ({ targetId, rollMode: effect.mode })),
-  );
+  ]);
+}
+
+function mistCloudFormSavingThrowRollModeProjections(
+  target: BattleCreatureState,
+  targetId: CombatantId,
+  ability: Ability,
+): readonly BattleSavingThrowRollModeProjection[] {
+  return target.activeEffects.some(
+    (effect) => effect.kind === "spellMistCloudForm",
+  ) &&
+    MIST_CLOUD_FORM_SAVING_THROW_ADVANTAGE.some(
+      (candidate) => candidate === ability,
+    )
+    ? [{ targetId, rollMode: "advantage" }]
+    : [];
 }
 
 function activeAbilityD20TestSavingThrowRollModeProjections(

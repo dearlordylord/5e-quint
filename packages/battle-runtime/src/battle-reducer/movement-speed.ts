@@ -10,6 +10,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIST_CLOUD_FORM_STATE
 
 import { Match } from "effect";
 import {
@@ -68,6 +69,7 @@ import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
 import { selfTransformationModeSpecialSpeedKind } from "./spells-active-effects.ts";
 import { SLOW_ACTIVE_PENALTIES_SPEED_RATIO } from "./domain-constants.ts";
+import { MIST_CLOUD_FORM_FLY_SPEED_FEET } from "./mist-cloud-form-facts.ts";
 import {
   combatantCanSee,
   combatantWearingArmor,
@@ -187,12 +189,17 @@ export function effectiveMovementSpeed(
   speedKind: BattleMovementSpeedKind,
   isGrappled = false,
 ): MovementFeet {
+  const hasMistCloudForm = combatantHasMistCloudForm(combatant);
+  if (hasMistCloudForm && speedKind !== "fly") {
+    return movementFeet(0);
+  }
   const speedFeet =
     sharedEffectiveSpeed(
       battleCreatureSpeedFacts(combatant, isGrappled),
       speedKind,
     ) ?? movementFeet(0);
-  return combatant.activeEffects.some((effect) => effect.kind === "speedHalved")
+  return !hasMistCloudForm &&
+    combatant.activeEffects.some((effect) => effect.kind === "speedHalved")
     ? halveMovementSpeed(speedFeet)
     : speedFeet;
 }
@@ -227,6 +234,20 @@ export function battleCreatureSpeedFacts(
   combatant: BattleCreatureState,
   isGrappled = false,
 ): CreatureSpeedFacts {
+  if (combatantHasMistCloudForm(combatant)) {
+    return {
+      ordinarySpeedFeet: movementFeet(0),
+      speedChanges: [],
+      specialSpeeds: [
+        {
+          kind: "fixed",
+          speedType: "fly",
+          speedFeet: MIST_CLOUD_FORM_FLY_SPEED_FEET,
+        },
+      ],
+      terminalSpeedZero: battleTerminalSpeedZero(combatant, isGrappled),
+    };
+  }
   return {
     ordinarySpeedFeet: movementFeet(baseWalkSpeed(combatant)),
     speedChanges: battleSpeedChanges(combatant),
@@ -327,6 +348,9 @@ export function battleTerminalSpeedZero(
 export function representedMovementSpeedKinds(
   combatant: BattleCreatureState,
 ): readonly BattleMovementSpeedKind[] {
+  if (combatantHasMistCloudForm(combatant)) {
+    return ["fly"];
+  }
   const kinds = new Set<BattleMovementSpeedKind>(["walk"]);
   for (const kind of passiveSpeedKindGrantKinds(combatant)) {
     kinds.add(kind);
@@ -376,6 +400,12 @@ function activeSpecialSpeedGrantKinds(
       selfTransformationKinds.has(kind),
     ).map((kind) => ({ kind: "equalToSpeed" as const, speedType: kind })),
   ];
+}
+
+function combatantHasMistCloudForm(combatant: BattleCreatureState): boolean {
+  return combatant.activeEffects.some(
+    (effect) => effect.kind === "spellMistCloudForm",
+  );
 }
 
 export function isBattleLiteralSpecialSpeed(speed: {

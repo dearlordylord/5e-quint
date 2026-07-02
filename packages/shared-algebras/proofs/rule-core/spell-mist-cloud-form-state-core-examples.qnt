@@ -12,6 +12,8 @@ module spellMistCloudFormStateCoreExamples {
     concentrationUpToHour: true,
     targetIsWillingCreature: true,
     transformedObjects: WornAndCarriedObjects,
+    movementReplacement: mistCloudFormMovementReplacement,
+    passiveProjection: mistCloudFormPassiveProjection,
     hasZeroHitPointEnd: true,
     hasTargetMagicActionEnd: true,
     hasSpellEndCleanup: true,
@@ -25,6 +27,20 @@ module spellMistCloudFormStateCoreExamples {
           assert(effect.sourceCombatantKey == 20),
           assert(effect.targetCombatantKey == 30),
           assert(effect.transformedObjects == WornAndCarriedObjects),
+          assert(effect.movementReplacement.onlyMovementSpeedKind == MistCloudFlySpeed),
+          assert(effect.movementReplacement.feet == 10),
+          assert(effect.movementReplacement.hover),
+          assert(effect.passiveProjection.damageResistances == Set(
+            MistCloudBludgeoningResistance,
+            MistCloudPiercingResistance,
+            MistCloudSlashingResistance
+          )),
+          assert(effect.passiveProjection.conditionImmunities == Set(MistCloudProneImmunity)),
+          assert(effect.passiveProjection.savingThrowAdvantages == Set(
+            MistCloudStrengthSavingThrowAdvantage,
+            MistCloudDexteritySavingThrowAdvantage,
+            MistCloudConstitutionSavingThrowAdvantage
+          )),
           assert(effect.endCauses == mistCloudFormEndCauses),
           assert(effect.concentrationOwnerKey == 20),
           assert(effect.durationTicks == mistCloudFormDurationTicks),
@@ -37,6 +53,22 @@ module spellMistCloudFormStateCoreExamples {
     val incompleteFacts = completeMistCloudFacts.with(
       "hasTargetMagicActionEnd",
       false
+    )
+    assert(admitMistCloudFormEffect(10, 20, 30, incompleteFacts) == MistCloudFormRejected)
+  }
+
+  run test_mist_cloud_form_rejects_wrong_movement_replacement = {
+    val incompleteFacts = completeMistCloudFacts.with(
+      "movementReplacement",
+      mistCloudFormMovementReplacement.with("feet", 30)
+    )
+    assert(admitMistCloudFormEffect(10, 20, 30, incompleteFacts) == MistCloudFormRejected)
+  }
+
+  run test_mist_cloud_form_rejects_missing_passive_projection = {
+    val incompleteFacts = completeMistCloudFacts.with(
+      "passiveProjection",
+      mistCloudFormPassiveProjection.with("conditionImmunities", Set())
     )
     assert(admitMistCloudFormEffect(10, 20, 30, incompleteFacts) == MistCloudFormRejected)
   }

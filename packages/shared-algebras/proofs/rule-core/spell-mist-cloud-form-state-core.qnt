@@ -6,13 +6,42 @@
 module spellMistCloudFormStateCore {
   // RAW anchors:
   // - Spells/Descriptions-E-L.md: Gaseous Form target, duration, misty cloud
-  //   transformation, worn/carried objects, zero-Hit-Point end, target Magic
-  //   Action self-end, and normal spell end.
+  //   transformation, worn/carried objects, movement replacement, defensive
+  //   passives, zero-Hit-Point end, target Magic Action self-end, and normal
+  //   spell end.
   // - Spells/Gaining-and-Casting.md: Concentration duration follows the
   //   Concentration rules.
 
   type MistCloudTransformedObjects =
     | WornAndCarriedObjects
+
+  type MistCloudMovementSpeedKind =
+    | MistCloudFlySpeed
+
+  type MistCloudMovementReplacement = {
+    onlyMovementSpeedKind: MistCloudMovementSpeedKind,
+    feet: int,
+    hover: bool
+  }
+
+  type MistCloudDamageResistance =
+    | MistCloudBludgeoningResistance
+    | MistCloudPiercingResistance
+    | MistCloudSlashingResistance
+
+  type MistCloudConditionImmunity =
+    | MistCloudProneImmunity
+
+  type MistCloudSavingThrowAdvantage =
+    | MistCloudStrengthSavingThrowAdvantage
+    | MistCloudDexteritySavingThrowAdvantage
+    | MistCloudConstitutionSavingThrowAdvantage
+
+  type MistCloudPassiveProjection = {
+    damageResistances: Set[MistCloudDamageResistance],
+    conditionImmunities: Set[MistCloudConditionImmunity],
+    savingThrowAdvantages: Set[MistCloudSavingThrowAdvantage]
+  }
 
   type MistCloudFormEndCause =
     | MistCloudTargetDropsToZeroHitPoints
@@ -25,6 +54,8 @@ module spellMistCloudFormStateCore {
     concentrationUpToHour: bool,
     targetIsWillingCreature: bool,
     transformedObjects: MistCloudTransformedObjects,
+    movementReplacement: MistCloudMovementReplacement,
+    passiveProjection: MistCloudPassiveProjection,
     hasZeroHitPointEnd: bool,
     hasTargetMagicActionEnd: bool,
     hasSpellEndCleanup: bool
@@ -35,6 +66,8 @@ module spellMistCloudFormStateCore {
     sourceCombatantKey: int,
     targetCombatantKey: int,
     transformedObjects: MistCloudTransformedObjects,
+    movementReplacement: MistCloudMovementReplacement,
+    passiveProjection: MistCloudPassiveProjection,
     endCauses: Set[MistCloudFormEndCause],
     concentrationOwnerKey: int,
     durationTicks: int
@@ -45,6 +78,26 @@ module spellMistCloudFormStateCore {
     | MistCloudFormRejected
 
   pure def mistCloudFormDurationTicks: int = 60 * 10
+
+  pure def mistCloudFormMovementReplacement: MistCloudMovementReplacement = {
+    onlyMovementSpeedKind: MistCloudFlySpeed,
+    feet: 10,
+    hover: true,
+  }
+
+  pure def mistCloudFormPassiveProjection: MistCloudPassiveProjection = {
+    damageResistances: Set(
+      MistCloudBludgeoningResistance,
+      MistCloudPiercingResistance,
+      MistCloudSlashingResistance
+    ),
+    conditionImmunities: Set(MistCloudProneImmunity),
+    savingThrowAdvantages: Set(
+      MistCloudStrengthSavingThrowAdvantage,
+      MistCloudDexteritySavingThrowAdvantage,
+      MistCloudConstitutionSavingThrowAdvantage
+    ),
+  }
 
   pure def mistCloudFormEndCauses: Set[MistCloudFormEndCause] =
     Set(
@@ -60,6 +113,8 @@ module spellMistCloudFormStateCore {
       facts.concentrationUpToHour,
       facts.targetIsWillingCreature,
       facts.transformedObjects == WornAndCarriedObjects,
+      facts.movementReplacement == mistCloudFormMovementReplacement,
+      facts.passiveProjection == mistCloudFormPassiveProjection,
       facts.hasZeroHitPointEnd,
       facts.hasTargetMagicActionEnd,
       facts.hasSpellEndCleanup,
@@ -77,6 +132,8 @@ module spellMistCloudFormStateCore {
         sourceCombatantKey: sourceCombatantKey,
         targetCombatantKey: targetCombatantKey,
         transformedObjects: facts.transformedObjects,
+        movementReplacement: facts.movementReplacement,
+        passiveProjection: facts.passiveProjection,
         endCauses: mistCloudFormEndCauses,
         concentrationOwnerKey: sourceCombatantKey,
         durationTicks: mistCloudFormDurationTicks,
