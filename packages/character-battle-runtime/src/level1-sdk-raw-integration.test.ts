@@ -193,6 +193,7 @@ const baneBardId = combatantId("combatant:l1-sdk-bane-bard");
 const baneClericId = combatantId("combatant:l1-sdk-bane-cleric");
 const baneWarlockId = combatantId("combatant:l1-sdk-bane-warlock");
 const commandBardId = combatantId("combatant:l1-sdk-command-bard");
+const entangleDruidId = combatantId("combatant:l1-sdk-entangle-druid");
 const animalFriendshipDruidId = combatantId(
   "combatant:l1-sdk-animal-friendship-druid",
 );
@@ -349,6 +350,7 @@ const healingWordSpellId = "healing_word";
 const baneSpellId = "bane";
 const blessSpellId = "bless";
 const commandSpellId = "command";
+const entangleSpellId = "entangle";
 const shieldOfFaithSpellId = "shield_of_faith";
 const animalFriendshipSpellId = "animal_friendship";
 const charmPersonSpellId = "charm_person";
@@ -464,7 +466,7 @@ const druidWildShapeDraftPlan = {
       "class_prepared_spell_choices",
       animalFriendshipSpellId,
       cureWoundsSpellId,
-      "entangle",
+      entangleSpellId,
       "faerie_fire",
       healingWordSpellId,
     ),
@@ -5116,6 +5118,38 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
+  test("Druid and Ranger Entangle spell-list choices share one save-gated Restrained battle path", () => {
+    const druidBuild = finalizedLevelOneDruidEntangleBuild();
+    const rangerBuild = finalizedLevelOneRangerEntangleBuild();
+
+    expect(druidBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_druid",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([entangleSpellId]),
+        }),
+      ]),
+    );
+    expect(rangerBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_ranger",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([entangleSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneEntangle({
+      battleIdText: "battle:l1-sdk-entangle-druid",
+      characterIdText: "character:l1-sdk-entangle-druid",
+      build: druidBuild,
+      casterId: entangleDruidId,
+      expectedSpellSaveDc: 12,
+    });
+  });
+
   test("Bard, Druid, Sorcerer, Warlock, and Wizard Charm Person spell-list choices share one Humanoid Wisdom save Charmed battle resolution", () => {
     const bardBuild = finalizedLevelOneBardCharmPersonBuild();
     const druidBuild = finalizedLevelOneDruidCharmPersonBuild();
@@ -8475,6 +8509,149 @@ function assertLevelOneAnimalFriendship(input: {
   expect(caster.origin.spellcasting?.spellSlots).toEqual([
     { spellLevel: 1, count: 2, expended: 1 },
   ]);
+}
+
+function assertLevelOneEntangle(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        secondMonsterId,
+        8,
+        srdStatBlock("stat_block_skeleton"),
+      ),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    entangleSpellId,
+    1,
+    "saveGatedCondition",
+  );
+  const save = requireHoleFromList(act.initialHoles, "savingThrowOutcome");
+
+  expect(act.subject).toMatchObject({
+    tag: "actionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: entangleSpellId,
+      slotLevel: 1,
+      procedure: "saveGatedCondition",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(save).toMatchObject({
+    ability: "str",
+    dc: { kind: "caster_spell_save_dc" },
+    spell: {
+      procedure: "saveGatedCondition",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      targeting: expect.objectContaining({ sideFeet: 20 }),
+      effect: {
+        kind: "fixed",
+        condition: "restrained",
+        expiresAt: "concentration",
+        escape: {
+          kind: "abilityCheck",
+          ability: "str",
+          skill: "athletics",
+          allowedActor: "target",
+          successEnds: "condition",
+        },
+        turnStartDamage: null,
+        repeatSave: null,
+      },
+      rangeFeet: movementFeet(90),
+    },
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        areaSavingThrowOutcomeFill(save, input.casterId, [
+          { targetId: monsterId, succeeded: false },
+          { targetId: secondMonsterId, succeeded: true },
+        ]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+  const restrainedTarget = requireCombatant(resolved.state, monsterId);
+  const sparedTarget = requireCombatant(resolved.state, secondMonsterId);
+
+  expect(hasCondition(restrainedTarget.conditions, "restrained")).toBe(true);
+  expect(hasCondition(sparedTarget.conditions, "restrained")).toBe(false);
+  expect(restrainedTarget.activeEffects).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "spellCondition",
+        sourceSpellId: entangleSpellId,
+        sourceCombatantId: input.casterId,
+        condition: "restrained",
+        expiresAt: {
+          kind: "concentration",
+          combatantId: input.casterId,
+        },
+        escape: {
+          kind: "abilityCheck",
+          ability: "str",
+          skill: "athletics",
+          allowedActor: "target",
+          successEnds: "condition",
+        },
+      }),
+    ]),
+  );
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(caster.concentration).toEqual({
+    sourceSpellId: entangleSpellId,
+    effectKind: "spellEffect",
+  });
+  expect(caster.activeEffects).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+
+  const concentrationEnded = breakBattleConcentration(
+    resolved.state,
+    input.casterId,
+  );
+  expect(
+    hasCondition(
+      requireCombatant(concentrationEnded, monsterId).conditions,
+      "restrained",
+    ),
+  ).toBe(false);
+  expect(requireCombatant(concentrationEnded, monsterId).activeEffects).toEqual(
+    [],
+  );
+  expect(
+    requireCharacterCombatant(concentrationEnded, input.casterId).concentration,
+  ).toBeNull();
 }
 
 function assertLevelOneCharmPerson(input: {
@@ -11916,7 +12093,7 @@ function finalizedLevelOneDruidPoisonSprayBuild(): CharacterBuild {
     preparedSpells: [
       "animal_friendship",
       "cure_wounds",
-      "entangle",
+      entangleSpellId,
       "faerie_fire",
     ],
   });
@@ -11930,7 +12107,7 @@ function finalizedLevelOneDruidProduceFlameBuild(): CharacterBuild {
     preparedSpells: [
       "animal_friendship",
       "cure_wounds",
-      "entangle",
+      entangleSpellId,
       "faerie_fire",
     ],
   });
@@ -11944,7 +12121,7 @@ function finalizedLevelOneDruidShillelaghBuild(): CharacterBuild {
     preparedSpells: [
       "animal_friendship",
       "cure_wounds",
-      "entangle",
+      entangleSpellId,
       "faerie_fire",
     ],
     weaponPurchase: {
@@ -11976,8 +12153,22 @@ function finalizedLevelOneDruidCureWoundsBuild(): CharacterBuild {
     preparedSpells: [
       "animal_friendship",
       cureWoundsSpellId,
-      "entangle",
+      entangleSpellId,
       "faerie_fire",
+    ],
+  });
+}
+
+function finalizedLevelOneDruidEntangleBuild(): CharacterBuild {
+  return finalizedLevelOneDruidBuild({
+    draftIdText: "draft:l1-sdk-druid-entangle",
+    expectedBuildLabel: "Druid Entangle",
+    cantrips: [produceFlameSpellId, poisonSpraySpellId],
+    preparedSpells: [
+      animalFriendshipSpellId,
+      cureWoundsSpellId,
+      entangleSpellId,
+      healingWordSpellId,
     ],
   });
 }
@@ -11990,7 +12181,7 @@ function finalizedLevelOneDruidCharmPersonBuild(): CharacterBuild {
     preparedSpells: [
       animalFriendshipSpellId,
       charmPersonSpellId,
-      "entangle",
+      entangleSpellId,
       healingWordSpellId,
     ],
   });
@@ -12004,7 +12195,7 @@ function finalizedLevelOneDruidAnimalFriendshipBuild(): CharacterBuild {
     preparedSpells: [
       animalFriendshipSpellId,
       "cure_wounds",
-      "entangle",
+      entangleSpellId,
       healingWordSpellId,
     ],
   });
@@ -12338,6 +12529,14 @@ function finalizedLevelOneRangerAnimalFriendshipBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-ranger-animal-friendship",
     expectedBuildLabel: "Ranger Animal Friendship",
     preparedSpells: [animalFriendshipSpellId, "cure_wounds"],
+  });
+}
+
+function finalizedLevelOneRangerEntangleBuild(): CharacterBuild {
+  return finalizedLevelOneRangerBuild({
+    draftIdText: "draft:l1-sdk-ranger-entangle",
+    expectedBuildLabel: "Ranger Entangle",
+    preparedSpells: [entangleSpellId, cureWoundsSpellId],
   });
 }
 
