@@ -52,6 +52,10 @@ const paths = {
       root,
       "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
     ),
+    fighterLifecycleSupport: path.join(
+      root,
+      "packages/character-battle-runtime/src/fighter-character-lifecycle-test-support.ts",
+    ),
     sdkIntegrationSupport: path.join(
       root,
       "packages/character-battle-runtime/src/sdk-integration-test-support.ts",
@@ -109,8 +113,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 212;
-const expectedLevelOneTwoSeedScenarioRows = 122;
+const expectedLevelOneTwoCampaignGroups = 213;
+const expectedLevelOneTwoSeedScenarioRows = 131;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -1091,6 +1095,178 @@ const druidMulticlassBuildSheetScenarioRows = [
   ...row,
 }));
 
+const fighterBuildSheetScenarioLabel =
+  "level1-sdk-raw-integration: Fighter build-sheet projection derives level-1 class facts from legal creation and a fresh sheet";
+const fighterBuildSheetScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-fighter-build-sheet"',
+  "fighterLifecycleDraftPlan",
+  'battle: { tag: "withoutBattle" }',
+  "fixture.sheet.build",
+  "readClassCreationFacts(",
+  "characterBuildUnitRefs(",
+  "primaryAbilities",
+  "characterBuildHitPoints(",
+  ".hitDice",
+  "characterBuildFeatureUnitIds(",
+  "featureGrants",
+  "characterBuildProficiencies(",
+  "savingThrowProficiencies",
+  "proficiencyChoices",
+  "weaponProficiencies",
+  "characterBuildArmorTraining(",
+  "armorTraining",
+  "selectedUnitChoiceOptionIds(",
+  '"fighter_weapon_mastery"',
+  '"weapon_mastery_options"',
+  "unitLibrary.requireUnit(\"fighter_weapon_mastery\")",
+  '"weapon_mastery_choice"',
+  '"class_level_total_choices"',
+  '"class_proficient_weapons"',
+];
+const fighterBuildSheetScenarioHelperNeedles = [
+  {
+    path: paths.seedScenarioFiles.fighterLifecycleSupport,
+    anchor: "const fighterLifecycleDraftPlan =",
+    needles: [
+      'classUnitId: "class_fighter"',
+      "level: 1",
+      '"class_skill_proficiency_choice"',
+      '"fighter_fighting_style"',
+      '"class_feature_feat_choice"',
+      '"fighter_weapon_mastery"',
+      '"weapon_mastery_options"',
+      'legalUnitChoice("class_fighter", "class_equipment_choice", "option_c")',
+      '"equipment_purchase"',
+      'legalLoadoutChoice("armor_chain_mail", "armor", "worn")',
+      'legalLoadoutChoice("equipment_shield", "shield", "wielded")',
+      'legalLoadoutChoice("weapon_longsword", "weapon", "wielded_one_handed")',
+    ],
+  },
+];
+const fighterBuildSheetScenarioRows = [
+  {
+    rowId:
+      "srd521:classes/fighter:level-1:class-container:fighter_class_container",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:3"],
+  },
+  {
+    rowId:
+      "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:12"],
+  },
+  {
+    rowId:
+      "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:8"],
+  },
+  {
+    rowId:
+      "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:7"],
+  },
+  {
+    rowId:
+      "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:9"],
+  },
+  {
+    rowId:
+      "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:10"],
+  },
+  {
+    rowId:
+      "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:11"],
+  },
+  {
+    candidateUnitId: "fighter_weapon_mastery",
+    rowId:
+      "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:70-74"],
+  },
+].map((row) => ({
+  candidateUnitId: "class_fighter",
+  className: "Fighter",
+  levelBand: "level-1",
+  label: fighterBuildSheetScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: "legal-build-sheet-owner",
+  tracerNeedles: fighterBuildSheetScenarioNeedles,
+  helperNeedles: fighterBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
+
+const fighterMulticlassBuildSheetScenarioLabel =
+  "level1-sdk-raw-integration: Fighter multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet";
+const fighterMulticlassBuildSheetScenarioNeedles = [
+  "finalizedWizardToFighterMulticlassBuild()",
+  "createLegalSourceCharacterSheet({",
+  'characterIdText: "character:l1-sdk-fighter-multiclass-build-sheet"',
+  "fighterMulticlassProgression",
+  "readClassCreationFacts(",
+  "characterBuildHitPoints(",
+  ".hitDice",
+  "characterBuildFeatureUnitIds(",
+  "featureGrants",
+  "characterBuildProficiencies(",
+  "proficiencies.weapon",
+  '"martial"',
+  "characterBuildArmorTraining(",
+  '"light"',
+  '"medium"',
+  '"shield"',
+  "selectedUnitChoiceOptionIds(",
+  '"fighter_weapon_mastery"',
+  "multiclassProficiencies",
+];
+const fighterMulticlassBuildSheetScenarioHelperNeedles = [
+  {
+    anchor: "const fighterMulticlassProgression =",
+    needles: [
+      'startingClass: classUnitId("class_wizard")',
+      'classUnitId: classUnitId("class_fighter")',
+      'hitPointRule: { tag: "fixedHigherLevelGain" }',
+    ],
+  },
+  {
+    anchor: "function finalizedWizardToFighterMulticlassBuild():",
+    needles: [
+      "createCharacterDraft({",
+      'draftId: characterDraftId("draft:l1-sdk-fighter-multiclass-build-sheet")',
+      "progressionOptionId(fighterMulticlassProgression)",
+      '"class_wizard"',
+      '"wizard_cantrip_choices"',
+      '"wizard_spellbook_choices"',
+      '"wizard_prepared_spell_choices"',
+      '"fighter_fighting_style"',
+      '"fighter_weapon_mastery"',
+      '"weapon_mastery_options"',
+      "testLoadoutHoleId(\"weapon_longsword\", \"weapon\")",
+      "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
+      "return { draft: afterLoadout, build: result.build };",
+    ],
+  },
+];
+const fighterMulticlassBuildSheetScenarioRows = [
+  {
+    rowId:
+      "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:22-25"],
+  },
+].map((row) => ({
+  candidateUnitId: "class_fighter",
+  className: "Fighter",
+  levelBand: "level-1",
+  label: fighterMulticlassBuildSheetScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: "legal-build-sheet-owner",
+  tracerNeedles: fighterMulticlassBuildSheetScenarioNeedles,
+  helperNeedles: fighterMulticlassBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
+
 const druidWildShapeSdkScenarioLabel =
   "level1-sdk-raw-integration: Druid Wild Shape splits legal level-2 creation facts, sheet known forms, battle form use, and active-form handoff closure";
 const druidWildShapeSdkScenarioNeedles = [
@@ -1205,6 +1381,8 @@ const seededSdkScenarioRows = [
     helperNeedles: druidicCreationScenarioHelperNeedles,
   },
   ...druidMulticlassBuildSheetScenarioRows,
+  ...fighterBuildSheetScenarioRows,
+  ...fighterMulticlassBuildSheetScenarioRows,
   {
     candidateUnitId: "druid_wild_shape",
     className: "Druid",
