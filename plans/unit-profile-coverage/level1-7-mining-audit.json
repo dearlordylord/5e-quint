@@ -16,11 +16,9 @@
       "spell-level-4": 81
     },
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
-      "catalog-authored-executable-follow-up": 1,
       "catalog-authored-review-required": 19,
       "catalog-installed-owner-evidence-present": 12,
-      "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 28,
+      "catalog-only/dead-for-now": 30,
       "missing-authored-record": 15
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
@@ -35,8 +33,8 @@
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 484,
-      "accepted-no-battle-effect": 253,
-      "battle-runtime-required": 36,
+      "accepted-no-battle-effect": 257,
+      "battle-runtime-required": 32,
       "not-applicable": 77,
       "owner-evidence-required": 50
     },
@@ -55,11 +53,10 @@
       "subclass selection": 12
     },
     "rowsByFinalDisposition": {
-      "catalog-authored-executable-follow-up": 1,
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 501,
-      "catalog-installed-owner-evidence-required": 4,
-      "catalog-only/dead-for-now": 207,
+      "catalog-installed-owner-evidence-required": 1,
+      "catalog-only/dead-for-now": 211,
       "level-5-7-follow-up-required": 22,
       "missing-authored-record": 32,
       "non-runtime": 84
@@ -5210,7 +5207,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -5638,7 +5635,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -5734,7 +5731,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -5926,7 +5923,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -7325,7 +7322,7 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
+          "kind": "resource-option-rider-boundary",
           "owner": "future Turn Undead Channel Divinity option execution owner",
           "reason": "SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule.",
           "source": "unit-claim",
@@ -9493,7 +9490,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -9541,7 +9538,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "outside-battle-runtime",
           "owner": "runtime-detached table inventory and survival adjudication owner",
           "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
           "source": "unit-claim",
@@ -10013,7 +10010,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -10061,7 +10058,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -10157,7 +10154,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -16575,7 +16572,7 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
+          "kind": "resource-option-rider-boundary",
           "owner": "future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners",
           "reason": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
           "source": "unit-claim",
@@ -28633,7 +28630,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -28946,7 +28943,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
         "state": "present"
       },
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
+      "nextAction": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -28962,16 +28959,20 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
+          "reason": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -29385,7 +29386,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -32674,7 +32675,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
         "state": "present"
       },
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
+      "nextAction": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32690,16 +32691,20 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
+          "reason": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -32929,7 +32934,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -38169,7 +38174,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -38434,7 +38439,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",
         "state": "present"
       },
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
+      "nextAction": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38450,16 +38455,20 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
+          "reason": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -38810,7 +38819,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_phantom_steed",
         "state": "present"
       },
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE, L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT, L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE: L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE owns Promote spell-created mount occurrence creation from typed spawned-creature facts, caller-supplied unoccupied placement, Riding Horse catalog stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace on spell end. Required output: Supported-profile or profile-subset-supported Phantom Steed claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for mount lifecycle/control without copying Riding Horse stat-block data or dispatching on Phantom Steed identity.; L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT owns Promote the saddle, bit, and bridle created by the spell as object/equipment occurrences that vanish when carried more than 10 feet from the steed, consuming explicit distance and carried-state witnesses. Required output: Supported-profile or profile-subset-supported object/equipment cleanup claim with focused tests after an object/equipment occurrence owner exists; no Phantom Steed-local inventory ledger or duplicated equipment state.; L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE owns Promote the 13 miles/hour travel fact through a table travel owner that consumes the typed mount travel fact without deriving route, terrain, pace choice, or map distance in battle runtime. Required output: Runtime-detached or supported travel-owner claim with focused tests after table travel facts are represented; no battle-map travel state or authored spell identity dispatch.",
+      "nextAction": "Phantom Steed remains closed at an explicit split owner boundary: mount lifecycle/control must model spell-created mount identity, caller-supplied unoccupied placement, Riding Horse stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace; object cleanup must model saddle/bit/bridle distance-vanish; table travel must model the 13 miles/hour fact. These owners must consume typed Surface/profile facts and explicit table witnesses without duplicating Riding Horse data, table geometry, travel state, equipment state, or authored-identity dispatch in generic runtime code.",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_phantom_steed",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38826,7 +38835,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "companion-control-boundary",
@@ -38839,7 +38848,7 @@
           "state": "not-installed",
           "unitId": "phantom_steed"
         },
-        "finalDisposition": "catalog-authored-executable-follow-up",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -38969,7 +38978,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -39113,7 +39122,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -39257,7 +39266,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -40851,7 +40860,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "table-perception-exploration",
           "owner": "runtime-detached table/perception and remote-sensor owner",
           "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy.",
           "source": "unit-claim",
@@ -41020,7 +41029,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "outside-battle-runtime",
           "owner": "runtime-detached table inventory and survival adjudication owner",
           "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
           "source": "unit-claim",
@@ -41462,7 +41471,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance."
+        "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity."
       ],
       "spellName": "Gaseous Form",
       "supportSnapshot": {
@@ -41473,16 +41482,20 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
+          "reason": "Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -42110,7 +42123,7 @@
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
-        "Promote follow-up split L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE, L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT, L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE: L3-FOLLOWUP-PHANTOM-STEED-MOUNT-LIFECYCLE owns Promote spell-created mount occurrence creation from typed spawned-creature facts, caller-supplied unoccupied placement, Riding Horse catalog stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace on spell end. Required output: Supported-profile or profile-subset-supported Phantom Steed claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for mount lifecycle/control without copying Riding Horse stat-block data or dispatching on Phantom Steed identity.; L3-FOLLOWUP-PHANTOM-STEED-CREATED-EQUIPMENT owns Promote the saddle, bit, and bridle created by the spell as object/equipment occurrences that vanish when carried more than 10 feet from the steed, consuming explicit distance and carried-state witnesses. Required output: Supported-profile or profile-subset-supported object/equipment cleanup claim with focused tests after an object/equipment occurrence owner exists; no Phantom Steed-local inventory ledger or duplicated equipment state.; L3-FOLLOWUP-PHANTOM-STEED-TRAVEL-PACE owns Promote the 13 miles/hour travel fact through a table travel owner that consumes the typed mount travel fact without deriving route, terrain, pace choice, or map distance in battle runtime. Required output: Runtime-detached or supported travel-owner claim with focused tests after table travel facts are represented; no battle-map travel state or authored spell identity dispatch."
+        "Phantom Steed remains closed at an explicit split owner boundary: mount lifecycle/control must model spell-created mount identity, caller-supplied unoccupied placement, Riding Horse stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace; object cleanup must model saddle/bit/bridle distance-vanish; table travel must model the 13 miles/hour fact. These owners must consume typed Surface/profile facts and explicit table witnesses without duplicating Riding Horse data, table geometry, travel state, equipment state, or authored-identity dispatch in generic runtime code."
       ],
       "spellName": "Phantom Steed",
       "supportSnapshot": {
@@ -42121,7 +42134,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "companion-control-boundary",
@@ -42134,7 +42147,7 @@
           "state": "not-installed",
           "unitId": "phantom_steed"
         },
-        "finalDisposition": "catalog-authored-executable-follow-up",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -42465,7 +42478,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication owner",
           "reason": "Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state.",
           "source": "unit-claim",
@@ -42678,7 +42691,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -43013,7 +43026,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",

@@ -1,7 +1,8 @@
 # Level 5 Full SRD Reachable Unit Accounting
 
-This is pre-work for the character-level-5 SRD frontier. It is an accounting
-audit and task-shaping document, not an implementation record.
+This is the final accounting snapshot for the character-level-5 SRD frontier.
+It summarizes generated local artifacts after the level-5 Ralph queue landed;
+it is not a semantic implementation record.
 
 ## Scope
 
@@ -60,26 +61,23 @@ their class tables only grant level-2 spell slots at that level.
 | Wizard | 2 | 29 | 31 |
 | Total | 28 | 110 | 138 |
 
-## Current Accounting Buckets
+## Final Accounting Buckets
 
 From `level1-5-sdk-raw-inventory.json`, the 138 level-5 completion rows split
 as follows.
 
 | SDK disposition | Rows | Meaning |
 | --- | ---: | --- |
-| `seed-scenario-present` | 6 | Existing SDK seeds already cover these row paths; verify and preserve. |
-| `sdk-scenario-needed` | 35 | Runtime/support owner is resolved; add SDK RAW integration scenarios. |
-| `sdk-scenario-or-owner-closure-needed` | 6 | Owner evidence exists, but SDK must choose scenario coverage or explicit SDK closure. |
-| `explicit-closure-needed` | 12 | Class-table summary rows need explicit SDK-scope non-runtime closure. |
-| `future-owner-before-sdk` | 43 | Row is closed from current runtime/SDK scope until a future durable owner exists. |
-| `closure-review-needed` | 36 | Owner boundary remains unresolved for SDK accounting. |
+| `explicit-closure-recorded` | 12 | Class-table summary rows have recorded SDK-scope table-only closure through `L5_PROGRESSION_DELTA_AUDIT.md`. |
+| `future-owner-before-sdk` | 64 | Row is closed from current runtime/SDK scope until a future durable owner exists. |
+| `seed-scenario-present` | 47 | Existing SDK tracer bullets cover these row paths; preserve their evidence. |
+| `table-only-closure-needed` | 15 | Explicit table-only closure evidence is recorded, but no SDK runtime scenario is expected. |
 
 Owner-boundary status:
 
 | Owner-boundary status | Rows |
 | --- | ---: |
-| resolved | 102 |
-| unresolved-review | 36 |
+| resolved | 138 |
 
 ## Progression Delta Closure
 
@@ -105,58 +103,57 @@ that they are generic progression facts, not new per-class runtime dispatch:
   spell pressure; they remain excluded from the spell-level-3 denominator.
 
 Therefore this audit does not add a separate "finish level-5 progression"
-runtime task. The existing Ralph queue consumes the progression audit through
-the class-table closure, feature owner-review, future-owner, and SDK scenario
-tasks.
+runtime task. The completed Ralph queue consumes the progression audit through
+class-table closure, future-owner closure, table-only closure, and SDK scenario
+evidence.
 
 ## Artifact Reconciliation Findings
 
-Generated artifacts agree on the 138-row denominator and SDK bucket counts, but
-two spell identities need explicit reconciliation because the mining audit's
-runtime-follow-up language is stronger than the SDK queue's future-owner closure
-label.
+Generated artifacts agree on the 138-row denominator, SDK bucket counts, and
+owner-boundary status. No level-5 completion row remains in the
+`sdk-scenario-needed` bucket. The two earlier reconciliation rows now both use
+typed future-owner closure language in the mining audit and SDK inventory.
 
 | Unit | Rows | Mining disposition | SDK disposition | Accounting decision | Ralph task |
 | --- | ---: | --- | --- | --- | --- |
-| `gaseous_form` | 3 | `catalog-installed-owner-evidence-required`; battle-runtime-required; follow-up `L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME` | `future-owner-before-sdk` | Keep out of SDK scenarios until the typed mist-cloud effect owner is promoted or the checker records an explicit future-owner closure matching the mining follow-up. | `L5FULL-FUT-11-GASEOUS-FORM` |
-| `phantom_steed` | 1 | `catalog-authored-executable-follow-up`; battle-runtime-required; split follow-ups for mount lifecycle, created equipment, and table travel | `future-owner-before-sdk` | Keep out of SDK scenarios until the split mount/equipment/travel owners are promoted or the checker records an explicit future-owner closure matching the mining follow-ups. | `L5FULL-FUT-15-PHANTOM-STEED` |
+| `gaseous_form` | 3 | `catalog-only/dead-for-now`; accepted-no-battle-effect; closure `table-spatial-derivation: future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner` | `future-owner-before-sdk` | Explicit future-owner closure is now recorded; keep out of SDK scenarios until the typed mist-cloud effect owner is promoted. The structured follow-up task remains on the Unit claim. | `L5FULL-FUT-11-GASEOUS-FORM` |
+| `phantom_steed` | 1 | `catalog-only/dead-for-now`; accepted-no-battle-effect; explicit split owner boundary for mount lifecycle/control, created-equipment cleanup, and table travel | `future-owner-before-sdk` | Explicit future-owner closure is now recorded; keep out of SDK scenarios until the split mount/equipment/travel owners are promoted. | `L5FULL-FUT-15-PHANTOM-STEED` |
 
-These four rows remain inside the 43-row `future-owner-before-sdk` bucket. The
-Ralph tasks above must reconcile the generated artifacts before preserving the
-closure; they are not ordinary no-op closure tasks.
+These four rows remain inside the 64-row `future-owner-before-sdk` bucket. All
+level-5 completion rows now have a resolved generated owner boundary.
 
 ## Character-Level 5 Rows
 
 | Unit | Concept | Row kind | SRD anchor | Surface | Catalog | Profile | Final disposition | Owner boundary | SDK disposition | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `barbarian_extra_attack` | Barbarian Extra Attack | class-feature-grant | .references/srd-5.2.1/Classes/Barbarian.md:112 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | sdk-scenario-or-owner-closure-needed | unit-profile-owner-evidence |
-| `barbarian_fast_movement` | Barbarian Fast Movement | class-feature-grant | .references/srd-5.2.1/Classes/Barbarian.md:116 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | sdk-scenario-or-owner-closure-needed | unit-profile-owner-evidence |
-| `class_barbarian` | Barbarian level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Barbarian.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
+| `barbarian_extra_attack` | Barbarian Extra Attack | class-feature-grant | .references/srd-5.2.1/Classes/Barbarian.md:112 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | seed-scenario-present | unit-profile-owner-evidence; level5-sdk-tracer-bullets |
+| `barbarian_fast_movement` | Barbarian Fast Movement | class-feature-grant | .references/srd-5.2.1/Classes/Barbarian.md:116 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | seed-scenario-present | unit-profile-owner-evidence; level5-sdk-tracer-bullets |
+| `class_barbarian` | Barbarian level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Barbarian.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
 | `bard_font_of_inspiration` | Bard Font of Inspiration | class-feature-grant | .references/srd-5.2.1/Classes/Bard.md:113 | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now | future-runtime-owner-before-sdk | future-owner-before-sdk | battle-readiness-closure |
-| `class_bard` | Bard level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Bard.md:40 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
-| `cleric_sear_undead` | Cleric Sear Undead | class-feature-grant | .references/srd-5.2.1/Classes/Cleric.md:110 | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now | class-feature-closure-review | closure-review-needed | battle-readiness-closure |
-| `class_cleric` | Cleric level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Cleric.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
+| `class_bard` | Bard level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Bard.md:40 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
+| `cleric_sear_undead` | Cleric Sear Undead | class-feature-grant | .references/srd-5.2.1/Classes/Cleric.md:110 | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now | future-runtime-owner-before-sdk | future-owner-before-sdk | battle-readiness-closure |
+| `class_cleric` | Cleric level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Cleric.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
 | `druid_wild_resurgence` | Druid Wild Resurgence | class-feature-grant | .references/srd-5.2.1/Classes/Druid.md:138 | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now | future-runtime-owner-before-sdk | future-owner-before-sdk | battle-readiness-closure |
-| `class_druid` | Druid level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Druid.md:36 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
-| `fighter_extra_attack` | Fighter Extra Attack | class-feature-grant | .references/srd-5.2.1/Classes/Fighter.md:94 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | sdk-scenario-or-owner-closure-needed | unit-profile-owner-evidence |
-| `fighter_tactical_shift` | Fighter Tactical Shift | class-feature-grant | .references/srd-5.2.1/Classes/Fighter.md:98 | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now | class-feature-closure-review | closure-review-needed | battle-readiness-closure |
-| `class_fighter` | Fighter level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Fighter.md:35 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
+| `class_druid` | Druid level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Druid.md:36 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
+| `fighter_extra_attack` | Fighter Extra Attack | class-feature-grant | .references/srd-5.2.1/Classes/Fighter.md:94 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | seed-scenario-present | unit-profile-owner-evidence; level5-sdk-tracer-bullets |
+| `fighter_tactical_shift` | Fighter Tactical Shift | class-feature-grant | .references/srd-5.2.1/Classes/Fighter.md:98 | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now | future-runtime-owner-before-sdk | future-owner-before-sdk | battle-readiness-closure |
+| `class_fighter` | Fighter level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Fighter.md:35 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
 | `monk_extra_attack` | Monk Extra Attack | class-feature-grant | .references/srd-5.2.1/Classes/Monk.md:120 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | seed-scenario-present | unit-profile-owner-evidence |
 | `monk_stunning_strike` | Monk Stunning Strike | class-feature-grant | .references/srd-5.2.1/Classes/Monk.md:124 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | seed-scenario-present | unit-profile-owner-evidence |
-| `class_monk` | Monk level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Monk.md:36 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
-| `paladin_extra_attack` | Paladin Extra Attack | class-feature-grant | .references/srd-5.2.1/Classes/Paladin.md:126 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | sdk-scenario-or-owner-closure-needed | unit-profile-owner-evidence |
+| `class_monk` | Monk level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Monk.md:36 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
+| `paladin_extra_attack` | Paladin Extra Attack | class-feature-grant | .references/srd-5.2.1/Classes/Paladin.md:126 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | seed-scenario-present | unit-profile-owner-evidence; level5-sdk-tracer-bullets |
 | `paladin_faithful_steed` | Paladin Faithful Steed | class-feature-grant | .references/srd-5.2.1/Classes/Paladin.md:130 | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now | future-runtime-owner-before-sdk | future-owner-before-sdk | battle-readiness-closure |
-| `class_paladin` | Paladin level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Paladin.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
-| `ranger_extra_attack` | Ranger Extra Attack | class-feature-grant | .references/srd-5.2.1/Classes/Ranger.md:110 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | sdk-scenario-or-owner-closure-needed | unit-profile-owner-evidence |
-| `class_ranger` | Ranger level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Ranger.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
+| `class_paladin` | Paladin level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Paladin.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
+| `ranger_extra_attack` | Ranger Extra Attack | class-feature-grant | .references/srd-5.2.1/Classes/Ranger.md:110 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | seed-scenario-present | unit-profile-owner-evidence; level5-sdk-tracer-bullets |
+| `class_ranger` | Ranger level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Ranger.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
 | `rogue_cunning_strike` | Rogue Cunning Strike | class-feature-grant | .references/srd-5.2.1/Classes/Rogue.md:97 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | seed-scenario-present | unit-profile-owner-evidence |
-| `rogue_uncanny_dodge` | Rogue Uncanny Dodge | class-feature-grant | .references/srd-5.2.1/Classes/Rogue.md:109 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | sdk-scenario-or-owner-closure-needed | unit-profile-owner-evidence |
-| `class_rogue` | Rogue level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Rogue.md:40 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
+| `rogue_uncanny_dodge` | Rogue Uncanny Dodge | class-feature-grant | .references/srd-5.2.1/Classes/Rogue.md:109 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-battle-to-battle | seed-scenario-present | unit-profile-owner-evidence; level5-sdk-tracer-bullets |
+| `class_rogue` | Rogue level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Rogue.md:40 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
 | `sorcerer_sorcerous_restoration` | Sorcerer Sorcerous Restoration | class-feature-grant | .references/srd-5.2.1/Classes/Sorcerer.md:127 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | character-sheet | seed-scenario-present | unit-profile-owner-evidence |
-| `class_sorcerer` | Sorcerer level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Sorcerer.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
-| `class_warlock` | Warlock level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Warlock.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
+| `class_sorcerer` | Sorcerer level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Sorcerer.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
+| `class_warlock` | Warlock level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Warlock.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
 | `wizard_memorize_spell` | Wizard Memorize Spell | class-feature-grant | .references/srd-5.2.1/Classes/Wizard.md:116 | missing-authored-record | not-installed | unsupported-profile | catalog-only/dead-for-now | future-runtime-owner-before-sdk | future-owner-before-sdk | battle-readiness-closure |
-| `class_wizard` | Wizard level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Wizard.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-needed | - |
+| `class_wizard` | Wizard level 5 feature table row | class-table-summary | .references/srd-5.2.1/Classes/Wizard.md:39 | authored-record-present | installed | unsupported-profile | non-runtime | build-progression | explicit-closure-recorded | sdk-class-table-summary-closure |
 
 ## Spell-Level 3 Unique Identities
 
@@ -179,7 +176,7 @@ This table groups the 110 class-list rows into their 42 spell identities. The
 | `fear` | Fear | Bard, Sorcerer, Warlock, Wizard | 4 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | Bard .references/srd-5.2.1/Classes/Bard.md:220<br>Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:305<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:382<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:243 |
 | `fireball` | Fireball | Sorcerer, Wizard | 2 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:306<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:244 |
 | `fly` | Fly | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:307<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:383<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:245 |
-| `gaseous_form` | Gaseous Form | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | unsupported-profile | catalog-installed-owner-evidence-required | battle-runtime-required | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:308<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:384<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:246 |
+| `gaseous_form` | Gaseous Form | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:308<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:384<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:246 |
 | `glyph_of_warding` | Glyph of Warding | Bard, Cleric, Wizard | 3 | authored-record-present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | Bard .references/srd-5.2.1/Classes/Bard.md:221<br>Cleric .references/srd-5.2.1/Classes/Cleric.md:211<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:247 |
 | `haste` | Haste | Sorcerer, Wizard | 2 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:309<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:248 |
 | `hypnotic_pattern` | Hypnotic Pattern | Bard, Sorcerer, Warlock, Wizard | 4 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Bard .references/srd-5.2.1/Classes/Bard.md:222<br>Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:310<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:385<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:249 |
@@ -189,7 +186,7 @@ This table groups the 110 class-list rows into their 42 spell identities. The
 | `mass_healing_word` | Mass Healing Word | Bard, Cleric | 2 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Bard .references/srd-5.2.1/Classes/Bard.md:224<br>Cleric .references/srd-5.2.1/Classes/Cleric.md:213 |
 | `meld_into_stone` | Meld into Stone | Cleric, Druid | 2 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | Cleric .references/srd-5.2.1/Classes/Cleric.md:214<br>Druid .references/srd-5.2.1/Classes/Druid.md:257 |
 | `nondetection` | Nondetection | Bard, Wizard | 2 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | Bard .references/srd-5.2.1/Classes/Bard.md:225<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:253 |
-| `phantom_steed` | Phantom Steed | Wizard | 1 | authored-record-present | not-installed | unsupported-profile | catalog-authored-executable-follow-up | battle-runtime-required | Wizard .references/srd-5.2.1/Classes/Wizard.md:254 |
+| `phantom_steed` | Phantom Steed | Wizard | 1 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | Wizard .references/srd-5.2.1/Classes/Wizard.md:254 |
 | `plant_growth` | Plant Growth | Bard, Druid | 2 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | Bard .references/srd-5.2.1/Classes/Bard.md:226<br>Druid .references/srd-5.2.1/Classes/Druid.md:258 |
 | `protection_from_energy` | Protection from Energy | Cleric, Druid, Sorcerer, Wizard | 4 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Cleric .references/srd-5.2.1/Classes/Cleric.md:215<br>Druid .references/srd-5.2.1/Classes/Druid.md:259<br>Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:313<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:255 |
 | `remove_curse` | Remove Curse | Cleric, Warlock, Wizard | 3 | authored-record-present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | Cleric .references/srd-5.2.1/Classes/Cleric.md:216<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:388<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:256 |
@@ -214,14 +211,10 @@ Each row maps to `plans/RALPH_L5_FULL_SRD_COMPLETION.md`.
 
 | Bucket | Rows | Ralph action |
 | --- | ---: | --- |
-| Existing SDK seeds | 6 | Verify existing level-5 seed scenarios and keep their evidence discoverable. |
-| Explicit class-table closure | 12 | Record SDK-scope table-only closure for the twelve class-table summaries. |
-| Owner review for supported feature rows | 6 | Decide per Unit whether to add an SDK scenario or mark SDK closure. |
-| Feature owner review | 2 | Resolve Cleric Sear Undead and Fighter Tactical Shift owner boundaries before SDK admission. |
-| Future owner before SDK | 43 | Preserve current runtime-detached closure; do not add SDK scenarios until the durable owner exists. |
-| Artifact reconciliation before preserving future-owner closure | 4 | Reconcile `gaseous_form` and `phantom_steed` mining-vs-SDK disposition text before treating their future-owner closures as durable. This overlaps the future-owner bucket and does not change the 138-row denominator. |
-| Battle spell SDK scenarios | 35 | Add one SDK scenario group per supported spell identity/access slice. |
-| Spell-effect owner review | 36 | Resolve owner boundary or precise closure for twelve spell identities before SDK admission. |
+| Existing SDK seeds | 47 | Preserve existing level-5 tracer bullets and keep their evidence discoverable. |
+| Explicit class-table closure | 12 | Preserve the recorded SDK-scope table-only closure for the twelve class-table summaries. |
+| Future owner before SDK | 64 | Preserve current runtime-detached closure; do not add SDK scenarios until the durable owner exists. |
+| Table-only spell closure | 15 | Preserve explicit table-only closure evidence for Clairvoyance, Sending, Speak with Dead, and Tongues rows. |
 
 ## Spell Description Anchors
 
@@ -301,4 +294,4 @@ cite that file instead of re-deriving level-5 generic progression facts.
   `pnpm sdk-raw-integration-inventory:check`,
   `pnpm cleanroom-branch-coverage:check`,
   `git diff --check`.
-- Do not run MBT for this pre-work.
+- Do not run MBT for this accounting refresh.

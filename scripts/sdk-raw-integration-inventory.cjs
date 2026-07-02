@@ -4,6 +4,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const { readJson, toRepoPath } = require("./unit-profile-coverage-io.cjs");
+const {
+  battleReadinessClosureKind,
+} = require("./unit-profile-coverage-config.cjs");
 const { stable } = require("./unit-profile-coverage-report.cjs");
 
 const root = process.env.SDK_RAW_INTEGRATION_ROOT ?? process.cwd();
@@ -100,14 +103,27 @@ const sheetSpellAccessRowKinds = new Set([
   "subclass-spell-access",
 ]);
 const futureSpellClosureKinds = new Set([
-  "outside-battle-runtime",
-  "table-spatial-derivation",
-  "companion-control-boundary",
+  battleReadinessClosureKind.outsideBattleRuntime,
+  battleReadinessClosureKind.tableSpatialDerivation,
+  battleReadinessClosureKind.companionControlBoundary,
 ]);
-const tableOnlySpellClosureKinds = new Set(["social-knowledge-effect"]);
+const tableOnlySpellClosureKinds = new Set([
+  battleReadinessClosureKind.socialKnowledgeEffect,
+  battleReadinessClosureKind.tablePerceptionExploration,
+]);
+const reviewedPresentationExplorationFutureSpellUnitIds = new Set([
+  "major_image",
+  "nondetection",
+  "plant_growth",
+  "speak_with_plants",
+  "tiny_hut",
+  "water_breathing",
+  "water_walk",
+]);
 const characterCreationClosureKinds = new Set(["selection-grant-container"]);
 const futureFeatureClosureKinds = new Set([
   "character-fact-and-runtime-detached-split",
+  "resource-option-rider-boundary",
 ]);
 const ownerProfilePrefixes = [
   ["character-creation.", "character-creation"],
@@ -121,6 +137,15 @@ const ownerPathPrefixes = [
   ["packages/character-battle-runtime/", "character-battle-runtime"],
   ["packages/battle-runtime/", "character-battle-to-battle"],
 ];
+const explicitClosureRecordedDisposition = "explicit-closure-recorded";
+const levelFiveClassTableSummaryClosure = Object.freeze({
+  source: "sdk-class-table-summary-closure",
+  taskId: "L5FULL-CLOSE-01-LEVEL5-CLASS-TABLES",
+  closureKind: "sdk-scope-table-only-closure",
+  audit: "plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md",
+  reason:
+    "The level-5 class table row is a table summary. The progression delta audit maps Proficiency Bonus, Spell Access, Spell Slot, Pact Slot, Weapon Mastery, and feature-resource deltas to existing generic owners, while feature grants and spell pressure remain separate source rows.",
+});
 
 const seededSdkScenarioRows = [
   {
@@ -3592,6 +3617,111 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "barbarian_extra_attack",
+    className: "Barbarian",
+    levelBand: "level-5",
+    label: "level5-sdk-tracer-bullets: Barbarian Extra Attack",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
+    tracerNeedles: ["barbarianExtraAttackUnitId"],
+    helperNeedles: [
+      {
+        anchor: "function assertLevelFiveExtraAttackHandoff",
+        needles: [
+          "resolveWeaponAttackMiss({",
+          'source: "classFeatureExtraAttack"',
+          "sourceUnitId: input.sourceUnitId",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "barbarian_fast_movement",
+    className: "Barbarian",
+    levelBand: "level-5",
+    label: "level5-sdk-tracer-bullets: Barbarian Fast Movement",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_fast_movement",
+    tracerNeedles: ["barbarianFastMovementUnitId"],
+    helperNeedles: [
+      {
+        anchor: "function assertLevelFiveFastMovementHandoff",
+        needles: [
+          "PASSIVE_SPEED_BONUS_SUPPORT_PROFILE",
+          "const fastMovementDeltaFeet = movementDeltaFeet(10)",
+          "deltaFeet: fastMovementDeltaFeet",
+          "condition: {",
+          'kind: "notWearingArmor"',
+          'categories: ["heavy"]',
+          'action: "dash"',
+          "dashMovementBonusFeet",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "fighter_extra_attack",
+    className: "Fighter",
+    levelBand: "level-5",
+    label: "level5-sdk-tracer-bullets: Fighter Extra Attack",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
+    tracerNeedles: ["fighterExtraAttackUnitId"],
+    helperNeedles: [
+      {
+        anchor: "function assertLevelFiveExtraAttackHandoff",
+        needles: [
+          "resolveWeaponAttackMiss({",
+          'source: "classFeatureExtraAttack"',
+          "sourceUnitId: input.sourceUnitId",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "paladin_extra_attack",
+    className: "Paladin",
+    levelBand: "level-5",
+    label: "level5-sdk-tracer-bullets: Paladin Extra Attack",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
+    tracerNeedles: ["paladinExtraAttackUnitId"],
+    helperNeedles: [
+      {
+        anchor: "function assertLevelFiveExtraAttackHandoff",
+        needles: [
+          "resolveWeaponAttackMiss({",
+          'source: "classFeatureExtraAttack"',
+          "sourceUnitId: input.sourceUnitId",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "ranger_extra_attack",
+    className: "Ranger",
+    levelBand: "level-5",
+    label: "level5-sdk-tracer-bullets: Ranger Extra Attack",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/ranger:level-5:class-feature-grant:ranger_extra_attack",
+    tracerNeedles: ["rangerExtraAttackUnitId"],
+    helperNeedles: [
+      {
+        anchor: "function assertLevelFiveExtraAttackHandoff",
+        needles: [
+          "resolveWeaponAttackMiss({",
+          'source: "classFeatureExtraAttack"',
+          "sourceUnitId: input.sourceUnitId",
+        ],
+      },
+    ],
+  },
+  {
     candidateUnitId: "monk_extra_attack",
     className: "Monk",
     levelBand: "level-5",
@@ -3621,6 +3751,22 @@ const seededSdkScenarioRows = [
     tracerNeedles: ["rogueCunningStrikeUnitId"],
   },
   {
+    candidateUnitId: "rogue_uncanny_dodge",
+    className: "Rogue",
+    levelBand: "level-5",
+    label:
+      "level5-sdk-tracer-bullets: Rogue Uncanny Dodge projects through sheet handoff and halves visible attack-roll damage",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
+    tracerNeedles: [
+      "rogueUncannyDodgeUnitId",
+      "REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE",
+      'kind: "reactionRollOrDamageReduction"',
+      'modifierKind: "attackDamageReduction"',
+    ],
+  },
+  {
     candidateUnitId: "sorcerer_sorcerous_restoration",
     className: "Sorcerer",
     levelBand: "level-5",
@@ -3641,6 +3787,67 @@ const seededSdkScenarioRows = [
     tracerNeedles: ["hasteSpellId"],
   },
   {
+    candidateUnitId: "haste",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Haste",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_haste",
+    tracerNeedles: [
+      "hasteSpellId",
+      "hasteSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "protection_from_energy",
+    className: "Cleric",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Protection from Energy",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_protection_from_energy",
+    tracerNeedles: [
+      "protectionFromEnergySpellId",
+      "protectionFromEnergyClericId",
+      "levelFiveClericBuild",
+      '"class_cleric"',
+    ],
+  },
+  {
+    candidateUnitId: "protection_from_energy",
+    className: "Druid",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Protection from Energy",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_protection_from_energy",
+    tracerNeedles: [
+      "protectionFromEnergySpellId",
+      "protectionFromEnergyDruidId",
+      "levelFiveDruidBuild",
+      "levelFiveDruidWildShapeKnownFormStatBlockIds",
+      '"class_druid"',
+    ],
+  },
+  {
+    candidateUnitId: "protection_from_energy",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Protection from Energy",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_protection_from_energy",
+    tracerNeedles: [
+      "protectionFromEnergySpellId",
+      "protectionFromEnergySorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
     candidateUnitId: "protection_from_energy",
     className: "Wizard",
     levelBand: "spell-level-3",
@@ -3649,6 +3856,500 @@ const seededSdkScenarioRows = [
     rowId:
       "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_protection_from_energy",
     tracerNeedles: ["protectionFromEnergySpellId"],
+  },
+  {
+    candidateUnitId: "sleet_storm",
+    className: "Druid",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_sleet_storm",
+    tracerNeedles: [
+      "sleetStormSpellId",
+      "sleetStormDruidId",
+      "levelFiveDruidBuild",
+      "levelFiveDruidWildShapeKnownFormStatBlockIds",
+      '"class_druid"',
+    ],
+  },
+  {
+    candidateUnitId: "sleet_storm",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_sleet_storm",
+    tracerNeedles: [
+      "sleetStormSpellId",
+      "sleetStormSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "sleet_storm",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_sleet_storm",
+    tracerNeedles: [
+      "sleetStormSpellId",
+      "sleetStormWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
+  {
+    candidateUnitId: "slow",
+    className: "Bard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_slow",
+    tracerNeedles: [
+      "slowSpellId",
+      "slowBardId",
+      "levelFiveBardBuild",
+      '"class_bard"',
+    ],
+  },
+  {
+    candidateUnitId: "slow",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_slow",
+    tracerNeedles: [
+      "slowSpellId",
+      "slowSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "slow",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_slow",
+    tracerNeedles: [
+      "slowSpellId",
+      "slowWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
+  {
+    candidateUnitId: "counterspell",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Counterspell",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_counterspell",
+    tracerNeedles: [
+      "counterspellSpellId",
+      "counterspellSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "counterspell",
+    className: "Warlock",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Counterspell",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_counterspell",
+    tracerNeedles: [
+      "counterspellSpellId",
+      "counterspellWarlockId",
+      "levelFiveWarlockBuild",
+      '"class_warlock"',
+    ],
+  },
+  {
+    candidateUnitId: "counterspell",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Counterspell",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_counterspell",
+    tracerNeedles: [
+      "counterspellSpellId",
+      "counterspellWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Bard",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicBardId",
+      "levelFiveBardBuild",
+      '"class_bard"',
+    ],
+  },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Cleric",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicClericId",
+      "levelFiveClericBuild",
+      '"class_cleric"',
+    ],
+  },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Druid",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicDruidId",
+      "levelFiveDruidBuild",
+      '"class_druid"',
+    ],
+  },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Warlock",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicWarlockId",
+      "levelFiveWarlockBuild",
+      '"class_warlock"',
+    ],
+  },
+  {
+    candidateUnitId: "dispel_magic",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Dispel Magic",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_dispel_magic",
+    tracerNeedles: [
+      "dispelMagicSpellId",
+      "dispelMagicWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
+  {
+    candidateUnitId: "fireball",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Fireball",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fireball",
+    tracerNeedles: [
+      "fireballSpellId",
+      "fireballSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "fireball",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label: "level5-sdk-tracer-bullets: Fireball",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_fireball",
+    tracerNeedles: [
+      "fireballSpellId",
+      "fireballWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
+  {
+    candidateUnitId: "fly",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_fly",
+    tracerNeedles: [
+      "flySpellId",
+      "flySorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "fly",
+    className: "Warlock",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_fly",
+    tracerNeedles: [
+      "flySpellId",
+      "flyWarlockId",
+      "levelFiveWarlockBuild",
+      '"class_warlock"',
+    ],
+  },
+  {
+    candidateUnitId: "fly",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_fly",
+    tracerNeedles: [
+      "flySpellId",
+      "flyWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
+  {
+    candidateUnitId: "glyph_of_warding",
+    className: "Bard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_glyph_of_warding",
+    tracerNeedles: [
+      "glyphOfWardingSpellId",
+      "glyphOfWardingBardId",
+      "levelFiveBardBuild",
+      '"class_bard"',
+    ],
+  },
+  {
+    candidateUnitId: "glyph_of_warding",
+    className: "Cleric",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_glyph_of_warding",
+    tracerNeedles: [
+      "glyphOfWardingSpellId",
+      "glyphOfWardingClericId",
+      "levelFiveClericBuild",
+      '"class_cleric"',
+    ],
+  },
+  {
+    candidateUnitId: "glyph_of_warding",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",
+    tracerNeedles: [
+      "glyphOfWardingSpellId",
+      "glyphOfWardingWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
+  {
+    candidateUnitId: "hypnotic_pattern",
+    className: "Bard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_hypnotic_pattern",
+    tracerNeedles: [
+      "hypnoticPatternSpellId",
+      "hypnoticPatternBardId",
+      "levelFiveBardBuild",
+      '"class_bard"',
+    ],
+  },
+  {
+    candidateUnitId: "hypnotic_pattern",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_hypnotic_pattern",
+    tracerNeedles: [
+      "hypnoticPatternSpellId",
+      "hypnoticPatternSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "hypnotic_pattern",
+    className: "Warlock",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
+    tracerNeedles: [
+      "hypnoticPatternSpellId",
+      "hypnoticPatternWarlockId",
+      "levelFiveWarlockBuild",
+      '"class_warlock"',
+    ],
+  },
+  {
+    candidateUnitId: "hypnotic_pattern",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern",
+    tracerNeedles: [
+      "hypnoticPatternSpellId",
+      "hypnoticPatternWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
+  {
+    candidateUnitId: "lightning_bolt",
+    className: "Sorcerer",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt",
+    tracerNeedles: [
+      "lightningBoltSpellId",
+      "lightningBoltSorcererId",
+      "levelFiveSorcererBuild",
+      '"class_sorcerer"',
+    ],
+  },
+  {
+    candidateUnitId: "lightning_bolt",
+    className: "Wizard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt",
+    tracerNeedles: [
+      "lightningBoltSpellId",
+      "lightningBoltWizardId",
+      "levelFiveWizardBuild",
+      '"class_wizard"',
+    ],
+  },
+  {
+    candidateUnitId: "mass_healing_word",
+    className: "Bard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word",
+    tracerNeedles: [
+      "massHealingWordSpellId",
+      "massHealingWordBardId",
+      "levelFiveBardBuild",
+      '"class_bard"',
+      "bonusActionSpellSlotActForProcedure",
+      '"directHitPointRestoration"',
+      "spellTargetListFill",
+      "damageRollFillWithGroups",
+    ],
+  },
+  {
+    candidateUnitId: "mass_healing_word",
+    className: "Cleric",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
+    tracerNeedles: [
+      "massHealingWordSpellId",
+      "massHealingWordClericId",
+      "levelFiveClericBuild",
+      '"class_cleric"',
+      "bonusActionSpellSlotActForProcedure",
+      '"directHitPointRestoration"',
+      "spellTargetListFill",
+      "damageRollFillWithGroups",
+    ],
   },
 ];
 
@@ -4411,6 +5112,23 @@ function battleReadinessStateIs(row, state) {
   return battleReadiness.state === state;
 }
 
+function isLevelFiveClassTableSummaryRow(row) {
+  return row.levelBand === "level-5" && row.rowKind === "class-table-summary";
+}
+
+function levelFiveClassTableSummaryRecordedClosureEvidence(row, disposition) {
+  if (disposition !== explicitClosureRecordedDisposition) return undefined;
+  if (
+    !isLevelFiveClassTableSummaryRow(row) ||
+    row.supportSnapshot.finalDisposition !== "non-runtime"
+  ) {
+    throw new Error(
+      `Internal invariant failed: ${explicitClosureRecordedDisposition} must be restricted to non-runtime level-5 class-table summary rows.`,
+    );
+  }
+  return levelFiveClassTableSummaryClosure;
+}
+
 function profileOwnerBoundary(profileId) {
   const matched = ownerProfilePrefixes.find(([prefix]) =>
     profileId.startsWith(prefix),
@@ -4522,7 +5240,23 @@ function spellEffectOwnerResult(row) {
       },
     };
   }
-  if (closure.kind === "outside-runtime-presentation-exploration") {
+  if (
+    closure.kind ===
+    battleReadinessClosureKind.outsideRuntimePresentationExploration
+  ) {
+    if (
+      reviewedPresentationExplorationFutureSpellUnitIds.has(
+        row.candidateUnitId,
+      )
+    ) {
+      return {
+        proposedOwnerBoundary: "future-runtime-owner-before-sdk",
+        ownerBoundaryEvidence: {
+          source: "battle-readiness-closure",
+          closure,
+        },
+      };
+    }
     return {
       proposedOwnerBoundary: "spell-effect-owner-review",
       ownerBoundaryEvidence: {
@@ -4634,7 +5368,9 @@ function levelReportSummary(input) {
 }
 
 function ownerBoundaryForMiningRow(row, ownerEvidence) {
-  if (row.rowKind === "class-table-summary") return "build-progression";
+  if (row.rowKind === "class-table-summary") {
+    return "build-progression";
+  }
   if (buildSheetRowKinds.has(row.rowKind)) return "character-build-to-sheet";
   if (buildBattleRowKinds.has(row.rowKind)) return "character-build-to-battle";
   if (sheetSpellAccessRowKinds.has(row.rowKind)) {
@@ -4713,6 +5449,9 @@ function scenarioLaneForRow(row) {
   }
   if (row.sdkInventoryDisposition === "future-owner-before-sdk") {
     return "future-owner-before-sdk";
+  }
+  if (row.sdkInventoryDisposition === explicitClosureRecordedDisposition) {
+    return "explicit-closure";
   }
   if (row.sdkInventoryDisposition === "explicit-closure-needed") {
     return "explicit-closure";
@@ -4851,12 +5590,19 @@ function scenarioSuggestion(group) {
     return "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.";
   }
   if (group.lane === "table-only-closure") {
-    return "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded social/knowledge closure evidence.";
+    return "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.";
   }
   if (group.lane === "sheet-build-closure") {
     return "Review lower-owner evidence and either add a build/sheet SDK assertion for user-reachable state or retain an explicit closure with the local RAW anchor.";
   }
   if (group.lane === "explicit-closure") {
+    if (
+      group.sdkInventoryDispositions.includes(
+        explicitClosureRecordedDisposition,
+      )
+    ) {
+      return "Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row.";
+    }
     return "Keep this generated non-runtime class-table closure tied to the local class table row.";
   }
   if (group.lane === "future-owner-before-sdk") {
@@ -5162,6 +5908,9 @@ function sdkInventoryDisposition(row, proposedOwnerBoundary) {
     return "seed-scenario-present";
   }
   if (row.supportSnapshot.finalDisposition === "non-runtime") {
+    if (isLevelFiveClassTableSummaryRow(row)) {
+      return explicitClosureRecordedDisposition;
+    }
     return "explicit-closure-needed";
   }
   if (proposedOwnerBoundary === "future-runtime-owner-before-sdk") {
@@ -5212,6 +5961,12 @@ function projectMiningRow(row, ownerEvidence) {
   );
   const { proposedOwnerBoundary } = ownerBoundary;
   const disposition = sdkInventoryDisposition(row, proposedOwnerBoundary);
+  const recordedClosure = levelFiveClassTableSummaryRecordedClosureEvidence(
+    row,
+    disposition,
+  );
+  const ownerBoundaryEvidence =
+    recordedClosure ?? ownerBoundary.ownerBoundaryEvidence;
   return {
     rowId: row.rowId,
     levelBand: row.levelBand,
@@ -5230,17 +5985,20 @@ function projectMiningRow(row, ownerEvidence) {
       proposedOwnerBoundary,
       disposition,
     ),
-    ...(ownerBoundary.ownerBoundaryEvidence === undefined
+    ...(ownerBoundaryEvidence === undefined
       ? {}
       : {
-          ownerBoundaryEvidence: ownerBoundary.ownerBoundaryEvidence,
+          ownerBoundaryEvidence,
         }),
     ...(seedScenario === undefined
       ? {}
       : {
           existingSdkScenario: seedScenario,
         }),
-    nextAction: row.nextAction,
+    nextAction:
+      recordedClosure === undefined
+        ? row.nextAction
+        : "SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state.",
   };
 }
 
@@ -5584,14 +6342,21 @@ function renderInventory(inventory) {
     "- Scenario groups are implementation planning groups, not coverage evidence.",
     "  A row is not covered until a deterministic SDK test or explicit closure",
     "  asserts its RAW-facing obligation.",
+    "- `explicit-closure-recorded` means the level-5 class-table summary row has",
+    "  recorded SDK-scope table-only closure evidence from",
+    "  `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`; no SDK",
+    "  scenario or runtime state is expected for the summary row itself.",
+    "  `explicit-closure-needed` remains the unresolved generated disposition",
+    "  for non-runtime rows without a task-recorded SDK closure.",
     "- Supported class-feature owner boundaries are classified from",
     "  `unit-claims.jsonl` profile ids and unit-level owner-evidence rows.",
     "  `multi-owner-sdk-split` means the SDK scenario must assert each profile at",
     "  its real owner instead of pretending the feature has one owner. Unsupported",
     "  class-feature rows use exact row owner evidence when present; otherwise",
     "  closure rows are classified only by typed closure kind.",
-    "- `table-only-closure` means a spell row has recorded social/knowledge",
-    "  closure evidence that is table-owned rather than SDK-executable.",
+    "- `table-only-closure` means a spell row has recorded social/knowledge,",
+    "  table/perception, or exploration closure evidence that is table-owned",
+    "  rather than SDK-executable.",
     "  `spell-effect-owner-review` means the row lacks recorded closure evidence",
     "  or has a recorded closure kind that is not typed enough to split",
     "  future-owner from table-only closure.",

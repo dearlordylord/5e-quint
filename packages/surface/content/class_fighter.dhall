@@ -21,7 +21,7 @@ let fighter =
           }
       , className = "fighter"
       , description =
-          "Minimum SRD Fighter class creation facts plus early progression through level 4."
+          "Minimum SRD Fighter class creation facts plus early progression through the level 5 Extra Attack grant."
       , featureGrants =
         [ { level = 1, unitId = "fighter_fighting_style" }
         , { level = 1, unitId = "fighter_second_wind" }
@@ -29,6 +29,7 @@ let fighter =
         , { level = 2, unitId = "fighter_action_surge" }
         , { level = 2, unitId = "fighter_tactical_mind" }
         , { level = 4, unitId = "fighter_ability_score_improvement_l4" }
+        , { level = 5, unitId = "fighter_extra_attack" }
         ]
       , hitPointDie = 10
       , id = "class_fighter"
@@ -46,7 +47,7 @@ let fighter =
       , primaryAbilities = { abilities = [ "str", "dex" ], kind = "any_of" }
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Fighter.md:3-24,29-34,56-92"
+        , section = "Classes/Fighter.md:3-24,29-34,56-97"
         }
       , savingThrowProficiencies = [ "str", "con" ]
       , skillProficiencyChoice =

@@ -197,7 +197,25 @@ describe("character-creation Surface records", () => {
     });
   });
 
-  test("decodes and reads Ranger level 4 Ability Score Improvement grant", () => {
+  test("decodes and reads Paladin level 5 Extra Attack grant", () => {
+    const classRecord = decodeClassRecordSync(classPaladinInput);
+    const unit = decodeUnitRecordSync(classPaladinInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_paladin",
+        className: "paladin",
+        featureGrants: expect.arrayContaining([
+          { level: 5, unitId: "paladin_extra_attack" },
+        ]),
+      },
+    });
+  });
+
+  test("decodes and reads Ranger level 4 and 5 feature grants", () => {
     const classRecord = decodeClassRecordSync(classRangerInput);
     const unit = decodeUnitRecordSync(classRangerInput);
     const result = readClassCreationFacts(unit);
@@ -210,6 +228,7 @@ describe("character-creation Surface records", () => {
         className: "ranger",
         featureGrants: expect.arrayContaining([
           { level: 4, unitId: "ranger_ability_score_improvement_l4" },
+          { level: 5, unitId: "ranger_extra_attack" },
         ]),
       },
     });
@@ -275,6 +294,7 @@ describe("character-creation Surface records", () => {
           { level: 1, unitId: "fighter_weapon_mastery" },
           { level: 2, unitId: "fighter_action_surge" },
           { level: 2, unitId: "fighter_tactical_mind" },
+          { level: 5, unitId: "fighter_extra_attack" },
         ]),
       },
     });

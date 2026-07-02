@@ -61,8 +61,8 @@ older L5 implementation lanes:
 | Explicit class-table closure | 12 | Close level-5 class-table summary rows as SDK-scope table-only rows after citing the progression-delta audit. |
 | Battle spell SDK scenarios | 35 | Add SDK RAW scenarios or class-access assertions for supported spell Units. |
 | Owner review for supported feature rows | 6 | Decide SDK scenario vs explicit SDK closure per Unit. |
-| Feature owner review | 2 | Resolve Sear Undead and Tactical Shift owner boundaries. |
-| Future owner before SDK | 43 | Preserve future-owner closures until durable owners exist. |
+| Feature owner review | 0 | No level-5 class-feature owner-review rows remain before SDK admission. |
+| Future owner before SDK | 45 | Preserve future-owner closures until durable owners exist. |
 | Artifact reconciliation inside future-owner lane | 4 | Reconcile `gaseous_form` and `phantom_steed` mining-vs-SDK disposition text before treating the future-owner closures as durable. |
 | Spell-effect owner review | 36 | Resolve owner boundaries for twelve spell identities. |
 

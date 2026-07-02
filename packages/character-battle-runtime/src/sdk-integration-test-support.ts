@@ -81,6 +81,9 @@ type CharacterCombatantState = BattleCreatureState & {
     { readonly kind: "character" }
   >;
 };
+type CharacterBuildSpellcastingSource = NonNullable<
+  CharacterBuild["spellcasting"]
+>["sources"][number];
 type CastActionSpellSubject = Extract<
   BattleSubject,
   { readonly tag: "actionSpell" }
@@ -136,6 +139,7 @@ export function characterSheet(input: {
   readonly build: CharacterBuild;
   readonly initiative: number;
   readonly currentHp?: number;
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockRecord["id"][];
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
 }): SheetFixture {
   return {
@@ -152,6 +156,13 @@ export function characterSheet(input: {
         tempHp: Hp(0),
         conditions: [],
         unitLibrary,
+        ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+          ? {}
+          : {
+              druidWildShapeKnownFormStatBlockIds:
+                input.druidWildShapeKnownFormStatBlockIds,
+              statBlockCatalog,
+            }),
         ...(input.resourceExpenditures === undefined
           ? {}
           : { resourceExpenditures: input.resourceExpenditures }),
@@ -314,6 +325,19 @@ const levelFiveWizardFeatureSpellbook = [
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const levelFiveWizardFeatureSpellbookIds: ReadonlySet<UnitRecord["id"]> =
   new Set(levelFiveWizardFeatureSpellbook);
+const levelFiveFullCasterSpellSlots = [
+  { spellLevel: 1, count: 4 },
+  { spellLevel: 2, count: 3 },
+  { spellLevel: 3, count: 2 },
+] as const;
+export const levelFiveDruidWildShapeKnownFormStatBlockIds = [
+  "stat_block_rat",
+  "stat_block_riding_horse",
+  "stat_block_spider",
+  "stat_block_wolf",
+  "stat_block_lizard",
+  "stat_block_cat",
+] as const satisfies ReadonlyArray<StatBlockRecord["id"]>;
 
 function levelFiveWizardChoices(
   requiredPreparedSpells: readonly UnitRecord["id"][],
@@ -607,7 +631,76 @@ function creationFinalizationResultSummary(
   return `invalid with issues ${JSON.stringify(result.issues)}`;
 }
 
-export function levelFiveSorcererBuild(): CharacterBuild {
+function levelFiveFullCasterBuild(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly spellcastingAbility: CharacterBuildSpellcastingSource["spellcastingAbility"];
+  readonly spellcastingFocuses: CharacterBuildSpellcastingSource["spellcastingFocuses"];
+  readonly preparedSpells: readonly UnitRecord["id"][];
+  readonly abilityScores: Parameters<typeof abilityScoreAssignment>[0];
+}): CharacterBuild {
+  return levelFiveBaseBuild({
+    classUnitId: input.classUnitId,
+    abilityScores: input.abilityScores,
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: input.classUnitId,
+          spellcastingAbility: input.spellcastingAbility,
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: input.preparedSpells,
+          spellcastingFocuses: input.spellcastingFocuses,
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: levelFiveFullCasterSpellSlots,
+        },
+      },
+    },
+  });
+}
+
+export function levelFiveBardBuild(input: {
+  readonly preparedSpells: readonly UnitRecord["id"][];
+}): CharacterBuild {
+  return levelFiveFullCasterBuild({
+    classUnitId: "class_bard",
+    spellcastingAbility: "cha",
+    spellcastingFocuses: ["musical_instrument"],
+    preparedSpells: input.preparedSpells,
+    abilityScores: { str: 8, dex: 14, con: 14, int: 10, wis: 10, cha: 16 },
+  });
+}
+
+export function levelFiveClericBuild(input: {
+  readonly preparedSpells: readonly UnitRecord["id"][];
+}): CharacterBuild {
+  return levelFiveFullCasterBuild({
+    classUnitId: "class_cleric",
+    spellcastingAbility: "wis",
+    spellcastingFocuses: ["holy_symbol"],
+    preparedSpells: input.preparedSpells,
+    abilityScores: { str: 10, dex: 10, con: 14, int: 10, wis: 16, cha: 12 },
+  });
+}
+
+export function levelFiveDruidBuild(input: {
+  readonly preparedSpells: readonly UnitRecord["id"][];
+}): CharacterBuild {
+  return levelFiveFullCasterBuild({
+    classUnitId: "class_druid",
+    spellcastingAbility: "wis",
+    spellcastingFocuses: ["druidic_focus"],
+    preparedSpells: input.preparedSpells,
+    abilityScores: { str: 10, dex: 14, con: 14, int: 10, wis: 16, cha: 8 },
+  });
+}
+
+export function levelFiveSorcererBuild(
+  input: { readonly preparedSpells?: readonly UnitRecord["id"][] } = {},
+): CharacterBuild {
   return levelFiveBaseBuild({
     classUnitId: "class_sorcerer",
     abilityScores: { str: 8, dex: 14, con: 14, int: 10, wis: 10, cha: 16 },
@@ -634,18 +727,42 @@ export function levelFiveSorcererBuild(): CharacterBuild {
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
-          preparedSpells: [],
+          preparedSpells: input.preparedSpells ?? [],
           spellcastingFocuses: ["arcane_focus"],
         },
       ],
       slotPools: {
         spellcasting: {
           kind: "spellcasting",
-          slots: [
-            { spellLevel: 1, count: 4 },
-            { spellLevel: 2, count: 3 },
-            { spellLevel: 3, count: 2 },
-          ],
+          slots: levelFiveFullCasterSpellSlots,
+        },
+      },
+    },
+  });
+}
+
+export function levelFiveWarlockBuild(input: {
+  readonly preparedSpells: readonly UnitRecord["id"][];
+}): CharacterBuild {
+  return levelFiveBaseBuild({
+    classUnitId: "class_warlock",
+    abilityScores: { str: 8, dex: 14, con: 14, int: 10, wis: 10, cha: 16 },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_warlock",
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: input.preparedSpells,
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        pactMagic: {
+          kind: "pactMagic",
+          slotLevel: 3,
+          count: 2,
         },
       },
     },

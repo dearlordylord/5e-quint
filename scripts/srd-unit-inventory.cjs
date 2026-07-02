@@ -1094,18 +1094,19 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
     const claim = row.candidateUnitId
       ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
       : undefined;
+    const battleReadinessClosure = battleReadinessClosureFromUnitClaim(claim);
+    if (
+      row.rowKind === "spell-unit-pressure" &&
+      battleReadinessClosure !== undefined
+    ) {
+      return "catalog-only/dead-for-now";
+    }
     if (
       row.rowKind === "spell-unit-pressure" &&
       (spellUnitExecutableFollowUps.has(row.candidateUnitId) ||
         claimFollowUpTasks(claim).length > 0)
     ) {
       return "catalog-authored-executable-follow-up";
-    }
-    if (
-      row.rowKind === "spell-unit-pressure" &&
-      battleReadinessClosureFromUnitClaim(claim) !== undefined
-    ) {
-      return "catalog-only/dead-for-now";
     }
     if (
       row.rowKind === "spell-unit-pressure" &&
@@ -1194,6 +1195,13 @@ function nextAction(
     );
     if (spellUnitClassification?.kind === "catalog-only-closure") {
       return spellUnitClassification.reason;
+    }
+    const claim = row.candidateUnitId
+      ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
+      : undefined;
+    const battleReadinessClosure = battleReadinessClosureFromUnitClaim(claim);
+    if (battleReadinessClosure !== undefined) {
+      return battleReadinessClosure.reason;
     }
     return "Decide whether to admit/support, or keep catalog-only closure counted.";
   }
@@ -1782,7 +1790,19 @@ function installedSpellUnitOwnerClassification(
       missingConstruct: claim.issue,
     };
   }
+  const battleReadinessClosure =
+    claim?.tag === "unsupported-profile" &&
+    isBattleReadinessClosure(claim.battleReadinessClosure)
+      ? claim.battleReadinessClosure
+      : undefined;
   const followUpTasks = claimFollowUpTasks(claim);
+  if (battleReadinessClosure && isInstalled) {
+    return {
+      kind: "catalog-only-closure",
+      owner: battleReadinessClosure.owner,
+      reason: battleReadinessClosure.reason ?? claim.reason,
+    };
+  }
   if (claim?.tag === "unsupported-profile" && followUpTasks.length > 0) {
     return {
       kind: "evidence-required",
@@ -1790,14 +1810,11 @@ function installedSpellUnitOwnerClassification(
       requirement: followUpTaskRequirement(followUpTasks),
     };
   }
-  if (
-    claim?.tag === "unsupported-profile" &&
-    isBattleReadinessClosure(claim.battleReadinessClosure)
-  ) {
+  if (battleReadinessClosure) {
     return {
       kind: "catalog-only-closure",
-      owner: claim.battleReadinessClosure.owner,
-      reason: claim.battleReadinessClosure.reason ?? claim.reason,
+      owner: battleReadinessClosure.owner,
+      reason: battleReadinessClosure.reason ?? claim.reason,
     };
   }
   if (claim?.tag === "unsupported-profile") {

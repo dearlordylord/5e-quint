@@ -66,7 +66,7 @@ and adding one here would create unsupported targeting and visibility semantics.
 The checker-visible owner is therefore:
 
 - `unsupported-profile`
-- `battleReadinessClosure.kind`: `outside-runtime-presentation-exploration`
+- `battleReadinessClosure.kind`: `table-perception-exploration`
 - `battleReadinessClosure.owner`: runtime-detached table/perception and
   remote-sensor owner
 
@@ -89,7 +89,9 @@ Round 2 architecture and connascence pass:
   dispatch on authored identity.
 - Strong remaining coupling is local to the claim text and this report: if
   Clairvoyance later receives a remote-sensor owner, both documents and the
-  generated coverage artifacts must be updated together.
+  generated coverage artifacts must be updated together. The typed
+  `table-perception-exploration` closure keeps the SDK owner-boundary split
+  checker-visible without inferring it from prose.
 
 ## Verification For This Closure
 

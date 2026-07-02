@@ -29,6 +29,7 @@ let rogue =
         , { level = 3, unitId = "rogue_steady_aim" }
         , { level = 4, unitId = "rogue_ability_score_improvement_l4" }
         , { level = 5, unitId = "rogue_cunning_strike" }
+        , { level = 5, unitId = "rogue_uncanny_dodge" }
         ]
       , hitPointDie = 8
       , id = "class_rogue"

@@ -7,343 +7,343 @@
     {
       "number": 1,
       "id": "L5FULL-SEED-01-EXISTING-LEVEL5-SEEDS",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Verify existing level-5 SDK seed scenario rows"
     },
     {
       "number": 2,
       "id": "L5FULL-CLOSE-01-LEVEL5-CLASS-TABLES",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Explicitly close the twelve level-5 class-table summary rows"
     },
     {
       "number": 3,
       "id": "L5FULL-SDK-01-COUNTERSPELL",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Counterspell"
     },
     {
       "number": 4,
       "id": "L5FULL-SDK-02-DISPEL-MAGIC",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Dispel Magic"
     },
     {
       "number": 5,
       "id": "L5FULL-SDK-03-FIREBALL",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Fireball"
     },
     {
       "number": 6,
       "id": "L5FULL-SDK-04-FLY",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Fly"
     },
     {
       "number": 7,
       "id": "L5FULL-SDK-05-GLYPH-OF-WARDING",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Glyph of Warding"
     },
     {
       "number": 8,
       "id": "L5FULL-SDK-06-HASTE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Haste"
     },
     {
       "number": 9,
       "id": "L5FULL-SDK-07-HYPNOTIC-PATTERN",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Hypnotic Pattern"
     },
     {
       "number": 10,
       "id": "L5FULL-SDK-08-LIGHTNING-BOLT",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Lightning Bolt"
     },
     {
       "number": 11,
       "id": "L5FULL-SDK-09-MASS-HEALING-WORD",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Mass Healing Word"
     },
     {
       "number": 12,
       "id": "L5FULL-SDK-10-PROTECTION-FROM-ENERGY",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Protection from Energy"
     },
     {
       "number": 13,
       "id": "L5FULL-SDK-11-SLEET-STORM",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Sleet Storm"
     },
     {
       "number": 14,
       "id": "L5FULL-SDK-12-SLOW",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-5 SDK RAW scenario for Slow"
     },
     {
       "number": 15,
       "id": "L5FULL-FEAT-01-CLERIC-SEAR-UNDEAD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Cleric Sear Undead"
     },
     {
       "number": 16,
       "id": "L5FULL-FEAT-02-FIGHTER-TACTICAL-SHIFT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Fighter Tactical Shift"
     },
     {
       "number": 17,
       "id": "L5FULL-FUT-01-ANIMATE-DEAD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Animate Dead"
     },
     {
       "number": 18,
       "id": "L5FULL-FUT-02-BARD-FONT-OF-INSPIRATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Bard Font of Inspiration"
     },
     {
       "number": 19,
       "id": "L5FULL-FUT-03-BEACON-OF-HOPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Beacon of Hope"
     },
     {
       "number": 20,
       "id": "L5FULL-FUT-04-BESTOW-CURSE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Bestow Curse"
     },
     {
       "number": 21,
       "id": "L5FULL-FUT-05-BLINK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Blink"
     },
     {
       "number": 22,
       "id": "L5FULL-FUT-06-CALL-LIGHTNING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Call Lightning"
     },
     {
       "number": 23,
       "id": "L5FULL-FUT-07-CONJURE-ANIMALS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Conjure Animals"
     },
     {
       "number": 24,
       "id": "L5FULL-FUT-08-DAYLIGHT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Daylight"
     },
     {
       "number": 25,
       "id": "L5FULL-FUT-09-DRUID-WILD-RESURGENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Druid Wild Resurgence"
     },
     {
       "number": 26,
       "id": "L5FULL-FUT-10-FEAR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Fear"
     },
     {
       "number": 27,
       "id": "L5FULL-FUT-11-GASEOUS-FORM",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile future-owner closure for Gaseous Form"
     },
     {
       "number": 28,
       "id": "L5FULL-FUT-12-MAGIC-CIRCLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Magic Circle"
     },
     {
       "number": 29,
       "id": "L5FULL-FUT-13-MELD-INTO-STONE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Meld into Stone"
     },
     {
       "number": 30,
       "id": "L5FULL-FUT-14-PALADIN-FAITHFUL-STEED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Paladin Faithful Steed"
     },
     {
       "number": 31,
       "id": "L5FULL-FUT-15-PHANTOM-STEED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile future-owner closure for Phantom Steed"
     },
     {
       "number": 32,
       "id": "L5FULL-FUT-16-REMOVE-CURSE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Remove Curse"
     },
     {
       "number": 33,
       "id": "L5FULL-FUT-17-REVIVIFY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Revivify"
     },
     {
       "number": 34,
       "id": "L5FULL-FUT-18-SPIRIT-GUARDIANS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Spirit Guardians"
     },
     {
       "number": 35,
       "id": "L5FULL-FUT-19-STINKING-CLOUD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Stinking Cloud"
     },
     {
       "number": 36,
       "id": "L5FULL-FUT-20-VAMPIRIC-TOUCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Vampiric Touch"
     },
     {
       "number": 37,
       "id": "L5FULL-FUT-21-WIND-WALL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Wind Wall"
     },
     {
       "number": 38,
       "id": "L5FULL-FUT-22-WIZARD-MEMORIZE-SPELL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Wizard Memorize Spell"
     },
     {
       "number": 39,
       "id": "L5FULL-OWN-01-BARBARIAN-EXTRA-ATTACK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose SDK scenario or SDK closure for Barbarian Extra Attack"
     },
     {
       "number": 40,
       "id": "L5FULL-OWN-02-BARBARIAN-FAST-MOVEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose SDK scenario or SDK closure for Barbarian Fast Movement"
     },
     {
       "number": 41,
       "id": "L5FULL-OWN-03-FIGHTER-EXTRA-ATTACK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose SDK scenario or SDK closure for Fighter Extra Attack"
     },
     {
       "number": 42,
       "id": "L5FULL-OWN-04-PALADIN-EXTRA-ATTACK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose SDK scenario or SDK closure for Paladin Extra Attack"
     },
     {
       "number": 43,
       "id": "L5FULL-OWN-05-RANGER-EXTRA-ATTACK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose SDK scenario or SDK closure for Ranger Extra Attack"
     },
     {
       "number": 44,
       "id": "L5FULL-OWN-06-ROGUE-UNCANNY-DODGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose SDK scenario or SDK closure for Rogue Uncanny Dodge"
     },
     {
       "number": 45,
       "id": "L5FULL-REV-01-CLAIRVOYANCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Clairvoyance"
     },
     {
       "number": 46,
       "id": "L5FULL-REV-02-CREATE-FOOD-AND-WATER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Create Food and Water"
     },
     {
       "number": 47,
       "id": "L5FULL-REV-03-MAJOR-IMAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Major Image"
     },
     {
       "number": 48,
       "id": "L5FULL-REV-04-NONDETECTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Nondetection"
     },
     {
       "number": 49,
       "id": "L5FULL-REV-05-PLANT-GROWTH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Plant Growth"
     },
     {
       "number": 50,
       "id": "L5FULL-REV-06-SENDING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Sending"
     },
     {
       "number": 51,
       "id": "L5FULL-REV-07-SPEAK-WITH-DEAD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Speak with Dead"
     },
     {
       "number": 52,
       "id": "L5FULL-REV-08-SPEAK-WITH-PLANTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Speak with Plants"
     },
     {
       "number": 53,
       "id": "L5FULL-REV-09-TINY-HUT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Tiny Hut"
     },
     {
       "number": 54,
       "id": "L5FULL-REV-10-TONGUES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Tongues"
     },
     {
       "number": 55,
       "id": "L5FULL-REV-11-WATER-BREATHING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Water Breathing"
     },
     {
       "number": 56,
       "id": "L5FULL-REV-12-WATER-WALK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Water Walk"
     },
     {
       "number": 57,
       "id": "L5FULL-FINAL-01-GENERATED-REFRESH",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Refresh and verify generated level-5 full SRD accounting"
     }
   ]
@@ -417,8 +417,8 @@ closing or implementing the row.
 | # | Task | Lane | Unit(s) | Rows | Current state | Output | Acceptance | SRD anchors |
 | ---: | --- | --- | --- | ---: | --- | --- | --- | --- |
 | 1 | `L5FULL-SEED-01-EXISTING-LEVEL5-SEEDS` | seed-present | `monk_extra_attack`, `monk_stunning_strike`, `rogue_cunning_strike`, `sorcerer_sorcerous_restoration`, `haste`, `protection_from_energy` | 6 | Existing SDK seeds recorded. | Verify seed coverage remains linked to SDK inventory. | `sdk-raw-integration-inventory:check` still reports six level-5 seed rows. | See SDK inventory seed rows. |
-| 2 | `L5FULL-CLOSE-01-LEVEL5-CLASS-TABLES` | explicit-closure | twelve `class_*` level-5 table summaries | 12 | `explicit-closure-needed`, `build-progression`, resolved; progression deltas audited separately. | Record SDK-scope table-only closure citing `L5_PROGRESSION_DELTA_AUDIT.md`. | No class-table summary remains an SDK completion blocker, and no duplicate per-class Proficiency Bonus, Spell Slot, Pact Slot, Weapon Mastery, or feature-resource state is introduced. | See accounting table for twelve class anchors and `L5_PROGRESSION_DELTA_AUDIT.md`. |
-| 3 | `L5FULL-SDK-01-COUNTERSPELL` | battle-spell-sdk | `counterspell` | 3 | `sdk-scenario-needed`, resolved. | Add SDK RAW scenario or class-access assertions. | Scenario covers Sorcerer, Warlock, Wizard access rows and supported runtime behavior. | .references/srd-5.2.1/Classes/Sorcerer.md:302<br>.references/srd-5.2.1/Classes/Warlock.md:380<br>.references/srd-5.2.1/Classes/Wizard.md:241 |
+| 2 | `L5FULL-CLOSE-01-LEVEL5-CLASS-TABLES` | explicit-closure | twelve `class_*` level-5 table summaries | 12 | `explicit-closure-recorded`, `build-progression`, resolved; progression deltas audited separately. | Preserve SDK-scope table-only closure citing `L5_PROGRESSION_DELTA_AUDIT.md`. | No class-table summary remains an SDK completion blocker, and no duplicate per-class Proficiency Bonus, Spell Slot, Pact Slot, Weapon Mastery, or feature-resource state is introduced. | See accounting table for twelve class anchors and `L5_PROGRESSION_DELTA_AUDIT.md`. |
+| 3 | `L5FULL-SDK-01-COUNTERSPELL` | battle-spell-sdk | `counterspell` | 3 | `seed-scenario-present`, resolved. | Preserve the level-5 Counterspell SDK tracer scenario and class-access assertions. | Scenario covers Sorcerer, Warlock, Wizard access rows and supported runtime behavior. | .references/srd-5.2.1/Classes/Sorcerer.md:302<br>.references/srd-5.2.1/Classes/Warlock.md:380<br>.references/srd-5.2.1/Classes/Wizard.md:241 |
 | 4 | `L5FULL-SDK-02-DISPEL-MAGIC` | battle-spell-sdk | `dispel_magic` | 6 | `sdk-scenario-needed`, resolved. | Add SDK RAW scenario or class-access assertions. | Scenario covers all six class access rows and supported subset semantics. | .references/srd-5.2.1/Classes/Bard.md:219<br>.references/srd-5.2.1/Classes/Cleric.md:210<br>.references/srd-5.2.1/Classes/Druid.md:256<br>.references/srd-5.2.1/Classes/Sorcerer.md:304<br>.references/srd-5.2.1/Classes/Warlock.md:381<br>.references/srd-5.2.1/Classes/Wizard.md:242 |
 | 5 | `L5FULL-SDK-03-FIREBALL` | battle-spell-sdk | `fireball` | 2 | `sdk-scenario-needed`, resolved. | Add SDK RAW scenario or class-access assertions. | Scenario covers Sorcerer and Wizard access rows and supported runtime behavior. | .references/srd-5.2.1/Classes/Sorcerer.md:306<br>.references/srd-5.2.1/Classes/Wizard.md:244 |
 | 6 | `L5FULL-SDK-04-FLY` | battle-spell-sdk | `fly` | 3 | `sdk-scenario-needed`, resolved. | Add SDK RAW scenario or class-access assertions. | Scenario covers Sorcerer, Warlock, Wizard access rows and supported subset semantics. | .references/srd-5.2.1/Classes/Sorcerer.md:307<br>.references/srd-5.2.1/Classes/Warlock.md:383<br>.references/srd-5.2.1/Classes/Wizard.md:245 |
@@ -430,8 +430,8 @@ closing or implementing the row.
 | 12 | `L5FULL-SDK-10-PROTECTION-FROM-ENERGY` | battle-spell-sdk | `protection_from_energy` | 3 | `sdk-scenario-needed`, resolved. | Add Cleric, Druid, and Sorcerer SDK coverage beyond the existing Wizard seed. | Three non-Wizard rows leave `sdk-scenario-needed`; Wizard seed remains intact. | .references/srd-5.2.1/Classes/Cleric.md:215<br>.references/srd-5.2.1/Classes/Druid.md:259<br>.references/srd-5.2.1/Classes/Sorcerer.md:313 |
 | 13 | `L5FULL-SDK-11-SLEET-STORM` | battle-spell-sdk | `sleet_storm` | 3 | `sdk-scenario-needed`, resolved. | Add SDK RAW scenario or class-access assertions. | Scenario covers Druid, Sorcerer, Wizard access rows and supported subset semantics. | .references/srd-5.2.1/Classes/Druid.md:261<br>.references/srd-5.2.1/Classes/Sorcerer.md:314<br>.references/srd-5.2.1/Classes/Wizard.md:258 |
 | 14 | `L5FULL-SDK-12-SLOW` | battle-spell-sdk | `slow` | 3 | `sdk-scenario-needed`, resolved. | Add SDK RAW scenario or class-access assertions. | Scenario covers Bard, Sorcerer, Wizard access rows and supported runtime behavior. | .references/srd-5.2.1/Classes/Bard.md:228<br>.references/srd-5.2.1/Classes/Sorcerer.md:315<br>.references/srd-5.2.1/Classes/Wizard.md:259 |
-| 15 | `L5FULL-FEAT-01-CLERIC-SEAR-UNDEAD` | feature-owner-review | `cleric_sear_undead` | 1 | `closure-review-needed`, unresolved. | Decide SDK closure vs future Turn Undead owner prerequisite. | Row is no longer unresolved-review without adding duplicate Channel Divinity state. | .references/srd-5.2.1/Classes/Cleric.md:110 |
-| 16 | `L5FULL-FEAT-02-FIGHTER-TACTICAL-SHIFT` | feature-owner-review | `fighter_tactical_shift` | 1 | `closure-review-needed`, unresolved. | Decide SDK closure vs future Second Wind movement owner prerequisite. | Row is no longer unresolved-review without adding duplicate Second Wind or movement state. | .references/srd-5.2.1/Classes/Fighter.md:98 |
+| 15 | `L5FULL-FEAT-01-CLERIC-SEAR-UNDEAD` | future-owner-before-sdk | `cleric_sear_undead` | 1 | resolved future owner before SDK. | Preserve Turn Undead resource-option rider closure. | No SDK scenario is added before the future Turn Undead Channel Divinity option execution owner exists, and no duplicate Channel Divinity or Sear Undead action, resource, or target state is introduced. | .references/srd-5.2.1/Classes/Cleric.md:110 |
+| 16 | `L5FULL-FEAT-02-FIGHTER-TACTICAL-SHIFT` | future-owner-before-sdk | `fighter_tactical_shift` | 1 | resolved future owner before SDK. | Preserve Second Wind activation movement-rider closure. | No SDK scenario is added before the future Second Wind activation rider owner exists, and no duplicate Second Wind pool, turn Movement budget, or Opportunity Attack state is introduced. | .references/srd-5.2.1/Classes/Fighter.md:98 |
 | 17 | `L5FULL-FUT-01-ANIMATE-DEAD` | future-owner-before-sdk | `animate_dead` | 2 | resolved future owner before SDK. | Preserve companion-control closure. | No SDK scenario is added before the durable reanimated companion owner exists. | .references/srd-5.2.1/Classes/Cleric.md:204<br>.references/srd-5.2.1/Classes/Wizard.md:237 |
 | 18 | `L5FULL-FUT-02-BARD-FONT-OF-INSPIRATION` | future-owner-before-sdk | `bard_font_of_inspiration` | 1 | resolved future owner before SDK. | Preserve Character Sheet resource-recovery closure. | No duplicate Bardic Inspiration resource state is introduced. | .references/srd-5.2.1/Classes/Bard.md:113 |
 | 19 | `L5FULL-FUT-03-BEACON-OF-HOPE` | future-owner-before-sdk | `beacon_of_hope` | 1 | resolved future owner before SDK. | Preserve active spell-effect owner closure. | No SDK scenario is added before healing-maximization and save-mode owner exists. | .references/srd-5.2.1/Classes/Cleric.md:205 |
@@ -460,18 +460,18 @@ closing or implementing the row.
 | 42 | `L5FULL-OWN-04-PALADIN-EXTRA-ATTACK` | owner-review | `paladin_extra_attack` | 1 | `sdk-scenario-or-owner-closure-needed`, resolved owner. | Add SDK scenario or explicit SDK closure. | Row leaves owner-review without duplicating Extra Attack behavior. | .references/srd-5.2.1/Classes/Paladin.md:126 |
 | 43 | `L5FULL-OWN-05-RANGER-EXTRA-ATTACK` | owner-review | `ranger_extra_attack` | 1 | `sdk-scenario-or-owner-closure-needed`, resolved owner. | Add SDK scenario or explicit SDK closure. | Row leaves owner-review without duplicating Extra Attack behavior. | .references/srd-5.2.1/Classes/Ranger.md:110 |
 | 44 | `L5FULL-OWN-06-ROGUE-UNCANNY-DODGE` | owner-review | `rogue_uncanny_dodge` | 1 | `sdk-scenario-or-owner-closure-needed`, resolved owner. | Add SDK scenario or explicit SDK closure. | Row leaves owner-review without duplicating Reaction damage-reduction behavior. | .references/srd-5.2.1/Classes/Rogue.md:109 |
-| 45 | `L5FULL-REV-01-CLAIRVOYANCE` | spell-effect-owner-review | `clairvoyance` | 4 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Four rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:218<br>.references/srd-5.2.1/Classes/Cleric.md:207<br>.references/srd-5.2.1/Classes/Sorcerer.md:301<br>.references/srd-5.2.1/Classes/Wizard.md:240 |
-| 46 | `L5FULL-REV-02-CREATE-FOOD-AND-WATER` | spell-effect-owner-review | `create_food_and_water` | 1 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Row leaves unresolved-review. | .references/srd-5.2.1/Classes/Cleric.md:208 |
-| 47 | `L5FULL-REV-03-MAJOR-IMAGE` | spell-effect-owner-review | `major_image` | 4 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Four rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:223<br>.references/srd-5.2.1/Classes/Sorcerer.md:312<br>.references/srd-5.2.1/Classes/Warlock.md:387<br>.references/srd-5.2.1/Classes/Wizard.md:252 |
-| 48 | `L5FULL-REV-04-NONDETECTION` | spell-effect-owner-review | `nondetection` | 2 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Two rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:225<br>.references/srd-5.2.1/Classes/Wizard.md:253 |
-| 49 | `L5FULL-REV-05-PLANT-GROWTH` | spell-effect-owner-review | `plant_growth` | 2 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Two rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:226<br>.references/srd-5.2.1/Classes/Druid.md:258 |
-| 50 | `L5FULL-REV-06-SENDING` | spell-effect-owner-review | `sending` | 3 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Three rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:227<br>.references/srd-5.2.1/Classes/Cleric.md:218<br>.references/srd-5.2.1/Classes/Wizard.md:257 |
-| 51 | `L5FULL-REV-07-SPEAK-WITH-DEAD` | spell-effect-owner-review | `speak_with_dead` | 3 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Three rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:229<br>.references/srd-5.2.1/Classes/Cleric.md:219<br>.references/srd-5.2.1/Classes/Wizard.md:260 |
-| 52 | `L5FULL-REV-08-SPEAK-WITH-PLANTS` | spell-effect-owner-review | `speak_with_plants` | 2 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Two rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:230<br>.references/srd-5.2.1/Classes/Druid.md:262 |
-| 53 | `L5FULL-REV-09-TINY-HUT` | spell-effect-owner-review | `tiny_hut` | 2 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Two rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:232<br>.references/srd-5.2.1/Classes/Wizard.md:262 |
-| 54 | `L5FULL-REV-10-TONGUES` | spell-effect-owner-review | `tongues` | 5 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Five rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:233<br>.references/srd-5.2.1/Classes/Cleric.md:221<br>.references/srd-5.2.1/Classes/Sorcerer.md:317<br>.references/srd-5.2.1/Classes/Warlock.md:389<br>.references/srd-5.2.1/Classes/Wizard.md:263 |
-| 55 | `L5FULL-REV-11-WATER-BREATHING` | spell-effect-owner-review | `water_breathing` | 3 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Three rows leave unresolved-review. | .references/srd-5.2.1/Classes/Druid.md:263<br>.references/srd-5.2.1/Classes/Sorcerer.md:319<br>.references/srd-5.2.1/Classes/Wizard.md:265 |
-| 56 | `L5FULL-REV-12-WATER-WALK` | spell-effect-owner-review | `water_walk` | 3 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Three rows leave unresolved-review. | .references/srd-5.2.1/Classes/Cleric.md:222<br>.references/srd-5.2.1/Classes/Druid.md:264<br>.references/srd-5.2.1/Classes/Sorcerer.md:320 |
+| 45 | `L5FULL-REV-01-CLAIRVOYANCE` | table-only-closure | `clairvoyance` | 4 | `table-only-closure-needed`, resolved. | Preserve table/perception/exploration closure. | Four rows leave unresolved-review without adding battle-runtime sensor, targeting, visibility, companion, or actor state. | .references/srd-5.2.1/Classes/Bard.md:218<br>.references/srd-5.2.1/Classes/Cleric.md:207<br>.references/srd-5.2.1/Classes/Sorcerer.md:301<br>.references/srd-5.2.1/Classes/Wizard.md:240 |
+| 46 | `L5FULL-REV-02-CREATE-FOOD-AND-WATER` | future-owner-before-sdk | `create_food_and_water` | 1 | `future-owner-before-sdk`, resolved. | Preserve inventory/survival owner closure. | Row leaves unresolved-review without adding battle-runtime inventory, provision, consumption, spoilage, malnutrition, or dehydration state. | .references/srd-5.2.1/Classes/Cleric.md:208 |
+| 47 | `L5FULL-REV-03-MAJOR-IMAGE` | future-owner-before-sdk | `major_image` | 4 | `future-owner-before-sdk`, resolved. | Preserve illusion Spell Effect and table/presentation/perception owner closure. | Four rows leave unresolved-review without adding illusion occurrence, table/presentation/perception, map, line-of-sight, object/creature presence, or believability duplicate state. | .references/srd-5.2.1/Classes/Bard.md:223<br>.references/srd-5.2.1/Classes/Sorcerer.md:312<br>.references/srd-5.2.1/Classes/Warlock.md:387<br>.references/srd-5.2.1/Classes/Wizard.md:252 |
+| 48 | `L5FULL-REV-04-NONDETECTION` | future-owner-before-sdk | `nondetection` | 2 | `future-owner-before-sdk`, resolved. | Preserve divination targeting and magical scrying-sensor perception owner closure. | Two rows leave unresolved-review without adding Divination targetability, remote-sensor perception, place identity, table/perception disclosure, battle map, sensor, or authored spell identity duplicate state. | .references/srd-5.2.1/Classes/Bard.md:225<br>.references/srd-5.2.1/Classes/Wizard.md:253 |
+| 49 | `L5FULL-REV-05-PLANT-GROWTH` | future-owner-before-sdk | `plant_growth` | 2 | `future-owner-before-sdk`, resolved. | Preserve table/spatial/exploration/economy owner closure. | Two rows leave unresolved-review without adding normal-plant area membership, excluded-area geometry, pathfinding, travel-pacing, plant-world, harvest, food-yield, or economy state. | .references/srd-5.2.1/Classes/Bard.md:226<br>.references/srd-5.2.1/Classes/Druid.md:258 |
+| 50 | `L5FULL-REV-06-SENDING` | table-only-closure | `sending` | 3 | `table-only-closure-needed`, resolved. | Preserve runtime-detached table communication closure. | Three rows leave unresolved-review without adding battle-runtime communication content, creature knowledge/description matching, planar-location, delivery-failure, response, or recipient-block state. | .references/srd-5.2.1/Classes/Bard.md:227<br>.references/srd-5.2.1/Classes/Cleric.md:218<br>.references/srd-5.2.1/Classes/Wizard.md:257 |
+| 51 | `L5FULL-REV-07-SPEAK-WITH-DEAD` | table-only-closure | `speak_with_dead` | 3 | `table-only-closure-needed`, resolved. | Preserve runtime-detached table communication and corpse/remains eligibility closure. | Three rows leave unresolved-review without adding battle-runtime corpse identity, mouth state, former creature type, recent spell-target history, conversation contents, truthfulness, language/knowledge history, soul/animating-spirit, or future-event state. | .references/srd-5.2.1/Classes/Bard.md:229<br>.references/srd-5.2.1/Classes/Cleric.md:219<br>.references/srd-5.2.1/Classes/Wizard.md:260 |
+| 52 | `L5FULL-REV-08-SPEAK-WITH-PLANTS` | future-owner-before-sdk | `speak_with_plants` | 2 | `future-owner-before-sdk`, resolved. | Preserve plant communication, terrain-conversion, table/spatial/exploration, and pathfinding owner closure. | Two rows leave unresolved-review without adding plant-world, non-creature plant sentience, table information, terrain-conversion choice/persistence, immobile area placement, or pathfinding and movement-cost duplicate state. | .references/srd-5.2.1/Classes/Bard.md:230<br>.references/srd-5.2.1/Classes/Druid.md:262 |
+| 53 | `L5FULL-REV-09-TINY-HUT` | future-owner-before-sdk | `tiny_hut` | 2 | `future-owner-before-sdk`, resolved. | Preserve stationary shelter Spell Effect and table/spatial/environment owner closure. | Two rows leave unresolved-review without adding stationary Emanation placement, cast-time encapsulation or membership, passage-boundary, weather or atmosphere, interior-light, color, one-way visibility, or level-capped spell-boundary duplicate state. | .references/srd-5.2.1/Classes/Bard.md:232<br>.references/srd-5.2.1/Classes/Wizard.md:262 |
+| 54 | `L5FULL-REV-10-TONGUES` | table-only-closure | `tongues` | 5 | `table-only-closure-needed`, resolved. | Preserve runtime-detached language/communication closure. | Five rows leave unresolved-review without adding battle-runtime hearing, sight, language-table, conversation, social-outcome, autonomous-behavior, or commanded-action state. | .references/srd-5.2.1/Classes/Bard.md:233<br>.references/srd-5.2.1/Classes/Cleric.md:221<br>.references/srd-5.2.1/Classes/Sorcerer.md:317<br>.references/srd-5.2.1/Classes/Warlock.md:389<br>.references/srd-5.2.1/Classes/Wizard.md:263 |
+| 55 | `L5FULL-REV-11-WATER-BREATHING` | future-owner-before-sdk | `water_breathing` | 3 | Resolved future table/environment breathing and Suffocation owner before SDK. | Preserve environmental breathing/Suffocation owner closure. | Three rows leave unresolved-review without adding duplicate underwater environment, hold-breath timer, Suffocation turn progression, or suffocation-caused Exhaustion cleanup state. | .references/srd-5.2.1/Classes/Druid.md:263<br>.references/srd-5.2.1/Classes/Sorcerer.md:319<br>.references/srd-5.2.1/Classes/Wizard.md:265 |
+| 56 | `L5FULL-REV-12-WATER-WALK` | future-owner-before-sdk | `water_walk` | 3 | Resolved future table/spatial/environment traversal owner before SDK. | Preserve liquid-surface traversal and transition owner closure. | Three rows leave unresolved-review without adding duplicate liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate/falling transition execution state. | .references/srd-5.2.1/Classes/Cleric.md:222<br>.references/srd-5.2.1/Classes/Druid.md:264<br>.references/srd-5.2.1/Classes/Sorcerer.md:320 |
 | 57 | `L5FULL-FINAL-01-GENERATED-REFRESH` | final | all level-5 completion rows | 138 | Prior tasks merged. | Run aggregate generated refresh and checks. | Generated inventory and accounting reflect completed queue; no semantic source/evidence fixes are hidden in this task. | All anchors in accounting audit. |
 
 ## Shared Verification

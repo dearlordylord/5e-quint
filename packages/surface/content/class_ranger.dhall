@@ -2,13 +2,14 @@
   { categories = [ "light", "medium", "shield" ], kind = "trained" }
 , className = "ranger"
 , description =
-    "SRD Ranger class creation and level 1-5 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-2 class-feature grants, level-3 subclass selection, and the level-4 Ability Score Improvement feature grant."
+    "SRD Ranger class creation and level 1-5 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-2 class-feature grants, level-3 subclass selection, the level-4 Ability Score Improvement feature grant, and the level-5 Extra Attack feature grant."
 , featureGrants =
   [ { level = 1, unitId = "ranger_favored_enemy" }
   , { level = 1, unitId = "ranger_weapon_mastery" }
   , { level = 2, unitId = "ranger_deft_explorer" }
   , { level = 2, unitId = "ranger_fighting_style" }
   , { level = 4, unitId = "ranger_ability_score_improvement_l4" }
+  , { level = 5, unitId = "ranger_extra_attack" }
   ]
 , hitPointDie = 10
 , id = "class_ranger"
@@ -40,7 +41,7 @@
 , primaryAbilities = { abilities = [ "dex", "wis" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Ranger.md:3-24,33-43,58-99,106-109,160-196"
+  , section = "Classes/Ranger.md:3-24,33-43,58-99,106-112,160-196"
   }
 , savingThrowProficiencies = [ "str", "dex" ]
 , skillProficiencyChoice =

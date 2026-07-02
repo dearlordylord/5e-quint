@@ -4,9 +4,10 @@ Date: 2026-05-21
 
 ## Decision
 
-Task 28 closes `tongues` as an accepted runtime-detached
-`unsupported-profile` Unit claim. No battle-runtime behavior, QNT behavior,
-catalog admission, companion/control model, autonomous behavior, or
+Task 54 preserves the Task 28 `tongues` closure as an accepted
+runtime-detached `unsupported-profile` Unit claim and tightens its SDK owner
+boundary to table-social communication. No battle-runtime behavior, QNT
+behavior, catalog admission, companion/control model, autonomous behavior, or
 authored-identity runtime dispatch is introduced.
 
 The spell changes language intelligibility for a touched creature. Promoted
@@ -42,10 +43,13 @@ Current artifacts checked:
 - `plans/unit-profile-coverage/L1K_DETECTION_COMMUNICATION_SPELL_CANDIDATE_INTAKE.md`
   already classified Tongues as runtime-detached language and communication
   need.
+- Task 54 rechecks the same local RAW anchors for the level-5 SDK inventory
+  rows and records the owner boundary as table-social communication closure
+  rather than an unresolved spell-effect owner review.
 - `plans/unit-profile-coverage/unit-matrix.json` and
-  `plans/unit-profile-coverage/srd-unit-inventory.json` previously left the
-  Bard, Cleric, Sorcerer, Warlock, and Wizard spell-list rows as
-  `catalog-authored-review-required`.
+  `plans/unit-profile-coverage/srd-unit-inventory.json` carry the
+  unsupported-profile closure for the Bard, Cleric, Sorcerer, Warlock, and
+  Wizard spell-list rows.
 
 ## Closure
 
@@ -67,7 +71,7 @@ conversation or social-result semantics outside the battle reducer boundary.
 The checker-visible owner is therefore:
 
 - `unsupported-profile`
-- `battleReadinessClosure.kind`: `outside-runtime-presentation-exploration`
+- `battleReadinessClosure.kind`: `social-knowledge-effect`
 - `battleReadinessClosure.owner`: runtime-detached language/communication
   owner
 
@@ -97,6 +101,8 @@ Round 2 architecture and connascence pass:
 
 - `pnpm unit-profile-coverage:check -- --write`
 - `pnpm unit-profile-coverage:check`
+- `pnpm sdk-raw-integration-inventory:check -- --write`
+- `pnpm sdk-raw-integration-inventory:check`
 - `pnpm rules-kernel-coverage:check`
 - `git diff --check`
 

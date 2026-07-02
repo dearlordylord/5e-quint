@@ -112,7 +112,7 @@ const strictStatusDefinitions = [
     status: "closed-runtime-detached-table-adjudication",
     strictTargetClosed: true,
     description:
-      "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
+      "The Unit claim records a runtime-detached presentation, exploration, table/perception, or durable social/knowledge closure.",
   },
   {
     status: "closed-character-fact-and-runtime-detached-split",
@@ -176,6 +176,7 @@ const strictStatusDescriptions = new Map(
 );
 const runtimeDetachedClosureKinds = new Set([
   battleReadinessClosureKind.outsideRuntimePresentationExploration,
+  battleReadinessClosureKind.tablePerceptionExploration,
 ]);
 const durableSocialKnowledgeClosureKind =
   battleReadinessClosureKind.socialKnowledgeEffect;
@@ -194,6 +195,7 @@ const strictClosedResidualClosureKinds = new Set([
   outsideBattleRuntimeClosureKind,
   tableSpatialDerivationClosureKind,
   battleReadinessClosureKind.outsideRuntimePresentationExploration,
+  battleReadinessClosureKind.tablePerceptionExploration,
 ]);
 const d20RollModeResidualTerms = [
   "ability-check roll-mode",

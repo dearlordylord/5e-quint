@@ -921,7 +921,7 @@
     },
     {
       "count": 11,
-      "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
+      "description": "The Unit claim records a runtime-detached presentation, exploration, table/perception, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
         "alarm",
@@ -4456,7 +4456,7 @@
                 "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+                "title": "Battle marked-damage spell riders for attack-roll damage, Concentration duration, and zero-Hit-Point transfer timing"
               }
             ],
             "profileId": "spell.invocation-marked-damage-rider",
@@ -4500,7 +4500,7 @@
                 "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+                "title": "Battle marked-damage spell riders for attack-roll damage, Concentration duration, and zero-Hit-Point transfer timing"
               }
             ],
             "profileId": "spell.invocation-marked-damage-rider",

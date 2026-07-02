@@ -35,6 +35,10 @@
     {
       "level": 5,
       "unitId": "rogue_cunning_strike"
+    },
+    {
+      "level": 5,
+      "unitId": "rogue_uncanny_dodge"
     }
   ],
   "hitPointDie": 8,
