@@ -317,11 +317,15 @@ const charmPersonNonHumanoidId = combatantId(
   "combatant:l1-sdk-charm-person-non-humanoid",
 );
 const druidWildShapeDruidId = combatantId("combatant:l2-sdk-druid-wild-shape");
+const actionSurgeFighterId = combatantId(
+  "combatant:l2-sdk-action-surge-fighter",
+);
 const thunderwaveUnsecuredObjectId = battleObjectId(
   "object:l1-sdk-thunderwave-unsecured",
 );
 
 const fighterSecondWindUnitId = "fighter_second_wind";
+const fighterActionSurgeUnitId = "fighter_action_surge";
 const barbarianRageUnitId = "barbarian_rage";
 const barbarianDangerSenseUnitId = "barbarian_danger_sense";
 const barbarianRecklessAttackUnitId = "barbarian_reckless_attack";
@@ -1037,6 +1041,12 @@ const fighterBuildBattleDraftPlan = {
 const fighterFightingStyleCreationDraftPlan = {
   ...fighterLifecycleDraftPlan,
   label: "Fighter Fighting Style creation",
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const fighterActionSurgeDraftPlan = {
+  ...fighterLifecycleDraftPlan,
+  label: "Fighter Action Surge battle feature",
+  level: 2,
 } as const satisfies LegalSourceCharacterDraftPlan;
 
 const bardicInspirationDraftPlan = {
@@ -2005,6 +2015,165 @@ describe("level 1 SDK RAW integration", () => {
       category: "fighting_style",
       kind: "feat",
     });
+  });
+
+  test("Fighter Action Surge grants one additional non-Magic Action from a legal level-2 sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l2-sdk-fighter-action-surge",
+      draftPlan: fighterActionSurgeDraftPlan,
+      sheet: {
+        characterIdText: "character:l2-sdk-fighter-action-surge",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l2-sdk-fighter-action-surge",
+        combatantId: actionSurgeFighterId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      },
+    });
+
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_fighter"),
+      advancements: [
+        {
+          classUnitId: classUnitId("class_fighter"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    });
+    expect(characterBuildUnitRefs(fixture.build, unitLibrary)).toEqual(
+      expect.arrayContaining([{ unitId: fighterActionSurgeUnitId }]),
+    );
+
+    const fighter = requireCharacterCombatant(
+      fixture.state,
+      actionSurgeFighterId,
+    );
+    expect(fighter.origin.characterUnitRefs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ unitId: fighterActionSurgeUnitId }),
+      ]),
+    );
+    expect(characterResources(fighter)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: fighterActionSurgeUnitId }),
+          usesRemaining: resourceCount(1),
+          usedThisTurn: false,
+        }),
+      ]),
+    );
+
+    const attack = attackSubject(
+      fixture.state,
+      actionSurgeFighterId,
+      "Longsword",
+    );
+    const target = requireHole(
+      resolveBattleSubject({ state: fixture.state, subject: attack, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      target,
+      actionSurgeFighterId,
+      monsterId,
+      "Longsword",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state: fixture.state,
+        subject: attack,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const afterOrdinaryAction = requireResolved(
+      resolveBattleSubject({
+        state: fixture.state,
+        subject: attack,
+        fills: [
+          targetFill,
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ],
+      }),
+    ).state;
+    expect(snapshotBattle(afterOrdinaryAction).turn.actionResources).toEqual([]);
+
+    const act = unitFeatureActForUnitId(
+      afterOrdinaryAction,
+      actionSurgeFighterId,
+      fighterActionSurgeUnitId,
+    );
+    expect(act).toMatchObject({
+      label: "Action Surge",
+      initialHoles: [],
+      subject: {
+        tag: "unitFeature",
+        actorId: actionSurgeFighterId,
+        unitId: fighterActionSurgeUnitId,
+      },
+    });
+
+    const surged = requireResolved(
+      resolveBattleSubject({
+        state: afterOrdinaryAction,
+        subject: act.subject,
+        fills: [],
+      }),
+    );
+
+    expect(surged.snapshot.turn.actionResources).toEqual([
+      {
+        kind: "action",
+        source: "unit",
+        sourceOwnerId: actionSurgeFighterId,
+        sourceUnitId: fighterActionSurgeUnitId,
+        restriction: { kind: "exclude", actions: ["magic"] },
+      },
+    ]);
+    expect(
+      surged.snapshot.acts.some(
+        (candidate) =>
+          candidate.subject.tag === "action" &&
+          candidate.subject.actorId === actionSurgeFighterId &&
+          candidate.subject.action === "attack" &&
+          candidate.subject.attackName === "Longsword",
+      ),
+    ).toBe(true);
+    expect(
+      characterResources(
+        requireCharacterCombatant(surged.state, actionSurgeFighterId),
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: fighterActionSurgeUnitId }),
+          usesRemaining: resourceCount(0),
+          usedThisTurn: true,
+        }),
+      ]),
+    );
+    expect(
+      discoverBattleActs(surged.state).some(
+        (candidate) =>
+          candidate.subject.tag === "unitFeature" &&
+          candidate.subject.actorId === actionSurgeFighterId &&
+          candidate.subject.unitId === fighterActionSurgeUnitId,
+      ),
+    ).toBe(false);
   });
 
   test("Warlock Pact Magic creation finalizes level-1 cantrips, prepared spells, and Pact Slots", () => {
