@@ -1290,6 +1290,17 @@ describe("character creation hole discovery", () => {
     ).toBe("cha");
   });
 
+  test("models Paladin Extra Attack as a level 5 class feature grant", () => {
+    const paladinFacts = readClassCreationFacts(
+      unitLibrary.requireUnit("class_paladin"),
+    );
+    expect(paladinFacts.tag).toBe("readable");
+    if (paladinFacts.tag !== "readable") return;
+    expect(paladinFacts.value.featureGrants).toEqual(
+      expect.arrayContaining([{ level: 5, unitId: "paladin_extra_attack" }]),
+    );
+  });
+
   test("models Ranger level 2 Deft Explorer and Fighting Style acquisition choices", () => {
     const rangerFacts = readClassCreationFacts(
       unitLibrary.requireUnit("class_ranger"),

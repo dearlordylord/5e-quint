@@ -7639,6 +7639,29 @@ describe("SRD Unit catalog boundary", () => {
     });
   });
 
+  test("installs Paladin Extra Attack as a level-5 class feature grant", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_paladin")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 5, unitId: "paladin_extra_attack" },
+      ]),
+      kind: "class",
+    });
+    expect(result.catalog.requireUnit("paladin_extra_attack")).toMatchObject({
+      acquiredAtLevel: 5,
+      className: "paladin",
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: [{ additional: 1, kind: "scale_attack_count" }],
+      },
+    });
+  });
+
   test("installs Rogue Fast Hands as delegated Bonus Action options", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

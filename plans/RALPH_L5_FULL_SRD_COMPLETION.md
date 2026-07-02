@@ -253,7 +253,7 @@
     {
       "number": 42,
       "id": "L5FULL-OWN-04-PALADIN-EXTRA-ATTACK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose SDK scenario or SDK closure for Paladin Extra Attack"
     },
     {

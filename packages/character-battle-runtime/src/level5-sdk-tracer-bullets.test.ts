@@ -94,6 +94,9 @@ const fastMovementBarbarianId = combatantId(
 const extraAttackFighterId = combatantId(
   "combatant:l5-tracer-extra-attack-fighter",
 );
+const extraAttackPaladinId = combatantId(
+  "combatant:l5-tracer-extra-attack-paladin",
+);
 const extraAttackMonkId = combatantId("combatant:l5-tracer-extra-attack-monk");
 const monkId = combatantId("combatant:l5-tracer-monk");
 const rogueId = combatantId("combatant:l5-tracer-rogue");
@@ -205,6 +208,7 @@ const slowSuccessfulSaveTargetId = combatantId(
 const barbarianExtraAttackUnitId = "barbarian_extra_attack";
 const barbarianFastMovementUnitId = "barbarian_fast_movement";
 const fighterExtraAttackUnitId = "fighter_extra_attack";
+const paladinExtraAttackUnitId = "paladin_extra_attack";
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
 const monkStunningStrikeUnitId = "monk_stunning_strike";
@@ -386,6 +390,26 @@ describe("level 5 SDK tracer bullets", () => {
         int: 10,
         wis: 10,
         cha: 10,
+      },
+    });
+  });
+
+  test("Paladin Extra Attack projects through sheet handoff and opens exactly one added attack slot", () => {
+    assertLevelFiveExtraAttackHandoff({
+      actorId: extraAttackPaladinId,
+      battleIdText: "battle:l5-tracer-extra-attack-paladin",
+      characterIdText: "character:l5-tracer-extra-attack-paladin",
+      classUnitId: "class_paladin",
+      sourceUnitId: paladinExtraAttackUnitId,
+      weaponUnitId: "weapon_longsword",
+      attackName: "Longsword",
+      abilityScores: {
+        str: 16,
+        dex: 10,
+        con: 14,
+        int: 10,
+        wis: 10,
+        cha: 16,
       },
     });
   });

@@ -197,6 +197,24 @@ describe("character-creation Surface records", () => {
     });
   });
 
+  test("decodes and reads Paladin level 5 Extra Attack grant", () => {
+    const classRecord = decodeClassRecordSync(classPaladinInput);
+    const unit = decodeUnitRecordSync(classPaladinInput);
+    const result = readClassCreationFacts(unit);
+
+    expect(classRecord.kind).toBe("class");
+    expect(result).toMatchObject({
+      tag: "readable",
+      value: {
+        recordId: "class_paladin",
+        className: "paladin",
+        featureGrants: expect.arrayContaining([
+          { level: 5, unitId: "paladin_extra_attack" },
+        ]),
+      },
+    });
+  });
+
   test("decodes and reads Ranger level 4 Ability Score Improvement grant", () => {
     const classRecord = decodeClassRecordSync(classRangerInput);
     const unit = decodeUnitRecordSync(classRangerInput);

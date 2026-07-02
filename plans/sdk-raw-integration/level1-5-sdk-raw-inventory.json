@@ -3624,6 +3624,10 @@
       "category": "class feature",
       "className": "Paladin",
       "concept": "Paladin Extra Attack",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Paladin Extra Attack",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -3654,7 +3658,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 129,
         "lineStart": 126,
@@ -10090,61 +10094,6 @@
     },
     {
       "candidateUnitIds": [
-        "paladin_extra_attack"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Paladin"
-      ],
-      "groupId": "l15-sdk-raw-07:owner-review:paladin-extra-attack",
-      "lane": "owner-review",
-      "levelBands": [
-        "level-5"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"owner-review\",\"paladin_extra_attack\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Paladin.md:126"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "paladin_extra_attack",
-          "className": "Paladin",
-          "concept": "Paladin Extra Attack",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
-          "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
-          "source": {
-            "lineEnd": 129,
-            "lineStart": 126,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Paladin Extra Attack"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-or-owner-closure-needed"
-      ],
-      "suggestedScenario": "Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "ranger_extra_attack"
       ],
       "categories": [
@@ -10521,6 +10470,61 @@
       ],
       "sampleConcepts": [
         "Monk Stunning Strike"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "paladin_extra_attack"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Paladin"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:level-5-paladin-paladin-extra-attack",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-5"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"level-5:Paladin:paladin_extra_attack\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Paladin.md:126"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "paladin_extra_attack",
+          "className": "Paladin",
+          "concept": "Paladin Extra Attack",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 129,
+            "lineStart": 126,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Paladin Extra Attack"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -31982,6 +31986,10 @@
       "category": "class feature",
       "className": "Paladin",
       "concept": "Paladin Extra Attack",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Paladin Extra Attack",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -32012,7 +32020,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 129,
         "lineStart": 126,
@@ -57892,19 +57900,19 @@
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 45,
       "sdk-scenario-needed": 2,
-      "sdk-scenario-or-owner-closure-needed": 3,
-      "seed-scenario-present": 42
+      "sdk-scenario-or-owner-closure-needed": 2,
+      "seed-scenario-present": 43
     },
     "level5ScenarioGroups": 94,
     "level5ScenarioGroupsByLane": {
       "battle-spell-sdk": 1,
       "explicit-closure": 12,
       "future-owner-before-sdk": 24,
-      "owner-review": 3,
-      "seed-present": 42,
+      "owner-review": 2,
+      "seed-present": 43,
       "spell-effect-owner-review": 12
     },
-    "level5SeedScenarioRows": 42,
+    "level5SeedScenarioRows": 43,
     "levelOneFiveMinedRows": 770,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -57954,8 +57962,8 @@
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 47,
       "sdk-scenario-needed": 401,
-      "sdk-scenario-or-owner-closure-needed": 3,
-      "seed-scenario-present": 106,
+      "sdk-scenario-or-owner-closure-needed": 2,
+      "seed-scenario-present": 107,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
@@ -57971,8 +57979,8 @@
       "feature-owner-review": 2,
       "future-owner-before-sdk": 26,
       "multi-owner-feature-sdk": 9,
-      "owner-review": 3,
-      "seed-present": 106,
+      "owner-review": 2,
+      "seed-present": 107,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -84433,61 +84441,6 @@
     },
     {
       "candidateUnitIds": [
-        "paladin_extra_attack"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Paladin"
-      ],
-      "groupId": "l15-sdk-raw-07:owner-review:paladin-extra-attack",
-      "lane": "owner-review",
-      "levelBands": [
-        "level-5"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"owner-review\",\"paladin_extra_attack\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Paladin.md:126"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "paladin_extra_attack",
-          "className": "Paladin",
-          "concept": "Paladin Extra Attack",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
-          "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
-          "source": {
-            "lineEnd": 129,
-            "lineStart": 126,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Paladin Extra Attack"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-or-owner-closure-needed"
-      ],
-      "suggestedScenario": "Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "ranger_extra_attack"
       ],
       "categories": [
@@ -84864,6 +84817,61 @@
       ],
       "sampleConcepts": [
         "Monk Stunning Strike"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "paladin_extra_attack"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Paladin"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:level-5-paladin-paladin-extra-attack",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-5"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"level-5:Paladin:paladin_extra_attack\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Paladin.md:126"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "paladin_extra_attack",
+          "className": "Paladin",
+          "concept": "Paladin Extra Attack",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 129,
+            "lineStart": 126,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Paladin Extra Attack"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -92664,6 +92672,31 @@
       "rowKey": "level-5:Fighter:fighter_extra_attack",
       "tracerNeedles": [
         "fighterExtraAttackUnitId"
+      ]
+    },
+    {
+      "candidateUnitId": "paladin_extra_attack",
+      "className": "Paladin",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Paladin Extra Attack",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function assertLevelFiveExtraAttackHandoff",
+          "needles": [
+            "resolveWeaponAttackMiss({",
+            "source: \"classFeatureExtraAttack\"",
+            "sourceUnitId: input.sourceUnitId"
+          ]
+        }
+      ],
+      "levelBand": "level-5",
+      "rowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
+      "rowKey": "level-5:Paladin:paladin_extra_attack",
+      "tracerNeedles": [
+        "paladinExtraAttackUnitId"
       ]
     },
     {

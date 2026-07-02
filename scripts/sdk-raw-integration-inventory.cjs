@@ -3637,7 +3637,7 @@ const seededSdkScenarioRows = [
           "PASSIVE_SPEED_BONUS_SUPPORT_PROFILE",
           "const fastMovementDeltaFeet = movementDeltaFeet(10)",
           "deltaFeet: fastMovementDeltaFeet",
-          'condition: {',
+          "condition: {",
           'kind: "notWearingArmor"',
           'categories: ["heavy"]',
           'action: "dash"',
@@ -3655,6 +3655,26 @@ const seededSdkScenarioRows = [
     rowId:
       "srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack",
     tracerNeedles: ["fighterExtraAttackUnitId"],
+    helperNeedles: [
+      {
+        anchor: "function assertLevelFiveExtraAttackHandoff",
+        needles: [
+          "resolveWeaponAttackMiss({",
+          'source: "classFeatureExtraAttack"',
+          "sourceUnitId: input.sourceUnitId",
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "paladin_extra_attack",
+    className: "Paladin",
+    levelBand: "level-5",
+    label: "level5-sdk-tracer-bullets: Paladin Extra Attack",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack",
+    tracerNeedles: ["paladinExtraAttackUnitId"],
     helperNeedles: [
       {
         anchor: "function assertLevelFiveExtraAttackHandoff",

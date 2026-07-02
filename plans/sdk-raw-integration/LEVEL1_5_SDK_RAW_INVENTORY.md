@@ -16,7 +16,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-5 mined rows | 770 |
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
-| Existing level-5 SDK seed scenario rows | 42 |
+| Existing level-5 SDK seed scenario rows | 43 |
 | Scenario groups | 433 |
 | Level 5 scenario groups | 94 |
 
@@ -43,8 +43,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 47 |
 | sdk-scenario-needed | 401 |
-| sdk-scenario-or-owner-closure-needed | 3 |
-| seed-scenario-present | 106 |
+| sdk-scenario-or-owner-closure-needed | 2 |
+| seed-scenario-present | 107 |
 | table-only-closure-needed | 11 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -95,8 +95,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | feature-owner-review | 2 |
 | future-owner-before-sdk | 26 |
 | multi-owner-feature-sdk | 9 |
-| owner-review | 3 |
-| seed-present | 106 |
+| owner-review | 2 |
+| seed-present | 107 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 46 |
 | table-only-closure | 4 |
@@ -109,8 +109,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 45 |
 | sdk-scenario-needed | 2 |
-| sdk-scenario-or-owner-closure-needed | 3 |
-| seed-scenario-present | 42 |
+| sdk-scenario-or-owner-closure-needed | 2 |
+| seed-scenario-present | 43 |
 
 ### Level 5 Completion Rows by Proposed Owner Boundary
 
@@ -136,8 +136,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | battle-spell-sdk | 1 |
 | explicit-closure | 12 |
 | future-owner-before-sdk | 24 |
-| owner-review | 3 |
-| seed-present | 42 |
+| owner-review | 2 |
+| seed-present | 43 |
 | spell-effect-owner-review | 12 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -218,6 +218,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack` / `level-5:Barbarian:barbarian_extra_attack`: level5-sdk-tracer-bullets: Barbarian Extra Attack
 - `srd521:classes/barbarian:level-5:class-feature-grant:barbarian_fast_movement` / `level-5:Barbarian:barbarian_fast_movement`: level5-sdk-tracer-bullets: Barbarian Fast Movement
 - `srd521:classes/fighter:level-5:class-feature-grant:fighter_extra_attack` / `level-5:Fighter:fighter_extra_attack`: level5-sdk-tracer-bullets: Fighter Extra Attack
+- `srd521:classes/paladin:level-5:class-feature-grant:paladin_extra_attack` / `level-5:Paladin:paladin_extra_attack`: level5-sdk-tracer-bullets: Paladin Extra Attack
 - `srd521:classes/monk:level-5:class-feature-grant:monk_extra_attack` / `level-5:Monk:monk_extra_attack`: level5-sdk-tracer-bullets: Extra Attack
 - `srd521:classes/monk:level-5:class-feature-grant:monk_stunning_strike` / `level-5:Monk:monk_stunning_strike`: level5-sdk-tracer-bullets: Stunning Strike
 - `srd521:classes/rogue:level-5:class-feature-grant:rogue_cunning_strike` / `level-5:Rogue:rogue_cunning_strike`: level5-sdk-tracer-bullets: Cunning Strike
@@ -299,7 +300,6 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Sorcerer, Warlock, Wizard | `vampiric_touch` | Sorcerer spell list Vampiric Touch<br>Warlock spell list Vampiric Touch<br>Wizard spell list Vampiric Touch | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | spell-level-3 | Druid | `wind_wall` | Druid spell list Wind Wall | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Wizard | `wizard_memorize_spell` | Wizard Memorize Spell | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
-| L15-SDK-RAW-07 | owner-review | 1 | level-5 | Paladin | `paladin_extra_attack` | Paladin Extra Attack | Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure. |
 | L15-SDK-RAW-07 | owner-review | 1 | level-5 | Ranger | `ranger_extra_attack` | Ranger Extra Attack | Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure. |
 | L15-SDK-RAW-07 | owner-review | 1 | level-5 | Rogue | `rogue_uncanny_dodge` | Rogue Uncanny Dodge | Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Barbarian | `barbarian_extra_attack` | Barbarian Extra Attack | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
@@ -307,6 +307,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Fighter | `fighter_extra_attack` | Fighter Extra Attack | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Monk | `monk_extra_attack` | Monk Extra Attack | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Monk | `monk_stunning_strike` | Monk Stunning Strike | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | level-5 | Paladin | `paladin_extra_attack` | Paladin Extra Attack | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Rogue | `rogue_cunning_strike` | Rogue Cunning Strike | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | level-5 | Sorcerer | `sorcerer_sorcerous_restoration` | Sorcerer Sorcerous Restoration | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `dispel_magic` | Bard spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
@@ -425,7 +426,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | level-5 | Monk Extra Attack | `monk_extra_attack` | `.references/srd-5.2.1/Classes/Monk.md:120` | catalog-installed-owner-evidence-present | not-applicable | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Extra Attack | Owner-specific operational evidence is classified and present. |
 | level-5 | Monk Stunning Strike | `monk_stunning_strike` | `.references/srd-5.2.1/Classes/Monk.md:124` | catalog-installed-owner-evidence-present | not-applicable | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Stunning Strike | Owner-specific operational evidence is classified and present. |
 | level-5 | Monk level 5 feature table row | `class_monk` | `.references/srd-5.2.1/Classes/Monk.md:36` | non-runtime | not-applicable | build-progression | resolved | explicit-closure-recorded |  | SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state. |
-| level-5 | Paladin Extra Attack | `paladin_extra_attack` | `.references/srd-5.2.1/Classes/Paladin.md:126` | catalog-installed-owner-evidence-present | not-applicable | character-battle-to-battle | resolved | sdk-scenario-or-owner-closure-needed |  | Owner-specific operational evidence is classified and present. |
+| level-5 | Paladin Extra Attack | `paladin_extra_attack` | `.references/srd-5.2.1/Classes/Paladin.md:126` | catalog-installed-owner-evidence-present | not-applicable | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Paladin Extra Attack | Owner-specific operational evidence is classified and present. |
 | level-5 | Paladin Faithful Steed | `paladin_faithful_steed` | `.references/srd-5.2.1/Classes/Paladin.md:130` | catalog-only/dead-for-now | not-applicable | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | SRD Faithful Steed grants a Paladin Find Steed as always prepared and one casting without expending a Spell Slot, recovered on a Long Rest. A future Character Sheet owner should derive the prepared Spell Access and Long Rest-cleared casting marker from the Paladin level-5 feature and existing Spell Slot and rest state, while the existing find_steed Unit remains closed at the companion-control boundary for summoned steed lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop handling. Paladin class state must not copy steed identity, companion lifecycle, or mount execution state, and generic runtime code must not dispatch on Paladin or Faithful Steed authored identity. |
 | level-5 | Paladin level 5 feature table row | `class_paladin` | `.references/srd-5.2.1/Classes/Paladin.md:39` | non-runtime | not-applicable | build-progression | resolved | explicit-closure-recorded |  | SDK-scope table-only closure is recorded by L5_PROGRESSION_DELTA_AUDIT.md; no runtime work or duplicate class progression state. |
 | level-5 | Ranger Extra Attack | `ranger_extra_attack` | `.references/srd-5.2.1/Classes/Ranger.md:110` | catalog-installed-owner-evidence-present | not-applicable | character-battle-to-battle | resolved | sdk-scenario-or-owner-closure-needed |  | Owner-specific operational evidence is classified and present. |
