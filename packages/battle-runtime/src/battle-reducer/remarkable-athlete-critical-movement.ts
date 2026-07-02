@@ -271,6 +271,7 @@ function remarkableAthleteCriticalHitMovementHole(
     label: "Remarkable Athlete movement",
     actorId,
     movementBudgetFeet: movementBudget.movementBudgetFeet,
+    mistCloudFormTableSpatialWitnesses: [],
     speedKinds: movementBudget.speedKinds,
   };
 }

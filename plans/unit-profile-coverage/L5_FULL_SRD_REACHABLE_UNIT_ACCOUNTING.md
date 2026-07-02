@@ -112,18 +112,17 @@ tasks.
 ## Artifact Reconciliation Findings
 
 Generated artifacts agree on the 138-row denominator and SDK bucket counts, but
-two spell identities need explicit reconciliation because the mining audit's
+one spell identity needs explicit reconciliation because the mining audit's
 runtime-follow-up language is stronger than the SDK queue's future-owner closure
 label.
 
 | Unit | Rows | Mining disposition | SDK disposition | Accounting decision | Ralph task |
 | --- | ---: | --- | --- | --- | --- |
-| `gaseous_form` | 3 | `catalog-installed-owner-evidence-required`; battle-runtime-required; follow-up `L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME` | `future-owner-before-sdk` | Keep out of SDK scenarios until the typed mist-cloud effect owner is promoted or the checker records an explicit future-owner closure matching the mining follow-up. | `L5FULL-FUT-11-GASEOUS-FORM` |
 | `phantom_steed` | 1 | `catalog-authored-executable-follow-up`; battle-runtime-required; split follow-ups for mount lifecycle, created equipment, and table travel | `future-owner-before-sdk` | Keep out of SDK scenarios until the split mount/equipment/travel owners are promoted or the checker records an explicit future-owner closure matching the mining follow-ups. | `L5FULL-FUT-15-PHANTOM-STEED` |
 
-These four rows remain inside the 43-row `future-owner-before-sdk` bucket. The
-Ralph tasks above must reconcile the generated artifacts before preserving the
-closure; they are not ordinary no-op closure tasks.
+This row remains inside the 40-row `future-owner-before-sdk` bucket. The
+Ralph task above must reconcile the generated artifacts before preserving the
+closure; it is not an ordinary no-op closure task.
 
 ## Character-Level 5 Rows
 
@@ -179,7 +178,7 @@ This table groups the 110 class-list rows into their 42 spell identities. The
 | `fear` | Fear | Bard, Sorcerer, Warlock, Wizard | 4 | authored-record-present | not-installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | Bard .references/srd-5.2.1/Classes/Bard.md:220<br>Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:305<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:382<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:243 |
 | `fireball` | Fireball | Sorcerer, Wizard | 2 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:306<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:244 |
 | `fly` | Fly | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:307<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:383<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:245 |
-| `gaseous_form` | Gaseous Form | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | unsupported-profile | catalog-installed-owner-evidence-required | battle-runtime-required | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:308<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:384<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:246 |
+| `gaseous_form` | Gaseous Form | Sorcerer, Warlock, Wizard | 3 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:308<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:384<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:246 |
 | `glyph_of_warding` | Glyph of Warding | Bard, Cleric, Wizard | 3 | authored-record-present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | Bard .references/srd-5.2.1/Classes/Bard.md:221<br>Cleric .references/srd-5.2.1/Classes/Cleric.md:211<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:247 |
 | `haste` | Haste | Sorcerer, Wizard | 2 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:309<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:248 |
 | `hypnotic_pattern` | Hypnotic Pattern | Bard, Sorcerer, Warlock, Wizard | 4 | authored-record-present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | Bard .references/srd-5.2.1/Classes/Bard.md:222<br>Sorcerer .references/srd-5.2.1/Classes/Sorcerer.md:310<br>Warlock .references/srd-5.2.1/Classes/Warlock.md:385<br>Wizard .references/srd-5.2.1/Classes/Wizard.md:249 |

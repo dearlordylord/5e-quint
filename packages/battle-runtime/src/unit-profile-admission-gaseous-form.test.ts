@@ -1,10 +1,14 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE gaseous_form
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP gaseous_form
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-mist-cloud-form
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MIST_CLOUD_FORM_STATE
 import { describe, expect, test } from "vitest";
+import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
+import { proficiencyBonus } from "@dnd/shared/types";
 import type { EffectAtom, SpellRecord } from "@dnd/surface/surface/types";
 import {
   applyCondition,
+  breakBattleConcentration,
   combatantId,
   discoverBattleActs,
   elapsedTimeTicks,
@@ -16,6 +20,8 @@ import {
   spellSlotInvocationRef,
   spellTargetId,
 } from "./unit-profile-admission-test-support.ts";
+import { combatantPerceptionCommunicationProjection } from "./creature-perception-communication.ts";
+import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import {
   effectiveMovementSpeed,
   representedMovementSpeedKinds,
@@ -475,6 +481,426 @@ describe("L12-SH62 deterministic Gaseous Form mist-cloud state admission", () =>
     expect(
       conditionApplicationPreventedByConditionImmunity(target, "prone"),
     ).toBe(true);
+  });
+
+  test("restricts speech, attacks, spellcasting, object interaction, and exposes table-spatial witnesses", () => {
+    const spell = spellRecord(gaseousFormUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      targetPreparedSpells: [spell],
+      targetSpellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [spell],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+      },
+    });
+    const act = spellAct({ state, spellId: gaseousFormUnitId, slotLevel: 3 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = knownWillingSpellTargetListFill(
+      targetHole,
+      spellCasterId,
+      gaseousFormUnitId,
+      [spellTargetId],
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Gaseous Form cast to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn.");
+    }
+    const target = requireCombatant(targetTurn.state, spellTargetId);
+    const acts = discoverBattleActs(targetTurn.state);
+
+    expect(
+      combatantPerceptionCommunicationProjection(target).communication,
+    ).toMatchObject({
+      kind: "characterRetainedCommunication",
+      speech: {
+        kind: "retainedCharacterSpeech",
+        blockedByCondition: false,
+        blockedByMistCloudForm: true,
+      },
+    });
+    const movementHole = acts
+      .flatMap((candidate) => candidate.initialHoles)
+      .find((hole) => hole.kind === "movement");
+    expect(movementHole).toMatchObject({
+      kind: "movement",
+      mistCloudFormTableSpatialWitnesses: [
+        "occupyAnotherCreatureSpace",
+        "passThroughNarrowOpenings",
+        "liquidsAsSolidSurfaces",
+      ],
+    });
+    expect(
+      acts.some(
+        (candidate) =>
+          candidate.subject.tag === "action" &&
+          candidate.subject.action === "attack",
+      ),
+    ).toBe(false);
+    expect(
+      acts.some((candidate) => candidate.subject.tag === "actionSpell"),
+    ).toBe(false);
+    expect(
+      acts.some(
+        (candidate) =>
+          candidate.subject.tag === "runtimeCommand" &&
+          candidate.subject.command === "releaseSpellCreatedHeldObject",
+      ),
+    ).toBe(false);
+    expect(
+      acts.some(
+        (candidate) =>
+          candidate.subject.tag === "runtimeCommand" &&
+          candidate.subject.command === "dismissMistCloudForm",
+      ),
+    ).toBe(true);
+
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: {
+          tag: "action",
+          actorId: spellTargetId,
+          action: "attack",
+          attackName: "Unarmed Strike",
+        },
+        fills: [],
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        tag: "invalid",
+        message: "Mist-cloud form prevents attacks.",
+      }),
+    );
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: {
+          tag: "actionSpell",
+          actorId: spellTargetId,
+          invocation: spellSlotInvocationRef(
+            gaseousFormUnitId,
+            3,
+            "mistCloudForm",
+          ),
+          mode: { tag: "cast" },
+        },
+        fills: [],
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        tag: "invalid",
+        message: "Mist-cloud form prevents spellcasting.",
+      }),
+    );
+  });
+
+  test("pending Command Drop under mist-cloud form resolves without object interaction deadlock", () => {
+    const spell = spellRecord(gaseousFormUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: gaseousFormUnitId, slotLevel: 3 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = knownWillingSpellTargetListFill(
+      targetHole,
+      spellCasterId,
+      gaseousFormUnitId,
+      [spellTargetId],
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Gaseous Form cast to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn.");
+    }
+    const commandSourceSpellId = "synthetic_command_drop_source";
+    const target = requireCombatant(targetTurn.state, spellTargetId);
+    const commandState = {
+      ...targetTurn.state,
+      combatants: new Map(targetTurn.state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "commandPending",
+            option: "drop",
+            sourceSpellId: commandSourceSpellId,
+            sourceCombatantId: spellCasterId,
+            expiresAt: {
+              kind: "endOfTurn",
+              combatantId: spellTargetId,
+              round: targetTurn.state.initiative.round,
+            },
+          } satisfies BattleActiveEffect,
+        ],
+      }),
+    };
+    const commandDrop = discoverBattleActs(commandState).find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "commandDrop",
+    );
+    if (commandDrop === undefined) {
+      throw new Error("Expected pending Command Drop act.");
+    }
+    expect(commandDrop.initialHoles).toEqual([]);
+
+    const dropped = resolveBattleSubject({
+      state: commandState,
+      subject: commandDrop.subject,
+      fills: [],
+    });
+    if (dropped.tag !== "resolved") {
+      throw new Error("Expected Command Drop under mist-cloud form to resolve.");
+    }
+    expect(dropped.droppedObjects).toEqual([]);
+    expect(
+      requireCombatant(dropped.state, spellTargetId).activeEffects.some(
+        (effect) => effect.kind === "commandPending",
+      ),
+    ).toBe(false);
+  });
+
+  test("target Magic Action self-ending removes the form and clears sole Concentration owner cleanup", () => {
+    const spell = spellRecord(gaseousFormUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: gaseousFormUnitId, slotLevel: 3 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = knownWillingSpellTargetListFill(
+      targetHole,
+      spellCasterId,
+      gaseousFormUnitId,
+      [spellTargetId],
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Gaseous Form cast to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn.");
+    }
+    const dismiss = discoverBattleActs(targetTurn.state).find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "dismissMistCloudForm",
+    );
+    if (dismiss === undefined) {
+      throw new Error("Expected mist-cloud self-dismissal act.");
+    }
+
+    const dismissed = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: dismiss.subject,
+      fills: [],
+    });
+    if (dismissed.tag !== "resolved") {
+      throw new Error("Expected mist-cloud self-dismissal to resolve.");
+    }
+
+    expect(
+      requireCombatant(dismissed.state, spellTargetId).activeEffects.some(
+        (effect) => effect.kind === "spellMistCloudForm",
+      ),
+    ).toBe(false);
+    expect(
+      requireCombatant(dismissed.state, spellTargetId).activeEffects.some(
+        (effect) => effect.kind === "conditionImmunity",
+      ),
+    ).toBe(false);
+    expect(requireCombatant(dismissed.state, spellCasterId).concentration).toBe(
+      null,
+    );
+  });
+
+  test("target Magic Action self-ending restores a pre-existing non-spell Prone source", () => {
+    const spell = spellRecord(gaseousFormUnitId);
+    const baseState = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const targetBeforeCast = requireCombatant(baseState, spellTargetId);
+    if (targetBeforeCast.positiveHpUnconscious !== null) {
+      throw new Error("Expected Gaseous Form target to be conscious.");
+    }
+    const state = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(spellTargetId, {
+        ...targetBeforeCast,
+        conditions: applyCondition(targetBeforeCast.conditions, "prone"),
+      }),
+    };
+    const act = spellAct({ state, spellId: gaseousFormUnitId, slotLevel: 3 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = knownWillingSpellTargetListFill(
+      targetHole,
+      spellCasterId,
+      gaseousFormUnitId,
+      [spellTargetId],
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Gaseous Form cast to resolve.");
+    }
+    expect(
+      hasCondition(
+        requireCombatant(resolved.state, spellTargetId).conditions,
+        "prone",
+      ),
+    ).toBe(false);
+    const targetTurn = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn.");
+    }
+    const dismiss = discoverBattleActs(targetTurn.state).find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "dismissMistCloudForm",
+    );
+    if (dismiss === undefined) {
+      throw new Error("Expected mist-cloud self-dismissal act.");
+    }
+    const dismissed = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: dismiss.subject,
+      fills: [],
+    });
+    if (dismissed.tag !== "resolved") {
+      throw new Error("Expected mist-cloud self-dismissal to resolve.");
+    }
+
+    expect(
+      hasCondition(
+        requireCombatant(dismissed.state, spellTargetId).conditions,
+        "prone",
+      ),
+    ).toBe(true);
+  });
+
+  test("zero Hit Points ends the target's mist-cloud form without authored identity dispatch", () => {
+    const spell = spellRecord(gaseousFormUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      targetHp: 5,
+      targetMaxHp: 5,
+    });
+    const act = spellAct({ state, spellId: gaseousFormUnitId, slotLevel: 3 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = knownWillingSpellTargetListFill(
+      targetHole,
+      spellCasterId,
+      gaseousFormUnitId,
+      [spellTargetId],
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Gaseous Form cast to resolve.");
+    }
+    const target = requireCombatant(resolved.state, spellTargetId);
+
+    const dropped = applyBattleHitPointDamage({
+      state: resolved.state,
+      target,
+      damageAmount: 5,
+      deathFailuresAtZeroHp: 1,
+    });
+
+    expect(
+      requireCombatant(dropped, spellTargetId).activeEffects.some(
+        (effect) => effect.kind === "spellMistCloudForm",
+      ),
+    ).toBe(false);
+    expect(requireCombatant(dropped, spellCasterId).concentration).toBe(null);
+  });
+
+  test("normal spell ending cleans up active mist-cloud form state", () => {
+    const spell = spellRecord(gaseousFormUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: gaseousFormUnitId, slotLevel: 3 });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = knownWillingSpellTargetListFill(
+      targetHole,
+      spellCasterId,
+      gaseousFormUnitId,
+      [spellTargetId],
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Gaseous Form cast to resolve.");
+    }
+
+    const ended = breakBattleConcentration(resolved.state, spellCasterId);
+
+    expect(
+      requireCombatant(ended, spellTargetId).activeEffects.some(
+        (effect) => effect.kind === "spellMistCloudForm",
+      ),
+    ).toBe(false);
+    expect(
+      requireCombatant(ended, spellTargetId).activeEffects.some(
+        (effect) => effect.kind === "conditionImmunity",
+      ),
+    ).toBe(false);
+    expect(requireCombatant(ended, spellCasterId).concentration).toBe(null);
   });
 
   test("requires known willing target evidence before applying the form", () => {

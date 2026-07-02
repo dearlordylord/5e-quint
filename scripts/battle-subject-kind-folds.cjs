@@ -86,6 +86,7 @@ function runtimeCommandSubjectKind(discriminatorValue) {
     case "protectionRelevantEffectSave":
       return "runtimeProtectionSave";
     case "replaceSelfTransformationMode":
+    case "dismissMistCloudForm":
       return "runtimeTransformationMode";
     case "commandGrovel":
     case "commandDrop":

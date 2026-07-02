@@ -99,6 +99,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "jumpMovementReplacement",
   "dragonsBreathExhale",
   "replaceSelfTransformationMode",
+  "dismissMistCloudForm",
   "commandGrovel",
   "commandDrop",
   "commandApproach",
@@ -115,6 +116,13 @@ export const BATTLE_MOVEMENT_SPEED_KINDS = [
 ] as const;
 export type BattleMovementSpeedKind =
   (typeof BATTLE_MOVEMENT_SPEED_KINDS)[number];
+export const MIST_CLOUD_FORM_TABLE_SPATIAL_WITNESSES = [
+  "occupyAnotherCreatureSpace",
+  "passThroughNarrowOpenings",
+  "liquidsAsSolidSurfaces",
+] as const;
+export type MistCloudFormTableSpatialWitness =
+  (typeof MIST_CLOUD_FORM_TABLE_SPATIAL_WITNESSES)[number];
 export const MONK_FOCUS_PATIENT_DEFENSE_MODES = [
   "freeDisengage",
   "focusDisengageDodge",
@@ -888,6 +896,13 @@ export const BattleSubjectSchema = Schema.Union(
     sourceSpellId: SpellId,
     mode: Schema.Literal(SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND),
     naturalWeaponDamageType: DamageTypeSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("dismissMistCloudForm"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),

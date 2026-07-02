@@ -423,6 +423,7 @@ export function subjectName(
   | "levitateAltitudeControl"
   | "dragonsBreathExhale"
   | "replaceSelfTransformationMode"
+  | "dismissMistCloudForm"
   | "commandGrovel"
   | "commandDrop"
   | "commandApproach"

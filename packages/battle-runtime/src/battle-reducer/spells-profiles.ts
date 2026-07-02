@@ -129,6 +129,7 @@ import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles
 import { afterHitTimedDamageAndSaveProfile } from "./spell-procedure-profiles/after-hit-timed-damage-and-save.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
+import { mistCloudFormBlocksSpellcasting } from "./mist-cloud-form-restrictions.ts";
 export * from "./spells-profiles-support.ts";
 export {
   animalFriendshipSaveGateConditionSpell,
@@ -166,6 +167,9 @@ export function supportedSpellActs(
   state?: BattleState,
 ): readonly SupportedSpellInvocation[] {
   if (actor.origin.kind !== "character") {
+    return [];
+  }
+  if (mistCloudFormBlocksSpellcasting(actor)) {
     return [];
   }
   const spellcasting = actor.origin.spellcasting;

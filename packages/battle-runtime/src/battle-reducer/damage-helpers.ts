@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-damage-die-floor
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mist-cloud-form
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.light-extra-attack-damage-ability-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-damage-resistance
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION

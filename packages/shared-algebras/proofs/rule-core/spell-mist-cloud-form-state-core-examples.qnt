@@ -14,6 +14,8 @@ module spellMistCloudFormStateCoreExamples {
     transformedObjects: WornAndCarriedObjects,
     movementReplacement: mistCloudFormMovementReplacement,
     passiveProjection: mistCloudFormPassiveProjection,
+    activityRestrictions: mistCloudFormActivityRestrictions,
+    tableSpatialWitnesses: mistCloudFormTableSpatialWitnesses,
     hasZeroHitPointEnd: true,
     hasTargetMagicActionEnd: true,
     hasSpellEndCleanup: true,
@@ -41,6 +43,8 @@ module spellMistCloudFormStateCoreExamples {
             MistCloudDexteritySavingThrowAdvantage,
             MistCloudConstitutionSavingThrowAdvantage
           )),
+          assert(effect.activityRestrictions == mistCloudFormActivityRestrictions),
+          assert(effect.tableSpatialWitnesses == mistCloudFormTableSpatialWitnesses),
           assert(effect.endCauses == mistCloudFormEndCauses),
           assert(effect.concentrationOwnerKey == 20),
           assert(effect.durationTicks == mistCloudFormDurationTicks),
@@ -69,6 +73,22 @@ module spellMistCloudFormStateCoreExamples {
     val incompleteFacts = completeMistCloudFacts.with(
       "passiveProjection",
       mistCloudFormPassiveProjection.with("conditionImmunities", Set())
+    )
+    assert(admitMistCloudFormEffect(10, 20, 30, incompleteFacts) == MistCloudFormRejected)
+  }
+
+  run test_mist_cloud_form_rejects_missing_activity_restrictions = {
+    val incompleteFacts = completeMistCloudFacts.with(
+      "activityRestrictions",
+      mistCloudFormActivityRestrictions.exclude(Set(MistCloudCannotCastSpells))
+    )
+    assert(admitMistCloudFormEffect(10, 20, 30, incompleteFacts) == MistCloudFormRejected)
+  }
+
+  run test_mist_cloud_form_rejects_missing_table_spatial_witnesses = {
+    val incompleteFacts = completeMistCloudFacts.with(
+      "tableSpatialWitnesses",
+      mistCloudFormTableSpatialWitnesses.exclude(Set(MistCloudTreatsLiquidsAsSolidSurfaces))
     )
     assert(admitMistCloudFormEffect(10, 20, 30, incompleteFacts) == MistCloudFormRejected)
   }

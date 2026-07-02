@@ -41,8 +41,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 140 |
 | explicit-closure-needed | 36 |
 | explicit-closure-present | 24 |
-| future-owner-before-sdk | 44 |
-| sdk-scenario-needed | 348 |
+| future-owner-before-sdk | 41 |
+| sdk-scenario-needed | 351 |
 | sdk-scenario-or-owner-closure-needed | 6 |
 | seed-scenario-present | 157 |
 | table-only-closure-needed | 15 |
@@ -52,14 +52,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Proposed owner boundary | Rows |
 | --- | ---: |
 | build-progression | 60 |
-| character-battle-to-battle | 322 |
+| character-battle-to-battle | 325 |
 | character-build-to-battle | 17 |
 | character-build-to-sheet | 112 |
 | character-creation | 29 |
 | character-sheet | 9 |
 | character-sheet-spell-access | 12 |
 | class-feature-closure-review | 4 |
-| future-runtime-owner-before-sdk | 44 |
+| future-runtime-owner-before-sdk | 41 |
 | multi-owner-sdk-split | 10 |
 | spell-effect-owner-review | 136 |
 | table-only-closure | 15 |
@@ -86,7 +86,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 19 |
-| battle-spell-sdk | 79 |
+| battle-spell-sdk | 80 |
 | build-battle-sdk | 7 |
 | build-sheet-sdk | 19 |
 | character-creation-sdk | 24 |
@@ -94,7 +94,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure | 36 |
 | explicit-closure-present | 24 |
 | feature-owner-review | 4 |
-| future-owner-before-sdk | 23 |
+| future-owner-before-sdk | 22 |
 | multi-owner-feature-sdk | 8 |
 | owner-review | 6 |
 | seed-present | 105 |
@@ -108,8 +108,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | --- | ---: |
 | closure-review-needed | 36 |
 | explicit-closure-needed | 12 |
-| future-owner-before-sdk | 43 |
-| sdk-scenario-needed | 35 |
+| future-owner-before-sdk | 40 |
+| sdk-scenario-needed | 38 |
 | sdk-scenario-or-owner-closure-needed | 6 |
 | seed-scenario-present | 6 |
 
@@ -118,10 +118,10 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Proposed owner boundary | Rows |
 | --- | ---: |
 | build-progression | 12 |
-| character-battle-to-battle | 46 |
+| character-battle-to-battle | 49 |
 | character-sheet | 1 |
 | class-feature-closure-review | 2 |
-| future-runtime-owner-before-sdk | 43 |
+| future-runtime-owner-before-sdk | 40 |
 | spell-effect-owner-review | 34 |
 
 ### Level 5 Completion Rows by Owner Boundary Status
@@ -135,10 +135,10 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Lane | Groups |
 | --- | ---: |
-| battle-spell-sdk | 12 |
+| battle-spell-sdk | 13 |
 | explicit-closure | 12 |
 | feature-owner-review | 2 |
-| future-owner-before-sdk | 22 |
+| future-owner-before-sdk | 21 |
 | owner-review | 6 |
 | seed-present | 6 |
 | spell-effect-owner-review | 12 |
@@ -149,8 +149,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | --- | --- | ---: | ---: | --- | --- | --- |
 | Character Level 1 | level-1, spell-level-0, spell-level-1 | 94 | 14 | 94/94 (100%) | 367/367 (100%) | plans/unit-profile-coverage/level1-full-support.json |
 | Character Levels 1-2 | level-1, level-2, spell-level-0, spell-level-1 | 115 | 19 | 115/115 (100%) | 400/400 (100%) | plans/unit-profile-coverage/level1-2-full-support.json |
-| Character Levels 1-3 | level-1, level-2, level-3, spell-level-0, spell-level-1, spell-level-2 | 197 | 51 | 197/197 (100%) | 606/607 (99.8%) | plans/unit-profile-coverage/level1-3-full-support.json |
-| Character Levels 1-4 | level-1, level-2, level-3, level-4, spell-level-0, spell-level-1, spell-level-2 | 210 | 63 | 210/210 (100%) | 631/632 (99.8%) | plans/unit-profile-coverage/level1-4-full-support.json |
+| Character Levels 1-3 | level-1, level-2, level-3, spell-level-0, spell-level-1, spell-level-2 | 197 | 51 | 197/197 (100%) | 607/607 (100%) | plans/unit-profile-coverage/level1-3-full-support.json |
+| Character Levels 1-4 | level-1, level-2, level-3, level-4, spell-level-0, spell-level-1, spell-level-2 | 210 | 63 | 210/210 (100%) | 632/632 (100%) | plans/unit-profile-coverage/level1-4-full-support.json |
 
 ## Existing SDK Seed Scenario Rows
 
@@ -576,6 +576,7 @@ Whole-width source lifecycle seed rows: 88/152.
 | L15-SDK-RAW-07 | battle-spell-sdk | 6 | spell-level-3 | Bard, Cleric, Druid, Sorcerer, Warlock, Wizard | `dispel_magic` | Bard spell list Dispel Magic<br>Cleric spell list Dispel Magic<br>Druid spell list Dispel Magic<br>Sorcerer spell list Dispel Magic<br>Warlock spell list Dispel Magic<br>Wizard spell list Dispel Magic | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 2 | spell-level-3 | Sorcerer, Wizard | `fireball` | Sorcerer spell list Fireball<br>Wizard spell list Fireball | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 3 | spell-level-3 | Sorcerer, Warlock, Wizard | `fly` | Sorcerer spell list Fly<br>Warlock spell list Fly<br>Wizard spell list Fly | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
+| L15-SDK-RAW-07 | battle-spell-sdk | 3 | spell-level-3 | Sorcerer, Warlock, Wizard | `gaseous_form` | Sorcerer spell list Gaseous Form<br>Warlock spell list Gaseous Form<br>Wizard spell list Gaseous Form | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 3 | spell-level-3 | Bard, Cleric, Wizard | `glyph_of_warding` | Bard spell list Glyph of Warding<br>Cleric spell list Glyph of Warding<br>Wizard spell list Glyph of Warding | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 1 | spell-level-3 | Sorcerer | `haste` | Sorcerer spell list Haste | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | battle-spell-sdk | 4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard | `hypnotic_pattern` | Bard spell list Hypnotic Pattern<br>Sorcerer spell list Hypnotic Pattern<br>Warlock spell list Hypnotic Pattern<br>Wizard spell list Hypnotic Pattern | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
@@ -608,7 +609,6 @@ Whole-width source lifecycle seed rows: 88/152.
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Cleric, Druid, Sorcerer | `daylight` | Cleric spell list Daylight<br>Druid spell list Daylight<br>Sorcerer spell list Daylight | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Druid | `druid_wild_resurgence` | Druid Wild Resurgence | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard | `fear` | Bard spell list Fear<br>Sorcerer spell list Fear<br>Warlock spell list Fear<br>Wizard spell list Fear | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
-| L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Sorcerer, Warlock, Wizard | `gaseous_form` | Sorcerer spell list Gaseous Form<br>Warlock spell list Gaseous Form<br>Wizard spell list Gaseous Form | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Cleric, Warlock, Wizard | `magic_circle` | Cleric spell list Magic Circle<br>Warlock spell list Magic Circle<br>Wizard spell list Magic Circle | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 2 | spell-level-3 | Cleric, Druid | `meld_into_stone` | Cleric spell list Meld into Stone<br>Druid spell list Meld into Stone | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Paladin | `paladin_faithful_steed` | Paladin Faithful Steed | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
@@ -731,7 +731,7 @@ Whole-width source lifecycle seed rows: 88/152.
 | spell-level-3 | Sorcerer spell list Fear | `fear` | `.references/srd-5.2.1/Classes/Sorcerer.md:305` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers. |
 | spell-level-3 | Sorcerer spell list Fireball | `fireball` | `.references/srd-5.2.1/Classes/Sorcerer.md:306` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Fly | `fly` | `.references/srd-5.2.1/Classes/Sorcerer.md:307` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
-| spell-level-3 | Sorcerer spell list Gaseous Form | `gaseous_form` | `.references/srd-5.2.1/Classes/Sorcerer.md:308` | catalog-installed-owner-evidence-required | battle-runtime-required | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance. |
+| spell-level-3 | Sorcerer spell list Gaseous Form | `gaseous_form` | `.references/srd-5.2.1/Classes/Sorcerer.md:308` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Haste | `haste` | `.references/srd-5.2.1/Classes/Sorcerer.md:309` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Sorcerer.md:310` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Lightning Bolt | `lightning_bolt` | `.references/srd-5.2.1/Classes/Sorcerer.md:311` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
@@ -749,7 +749,7 @@ Whole-width source lifecycle seed rows: 88/152.
 | spell-level-3 | Warlock spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Warlock.md:381` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Warlock spell list Fear | `fear` | `.references/srd-5.2.1/Classes/Warlock.md:382` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers. |
 | spell-level-3 | Warlock spell list Fly | `fly` | `.references/srd-5.2.1/Classes/Warlock.md:383` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
-| spell-level-3 | Warlock spell list Gaseous Form | `gaseous_form` | `.references/srd-5.2.1/Classes/Warlock.md:384` | catalog-installed-owner-evidence-required | battle-runtime-required | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance. |
+| spell-level-3 | Warlock spell list Gaseous Form | `gaseous_form` | `.references/srd-5.2.1/Classes/Warlock.md:384` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Warlock spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Warlock.md:385` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Warlock spell list Magic Circle | `magic_circle` | `.references/srd-5.2.1/Classes/Warlock.md:386` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name. |
 | spell-level-3 | Warlock spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Warlock.md:387` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
@@ -767,7 +767,7 @@ Whole-width source lifecycle seed rows: 88/152.
 | spell-level-3 | Wizard spell list Fear | `fear` | `.references/srd-5.2.1/Classes/Wizard.md:243` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers. |
 | spell-level-3 | Wizard spell list Fireball | `fireball` | `.references/srd-5.2.1/Classes/Wizard.md:244` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Fly | `fly` | `.references/srd-5.2.1/Classes/Wizard.md:245` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
-| spell-level-3 | Wizard spell list Gaseous Form | `gaseous_form` | `.references/srd-5.2.1/Classes/Wizard.md:246` | catalog-installed-owner-evidence-required | battle-runtime-required | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance. |
+| spell-level-3 | Wizard spell list Gaseous Form | `gaseous_form` | `.references/srd-5.2.1/Classes/Wizard.md:246` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Wizard.md:247` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Haste | `haste` | `.references/srd-5.2.1/Classes/Wizard.md:248` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Haste | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Wizard.md:249` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |

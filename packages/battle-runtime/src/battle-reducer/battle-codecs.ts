@@ -11,6 +11,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mist-cloud-form
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
@@ -63,6 +64,7 @@ import {
   BATTLE_MOVEMENT_SPEED_KINDS,
   BattleSubjectSchema,
   BattleSubjectTextSchema,
+  MIST_CLOUD_FORM_TABLE_SPATIAL_WITNESSES,
   SpellInvocationRefSchema,
   type BattleMovementSpeedKind,
   type SpellInvocationRefEncoded,
@@ -1959,6 +1961,9 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     actorId: CombatantId,
     movementBudgetFeet: MovementFeet,
+    mistCloudFormTableSpatialWitnesses: Schema.Array(
+      Schema.Literal(...MIST_CLOUD_FORM_TABLE_SPATIAL_WITNESSES),
+    ),
     speedKinds: Schema.Array(
       Schema.Struct({
         kind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),

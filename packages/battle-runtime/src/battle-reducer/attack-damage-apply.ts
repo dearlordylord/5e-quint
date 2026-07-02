@@ -80,6 +80,7 @@ import {
   type WildShapeLoadoutObjectRef,
   type WildShapeWornLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
+import { combatantHasMistCloudForm } from "./mist-cloud-form-restrictions.ts";
 
 export function attackDamageHole(
   attack: SupportedAttackActionOption,
@@ -381,6 +382,9 @@ export function attackActionOptionsForActor(
     return [];
   }
   const actor = state.combatants.get(actorId);
+  if (combatantHasMistCloudForm(actor)) {
+    return [];
+  }
   if (isCharacterBattleCreatureState(actor)) {
     const wildShape = activeDruidWildShape(actor);
     if (wildShape !== null) {

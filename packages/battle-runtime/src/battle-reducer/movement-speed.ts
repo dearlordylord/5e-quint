@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.grappler unit-feature.martial-arts-attack-projection unit-feature.stunning-strike
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mist-cloud-form
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.grappler unit-feature.martial-arts-attack-projection spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE

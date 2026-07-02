@@ -86,6 +86,7 @@ test("projects character languages and speech while not Incapacitated", () => {
       speech: {
         kind: "retainedCharacterSpeech",
         blockedByCondition: false,
+        blockedByMistCloudForm: false,
       },
     },
   });
@@ -105,6 +106,7 @@ test("projects retained character speech as blocked by Incapacitated", () => {
     speech: {
       kind: "retainedCharacterSpeech",
       blockedByCondition: true,
+      blockedByMistCloudForm: false,
     },
   });
 });
@@ -142,6 +144,7 @@ test("projects Wild Shape form senses while retaining character communication", 
       speech: {
         kind: "retainedCharacterSpeech",
         blockedByCondition: false,
+        blockedByMistCloudForm: false,
       },
     },
   });

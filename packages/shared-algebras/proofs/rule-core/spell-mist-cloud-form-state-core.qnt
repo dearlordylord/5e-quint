@@ -37,6 +37,18 @@ module spellMistCloudFormStateCore {
     | MistCloudDexteritySavingThrowAdvantage
     | MistCloudConstitutionSavingThrowAdvantage
 
+  type MistCloudActivityRestriction =
+    | MistCloudCannotTalk
+    | MistCloudCannotManipulateObjects
+    | MistCloudCarriedOrHeldObjectsCannotBeDroppedUsedOrInteractedWith
+    | MistCloudCannotAttack
+    | MistCloudCannotCastSpells
+
+  type MistCloudTableSpatialWitness =
+    | MistCloudCanOccupyAnotherCreatureSpace
+    | MistCloudCanPassThroughNarrowOpenings
+    | MistCloudTreatsLiquidsAsSolidSurfaces
+
   type MistCloudPassiveProjection = {
     damageResistances: Set[MistCloudDamageResistance],
     conditionImmunities: Set[MistCloudConditionImmunity],
@@ -56,6 +68,8 @@ module spellMistCloudFormStateCore {
     transformedObjects: MistCloudTransformedObjects,
     movementReplacement: MistCloudMovementReplacement,
     passiveProjection: MistCloudPassiveProjection,
+    activityRestrictions: Set[MistCloudActivityRestriction],
+    tableSpatialWitnesses: Set[MistCloudTableSpatialWitness],
     hasZeroHitPointEnd: bool,
     hasTargetMagicActionEnd: bool,
     hasSpellEndCleanup: bool
@@ -68,6 +82,8 @@ module spellMistCloudFormStateCore {
     transformedObjects: MistCloudTransformedObjects,
     movementReplacement: MistCloudMovementReplacement,
     passiveProjection: MistCloudPassiveProjection,
+    activityRestrictions: Set[MistCloudActivityRestriction],
+    tableSpatialWitnesses: Set[MistCloudTableSpatialWitness],
     endCauses: Set[MistCloudFormEndCause],
     concentrationOwnerKey: int,
     durationTicks: int
@@ -106,6 +122,22 @@ module spellMistCloudFormStateCore {
       MistCloudSpellEnds
     )
 
+  pure def mistCloudFormActivityRestrictions: Set[MistCloudActivityRestriction] =
+    Set(
+      MistCloudCannotTalk,
+      MistCloudCannotManipulateObjects,
+      MistCloudCarriedOrHeldObjectsCannotBeDroppedUsedOrInteractedWith,
+      MistCloudCannotAttack,
+      MistCloudCannotCastSpells
+    )
+
+  pure def mistCloudFormTableSpatialWitnesses: Set[MistCloudTableSpatialWitness] =
+    Set(
+      MistCloudCanOccupyAnotherCreatureSpace,
+      MistCloudCanPassThroughNarrowOpenings,
+      MistCloudTreatsLiquidsAsSolidSurfaces
+    )
+
   pure def legalMistCloudFormAdmissionFacts(facts: MistCloudFormAdmissionFacts): bool =
     all {
       facts.actionCastingTime,
@@ -115,6 +147,8 @@ module spellMistCloudFormStateCore {
       facts.transformedObjects == WornAndCarriedObjects,
       facts.movementReplacement == mistCloudFormMovementReplacement,
       facts.passiveProjection == mistCloudFormPassiveProjection,
+      facts.activityRestrictions == mistCloudFormActivityRestrictions,
+      facts.tableSpatialWitnesses == mistCloudFormTableSpatialWitnesses,
       facts.hasZeroHitPointEnd,
       facts.hasTargetMagicActionEnd,
       facts.hasSpellEndCleanup,
@@ -134,6 +168,8 @@ module spellMistCloudFormStateCore {
         transformedObjects: facts.transformedObjects,
         movementReplacement: facts.movementReplacement,
         passiveProjection: facts.passiveProjection,
+        activityRestrictions: facts.activityRestrictions,
+        tableSpatialWitnesses: facts.tableSpatialWitnesses,
         endCauses: mistCloudFormEndCauses,
         concentrationOwnerKey: sourceCombatantKey,
         durationTicks: mistCloudFormDurationTicks,

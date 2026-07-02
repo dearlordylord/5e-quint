@@ -80,6 +80,10 @@ import {
   activeLevitatedCreatureTargetsControlledBy,
   levitateAltitudeChangeHole,
 } from "./levitate-creature.ts";
+import {
+  activeMistCloudFormEffect,
+  mistCloudFormBlocksObjectManipulation,
+} from "./mist-cloud-form-restrictions.ts";
 import { dragonsBreathExhaleActs } from "./dragons-breath.ts";
 
 import {
@@ -251,12 +255,16 @@ export function discoverBattleActs(
           state,
           actorId,
         );
+        const mistCloudBlocksDrop =
+          mistCloudFormBlocksObjectManipulation(state.combatants.get(actorId));
         return {
           subject,
           label: "Command: Drop",
-          summary: "Drop held objects and end the turn.",
+          summary: mistCloudBlocksDrop
+            ? "End the turn; mist-cloud form prevents dropping held objects."
+            : "Drop held objects and end the turn.",
           initialHoles:
-            canonicalObjectIds === null
+            !mistCloudBlocksDrop && canonicalObjectIds === null
               ? [commandDropHeldObjectFactsHole(subject)]
               : [],
         };
@@ -326,6 +334,7 @@ export function discoverBattleActs(
   }
   acts.push(...startTurnWebActs);
   acts.push(...selfTransformationModeReplacementActs(state, actorId));
+  acts.push(...mistCloudFormDismissalActs(state, actorId));
   acts.push(...levitateAltitudeControlActs(state, actorId));
   if (!combatantInsideActiveAntimagicFieldAura(state, actorId)) {
     acts.push(...dragonsBreathExhaleActs(state, actorId));
@@ -628,7 +637,9 @@ export function discoverBattleActs(
     : [];
   acts.push(...companionProtocolActs(state, actorId, spellActs));
   acts.push(...spellActs);
-  acts.push(...spellCreatedHeldObjectReleaseActs(state, actorId));
+  if (!mistCloudFormBlocksObjectManipulation(state.combatants.get(actorId))) {
+    acts.push(...spellCreatedHeldObjectReleaseActs(state, actorId));
+  }
   acts.push(...flamingSphereRepositionActs(state, actorId));
   acts.push(...flamingSphereRamActs(state, actorId));
   acts.push(...moonbeamRepositionActs(state, actorId));
@@ -659,6 +670,35 @@ export function discoverBattleActs(
   acts.push(...discoverLegendaryActionActs(state));
 
   return acts;
+}
+
+function mistCloudFormDismissalActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  const effect = activeMistCloudFormEffect(actor);
+  if (
+    effect === null ||
+    !combatantCanTakeActions(actor) ||
+    !canSpendAction(state.currentTurnResources, "magic")
+  ) {
+    return [];
+  }
+  return [
+    {
+      subject: {
+        tag: "runtimeCommand" as const,
+        actorId,
+        command: "dismissMistCloudForm" as const,
+        sourceCombatantId: effect.sourceCombatantId,
+        sourceSpellId: spellId(effect.sourceSpellId),
+      },
+      label: "End Mist-Cloud Form",
+      summary: "Use a Magic action to end this mist-cloud form on yourself.",
+      initialHoles: [],
+    },
+  ];
 }
 
 function companionProtocolActs(

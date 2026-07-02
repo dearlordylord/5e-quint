@@ -168,6 +168,13 @@ import {
   battleSubjectInterdictedByAntimagicField,
   combatantInsideActiveAntimagicFieldAura,
 } from "./antimagic-field-action-interdiction.ts";
+import {
+  activeMistCloudFormEffect,
+  battleStateAfterMistCloudFormSelfDismissal,
+  mistCloudFormBlocksAttackSubject,
+  mistCloudFormBlocksObjectSubject,
+  mistCloudFormBlocksSpellcasting,
+} from "./mist-cloud-form-restrictions.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   activeSelfTransformationModeEffect,
@@ -935,6 +942,33 @@ export function resolveBattleSubjectInternal(
       antimagicFieldInterdictionMessage(input.state, input.subject),
     );
   }
+  if (mistCloudFormBlocksAttackSubject(input.state, input.subject)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Mist-cloud form prevents attacks.",
+    );
+  }
+  if (mistCloudFormBlocksObjectSubject(input.state, input.subject)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Mist-cloud form prevents manipulating, dropping, using, or otherwise interacting with objects.",
+    );
+  }
+  if (
+    (input.subject.tag === "actionSpell" ||
+      input.subject.tag === "bonusActionSpell" ||
+      input.subject.tag === "bonusActionDashSpell" ||
+      input.subject.tag === "findFamiliarTouchSpell") &&
+    mistCloudFormBlocksSpellcasting(input.state.combatants.get(actorId))
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Mist-cloud form prevents spellcasting.",
+    );
+  }
 
   if (
     subjectRequiresActionEligibility(input.subject) &&
@@ -1328,6 +1362,12 @@ export function resolveBattleSubjectInternal(
         ...input,
         subject,
       });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "dismissMistCloudForm"
+    ) {
+      return resolveDismissMistCloudFormCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&
@@ -2028,8 +2068,58 @@ function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
       subject.command === "standFromProne" ||
       subject.command === "jumpMovementReplacement" ||
       subject.command === "levitateAltitudeControl" ||
+      subject.command === "dismissMistCloudForm" ||
       subject.command === "replaceSelfTransformationMode")
   );
+}
+
+function resolveDismissMistCloudFormCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "dismissMistCloudForm";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const effect = activeMistCloudFormEffect(
+    input.state.combatants.get(input.subject.actorId),
+  );
+  if (
+    !combatantCanTakeActions(input.state.combatants.get(input.subject.actorId)) ||
+    effect === null ||
+    effect.sourceCombatantId !== input.subject.sourceCombatantId ||
+    effect.sourceSpellId !== input.subject.sourceSpellId
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Mist-cloud form is no longer active for this combatant.",
+    );
+  }
+  if (!canSpendAction(input.state.currentTurnResources, "magic")) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Magic action is no longer available for the current actor.",
+    );
+  }
+  const nextState = battleStateAfterMistCloudFormSelfDismissal(
+    {
+      ...input.state,
+      currentTurnResources: Either.getOrThrow(
+        spendAction(input.state.currentTurnResources, "magic"),
+      ),
+    },
+    input.subject.actorId,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function resolveLevitateAltitudeControlCommand(

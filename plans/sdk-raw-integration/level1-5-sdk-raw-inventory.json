@@ -4500,14 +4500,14 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Gaseous Form",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 308,
         "lineStart": 308,
@@ -4521,18 +4521,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime mist-cloud form profile plus caller/table spatial witnesses",
+          "reason": "Creature-space occupancy, narrow-opening passage, and liquid-surface treatment depend on caller/table geometry and occupancy witnesses. The runtime consumes the typed Surface facts and exposes the required witness categories without adding parallel map or terrain state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -5395,14 +5399,14 @@
       "category": "spell Unit pressure",
       "className": "Warlock",
       "concept": "Warlock spell list Gaseous Form",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 384,
         "lineStart": 384,
@@ -5416,18 +5420,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime mist-cloud form profile plus caller/table spatial witnesses",
+          "reason": "Creature-space occupancy, narrow-opening passage, and liquid-surface treatment depend on caller/table geometry and occupancy witnesses. The runtime consumes the typed Surface facts and exposes the required witness categories without adding parallel map or terrain state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -6335,14 +6343,14 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Gaseous Form",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 246,
         "lineStart": 246,
@@ -6356,18 +6364,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime mist-cloud form profile plus caller/table spatial witnesses",
+          "reason": "Creature-space occupancy, narrow-opening passage, and liquid-surface treatment depend on caller/table geometry and occupancy witnesses. The runtime consumes the typed Surface facts and exposes the required witness categories without adding parallel map or terrain state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -7770,6 +7782,97 @@
         "Sorcerer spell list Fly",
         "Warlock spell list Fly",
         "Wizard spell list Fly"
+      ],
+      "sdkInventoryDispositions": [
+        "sdk-scenario-needed"
+      ],
+      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "gaseous_form"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:battle-spell-sdk:gaseous-form",
+      "lane": "battle-spell-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"gaseous_form\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:308",
+        ".references/srd-5.2.1/Classes/Warlock.md:384",
+        ".references/srd-5.2.1/Classes/Wizard.md:246"
+      ],
+      "rowCount": 3,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "gaseous_form",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Gaseous Form",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 308,
+            "lineStart": 308,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "candidateUnitId": "gaseous_form",
+          "className": "Warlock",
+          "concept": "Warlock spell list Gaseous Form",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 384,
+            "lineStart": 384,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "candidateUnitId": "gaseous_form",
+          "className": "Wizard",
+          "concept": "Wizard spell list Gaseous Form",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 246,
+            "lineStart": 246,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Gaseous Form",
+        "Warlock spell list Gaseous Form",
+        "Wizard spell list Gaseous Form"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"
@@ -9926,97 +10029,6 @@
         "Sorcerer spell list Fear",
         "Warlock spell list Fear",
         "Wizard spell list Fear"
-      ],
-      "sdkInventoryDispositions": [
-        "future-owner-before-sdk"
-      ],
-      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "gaseous_form"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Sorcerer",
-        "Warlock",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:gaseous-form",
-      "lane": "future-owner-before-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "future-runtime-owner-before-sdk"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"gaseous_form\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md:308",
-        ".references/srd-5.2.1/Classes/Warlock.md:384",
-        ".references/srd-5.2.1/Classes/Wizard.md:246"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "gaseous_form",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Gaseous Form",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 308,
-            "lineStart": 308,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "gaseous_form",
-          "className": "Warlock",
-          "concept": "Warlock spell list Gaseous Form",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 384,
-            "lineStart": 384,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "candidateUnitId": "gaseous_form",
-          "className": "Wizard",
-          "concept": "Wizard spell list Gaseous Form",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 246,
-            "lineStart": 246,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Sorcerer spell list Gaseous Form",
-        "Warlock spell list Gaseous Form",
-        "Wizard spell list Gaseous Form"
       ],
       "sdkInventoryDispositions": [
         "future-owner-before-sdk"
@@ -41461,14 +41473,14 @@
       "category": "spell Unit pressure",
       "className": "Sorcerer",
       "concept": "Sorcerer spell list Gaseous Form",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 308,
         "lineStart": 308,
@@ -41482,18 +41494,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime mist-cloud form profile plus caller/table spatial witnesses",
+          "reason": "Creature-space occupancy, narrow-opening passage, and liquid-surface treatment depend on caller/table geometry and occupancy witnesses. The runtime consumes the typed Surface facts and exposes the required witness categories without adding parallel map or terrain state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -44713,14 +44729,14 @@
       "category": "spell Unit pressure",
       "className": "Warlock",
       "concept": "Warlock spell list Gaseous Form",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 384,
         "lineStart": 384,
@@ -44734,18 +44750,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime mist-cloud form profile plus caller/table spatial witnesses",
+          "reason": "Creature-space occupancy, narrow-opening passage, and liquid-surface treatment depend on caller/table geometry and occupancy witnesses. The runtime consumes the typed Surface facts and exposes the required witness categories without adding parallel map or terrain state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -50555,14 +50575,14 @@
       "category": "spell Unit pressure",
       "className": "Wizard",
       "concept": "Wizard spell list Gaseous Form",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 246,
         "lineStart": 246,
@@ -50576,18 +50596,22 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "battle-runtime-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime mist-cloud form profile plus caller/table spatial witnesses",
+          "reason": "Creature-space occupancy, narrow-opening passage, and liquid-surface treatment depend on caller/table geometry and occupancy witnesses. The runtime consumes the typed Surface facts and exposes the required witness categories without adding parallel map or terrain state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
           "unitId": "gaseous_form"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -58143,12 +58167,11 @@
       ],
       "productReadiness": {
         "denominator": 607,
-        "numerator": 606,
-        "percent": "99.8%",
+        "numerator": 607,
+        "percent": "100%",
         "rowsByStatus": {
-          "accepted": 446,
-          "accepted-no-battle-effect": 160,
-          "owner-evidence-required": 1
+          "accepted": 447,
+          "accepted-no-battle-effect": 160
         }
       },
       "sourcePath": "plans/unit-profile-coverage/level1-3-full-support.json",
@@ -60421,12 +60444,11 @@
       ],
       "productReadiness": {
         "denominator": 632,
-        "numerator": 631,
-        "percent": "99.8%",
+        "numerator": 632,
+        "percent": "100%",
         "rowsByStatus": {
-          "accepted": 447,
-          "accepted-no-battle-effect": 184,
-          "owner-evidence-required": 1
+          "accepted": 448,
+          "accepted-no-battle-effect": 184
         }
       },
       "sourcePath": "plans/unit-profile-coverage/level1-4-full-support.json",
@@ -60505,12 +60527,11 @@
         "nonSupportedFrontier": 51,
         "productReadiness": {
           "denominator": 607,
-          "numerator": 606,
-          "percent": "99.8%",
+          "numerator": 607,
+          "percent": "100%",
           "rowsByStatus": {
-            "accepted": 446,
-            "accepted-no-battle-effect": 160,
-            "owner-evidence-required": 1
+            "accepted": 447,
+            "accepted-no-battle-effect": 160
           }
         },
         "strictDenominator": 197,
@@ -60524,12 +60545,11 @@
         "nonSupportedFrontier": 63,
         "productReadiness": {
           "denominator": 632,
-          "numerator": 631,
-          "percent": "99.8%",
+          "numerator": 632,
+          "percent": "100%",
           "rowsByStatus": {
-            "accepted": 447,
-            "accepted-no-battle-effect": 184,
-            "owner-evidence-required": 1
+            "accepted": 448,
+            "accepted-no-battle-effect": 184
           }
         },
         "strictDenominator": 210,
@@ -60548,10 +60568,10 @@
     },
     "level5CompletionRowsByOwnerBoundary": {
       "build-progression": 12,
-      "character-battle-to-battle": 46,
+      "character-battle-to-battle": 49,
       "character-sheet": 1,
       "class-feature-closure-review": 2,
-      "future-runtime-owner-before-sdk": 43,
+      "future-runtime-owner-before-sdk": 40,
       "spell-effect-owner-review": 34
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
@@ -60561,17 +60581,17 @@
     "level5CompletionRowsBySdkInventoryDisposition": {
       "closure-review-needed": 36,
       "explicit-closure-needed": 12,
-      "future-owner-before-sdk": 43,
-      "sdk-scenario-needed": 35,
+      "future-owner-before-sdk": 40,
+      "sdk-scenario-needed": 38,
       "sdk-scenario-or-owner-closure-needed": 6,
       "seed-scenario-present": 6
     },
     "level5ScenarioGroups": 72,
     "level5ScenarioGroupsByLane": {
-      "battle-spell-sdk": 12,
+      "battle-spell-sdk": 13,
       "explicit-closure": 12,
       "feature-owner-review": 2,
-      "future-owner-before-sdk": 22,
+      "future-owner-before-sdk": 21,
       "owner-review": 6,
       "seed-present": 6,
       "spell-effect-owner-review": 12
@@ -60591,14 +60611,14 @@
     },
     "levelOneFiveRowsByOwnerBoundary": {
       "build-progression": 60,
-      "character-battle-to-battle": 322,
+      "character-battle-to-battle": 325,
       "character-build-to-battle": 17,
       "character-build-to-sheet": 112,
       "character-creation": 29,
       "character-sheet": 9,
       "character-sheet-spell-access": 12,
       "class-feature-closure-review": 4,
-      "future-runtime-owner-before-sdk": 44,
+      "future-runtime-owner-before-sdk": 41,
       "multi-owner-sdk-split": 10,
       "spell-effect-owner-review": 136,
       "table-only-closure": 15
@@ -60624,8 +60644,8 @@
       "closure-review-needed": 140,
       "explicit-closure-needed": 36,
       "explicit-closure-present": 24,
-      "future-owner-before-sdk": 44,
-      "sdk-scenario-needed": 348,
+      "future-owner-before-sdk": 41,
+      "sdk-scenario-needed": 351,
       "sdk-scenario-or-owner-closure-needed": 6,
       "seed-scenario-present": 157,
       "table-only-closure-needed": 15
@@ -60694,7 +60714,7 @@
     "scenarioGroups": 416,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 19,
-      "battle-spell-sdk": 79,
+      "battle-spell-sdk": 80,
       "build-battle-sdk": 7,
       "build-sheet-sdk": 19,
       "character-creation-sdk": 24,
@@ -60702,7 +60722,7 @@
       "explicit-closure": 36,
       "explicit-closure-present": 24,
       "feature-owner-review": 4,
-      "future-owner-before-sdk": 23,
+      "future-owner-before-sdk": 22,
       "multi-owner-feature-sdk": 8,
       "owner-review": 6,
       "seed-present": 105,
@@ -85404,6 +85424,97 @@
     },
     {
       "candidateUnitIds": [
+        "gaseous_form"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:battle-spell-sdk:gaseous-form",
+      "lane": "battle-spell-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"gaseous_form\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Sorcerer.md:308",
+        ".references/srd-5.2.1/Classes/Warlock.md:384",
+        ".references/srd-5.2.1/Classes/Wizard.md:246"
+      ],
+      "rowCount": 3,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "gaseous_form",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Gaseous Form",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 308,
+            "lineStart": 308,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "candidateUnitId": "gaseous_form",
+          "className": "Warlock",
+          "concept": "Warlock spell list Gaseous Form",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 384,
+            "lineStart": 384,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "candidateUnitId": "gaseous_form",
+          "className": "Wizard",
+          "concept": "Wizard spell list Gaseous Form",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 246,
+            "lineStart": 246,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Sorcerer spell list Gaseous Form",
+        "Warlock spell list Gaseous Form",
+        "Wizard spell list Gaseous Form"
+      ],
+      "sdkInventoryDispositions": [
+        "sdk-scenario-needed"
+      ],
+      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "glyph_of_warding"
       ],
       "categories": [
@@ -87551,97 +87662,6 @@
         "Sorcerer spell list Fear",
         "Warlock spell list Fear",
         "Wizard spell list Fear"
-      ],
-      "sdkInventoryDispositions": [
-        "future-owner-before-sdk"
-      ],
-      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "gaseous_form"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Sorcerer",
-        "Warlock",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:gaseous-form",
-      "lane": "future-owner-before-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "future-runtime-owner-before-sdk"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"gaseous_form\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Sorcerer.md:308",
-        ".references/srd-5.2.1/Classes/Warlock.md:384",
-        ".references/srd-5.2.1/Classes/Wizard.md:246"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "gaseous_form",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Gaseous Form",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_gaseous_form",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 308,
-            "lineStart": 308,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "gaseous_form",
-          "className": "Warlock",
-          "concept": "Warlock spell list Gaseous Form",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_gaseous_form",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 384,
-            "lineStart": 384,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "candidateUnitId": "gaseous_form",
-          "className": "Wizard",
-          "concept": "Wizard spell list Gaseous Form",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_gaseous_form",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 246,
-            "lineStart": 246,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Sorcerer spell list Gaseous Form",
-        "Warlock spell list Gaseous Form",
-        "Wizard spell list Gaseous Form"
       ],
       "sdkInventoryDispositions": [
         "future-owner-before-sdk"

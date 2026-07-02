@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mist-cloud-form
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type { Language } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
@@ -12,6 +13,7 @@ import {
   activeDruidWildShapeForm,
   combatantSkillModifier,
 } from "./battle-reducer/druid-wild-shape.ts";
+import { mistCloudFormBlocksSpeech } from "./battle-reducer/mist-cloud-form-restrictions.ts";
 
 export type BattleCreatureSpecialSense = CreatureSense;
 
@@ -30,6 +32,7 @@ export type BattleStatBlockCommunicationText =
 export type BattleCharacterSpeechProjection = {
   readonly kind: "retainedCharacterSpeech";
   readonly blockedByCondition: boolean;
+  readonly blockedByMistCloudForm: boolean;
 };
 
 export type BattleCreatureCommunicationProjection =
@@ -82,6 +85,7 @@ function combatantCommunicationProjection(
       speech: {
         kind: "retainedCharacterSpeech",
         blockedByCondition: isIncapacitated(combatant.conditions),
+        blockedByMistCloudForm: mistCloudFormBlocksSpeech(combatant),
       },
     };
   }

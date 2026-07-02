@@ -368,6 +368,10 @@ function runtimeCommandSubjectKind(
         "replaceSelfTransformationMode",
         () => "runtimeTransformationMode" as const,
       ),
+      byCommand(
+        "dismissMistCloudForm",
+        () => "runtimeTransformationMode" as const,
+      ),
       byCommand("commandGrovel", () => "runtimeCompelledAction" as const),
       byCommand("commandDrop", () => "runtimeCompelledAction" as const),
       byCommand("commandApproach", () => "runtimeCompelledAction" as const),

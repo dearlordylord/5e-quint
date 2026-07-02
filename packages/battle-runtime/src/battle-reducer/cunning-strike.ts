@@ -533,6 +533,7 @@ function cunningStrikeMovementHole(
     label: "Cunning Strike Withdraw movement",
     actorId,
     movementBudgetFeet: movementBudget.movementBudgetFeet,
+    mistCloudFormTableSpatialWitnesses: [],
     speedKinds: movementBudget.speedKinds,
   };
 }

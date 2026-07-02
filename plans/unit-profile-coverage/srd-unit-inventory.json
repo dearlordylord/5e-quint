@@ -290,12 +290,12 @@
     },
     "levelThreeSpellBattleReadiness": {
       "denominator": 110,
-      "numerator": 106,
-      "percent": "96.4%",
+      "numerator": 109,
+      "percent": "99.1%",
       "rowsByStatus": {
         "accepted-no-battle-effect": 69,
-        "accepted": 37,
-        "battle-runtime-required": 4
+        "accepted": 40,
+        "battle-runtime-required": 1
       }
     },
     "levelFourSpellBattleReadiness": {
@@ -364,13 +364,12 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 502,
+      "catalog-installed-owner-evidence-present": 505,
       "non-runtime": 84,
       "catalog-only/dead-for-now": 207,
       "level-5-7-follow-up-required": 22,
       "catalog-authored-review-required": 49,
       "missing-authored-record": 32,
-      "catalog-installed-owner-evidence-required": 3,
       "catalog-authored-executable-follow-up": 1
     },
     "spellPressureRowsByDisposition": {
@@ -379,14 +378,12 @@
     },
     "levelThreeSpellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 69,
-      "catalog-installed-owner-evidence-present": 37,
-      "catalog-installed-owner-evidence-required": 3,
+      "catalog-installed-owner-evidence-present": 40,
       "catalog-authored-executable-follow-up": 1
     },
     "levelThreeInstalledSpellPressureRowsByDisposition": {
       "catalog-only/dead-for-now": 33,
-      "catalog-installed-owner-evidence-present": 37,
-      "catalog-installed-owner-evidence-required": 3
+      "catalog-installed-owner-evidence-present": 40
     },
     "levelFourSpellPressureRowsByDisposition": {
       "catalog-authored-review-required": 49,
@@ -30957,8 +30954,14 @@
         "state": "installed",
         "unitId": "gaseous_form"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "battle-runtime mist-cloud form profile plus caller/table spatial witnesses",
+        "reason": "Creature-space occupancy, narrow-opening passage, and liquid-surface treatment depend on caller/table geometry and occupancy witnesses. The runtime consumes the typed Surface facts and exposes the required witness categories without adding parallel map or terrain state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -30966,13 +30969,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP at packages/battle-runtime/src/unit-profile-admission-gaseous-form.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_haste",
@@ -34384,8 +34387,14 @@
         "state": "installed",
         "unitId": "gaseous_form"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "battle-runtime mist-cloud form profile plus caller/table spatial witnesses",
+        "reason": "Creature-space occupancy, narrow-opening passage, and liquid-surface treatment depend on caller/table geometry and occupancy witnesses. The runtime consumes the typed Surface facts and exposes the required witness categories without adding parallel map or terrain state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -34393,13 +34402,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP at packages/battle-runtime/src/unit-profile-admission-gaseous-form.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_hypnotic_pattern",
@@ -39829,8 +39838,14 @@
         "state": "installed",
         "unitId": "gaseous_form"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "battle-runtime mist-cloud form profile plus caller/table spatial witnesses",
+        "reason": "Creature-space occupancy, narrow-opening passage, and liquid-surface treatment depend on caller/table geometry and occupancy witnesses. The runtime consumes the typed Surface facts and exposes the required witness categories without adding parallel map or terrain state."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -39838,13 +39853,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
-          "evidence": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP at packages/battle-runtime/src/unit-profile-admission-gaseous-form.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME owns Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_glyph_of_warding",

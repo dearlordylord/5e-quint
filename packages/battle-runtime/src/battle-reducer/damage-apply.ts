@@ -116,6 +116,7 @@ import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
 } from "./fly-speed-grant-end-fall-cleanup.ts";
+import { battleStateAfterMistCloudFormZeroHitPointCleanup } from "./mist-cloud-form-restrictions.ts";
 import {
   hideousLaughterDamageRepeatSaveHoles,
   hideousLaughterRepeatSavingThrowOutcomeHole,
@@ -574,8 +575,15 @@ export function applyBattleHitPointDamage(input: {
             input.hideousLaughterDamageRepeatSaveEventKey,
         })
       : afterFamiliar;
+  const afterMistCloudFormZeroHitPointCleanup =
+    battleStateAfterMistCloudFormZeroHitPointCleanup(
+      afterWardingBondDamageShare,
+      targetId,
+      input.target,
+      damaged,
+    );
   return battleStateAfterWardingBondCasterZeroHitPoints(
-    afterWardingBondDamageShare,
+    afterMistCloudFormZeroHitPointCleanup,
   );
 }
 

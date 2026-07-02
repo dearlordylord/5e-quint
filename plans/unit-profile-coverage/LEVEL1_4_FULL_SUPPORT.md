@@ -17,15 +17,15 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 147/210 (70%) |
 | Strict target closure | 210/210 (100%) |
 | Selected identity readiness | 169/169 (100%) |
-| Diagnostic product readiness | 631/632 (99.8%) |
-| SRD authored product readiness | 116/116 (100%) |
+| Diagnostic product readiness | 632/632 (100%) |
+| SRD authored product readiness | 130/130 (100%) |
 | Rules-kernel profile join | 103/103 (100%) |
 | Rules-kernel covered profile join | 103/103 (100%) |
 | Supported Unit rules-kernel chain | 141/141 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 631/632 (99.8%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 632/632 (100%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -33,9 +33,8 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 447 |
+| accepted | 448 |
 | accepted-no-battle-effect | 184 |
-| owner-evidence-required | 1 |
 
 ### Selected Identity Replay Accounting
 
@@ -59,7 +58,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 210/210 (100%) | _none_ |
 | Selected identity readiness | pass | 169/169 (100%) | _none_ |
-| SRD authored product readiness | pass | 116/116 (100%) | _none_ |
+| SRD authored product readiness | pass | 130/130 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
 
@@ -74,9 +73,9 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD background concrete equipment refs | complete | 4/4 (100%) | Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog. |
 | SRD species records | complete | 9/9 (100%) | Every SRD species selectable at character creation must be installed. |
 | SRD species trait refs | complete | 21/21 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
-| SRD class feature grants through level 4 | complete | 61/61 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
-| SRD class concrete equipment refs | complete | 5/5 (100%) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
-| Unique SRD concrete equipment refs | complete | 8/8 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
+| SRD class feature grants through level 4 | complete | 62/62 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
+| SRD class concrete equipment refs | complete | 13/13 (100%) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
+| Unique SRD concrete equipment refs | complete | 13/13 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
 
 ### Readiness Blockers
 

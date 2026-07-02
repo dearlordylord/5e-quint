@@ -163,6 +163,7 @@ import {
   type BattleMovementSpeedKind,
   type BattleSubject,
   type BonusActionStandardActionSubject,
+  type MistCloudFormTableSpatialWitness,
   type MonkFocusFlurryOfBlowsStrikeSubject,
   type MonkFocusOptionSubject,
   type SpellInvocationRef,
@@ -6004,6 +6005,7 @@ export type BattleMovementHole = {
   readonly label: string;
   readonly actorId: CombatantId;
   readonly movementBudgetFeet: MovementFeet;
+  readonly mistCloudFormTableSpatialWitnesses: readonly MistCloudFormTableSpatialWitness[];
   readonly speedKinds: readonly {
     readonly kind: BattleMovementSpeedKind;
     readonly movementBudgetFeet: MovementFeet;

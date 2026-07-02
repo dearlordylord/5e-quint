@@ -44,10 +44,12 @@ import {
 } from "../spells-profile-shared.ts";
 import {
   MIST_CLOUD_FORM_CAN_HOVER,
+  MIST_CLOUD_FORM_ACTIVITY_LIMITS,
   MIST_CLOUD_FORM_CONDITION_IMMUNITIES,
   MIST_CLOUD_FORM_DAMAGE_RESISTANCES,
   MIST_CLOUD_FORM_FLY_SPEED_FEET,
   MIST_CLOUD_FORM_SAVING_THROW_ADVANTAGE,
+  MIST_CLOUD_FORM_TABLE_SPATIAL_FACTS,
 } from "../mist-cloud-form-facts.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
@@ -166,6 +168,8 @@ function mistCloudFormSpellProjection(
     effect.kind !== "transform_target" ||
     effect.newForm.kind !== "spell_effect_mist_cloud" ||
     !mistCloudFormMovementAndPassivesAreComplete(effect.newForm) ||
+    !mistCloudFormActivityLimitsAreComplete(effect.newForm) ||
+    !mistCloudFormTableSpatialFactsAreComplete(effect.newForm) ||
     effect.newForm.transformedObjects !== "worn_and_carried" ||
     !mistCloudFormRevertTriggersAreComplete(effect.revertTriggers)
   ) {
@@ -217,6 +221,35 @@ function mistCloudFormMovementAndPassivesAreComplete(
       form.passive.savingThrowAdvantage,
       MIST_CLOUD_FORM_SAVING_THROW_ADVANTAGE,
     )
+  );
+}
+
+function mistCloudFormActivityLimitsAreComplete(
+  form: MistCloudFormShape,
+): boolean {
+  return (
+    form.activityLimits.communication ===
+      MIST_CLOUD_FORM_ACTIVITY_LIMITS.communication &&
+    form.activityLimits.objectManipulation ===
+      MIST_CLOUD_FORM_ACTIVITY_LIMITS.objectManipulation &&
+    form.activityLimits.carriedOrHeldObjects ===
+      MIST_CLOUD_FORM_ACTIVITY_LIMITS.carriedOrHeldObjects &&
+    sameStringSet(
+      form.activityLimits.prohibitedActivities,
+      MIST_CLOUD_FORM_ACTIVITY_LIMITS.prohibitedActivities,
+    )
+  );
+}
+
+function mistCloudFormTableSpatialFactsAreComplete(
+  form: MistCloudFormShape,
+): boolean {
+  return (
+    form.tableSpatial.creatureSpace ===
+      MIST_CLOUD_FORM_TABLE_SPATIAL_FACTS.creatureSpace &&
+    form.tableSpatial.narrowOpenings ===
+      MIST_CLOUD_FORM_TABLE_SPATIAL_FACTS.narrowOpenings &&
+    form.tableSpatial.liquids === MIST_CLOUD_FORM_TABLE_SPATIAL_FACTS.liquids
   );
 }
 

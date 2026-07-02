@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "L12-SH16-CLEANROOM-GATE-PLAN",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Prepare the later cleanroom replay gate"
     },
     {
@@ -385,7 +385,7 @@
     {
       "number": 64,
       "id": "L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Promote Gaseous Form restrictions and cleanup"
     }
   ]
@@ -619,7 +619,7 @@ Reviewer-loop convergence:
 | 13 | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY - Close the first spell-effect owner review family | done | L12-SH04-GROUPING-GENERATOR-GATE | closure-review | Goodberry spell-list pressure family classified as table-only inventory/survival closure. |
 | 14 | L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS - Add the first small QNT harness pressure witness | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | QNT/harness-pressure | Small deterministic source-side witness or existing obligation strengthening. |
 | 15 | L12-SH15-NEXT-BATCH-SPLIT - Expand the next one-session task batches | done | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS | planning | Added Tasks 24-39 as the next runnable batch and Task 40 as the remaining-group splitter. |
-| 16 | L12-SH16-CLEANROOM-GATE-PLAN - Prepare the later cleanroom replay gate | blocked | L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE, L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE, L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES, L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP | later cleanroom gate | Cleanroom replay gate remains behind the newly visible level-3 source-side owner-evidence follow-ups. |
+| 16 | L12-SH16-CLEANROOM-GATE-PLAN - Prepare the later cleanroom replay gate | ready-for-research | L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE, L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE, L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES, L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP | later cleanroom gate | Cleanroom replay gate is runnable after the level-3 source-side owner-evidence follow-ups landed. |
 | 17 | L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE - Migrate the Barbarian Rage seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `barbarian_rage` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 18 | L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION - Migrate the Bardic Inspiration seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `bard_bardic_inspiration` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 19 | L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND - Migrate the Fighter Second Wind seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `fighter_second_wind` seed uses legal creation and remains a real sheet/battle handoff scenario. |
@@ -667,7 +667,7 @@ Reviewer-loop convergence:
 | 61 | L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE - Reconcile Rogue Second-Story Work owner evidence | done | L12-SH60-REMAINING-BATCH-SPLIT-2 | unit-profile/evidence | Reconcile Rogue Second-Story Work's supported character-sheet profile with the SDK inventory owner-evidence row. |
 | 62 | L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE - Promote Gaseous Form mist-cloud state admission | done | L12-SH60-REMAINING-BATCH-SPLIT-2 | battle-runtime/spell-effect-owner | Add the typed mist-cloud form active-effect admission and lifecycle skeleton without authored-identity dispatch. |
 | 63 | L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES - Promote Gaseous Form movement and passive projections | done | L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE | battle-runtime/spell-effect-owner | Project mist-cloud movement replacement, Dash budget, Resistance, Prone Immunity, and Saving Throw Advantage from the admitted active effect. |
-| 64 | L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP - Promote Gaseous Form restrictions and cleanup | ready-for-research | L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES | battle-runtime/spell-effect-owner | Add mist-cloud action/object/speech restrictions, self-ending, zero-Hit-Point and spell-end cleanup, and table/spatial witness handling. |
+| 64 | L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP - Promote Gaseous Form restrictions and cleanup | done | L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES | battle-runtime/spell-effect-owner | Add mist-cloud action/object/speech restrictions, self-ending, zero-Hit-Point and spell-end cleanup, and table/spatial witness handling. |
 
 ## Task Details
 
@@ -1381,17 +1381,7 @@ Plan Impact:
 
 ### Task 16 - L12-SH16-CLEANROOM-GATE-PLAN
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE`,
-`L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE`,
-`L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES`, and
-`L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP`. Task 60 found no remaining L1/L2
-owner-evidence or runtime-required rows, but the current source-side inventory
-still has level-3 owner-evidence follow-ups that should land before cleanroom
-replay is treated as stable.
+Status: `ready-for-research`
 
 Input:
 
@@ -2515,8 +2505,8 @@ Plan Impact:
 - `applied`; post-Task-39 inventory has 112 remaining needed L1/L2 groups
   across source scenario, closure-review, explicit-closure, and table-only
   lanes. Tasks 44-59 are the next runnable one-session batch. Task 60 is the
-  next remaining-group split gate. Task 16 remains blocked behind further
-  source-side stabilization.
+  next remaining-group split gate. Task 16 remains gated on further source-side
+  stabilization.
 
 ### Task 41 - L12-SH41-WILD-SHAPE-FORM-ACTION-SHAPES
 
@@ -3433,7 +3423,7 @@ Validation:
 Plan Impact:
 
 - `applied`; current L1/L2 battle-readiness rows are complete, Task 16 remains
-  blocked behind level-3 source-side stabilization, and Tasks 61-64 are the next
+  gated on level-3 source-side stabilization, and Tasks 61-64 are the next
   concrete owner-evidence follow-ups.
 
 ### Task 61 - L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE
@@ -3614,13 +3604,7 @@ Plan Impact:
 
 ### Task 64 - L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP
 
-Status: `ready-for-research`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for `L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES` so final
-Gaseous Form support can build on an admitted mist-cloud occurrence with
-movement and passive projections.
+Status: `done`
 
 Input:
 

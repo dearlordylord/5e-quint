@@ -496,3 +496,4 @@
 {"unitId":"glyph_of_warding","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION","ownerPath":"packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"}}
 {"unitId":"glyph_of_warding","evidence":{"tag":"deterministic-admission-projection","taskId":"L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION","ownerPath":"packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"}}
 {"unitId":"gaseous_form","evidence":{"tag":"deterministic-admission-projection","taskId":"L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-gaseous-form.test.ts"}}
+{"unitId":"gaseous_form","evidence":{"tag":"deterministic-admission-projection","taskId":"L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP","ownerPath":"packages/battle-runtime/src/unit-profile-admission-gaseous-form.test.ts"}}

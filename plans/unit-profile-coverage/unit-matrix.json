@@ -49,8 +49,8 @@
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 554,
-      "numerator": 332,
-      "percent": "59.9%"
+      "numerator": 335,
+      "percent": "60.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 333
+      "value": 336
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 191,
-      "numerator": 186,
+      "denominator": 192,
+      "numerator": 187,
       "percent": "97.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 333,
-      "numerator": 333,
+      "denominator": 336,
+      "numerator": 336,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 130,
-      "numerator": 130,
+      "denominator": 131,
+      "numerator": 131,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 130,
-      "numerator": 126,
+      "denominator": 131,
+      "numerator": 127,
       "percent": "96.9%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 168,
-      "numerator": 167,
+      "denominator": 169,
+      "numerator": 168,
       "percent": "99.4%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 168,
-      "numerator": 167,
+      "denominator": 169,
+      "numerator": 168,
       "percent": "99.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 177,
-      "numerator": 177,
+      "denominator": 178,
+      "numerator": 178,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 130,
-      "numerator": 130,
+      "denominator": 131,
+      "numerator": 131,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 130,
-      "numerator": 130,
+      "denominator": 131,
+      "numerator": 131,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 183,
+      "denominator": 184,
       "numerator": 178,
-      "percent": "97.3%"
+      "percent": "96.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 282,
-      "numerator": 191,
-      "percent": "67.7%"
+      "numerator": 192,
+      "percent": "68.1%"
     }
   },
   "metricSemantics": [
@@ -5782,19 +5782,56 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-mist-cloud-form",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/mist-cloud-form.ts",
+        "packages/battle-runtime/src/battle-reducer/mist-cloud-form-restrictions.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/battle-subjects.ts",
+        "packages/battle-runtime/src/creature-perception-communication.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts"
+      ],
+      "sourceBoundary": "The runtime consumes Gaseous Form's typed Surface transform-target mist-cloud shape rather than authored spell identity: Magic Action and level-3-or-higher Spell Slot spend, Touch range, one or more willing creature targets from slot-scaled target facts, caster-owned Concentration up to 1 hour, target-owned spellMistCloudForm active-effect state, worn-and-carried object transformation identity, replacement movement as the only movement method with 10-foot Fly Speed and hover, Bludgeoning/Piercing/Slashing Resistance, Prone Immunity, Strength/Dexterity/Constitution Saving Throw Advantage, no speech, no object manipulation/drop/use/interaction, no attacks, no spellcasting, explicit zero-Hit-Point ending, target Magic Action self-dismissal, normal spell-end cleanup, and caller/table spatial witness requirements for creature-space occupancy, narrow-opening passage, and liquid-as-solid-surface treatment. The runtime exposes those spatial clauses as witness categories and does not duplicate map, opening, liquid, or creature-space state.",
+      "taskRefs": [
+        "L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE",
+        "L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES",
+        "L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP"
+      ],
+      "title": "Spell invocation creates a mist-cloud form active effect with caster Concentration ownership",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core-examples.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gaseous-form.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 168,
-        "numerator": 167,
+        "denominator": 169,
+        "numerator": 168,
         "percent": "99.4%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 168,
-        "numerator": 167,
+        "denominator": 169,
+        "numerator": 168,
         "percent": "99.4%"
       }
     },
@@ -8670,6 +8707,28 @@
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt"
         ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.MIST_CLOUD_FORM_STATE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Gaseous Form mist-cloud admission creates target-owned spell form state with caster Concentration and end-cause identity"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+          }
+        ],
+        "profileId": "spell.invocation-mist-cloud-form",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core.qnt"
+        ]
       }
     ],
     "sourceArtifacts": {
@@ -8680,8 +8739,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 177,
-          "numerator": 177,
+          "denominator": 178,
+          "numerator": 178,
           "percent": "100%"
         }
       },
@@ -10604,6 +10663,34 @@
             }
           ],
           "unitId": "fog_cloud"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.MIST_CLOUD_FORM_STATE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Gaseous Form mist-cloud admission creates target-owned spell form state with caster Concentration and end-cause identity"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-mist-cloud-form",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "gaseous_form"
         },
         {
           "joinStatus": "covered",
@@ -13554,7 +13641,7 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 11,
+    "rowCount": 12,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -13658,6 +13745,23 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "species_halfling_naturally_stealthy"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "spell",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/gaseous_form.json",
+        "support": {
+          "profileIds": [
+            "spell.invocation-mist-cloud-form"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "gaseous_form"
       },
       {
         "catalogAdmissionStatus": "installed",
@@ -17616,6 +17720,54 @@
         "spell.invocation-glyph-stored-concentration-full-duration"
       ],
       "taskId": "L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused rule-core Quint examples cover identity-free mist-cloud form admission facts, accepted active-effect projection for source spell, source combatant, target combatant, worn-and-carried transformation, Concentration owner, duration, and end-cause set, plus rejection when the target Magic Action self-end fact is absent.",
+      "profileIds": [
+        "spell.invocation-mist-cloud-form"
+      ],
+      "taskId": "L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Gaseous Form mist-cloud admission from typed Surface facts without authored-identity dispatch, level-3+ Spell Slot discovery and slot-scaled willing targets, Magic Action and Spell Slot spending, caster-owned Concentration, target-owned spellMistCloudForm active-effect state, known-willing target evidence, synthetic identity admission, and rejection of adjacent transform shapes missing the Magic Action self-end trigger.",
+      "profileIds": [
+        "spell.invocation-mist-cloud-form"
+      ],
+      "taskId": "L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused rule-core Quint examples cover identity-free mist-cloud movement and passive admission facts: Fly Speed 10 feet, Hover, Bludgeoning/Piercing/Slashing Resistance, Prone Immunity, and Strength/Dexterity/Constitution Saving Throw Advantage.",
+      "profileIds": [
+        "spell.invocation-mist-cloud-form"
+      ],
+      "taskId": "L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Gaseous Form movement and passive runtime projection without authored-identity dispatch: represented movement speed kinds/effective Fly speed, damage resistance adjustment, Prone condition immunity, and Strength/Dexterity/Constitution Saving Throw Advantage.",
+      "profileIds": [
+        "spell.invocation-mist-cloud-form"
+      ],
+      "taskId": "L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused rule-core Quint examples now require identity-free mist-cloud admission facts for no speech, no object manipulation/drop/use/interaction, no attacks, no spellcasting, and table-spatial witness facts for creature-space occupancy, narrow-opening passage, and liquid-as-solid-surface treatment, with rejection when restriction or witness facts are missing.",
+      "profileIds": [
+        "spell.invocation-mist-cloud-form"
+      ],
+      "taskId": "L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover mist-cloud restrictions for speech, attacks, spellcasting, and object interaction discovery/replay; target Magic Action self-ending; zero-Hit-Point ending; normal Concentration spell-end cleanup; and explicit table-spatial witness projection without authored Gaseous Form identity dispatch.",
+      "profileIds": [
+        "spell.invocation-mist-cloud-form"
+      ],
+      "taskId": "L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -17674,14 +17826,14 @@
         "installedUnitDenominator": 148,
         "kind": "spell",
         "label": "Spell Units",
-        "profileFactDenominator": 145,
+        "profileFactDenominator": 146,
         "profileSubsetSupportedUnits": 20,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 115,
-        "selectedIdentityReplayGapUnits": 5,
+        "selectedIdentityReplayDenominator": 116,
+        "selectedIdentityReplayGapUnits": 6,
         "selectedIdentityReplayWitnessUnits": 110,
-        "supportedProfileUnits": 95,
-        "unsupportedOrOtherUnits": 33
+        "supportedProfileUnits": 96,
+        "unsupportedOrOtherUnits": 32
       },
       {
         "executableUnitDenominator": 96,
@@ -37145,23 +37297,84 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME",
-            "mechanic": "Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment.",
-            "owner": "future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner",
-            "requiredOutput": "Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance.",
-            "title": "Gaseous Form Mist-Cloud Runtime"
-          }
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "battle-runtime mist-cloud form profile plus caller/table spatial witnesses",
+          "reason": "Creature-space occupancy, narrow-opening passage, and liquid-surface treatment depend on caller/table geometry and occupancy witnesses. The runtime consumes the typed Surface facts and exposes the required witness categories without adding parallel map or terrain state."
+        },
+        "profileIds": [
+          "spell.invocation-mist-cloud-form"
         ],
-        "reason": "Gaseous Form is authored and installed as an SRD Surface Spell Definition with Action Spell Slot casting, Touch range, V/S/M gauze components, Concentration up to 1 hour, willing touched creature targeting with one additional target per slot level above 3, and a typed spell-effect mist-cloud form for the target plus its worn and carried objects. The form facts include replacement movement as the target's only movement method: 10-foot Fly Speed with hover; table/spatial ownership for occupying another creature's space, passing through narrow openings, and treating liquids as solid surfaces; Bludgeoning, Piercing, and Slashing Resistance; Prone Immunity; Strength, Dexterity, and Constitution Saving Throw Advantage; no talking; no object manipulation, object dropping, use, or interaction; no attacks; no spellcasting; zero-Hit-Point ending; Magic-action self-ending; and normal spell-end cleanup. No promoted battle-runtime profile is claimed because these form facts require a future mist-cloud form Spell Effect owner and table/spatial witnesses rather than generic spell-id dispatch.",
-        "tag": "unsupported-profile"
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Surface authors Gaseous Form as an SRD Spell Definition with Magic Action Spell Slot casting, level 3, Touch range, willing touched creature targeting, Concentration up to 1 hour, and a typed transform-target spell-effect mist-cloud form.",
+          "Battle runtime admits the exact typed mist-cloud transform shape, movement/passive projection facts, activity restrictions, table-spatial witness facts, and end triggers without branching on Gaseous Form id, name, slug, provenance section, or spell-list identity.",
+          "Battle runtime discovers level-3-or-higher Spell Slot casts, including one additional willing creature target for each slot level above 3, spends the Magic Action and Spell Slot, opens the normal spell-cast interrupt window, and starts caster-owned Concentration for the mist-cloud active effect.",
+          "Battle runtime applies target-owned spellMistCloudForm active-effect state carrying source spell identity, source combatant identity, worn-and-carried object transformation identity, Concentration duration, and the zero-Hit-Point, target Magic Action self-dismissal, and normal spell-end causes.",
+          "Battle runtime derives the mist-cloud movement replacement as the target's only movement method, a 10-foot Fly Speed with hover, including effective movement and Dash budget projections from the active effect rather than duplicated base Speed facts.",
+          "Battle runtime derives Bludgeoning, Piercing, and Slashing Resistance, Prone Immunity with active Prone suppression, and Strength, Dexterity, and Constitution Saving Throw Advantage from the active effect.",
+          "Battle runtime blocks speech, object manipulation/drop/use/interaction, attacks, and spellcasting from the active mist-cloud effect while preserving the target Magic Action self-ending route.",
+          "Battle runtime removes the active mist-cloud form and its Prone Immunity projection when the target self-ends with a Magic Action, drops to 0 Hit Points, or the source spell ends through normal Concentration cleanup.",
+          "Battle runtime exposes creature-space occupancy, narrow-opening passage, and liquid-as-solid-surface clauses as table-spatial witness requirements and does not store duplicate map, opening, liquid, or creature-space state."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gaseous-form.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gaseous-form.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-mist-cloud-form",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/mist-cloud-form.ts",
+            "packages/battle-runtime/src/battle-reducer/mist-cloud-form-restrictions.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/battle-subjects.ts",
+            "packages/battle-runtime/src/creature-perception-communication.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts"
+          ],
+          "sourceBoundary": "The runtime consumes Gaseous Form's typed Surface transform-target mist-cloud shape rather than authored spell identity: Magic Action and level-3-or-higher Spell Slot spend, Touch range, one or more willing creature targets from slot-scaled target facts, caster-owned Concentration up to 1 hour, target-owned spellMistCloudForm active-effect state, worn-and-carried object transformation identity, replacement movement as the only movement method with 10-foot Fly Speed and hover, Bludgeoning/Piercing/Slashing Resistance, Prone Immunity, Strength/Dexterity/Constitution Saving Throw Advantage, no speech, no object manipulation/drop/use/interaction, no attacks, no spellcasting, explicit zero-Hit-Point ending, target Magic Action self-dismissal, normal spell-end cleanup, and caller/table spatial witness requirements for creature-space occupancy, narrow-opening passage, and liquid-as-solid-surface treatment. The runtime exposes those spatial clauses as witness categories and does not duplicate map, opening, liquid, or creature-space state.",
+          "taskRefs": [
+            "L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE",
+            "L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES",
+            "L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP"
+          ],
+          "title": "Spell invocation creates a mist-cloud form active effect with caster Concentration ownership",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-mist-cloud-form-state-core-examples.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-gaseous-form.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/gaseous_form.json",
       "unitId": "gaseous_form"
     },
@@ -38754,6 +38967,42 @@
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_greatsword.json",
+      "unitId": "weapon_greatsword"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_javelin.json",
+      "unitId": "weapon_javelin"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_longsword.json",
       "unitId": "weapon_longsword"
     },
@@ -38774,6 +39023,24 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_mace.json",
       "unitId": "weapon_mace"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_sickle.json",
+      "unitId": "weapon_sickle"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -42864,24 +43131,6 @@
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_greatsword.json",
-      "unitId": "weapon_greatsword"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_halberd.json",
       "unitId": "weapon_halberd"
     },
@@ -42938,24 +43187,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_heavy_crossbow.json",
       "unitId": "weapon_heavy_crossbow"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_javelin.json",
-      "unitId": "weapon_javelin"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -43154,24 +43385,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_scimitar.json",
       "unitId": "weapon_scimitar"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_sickle.json",
-      "unitId": "weapon_sickle"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

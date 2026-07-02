@@ -13,6 +13,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mist-cloud-form
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
@@ -139,6 +140,10 @@ import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-
 import { needsHolesResult } from "./hole-helpers.ts";
 import { maxJumpMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
 import { validateLevitatedMovementFact } from "./levitate-creature.ts";
+import {
+  mistCloudFormBlocksObjectManipulation,
+  mistCloudFormSpatialWitnessesForCombatant,
+} from "./mist-cloud-form-restrictions.ts";
 import {
   moonbeamDamageAfterSave,
   moonbeamMoveDistanceAccepted,
@@ -1628,7 +1633,14 @@ export function resolveCommandDropCommand(
     input.state,
     input.subject.actorId,
   );
-  if (canonicalObjectIds !== null && heldObjectFactFills.length > 0) {
+  const mistCloudBlocksDrop = mistCloudFormBlocksObjectManipulation(
+    input.state.combatants.get(input.subject.actorId),
+  );
+  if (
+    !mistCloudBlocksDrop &&
+    canonicalObjectIds !== null &&
+    heldObjectFactFills.length > 0
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -1636,7 +1648,11 @@ export function resolveCommandDropCommand(
     );
   }
   const heldObjectFactFill = heldObjectFactFills[0];
-  if (canonicalObjectIds === null && heldObjectFactFill === undefined) {
+  if (
+    !mistCloudBlocksDrop &&
+    canonicalObjectIds === null &&
+    heldObjectFactFill === undefined
+  ) {
     return needsHolesResult(input.state, input.subject, [
       commandDropHeldObjectFactsHole(input.subject),
     ]);
@@ -1652,7 +1668,9 @@ export function resolveCommandDropCommand(
       "Command Drop held-object facts must use the selected Command Drop hole.",
     );
   }
-  const objectIds = canonicalObjectIds ?? heldObjectFactFill?.value.objectIds;
+  const objectIds = mistCloudBlocksDrop
+    ? []
+    : (canonicalObjectIds ?? heldObjectFactFill?.value.objectIds);
   if (objectIds === undefined) {
     return invalidResult(
       input.state,
@@ -7024,6 +7042,7 @@ export function movementHole(
 ): BattleMovementHole {
   const budget = battleMovementBudgetForActor(state, actorId);
   return movementHoleWithBudget(
+    state,
     actorId,
     budget.remainingFeet,
     budget.speedKinds.map((speedKind) => ({
@@ -7049,6 +7068,7 @@ export function readiedMovementHole(
           movementBudgetFeet: effectiveMovementSpeed(actor, kind, isGrappled),
         }));
   return movementHoleWithBudget(
+    state,
     actorId,
     readiedMovementBudgetForActor(state, actorId),
     speedKinds,
@@ -7056,6 +7076,7 @@ export function readiedMovementHole(
 }
 
 export function movementHoleWithBudget(
+  state: BattleState,
   actorId: CombatantId,
   movementBudgetFeet: MovementFeet,
   speedKinds: readonly {
@@ -7070,6 +7091,8 @@ export function movementHoleWithBudget(
     label: "Movement",
     actorId,
     movementBudgetFeet,
+    mistCloudFormTableSpatialWitnesses:
+      mistCloudFormSpatialWitnessesForCombatant(state.combatants.get(actorId)),
     speedKinds,
   };
 }

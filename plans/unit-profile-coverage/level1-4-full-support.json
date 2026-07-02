@@ -3306,12 +3306,11 @@
   "metrics": {
     "productReadiness": {
       "denominator": 632,
-      "numerator": 631,
-      "percent": "99.8%",
+      "numerator": 632,
+      "percent": "100%",
       "rowsByStatus": {
-        "accepted": 447,
-        "accepted-no-battle-effect": 184,
-        "owner-evidence-required": 1
+        "accepted": 448,
+        "accepted-no-battle-effect": 184
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -10745,8 +10744,8 @@
         "group": "level-scoped-class-feature-grants",
         "label": "SRD class feature grants through level 4",
         "metrics": {
-          "denominator": 61,
-          "numerator": 61,
+          "denominator": 62,
+          "numerator": 62,
           "percent": "100%"
         },
         "rows": [
@@ -11177,6 +11176,15 @@
             "kind": "class_feature",
             "ownerUnitId": "class_rogue",
             "ready": true,
+            "relation": "class.featureGrants.level-2",
+            "sourceRecordPath": "packages/surface/content/rogue_cunning_action.json",
+            "status": "installed",
+            "unitId": "rogue_cunning_action"
+          },
+          {
+            "kind": "class_feature",
+            "ownerUnitId": "class_rogue",
+            "ready": true,
             "relation": "class.featureGrants.level-3",
             "sourceRecordPath": "packages/surface/content/rogue_steady_aim.json",
             "status": "installed",
@@ -11301,7 +11309,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 61
+          "installed": 62
         }
       },
       {
@@ -11311,8 +11319,8 @@
         "group": "class-starting-equipment-unit-refs",
         "label": "SRD class concrete equipment refs",
         "metrics": {
-          "denominator": 5,
-          "numerator": 5,
+          "denominator": 13,
+          "numerator": 13,
           "percent": "100%"
         },
         "rows": [
@@ -11366,10 +11374,91 @@
             "sourceRecordPath": "packages/surface/content/weapon_mace.json",
             "status": "installed",
             "unitId": "weapon_mace"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_druid",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_leather.json",
+            "status": "installed",
+            "unitId": "armor_leather"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "shield",
+            "ownerUnitId": "class_druid",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/equipment_shield.json",
+            "status": "installed",
+            "unitId": "equipment_shield"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_druid",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_sickle.json",
+            "status": "installed",
+            "unitId": "weapon_sickle"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_druid",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_quarterstaff.json",
+            "status": "installed",
+            "unitId": "weapon_quarterstaff"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_chain_mail.json",
+            "status": "installed",
+            "unitId": "armor_chain_mail"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_greatsword.json",
+            "status": "installed",
+            "unitId": "weapon_greatsword"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_flail.json",
+            "status": "installed",
+            "unitId": "weapon_flail"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_fighter",
+            "quantity": 8,
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_javelin.json",
+            "status": "installed",
+            "unitId": "weapon_javelin"
           }
         ],
         "rowsByStatus": {
-          "installed": 5
+          "installed": 13
         }
       },
       {
@@ -11379,11 +11468,21 @@
         "group": "starting-equipment-concrete-unit-refs",
         "label": "Unique SRD concrete equipment refs",
         "metrics": {
-          "denominator": 8,
-          "numerator": 8,
+          "denominator": 13,
+          "numerator": 13,
           "percent": "100%"
         },
         "rows": [
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_chain_mail.json",
+            "status": "installed",
+            "unitId": "armor_chain_mail"
+          },
           {
             "group": "starting-equipment-unit-refs",
             "kind": "armor",
@@ -11428,6 +11527,37 @@
           {
             "group": "starting-equipment-unit-refs",
             "kind": "weapon",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_flail.json",
+            "status": "installed",
+            "unitId": "weapon_flail"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_fighter",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_greatsword.json",
+            "status": "installed",
+            "unitId": "weapon_greatsword"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_fighter",
+            "quantity": 8,
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_javelin.json",
+            "status": "installed",
+            "unitId": "weapon_javelin"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
             "ownerUnitId": "class_cleric",
             "ready": true,
             "relation": "startingEquipment.option_a.unit_ref",
@@ -11458,6 +11588,16 @@
           {
             "group": "starting-equipment-unit-refs",
             "kind": "weapon",
+            "ownerUnitId": "class_druid",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_sickle.json",
+            "status": "installed",
+            "unitId": "weapon_sickle"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
             "ownerUnitId": "background_soldier",
             "ready": true,
             "relation": "startingEquipment.option_a.unit_ref",
@@ -11467,13 +11607,13 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 8
+          "installed": 13
         }
       }
     ],
     "metrics": {
-      "denominator": 116,
-      "numerator": 116,
+      "denominator": 130,
+      "numerator": 130,
       "percent": "100%"
     },
     "openBlockerCount": 0
