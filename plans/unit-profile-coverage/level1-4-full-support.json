@@ -518,7 +518,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
+      "reason": "Local SRD .references/srd-5.2.1/Spells/Descriptions-A-D.md:881-890 grants literal understanding of heard, signed, and touch-read written language for 1 hour, while excluding symbols and secret messages; .references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,90-104,122-148 makes its Action-or-Ritual casting, component requirements, and time-span duration ordinary spellcasting facts. Promoted battle runtime does not own language content, literal meaning, text reading pace, touch-to-read table state, symbol decoding, secret-message adjudication, or communication outcomes.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
