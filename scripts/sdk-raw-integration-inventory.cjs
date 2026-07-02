@@ -106,7 +106,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 207;
-const expectedLevelOneTwoSeedScenarioRows = 108;
+const expectedLevelOneTwoSeedScenarioRows = 109;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -687,6 +687,21 @@ const clericBuildSheetScenarioNeedles = [
   "characterBuildArmorTraining(",
   "armorTraining",
 ];
+const clericDivineOrderCreationScenarioLabel =
+  "level1-sdk-raw-integration: Cleric Divine Order creation finalizes the selected Protector role into build facts";
+const clericDivineOrderCreationScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-cleric-divine-order-creation"',
+  "clericDivineOrderCreationDraftPlan",
+  'battle: { tag: "withoutBattle" }',
+  "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+  "fixture.sheet.build",
+  "characterBuildProficiencies(fixture.build, unitLibrary)",
+  ".weapon",
+  '"martial"',
+  "characterBuildArmorTraining(fixture.build, unitLibrary)",
+  '"heavy"',
+];
 const clericBuildSheetScenarioHelperNeedles = [
   {
     anchor: "const clericBuildSheetDraftPlan =",
@@ -706,6 +721,16 @@ const clericBuildSheetScenarioHelperNeedles = [
       'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
     ],
   },
+];
+const clericDivineOrderCreationScenarioHelperNeedles = [
+  {
+    anchor: "const clericDivineOrderCreationDraftPlan =",
+    needles: [
+      'label: "Cleric Divine Order creation"',
+      "...clericBuildSheetDraftPlan",
+    ],
+  },
+  ...clericBuildSheetScenarioHelperNeedles,
 ];
 const clericBuildSheetScenarioRows = [
   {
@@ -984,6 +1009,19 @@ const seededSdkScenarioRows = [
   ...bardBuildSheetScenarioRows,
   ...bardMulticlassBuildSheetScenarioRows,
   ...clericBuildSheetScenarioRows,
+  {
+    candidateUnitId: "cleric_divine_order",
+    className: "Cleric",
+    levelBand: "level-1",
+    label: clericDivineOrderCreationScenarioLabel,
+    path: barbarianBuildSheetScenarioPath,
+    rowId:
+      "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+    rawSources: [".references/srd-5.2.1/Classes/Cleric.md:80-87"],
+    sourceProof: "legal-creation-owner",
+    tracerNeedles: clericDivineOrderCreationScenarioNeedles,
+    helperNeedles: clericDivineOrderCreationScenarioHelperNeedles,
+  },
   ...clericMulticlassBuildSheetScenarioRows,
   ...druidBuildSheetScenarioRows,
   ...druidMulticlassBuildSheetScenarioRows,

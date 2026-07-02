@@ -175,7 +175,7 @@
     {
       "number": 29,
       "id": "L12-SH29-CREATION-CLERIC-DIVINE-ORDER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the Cleric Divine Order creation SDK group"
     },
     {
@@ -467,7 +467,7 @@ Reviewer-loop convergence:
 | 26 | L12-SH26-BUILD-SHEET-DRUID - Add the Druid build-sheet SDK group | done | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Druid class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
 | 27 | L12-SH27-BUILD-BATTLE-BARD - Add the Bard build-battle SDK group | done | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-battle-sdk | Bard starting equipment proves through legal build, fresh sheet, and battle combatant projection. |
 | 28 | L12-SH28-BUILD-BATTLE-CLERIC - Add the Cleric build-battle SDK group | done | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-battle-sdk | Cleric starting equipment proves through legal build, fresh sheet, and battle combatant projection. |
-| 29 | L12-SH29-CREATION-CLERIC-DIVINE-ORDER - Add the Cleric Divine Order creation SDK group | ready-for-research | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | character-creation-sdk | Cleric Divine Order selection proves through legal draft holes and finalized build facts. |
+| 29 | L12-SH29-CREATION-CLERIC-DIVINE-ORDER - Add the Cleric Divine Order creation SDK group | done | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | character-creation-sdk | Cleric Divine Order selection proves through legal draft holes and finalized build facts. |
 | 30 | L12-SH30-CREATION-DRUID-DRUIDIC - Add the Druidic creation SDK group | ready-for-research | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | character-creation-sdk | Druidic language and always-prepared spell access prove through legal draft holes and finalized build facts. |
 | 31 | L12-SH31-SPELL-ACCESS-CLERIC - Add the Cleric sheet spell-access SDK group | ready-for-research | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | sheet-spell-access-sdk | Cleric Spellcasting projects known/prepared/list/slot facts from legal creation to sheet. |
 | 32 | L12-SH32-SHEET-MONK-UNARMORED-DEFENSE - Add the Monk Unarmored Defense sheet SDK group | ready-for-research | L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | character-sheet-sdk | Monk Unarmored Defense projects Armor Class from legal creation and a fresh sheet. |
@@ -1775,7 +1775,7 @@ Plan Impact:
 
 ### Task 29 - L12-SH29-CREATION-CLERIC-DIVINE-ORDER
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

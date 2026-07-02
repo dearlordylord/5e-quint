@@ -698,6 +698,11 @@ const clericBuildSheetDraftPlan = {
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
+const clericDivineOrderCreationDraftPlan = {
+  ...clericBuildSheetDraftPlan,
+  label: "Cleric Divine Order creation",
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 const clericBuildBattleDraftPlan = {
   ...clericBuildSheetDraftPlan,
   label: "Cleric build-battle projection",
@@ -1446,6 +1451,36 @@ describe("level 1 SDK RAW integration", () => {
         count: 1,
       },
     });
+  });
+
+  test("Cleric Divine Order creation finalizes the selected Protector role into build facts", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-cleric-divine-order-creation",
+      draftPlan: clericDivineOrderCreationDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-cleric-divine-order-creation",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_cleric"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(
+      requireRight(characterBuildProficiencies(fixture.build, unitLibrary))
+        .weapon,
+    ).toEqual(expect.arrayContaining(["martial"]));
+    expect(
+      requireRight(characterBuildArmorTraining(fixture.build, unitLibrary)),
+    ).toEqual(expect.arrayContaining(["heavy"]));
   });
 
   test("Bard Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet", () => {

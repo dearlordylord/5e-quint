@@ -18802,6 +18802,13 @@
       "category": "class feature",
       "className": "Cleric",
       "concept": "Cleric Divine Order",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Divine Order creation finalizes the selected Protector role into build facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:80-87"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -18834,7 +18841,7 @@
       "proposedOwnerBoundary": "character-creation",
       "rowId": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 87,
         "lineStart": 80,
@@ -51075,12 +51082,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 14,
+        "groupCount": 13,
         "lane": "character-creation-sdk",
         "ownerTaskIds": [
           "L12-SH05-CREATION-SDK-FIRST-SLICE"
         ],
-        "rowCount": 14,
+        "rowCount": 13,
         "rowFamily": "source-row",
         "taskFamily": "character-creation-sdk"
       },
@@ -51131,7 +51138,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 75,
+        "groupCount": 76,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -51143,7 +51150,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 108,
+        "rowCount": 109,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51217,16 +51224,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 75,
+        "groupCount": 76,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 108,
+        "rowCount": 109,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 86,
+        "groupCount": 85,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51237,7 +51244,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 197,
+        "rowCount": 196,
         "rowFamily": "source-row"
       },
       {
@@ -51839,6 +51846,25 @@
       "rowKind": "class-container",
       "sourceBuildPath": "legal-creation-draft-finalize",
       "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "cleric_divine_order",
+      "classification": "legal creation owner proof",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Divine Order creation finalizes the selected Protector role into build facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as source creation seed; add sheet or battle assertions only for rows owned by those boundaries.",
+      "reason": "The represented source character build is finalized through character creation at the row owner boundary; battle handoff is not required for this owner.",
+      "rowId": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+      "rowKey": "level-1:Cleric:cleric_divine_order",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-creation-owner",
       "usesRealSheetBattleHandoff": false,
       "wholeWidthSourceLifecycleProof": false
     },
@@ -59179,9 +59205,9 @@
       "closure-review-needed": 142,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 390,
+      "sdk-scenario-needed": 389,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 114,
+      "seed-scenario-present": 115,
       "table-only-closure-needed": 13
     },
     "levelOneFourRows": 632,
@@ -59191,11 +59217,11 @@
       "battle-spell-sdk": 31,
       "build-battle-sdk": 9,
       "build-sheet-sdk": 9,
-      "character-creation-sdk": 14,
+      "character-creation-sdk": 13,
       "character-sheet-sdk": 6,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 75,
+      "seed-present": 76,
       "sheet-spell-access-sdk": 6,
       "spell-effect-owner-review": 21,
       "table-only-closure": 1
@@ -59203,8 +59229,8 @@
     "levelOneTwoCampaignGroupsByRowFamily": {
       "closure-review-row": 21,
       "explicit-closure-row": 24,
-      "seed-row": 75,
-      "source-row": 86,
+      "seed-row": 76,
+      "source-row": 85,
       "table-only-closure-row": 1
     },
     "levelOneTwoCampaignRows": 400,
@@ -59213,11 +59239,11 @@
       "battle-spell-sdk": 80,
       "build-battle-sdk": 13,
       "build-sheet-sdk": 67,
-      "character-creation-sdk": 14,
+      "character-creation-sdk": 13,
       "character-sheet-sdk": 6,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 108,
+      "seed-present": 109,
       "sheet-spell-access-sdk": 6,
       "spell-effect-owner-review": 69,
       "table-only-closure": 2
@@ -59225,22 +59251,22 @@
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 69,
       "explicit-closure-row": 24,
-      "seed-row": 108,
-      "source-row": 197,
+      "seed-row": 109,
+      "source-row": 196,
       "table-only-closure-row": 2
     },
-    "levelOneTwoSeedMigrationAuditRows": 108,
+    "levelOneTwoSeedMigrationAuditRows": 109,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 72,
       "legal build-sheet owner proof": 35,
-      "legal creation owner proof": 1
+      "legal creation owner proof": 2
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 36,
+      "not-real-sheet-battle": 37,
       "real-sheet-battle": 72
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 108
+      "legal-creation-draft-finalize": 109
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 72,
     "scenarioGroups": 411,
@@ -59249,14 +59275,14 @@
       "battle-spell-sdk": 82,
       "build-battle-sdk": 9,
       "build-sheet-sdk": 21,
-      "character-creation-sdk": 28,
+      "character-creation-sdk": 27,
       "character-sheet-sdk": 6,
       "explicit-closure": 60,
       "feature-owner-review": 4,
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
-      "seed-present": 81,
+      "seed-present": 82,
       "sheet-spell-access-sdk": 11,
       "spell-effect-owner-review": 45,
       "table-only-closure": 5
@@ -63937,61 +63963,6 @@
     },
     {
       "candidateUnitIds": [
-        "cleric_divine_order"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-03:character-creation-sdk:cleric-divine-order",
-      "lane": "character-creation-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-creation"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"character-creation-sdk\",\"cleric_divine_order\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:80"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "cleric_divine_order",
-          "className": "Cleric",
-          "concept": "Cleric Divine Order",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-creation",
-          "rowId": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 87,
-            "lineStart": 80,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric Divine Order"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Finalize the build through character creation and assert the SRD-facing selected feature, option, proficiency, or retained Unit refs without claiming sheet or battle execution.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
         "druid_druidic"
       ],
       "categories": [
@@ -66027,6 +65998,62 @@
         "Cleric Starting Equipment",
         "Cleric Weapon Proficiencies",
         "Cleric class container"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "cleric_divine_order"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-cleric-cleric-divine-order",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-creation"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Cleric:cleric_divine_order\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:80",
+        ".references/srd-5.2.1/Classes/Cleric.md:80-87"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "cleric_divine_order",
+          "className": "Cleric",
+          "concept": "Cleric Divine Order",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-creation",
+          "rowId": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 87,
+            "lineStart": 80,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric Divine Order"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -89699,6 +89726,61 @@
         "weaponProficiencies",
         "characterBuildArmorTraining(",
         "armorTraining"
+      ]
+    },
+    {
+      "candidateUnitId": "cleric_divine_order",
+      "className": "Cleric",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Divine Order creation finalizes the selected Protector role into build facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:80-87"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const clericDivineOrderCreationDraftPlan =",
+          "needles": [
+            "label: \"Cleric Divine Order creation\"",
+            "...clericBuildSheetDraftPlan"
+          ]
+        },
+        {
+          "anchor": "const clericBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_cleric\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_cantrip_choices\"",
+            "...clericBuildSheetCantrips",
+            "\"class_prepared_spell_choices\"",
+            "...clericBuildSheetPreparedSpells",
+            "\"cleric_divine_order\"",
+            "\"divine_order\"",
+            "\"protector\"",
+            "legalUnitChoice(\"class_cleric\", \"class_equipment_choice\", \"option_b\")",
+            "legalUnitChoice(\"class_cleric\", \"equipment_purchase\", \"weapon_dagger\")",
+            "legalLoadoutChoice(\"weapon_dagger\", \"weapon\", \"wielded_one_handed\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+      "rowKey": "level-1:Cleric:cleric_divine_order",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-cleric-divine-order-creation\"",
+        "clericDivineOrderCreationDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+        "fixture.sheet.build",
+        "characterBuildProficiencies(fixture.build, unitLibrary)",
+        ".weapon",
+        "\"martial\"",
+        "characterBuildArmorTraining(fixture.build, unitLibrary)",
+        "\"heavy\""
       ]
     },
     {
