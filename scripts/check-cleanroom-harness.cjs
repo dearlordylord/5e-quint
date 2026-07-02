@@ -16,6 +16,10 @@ const SOURCE_SCOPE_SNAPSHOT_PATH = path.resolve(
   __dirname,
   "../plans/cleanroom-scaffolds/tasks/LEVEL_1_2_SCOPE.snapshot.md",
 );
+const TARGET_SCOPE_SNAPSHOT_PATHS = [
+  path.resolve(__dirname, "../tasks/LEVEL_1_2_SCOPE.md"),
+  path.resolve(process.cwd(), "tasks/LEVEL_1_2_SCOPE.md"),
+];
 
 const requiredReviewChecklists = [
   "raw-qnt-traceability",
@@ -556,6 +560,18 @@ function readExpectedScopeSnapshot(rootPath, issues) {
     );
     return undefined;
   }
+}
+
+function readAvailableScopeSnapshot() {
+  const scopePath = [SOURCE_SCOPE_SNAPSHOT_PATH, ...TARGET_SCOPE_SNAPSHOT_PATHS].find(
+    (candidate) => fs.existsSync(candidate),
+  );
+  if (scopePath === undefined) {
+    throw new Error(
+      "source cleanroom LEVEL_1_2_SCOPE snapshot is missing and no rendered target tasks/LEVEL_1_2_SCOPE.md is available.",
+    );
+  }
+  return fs.readFileSync(scopePath, "utf8");
 }
 
 function activeQueuedDrivers(rootPath, issues) {
@@ -2566,7 +2582,7 @@ function validFixture(rootPath) {
   });
   fs.writeFileSync(
     path.join(rootPath, "tasks/LEVEL_1_2_SCOPE.md"),
-    fs.readFileSync(SOURCE_SCOPE_SNAPSHOT_PATH, "utf8"),
+    readAvailableScopeSnapshot(),
   );
   writeJson(path.join(rootPath, "tasks/target-replay-evidence/mm.json"), {
     generatedBy: { tag: "target-harness", name: "Aster Quint Bridge" },
@@ -2932,15 +2948,13 @@ function runSelfTest() {
 	      (rootPath) => {
 	        const laterDriver =
 	          "cleanroom-input/qnt/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt";
-	        fs.writeFileSync(
-	          path.join(rootPath, "tasks/LEVEL_1_2_SCOPE.md"),
-	          fs
-	            .readFileSync(SOURCE_SCOPE_SNAPSHOT_PATH, "utf8")
-	            .replace(
-	              "1. `cleanroom-input/qnt/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt`",
-	              `1. \`${laterDriver}\``,
-	            ),
-	        );
+        fs.writeFileSync(
+          path.join(rootPath, "tasks/LEVEL_1_2_SCOPE.md"),
+          readAvailableScopeSnapshot().replace(
+            "1. `cleanroom-input/qnt/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt`",
+            `1. \`${laterDriver}\``,
+          ),
+        );
 	        const startGatePath = path.join(rootPath, "tasks/START_GATE.json");
 	        const startGate = readJson(startGatePath);
 	        startGate.taskScope.selectedDrivers = [laterDriver];

@@ -616,16 +616,34 @@ function quintParse(filePath) {
   );
   const outPath = path.join(tmpDir, "parse.json");
   try {
-    execFileSync(
-      "pnpm",
-      ["exec", "quint", "parse", filePath, "--out", outPath],
+    const attempts = [
       {
-        cwd: REPO_ROOT,
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
+        command: "quint",
+        args: ["parse", filePath, "--out", outPath],
+        cwd: root,
       },
-    );
-    return readJson(outPath);
+      {
+        command: "pnpm",
+        args: ["exec", "quint", "parse", filePath, "--out", outPath],
+        cwd: REPO_ROOT,
+      },
+    ];
+    const errors = [];
+    for (const attempt of attempts) {
+      try {
+        execFileSync(attempt.command, attempt.args, {
+          cwd: attempt.cwd,
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "pipe"],
+        });
+        return readJson(outPath);
+      } catch (error) {
+        errors.push(
+          `${attempt.command} ${attempt.args.join(" ")}: ${error.message}`,
+        );
+      }
+    }
+    throw new Error(errors.join("\n"));
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
