@@ -171,6 +171,7 @@ const healingWordBardId = combatantId("combatant:l1-sdk-healing-word-bard");
 const animalFriendshipBardId = combatantId(
   "combatant:l1-sdk-animal-friendship-bard",
 );
+const charmPersonBardId = combatantId("combatant:l1-sdk-charm-person-bard");
 const baneBardId = combatantId("combatant:l1-sdk-bane-bard");
 const baneClericId = combatantId("combatant:l1-sdk-bane-cleric");
 const baneWarlockId = combatantId("combatant:l1-sdk-bane-warlock");
@@ -297,6 +298,12 @@ const animalFriendshipBeastId = combatantId(
 const animalFriendshipNonBeastId = combatantId(
   "combatant:l1-sdk-animal-friendship-non-beast",
 );
+const charmPersonHumanoidId = combatantId(
+  "combatant:l1-sdk-charm-person-humanoid",
+);
+const charmPersonNonHumanoidId = combatantId(
+  "combatant:l1-sdk-charm-person-non-humanoid",
+);
 const druidWildShapeDruidId = combatantId("combatant:l2-sdk-druid-wild-shape");
 const thunderwaveUnsecuredObjectId = battleObjectId(
   "object:l1-sdk-thunderwave-unsecured",
@@ -319,6 +326,7 @@ const baneSpellId = "bane";
 const blessSpellId = "bless";
 const shieldOfFaithSpellId = "shield_of_faith";
 const animalFriendshipSpellId = "animal_friendship";
+const charmPersonSpellId = "charm_person";
 const sorcerousBurstSpellId = "sorcerous_burst";
 const acidSplashSpellId = "acid_splash";
 const poisonSpraySpellId = "poison_spray";
@@ -373,6 +381,7 @@ const sanctuaryDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
 const animalFriendshipDurationTicks = requireRight(
   elapsedTimeTicksFromHours(24),
 );
+const charmPersonDurationTicks = requireRight(elapsedTimeTicksFromHours(1));
 const huntersMarkDurationTicks = requireRight(elapsedTimeTicksFromHours(1));
 const levelTwoDruidWildShapeKnownFormIds = [
   "stat_block_rat",
@@ -3719,6 +3728,72 @@ describe("level 1 SDK RAW integration", () => {
     });
   });
 
+  test("Bard, Druid, Sorcerer, Warlock, and Wizard Charm Person spell-list choices share one Humanoid Wisdom save Charmed battle resolution", () => {
+    const bardBuild = finalizedLevelOneBardCharmPersonBuild();
+    const druidBuild = finalizedLevelOneDruidCharmPersonBuild();
+    const sorcererBuild = finalizedLevelOneSorcererCharmPersonBuild();
+    const warlockBuild = finalizedLevelOneWarlockCharmPersonBuild();
+    const wizardBuild = finalizedLevelOneWizardCharmPersonBuild();
+
+    expect(bardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_bard",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([charmPersonSpellId]),
+        }),
+      ]),
+    );
+    expect(druidBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_druid",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([charmPersonSpellId]),
+        }),
+      ]),
+    );
+    expect(sorcererBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_sorcerer",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([charmPersonSpellId]),
+        }),
+      ]),
+    );
+    expect(warlockBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_warlock",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([charmPersonSpellId]),
+        }),
+      ]),
+    );
+    expect(warlockBuild.spellcasting?.slotPools).toMatchObject({
+      pactMagic: { kind: "pactMagic", slotLevel: 1, count: 1 },
+    });
+    expect(wizardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_wizard",
+          spellcastingAbility: "int",
+          preparedSpells: expect.arrayContaining([charmPersonSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneCharmPerson({
+      battleIdText: "battle:l1-sdk-charm-person-bard",
+      characterIdText: "character:l1-sdk-charm-person-bard",
+      targetCharacterIdText: "character:l1-sdk-charm-person-humanoid",
+      build: bardBuild,
+      casterId: charmPersonBardId,
+      expectedSpellSaveDc: 12,
+    });
+  });
+
   test("Sorcerer, Warlock, and Wizard Chill Touch cantrips resolve from level-1 sheets as melee spell attacks with Hit Point regain prevention", () => {
     const sorcererBuild = finalizedLevelOneSorcererChillTouchBuild();
     const warlockBuild = finalizedLevelOneWarlockChillTouchBuild();
@@ -6801,6 +6876,165 @@ function assertLevelOneAnimalFriendship(input: {
   ]);
 }
 
+function assertLevelOneCharmPerson(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly targetCharacterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+      }),
+      characterSheet({
+        characterIdText: input.targetCharacterIdText,
+        build: input.build,
+        combatantId: charmPersonHumanoidId,
+        initiative: 10,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(
+        charmPersonNonHumanoidId,
+        8,
+        srdStatBlock("stat_block_skeleton"),
+      ),
+    ],
+  });
+  const act = spellSlotActForProcedure(
+    state,
+    charmPersonSpellId,
+    1,
+    "saveGatedCondition",
+  );
+  const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
+
+  expect(act.subject).toMatchObject({
+    tag: "actionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: charmPersonSpellId,
+      slotLevel: 1,
+      procedure: "saveGatedCondition",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(targetList).toMatchObject({
+    label: "Charm Person targets",
+    minTargets: 1,
+    maxTargets: 1,
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([charmPersonHumanoidId]),
+    spell: {
+      access: { tag: "prepared" },
+      procedure: "saveGatedCondition",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+      targetCreatureTypes: ["humanoid"],
+      effect: {
+        kind: "fixed",
+        condition: "charmed",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: charmPersonDurationTicks,
+        },
+        escape: { kind: "targetDamagedByCasterOrAlly" },
+        turnStartDamage: null,
+        repeatSave: null,
+      },
+      rangeFeet: movementFeet(30),
+    },
+  });
+  expect(targetList.choices).not.toContain(charmPersonNonHumanoidId);
+
+  const targetFill = charmPersonTargetListFill(
+    targetList,
+    input.casterId,
+    charmPersonHumanoidId,
+  );
+  const save = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "savingThrowOutcome",
+  );
+
+  expect(save).toMatchObject({
+    label: "Charm Person target-list Saving Throw outcomes",
+    ability: "wis",
+    dc: { kind: "caster_spell_save_dc" },
+    spell: {
+      procedure: "saveGatedCondition",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+      targetCreatureTypes: ["humanoid"],
+      rangeFeet: movementFeet(30),
+    },
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(save, [
+          { targetId: charmPersonHumanoidId, succeeded: false },
+        ]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+  const humanoid = requireCombatant(resolved.state, charmPersonHumanoidId);
+
+  expect(hasCondition(humanoid.conditions, "charmed")).toBe(true);
+  expect(humanoid.activeEffects).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "spellCondition",
+        sourceSpellId: charmPersonSpellId,
+        sourceCombatantId: input.casterId,
+        condition: "charmed",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: charmPersonDurationTicks,
+        },
+        escape: { kind: "targetDamagedByCasterOrAlly" },
+      }),
+    ]),
+  );
+  expect(
+    hasCondition(
+      requireCombatant(resolved.state, charmPersonNonHumanoidId).conditions,
+      "charmed",
+    ),
+  ).toBe(false);
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(caster.concentration).toBeNull();
+  expect(caster.activeEffects).toEqual([]);
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+}
+
 function assertLevelOneHuntersMark(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
@@ -9166,6 +9400,20 @@ function finalizedLevelOneBardCureWoundsBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneBardCharmPersonBuild(): CharacterBuild {
+  return finalizedLevelOneBardBuild({
+    draftIdText: "draft:l1-sdk-bard-charm-person",
+    expectedBuildLabel: "Bard Charm Person",
+    cantrips: ["dancing_lights", viciousMockerySpellId],
+    preparedSpells: [
+      charmPersonSpellId,
+      "color_spray",
+      dissonantWhispersSpellId,
+      healingWordSpellId,
+    ],
+  });
+}
+
 function finalizedLevelOneBardAnimalFriendshipBuild(): CharacterBuild {
   return finalizedLevelOneBardBuild({
     draftIdText: "draft:l1-sdk-bard-animal-friendship",
@@ -9664,6 +9912,20 @@ function finalizedLevelOneDruidCureWoundsBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneDruidCharmPersonBuild(): CharacterBuild {
+  return finalizedLevelOneDruidBuild({
+    draftIdText: "draft:l1-sdk-druid-charm-person",
+    expectedBuildLabel: "Druid Charm Person",
+    cantrips: [produceFlameSpellId, poisonSpraySpellId],
+    preparedSpells: [
+      animalFriendshipSpellId,
+      charmPersonSpellId,
+      "entangle",
+      healingWordSpellId,
+    ],
+  });
+}
+
 function finalizedLevelOneDruidAnimalFriendshipBuild(): CharacterBuild {
   return finalizedLevelOneDruidBuild({
     draftIdText: "draft:l1-sdk-druid-animal-friendship",
@@ -10158,6 +10420,20 @@ function finalizedLevelOneSorcererBurningHandsBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneSorcererCharmPersonBuild(): CharacterBuild {
+  return finalizedLevelOneSorcererBuild({
+    draftIdText: "draft:l1-sdk-sorcerer-charm-person",
+    expectedBuildLabel: "Sorcerer Charm Person",
+    cantrips: [
+      fireBoltSpellId,
+      "light",
+      shockingGraspSpellId,
+      sorcerousBurstSpellId,
+    ],
+    preparedSpells: [charmPersonSpellId, burningHandsSpellId],
+  });
+}
+
 function finalizedLevelOneSorcererSorcerousBurstBuild(): CharacterBuild {
   return finalizedLevelOneSorcererBuild({
     draftIdText: "draft:l1-sdk-sorcerer-sorcerous-burst",
@@ -10495,6 +10771,16 @@ function finalizedLevelOneWarlockHexBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneWarlockCharmPersonBuild(): CharacterBuild {
+  return finalizedLevelOneWarlockBuild({
+    draftIdText: "draft:l1-sdk-warlock-charm-person",
+    expectedBuildLabel: "Warlock Charm Person",
+    cantrips: [eldritchBlastSpellId, poisonSpraySpellId],
+    preparedSpells: [charmPersonSpellId, hexSpellId],
+    eldritchInvocation: "eldritch_mind",
+  });
+}
+
 function finalizedLevelOneWarlockBaneBuild(): CharacterBuild {
   return finalizedLevelOneWarlockBuild({
     draftIdText: "draft:l1-sdk-warlock-bane",
@@ -10655,6 +10941,28 @@ function finalizedLevelOneWizardBurningHandsBuild(): CharacterBuild {
       "detect_magic",
       "magic_missile",
       "shield",
+    ],
+  });
+}
+
+function finalizedLevelOneWizardCharmPersonBuild(): CharacterBuild {
+  return finalizedLevelOneWizardBuild({
+    draftIdText: "draft:l1-sdk-wizard-charm-person",
+    expectedBuildLabel: "Wizard Charm Person",
+    cantrips: ["light", fireBoltSpellId, "ray_of_frost"],
+    spellbook: [
+      charmPersonSpellId,
+      "detect_magic",
+      "mage_armor",
+      magicMissileSpellId,
+      "shield",
+      "sleep",
+    ],
+    preparedSpells: [
+      charmPersonSpellId,
+      "detect_magic",
+      "mage_armor",
+      magicMissileSpellId,
     ],
   });
 }
@@ -11005,12 +11313,32 @@ function finalizedLevelOneWizardBuild(input: {
     }),
   );
   const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
-  if (result.tag !== "ready") {
+  if (result.tag === "ready") {
+    return result.build;
+  }
+  const afterLoadout = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        creationChoiceFill(
+          testLoadoutHoleId("weapon_dagger", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+  const afterLoadoutResult = finalizeCharacterDraft({
+    draft: afterLoadout,
+    unitLibrary,
+  });
+  if (afterLoadoutResult.tag !== "ready") {
     throw new Error(
-      `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
+      `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(afterLoadoutResult)}`,
     );
   }
-  return result.build;
+  return afterLoadoutResult.build;
 }
 
 function requireAcceptedCreationBatch(
@@ -11670,6 +11998,21 @@ function animalFriendshipTargetListFill(
         targetId,
         spellId: animalFriendshipSpellId,
       },
+    ],
+  };
+}
+
+function charmPersonTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds: [targetId] },
+    spatialFacts: [
+      { kind: "spellTarget", casterId, targetId, spellId: charmPersonSpellId },
     ],
   };
 }

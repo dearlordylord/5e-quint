@@ -105,8 +105,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 206;
-const expectedLevelOneTwoSeedScenarioRows = 113;
+const expectedLevelOneTwoCampaignGroups = 210;
+const expectedLevelOneTwoSeedScenarioRows = 118;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -3236,6 +3236,115 @@ const seededSdkScenarioRows = [
     helperNeedles: animalFriendshipSdkHelperNeedles(),
   },
   {
+    candidateUnitId: "charm_person",
+    className: "Bard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Druid, Sorcerer, Warlock, and Wizard Charm Person spell-list choices share one Humanoid Wisdom save Charmed battle resolution",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Bard.md:164",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:694-706",
+    ],
+    rowId:
+      "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
+    tracerNeedles: [
+      "const bardBuild = finalizedLevelOneBardCharmPersonBuild();",
+      'sourceUnitId: "class_bard"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([charmPersonSpellId])",
+      "build: bardBuild,",
+      "casterId: charmPersonBardId,",
+      "expectedSpellSaveDc: 12,",
+    ],
+    helperNeedles: charmPersonSdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "charm_person",
+    className: "Druid",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Druid, Sorcerer, Warlock, and Wizard Charm Person spell-list choices share one Humanoid Wisdom save Charmed battle resolution",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Druid.md:205",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:694-706",
+    ],
+    rowId:
+      "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
+    tracerNeedles: [
+      "const druidBuild = finalizedLevelOneDruidCharmPersonBuild();",
+      'sourceUnitId: "class_druid"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([charmPersonSpellId])",
+    ],
+    helperNeedles: charmPersonSdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "charm_person",
+    className: "Sorcerer",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Druid, Sorcerer, Warlock, and Wizard Charm Person spell-list choices share one Humanoid Wisdom save Charmed battle resolution",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Sorcerer.md:245",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:694-706",
+    ],
+    rowId:
+      "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_charm_person",
+    tracerNeedles: [
+      "const sorcererBuild = finalizedLevelOneSorcererCharmPersonBuild();",
+      'sourceUnitId: "class_sorcerer"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([charmPersonSpellId])",
+    ],
+    helperNeedles: charmPersonSdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "charm_person",
+    className: "Warlock",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Druid, Sorcerer, Warlock, and Wizard Charm Person spell-list choices share one Humanoid Wisdom save Charmed battle resolution",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Warlock.md:349",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:694-706",
+    ],
+    rowId:
+      "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
+    tracerNeedles: [
+      "const warlockBuild = finalizedLevelOneWarlockCharmPersonBuild();",
+      'sourceUnitId: "class_warlock"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([charmPersonSpellId])",
+      'pactMagic: { kind: "pactMagic", slotLevel: 1, count: 1 }',
+    ],
+    helperNeedles: charmPersonSdkHelperNeedles(),
+  },
+  {
+    candidateUnitId: "charm_person",
+    className: "Wizard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Druid, Sorcerer, Warlock, and Wizard Charm Person spell-list choices share one Humanoid Wisdom save Charmed battle resolution",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Wizard.md:164",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:694-706",
+    ],
+    rowId:
+      "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_charm_person",
+    tracerNeedles: [
+      "const wizardBuild = finalizedLevelOneWizardCharmPersonBuild();",
+      'sourceUnitId: "class_wizard"',
+      'spellcastingAbility: "int"',
+      "preparedSpells: expect.arrayContaining([charmPersonSpellId])",
+    ],
+    helperNeedles: charmPersonSdkHelperNeedles(),
+  },
+  {
     candidateUnitId: "ranger_favored_enemy",
     className: "Ranger",
     levelBand: "level-1",
@@ -5223,6 +5332,94 @@ function animalFriendshipSdkHelperNeedles() {
         "value: { targetIds: [targetId] }",
         'kind: "spellTarget"',
         "spellId: animalFriendshipSpellId",
+      ],
+    },
+  ];
+}
+
+function charmPersonSdkHelperNeedles() {
+  return [
+    {
+      anchor: "function finalizedLevelOneBardCharmPersonBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneBardBuild({",
+        'draftIdText: "draft:l1-sdk-bard-charm-person"',
+        'expectedBuildLabel: "Bard Charm Person"',
+        "charmPersonSpellId",
+      ],
+    },
+    {
+      anchor:
+        "function finalizedLevelOneDruidCharmPersonBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneDruidBuild({",
+        'draftIdText: "draft:l1-sdk-druid-charm-person"',
+        'expectedBuildLabel: "Druid Charm Person"',
+        "charmPersonSpellId",
+      ],
+    },
+    {
+      anchor:
+        "function finalizedLevelOneSorcererCharmPersonBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneSorcererBuild({",
+        'draftIdText: "draft:l1-sdk-sorcerer-charm-person"',
+        'expectedBuildLabel: "Sorcerer Charm Person"',
+        "charmPersonSpellId",
+      ],
+    },
+    {
+      anchor:
+        "function finalizedLevelOneWarlockCharmPersonBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneWarlockBuild({",
+        'draftIdText: "draft:l1-sdk-warlock-charm-person"',
+        'expectedBuildLabel: "Warlock Charm Person"',
+        "charmPersonSpellId",
+      ],
+    },
+    {
+      anchor:
+        "function finalizedLevelOneWizardCharmPersonBuild(): CharacterBuild",
+      needles: [
+        "finalizedLevelOneWizardBuild({",
+        'draftIdText: "draft:l1-sdk-wizard-charm-person"',
+        'expectedBuildLabel: "Wizard Charm Person"',
+        "charmPersonSpellId",
+      ],
+    },
+    {
+      anchor: "function assertLevelOneCharmPerson",
+      needles: [
+        'srdStatBlock("stat_block_skeleton")',
+        "spellSlotActForProcedure(",
+        "charmPersonSpellId",
+        '"saveGatedCondition"',
+        "spellSaveDcForCaster(state, input.casterId)",
+        "choices: expect.arrayContaining([charmPersonHumanoidId])",
+        "expect(targetList.choices).not.toContain(charmPersonNonHumanoidId);",
+        'targetCreatureTypes: ["humanoid"]',
+        'condition: "charmed"',
+        "durationTicks: charmPersonDurationTicks",
+        'escape: { kind: "targetDamagedByCasterOrAlly" }',
+        "rangeFeet: movementFeet(30)",
+        "charmPersonTargetListFill(",
+        'label: "Charm Person target-list Saving Throw outcomes"',
+        "savingThrowOutcomeFill(save,",
+        "{ targetId: charmPersonHumanoidId, succeeded: false }",
+        'hasCondition(humanoid.conditions, "charmed")',
+        "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
+        "spellSlotUsesThisTurn",
+        "{ spellLevel: 1, count: 2, expended: 1 }",
+      ],
+    },
+    {
+      anchor: "function charmPersonTargetListFill",
+      needles: [
+        'kind: "spellTargetList"',
+        "value: { targetIds: [targetId] }",
+        'kind: "spellTarget"',
+        "spellId: charmPersonSpellId",
       ],
     },
   ];
