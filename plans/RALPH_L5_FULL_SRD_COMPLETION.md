@@ -217,7 +217,7 @@
     {
       "number": 36,
       "id": "L5FULL-FUT-20-VAMPIRIC-TOUCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Vampiric Touch"
     },
     {
