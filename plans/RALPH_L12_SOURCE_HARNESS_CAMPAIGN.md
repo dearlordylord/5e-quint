@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "L12-SH15-NEXT-BATCH-SPLIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Expand the next one-session task batches"
     },
     {
@@ -141,6 +141,108 @@
       "id": "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS",
       "status": "done",
       "title": "Migrate the Sorcerer Burning Hands seed to legal source creation"
+    },
+    {
+      "number": 24,
+      "id": "L12-SH24-BUILD-SHEET-BARD",
+      "status": "ready-for-research",
+      "title": "Add the Bard build-sheet SDK group"
+    },
+    {
+      "number": 25,
+      "id": "L12-SH25-BUILD-SHEET-CLERIC",
+      "status": "ready-for-research",
+      "title": "Add the Cleric build-sheet SDK group"
+    },
+    {
+      "number": 26,
+      "id": "L12-SH26-BUILD-SHEET-DRUID",
+      "status": "ready-for-research",
+      "title": "Add the Druid build-sheet SDK group"
+    },
+    {
+      "number": 27,
+      "id": "L12-SH27-BUILD-BATTLE-BARD",
+      "status": "ready-for-research",
+      "title": "Add the Bard build-battle SDK group"
+    },
+    {
+      "number": 28,
+      "id": "L12-SH28-BUILD-BATTLE-CLERIC",
+      "status": "ready-for-research",
+      "title": "Add the Cleric build-battle SDK group"
+    },
+    {
+      "number": 29,
+      "id": "L12-SH29-CREATION-CLERIC-DIVINE-ORDER",
+      "status": "ready-for-research",
+      "title": "Add the Cleric Divine Order creation SDK group"
+    },
+    {
+      "number": 30,
+      "id": "L12-SH30-CREATION-DRUID-DRUIDIC",
+      "status": "ready-for-research",
+      "title": "Add the Druidic creation SDK group"
+    },
+    {
+      "number": 31,
+      "id": "L12-SH31-SPELL-ACCESS-CLERIC",
+      "status": "ready-for-research",
+      "title": "Add the Cleric sheet spell-access SDK group"
+    },
+    {
+      "number": 32,
+      "id": "L12-SH32-SHEET-MONK-UNARMORED-DEFENSE",
+      "status": "ready-for-research",
+      "title": "Add the Monk Unarmored Defense sheet SDK group"
+    },
+    {
+      "number": 33,
+      "id": "L12-SH33-BATTLE-FEATURE-RECKLESS-ATTACK",
+      "status": "ready-for-research",
+      "title": "Add the Barbarian Reckless Attack battle-feature SDK group"
+    },
+    {
+      "number": 34,
+      "id": "L12-SH34-BATTLE-SPELL-CHARM-PERSON",
+      "status": "ready-for-research",
+      "title": "Add the Charm Person battle-spell SDK group"
+    },
+    {
+      "number": 35,
+      "id": "L12-SH35-BATTLE-SPELL-COLOR-SPRAY",
+      "status": "ready-for-research",
+      "title": "Add the Color Spray battle-spell SDK group"
+    },
+    {
+      "number": 36,
+      "id": "L12-SH36-MULTI-OWNER-DRUID-WILD-SHAPE",
+      "status": "ready-for-research",
+      "title": "Split the Druid Wild Shape multi-owner SDK group"
+    },
+    {
+      "number": 37,
+      "id": "L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Close the level-1 class table summary family"
+    },
+    {
+      "number": 38,
+      "id": "L12-SH38-CLOSURE-ALARM",
+      "status": "ready-for-research",
+      "title": "Close the Alarm spell-effect owner review group"
+    },
+    {
+      "number": 39,
+      "id": "L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH",
+      "status": "ready-for-research",
+      "title": "Audit the first seed-present source regression batch"
+    },
+    {
+      "number": 40,
+      "id": "L12-SH40-REMAINING-BATCH-SPLIT",
+      "status": "blocked",
+      "title": "Split the remaining L1/L2 source harness groups"
     }
   ]
 }
@@ -196,17 +298,17 @@ stable.
 
 ## Denominator Snapshot
 
-The frozen L1/L2 source harness denominator comes from
+The current L1/L2 source harness denominator comes from
 `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`, filtered to
 `level-1`, `level-2`, `spell-level-0`, and `spell-level-1`.
 
 | Metric | Count |
 | --- | ---: |
 | L1/L2 diagnostic product-readiness rows | 400 |
-| L1/L2 scenario groups | 207 |
-| Existing L1/L2 seed rows | 65 |
-| `sdk-scenario-needed` rows | 240 |
-| `seed-scenario-present` rows | 65 |
+| L1/L2 scenario groups | 210 |
+| Existing L1/L2 seed rows | 80 |
+| `sdk-scenario-needed` rows | 225 |
+| `seed-scenario-present` rows | 80 |
 | `explicit-closure-needed` rows | 24 |
 | `closure-review-needed` rows | 69 |
 | `table-only-closure-needed` rows | 2 |
@@ -216,26 +318,24 @@ Campaign assignment by lane:
 | Lane | Rows | Groups | Disposition | Initial owner in this plan |
 | --- | ---: | ---: | --- | --- |
 | fixture/enabling | 0 | 0 | enabling work | Tasks 1-4 |
-| character-creation-sdk | 14 | 14 | `sdk-scenario-needed` | Task 15 follow-ups |
-| build-sheet-sdk | 100 | 12 | `sdk-scenario-needed` | Task 6, then Task 15 follow-ups |
-| build-battle-sdk | 17 | 12 | `sdk-scenario-needed` | Task 7, then Task 15 follow-ups |
-| character-sheet-sdk | 7 | 7 | `sdk-scenario-needed` | Task 8, then Task 15 follow-ups |
-| sheet-spell-access-sdk | 7 | 7 | `sdk-scenario-needed` | Task 9, then Task 15 follow-ups |
-| battle-feature-sdk | 6 | 6 | `sdk-scenario-needed` | Task 10, then Task 15 follow-ups |
-| battle-spell-sdk | 83 | 32 | `sdk-scenario-needed` | Task 11, then Task 15 follow-ups |
-| multi-owner-feature-sdk | 6 | 6 | `sdk-scenario-needed` | Task 12, then Task 15 follow-ups |
-| seed-present | 65 | 65 | `seed-scenario-present` | Task 3 migration audit, Tasks 17-23 seed migrations, Task 5 creation-owner seed, then Task 15 follow-ups |
-| explicit-closure | 24 | 24 | `explicit-closure-needed` | Task 4 grouping gate and Task 15 follow-ups |
-| spell-effect-owner-review | 69 | 21 | `closure-review-needed` | Task 13, then Task 15 follow-ups |
-| table-only-closure | 2 | 1 | `table-only-closure-needed` | Task 13, then Task 15 follow-ups |
+| character-creation-sdk | 14 | 14 | `sdk-scenario-needed` | Task 5, Tasks 29-30, then Task 40 follow-ups |
+| build-sheet-sdk | 93 | 12 | `sdk-scenario-needed` | Task 6, Tasks 24-26, then Task 40 follow-ups |
+| build-battle-sdk | 15 | 11 | `sdk-scenario-needed` | Task 7, Tasks 27-28, then Task 40 follow-ups |
+| character-sheet-sdk | 6 | 6 | `sdk-scenario-needed` | Task 8, Task 32, then Task 40 follow-ups |
+| sheet-spell-access-sdk | 6 | 6 | `sdk-scenario-needed` | Task 9, Task 31, then Task 40 follow-ups |
+| battle-feature-sdk | 5 | 5 | `sdk-scenario-needed` | Task 10, Task 33, then Task 40 follow-ups |
+| battle-spell-sdk | 80 | 31 | `sdk-scenario-needed` | Task 11, Tasks 34-35, then Task 40 follow-ups |
+| multi-owner-feature-sdk | 6 | 6 | `sdk-scenario-needed` | Task 12, Task 36, then Task 40 follow-ups |
+| seed-present | 80 | 73 | `seed-scenario-present` | Task 3 migration audit, Tasks 17-23 seed migrations, Task 39, then Task 40 follow-ups |
+| explicit-closure | 24 | 24 | `explicit-closure-needed` | Task 4 grouping gate, Task 37, then Task 40 follow-ups |
+| spell-effect-owner-review | 69 | 21 | `closure-review-needed` | Task 13, Task 38, then Task 40 follow-ups |
+| table-only-closure | 2 | 1 | `table-only-closure-needed` | Task 13 and Task 40 follow-ups |
 
 Every L1/L2 row in the five active dispositions is assigned by the table above.
-Tasks 6-14 are remaining first representative slices. The campaign now has 65
-seed-present rows: 57 whole-width lifecycle seed rows, seven direct-build seed
-rows needing migration, and one character-creation owner proof. Tasks 17-23
-carry the row-specific direct-build migrations. Task 15 must
-preserve the remaining desired work as concrete Ralph tasks in the index, DAG,
-and task details.
+After Tasks 5-14 and 17-23, the generated grouping has 80 seed-present rows
+across 73 groups. Task 15 expands the first runnable follow-up batch as Tasks
+24-39. Task 40 is the next split gate and preserves the remaining generated
+groups as executable planning work rather than prose backlog.
 
 ## Source Artifacts
 
@@ -342,7 +442,7 @@ Reviewer-loop convergence:
 | 1 | L12-SH01-DENOMINATOR-FORMAT-GATE - Verify the L1/L2 source denominator and Ralph format | done | none | fixture/enabling | Static denominator and plan-format verification, with durable corrections if inventory drifted. |
 | 2 | L12-SH02-LEGAL-FIXTURE-SEAM - Implement the legal source-side lifecycle fixture seam | done | L12-SH01-DENOMINATOR-FORMAT-GATE | fixture/enabling | Shared legal fixture helpers for L1/L2 source lifecycle scenarios. |
 | 3 | L12-SH03-SEED-MIGRATION-AUDIT - Audit existing seed rows for legal lifecycle proof | done | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH02-LEGAL-FIXTURE-SEAM | seed-present | Classification of the original 64 L1/L2 seed rows and first safe migrations if small. |
-| 4 | L12-SH04-GROUPING-GENERATOR-GATE - Generate the L1/L2 campaign grouping gate | done | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH03-SEED-MIGRATION-AUDIT | fixture/enabling | Generated or checked group assignment evidence for 400 rows and 207 groups. |
+| 4 | L12-SH04-GROUPING-GENERATOR-GATE - Generate the L1/L2 campaign grouping gate | done | L12-SH01-DENOMINATOR-FORMAT-GATE, L12-SH03-SEED-MIGRATION-AUDIT | fixture/enabling | Generated or checked group assignment evidence for 400 rows and current generated groups. |
 | 5 | L12-SH05-CREATION-SDK-FIRST-SLICE - Add the first character-creation SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | character-creation-sdk | Warlock Pact Magic creation scenario group using the shared fixture seam. |
 | 6 | L12-SH06-BUILD-SHEET-FIRST-SLICE - Add the first build-to-sheet SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | build-sheet-sdk | One class-wide build-sheet projection group. |
 | 7 | L12-SH07-BUILD-BATTLE-FIRST-SLICE - Add the first build-to-battle SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | build-battle-sdk | One build-battle handoff scenario group. |
@@ -353,8 +453,8 @@ Reviewer-loop convergence:
 | 12 | L12-SH12-MULTI-OWNER-FIRST-SLICE - Split the first multi-owner feature SDK slice | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | multi-owner-feature-sdk | One multi-owner group split into legal source scenario and explicit owner follow-ups. |
 | 13 | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY - Close the first spell-effect owner review family | done | L12-SH04-GROUPING-GENERATOR-GATE | closure-review | Goodberry spell-list pressure family classified as table-only inventory/survival closure. |
 | 14 | L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS - Add the first small QNT harness pressure witness | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | QNT/harness-pressure | Small deterministic source-side witness or existing obligation strengthening. |
-| 15 | L12-SH15-NEXT-BATCH-SPLIT - Expand the next one-session task batches | ready-for-research | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS | planning | Add the next runnable one-session tasks for remaining L1/L2 groups after seed migrations. |
-| 16 | L12-SH16-CLEANROOM-GATE-PLAN - Prepare the later cleanroom replay gate | blocked | L12-SH15-NEXT-BATCH-SPLIT | later cleanroom gate | Cleanroom replay gate plan after source-side harness stabilizes. |
+| 15 | L12-SH15-NEXT-BATCH-SPLIT - Expand the next one-session task batches | done | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS | planning | Added Tasks 24-39 as the next runnable batch and Task 40 as the remaining-group splitter. |
+| 16 | L12-SH16-CLEANROOM-GATE-PLAN - Prepare the later cleanroom replay gate | blocked | L12-SH40-REMAINING-BATCH-SPLIT | later cleanroom gate | Cleanroom replay gate plan after source-side harness stabilizes. |
 | 17 | L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE - Migrate the Barbarian Rage seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `barbarian_rage` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 18 | L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION - Migrate the Bardic Inspiration seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `bard_bardic_inspiration` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 19 | L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND - Migrate the Fighter Second Wind seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `fighter_second_wind` seed uses legal creation and remains a real sheet/battle handoff scenario. |
@@ -362,6 +462,23 @@ Reviewer-loop convergence:
 | 21 | L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK - Migrate the Rogue Sneak Attack seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `rogue_sneak_attack` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 22 | L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY - Migrate the Sorcerer Innate Sorcery seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `sorcerer_innate_sorcery` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 23 | L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS - Migrate the Sorcerer Burning Hands seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | Sorcerer `burning_hands` seed uses legal creation and remains a real sheet/battle handoff scenario. |
+| 24 | L12-SH24-BUILD-SHEET-BARD - Add the Bard build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Bard class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
+| 25 | L12-SH25-BUILD-SHEET-CLERIC - Add the Cleric build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Cleric class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
+| 26 | L12-SH26-BUILD-SHEET-DRUID - Add the Druid build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Druid class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
+| 27 | L12-SH27-BUILD-BATTLE-BARD - Add the Bard build-battle SDK group | ready-for-research | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-battle-sdk | Bard starting equipment proves through legal build, fresh sheet, and battle combatant projection. |
+| 28 | L12-SH28-BUILD-BATTLE-CLERIC - Add the Cleric build-battle SDK group | ready-for-research | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-battle-sdk | Cleric starting equipment proves through legal build, fresh sheet, and battle combatant projection. |
+| 29 | L12-SH29-CREATION-CLERIC-DIVINE-ORDER - Add the Cleric Divine Order creation SDK group | ready-for-research | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | character-creation-sdk | Cleric Divine Order selection proves through legal draft holes and finalized build facts. |
+| 30 | L12-SH30-CREATION-DRUID-DRUIDIC - Add the Druidic creation SDK group | ready-for-research | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | character-creation-sdk | Druidic language and always-prepared spell access prove through legal draft holes and finalized build facts. |
+| 31 | L12-SH31-SPELL-ACCESS-CLERIC - Add the Cleric sheet spell-access SDK group | ready-for-research | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | sheet-spell-access-sdk | Cleric Spellcasting projects known/prepared/list/slot facts from legal creation to sheet. |
+| 32 | L12-SH32-SHEET-MONK-UNARMORED-DEFENSE - Add the Monk Unarmored Defense sheet SDK group | ready-for-research | L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | character-sheet-sdk | Monk Unarmored Defense projects Armor Class from legal creation and a fresh sheet. |
+| 33 | L12-SH33-BATTLE-FEATURE-RECKLESS-ATTACK - Add the Barbarian Reckless Attack battle-feature SDK group | ready-for-research | L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | battle-feature-sdk | Barbarian Reckless Attack resolves from legal sheet-to-battle handoff through focused battle behavior. |
+| 34 | L12-SH34-BATTLE-SPELL-CHARM-PERSON - Add the Charm Person battle-spell SDK group | ready-for-research | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | battle-spell-sdk | Charm Person resolves once through battle behavior and preserves class spell-access evidence for five access rows. |
+| 35 | L12-SH35-BATTLE-SPELL-COLOR-SPRAY - Add the Color Spray battle-spell SDK group | ready-for-research | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | battle-spell-sdk | Color Spray resolves once through battle behavior and preserves class spell-access evidence for three access rows. |
+| 36 | L12-SH36-MULTI-OWNER-DRUID-WILD-SHAPE - Split the Druid Wild Shape multi-owner SDK group | ready-for-research | L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | multi-owner-feature-sdk | Druid Wild Shape is split into legal source scenario evidence and explicit owner follow-ups. |
+| 37 | L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE - Close the level-1 class table summary family | ready-for-research | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH15-NEXT-BATCH-SPLIT | explicit-closure | Level-1 class table summary rows receive explicit non-runtime/table-summary closure evidence. |
+| 38 | L12-SH38-CLOSURE-ALARM - Close the Alarm spell-effect owner review group | ready-for-research | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH15-NEXT-BATCH-SPLIT | spell-effect-owner-review | Alarm spell-list pressure rows receive closure evidence or concrete future owner tasks. |
+| 39 | L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH - Audit the first seed-present source regression batch | ready-for-research | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS, L12-SH15-NEXT-BATCH-SPLIT | seed-present | First migrated seed-present batch is checked for legal creation, real sheet/battle handoff, and row-specific assertion gaps. |
+| 40 | L12-SH40-REMAINING-BATCH-SPLIT - Split the remaining L1/L2 source harness groups | blocked | L12-SH24-BUILD-SHEET-BARD, L12-SH25-BUILD-SHEET-CLERIC, L12-SH26-BUILD-SHEET-DRUID, L12-SH27-BUILD-BATTLE-BARD, L12-SH28-BUILD-BATTLE-CLERIC, L12-SH29-CREATION-CLERIC-DIVINE-ORDER, L12-SH30-CREATION-DRUID-DRUIDIC, L12-SH31-SPELL-ACCESS-CLERIC, L12-SH32-SHEET-MONK-UNARMORED-DEFENSE, L12-SH33-BATTLE-FEATURE-RECKLESS-ATTACK, L12-SH34-BATTLE-SPELL-CHARM-PERSON, L12-SH35-BATTLE-SPELL-COLOR-SPRAY, L12-SH36-MULTI-OWNER-DRUID-WILD-SHAPE, L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE, L12-SH38-CLOSURE-ALARM, L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH | planning | Recompute remaining groups after the next batch and add the following one-session tasks. |
 
 ## Task Details
 
@@ -384,8 +501,8 @@ Research required before editing:
 - Verify Ralph plan contract: `ralph-task-index`, matching `### Task N`
   headings, runnable statuses, blocked metadata, DAG auto-unblock rules, and
   `Plan Impact` requirements.
-- Recompute the L1/L2 denominator from the inventory: 400 rows, 207 scenario
-  groups, current seed rows, and lane assignments.
+- Recompute the L1/L2 denominator from the inventory: 400 rows, current
+  generated scenario groups, current seed rows, and lane assignments.
 - Confirm the denominator still contains only `sdk-scenario-needed`,
   `seed-scenario-present`, `explicit-closure-needed`, and
   `closure-review-needed`.
@@ -403,7 +520,8 @@ Acceptance:
 - Every task has Input, Output, Acceptance, Validation, and Plan Impact
   sections.
 - No blocked task lacks `Blocker Type` and `Blocker Detail`.
-- The L1/L2 denominator assignment still covers all 400 rows and all 207 groups.
+- The L1/L2 denominator assignment still covers all 400 rows and all current
+  generated groups.
 
 Validation:
 
@@ -547,7 +665,8 @@ Output:
 
 Acceptance:
 
-- All 400 rows and 207 groups are assigned to a lane and campaign task family.
+- All 400 rows and all current generated groups are assigned to a lane and
+  campaign task family.
 - The checker distinguishes source rows, seed rows, explicit closure rows, and
   closure-review rows.
 - Mixed-provenance or mixed-license states are not representable in the new
@@ -1022,13 +1141,7 @@ Plan Impact:
 
 ### Task 15 - L12-SH15-NEXT-BATCH-SPLIT
 
-Status: `ready-for-research`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for Tasks 3, 5-14, and 17-23 to produce fixture,
-grouping, representative implementation, seed migration, closure, and QNT
-evidence.
+Status: `done`
 
 Input:
 
@@ -1074,7 +1187,8 @@ Validation:
 
 Plan Impact:
 
-- `applied`; this task exists to update the live queue.
+- `applied`; Tasks 24-39 are the next runnable one-session batch. Task 40 is
+  blocked on that batch and owns the next remaining-group split.
 
 ### Task 16 - L12-SH16-CLEANROOM-GATE-PLAN
 
@@ -1082,8 +1196,8 @@ Status: `blocked`
 
 Blocker Type: dependency
 
-Blocker Detail: Waits for `L12-SH15-NEXT-BATCH-SPLIT` and should remain behind
-source-side stabilization. If source evidence is still moving, this task should
+Blocker Detail: Waits for `L12-SH40-REMAINING-BATCH-SPLIT` and should remain
+behind source-side stabilization. If source evidence is still moving, this task should
 update its dependency list rather than editing cleanroom targets.
 
 Input:
@@ -1436,6 +1550,778 @@ Plan Impact:
 
 - `none` unless migration reveals additional seed rows or fixture work.
 
+### Task 24 - L12-SH24-BUILD-SHEET-BARD
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:build-sheet-sdk:bard`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Bard.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read the Bard level-1 class traits and multiclass entry rows in the local SRD.
+- Check terminology for CharacterBuild, Character Sheet, proficiency, and
+  multiclass entry.
+- Inspect the Barbarian build-sheet first slice and reuse the legal fixture seam
+  without adding duplicate derived sheet state.
+
+Output:
+
+- One Bard build-sheet scenario group from legal creation to a fresh sheet.
+- Inventory evidence for Bard class container, core traits, proficiencies, and
+  multiclass entry traits.
+
+Acceptance:
+
+- The task covers only the Bard build-sheet group.
+- The scenario finalizes through legal draft holes, not direct `CharacterBuild`
+  construction.
+- Assertions derive sheet facts from the finalized build and fresh sheet rather
+  than storing duplicate expected state.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Bard"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Bard exposes a build-sheet fixture gap that changes the
+  remaining class-wide task shape.
+
+### Task 25 - L12-SH25-BUILD-SHEET-CLERIC
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:build-sheet-sdk:cleric`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Cleric.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read the Cleric level-1 class traits and multiclass entry rows in the local
+  SRD.
+- Check terminology for CharacterBuild, Character Sheet, proficiency, and
+  multiclass entry.
+- Inspect the existing build-sheet helper patterns before adding assertions.
+
+Output:
+
+- One Cleric build-sheet scenario group from legal creation to a fresh sheet.
+- Inventory evidence for Cleric class container, core traits, proficiencies, and
+  multiclass entry traits.
+
+Acceptance:
+
+- The task covers only the Cleric build-sheet group.
+- The scenario finalizes through legal draft holes.
+- No spell execution assertions are added; spell access remains in the
+  sheet-spell-access lane.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Cleric"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Cleric exposes a build-sheet fixture gap that changes the
+  remaining class-wide task shape.
+
+### Task 26 - L12-SH26-BUILD-SHEET-DRUID
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:build-sheet-sdk:druid`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Druid.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read the Druid level-1 class traits and multiclass entry rows in the local SRD.
+- Check terminology for CharacterBuild, Character Sheet, proficiency, and
+  multiclass entry.
+- Inspect the existing build-sheet helper patterns before adding assertions.
+
+Output:
+
+- One Druid build-sheet scenario group from legal creation to a fresh sheet.
+- Inventory evidence for Druid class container, core traits, proficiencies, and
+  multiclass entry traits.
+
+Acceptance:
+
+- The task covers only the Druid build-sheet group.
+- The scenario finalizes through legal draft holes.
+- Druidic and Primal Order creation facts remain in their own creation groups.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Druid"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Druid exposes a build-sheet fixture gap that changes the
+  remaining class-wide task shape.
+
+### Task 27 - L12-SH27-BUILD-BATTLE-BARD
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:build-battle-sdk:bard`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Bard.md`
+- `.references/srd-5.2.1/Equipment.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Bard starting equipment and the relevant Equipment rules in the local SRD.
+- Check terminology for equipment, Armor Class, attack, damage, and handoff.
+- Inspect the Barbarian build-battle first slice and reuse the projection path.
+
+Output:
+
+- One Bard build-battle scenario group from legal creation through fresh sheet to
+  battle combatant.
+- Inventory evidence for Bard Starting Equipment battle projection.
+
+Acceptance:
+
+- The task covers only the Bard build-battle group.
+- Assertions prove user-reachable equipment or combatant projection facts.
+- No spell or feature behavior is added in this task.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Bard"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Bard exposes a shared build-battle projection gap.
+
+### Task 28 - L12-SH28-BUILD-BATTLE-CLERIC
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:build-battle-sdk:cleric`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Cleric.md`
+- `.references/srd-5.2.1/Equipment.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Cleric starting equipment and the relevant Equipment rules in the local
+  SRD.
+- Check terminology for equipment, Armor Class, attack, damage, and handoff.
+- Inspect the existing build-battle helper patterns before adding assertions.
+
+Output:
+
+- One Cleric build-battle scenario group from legal creation through fresh sheet
+  to battle combatant.
+- Inventory evidence for Cleric Starting Equipment battle projection.
+
+Acceptance:
+
+- The task covers only the Cleric build-battle group.
+- Assertions prove user-reachable equipment or combatant projection facts.
+- No spell or Channel Divinity behavior is added in this task.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Cleric"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Cleric exposes a shared build-battle projection gap.
+
+### Task 29 - L12-SH29-CREATION-CLERIC-DIVINE-ORDER
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:character-creation-sdk:cleric-divine-order`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Cleric.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read the Cleric Divine Order source text in the local SRD.
+- Check terminology for creation choice, class feature, and finalized build
+  facts.
+- Inspect the Warlock Pact Magic creation slice for the legal draft-hole flow.
+
+Output:
+
+- One legal creation scenario for Cleric Divine Order.
+- Inventory evidence for the selected finalized-build facts and any sheet facts
+  owned by the creation boundary.
+
+Acceptance:
+
+- The task covers only the Cleric Divine Order creation group.
+- The choice is made through discovered creation holes.
+- No battle behavior is asserted unless the SRD-owned output already projects
+  through the selected source facts.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Divine Order|Cleric"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Divine Order reveals a missing creation-hole owner.
+
+### Task 30 - L12-SH30-CREATION-DRUID-DRUIDIC
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:character-creation-sdk:druid-druidic`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Druid.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read the Druidic source text in the local SRD.
+- Check terminology for languages, always-prepared spell access, and
+  runtime-detached table adjudication.
+- Inspect the creation slice patterns and existing spell-access evidence.
+
+Output:
+
+- One legal creation scenario for Druidic source facts.
+- Inventory evidence for Druidic language and always-prepared Speak with Animals
+  access, with table adjudication kept out of battle behavior.
+
+Acceptance:
+
+- The task covers only the Druidic creation group.
+- The scenario finalizes through legal draft holes.
+- Hidden-message discovery and deciphering are not modeled as battle runtime
+  behavior.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Druidic|Druid"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Druidic reveals a missing creation or spell-access owner.
+
+### Task 31 - L12-SH31-SPELL-ACCESS-CLERIC
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:sheet-spell-access-sdk:cleric:spell-access`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Cleric.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Cleric Spellcasting and the local spell preparation/slot text.
+- Check terminology for prepared spells, Spell Slots, and spell list access.
+- Inspect the Bard spell-access first slice before adding assertions.
+
+Output:
+
+- One Cleric sheet spell-access scenario from legal creation to a fresh sheet.
+- Inventory evidence for known/prepared/list/slot facts.
+
+Acceptance:
+
+- The task covers only the Cleric spell-access group.
+- Spell execution remains in spell scenario groups.
+- Assertions use sheet-projected facts, not authored identity dispatch in runtime
+  behavior.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Cleric.*Spellcasting|Spellcasting.*Cleric"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Cleric spell access changes the remaining class spell-access
+  task shape.
+
+### Task 32 - L12-SH32-SHEET-MONK-UNARMORED-DEFENSE
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:character-sheet-sdk:monk-unarmored-defense`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Monk.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Monk Unarmored Defense in the local SRD.
+- Check terminology for Armor Class, Ability Score modifier, and Character
+  Sheet projection.
+- Inspect the Barbarian Unarmored Defense sheet slice before adding assertions.
+
+Output:
+
+- One Monk Unarmored Defense sheet scenario from legal creation to fresh sheet.
+- Inventory evidence for the sheet-owned Armor Class projection.
+
+Acceptance:
+
+- The task covers only the Monk Unarmored Defense sheet group.
+- The Armor Class fact is derived from canonical sheet ability and equipment
+  state.
+- No battle reducer behavior is added unless the existing projection already
+  exposes it.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Monk Unarmored Defense|Unarmored Defense"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Monk exposes a shared unarmored-defense projection gap.
+
+### Task 33 - L12-SH33-BATTLE-FEATURE-RECKLESS-ATTACK
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-04:battle-feature-sdk:barbarian-reckless-attack`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `packages/battle-runtime/src/`
+- `.references/srd-5.2.1/Classes/Barbarian.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Barbarian Reckless Attack in the local SRD.
+- Check terminology for Attack Roll Advantage and incoming attack-roll effects.
+- Inspect the Danger Sense battle-feature first slice and relevant battle-runtime
+  owner before editing.
+
+Output:
+
+- One Barbarian Reckless Attack source-side battle-feature scenario.
+- Runtime, QNT, or evidence updates only if the existing battle owner is missing
+  the required typed behavior.
+
+Acceptance:
+
+- The scenario starts from legal level-2 creation and real sheet-to-battle
+  projection.
+- Runtime behavior does not dispatch on authored identity.
+- If behavior changes, the relevant Quint owner and focused validation are
+  updated with the runtime change.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Reckless Attack|Barbarian"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- Relevant focused battle-runtime test or MBT only if executable battle behavior
+  changes.
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if Reckless Attack needs a new shared battle owner or QNT
+  parity task before SDK evidence can land.
+
+### Task 34 - L12-SH34-BATTLE-SPELL-CHARM-PERSON
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:battle-spell-sdk:charm-person`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `packages/battle-runtime/src/`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Charm Person and spellcasting rules in the local SRD.
+- Check terminology for Spell Invocation, Saving Throw, Charmed, and
+  Concentration/duration if applicable.
+- Confirm whether the existing battle spell owner already supports the typed
+  condition effect.
+
+Output:
+
+- One Charm Person spell scenario group covering the five access rows through
+  legal class spell access and battle resolution.
+- Runtime/QNT/evidence updates only for missing typed behavior needed by the
+  selected execution path.
+
+Acceptance:
+
+- The task covers only the Charm Person spell group.
+- One execution path proves the spell behavior; class-specific rows are covered
+  by explicit access assertions rather than duplicate behavior tests.
+- Runtime behavior uses typed spell/effect facts, not spell id/name dispatch.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Charm Person"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- Relevant focused battle-runtime test or MBT only if executable battle behavior
+  changes.
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if Charm Person must split by owner or exposes a reusable
+  condition-spell owner gap.
+
+### Task 35 - L12-SH35-BATTLE-SPELL-COLOR-SPRAY
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:battle-spell-sdk:color-spray`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `packages/battle-runtime/src/`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Color Spray and spellcasting rules in the local SRD.
+- Check terminology for Cone, Saving Throw, Blinded, and spell effect duration.
+- Confirm whether the existing battle spell owner already supports the typed
+  area condition effect.
+
+Output:
+
+- One Color Spray spell scenario group covering the three access rows through
+  legal class spell access and battle resolution.
+- Runtime/QNT/evidence updates only for missing typed behavior needed by the
+  selected execution path.
+
+Acceptance:
+
+- The task covers only the Color Spray spell group.
+- One execution path proves the spell behavior; class-specific rows are covered
+  by explicit access assertions rather than duplicate behavior tests.
+- Runtime behavior uses typed spell/effect facts, not spell id/name dispatch.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Color Spray"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- Relevant focused battle-runtime test or MBT only if executable battle behavior
+  changes.
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if Color Spray must split by owner or exposes a reusable
+  area-condition spell owner gap.
+
+### Task 36 - L12-SH36-MULTI-OWNER-DRUID-WILD-SHAPE
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-04:multi-owner-feature-sdk:druid-wild-shape`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `packages/battle-runtime/src/`
+- `.references/srd-5.2.1/Classes/Druid.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Druid Wild Shape in the local SRD.
+- Check terminology for Bonus Action, form, stat block, resource, and
+  sheet-to-battle projection.
+- Split source proof, runtime behavior, stat-block ownership, and table/spatial
+  boundaries before implementing.
+
+Output:
+
+- The smallest legal source scenario for the Druid Wild Shape group that can land
+  in one session.
+- Concrete follow-up tasks for any runtime, stat-block, or table/spatial owner
+  work not closed in this task.
+
+Acceptance:
+
+- The task does not attempt to implement the whole Wild Shape owner surface in
+  one pass.
+- Any unsupported owner boundary is preserved as a concrete task, not a prose
+  caveat.
+- Runtime behavior does not dispatch on Druid Wild Shape authored identity.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Wild Shape|Druid"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `pnpm unit-profile-coverage:check` if Unit evidence changes.
+- Relevant focused battle-runtime test or MBT only if executable battle behavior
+  changes.
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required`; this task is expected to add or revise follow-up owner tasks
+  if Wild Shape does not close in one session.
+
+### Task 37 - L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated groups `l15-sdk-raw-03:explicit-closure:*:class-table-summary:*`.
+- `.references/srd-5.2.1/Classes/`
+- `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+- `plans/sdk-raw-integration/LEVEL1_5_SDK_RAW_INVENTORY.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read the level-1 class tables in the local SRD.
+- Confirm every selected row has the same non-runtime table-summary owner reason.
+- Inspect existing generated closure evidence before adding any new evidence
+  shape.
+
+Output:
+
+- Explicit closure evidence for the level-1 class table summary family.
+- Inventory/report updates if the generated disposition changes.
+
+Acceptance:
+
+- The task covers only the level-1 class table summary closure family.
+- Closure reasons cite local SRD anchors and do not mark table summaries as
+  executable runtime behavior.
+- No generated evidence duplicates facts that can be projected from existing
+  inventory rows.
+
+Validation:
+
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if the same closure can safely cover level-2 table summaries
+  or if any class table row needs a separate owner.
+
+### Task 38 - L12-SH38-CLOSURE-ALARM
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:spell-effect-owner-review:alarm`.
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Alarm and spellcasting rules in the local SRD.
+- Check terminology for ward, area, mental alarm, audible alarm, and table
+  adjudication.
+- Determine whether Alarm is runtime-detached closure, existing source owner
+  sufficient, or missing a future owner.
+
+Output:
+
+- Closure evidence for Alarm, or concrete follow-up owner task(s) if Alarm needs
+  future runtime/spec support.
+- Inventory/profile updates if closure status changes.
+
+Acceptance:
+
+- The task covers only the Alarm closure-review group.
+- Closure reasons cite local SRD passages.
+- Only real owner/user decisions become blocked; Ralph-performable research
+  remains runnable.
+
+Validation:
+
+- `pnpm unit-profile-coverage:check`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if Alarm reveals a reusable ward/notification closure family
+  or a missing runtime owner task.
+
+### Task 39 - L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated seed audit rows for the migrated class-feature seeds from Tasks
+  17-22 and the Sorcerer Burning Hands seed from Task 23.
+- `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- Relevant local SRD class and spell files for the selected seed rows.
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Re-read the selected seed audit rows and confirm their current classification.
+- Confirm each selected seed still uses legal creation plus real sheet/battle
+  handoff.
+- Check whether row-specific assertions are missing after the migrations.
+
+Output:
+
+- A first seed-present audit batch that either records no action needed or adds
+  focused assertion/evidence updates for the migrated seeds.
+- Follow-up tasks for any seed-present groups that are too broad for this batch.
+
+Acceptance:
+
+- The task covers only the migrated first-batch seed rows named in the Input.
+- Existing seed rows are not double-counted as whole-width lifecycle proof unless
+  they use legal creation and real handoff.
+- Any assertion gap is fixed only in the touched seed scenario, not by broad
+  inventory relabeling.
+
+Validation:
+
+- `pnpm sdk-raw-integration-inventory:check`
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if the migrated seed batch reveals more seed migrations,
+  unsupported fixture paths, or a need to split seed-present audits differently.
+
+### Task 40 - L12-SH40-REMAINING-BATCH-SPLIT
+
+Status: `blocked`
+
+Blocker Type: dependency
+
+Blocker Detail: Waits for Tasks 24-39 to land so the next split can use their
+actual closeouts, inventory drift, and plan-impact notes.
+
+Input:
+
+- This plan after Tasks 24-39 land.
+- Generated L1/L2 campaign grouping after the next batch.
+- Task closeouts and plan-impact notes from Tasks 24-39.
+- `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+- `plans/sdk-raw-integration/LEVEL1_5_SDK_RAW_INVENTORY.md`
+
+Research required before editing:
+
+- Recompute remaining uncovered L1/L2 groups by lane.
+- Apply the same Task 15 sizing rules: one class group, one spell execution
+  group, one small identical closure family, or one owner split per task.
+- Check whether Task 16 should remain blocked behind further source-side work.
+
+Output:
+
+- Concrete Ralph tasks for the following one-session batch.
+- Updated `ralph-task-index`, DAG, and task details.
+- Status and dependency updates for tasks that become runnable.
+
+Acceptance:
+
+- Remaining desired work is represented as executable tasks or blocked tasks
+  with precise blockers.
+- No new task is larger than one coding-agent session.
+- Every new blocked task has `Blocker Type` and `Blocker Detail`.
+- Every new task has Input, Output, Acceptance, Validation, and Plan Impact
+  sections.
+
+Validation:
+
+- Static plan consistency checks from Task 1.
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `applied` when the next live queue update lands.
+
 ## Verification Matrix
 
 | Change type | Required validation |
@@ -1461,8 +2347,8 @@ with non-mutating checks:
   sections.
 - Confirm no task is blocked without `Blocker Type` and `Blocker Detail`.
 - Confirm the denominator table assigns all 400 L1/L2 rows:
-  - 240 `sdk-scenario-needed`
-  - 65 `seed-scenario-present`
+  - 225 `sdk-scenario-needed`
+  - 80 `seed-scenario-present`
   - 24 `explicit-closure-needed`
   - 69 `closure-review-needed`
   - 2 `table-only-closure-needed`
