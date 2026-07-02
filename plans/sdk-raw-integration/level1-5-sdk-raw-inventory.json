@@ -23553,6 +23553,13 @@
       "category": "equipment/weapon/armor pressure",
       "className": "Druid",
       "concept": "Druid Starting Equipment",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid build-battle handoff projects starting equipment into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:14"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -23560,7 +23567,7 @@
       "proposedOwnerBoundary": "character-build-to-battle",
       "rowId": "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
       "rowKind": "equipment-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 14,
         "lineStart": 14,
@@ -51417,12 +51424,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 9,
+        "groupCount": 8,
         "lane": "build-battle-sdk",
         "ownerTaskIds": [
           "L12-SH07-BUILD-BATTLE-FIRST-SLICE"
         ],
-        "rowCount": 12,
+        "rowCount": 11,
         "rowFamily": "source-row",
         "taskFamily": "build-battle-sdk"
       },
@@ -51527,7 +51534,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 140,
+        "rowCount": 141,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51614,12 +51621,12 @@
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 140,
+        "rowCount": 141,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 76,
+        "groupCount": 75,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51630,7 +51637,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 165,
+        "rowCount": 164,
         "rowFamily": "source-row"
       },
       {
@@ -51649,7 +51656,7 @@
       "sourcePathPrefix": ".references/srd-5.2.1/"
     },
     "totals": {
-      "groupCount": 213,
+      "groupCount": 212,
       "rowCount": 400
     }
   },
@@ -52830,6 +52837,25 @@
       "sourceProof": "legal-build-sheet-owner",
       "usesRealSheetBattleHandoff": false,
       "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_druid",
+      "classification": "already legal creation path",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid build-battle handoff projects starting equipment into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
+      "rowKey": "level-1:Druid:class_druid",
+      "rowKind": "equipment-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-battle-handoff",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
     },
     {
       "candidateUnitId": "class_druid",
@@ -60193,17 +60219,17 @@
       "explicit-closure-needed": 48,
       "explicit-closure-present": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 358,
+      "sdk-scenario-needed": 357,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 146,
+      "seed-scenario-present": 147,
       "table-only-closure-needed": 15
     },
     "levelOneFourRows": 632,
-    "levelOneTwoCampaignGroups": 213,
+    "levelOneTwoCampaignGroups": 212,
     "levelOneTwoCampaignGroupsByLane": {
       "battle-feature-sdk": 4,
       "battle-spell-sdk": 29,
-      "build-battle-sdk": 9,
+      "build-battle-sdk": 8,
       "build-sheet-sdk": 7,
       "character-creation-sdk": 12,
       "character-sheet-sdk": 5,
@@ -60220,21 +60246,21 @@
       "closure-review-row": 20,
       "explicit-closure-row": 12,
       "seed-row": 91,
-      "source-row": 76,
+      "source-row": 75,
       "table-only-closure-row": 2
     },
     "levelOneTwoCampaignRows": 400,
     "levelOneTwoCampaignRowsByLane": {
       "battle-feature-sdk": 4,
       "battle-spell-sdk": 72,
-      "build-battle-sdk": 12,
+      "build-battle-sdk": 11,
       "build-sheet-sdk": 50,
       "character-creation-sdk": 12,
       "character-sheet-sdk": 5,
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 140,
+      "seed-present": 141,
       "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 67,
       "table-only-closure": 4
@@ -60243,29 +60269,29 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 67,
       "explicit-closure-row": 12,
-      "seed-row": 140,
-      "source-row": 165,
+      "seed-row": 141,
+      "source-row": 164,
       "table-only-closure-row": 4
     },
-    "levelOneTwoSeedMigrationAuditRows": 140,
+    "levelOneTwoSeedMigrationAuditRows": 141,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 82,
+      "already legal creation path": 83,
       "legal build-sheet owner proof": 55,
       "legal creation owner proof": 3
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
       "not-real-sheet-battle": 58,
-      "real-sheet-battle": 82
+      "real-sheet-battle": 83
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 140
+      "legal-creation-draft-finalize": 141
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 82,
-    "scenarioGroups": 417,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 83,
+    "scenarioGroups": 416,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 19,
       "battle-spell-sdk": 80,
-      "build-battle-sdk": 9,
+      "build-battle-sdk": 8,
       "build-sheet-sdk": 19,
       "character-creation-sdk": 26,
       "character-sheet-sdk": 5,
@@ -60281,7 +60307,7 @@
       "table-only-closure": 6
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 180,
+      "L15-SDK-RAW-03": 179,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -62656,61 +62682,6 @@
         "sdk-scenario-needed"
       ],
       "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "class_druid"
-      ],
-      "categories": [
-        "equipment/weapon/armor pressure"
-      ],
-      "classNames": [
-        "Druid"
-      ],
-      "groupId": "l15-sdk-raw-03:build-battle-sdk:druid",
-      "lane": "build-battle-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-build-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"build-battle-sdk\",\"Druid\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Druid.md:14"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "equipment-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "class_druid",
-          "className": "Druid",
-          "concept": "Druid Starting Equipment",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-battle",
-          "rowId": "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 14,
-            "lineStart": 14,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Druid Starting Equipment"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Finalize build and equipment/mastery choices, project to battle, and assert AC, attack, damage, or mastery facts that a user reaches through the SDK path.",
       "taskId": "L15-SDK-RAW-03"
     },
     {
@@ -66363,7 +66334,8 @@
       ],
       "categories": [
         "character-creation or progression mechanic",
-        "class container"
+        "class container",
+        "equipment/weapon/armor pressure"
       ],
       "classNames": [
         "Druid"
@@ -66377,6 +66349,7 @@
         "resolved"
       ],
       "proposedOwnerBoundaries": [
+        "character-build-to-battle",
         "character-build-to-sheet"
       ],
       "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Druid:class_druid\"]",
@@ -66385,6 +66358,7 @@
         ".references/srd-5.2.1/Classes/Druid.md:11",
         ".references/srd-5.2.1/Classes/Druid.md:12",
         ".references/srd-5.2.1/Classes/Druid.md:13",
+        ".references/srd-5.2.1/Classes/Druid.md:14",
         ".references/srd-5.2.1/Classes/Druid.md:23",
         ".references/srd-5.2.1/Classes/Druid.md:23-27",
         ".references/srd-5.2.1/Classes/Druid.md:3",
@@ -66392,10 +66366,11 @@
         ".references/srd-5.2.1/Classes/Druid.md:8",
         ".references/srd-5.2.1/Classes/Druid.md:9"
       ],
-      "rowCount": 9,
+      "rowCount": 10,
       "rowKinds": [
         "class-container",
         "core-trait",
+        "equipment-pressure",
         "multiclass-entry"
       ],
       "rows": [
@@ -66522,6 +66497,21 @@
         {
           "candidateUnitId": "class_druid",
           "className": "Druid",
+          "concept": "Druid Starting Equipment",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-battle",
+          "rowId": "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 14,
+            "lineStart": 14,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_druid",
+          "className": "Druid",
           "concept": "Druid multiclass entry traits",
           "levelBand": "level-1",
           "ownerBoundaryStatus": "resolved",
@@ -66541,9 +66531,9 @@
         "Druid Primary Ability",
         "Druid Saving Throw Proficiencies",
         "Druid Skill Proficiencies",
+        "Druid Starting Equipment",
         "Druid Tool Proficiencies",
-        "Druid Weapon Proficiencies",
-        "Druid class container"
+        "Druid Weapon Proficiencies"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -92927,6 +92917,57 @@
         "snapshotCombatant(fixture.state, clericId)",
         "armorClass: 16",
         "attackSubject(fixture.state, clericId, \"Mace\")"
+      ]
+    },
+    {
+      "candidateUnitId": "class_druid",
+      "className": "Druid",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid build-battle handoff projects starting equipment into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:14"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const druidBuildBattleDraftPlan =",
+          "needles": [
+            "...druidBuildSheetDraftPlan",
+            "label: \"Druid build-battle projection\"",
+            "legalUnitChoice(\"class_druid\", \"class_equipment_choice\", \"option_a\")",
+            "legalLoadoutChoice(\"armor_leather\", \"armor\", \"worn\")",
+            "legalLoadoutChoice(\"equipment_shield\", \"shield\", \"wielded\")",
+            "legalLoadoutChoice(\"weapon_quarterstaff\", \"weapon\", \"wielded_one_handed\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
+      "rowKey": "level-1:Druid:class_druid",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-druid-build-battle\"",
+        "druidBuildBattleDraftPlan",
+        "battleIdText: \"battle:l1-sdk-druid-build-battle\"",
+        "requireCharacterCombatant(fixture.state, druidId)",
+        "fixture.build.equipment.owned",
+        "expect.objectContaining({ unitId: \"armor_leather\", quantity: 1 })",
+        "expect.objectContaining({ unitId: \"equipment_shield\", quantity: 1 })",
+        "expect.objectContaining({ unitId: \"weapon_sickle\", quantity: 1 })",
+        "expect.objectContaining({ unitId: \"weapon_quarterstaff\", quantity: 1 })",
+        "origin.selectedLoadout",
+        "armor: { unitId: \"armor_leather\" }",
+        "shield: { unitId: \"equipment_shield\" }",
+        "weapon: { unitId: \"weapon_quarterstaff\", grip: \"one_handed\" }",
+        "origin.attack",
+        "id: \"weapon_quarterstaff\"",
+        "name: \"Quarterstaff\"",
+        "mastery: \"topple\"",
+        "snapshotCombatant(fixture.state, druidId)",
+        "armorClass: 15",
+        "attackSubject(fixture.state, druidId, \"Quarterstaff\")"
       ]
     },
     {

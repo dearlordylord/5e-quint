@@ -1877,6 +1877,43 @@ describe("character creation hole discovery", () => {
     },
   );
 
+  test("opens Druid item-bundle starting equipment as a supported class equipment choice", () => {
+    const draft = draftWithSelections({
+      progression: testProgression("class_druid", 1),
+      background: "background_criminal",
+    });
+    const holes = discoverCreationHoles({
+      draft,
+      unitLibrary,
+    });
+
+    const equipmentHole = requireHoleById(
+      holes,
+      testUnitHoleId("class_druid", "class_equipment_choice"),
+    );
+    expect(equipmentHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+      options: [{ optionId: "option_a" }, { optionId: "option_b" }],
+    });
+    expect(supportedHoleOptionIds(equipmentHole)).toEqual(
+      expect.arrayContaining(["option_a", "option_b"]),
+    );
+    expect(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: [
+          choiceFill(
+            testUnitHoleId("class_druid", "class_equipment_choice"),
+            "option_a",
+          ),
+        ],
+      }),
+    ).toMatchObject({ tag: "accepted" });
+  });
+
   test("opens purchase after the manifest coin equipment path is selected", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({

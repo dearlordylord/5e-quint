@@ -164,18 +164,50 @@
   [ { coinsGp = 9
     , id = "option_a"
     , items = Some
-      [ { itemName = "Leather Armor", kind = "draft_owned_item" }
-      , { itemName = "Shield", kind = "draft_owned_item" }
-      , { itemName = "Sickle", kind = "draft_owned_item" }
-      , { itemName = "Druidic Focus (Quarterstaff)", kind = "draft_owned_item" }
-      , { itemName = "Explorer's Pack", kind = "draft_owned_item" }
-      , { itemName = "Herbalism Kit", kind = "draft_owned_item" }
+      [ { itemName = None Text
+        , kind = "unit_ref"
+        , quantity = None Natural
+        , unitId = Some "armor_leather"
+        }
+      , { itemName = None Text
+        , kind = "unit_ref"
+        , quantity = None Natural
+        , unitId = Some "equipment_shield"
+        }
+      , { itemName = None Text
+        , kind = "unit_ref"
+        , quantity = None Natural
+        , unitId = Some "weapon_sickle"
+        }
+      , { itemName = None Text
+        , kind = "unit_ref"
+        , quantity = None Natural
+        , unitId = Some "weapon_quarterstaff"
+        }
+      , { itemName = Some "Explorer's Pack"
+        , kind = "draft_owned_item"
+        , quantity = None Natural
+        , unitId = None Text
+        }
+      , { itemName = Some "Herbalism Kit"
+        , kind = "draft_owned_item"
+        , quantity = None Natural
+        , unitId = None Text
+        }
       ]
     , kind = "item_bundle"
     }
   , { coinsGp = 50
     , id = "option_b"
-    , items = None (List { itemName : Text, kind : Text })
+    , items =
+        None
+          ( List
+              { itemName : Optional Text
+              , kind : Text
+              , quantity : Optional Natural
+              , unitId : Optional Text
+              }
+          )
     , kind = "coin_grant"
     }
   ]

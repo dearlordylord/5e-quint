@@ -113,8 +113,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 213;
-const expectedLevelOneTwoSeedScenarioRows = 140;
+const expectedLevelOneTwoCampaignGroups = 212;
+const expectedLevelOneTwoSeedScenarioRows = 141;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -653,6 +653,60 @@ const clericBuildBattleScenarioRows = [
     sourceProof: legalBuildBattleHandoffSourceProof,
     tracerNeedles: clericBuildBattleScenarioNeedles,
     helperNeedles: clericBuildBattleScenarioHelperNeedles,
+  },
+];
+
+const druidBuildBattleScenarioLabel =
+  "level1-sdk-raw-integration: Druid build-battle handoff projects starting equipment into a battle combatant";
+const druidBuildBattleScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-druid-build-battle"',
+  "druidBuildBattleDraftPlan",
+  'battleIdText: "battle:l1-sdk-druid-build-battle"',
+  "requireCharacterCombatant(fixture.state, druidId)",
+  "fixture.build.equipment.owned",
+  'expect.objectContaining({ unitId: "armor_leather", quantity: 1 })',
+  'expect.objectContaining({ unitId: "equipment_shield", quantity: 1 })',
+  'expect.objectContaining({ unitId: "weapon_sickle", quantity: 1 })',
+  'expect.objectContaining({ unitId: "weapon_quarterstaff", quantity: 1 })',
+  "origin.selectedLoadout",
+  'armor: { unitId: "armor_leather" }',
+  'shield: { unitId: "equipment_shield" }',
+  'weapon: { unitId: "weapon_quarterstaff", grip: "one_handed" }',
+  "origin.attack",
+  'id: "weapon_quarterstaff"',
+  'name: "Quarterstaff"',
+  'mastery: "topple"',
+  "snapshotCombatant(fixture.state, druidId)",
+  "armorClass: 15",
+  'attackSubject(fixture.state, druidId, "Quarterstaff")',
+];
+const druidBuildBattleScenarioHelperNeedles = [
+  {
+    anchor: "const druidBuildBattleDraftPlan =",
+    needles: [
+      "...druidBuildSheetDraftPlan",
+      'label: "Druid build-battle projection"',
+      'legalUnitChoice("class_druid", "class_equipment_choice", "option_a")',
+      'legalLoadoutChoice("armor_leather", "armor", "worn")',
+      'legalLoadoutChoice("equipment_shield", "shield", "wielded")',
+      'legalLoadoutChoice("weapon_quarterstaff", "weapon", "wielded_one_handed")',
+    ],
+  },
+];
+const druidBuildBattleScenarioRows = [
+  {
+    candidateUnitId: "class_druid",
+    className: "Druid",
+    levelBand: "level-1",
+    label: druidBuildBattleScenarioLabel,
+    path: barbarianBuildSheetScenarioPath,
+    rowId:
+      "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:14"],
+    sourceProof: legalBuildBattleHandoffSourceProof,
+    tracerNeedles: druidBuildBattleScenarioNeedles,
+    helperNeedles: druidBuildBattleScenarioHelperNeedles,
   },
 ];
 
@@ -1546,6 +1600,7 @@ const seededSdkScenarioRows = [
   ...barbarianBuildBattleScenarioRows,
   ...bardBuildBattleScenarioRows,
   ...clericBuildBattleScenarioRows,
+  ...druidBuildBattleScenarioRows,
   {
     candidateUnitId: "barbarian_unarmored_defense",
     className: "Barbarian",

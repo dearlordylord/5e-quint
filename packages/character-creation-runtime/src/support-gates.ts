@@ -446,6 +446,10 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       creationChoiceOptionId("option_b"),
       creationChoiceOptionId("option_a"),
     ],
+    [SRD_DRUID_CLASS_UNIT_ID]: [
+      creationChoiceOptionId("option_b"),
+      creationChoiceOptionId("option_a"),
+    ],
     ...Object.fromEntries(
       SUPPORTED_BACKGROUND_UNIT_IDS.map((backgroundUnitId) => [
         backgroundUnitId,

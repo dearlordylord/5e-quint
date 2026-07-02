@@ -327,6 +327,7 @@ import weaponMaceInput from "../../content/weapon_mace.json";
 import weaponQuarterstaffInput from "../../content/weapon_quarterstaff.json";
 import weaponShortbowInput from "../../content/weapon_shortbow.json";
 import weaponShortswordInput from "../../content/weapon_shortsword.json";
+import weaponSickleInput from "../../content/weapon_sickle.json";
 import weaponSpearInput from "../../content/weapon_spear.json";
 import wizardArcaneRecoveryInput from "../../content/wizard_arcane_recovery.json";
 import wizardAbilityScoreImprovementL4Input from "../../content/wizard_ability_score_improvement_l4.json";
@@ -773,6 +774,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     weaponGreataxeInput,
     weaponLongswordInput,
     weaponMaceInput,
+    weaponSickleInput,
     weaponSpearInput,
     weaponFlailInput,
     weaponShortbowInput,

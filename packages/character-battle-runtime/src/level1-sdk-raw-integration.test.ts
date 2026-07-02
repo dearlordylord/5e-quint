@@ -161,6 +161,7 @@ const recklessAttackFighterId = combatantId(
 );
 const bardId = combatantId("combatant:l1-sdk-bard");
 const clericId = combatantId("combatant:l1-sdk-cleric");
+const druidId = combatantId("combatant:l1-sdk-druid");
 const dissonantWhispersBardId = combatantId(
   "combatant:l1-sdk-dissonant-whispers-bard",
 );
@@ -830,6 +831,25 @@ const druidBuildSheetDraftPlan = {
 const druidicCreationDraftPlan = {
   ...druidBuildSheetDraftPlan,
   label: "Druidic creation",
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const druidBuildBattleDraftPlan = {
+  ...druidBuildSheetDraftPlan,
+  label: "Druid build-battle projection",
+  sourcePreferences: [
+    ...druidBuildSheetDraftPlan.sourcePreferences.filter(
+      (preference) =>
+        !(
+          preference.source.tag === "unitChoice" &&
+          preference.source.unitId === "class_druid" &&
+          preference.source.choiceKey === "class_equipment_choice"
+        ),
+    ),
+    legalUnitChoice("class_druid", "class_equipment_choice", "option_a"),
+    legalLoadoutChoice("armor_leather", "armor", "worn"),
+    legalLoadoutChoice("equipment_shield", "shield", "wielded"),
+    legalLoadoutChoice("weapon_quarterstaff", "weapon", "wielded_one_handed"),
+  ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
 const bardicInspirationDraftPlan = {
@@ -2353,6 +2373,76 @@ describe("level 1 SDK RAW integration", () => {
         characterBuildArmorTraining(fixture.sheet.build, unitLibrary),
       ),
     ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
+  });
+
+  test("Druid build-battle handoff projects starting equipment into a battle combatant", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-druid-build-battle",
+      draftPlan: druidBuildBattleDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-druid-build-battle",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l1-sdk-druid-build-battle",
+        combatantId: druidId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      },
+    });
+
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(fixture.build.equipment.owned).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ unitId: "armor_leather", quantity: 1 }),
+        expect.objectContaining({ unitId: "equipment_shield", quantity: 1 }),
+        expect.objectContaining({ unitId: "weapon_sickle", quantity: 1 }),
+        expect.objectContaining({ unitId: "weapon_quarterstaff", quantity: 1 }),
+      ]),
+    );
+
+    const druid = requireCharacterCombatant(fixture.state, druidId);
+    expect(druid.origin.characterId).toBe(
+      "character:l1-sdk-druid-build-battle",
+    );
+    expect(druid.origin.selectedLoadout).toMatchObject({
+      armor: { unitId: "armor_leather" },
+      shield: { unitId: "equipment_shield" },
+      weapon: { unitId: "weapon_quarterstaff", grip: "one_handed" },
+    });
+    expect(druid.origin.attack).toMatchObject({
+      kind: "weapon",
+      weapon: {
+        id: "weapon_quarterstaff",
+        name: "Quarterstaff",
+        damage: { dice: 1, dieSize: 6 },
+        mastery: "topple",
+      },
+    });
+
+    const snapshot = snapshotCombatant(fixture.state, druidId);
+    expect(snapshot).toMatchObject({
+      hp: Hp(10),
+      maxHp: Hp(10),
+      armorClass: 15,
+      movement: { speedFeet: movementFeet(30) },
+    });
+    expect(attackSubject(fixture.state, druidId, "Quarterstaff")).toMatchObject({
+      tag: "action",
+      actorId: druidId,
+    });
   });
 
   test("Fighter build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {
