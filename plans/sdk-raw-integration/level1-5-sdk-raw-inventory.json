@@ -1013,7 +1013,7 @@
       "nextAction": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -1021,11 +1021,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_dead",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 229,
         "lineStart": 229,
@@ -1042,7 +1042,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -2220,7 +2220,7 @@
       "nextAction": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -2228,11 +2228,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_speak_with_dead",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 219,
         "lineStart": 219,
@@ -2249,7 +2249,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -7336,7 +7336,7 @@
       "nextAction": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -7344,11 +7344,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_speak_with_dead",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 260,
         "lineStart": 260,
@@ -7365,7 +7365,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -12887,97 +12887,6 @@
     },
     {
       "candidateUnitIds": [
-        "speak_with_dead"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:speak-with-dead",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"speak_with_dead\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:229",
-        ".references/srd-5.2.1/Classes/Cleric.md:219",
-        ".references/srd-5.2.1/Classes/Wizard.md:260"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "speak_with_dead",
-          "className": "Bard",
-          "concept": "Bard spell list Speak with Dead",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_dead",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 229,
-            "lineStart": 229,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "speak_with_dead",
-          "className": "Cleric",
-          "concept": "Cleric spell list Speak with Dead",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_speak_with_dead",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 219,
-            "lineStart": 219,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "speak_with_dead",
-          "className": "Wizard",
-          "concept": "Wizard spell list Speak with Dead",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_speak_with_dead",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 260,
-            "lineStart": 260,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Speak with Dead",
-        "Cleric spell list Speak with Dead",
-        "Wizard spell list Speak with Dead"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "speak_with_plants"
       ],
       "categories": [
@@ -13624,6 +13533,97 @@
         "Bard spell list Sending",
         "Cleric spell list Sending",
         "Wizard spell list Sending"
+      ],
+      "sdkInventoryDispositions": [
+        "table-only-closure-needed"
+      ],
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "speak_with_dead"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Cleric",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:table-only-closure:speak-with-dead",
+      "lane": "table-only-closure",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "table-only-closure"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"table-only-closure\",\"speak_with_dead\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:229",
+        ".references/srd-5.2.1/Classes/Cleric.md:219",
+        ".references/srd-5.2.1/Classes/Wizard.md:260"
+      ],
+      "rowCount": 3,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "speak_with_dead",
+          "className": "Bard",
+          "concept": "Bard spell list Speak with Dead",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_dead",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 229,
+            "lineStart": 229,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "speak_with_dead",
+          "className": "Cleric",
+          "concept": "Cleric spell list Speak with Dead",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_speak_with_dead",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 219,
+            "lineStart": 219,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "candidateUnitId": "speak_with_dead",
+          "className": "Wizard",
+          "concept": "Wizard spell list Speak with Dead",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_speak_with_dead",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 260,
+            "lineStart": 260,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Speak with Dead",
+        "Cleric spell list Speak with Dead",
+        "Wizard spell list Speak with Dead"
       ],
       "sdkInventoryDispositions": [
         "table-only-closure-needed"
@@ -19444,7 +19444,7 @@
       "nextAction": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -19452,11 +19452,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_dead",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 229,
         "lineStart": 229,
@@ -19473,7 +19473,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -23603,7 +23603,7 @@
       "nextAction": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -23611,11 +23611,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_speak_with_dead",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 219,
         "lineStart": 219,
@@ -23632,7 +23632,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -51717,7 +51717,7 @@
       "nextAction": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -51725,11 +51725,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_speak_with_dead",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 260,
         "lineStart": 260,
@@ -51746,7 +51746,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -57905,20 +57905,20 @@
       "character-battle-to-battle": 46,
       "character-sheet": 1,
       "future-runtime-owner-before-sdk": 54,
-      "spell-effect-owner-review": 18,
-      "table-only-closure": 7
+      "spell-effect-owner-review": 15,
+      "table-only-closure": 10
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 120,
-      "unresolved-review": 18
+      "resolved": 123,
+      "unresolved-review": 15
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 18,
+      "closure-review-needed": 15,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 54,
       "sdk-scenario-needed": 2,
       "seed-scenario-present": 45,
-      "table-only-closure-needed": 7
+      "table-only-closure-needed": 10
     },
     "level5ScenarioGroups": 94,
     "level5ScenarioGroupsByLane": {
@@ -57926,8 +57926,8 @@
       "explicit-closure": 12,
       "future-owner-before-sdk": 28,
       "seed-present": 45,
-      "spell-effect-owner-review": 6,
-      "table-only-closure": 2
+      "spell-effect-owner-review": 5,
+      "table-only-closure": 3
     },
     "level5SeedScenarioRows": 45,
     "levelOneFiveMinedRows": 770,
@@ -57953,12 +57953,12 @@
       "class-feature-closure-review": 2,
       "future-runtime-owner-before-sdk": 56,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 124,
-      "table-only-closure": 18
+      "spell-effect-owner-review": 121,
+      "table-only-closure": 21
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 644,
-      "unresolved-review": 126
+      "resolved": 647,
+      "unresolved-review": 123
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -57974,13 +57974,13 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 126,
+      "closure-review-needed": 123,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 56,
       "sdk-scenario-needed": 401,
       "seed-scenario-present": 109,
-      "table-only-closure-needed": 18
+      "table-only-closure-needed": 21
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 433,
@@ -57997,8 +57997,8 @@
       "multi-owner-feature-sdk": 9,
       "seed-present": 109,
       "sheet-spell-access-sdk": 12,
-      "spell-effect-owner-review": 40,
-      "table-only-closure": 6
+      "spell-effect-owner-review": 39,
+      "table-only-closure": 7
     },
     "scenarioGroupsByTask": {
       "L15-SDK-RAW-03": 174,
@@ -87241,97 +87241,6 @@
     },
     {
       "candidateUnitIds": [
-        "speak_with_dead"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:speak-with-dead",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"speak_with_dead\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:229",
-        ".references/srd-5.2.1/Classes/Cleric.md:219",
-        ".references/srd-5.2.1/Classes/Wizard.md:260"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "speak_with_dead",
-          "className": "Bard",
-          "concept": "Bard spell list Speak with Dead",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_dead",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 229,
-            "lineStart": 229,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "speak_with_dead",
-          "className": "Cleric",
-          "concept": "Cleric spell list Speak with Dead",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_speak_with_dead",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 219,
-            "lineStart": 219,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "speak_with_dead",
-          "className": "Wizard",
-          "concept": "Wizard spell list Speak with Dead",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_speak_with_dead",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 260,
-            "lineStart": 260,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Speak with Dead",
-        "Cleric spell list Speak with Dead",
-        "Wizard spell list Speak with Dead"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "speak_with_plants"
       ],
       "categories": [
@@ -87978,6 +87887,97 @@
         "Bard spell list Sending",
         "Cleric spell list Sending",
         "Wizard spell list Sending"
+      ],
+      "sdkInventoryDispositions": [
+        "table-only-closure-needed"
+      ],
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "speak_with_dead"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Cleric",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:table-only-closure:speak-with-dead",
+      "lane": "table-only-closure",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "table-only-closure"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"table-only-closure\",\"speak_with_dead\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:229",
+        ".references/srd-5.2.1/Classes/Cleric.md:219",
+        ".references/srd-5.2.1/Classes/Wizard.md:260"
+      ],
+      "rowCount": 3,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "speak_with_dead",
+          "className": "Bard",
+          "concept": "Bard spell list Speak with Dead",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_speak_with_dead",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 229,
+            "lineStart": 229,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "speak_with_dead",
+          "className": "Cleric",
+          "concept": "Cleric spell list Speak with Dead",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_speak_with_dead",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 219,
+            "lineStart": 219,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "candidateUnitId": "speak_with_dead",
+          "className": "Wizard",
+          "concept": "Wizard spell list Speak with Dead",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_speak_with_dead",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 260,
+            "lineStart": 260,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Speak with Dead",
+        "Cleric spell list Speak with Dead",
+        "Wizard spell list Speak with Dead"
       ],
       "sdkInventoryDispositions": [
         "table-only-closure-needed"

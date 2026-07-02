@@ -5731,7 +5731,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -10058,7 +10058,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -39122,7 +39122,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",
@@ -42691,7 +42691,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation.",
           "source": "unit-claim",

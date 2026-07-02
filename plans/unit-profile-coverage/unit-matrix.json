@@ -34415,11 +34415,11 @@
       },
       "claim": {
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached table communication and corpse/remains eligibility owner",
           "reason": "Speak with Dead supplies corpse-questioning and corpse-eligibility source facts, but promoted battle runtime does not own corpse identity or mouth state, former creature type at death, recent spell-target history, conversation contents, truthfulness or relationship adjudication, language and knowledge history, soul or animating-spirit state, or future-event speculation."
         },
-        "reason": "Speak with Dead is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 10-foot range, V/S/M burning-incense components, 10-minute duration, one corpse target, mouth-required and not-former-Undead corpse eligibility facts, a past-10-days repeat-target failure fact, an up-to-five-question table communication window, corpse knowledge and language limits, brief or cryptic answer guidance, truthfulness relationship adjudication, and soul/animating-spirit source facts. Task 7 claims no promoted battle-runtime profile because corpse identity, mouth presence, former creature type at death, recent spell-target history, question and answer contents, truthfulness, knowledge and language history, soul state, animating-spirit state, and future-event speculation are table communication and corpse/remains lifecycle facts rather than promoted battle runtime facts.",
+        "reason": "Speak with Dead is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 10-foot range, V/S/M burning-incense components, 10-minute duration, one corpse target, mouth-required and not-former-Undead corpse eligibility facts, a past-10-days repeat-target failure fact, an up-to-five-question table communication window, corpse knowledge and language limits, brief or cryptic answer guidance, truthfulness relationship adjudication, and soul/animating-spirit source facts. Task 51 records no promoted battle-runtime profile because corpse identity, mouth presence, former creature type at death, recent spell-target history, question and answer contents, truthfulness, knowledge and language history, soul state, animating-spirit state, and future-event speculation are table communication and corpse/remains lifecycle facts rather than promoted battle runtime facts.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
