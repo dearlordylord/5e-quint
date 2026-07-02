@@ -39,7 +39,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | SDK disposition | Rows |
 | --- | ---: |
 | closure-review-needed | 142 |
-| explicit-closure-needed | 60 |
+| explicit-closure-needed | 48 |
+| explicit-closure-present | 12 |
 | future-owner-before-sdk | 45 |
 | sdk-scenario-needed | 376 |
 | sdk-scenario-or-owner-closure-needed | 6 |
@@ -90,7 +91,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | build-sheet-sdk | 21 |
 | character-creation-sdk | 26 |
 | character-sheet-sdk | 5 |
-| explicit-closure | 60 |
+| explicit-closure | 48 |
+| explicit-closure-present | 12 |
 | feature-owner-review | 4 |
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 8 |
@@ -292,8 +294,9 @@ Rows/groups assigned: 400/212.
 
 | Row family | SDK disposition | Rows | Groups | Lanes |
 | --- | --- | ---: | ---: | --- |
+| closed-explicit-closure-row | explicit-closure-present | 12 | 12 | explicit-closure-present |
 | closure-review-row | closure-review-needed | 69 | 21 | spell-effect-owner-review |
-| explicit-closure-row | explicit-closure-needed | 24 | 24 | explicit-closure |
+| explicit-closure-row | explicit-closure-needed | 12 | 12 | explicit-closure |
 | seed-row | seed-scenario-present | 122 | 88 | seed-present |
 | source-row | sdk-scenario-needed | 183 | 78 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
 | table-only-closure-row | table-only-closure-needed | 2 | 1 | table-only-closure |
@@ -306,12 +309,34 @@ Rows/groups assigned: 400/212.
 | build-sheet-sdk | sdk-scenario-needed | source-row | 67 | 9 | build-sheet-sdk | `L12-SH06-BUILD-SHEET-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | character-creation-sdk | sdk-scenario-needed | source-row | 12 | 12 | character-creation-sdk | `L12-SH05-CREATION-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | character-sheet-sdk | sdk-scenario-needed | source-row | 5 | 5 | character-sheet-sdk | `L12-SH08-SHEET-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| explicit-closure | explicit-closure-needed | explicit-closure-row | 24 | 24 | explicit-closure | `L12-SH04-GROUPING-GENERATOR-GATE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| explicit-closure | explicit-closure-needed | explicit-closure-row | 12 | 12 | explicit-closure | `L12-SH04-GROUPING-GENERATOR-GATE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| explicit-closure-present | explicit-closure-present | closed-explicit-closure-row | 12 | 12 | explicit-closure | `L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE` | `L12-SH40-REMAINING-BATCH-SPLIT` |
 | multi-owner-feature-sdk | sdk-scenario-needed | source-row | 5 | 5 | multi-owner-feature-sdk | `L12-SH12-MULTI-OWNER-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | seed-present | seed-scenario-present | seed-row | 122 | 88 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | sheet-spell-access-sdk | sdk-scenario-needed | source-row | 5 | 5 | sheet-spell-access-sdk | `L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | spell-effect-owner-review | closure-review-needed | closure-review-row | 69 | 21 | spell-effect-owner-review | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | table-only-closure | table-only-closure-needed | table-only-closure-row | 2 | 1 | table-only-closure | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
+
+## Level 1 Class Table Summary Closure Evidence
+
+These rows are explicit SDK-scope closures, not executable runtime
+behavior. Their RAW anchors are projected from each inventory row's
+`source`; the evidence records only the shared closure reason.
+
+| Class | Concept | RAW source | Owner boundary | SDK disposition | Closure kind | RAW anchor field | Reason |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Barbarian | Barbarian level 1 feature table row | `.references/srd-5.2.1/Classes/Barbarian.md:35` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
+| Bard | Bard level 1 feature table row | `.references/srd-5.2.1/Classes/Bard.md:36` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
+| Cleric | Cleric level 1 feature table row | `.references/srd-5.2.1/Classes/Cleric.md:35` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
+| Druid | Druid level 1 feature table row | `.references/srd-5.2.1/Classes/Druid.md:32` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
+| Fighter | Fighter level 1 feature table row | `.references/srd-5.2.1/Classes/Fighter.md:31` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
+| Monk | Monk level 1 feature table row | `.references/srd-5.2.1/Classes/Monk.md:32` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
+| Paladin | Paladin level 1 feature table row | `.references/srd-5.2.1/Classes/Paladin.md:35` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
+| Ranger | Ranger level 1 feature table row | `.references/srd-5.2.1/Classes/Ranger.md:35` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
+| Rogue | Rogue level 1 feature table row | `.references/srd-5.2.1/Classes/Rogue.md:36` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
+| Sorcerer | Sorcerer level 1 feature table row | `.references/srd-5.2.1/Classes/Sorcerer.md:35` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
+| Warlock | Warlock level 1 feature table row | `.references/srd-5.2.1/Classes/Warlock.md:35` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
+| Wizard | Wizard level 1 feature table row | `.references/srd-5.2.1/Classes/Wizard.md:35` | build-progression | explicit-closure-present | non-runtime-table-summary | projected-from-row.source | The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence. |
 
 ## L1/L2 Seed Migration Audit
 

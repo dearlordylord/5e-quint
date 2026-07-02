@@ -100,6 +100,7 @@ const levelOneTwoSourceHarnessBands = new Set([
 const levelOneTwoCampaignActiveDispositions = new Set([
   "sdk-scenario-needed",
   "seed-scenario-present",
+  "explicit-closure-present",
   "explicit-closure-needed",
   "closure-review-needed",
   "table-only-closure-needed",
@@ -133,6 +134,11 @@ const characterCreationClosureKinds = new Set(["selection-grant-container"]);
 const futureFeatureClosureKinds = new Set([
   "character-fact-and-runtime-detached-split",
 ]);
+const levelOneClassTableSummaryClosureTaskId =
+  "L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE";
+const expectedLevelOneClassTableSummaryClosureRows = 12;
+const levelOneClassTableSummaryClosureReason =
+  "The local SRD class features table row summarizes level progression; narrower class trait, feature, spell-access, mastery, equipment, and resource rows own executable SDK/runtime evidence.";
 const ownerProfilePrefixes = [
   ["character-creation.", "character-creation"],
   ["character-sheet.", "character-sheet"],
@@ -149,6 +155,7 @@ const ownerPathPrefixes = [
 const levelOneTwoCampaignRowFamilyByDisposition = new Map([
   ["sdk-scenario-needed", "source-row"],
   ["seed-scenario-present", "seed-row"],
+  ["explicit-closure-present", "closed-explicit-closure-row"],
   ["explicit-closure-needed", "explicit-closure-row"],
   ["closure-review-needed", "closure-review-row"],
   ["table-only-closure-needed", "table-only-closure-row"],
@@ -234,6 +241,14 @@ const levelOneTwoCampaignLaneOwnership = new Map([
         "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS",
       ],
       followUpTaskIds: ["L12-SH15-NEXT-BATCH-SPLIT"],
+    },
+  ],
+  [
+    "explicit-closure-present",
+    {
+      taskFamily: "explicit-closure",
+      ownerTaskIds: [levelOneClassTableSummaryClosureTaskId],
+      followUpTaskIds: ["L12-SH40-REMAINING-BATCH-SPLIT"],
     },
   ],
   [
@@ -6624,6 +6639,24 @@ function unsupportedClassFeatureOwnerResult(row, ownerEvidence) {
   };
 }
 
+function isLevelOneClassTableSummaryRow(row) {
+  return row.levelBand === "level-1" && row.rowKind === "class-table-summary";
+}
+
+function levelOneClassTableSummaryOwnerResult() {
+  return {
+    proposedOwnerBoundary: "build-progression",
+    ownerBoundaryEvidence: {
+      source: "level-one-class-table-summary-closure",
+      taskId: levelOneClassTableSummaryClosureTaskId,
+      closureKind: "non-runtime-table-summary",
+      owner: "not-applicable",
+      rawAnchor: "projected-from-row.source",
+      reason: levelOneClassTableSummaryClosureReason,
+    },
+  };
+}
+
 function slug(value) {
   const result = String(value ?? "none")
     .toLowerCase()
@@ -6667,6 +6700,9 @@ function levelReportSummary(input) {
 }
 
 function ownerBoundaryForMiningRow(row, ownerEvidence) {
+  if (isLevelOneClassTableSummaryRow(row)) {
+    return levelOneClassTableSummaryOwnerResult();
+  }
   if (row.rowKind === "class-table-summary") return "build-progression";
   if (buildSheetRowKinds.has(row.rowKind)) return "character-build-to-sheet";
   if (buildBattleRowKinds.has(row.rowKind)) return "character-build-to-battle";
@@ -6743,6 +6779,9 @@ function implementationTaskForLevelBand(levelBand) {
 function scenarioLaneForRow(row) {
   if (row.sdkInventoryDisposition === "seed-scenario-present") {
     return "seed-present";
+  }
+  if (row.sdkInventoryDisposition === "explicit-closure-present") {
+    return "explicit-closure-present";
   }
   if (row.sdkInventoryDisposition === "future-owner-before-sdk") {
     return "future-owner-before-sdk";
@@ -6835,7 +6874,7 @@ function scenarioGroupParts(row) {
   ) {
     return [taskId, lane, row.candidateUnitId];
   }
-  if (lane === "explicit-closure") {
+  if (lane === "explicit-closure" || lane === "explicit-closure-present") {
     return [taskId, lane, row.className, row.rowKind, row.candidateUnitId];
   }
   return [taskId, lane, row.proposedOwnerBoundary, row.candidateUnitId];
@@ -6885,6 +6924,9 @@ function scenarioSuggestion(group) {
   }
   if (group.lane === "table-only-closure") {
     return "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-owned closure evidence.";
+  }
+  if (group.lane === "explicit-closure-present") {
+    return "Retain the explicit non-runtime class-table closure evidence tied to the local SRD row anchor.";
   }
   if (group.lane === "sheet-build-closure") {
     return "Review lower-owner evidence and either add a build/sheet SDK assertion for user-reachable state or retain an explicit closure with the local RAW anchor.";
@@ -7142,6 +7184,66 @@ function assertLocalRawSources(rows) {
   throw new Error(
     `SDK RAW inventory requires local SRD 5.2.1 source anchors. Invalid rows: ${invalidRows.length}\n${details}`,
   );
+}
+
+function assertLevelOneClassTableSummaryClosureEvidence(rows) {
+  const closureRows = rows.filter(isLevelOneClassTableSummaryRow);
+  const errors = [];
+  if (closureRows.length !== expectedLevelOneClassTableSummaryClosureRows) {
+    errors.push(
+      `Expected ${expectedLevelOneClassTableSummaryClosureRows} level-1 class table summary rows, found ${closureRows.length}.`,
+    );
+  }
+  for (const row of closureRows) {
+    const evidence = row.ownerBoundaryEvidence;
+    if (row.finalDisposition !== "non-runtime") {
+      errors.push(`${row.rowId} final disposition is ${row.finalDisposition}`);
+    }
+    if (row.proposedOwnerBoundary !== "build-progression") {
+      errors.push(
+        `${row.rowId} owner boundary is ${row.proposedOwnerBoundary}`,
+      );
+    }
+    if (row.sdkInventoryDisposition !== "explicit-closure-present") {
+      errors.push(
+        `${row.rowId} SDK disposition is ${row.sdkInventoryDisposition}`,
+      );
+    }
+    if (evidence?.source !== "level-one-class-table-summary-closure") {
+      errors.push(`${row.rowId} missing class table closure evidence`);
+      continue;
+    }
+    if (evidence.reason !== levelOneClassTableSummaryClosureReason) {
+      errors.push(`${row.rowId} has a divergent closure reason`);
+    }
+    if (evidence.rawAnchor !== "projected-from-row.source") {
+      errors.push(`${row.rowId} does not project its RAW anchor from row.source`);
+    }
+    if (!row.source.path.startsWith(".references/srd-5.2.1/Classes/")) {
+      errors.push(
+        `${row.rowId} has non-class RAW source ${sourceRef(row.source)}`,
+      );
+    }
+  }
+  const levelTwoTableRows = rows.filter(
+    (row) =>
+      row.levelBand === "level-2" && row.rowKind === "class-table-summary",
+  );
+  const closedLevelTwoRows = levelTwoTableRows.filter(
+    (row) => row.sdkInventoryDisposition === "explicit-closure-present",
+  );
+  if (closedLevelTwoRows.length !== 0) {
+    errors.push(
+      `Task ${levelOneClassTableSummaryClosureTaskId} must not close level-2 table summaries: ${closedLevelTwoRows
+        .map((row) => row.rowId)
+        .join(", ")}`,
+    );
+  }
+  if (errors.length !== 0) {
+    throw new Error(
+      `Level-1 class table summary closure evidence is stale:\n${errors.join("\n")}`,
+    );
+  }
 }
 
 function assertSeedScenarios(seedScenarioSources, rows) {
@@ -7529,6 +7631,9 @@ function sdkInventoryDisposition(row, proposedOwnerBoundary) {
   if (seededSdkScenarioByRowId.has(row.rowId)) {
     return "seed-scenario-present";
   }
+  if (isLevelOneClassTableSummaryRow(row)) {
+    return "explicit-closure-present";
+  }
   if (row.supportSnapshot.finalDisposition === "non-runtime") {
     return "explicit-closure-needed";
   }
@@ -7657,6 +7762,7 @@ function buildInventory() {
     .map((row) => projectMiningRow(row, ownerEvidence))
     .sort((left, right) => left.rowId.localeCompare(right.rowId));
   assertLocalRawSources(miningRows);
+  assertLevelOneClassTableSummaryClosureEvidence(miningRows);
   assertSeedScenarios(seedScenarioSources, miningRows);
   assertSurfaceClassSpellAccessCoversMinedRows(miningRows);
   const levelOneTwoSeedMigrationAuditRows = buildLevelOneTwoSeedMigrationAudit(
@@ -7940,6 +8046,23 @@ function renderLevelOneTwoCampaignRowFamilyRows(grouping) {
   });
 }
 
+function renderLevelOneClassTableSummaryClosureRows(rows) {
+  return rows.filter(isLevelOneClassTableSummaryRow).map((row) => {
+    const evidence = row.ownerBoundaryEvidence;
+    const cells = [
+      row.className,
+      row.concept,
+      `\`${sourceRef(row.source)}\``,
+      row.proposedOwnerBoundary,
+      row.sdkInventoryDisposition,
+      evidence?.closureKind ?? "",
+      evidence?.rawAnchor ?? "",
+      evidence?.reason ?? "",
+    ];
+    return `| ${cells.map(md).join(" | ")} |`;
+  });
+}
+
 function renderSeedMigrationAuditRows(rows) {
   return rows.map((row) => {
     const cells = [
@@ -8072,6 +8195,16 @@ function renderInventory(inventory) {
     "| Lane | SDK disposition | Row family | Rows | Groups | Task family | Owner tasks | Follow-up tasks |",
     "| --- | --- | --- | ---: | ---: | --- | --- | --- |",
     ...renderLevelOneTwoCampaignLaneRows(levelOneTwoCampaignGrouping),
+    "",
+    "## Level 1 Class Table Summary Closure Evidence",
+    "",
+    "These rows are explicit SDK-scope closures, not executable runtime",
+    "behavior. Their RAW anchors are projected from each inventory row's",
+    "`source`; the evidence records only the shared closure reason.",
+    "",
+    "| Class | Concept | RAW source | Owner boundary | SDK disposition | Closure kind | RAW anchor field | Reason |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    ...renderLevelOneClassTableSummaryClosureRows(inventory.levelOneFiveRows),
     "",
     "## L1/L2 Seed Migration Audit",
     "",
