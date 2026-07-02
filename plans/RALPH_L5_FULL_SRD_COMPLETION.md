@@ -223,7 +223,7 @@
     {
       "number": 37,
       "id": "L5FULL-FUT-21-WIND-WALL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Preserve future-owner-before-SDK closure for Wind Wall"
     },
     {
