@@ -38943,11 +38943,11 @@
       },
       "claim": {
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/exploration owner",
-          "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication."
+          "kind": "ward-notification-table-adjudication",
+          "owner": "runtime-detached table/exploration ward and notification owner",
+          "reason": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409)."
         },
-        "reason": "Alarm setup, warded-area monitoring, creature-size/travel adjudication, audible or mental notification, and sleep-wake handling are runtime-detached table/exploration state outside promoted battle Unit profiles.",
+        "reason": "Alarm is authored as an SRD Surface Spell Definition with 1-minute or Ritual casting, 30-foot range, V/S/M bell-and-wire components, 8-hour duration, a door/window or up-to-20-foot Cube ward, cast-time creature exemptions, touch-or-entry release events, and audible or mental notification facts. No promoted battle Unit profile is claimed because the local SRD makes the operative Alarm outcome a table/exploration ward and notification procedure: the spell alerts the caster when a creature touches or enters the warded area and optionally produces a handbell sound or mental ping (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62), while Ritual slot handling and longer casting are generic spellcasting facts (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104) and door/window/object/scene adjudication belongs to GM-described table state (.references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",

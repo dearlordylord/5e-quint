@@ -3,6 +3,9 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
+const {
+  battleReadinessClosureKind,
+} = require("./unit-profile-coverage-config.cjs");
 const { readJson, toRepoPath } = require("./unit-profile-coverage-io.cjs");
 const { stable } = require("./unit-profile-coverage-report.cjs");
 
@@ -122,17 +125,20 @@ const sheetSpellAccessRowKinds = new Set([
   "subclass-spell-access",
 ]);
 const futureSpellClosureKinds = new Set([
-  "outside-battle-runtime",
-  "table-spatial-derivation",
-  "companion-control-boundary",
+  battleReadinessClosureKind.outsideBattleRuntime,
+  battleReadinessClosureKind.tableSpatialDerivation,
+  battleReadinessClosureKind.companionControlBoundary,
 ]);
 const tableOnlySpellClosureKinds = new Set([
-  "social-knowledge-effect",
-  "inventory-survival-adjudication",
+  battleReadinessClosureKind.socialKnowledgeEffect,
+  battleReadinessClosureKind.inventorySurvivalAdjudication,
+  battleReadinessClosureKind.wardNotificationTableAdjudication,
 ]);
-const characterCreationClosureKinds = new Set(["selection-grant-container"]);
+const characterCreationClosureKinds = new Set([
+  battleReadinessClosureKind.selectionGrantContainer,
+]);
 const futureFeatureClosureKinds = new Set([
-  "character-fact-and-runtime-detached-split",
+  battleReadinessClosureKind.characterFactRuntimeDetachedSplit,
 ]);
 const levelOneClassTableSummaryClosureTaskId =
   "L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE";

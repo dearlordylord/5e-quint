@@ -176,6 +176,7 @@ const strictStatusDescriptions = new Map(
 );
 const runtimeDetachedClosureKinds = new Set([
   battleReadinessClosureKind.outsideRuntimePresentationExploration,
+  battleReadinessClosureKind.wardNotificationTableAdjudication,
 ]);
 const durableSocialKnowledgeClosureKind =
   battleReadinessClosureKind.socialKnowledgeEffect;
@@ -194,6 +195,7 @@ const strictClosedResidualClosureKinds = new Set([
   outsideBattleRuntimeClosureKind,
   tableSpatialDerivationClosureKind,
   battleReadinessClosureKind.outsideRuntimePresentationExploration,
+  battleReadinessClosureKind.wardNotificationTableAdjudication,
 ]);
 const d20RollModeResidualTerms = [
   "ability-check roll-mode",

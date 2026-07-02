@@ -24071,12 +24071,12 @@
       "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
         "source": "unit-claim",
-        "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached table/exploration owner",
-        "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication."
+        "kind": "ward-notification-table-adjudication",
+        "owner": "runtime-detached table/exploration ward and notification owner",
+        "reason": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409)."
       },
       "ownerEvidence": [],
-      "nextAction": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+      "nextAction": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -36547,12 +36547,12 @@
       "finalDisposition": "catalog-only/dead-for-now",
       "battleReadinessClosure": {
         "source": "unit-claim",
-        "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached table/exploration owner",
-        "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication."
+        "kind": "ward-notification-table-adjudication",
+        "owner": "runtime-detached table/exploration ward and notification owner",
+        "reason": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409)."
       },
       "ownerEvidence": [],
-      "nextAction": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+      "nextAction": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {

@@ -33812,22 +33812,22 @@
       "concept": "Ranger spell list Alarm",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-1",
-      "nextAction": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+      "nextAction": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/exploration owner",
-          "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+          "kind": "ward-notification-table-adjudication",
+          "owner": "runtime-detached table/exploration ward and notification owner",
+          "reason": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
           "source": "unit-claim",
           "state": "recorded"
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 164,
         "lineStart": 164,
@@ -33844,9 +33844,9 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/exploration owner",
-          "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+          "kind": "ward-notification-table-adjudication",
+          "owner": "runtime-detached table/exploration ward and notification owner",
+          "reason": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -46593,22 +46593,22 @@
       "concept": "Wizard spell list Alarm",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-1",
-      "nextAction": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+      "nextAction": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/exploration owner",
-          "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+          "kind": "ward-notification-table-adjudication",
+          "owner": "runtime-detached table/exploration ward and notification owner",
+          "reason": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
           "source": "unit-claim",
           "state": "recorded"
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 162,
         "lineStart": 162,
@@ -46625,9 +46625,9 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/exploration owner",
-          "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+          "kind": "ward-notification-table-adjudication",
+          "owner": "runtime-detached table/exploration ward and notification owner",
+          "reason": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
           "source": "unit-claim",
           "state": "recorded"
         },
@@ -51424,12 +51424,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 21,
+        "groupCount": 20,
         "lane": "spell-effect-owner-review",
         "ownerTaskIds": [
           "L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY"
         ],
-        "rowCount": 69,
+        "rowCount": 67,
         "rowFamily": "closure-review-row",
         "taskFamily": "spell-effect-owner-review"
       },
@@ -51438,12 +51438,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 1,
+        "groupCount": 2,
         "lane": "table-only-closure",
         "ownerTaskIds": [
           "L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY"
         ],
-        "rowCount": 2,
+        "rowCount": 4,
         "rowFamily": "table-only-closure-row",
         "taskFamily": "table-only-closure"
       }
@@ -51466,11 +51466,11 @@
       },
       {
         "disposition": "closure-review-needed",
-        "groupCount": 21,
+        "groupCount": 20,
         "lanes": [
           "spell-effect-owner-review"
         ],
-        "rowCount": 69,
+        "rowCount": 67,
         "rowFamily": "closure-review-row"
       },
       {
@@ -51509,11 +51509,11 @@
       },
       {
         "disposition": "table-only-closure-needed",
-        "groupCount": 1,
+        "groupCount": 2,
         "lanes": [
           "table-only-closure"
         ],
-        "rowCount": 2,
+        "rowCount": 4,
         "rowFamily": "table-only-closure-row"
       }
     ],
@@ -53801,7 +53801,7 @@
         {
           "claimTag": "unsupported-profile",
           "kind": "spell",
-          "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+          "reason": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
           "sourceRows": [
             {
               "category": "spell Unit pressure",
@@ -54478,7 +54478,7 @@
         {
           "claimTag": "unsupported-profile",
           "kind": "spell",
-          "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+          "reason": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
           "sourceRows": [
             {
               "category": "spell Unit pressure",
@@ -55263,7 +55263,7 @@
         {
           "claimTag": "unsupported-profile",
           "kind": "spell",
-          "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+          "reason": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
           "sourceRows": [
             {
               "category": "spell Unit pressure",
@@ -57288,7 +57288,7 @@
         {
           "claimTag": "unsupported-profile",
           "kind": "spell",
-          "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
+          "reason": "Alarm's SRD effect chooses a door, window, or up-to-20-foot Cube ward and alerts on creature touch or entry, with cast-time exemptions plus audible handbell or mental ping notification (.references/srd-5.2.1/Spells/Descriptions-A-D.md:50-62). The existing Surface record owns those source facts. Promoted battle runtime does not own hidden ward placement, table scene/object identity, automatic creature-entry or touch detection, audible propagation, private mental notification, or sleep/wake narration; generic Ritual slot handling and longer casting are covered by spellcasting rules rather than an Alarm-specific runtime owner (.references/srd-5.2.1/Spells/Gaining-and-Casting.md:52-58,102-104; .references/srd-5.2.1/Playing-the-Game.md:7-9,405-409).",
           "sourceRows": [
             {
               "category": "spell Unit pressure",
@@ -59700,12 +59700,12 @@
       "class-feature-closure-review": 4,
       "future-runtime-owner-before-sdk": 45,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 138,
-      "table-only-closure": 13
+      "spell-effect-owner-review": 136,
+      "table-only-closure": 15
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 628,
-      "unresolved-review": 142
+      "resolved": 630,
+      "unresolved-review": 140
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -59721,14 +59721,14 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 142,
+      "closure-review-needed": 140,
       "explicit-closure-needed": 48,
       "explicit-closure-present": 12,
       "future-owner-before-sdk": 45,
       "sdk-scenario-needed": 376,
       "sdk-scenario-or-owner-closure-needed": 6,
       "seed-scenario-present": 128,
-      "table-only-closure-needed": 13
+      "table-only-closure-needed": 15
     },
     "levelOneFourRows": 632,
     "levelOneTwoCampaignGroups": 212,
@@ -59744,16 +59744,16 @@
       "multi-owner-feature-sdk": 5,
       "seed-present": 88,
       "sheet-spell-access-sdk": 5,
-      "spell-effect-owner-review": 21,
-      "table-only-closure": 1
+      "spell-effect-owner-review": 20,
+      "table-only-closure": 2
     },
     "levelOneTwoCampaignGroupsByRowFamily": {
       "closed-explicit-closure-row": 12,
-      "closure-review-row": 21,
+      "closure-review-row": 20,
       "explicit-closure-row": 12,
       "seed-row": 88,
       "source-row": 78,
-      "table-only-closure-row": 1
+      "table-only-closure-row": 2
     },
     "levelOneTwoCampaignRows": 400,
     "levelOneTwoCampaignRowsByLane": {
@@ -59768,16 +59768,16 @@
       "multi-owner-feature-sdk": 5,
       "seed-present": 122,
       "sheet-spell-access-sdk": 5,
-      "spell-effect-owner-review": 69,
-      "table-only-closure": 2
+      "spell-effect-owner-review": 67,
+      "table-only-closure": 4
     },
     "levelOneTwoCampaignRowsByRowFamily": {
       "closed-explicit-closure-row": 12,
-      "closure-review-row": 69,
+      "closure-review-row": 67,
       "explicit-closure-row": 12,
       "seed-row": 122,
       "source-row": 183,
-      "table-only-closure-row": 2
+      "table-only-closure-row": 4
     },
     "levelOneTwoSeedMigrationAuditRows": 122,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
@@ -59809,8 +59809,8 @@
       "owner-review": 6,
       "seed-present": 94,
       "sheet-spell-access-sdk": 10,
-      "spell-effect-owner-review": 45,
-      "table-only-closure": 5
+      "spell-effect-owner-review": 44,
+      "table-only-closure": 6
     },
     "scenarioGroupsByTask": {
       "L15-SDK-RAW-03": 179,
@@ -71103,79 +71103,6 @@
     },
     {
       "candidateUnitIds": [
-        "alarm"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Ranger",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-03:spell-effect-owner-review:alarm",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"spell-effect-owner-review\",\"alarm\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Ranger.md:164",
-        ".references/srd-5.2.1/Classes/Wizard.md:162"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "alarm",
-          "className": "Ranger",
-          "concept": "Ranger spell list Alarm",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 164,
-            "lineStart": 164,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "candidateUnitId": "alarm",
-          "className": "Wizard",
-          "concept": "Wizard spell list Alarm",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 162,
-            "lineStart": 162,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Ranger spell list Alarm",
-        "Wizard spell list Alarm"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
         "comprehend_languages"
       ],
       "categories": [
@@ -73118,6 +73045,79 @@
         "closure-review-needed"
       ],
       "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "alarm"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Ranger",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-03:table-only-closure:alarm",
+      "lane": "table-only-closure",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "table-only-closure"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"table-only-closure\",\"alarm\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Ranger.md:164",
+        ".references/srd-5.2.1/Classes/Wizard.md:162"
+      ],
+      "rowCount": 2,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "alarm",
+          "className": "Ranger",
+          "concept": "Ranger spell list Alarm",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 164,
+            "lineStart": 164,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
+          "candidateUnitId": "alarm",
+          "className": "Wizard",
+          "concept": "Wizard spell list Alarm",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 162,
+            "lineStart": 162,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Ranger spell list Alarm",
+        "Wizard spell list Alarm"
+      ],
+      "sdkInventoryDispositions": [
+        "table-only-closure-needed"
+      ],
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-owned closure evidence.",
       "taskId": "L15-SDK-RAW-03"
     },
     {

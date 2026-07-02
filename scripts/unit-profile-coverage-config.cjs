@@ -146,6 +146,7 @@ const battleReadinessClosureKind = Object.freeze({
     "outside-runtime-presentation-exploration",
   outsideBattleRuntime: "outside-battle-runtime",
   inventorySurvivalAdjudication: "inventory-survival-adjudication",
+  wardNotificationTableAdjudication: "ward-notification-table-adjudication",
   characterFactRuntimeDetachedSplit:
     "character-fact-and-runtime-detached-split",
 });

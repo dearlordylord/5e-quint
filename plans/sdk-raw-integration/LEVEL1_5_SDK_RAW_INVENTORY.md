@@ -38,14 +38,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 142 |
+| closure-review-needed | 140 |
 | explicit-closure-needed | 48 |
 | explicit-closure-present | 12 |
 | future-owner-before-sdk | 45 |
 | sdk-scenario-needed | 376 |
 | sdk-scenario-or-owner-closure-needed | 6 |
 | seed-scenario-present | 128 |
-| table-only-closure-needed | 13 |
+| table-only-closure-needed | 15 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
 
@@ -61,15 +61,15 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | class-feature-closure-review | 4 |
 | future-runtime-owner-before-sdk | 45 |
 | multi-owner-sdk-split | 10 |
-| spell-effect-owner-review | 138 |
-| table-only-closure | 13 |
+| spell-effect-owner-review | 136 |
+| table-only-closure | 15 |
 
 ### All Level 1-5 Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 628 |
-| unresolved-review | 142 |
+| resolved | 630 |
+| unresolved-review | 140 |
 
 ### Scenario Groups by Task
 
@@ -99,8 +99,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | owner-review | 6 |
 | seed-present | 94 |
 | sheet-spell-access-sdk | 10 |
-| spell-effect-owner-review | 45 |
-| table-only-closure | 5 |
+| spell-effect-owner-review | 44 |
+| table-only-closure | 6 |
 
 ### Level 5 Completion Rows by SDK Disposition
 
@@ -295,11 +295,11 @@ Rows/groups assigned: 400/212.
 | Row family | SDK disposition | Rows | Groups | Lanes |
 | --- | --- | ---: | ---: | --- |
 | closed-explicit-closure-row | explicit-closure-present | 12 | 12 | explicit-closure-present |
-| closure-review-row | closure-review-needed | 69 | 21 | spell-effect-owner-review |
+| closure-review-row | closure-review-needed | 67 | 20 | spell-effect-owner-review |
 | explicit-closure-row | explicit-closure-needed | 12 | 12 | explicit-closure |
 | seed-row | seed-scenario-present | 122 | 88 | seed-present |
 | source-row | sdk-scenario-needed | 183 | 78 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
-| table-only-closure-row | table-only-closure-needed | 2 | 1 | table-only-closure |
+| table-only-closure-row | table-only-closure-needed | 4 | 2 | table-only-closure |
 
 | Lane | SDK disposition | Row family | Rows | Groups | Task family | Owner tasks | Follow-up tasks |
 | --- | --- | --- | ---: | ---: | --- | --- | --- |
@@ -314,8 +314,8 @@ Rows/groups assigned: 400/212.
 | multi-owner-feature-sdk | sdk-scenario-needed | source-row | 5 | 5 | multi-owner-feature-sdk | `L12-SH12-MULTI-OWNER-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | seed-present | seed-scenario-present | seed-row | 122 | 88 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | sheet-spell-access-sdk | sdk-scenario-needed | source-row | 5 | 5 | sheet-spell-access-sdk | `L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| spell-effect-owner-review | closure-review-needed | closure-review-row | 69 | 21 | spell-effect-owner-review | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| table-only-closure | table-only-closure-needed | table-only-closure-row | 2 | 1 | table-only-closure | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| spell-effect-owner-review | closure-review-needed | closure-review-row | 67 | 20 | spell-effect-owner-review | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| table-only-closure | table-only-closure-needed | table-only-closure-row | 4 | 2 | table-only-closure | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
 
 ## Level 1 Class Table Summary Closure Evidence
 
