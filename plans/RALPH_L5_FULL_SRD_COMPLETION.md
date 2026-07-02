@@ -337,7 +337,7 @@
     {
       "number": 56,
       "id": "L5FULL-REV-12-WATER-WALK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Water Walk"
     },
     {
@@ -467,7 +467,7 @@ closing or implementing the row.
 | 53 | `L5FULL-REV-09-TINY-HUT` | future-owner-before-sdk | `tiny_hut` | 2 | `future-owner-before-sdk`, resolved. | Preserve stationary shelter Spell Effect and table/spatial/environment owner closure. | Two rows leave unresolved-review without adding stationary Emanation placement, cast-time encapsulation or membership, passage-boundary, weather or atmosphere, interior-light, color, one-way visibility, or level-capped spell-boundary duplicate state. | .references/srd-5.2.1/Classes/Bard.md:232<br>.references/srd-5.2.1/Classes/Wizard.md:262 |
 | 54 | `L5FULL-REV-10-TONGUES` | table-only-closure | `tongues` | 5 | `table-only-closure-needed`, resolved. | Preserve runtime-detached language/communication closure. | Five rows leave unresolved-review without adding battle-runtime hearing, sight, language-table, conversation, social-outcome, autonomous-behavior, or commanded-action state. | .references/srd-5.2.1/Classes/Bard.md:233<br>.references/srd-5.2.1/Classes/Cleric.md:221<br>.references/srd-5.2.1/Classes/Sorcerer.md:317<br>.references/srd-5.2.1/Classes/Warlock.md:389<br>.references/srd-5.2.1/Classes/Wizard.md:263 |
 | 55 | `L5FULL-REV-11-WATER-BREATHING` | future-owner-before-sdk | `water_breathing` | 3 | Resolved future table/environment breathing and Suffocation owner before SDK. | Preserve environmental breathing/Suffocation owner closure. | Three rows leave unresolved-review without adding duplicate underwater environment, hold-breath timer, Suffocation turn progression, or suffocation-caused Exhaustion cleanup state. | .references/srd-5.2.1/Classes/Druid.md:263<br>.references/srd-5.2.1/Classes/Sorcerer.md:319<br>.references/srd-5.2.1/Classes/Wizard.md:265 |
-| 56 | `L5FULL-REV-12-WATER-WALK` | spell-effect-owner-review | `water_walk` | 3 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Three rows leave unresolved-review. | .references/srd-5.2.1/Classes/Cleric.md:222<br>.references/srd-5.2.1/Classes/Druid.md:264<br>.references/srd-5.2.1/Classes/Sorcerer.md:320 |
+| 56 | `L5FULL-REV-12-WATER-WALK` | future-owner-before-sdk | `water_walk` | 3 | Resolved future table/spatial/environment traversal owner before SDK. | Preserve liquid-surface traversal and transition owner closure. | Three rows leave unresolved-review without adding duplicate liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate/falling transition execution state. | .references/srd-5.2.1/Classes/Cleric.md:222<br>.references/srd-5.2.1/Classes/Druid.md:264<br>.references/srd-5.2.1/Classes/Sorcerer.md:320 |
 | 57 | `L5FULL-FINAL-01-GENERATED-REFRESH` | final | all level-5 completion rows | 138 | Prior tasks merged. | Run aggregate generated refresh and checks. | Generated inventory and accounting reflect completed queue; no semantic source/evidence fixes are hidden in this task. | All anchors in accounting audit. |
 
 ## Shared Verification

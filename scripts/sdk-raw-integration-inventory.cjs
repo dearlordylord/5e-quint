@@ -118,6 +118,7 @@ const reviewedPresentationExplorationFutureSpellUnitIds = new Set([
   "speak_with_plants",
   "tiny_hut",
   "water_breathing",
+  "water_walk",
 ]);
 const characterCreationClosureKinds = new Set(["selection-grant-container"]);
 const futureFeatureClosureKinds = new Set([

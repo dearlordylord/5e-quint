@@ -2399,11 +2399,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_water_walk",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 222,
         "lineStart": 222,
@@ -3164,11 +3164,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_water_walk",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 264,
         "lineStart": 264,
@@ -5303,11 +5303,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_water_walk",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 320,
         "lineStart": 320,
@@ -10539,6 +10539,97 @@
     },
     {
       "candidateUnitIds": [
+        "water_walk"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric",
+        "Druid",
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:water-walk",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"water_walk\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:222",
+        ".references/srd-5.2.1/Classes/Druid.md:264",
+        ".references/srd-5.2.1/Classes/Sorcerer.md:320"
+      ],
+      "rowCount": 3,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "water_walk",
+          "className": "Cleric",
+          "concept": "Cleric spell list Water Walk",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_water_walk",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 222,
+            "lineStart": 222,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "candidateUnitId": "water_walk",
+          "className": "Druid",
+          "concept": "Druid spell list Water Walk",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_water_walk",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 264,
+            "lineStart": 264,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "candidateUnitId": "water_walk",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Water Walk",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_water_walk",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 320,
+            "lineStart": 320,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Water Walk",
+        "Druid spell list Water Walk",
+        "Sorcerer spell list Water Walk"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "wind_wall"
       ],
       "categories": [
@@ -13120,97 +13211,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "water_walk"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric",
-        "Druid",
-        "Sorcerer"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:water-walk",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"water_walk\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:222",
-        ".references/srd-5.2.1/Classes/Druid.md:264",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:320"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "water_walk",
-          "className": "Cleric",
-          "concept": "Cleric spell list Water Walk",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_water_walk",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 222,
-            "lineStart": 222,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "water_walk",
-          "className": "Druid",
-          "concept": "Druid spell list Water Walk",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_water_walk",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 264,
-            "lineStart": 264,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "candidateUnitId": "water_walk",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Water Walk",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_water_walk",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 320,
-            "lineStart": 320,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Water Walk",
-        "Druid spell list Water Walk",
-        "Sorcerer spell list Water Walk"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
@@ -23782,11 +23782,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_water_walk",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 222,
         "lineStart": 222,
@@ -28056,11 +28056,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_water_walk",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 264,
         "lineStart": 264,
@@ -42510,11 +42510,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_water_walk",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 320,
         "lineStart": 320,
@@ -57904,18 +57904,15 @@
       "build-progression": 12,
       "character-battle-to-battle": 46,
       "character-sheet": 1,
-      "future-runtime-owner-before-sdk": 61,
-      "spell-effect-owner-review": 3,
+      "future-runtime-owner-before-sdk": 64,
       "table-only-closure": 15
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 135,
-      "unresolved-review": 3
+      "resolved": 138
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 3,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 61,
+      "future-owner-before-sdk": 64,
       "sdk-scenario-needed": 2,
       "seed-scenario-present": 45,
       "table-only-closure-needed": 15
@@ -57924,9 +57921,8 @@
     "level5ScenarioGroupsByLane": {
       "battle-spell-sdk": 1,
       "explicit-closure": 12,
-      "future-owner-before-sdk": 31,
+      "future-owner-before-sdk": 32,
       "seed-present": 45,
-      "spell-effect-owner-review": 1,
       "table-only-closure": 4
     },
     "level5SeedScenarioRows": 45,
@@ -57951,14 +57947,14 @@
       "character-sheet": 8,
       "character-sheet-spell-access": 12,
       "class-feature-closure-review": 2,
-      "future-runtime-owner-before-sdk": 63,
+      "future-runtime-owner-before-sdk": 66,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 109,
+      "spell-effect-owner-review": 106,
       "table-only-closure": 26
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 659,
-      "unresolved-review": 111
+      "resolved": 662,
+      "unresolved-review": 108
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -57974,10 +57970,10 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 111,
+      "closure-review-needed": 108,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 63,
+      "future-owner-before-sdk": 66,
       "sdk-scenario-needed": 401,
       "seed-scenario-present": 109,
       "table-only-closure-needed": 26
@@ -57993,11 +57989,11 @@
       "character-sheet-sdk": 7,
       "explicit-closure": 60,
       "feature-owner-review": 2,
-      "future-owner-before-sdk": 33,
+      "future-owner-before-sdk": 34,
       "multi-owner-feature-sdk": 9,
       "seed-present": 109,
       "sheet-spell-access-sdk": 12,
-      "spell-effect-owner-review": 35,
+      "spell-effect-owner-review": 34,
       "table-only-closure": 8
     },
     "scenarioGroupsByTask": {
@@ -84893,6 +84889,97 @@
     },
     {
       "candidateUnitIds": [
+        "water_walk"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric",
+        "Druid",
+        "Sorcerer"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:water-walk",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"water_walk\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:222",
+        ".references/srd-5.2.1/Classes/Druid.md:264",
+        ".references/srd-5.2.1/Classes/Sorcerer.md:320"
+      ],
+      "rowCount": 3,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "water_walk",
+          "className": "Cleric",
+          "concept": "Cleric spell list Water Walk",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_water_walk",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 222,
+            "lineStart": 222,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "candidateUnitId": "water_walk",
+          "className": "Druid",
+          "concept": "Druid spell list Water Walk",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_water_walk",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 264,
+            "lineStart": 264,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "candidateUnitId": "water_walk",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Water Walk",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_water_walk",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 320,
+            "lineStart": 320,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Water Walk",
+        "Druid spell list Water Walk",
+        "Sorcerer spell list Water Walk"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "wind_wall"
       ],
       "categories": [
@@ -87474,97 +87561,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "water_walk"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric",
-        "Druid",
-        "Sorcerer"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:water-walk",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"water_walk\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:222",
-        ".references/srd-5.2.1/Classes/Druid.md:264",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:320"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "water_walk",
-          "className": "Cleric",
-          "concept": "Cleric spell list Water Walk",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_water_walk",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 222,
-            "lineStart": 222,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "water_walk",
-          "className": "Druid",
-          "concept": "Druid spell list Water Walk",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/druid:spell-level-3:spell-unit-pressure:druid_spell_list_water_walk",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 264,
-            "lineStart": 264,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "candidateUnitId": "water_walk",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Water Walk",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_water_walk",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 320,
-            "lineStart": 320,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Water Walk",
-        "Druid spell list Water Walk",
-        "Sorcerer spell list Water Walk"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
