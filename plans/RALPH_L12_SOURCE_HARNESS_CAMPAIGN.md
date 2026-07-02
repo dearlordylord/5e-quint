@@ -151,7 +151,7 @@
     {
       "number": 25,
       "id": "L12-SH25-BUILD-SHEET-CLERIC",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the Cleric build-sheet SDK group"
     },
     {
@@ -463,7 +463,7 @@ Reviewer-loop convergence:
 | 22 | L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY - Migrate the Sorcerer Innate Sorcery seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `sorcerer_innate_sorcery` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 23 | L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS - Migrate the Sorcerer Burning Hands seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | Sorcerer `burning_hands` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 24 | L12-SH24-BUILD-SHEET-BARD - Add the Bard build-sheet SDK group | done | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Bard class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
-| 25 | L12-SH25-BUILD-SHEET-CLERIC - Add the Cleric build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Cleric class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
+| 25 | L12-SH25-BUILD-SHEET-CLERIC - Add the Cleric build-sheet SDK group | done | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Cleric class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
 | 26 | L12-SH26-BUILD-SHEET-DRUID - Add the Druid build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Druid class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
 | 27 | L12-SH27-BUILD-BATTLE-BARD - Add the Bard build-battle SDK group | ready-for-research | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-battle-sdk | Bard starting equipment proves through legal build, fresh sheet, and battle combatant projection. |
 | 28 | L12-SH28-BUILD-BATTLE-CLERIC - Add the Cleric build-battle SDK group | ready-for-research | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-battle-sdk | Cleric starting equipment proves through legal build, fresh sheet, and battle combatant projection. |
@@ -1598,7 +1598,7 @@ Plan Impact:
 
 ### Task 25 - L12-SH25-BUILD-SHEET-CLERIC
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

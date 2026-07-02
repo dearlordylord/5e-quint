@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 142 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 409 |
+| sdk-scenario-needed | 401 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 95 |
+| seed-scenario-present | 103 |
 | table-only-closure-needed | 13 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -87,7 +87,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | battle-feature-sdk | 20 |
 | battle-spell-sdk | 82 |
 | build-battle-sdk | 11 |
-| build-sheet-sdk | 23 |
+| build-sheet-sdk | 22 |
 | character-creation-sdk | 28 |
 | character-sheet-sdk | 6 |
 | explicit-closure | 60 |
@@ -95,7 +95,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | future-owner-before-sdk | 24 |
 | multi-owner-feature-sdk | 9 |
 | owner-review | 6 |
-| seed-present | 79 |
+| seed-present | 80 |
 | sheet-spell-access-sdk | 11 |
 | spell-effect-owner-review | 45 |
 | table-only-closure | 5 |
@@ -168,6 +168,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies` / `level-1:Bard:class_bard`: level1-sdk-raw-integration: Bard build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
 - `srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies` / `level-1:Bard:class_bard`: level1-sdk-raw-integration: Bard build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
 - `srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits` / `level-1:Bard:class_bard`: level1-sdk-raw-integration: Bard multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet
+- `srd521:classes/cleric:level-1:class-container:cleric_class_container` / `level-1:Cleric:class_cleric`: level1-sdk-raw-integration: Cleric build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
+- `srd521:classes/cleric:level-1:core-trait:cleric_armor_training` / `level-1:Cleric:class_cleric`: level1-sdk-raw-integration: Cleric build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
+- `srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die` / `level-1:Cleric:class_cleric`: level1-sdk-raw-integration: Cleric build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
+- `srd521:classes/cleric:level-1:core-trait:cleric_primary_ability` / `level-1:Cleric:class_cleric`: level1-sdk-raw-integration: Cleric build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
+- `srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies` / `level-1:Cleric:class_cleric`: level1-sdk-raw-integration: Cleric build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
+- `srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies` / `level-1:Cleric:class_cleric`: level1-sdk-raw-integration: Cleric build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
+- `srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies` / `level-1:Cleric:class_cleric`: level1-sdk-raw-integration: Cleric build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
+- `srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits` / `level-1:Cleric:class_cleric`: level1-sdk-raw-integration: Cleric multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet
 - `srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment` / `level-1:Barbarian:class_barbarian`: level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant
 - `srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery` / `level-1:Barbarian:barbarian_weapon_mastery`: level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant
 - `srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense` / `level-1:Barbarian:barbarian_unarmored_defense`: level1-sdk-raw-integration: Barbarian Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet
@@ -261,8 +269,8 @@ Rows/groups assigned: 400/209.
 | --- | --- | ---: | ---: | --- |
 | closure-review-row | closure-review-needed | 69 | 21 | spell-effect-owner-review |
 | explicit-closure-row | explicit-closure-needed | 24 | 24 | explicit-closure |
-| seed-row | seed-scenario-present | 89 | 73 | seed-present |
-| source-row | sdk-scenario-needed | 216 | 90 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
+| seed-row | seed-scenario-present | 97 | 74 | seed-present |
+| source-row | sdk-scenario-needed | 208 | 89 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
 | table-only-closure-row | table-only-closure-needed | 2 | 1 | table-only-closure |
 
 | Lane | SDK disposition | Row family | Rows | Groups | Task family | Owner tasks | Follow-up tasks |
@@ -270,12 +278,12 @@ Rows/groups assigned: 400/209.
 | battle-feature-sdk | sdk-scenario-needed | source-row | 5 | 5 | battle-feature-sdk | `L12-SH10-BATTLE-FEATURE-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | battle-spell-sdk | sdk-scenario-needed | source-row | 80 | 31 | battle-spell-sdk | `L12-SH11-BATTLE-SPELL-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | build-battle-sdk | sdk-scenario-needed | source-row | 15 | 11 | build-battle-sdk | `L12-SH07-BUILD-BATTLE-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| build-sheet-sdk | sdk-scenario-needed | source-row | 84 | 11 | build-sheet-sdk | `L12-SH06-BUILD-SHEET-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| build-sheet-sdk | sdk-scenario-needed | source-row | 76 | 10 | build-sheet-sdk | `L12-SH06-BUILD-SHEET-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | character-creation-sdk | sdk-scenario-needed | source-row | 14 | 14 | character-creation-sdk | `L12-SH05-CREATION-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | character-sheet-sdk | sdk-scenario-needed | source-row | 6 | 6 | character-sheet-sdk | `L12-SH08-SHEET-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | explicit-closure | explicit-closure-needed | explicit-closure-row | 24 | 24 | explicit-closure | `L12-SH04-GROUPING-GENERATOR-GATE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | multi-owner-feature-sdk | sdk-scenario-needed | source-row | 6 | 6 | multi-owner-feature-sdk | `L12-SH12-MULTI-OWNER-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| seed-present | seed-scenario-present | seed-row | 89 | 73 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| seed-present | seed-scenario-present | seed-row | 97 | 74 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | sheet-spell-access-sdk | sdk-scenario-needed | source-row | 6 | 6 | sheet-spell-access-sdk | `L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | spell-effect-owner-review | closure-review-needed | closure-review-row | 69 | 21 | spell-effect-owner-review | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | table-only-closure | table-only-closure-needed | table-only-closure-row | 2 | 1 | table-only-closure | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
@@ -291,19 +299,19 @@ Character Sheet and battle handoff.
 | Classification | Rows |
 | --- | ---: |
 | already legal creation path | 70 |
-| legal build-sheet owner proof | 18 |
+| legal build-sheet owner proof | 26 |
 | legal creation owner proof | 1 |
 
 | Source build path | Rows |
 | --- | ---: |
-| legal-creation-draft-finalize | 89 |
+| legal-creation-draft-finalize | 97 |
 
 | Real sheet/battle handoff | Rows |
 | --- | ---: |
-| not-real-sheet-battle | 19 |
+| not-real-sheet-battle | 27 |
 | real-sheet-battle | 70 |
 
-Whole-width source lifecycle seed rows: 70/89.
+Whole-width source lifecycle seed rows: 70/97.
 
 | Band | Class | Unit | Row kind | Classification | Source build path | Real sheet/battle handoff | Whole-width source lifecycle proof | Next action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -336,6 +344,14 @@ Whole-width source lifecycle seed rows: 70/89.
 | spell-level-1 | Bard | `cure_wounds` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Bard | `dissonant_whispers` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Bard | `healing_word` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
+| level-1 | Cleric | `class_cleric` | class-container | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
+| level-1 | Cleric | `class_cleric` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
+| level-1 | Cleric | `class_cleric` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
+| level-1 | Cleric | `class_cleric` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
+| level-1 | Cleric | `class_cleric` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
+| level-1 | Cleric | `class_cleric` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
+| level-1 | Cleric | `class_cleric` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
+| level-1 | Cleric | `class_cleric` | multiclass-entry | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
 | spell-level-0 | Cleric | `sacred_flame` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Cleric | `thaumaturgy` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-1 | Cleric | `bane` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |

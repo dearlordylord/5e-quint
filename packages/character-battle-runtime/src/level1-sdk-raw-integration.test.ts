@@ -523,6 +523,26 @@ const bardMulticlassProgression = {
     },
   ],
 } as const satisfies CharacterProgression;
+const clericBuildSheetCantrips = [
+  "guidance",
+  sacredFlameSpellId,
+  thaumaturgySpellId,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+const clericBuildSheetPreparedSpells = [
+  blessSpellId,
+  cureWoundsSpellId,
+  guidingBoltSpellId,
+  shieldOfFaithSpellId,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+const clericMulticlassProgression = {
+  startingClass: classUnitId("class_fighter"),
+  advancements: [
+    {
+      classUnitId: classUnitId("class_cleric"),
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+    },
+  ],
+} as const satisfies CharacterProgression;
 
 const bardSpellAccessDraftPlan = {
   label: "Bard Spellcasting spell access",
@@ -582,6 +602,61 @@ const bardSpellAccessDraftPlan = {
       "option_b",
     ),
     legalUnitChoice("class_bard", "equipment_purchase", "weapon_dagger"),
+    legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const clericBuildSheetDraftPlan = {
+  label: "Cleric build-sheet projection",
+  classUnitId: "class_cleric",
+  level: 1,
+  backgroundUnitId: "background_acolyte",
+  speciesUnitId: "species_orc",
+  languageOptionIds: ["Dwarvish", "Goblin"],
+  alignmentOptionId: "lawful_good",
+  abilityScores: {
+    str: 8,
+    dex: 13,
+    con: 14,
+    int: 10,
+    wis: 15,
+    cha: 12,
+  },
+  sourcePreferences: [
+    legalUnitChoice(
+      "class_cleric",
+      "class_skill_proficiency_choice",
+      "insight",
+      "religion",
+    ),
+    legalUnitChoice(
+      "class_cleric",
+      "class_cantrip_choices",
+      ...clericBuildSheetCantrips,
+    ),
+    legalUnitChoice(
+      "class_cleric",
+      "class_prepared_spell_choices",
+      ...clericBuildSheetPreparedSpells,
+    ),
+    legalUnitChoice("cleric_divine_order", "divine_order", "protector"),
+    legalUnitChoice(
+      "background_acolyte",
+      "background_ability_score_increase",
+      "two_and_one:wis:cha",
+    ),
+    legalUnitChoice(
+      "background_acolyte",
+      "background_tool_choice",
+      "calligraphers_supplies",
+    ),
+    legalUnitChoice("class_cleric", "class_equipment_choice", "option_b"),
+    legalUnitChoice(
+      "background_acolyte",
+      "background_equipment_choice",
+      "option_b",
+    ),
+    legalUnitChoice("class_cleric", "equipment_purchase", "weapon_dagger"),
     legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed"),
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
@@ -1394,6 +1469,89 @@ describe("level 1 SDK RAW integration", () => {
     ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
   });
 
+  test("Cleric build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-cleric-build-sheet",
+      draftPlan: clericBuildSheetDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-cleric-build-sheet",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_cleric"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+
+    const classFactsResult = readClassCreationFacts(
+      unitLibrary.requireUnit(fixture.sheet.build.progression.startingClass),
+    );
+    expect(classFactsResult.tag).toBe("readable");
+    if (classFactsResult.tag !== "readable") return;
+    const classFacts = classFactsResult.value;
+
+    expect(characterBuildUnitRefs(fixture.sheet.build)).toContainEqual({
+      unitId: fixture.sheet.build.progression.startingClass,
+    });
+    expect(classFacts.primaryAbilities).toEqual({
+      abilities: ["wis"],
+      kind: "all_of",
+    });
+    expect(
+      requireRight(characterBuildHitPoints(fixture.sheet.build, unitLibrary))
+        .hitDice,
+    ).toEqual([
+      {
+        classUnitId: fixture.sheet.build.progression.startingClass,
+        dieSize: classFacts.hitPointDie,
+        total: 1,
+      },
+    ]);
+    expect(
+      characterBuildFeatureUnitIds(fixture.sheet.build, unitLibrary),
+    ).toEqual(
+      expect.arrayContaining(
+        classFacts.featureGrants
+          .filter((grant) => grant.level <= 1)
+          .map((grant) => grant.unitId),
+      ),
+    );
+
+    const proficiencies = requireRight(
+      characterBuildProficiencies(fixture.sheet.build, unitLibrary),
+    );
+    expect(proficiencies.savingThrows).toEqual(
+      classFacts.savingThrowProficiencies,
+    );
+    expect(proficiencies.skills).toEqual(
+      expect.arrayContaining(
+        fixture.sheet.build.proficiencyChoices.flatMap((choice) =>
+          choice.kind === "skill" ? [choice.skill] : [],
+        ),
+      ),
+    );
+    expect(proficiencies.weapon).toEqual(
+      expect.arrayContaining(
+        classFacts.weaponProficiencies.flatMap((proficiency) =>
+          proficiency.kind === "weapon_category" ? [proficiency.category] : [],
+        ),
+      ),
+    );
+    expect(
+      requireRight(
+        characterBuildArmorTraining(fixture.sheet.build, unitLibrary),
+      ),
+    ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
+  });
+
   test("Bard multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet", () => {
     const finalized = finalizedFighterToBardMulticlassBuild();
     const sheet = createLegalSourceCharacterSheet({
@@ -1459,6 +1617,64 @@ describe("level 1 SDK RAW integration", () => {
     expect(classFacts.multiclassProficiencies).toMatchObject({
       kind: "mixed_choices",
       fixed: classFacts.armorTraining.map((category) => ({
+        category,
+        kind: "armor_category",
+      })),
+    });
+  });
+
+  test("Cleric multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet", () => {
+    const finalized = finalizedFighterToClericMulticlassBuild();
+    const sheet = createLegalSourceCharacterSheet({
+      characterIdText: "character:l1-sdk-cleric-multiclass-build-sheet",
+      build: finalized.build,
+      hitPoints: { tag: "maximum" },
+    });
+
+    expect(
+      discoverCreationHoles({ draft: finalized.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(finalized.build.progression).toEqual(clericMulticlassProgression);
+    expect(sheet.build).toEqual(finalized.build);
+
+    const classFactsResult = readClassCreationFacts(
+      unitLibrary.requireUnit("class_cleric"),
+    );
+    expect(classFactsResult.tag).toBe("readable");
+    if (classFactsResult.tag !== "readable") return;
+    const classFacts = classFactsResult.value;
+
+    expect(
+      requireRight(characterBuildHitPoints(sheet.build, unitLibrary)).hitDice,
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          classUnitId: "class_cleric",
+          dieSize: classFacts.hitPointDie,
+          total: 1,
+        },
+      ]),
+    );
+    expect(characterBuildFeatureUnitIds(sheet.build, unitLibrary)).toEqual(
+      expect.arrayContaining(
+        classFacts.featureGrants
+          .filter((grant) => grant.level <= 1)
+          .map((grant) => grant.unitId),
+      ),
+    );
+
+    const proficiencies = requireRight(
+      characterBuildProficiencies(sheet.build, unitLibrary),
+    );
+    expect(proficiencies.savingThrows).not.toEqual(
+      expect.arrayContaining([...classFacts.savingThrowProficiencies]),
+    );
+    expect(
+      requireRight(characterBuildArmorTraining(sheet.build, unitLibrary)),
+    ).toEqual(expect.arrayContaining(["light", "medium", "shield"]));
+    expect(classFacts.multiclassProficiencies).toEqual({
+      kind: "fixed",
+      proficiencies: classFacts.armorTraining.map((category) => ({
         category,
         kind: "armor_category",
       })),
@@ -7777,6 +7993,144 @@ function finalizedFighterToBardMulticlassBuild(): {
   if (result.tag !== "ready") {
     throw new Error(
       `Expected finalized Fighter to Bard multiclass build, received ${creationFinalizationResultSummary(result)}`,
+    );
+  }
+  return { draft: afterLoadout, build: result.build };
+}
+
+function finalizedFighterToClericMulticlassBuild(): {
+  readonly draft: CharacterDraft;
+  readonly build: CharacterBuild;
+} {
+  const draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId("draft:l1-sdk-cleric-multiclass-build-sheet"),
+  });
+  const afterInitial = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        creationChoiceFill(
+          "cc:draft:draft.progression.initial",
+          progressionOptionId(clericMulticlassProgression),
+        ),
+        creationChoiceFill("cc:draft:draft.background", "background_criminal"),
+        creationChoiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: requireRight(
+            abilityScoreAssignment({
+              str: 15,
+              dex: 14,
+              con: 12,
+              int: 8,
+              wis: 13,
+              cha: 10,
+            }),
+          ),
+        },
+        creationChoiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        creationChoiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "class_fighter",
+            "class_skill_proficiency_choice",
+          ),
+          "perception",
+          "survival",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "fighter_fighting_style",
+            "class_feature_feat_choice",
+          ),
+          "defense",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+          "weapon_longsword",
+          "weapon_spear",
+          "weapon_flail",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("cleric_divine_order", "divine_order"),
+          "protector",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:dex:con",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          "thieves_tools",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_fighter", "class_equipment_choice"),
+          "option_c",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_criminal",
+            "background_equipment_choice",
+          ),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_fighter", "equipment_purchase"),
+          "armor_chain_mail",
+          "weapon_longsword",
+          "equipment_shield",
+        ),
+      ],
+    }),
+  );
+  const afterLoadout = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        creationChoiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
+        creationChoiceFill(
+          testLoadoutHoleId("equipment_shield", "shield"),
+          "wielded",
+        ),
+        creationChoiceFill(
+          testLoadoutHoleId("weapon_longsword", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized Fighter to Cleric multiclass build, received ${creationFinalizationResultSummary(result)}`,
     );
   }
   return { draft: afterLoadout, build: result.build };

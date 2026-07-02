@@ -106,7 +106,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 209;
-const expectedLevelOneTwoSeedScenarioRows = 89;
+const expectedLevelOneTwoSeedScenarioRows = 97;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -557,10 +557,167 @@ const bardMulticlassBuildSheetScenarioRows = [
   ...row,
 }));
 
+const clericBuildSheetScenarioLabel =
+  "level1-sdk-raw-integration: Cleric build-sheet projection derives level-1 class facts from legal creation and a fresh sheet";
+const clericBuildSheetScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-cleric-build-sheet"',
+  "clericBuildSheetDraftPlan",
+  'battle: { tag: "withoutBattle" }',
+  "fixture.sheet.build",
+  "readClassCreationFacts(",
+  "characterBuildUnitRefs(",
+  "primaryAbilities",
+  "characterBuildHitPoints(",
+  ".hitDice",
+  "characterBuildFeatureUnitIds(",
+  "featureGrants",
+  "characterBuildProficiencies(",
+  "savingThrowProficiencies",
+  "proficiencyChoices",
+  "weaponProficiencies",
+  "characterBuildArmorTraining(",
+  "armorTraining",
+];
+const clericBuildSheetScenarioHelperNeedles = [
+  {
+    anchor: "const clericBuildSheetDraftPlan =",
+    needles: [
+      'classUnitId: "class_cleric"',
+      "level: 1",
+      '"class_skill_proficiency_choice"',
+      '"class_cantrip_choices"',
+      "...clericBuildSheetCantrips",
+      '"class_prepared_spell_choices"',
+      "...clericBuildSheetPreparedSpells",
+      '"cleric_divine_order"',
+      '"divine_order"',
+      '"protector"',
+      'legalUnitChoice("class_cleric", "class_equipment_choice", "option_b")',
+      'legalUnitChoice("class_cleric", "equipment_purchase", "weapon_dagger")',
+      'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
+    ],
+  },
+];
+const clericBuildSheetScenarioRows = [
+  {
+    rowId:
+      "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+    rawSources: [".references/srd-5.2.1/Classes/Cleric.md:3"],
+  },
+  {
+    rowId:
+      "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
+    rawSources: [".references/srd-5.2.1/Classes/Cleric.md:12"],
+  },
+  {
+    rowId:
+      "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
+    rawSources: [".references/srd-5.2.1/Classes/Cleric.md:8"],
+  },
+  {
+    rowId:
+      "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
+    rawSources: [".references/srd-5.2.1/Classes/Cleric.md:7"],
+  },
+  {
+    rowId:
+      "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Cleric.md:9"],
+  },
+  {
+    rowId:
+      "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Cleric.md:10"],
+  },
+  {
+    rowId:
+      "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Cleric.md:11"],
+  },
+].map((row) => ({
+  candidateUnitId: "class_cleric",
+  className: "Cleric",
+  levelBand: "level-1",
+  label: clericBuildSheetScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: "legal-build-sheet-owner",
+  tracerNeedles: clericBuildSheetScenarioNeedles,
+  helperNeedles: clericBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
+
+const clericMulticlassBuildSheetScenarioLabel =
+  "level1-sdk-raw-integration: Cleric multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet";
+const clericMulticlassBuildSheetScenarioNeedles = [
+  "finalizedFighterToClericMulticlassBuild()",
+  "createLegalSourceCharacterSheet({",
+  'characterIdText: "character:l1-sdk-cleric-multiclass-build-sheet"',
+  "clericMulticlassProgression",
+  "readClassCreationFacts(",
+  "characterBuildHitPoints(",
+  ".hitDice",
+  "characterBuildFeatureUnitIds(",
+  "featureGrants",
+  "characterBuildProficiencies(",
+  "savingThrowProficiencies",
+  "characterBuildArmorTraining(",
+  '"light"',
+  '"medium"',
+  '"shield"',
+  "multiclassProficiencies",
+];
+const clericMulticlassBuildSheetScenarioHelperNeedles = [
+  {
+    anchor: "const clericMulticlassProgression =",
+    needles: [
+      'startingClass: classUnitId("class_fighter")',
+      'classUnitId: classUnitId("class_cleric")',
+      'hitPointRule: { tag: "fixedHigherLevelGain" }',
+    ],
+  },
+  {
+    anchor: "function finalizedFighterToClericMulticlassBuild():",
+    needles: [
+      "createCharacterDraft({",
+      'draftId: characterDraftId("draft:l1-sdk-cleric-multiclass-build-sheet")',
+      "progressionOptionId(clericMulticlassProgression)",
+      '"class_fighter"',
+      '"fighter_fighting_style"',
+      '"fighter_weapon_mastery"',
+      '"cleric_divine_order"',
+      '"divine_order"',
+      '"protector"',
+      "testLoadoutHoleId(\"weapon_longsword\", \"weapon\")",
+      "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
+      "return { draft: afterLoadout, build: result.build };",
+    ],
+  },
+];
+const clericMulticlassBuildSheetScenarioRows = [
+  {
+    rowId:
+      "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
+    rawSources: [".references/srd-5.2.1/Classes/Cleric.md:22-26"],
+  },
+].map((row) => ({
+  candidateUnitId: "class_cleric",
+  className: "Cleric",
+  levelBand: "level-1",
+  label: clericMulticlassBuildSheetScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: "legal-build-sheet-owner",
+  tracerNeedles: clericMulticlassBuildSheetScenarioNeedles,
+  helperNeedles: clericMulticlassBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
+
 const seededSdkScenarioRows = [
   ...barbarianBuildSheetScenarioRows,
   ...bardBuildSheetScenarioRows,
   ...bardMulticlassBuildSheetScenarioRows,
+  ...clericBuildSheetScenarioRows,
+  ...clericMulticlassBuildSheetScenarioRows,
   ...barbarianBuildBattleScenarioRows,
   {
     candidateUnitId: "barbarian_unarmored_defense",
