@@ -9,7 +9,7 @@ class level 5 for all 12 SRD classes. It names the source facts and existing
 generic owners that already own progression, resources, Spell Access, Spell
 Slots, Pact Slots, and character-battle handoff.
 
-This is accounting pre-work only. It does not treat authored class, feature, or
+This audit is accounting only. It does not treat authored class, feature, or
 spell identity as runtime dispatch, and it does not introduce implementation
 tasks where the level-5 fact is already derivable from a generic owner.
 
@@ -36,15 +36,15 @@ owners named below.
 
 | Class | Source rows | Level-4 -> level-5 table deltas | Owner decision |
 | --- | --- | --- | --- |
-| Barbarian | `.references/srd-5.2.1/Classes/Barbarian.md:38-39` | Proficiency Bonus `+2 -> +3`. New level-5 feature grants: Extra Attack and Fast Movement. Rages stay `3`; Rage Damage stays `+2`; Weapon Mastery stays `3`. | Extra Attack and Fast Movement are row-accounted in `L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`; SDK task must decide scenario vs SDK closure. Proficiency Bonus is generic. No new Rage or Weapon Mastery task. |
+| Barbarian | `.references/srd-5.2.1/Classes/Barbarian.md:38-39` | Proficiency Bonus `+2 -> +3`. New level-5 feature grants: Extra Attack and Fast Movement. Rages stay `3`; Rage Damage stays `+2`; Weapon Mastery stays `3`. | Extra Attack and Fast Movement are row-accounted in `L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md` and now have level-5 SDK tracer evidence. Proficiency Bonus is generic. No new Rage or Weapon Mastery task. |
 | Bard | `.references/srd-5.2.1/Classes/Bard.md:39-40` | Proficiency Bonus `+2 -> +3`. New level-5 feature grant: Font of Inspiration. Bardic Die `D6 -> D8`; Prepared Spells `7 -> 9`; level-3 Spell Slots `0 -> 2`. Cantrips stay `3`; level-1/level-2 slots stay `4/3`. | Font of Inspiration remains future Character Sheet resource-recovery owner before SDK. Bardic Die scaling is already part of `bard_bardic_inspiration` supported mechanics in `plans/unit-profile-coverage/unit-claims.jsonl:70`; do not duplicate it under Font. Spell Access and slots are generic. |
-| Cleric | `.references/srd-5.2.1/Classes/Cleric.md:38-39` | Proficiency Bonus `+2 -> +3`. New level-5 feature grant: Sear Undead. Prepared Spells `7 -> 9`; level-3 Spell Slots `0 -> 2`. Channel Divinity stays `2`; Cantrips stay `4`; level-1/level-2 slots stay `4/3`. | Sear Undead needs owner-boundary review before SDK admission. Channel Divinity and Spell Slot facts remain generic resource/spellcasting facts. |
+| Cleric | `.references/srd-5.2.1/Classes/Cleric.md:38-39` | Proficiency Bonus `+2 -> +3`. New level-5 feature grant: Sear Undead. Prepared Spells `7 -> 9`; level-3 Spell Slots `0 -> 2`. Channel Divinity stays `2`; Cantrips stay `4`; level-1/level-2 slots stay `4/3`. | Sear Undead is closed as future Turn Undead option-rider owner before SDK admission. Channel Divinity and Spell Slot facts remain generic resource/spellcasting facts. |
 | Druid | `.references/srd-5.2.1/Classes/Druid.md:35-36` | Proficiency Bonus `+2 -> +3`. New level-5 feature grant: Wild Resurgence. Prepared Spells `7 -> 9`; level-3 Spell Slots `0 -> 2`. Wild Shape uses stay `2`; Cantrips stay `3`; level-1/level-2 slots stay `4/3`. | Wild Resurgence remains future Character Sheet resource-exchange owner before SDK. Spell Access and slots are generic. Wild Shape use count has no table delta. |
-| Fighter | `.references/srd-5.2.1/Classes/Fighter.md:34-35` | Proficiency Bonus `+2 -> +3`. New level-5 feature grants: Extra Attack and Tactical Shift. Second Wind uses stay `3`; Weapon Mastery stays `4`. | Extra Attack is row-accounted as supported owner review. Tactical Shift is resolved as future Second Wind activation rider owner before SDK. Second Wind healing magnitude is formula-derived from Fighter level; do not duplicate it in level-5 state. |
+| Fighter | `.references/srd-5.2.1/Classes/Fighter.md:34-35` | Proficiency Bonus `+2 -> +3`. New level-5 feature grants: Extra Attack and Tactical Shift. Second Wind uses stay `3`; Weapon Mastery stays `4`. | Extra Attack is row-accounted with level-5 SDK tracer evidence. Tactical Shift is resolved as future Second Wind activation rider owner before SDK. Second Wind healing magnitude is formula-derived from Fighter level; do not duplicate it in level-5 state. |
 | Monk | `.references/srd-5.2.1/Classes/Monk.md:35-36` | Proficiency Bonus `+2 -> +3`. New level-5 feature grants: Extra Attack and Stunning Strike. Martial Arts `1d6 -> 1d8`; Focus Points `4 -> 5`; Unarmored Movement stays `+10 ft.` | Extra Attack and Stunning Strike have existing SDK seed rows. Focus Points and Martial Arts die are generic class-feature/resource projections; Slow Fall magnitude is formula-derived from Monk level. |
-| Paladin | `.references/srd-5.2.1/Classes/Paladin.md:38-39` | Proficiency Bonus `+2 -> +3`. New level-5 feature grants: Extra Attack and Faithful Steed. Prepared Spells `5 -> 6`; level-1 slots `3 -> 4`; level-2 slots `0 -> 2`. Channel Divinity stays `2`. | Extra Attack is row-accounted as supported owner review. Faithful Steed remains split Spell Access plus future companion-control owner before SDK. Spell Access and slots are generic; no level-3 spell pressure. |
-| Ranger | `.references/srd-5.2.1/Classes/Ranger.md:38-39` | Proficiency Bonus `+2 -> +3`. New level-5 feature grant: Extra Attack. Favored Enemy free casts `2 -> 3`; Prepared Spells `5 -> 6`; level-1 slots `3 -> 4`; level-2 slots `0 -> 2`. | Extra Attack is row-accounted as supported owner review. Favored Enemy is a retained `Hunter's Mark` cast-count resource; Spell Access and slots are generic; no level-3 spell pressure. |
-| Rogue | `.references/srd-5.2.1/Classes/Rogue.md:39-40` | Proficiency Bonus `+2 -> +3`. New level-5 feature grants: Cunning Strike and Uncanny Dodge. Sneak Attack `2d6 -> 3d6`. | Cunning Strike has an existing SDK seed row; Uncanny Dodge is row-accounted as supported owner review. Sneak Attack damage scaling is the existing Sneak Attack owner, not new duplicate state. |
+| Paladin | `.references/srd-5.2.1/Classes/Paladin.md:38-39` | Proficiency Bonus `+2 -> +3`. New level-5 feature grants: Extra Attack and Faithful Steed. Prepared Spells `5 -> 6`; level-1 slots `3 -> 4`; level-2 slots `0 -> 2`. Channel Divinity stays `2`. | Extra Attack is row-accounted with level-5 SDK tracer evidence. Faithful Steed remains split Spell Access plus future companion-control owner before SDK. Spell Access and slots are generic; no level-3 spell pressure. |
+| Ranger | `.references/srd-5.2.1/Classes/Ranger.md:38-39` | Proficiency Bonus `+2 -> +3`. New level-5 feature grant: Extra Attack. Favored Enemy free casts `2 -> 3`; Prepared Spells `5 -> 6`; level-1 slots `3 -> 4`; level-2 slots `0 -> 2`. | Extra Attack is row-accounted with level-5 SDK tracer evidence. Favored Enemy is a retained `Hunter's Mark` cast-count resource; Spell Access and slots are generic; no level-3 spell pressure. |
+| Rogue | `.references/srd-5.2.1/Classes/Rogue.md:39-40` | Proficiency Bonus `+2 -> +3`. New level-5 feature grants: Cunning Strike and Uncanny Dodge. Sneak Attack `2d6 -> 3d6`. | Cunning Strike and Uncanny Dodge have level-5 SDK tracer evidence. Sneak Attack damage scaling is the existing Sneak Attack owner, not new duplicate state. |
 | Sorcerer | `.references/srd-5.2.1/Classes/Sorcerer.md:38-39` | Proficiency Bonus `+2 -> +3`. New level-5 feature grant: Sorcerous Restoration. Sorcery Points `4 -> 5`; Prepared Spells `7 -> 9`; level-3 Spell Slots `0 -> 2`. Cantrips stay `5`; level-1/level-2 slots stay `4/3`. | Sorcerous Restoration has an existing SDK seed row. Sorcery Point cap and created-slot conversion remain `sorcerer_font_of_magic`/Character Sheet resource facts. Spell Access and slots are generic. |
 | Warlock | `.references/srd-5.2.1/Classes/Warlock.md:38-39` | Proficiency Bonus `+2 -> +3`. No new class-feature grant in the table. Eldritch Invocations `3 -> 5`; Prepared Spells `5 -> 6`; Pact Slot Level `2 -> 3`. Cantrips stay `3`; Pact Slots stay `2`. | `warlock_eldritch_invocations` owns invocation count/progression. `warlock_pact_magic` owns prepared-spell, Pact Slot count, and Pact Slot level facts. Neither is battle/SDK behavior by itself. |
 | Wizard | `.references/srd-5.2.1/Classes/Wizard.md:38-39` | Proficiency Bonus `+2 -> +3`. New level-5 feature grant: Memorize Spell. Prepared Spells `7 -> 9`; level-3 Spell Slots `0 -> 2`. Cantrips stay `4`; level-1/level-2 slots stay `4/3`. | Memorize Spell remains future Character Sheet prepared-spell replacement owner before SDK. Spellbook learning, Spell Access, and slots are generic owner facts. |
@@ -66,18 +66,18 @@ These facts are not all new class-table feature rows, but they change at level
 | Wizard level gain adds two Wizard spells to the spellbook, each of a level for which the Wizard has Spell Slots; level 5 opens level-3 spellbook choices. | `.references/srd-5.2.1/Classes/Wizard.md:64` | `CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION` remains the owner. |
 | Druid Beast Shapes has no level-5 threshold; the most recent threshold was level 4. | `.references/srd-5.2.1/Classes/Druid.md:109` | No new level-5 Beast Shapes task. Existing Wild Shape known-form owners remain the authority. |
 
-## Follow-Up Result
+## Final Follow-Up Result
 
 No new implementation task is required solely by this progression audit.
 
-The required follow-up is accounting/linkage, already represented in the L5
+The required accounting/linkage follow-up is represented in the completed L5
 Ralph queue:
 
-- `L5FULL-CLOSE-01-LEVEL5-CLASS-TABLES` must close the twelve table summary
-  rows as SDK-scope table-only rows after citing this audit.
-- Supported feature rows remain in the owner-review or seed buckets of
-  `plans/RALPH_L5_FULL_SRD_COMPLETION.md`.
-- Future-owner and unresolved-owner rows remain split by their durable owner
+- `L5FULL-CLOSE-01-LEVEL5-CLASS-TABLES` closed the twelve table summary rows
+  as SDK-scope table-only rows after citing this audit.
+- Supported feature rows now resolve through existing level-5 SDK tracer
+  bullets where covered by the generated inventory.
+- Future-owner and table-only rows remain split by their durable owner
   boundaries; no broad "finish level-5 progression" task should be created.
 
 ## Verification Notes

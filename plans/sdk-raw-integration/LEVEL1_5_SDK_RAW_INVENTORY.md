@@ -16,9 +16,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | Level 1-5 mined rows | 770 |
 | Level 1-4 row-grained inventory rows | 632 |
 | Level 5 completion rows | 138 |
-| Existing level-5 SDK seed scenario rows | 45 |
-| Scenario groups | 433 |
-| Level 5 scenario groups | 94 |
+| Existing level-5 SDK seed scenario rows | 47 |
+| Scenario groups | 434 |
+| Level 5 scenario groups | 95 |
 
 ### All Level 1-5 Rows by Level Band
 
@@ -42,8 +42,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 66 |
-| sdk-scenario-needed | 401 |
-| seed-scenario-present | 109 |
+| sdk-scenario-needed | 399 |
+| seed-scenario-present | 111 |
 | table-only-closure-needed | 26 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -78,14 +78,14 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-04 | 33 |
 | L15-SDK-RAW-05 | 107 |
 | L15-SDK-RAW-06 | 25 |
-| L15-SDK-RAW-07 | 94 |
+| L15-SDK-RAW-07 | 95 |
 
 ### Scenario Groups by Lane
 
 | Lane | Groups |
 | --- | ---: |
 | battle-feature-sdk | 21 |
-| battle-spell-sdk | 72 |
+| battle-spell-sdk | 71 |
 | build-battle-sdk | 12 |
 | build-sheet-sdk | 24 |
 | character-creation-sdk | 29 |
@@ -94,7 +94,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | feature-owner-review | 2 |
 | future-owner-before-sdk | 34 |
 | multi-owner-feature-sdk | 9 |
-| seed-present | 109 |
+| seed-present | 111 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 34 |
 | table-only-closure | 8 |
@@ -105,8 +105,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | --- | ---: |
 | explicit-closure-recorded | 12 |
 | future-owner-before-sdk | 64 |
-| sdk-scenario-needed | 2 |
-| seed-scenario-present | 45 |
+| seed-scenario-present | 47 |
 | table-only-closure-needed | 15 |
 
 ### Level 5 Completion Rows by Proposed Owner Boundary
@@ -129,10 +128,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Lane | Groups |
 | --- | ---: |
-| battle-spell-sdk | 1 |
 | explicit-closure | 12 |
 | future-owner-before-sdk | 32 |
-| seed-present | 45 |
+| seed-present | 47 |
 | table-only-closure | 4 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -255,12 +253,13 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_hypnotic_pattern` / `spell-level-3:Wizard:hypnotic_pattern`: level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control
 - `srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_lightning_bolt` / `spell-level-3:Sorcerer:lightning_bolt`: level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage
 - `srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_lightning_bolt` / `spell-level-3:Wizard:lightning_bolt`: level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage
+- `srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word` / `spell-level-3:Bard:mass_healing_word`: level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action
+- `srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word` / `spell-level-3:Cleric:mass_healing_word`: level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action
 
 ## Level 5 Scenario Groups
 
 | Task | Lane | Rows | Bands | Classes | Units | Sample concepts | Suggested scenario |
 | --- | --- | ---: | --- | --- | --- | --- | --- |
-| L15-SDK-RAW-07 | battle-spell-sdk | 2 | spell-level-3 | Bard, Cleric | `mass_healing_word` | Bard spell list Mass Healing Word<br>Cleric spell list Mass Healing Word | Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources. |
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Barbarian | `class_barbarian` | Barbarian level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Bard | `class_bard` | Bard level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
 | L15-SDK-RAW-07 | explicit-closure | 1 | level-5 | Cleric | `class_cleric` | Cleric level 5 feature table row | Keep the recorded SDK-scope table-only closure tied to L5_PROGRESSION_DELTA_AUDIT.md and the local class table row. |
@@ -318,9 +317,11 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `dispel_magic` | Bard spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `glyph_of_warding` | Bard spell list Glyph of Warding | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `hypnotic_pattern` | Bard spell list Hypnotic Pattern | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `mass_healing_word` | Bard spell list Mass Healing Word | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Bard | `slow` | Bard spell list Slow | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Cleric | `dispel_magic` | Cleric spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Cleric | `glyph_of_warding` | Cleric spell list Glyph of Warding | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
+| L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Cleric | `mass_healing_word` | Cleric spell list Mass Healing Word | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Cleric | `protection_from_energy` | Cleric spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Druid | `dispel_magic` | Druid spell list Dispel Magic | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Druid | `protection_from_energy` | Druid spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
@@ -371,7 +372,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Bard spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Bard.md:221` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Bard spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Bard.md:222` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Bard spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Bard.md:223` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
-| spell-level-3 | Bard spell list Mass Healing Word | `mass_healing_word` | `.references/srd-5.2.1/Classes/Bard.md:224` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Bard spell list Mass Healing Word | `mass_healing_word` | `.references/srd-5.2.1/Classes/Bard.md:224` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Bard spell list Nondetection | `nondetection` | `.references/srd-5.2.1/Classes/Bard.md:225` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers. |
 | spell-level-3 | Bard spell list Plant Growth | `plant_growth` | `.references/srd-5.2.1/Classes/Bard.md:226` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy. |
 | spell-level-3 | Bard spell list Sending | `sending` | `.references/srd-5.2.1/Classes/Bard.md:227` | catalog-only/dead-for-now | accepted-no-battle-effect | table-only-closure | resolved | table-only-closure-needed |  | Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state. |
@@ -392,7 +393,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Cleric spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Cleric.md:210` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Dispel Magic | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Cleric spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Cleric.md:211` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Cleric spell list Magic Circle | `magic_circle` | `.references/srd-5.2.1/Classes/Cleric.md:212` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name. |
-| spell-level-3 | Cleric spell list Mass Healing Word | `mass_healing_word` | `.references/srd-5.2.1/Classes/Cleric.md:213` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
+| spell-level-3 | Cleric spell list Mass Healing Word | `mass_healing_word` | `.references/srd-5.2.1/Classes/Cleric.md:213` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Cleric spell list Meld into Stone | `meld_into_stone` | `.references/srd-5.2.1/Classes/Cleric.md:214` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name. |
 | spell-level-3 | Cleric spell list Protection from Energy | `protection_from_energy` | `.references/srd-5.2.1/Classes/Cleric.md:215` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Protection from Energy | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Cleric spell list Remove Curse | `remove_curse` | `.references/srd-5.2.1/Classes/Cleric.md:216` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects. |

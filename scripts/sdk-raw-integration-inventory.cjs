@@ -4311,6 +4311,46 @@ const seededSdkScenarioRows = [
       '"class_wizard"',
     ],
   },
+  {
+    candidateUnitId: "mass_healing_word",
+    className: "Bard",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word",
+    tracerNeedles: [
+      "massHealingWordSpellId",
+      "massHealingWordBardId",
+      "levelFiveBardBuild",
+      '"class_bard"',
+      "bonusActionSpellSlotActForProcedure",
+      '"directHitPointRestoration"',
+      "spellTargetListFill",
+      "damageRollFillWithGroups",
+    ],
+  },
+  {
+    candidateUnitId: "mass_healing_word",
+    className: "Cleric",
+    levelBand: "spell-level-3",
+    label:
+      "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
+    tracerNeedles: [
+      "massHealingWordSpellId",
+      "massHealingWordClericId",
+      "levelFiveClericBuild",
+      '"class_cleric"',
+      "bonusActionSpellSlotActForProcedure",
+      '"directHitPointRestoration"',
+      "spellTargetListFill",
+      "damageRollFillWithGroups",
+    ],
+  },
 ];
 
 function animalFriendshipSdkHelperNeedles() {

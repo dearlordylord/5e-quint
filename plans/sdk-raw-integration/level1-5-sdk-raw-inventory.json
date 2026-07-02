@@ -743,6 +743,10 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Mass Healing Word",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -750,7 +754,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 224,
         "lineStart": 224,
@@ -1897,6 +1901,10 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Mass Healing Word",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -1904,7 +1912,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 213,
         "lineStart": 213,
@@ -7671,79 +7679,6 @@
   "level5ScenarioGroups": [
     {
       "candidateUnitIds": [
-        "mass_healing_word"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:mass-healing-word",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"mass_healing_word\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:224",
-        ".references/srd-5.2.1/Classes/Cleric.md:213"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "mass_healing_word",
-          "className": "Bard",
-          "concept": "Bard spell list Mass Healing Word",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 224,
-            "lineStart": 224,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "mass_healing_word",
-          "className": "Cleric",
-          "concept": "Cleric spell list Mass Healing Word",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 213,
-            "lineStart": 213,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Mass Healing Word",
-        "Cleric spell list Mass Healing Word"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "class_barbarian"
       ],
       "categories": [
@@ -11455,6 +11390,61 @@
     },
     {
       "candidateUnitIds": [
+        "mass_healing_word"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-bard-mass-healing-word",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Bard:mass_healing_word\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:224"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "mass_healing_word",
+          "className": "Bard",
+          "concept": "Bard spell list Mass Healing Word",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 224,
+            "lineStart": 224,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Mass Healing Word"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "slow"
       ],
       "categories": [
@@ -11611,6 +11601,61 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Glyph of Warding"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "mass_healing_word"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-cleric-mass-healing-word",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Cleric:mass_healing_word\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:213"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "mass_healing_word",
+          "className": "Cleric",
+          "concept": "Cleric spell list Mass Healing Word",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 213,
+            "lineStart": 213,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Mass Healing Word"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -19174,6 +19219,10 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Mass Healing Word",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -19181,7 +19230,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 224,
         "lineStart": 224,
@@ -23280,6 +23329,10 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Mass Healing Word",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-3",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -23287,7 +23340,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 213,
         "lineStart": 213,
@@ -57913,19 +57966,17 @@
     "level5CompletionRowsBySdkInventoryDisposition": {
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 64,
-      "sdk-scenario-needed": 2,
-      "seed-scenario-present": 45,
+      "seed-scenario-present": 47,
       "table-only-closure-needed": 15
     },
-    "level5ScenarioGroups": 94,
+    "level5ScenarioGroups": 95,
     "level5ScenarioGroupsByLane": {
-      "battle-spell-sdk": 1,
       "explicit-closure": 12,
       "future-owner-before-sdk": 32,
-      "seed-present": 45,
+      "seed-present": 47,
       "table-only-closure": 4
     },
-    "level5SeedScenarioRows": 45,
+    "level5SeedScenarioRows": 47,
     "levelOneFiveMinedRows": 770,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -57974,15 +58025,15 @@
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 66,
-      "sdk-scenario-needed": 401,
-      "seed-scenario-present": 109,
+      "sdk-scenario-needed": 399,
+      "seed-scenario-present": 111,
       "table-only-closure-needed": 26
     },
     "levelOneFourRows": 632,
-    "scenarioGroups": 433,
+    "scenarioGroups": 434,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 21,
-      "battle-spell-sdk": 72,
+      "battle-spell-sdk": 71,
       "build-battle-sdk": 12,
       "build-sheet-sdk": 24,
       "character-creation-sdk": 29,
@@ -57991,7 +58042,7 @@
       "feature-owner-review": 2,
       "future-owner-before-sdk": 34,
       "multi-owner-feature-sdk": 9,
-      "seed-present": 109,
+      "seed-present": 111,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 34,
       "table-only-closure": 8
@@ -58001,7 +58052,7 @@
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
-      "L15-SDK-RAW-07": 94
+      "L15-SDK-RAW-07": 95
     }
   },
   "scenarioGroups": [
@@ -82021,79 +82072,6 @@
     },
     {
       "candidateUnitIds": [
-        "mass_healing_word"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-07:battle-spell-sdk:mass-healing-word",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"battle-spell-sdk\",\"mass_healing_word\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:224",
-        ".references/srd-5.2.1/Classes/Cleric.md:213"
-      ],
-      "rowCount": 2,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "mass_healing_word",
-          "className": "Bard",
-          "concept": "Bard spell list Mass Healing Word",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 224,
-            "lineStart": 224,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "mass_healing_word",
-          "className": "Cleric",
-          "concept": "Cleric spell list Mass Healing Word",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 213,
-            "lineStart": 213,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Mass Healing Word",
-        "Cleric spell list Mass Healing Word"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "class_barbarian"
       ],
       "categories": [
@@ -85805,6 +85783,61 @@
     },
     {
       "candidateUnitIds": [
+        "mass_healing_word"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-bard-mass-healing-word",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Bard:mass_healing_word\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:224"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "mass_healing_word",
+          "className": "Bard",
+          "concept": "Bard spell list Mass Healing Word",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 224,
+            "lineStart": 224,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Mass Healing Word"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "slow"
       ],
       "categories": [
@@ -85961,6 +85994,61 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Glyph of Warding"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "mass_healing_word"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:spell-level-3-cleric-mass-healing-word",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"spell-level-3:Cleric:mass_healing_word\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:213"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "mass_healing_word",
+          "className": "Cleric",
+          "concept": "Cleric spell list Mass Healing Word",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 213,
+            "lineStart": 213,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Mass Healing Word"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -93477,6 +93565,52 @@
         "lightningBoltWizardId",
         "levelFiveWizardBuild",
         "\"class_wizard\""
+      ]
+    },
+    {
+      "candidateUnitId": "mass_healing_word",
+      "className": "Bard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_mass_healing_word",
+      "rowKey": "spell-level-3:Bard:mass_healing_word",
+      "tracerNeedles": [
+        "massHealingWordSpellId",
+        "massHealingWordBardId",
+        "levelFiveBardBuild",
+        "\"class_bard\"",
+        "bonusActionSpellSlotActForProcedure",
+        "\"directHitPointRestoration\"",
+        "spellTargetListFill",
+        "damageRollFillWithGroups"
+      ]
+    },
+    {
+      "candidateUnitId": "mass_healing_word",
+      "className": "Cleric",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "spell-level-3",
+      "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_mass_healing_word",
+      "rowKey": "spell-level-3:Cleric:mass_healing_word",
+      "tracerNeedles": [
+        "massHealingWordSpellId",
+        "massHealingWordClericId",
+        "levelFiveClericBuild",
+        "\"class_cleric\"",
+        "bonusActionSpellSlotActForProcedure",
+        "\"directHitPointRestoration\"",
+        "spellTargetListFill",
+        "damageRollFillWithGroups"
       ]
     }
   ],
