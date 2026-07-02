@@ -4,6 +4,7 @@ import {
   battleSpellEffectOccurrenceId,
   battleObscurementZones,
   breakBattleConcentration,
+  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   combatantId,
   discoverBattleActs,
   endTurn,
@@ -78,6 +79,9 @@ import {
   unitLibrary,
 } from "./sdk-integration-test-support.ts";
 
+const extraAttackBarbarianId = combatantId(
+  "combatant:l5-tracer-extra-attack-barbarian",
+);
 const extraAttackMonkId = combatantId("combatant:l5-tracer-extra-attack-monk");
 const monkId = combatantId("combatant:l5-tracer-monk");
 const rogueId = combatantId("combatant:l5-tracer-rogue");
@@ -186,6 +190,7 @@ const slowSuccessfulSaveTargetId = combatantId(
   "combatant:l5-tracer-slow-successful-save-target",
 );
 
+const barbarianExtraAttackUnitId = "barbarian_extra_attack";
 const monkExtraAttackUnitId = "monk_extra_attack";
 const monkFocusUnitId = "monk_monks_focus";
 const monkStunningStrikeUnitId = "monk_stunning_strike";
@@ -325,56 +330,44 @@ type OngoingSpellTargetWithinRangeFact =
   OngoingSpellTargetChoiceFill["spatialFacts"][number];
 
 describe("level 5 SDK tracer bullets", () => {
+  test("Barbarian Extra Attack projects through sheet handoff and opens exactly one added attack slot", () => {
+    assertLevelFiveExtraAttackHandoff({
+      actorId: extraAttackBarbarianId,
+      battleIdText: "battle:l5-tracer-extra-attack-barbarian",
+      characterIdText: "character:l5-tracer-extra-attack-barbarian",
+      classUnitId: "class_barbarian",
+      sourceUnitId: barbarianExtraAttackUnitId,
+      weaponUnitId: "weapon_longsword",
+      attackName: "Longsword",
+      abilityScores: {
+        str: 16,
+        dex: 10,
+        con: 14,
+        int: 10,
+        wis: 10,
+        cha: 10,
+      },
+    });
+  });
+
   test("Extra Attack projects a level-5 martial character through sheet handoff and opens exactly one added attack slot", () => {
-    const state = battleFromSheets({
+    assertLevelFiveExtraAttackHandoff({
+      actorId: extraAttackMonkId,
       battleIdText: "battle:l5-tracer-extra-attack",
-      characters: [
-        characterSheet({
-          characterIdText: "character:l5-tracer-extra-attack",
-          build: levelFiveMartialBuild({
-            classUnitId: "class_monk",
-            weaponUnitId: "weapon_dagger",
-            abilityScores: {
-              str: 10,
-              dex: 16,
-              con: 14,
-              int: 10,
-              wis: 16,
-              cha: 10,
-            },
-          }),
-          combatantId: extraAttackMonkId,
-          initiative: 20,
-        }),
-      ],
-      monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
-      ],
-    });
-
-    const first = resolveWeaponAttackMiss({
-      state,
-      actorId: extraAttackMonkId,
-      targetId: monsterId,
+      characterIdText: "character:l5-tracer-extra-attack",
+      classUnitId: "class_monk",
+      sourceUnitId: monkExtraAttackUnitId,
+      weaponUnitId: "weapon_dagger",
       attackName: "Dagger",
+      abilityScores: {
+        str: 10,
+        dex: 16,
+        con: 14,
+        int: 10,
+        wis: 16,
+        cha: 10,
+      },
     });
-
-    expect(snapshotBattle(first.state).turn.actionResources).toEqual([
-      expect.objectContaining({
-        source: "classFeatureExtraAttack",
-        sourceOwnerId: extraAttackMonkId,
-        sourceUnitId: monkExtraAttackUnitId,
-      }),
-    ]);
-
-    const second = resolveWeaponAttackMiss({
-      state: first.state,
-      actorId: extraAttackMonkId,
-      targetId: monsterId,
-      attackName: "Dagger",
-    });
-
-    expect(snapshotBattle(second.state).turn.actionResources).toEqual([]);
   });
 
   test("Stunning Strike projects Monk Focus, spends one Focus Point, and applies the failed-save Stunned result", () => {
@@ -3258,6 +3251,80 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
     beforeDamageHp,
     afterDamageHp: requireCombatant(resolved.state, wardedId).hp,
   };
+}
+
+function assertLevelFiveExtraAttackHandoff(input: {
+  readonly actorId: CombatantId;
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly classUnitId: UnitRecord["id"];
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly weaponUnitId: UnitRecord["id"];
+  readonly attackName: string;
+  readonly abilityScores?: Parameters<
+    typeof levelFiveMartialBuild
+  >[0]["abilityScores"];
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: levelFiveMartialBuild({
+          classUnitId: input.classUnitId,
+          weaponUnitId: input.weaponUnitId,
+          ...(input.abilityScores === undefined
+            ? {}
+            : { abilityScores: input.abilityScores }),
+        }),
+        combatantId: input.actorId,
+        initiative: 20,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+
+  expect(
+    requireCharacterCombatant(state, input.actorId).origin.characterUnitRefs,
+  ).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        unitId: input.sourceUnitId,
+        supportProfiles: expect.arrayContaining([
+          expect.objectContaining({
+            kind: ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+            additionalAttacks: 1,
+          }),
+        ]),
+      }),
+    ]),
+  );
+
+  const first = resolveWeaponAttackMiss({
+    state,
+    actorId: input.actorId,
+    targetId: monsterId,
+    attackName: input.attackName,
+  });
+
+  expect(snapshotBattle(first.state).turn.actionResources).toEqual([
+    expect.objectContaining({
+      source: "classFeatureExtraAttack",
+      sourceOwnerId: input.actorId,
+      sourceUnitId: input.sourceUnitId,
+    }),
+  ]);
+
+  const second = resolveWeaponAttackMiss({
+    state: first.state,
+    actorId: input.actorId,
+    targetId: monsterId,
+    attackName: input.attackName,
+  });
+
+  expect(snapshotBattle(second.state).turn.actionResources).toEqual([]);
 }
 
 function resolveWeaponAttackMiss(input: {

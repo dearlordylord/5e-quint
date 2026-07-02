@@ -72,6 +72,10 @@
       "category": "class feature",
       "className": "Barbarian",
       "concept": "Barbarian Extra Attack",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Barbarian Extra Attack",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -102,7 +106,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 115,
         "lineStart": 112,
@@ -10078,61 +10082,6 @@
     },
     {
       "candidateUnitIds": [
-        "barbarian_extra_attack"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Barbarian"
-      ],
-      "groupId": "l15-sdk-raw-07:owner-review:barbarian-extra-attack",
-      "lane": "owner-review",
-      "levelBands": [
-        "level-5"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"owner-review\",\"barbarian_extra_attack\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Barbarian.md:112"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "barbarian_extra_attack",
-          "className": "Barbarian",
-          "concept": "Barbarian Extra Attack",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
-          "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
-          "source": {
-            "lineEnd": 115,
-            "lineStart": 112,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Barbarian Extra Attack"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-or-owner-closure-needed"
-      ],
-      "suggestedScenario": "Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "barbarian_fast_movement"
       ],
       "categories": [
@@ -10404,6 +10353,61 @@
         "sdk-scenario-or-owner-closure-needed"
       ],
       "suggestedScenario": "Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "barbarian_extra_attack"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Barbarian"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:level-5-barbarian-barbarian-extra-attack",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-5"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"level-5:Barbarian:barbarian_extra_attack\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Barbarian.md:112"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "barbarian_extra_attack",
+          "className": "Barbarian",
+          "concept": "Barbarian Extra Attack",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 115,
+            "lineStart": 112,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Barbarian Extra Attack"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
@@ -14733,6 +14737,10 @@
       "category": "class feature",
       "className": "Barbarian",
       "concept": "Barbarian Extra Attack",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Barbarian Extra Attack",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -14763,7 +14771,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 115,
         "lineStart": 112,
@@ -57868,19 +57876,19 @@
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 45,
       "sdk-scenario-needed": 2,
-      "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 39
+      "sdk-scenario-or-owner-closure-needed": 5,
+      "seed-scenario-present": 40
     },
     "level5ScenarioGroups": 94,
     "level5ScenarioGroupsByLane": {
       "battle-spell-sdk": 1,
       "explicit-closure": 12,
       "future-owner-before-sdk": 24,
-      "owner-review": 6,
-      "seed-present": 39,
+      "owner-review": 5,
+      "seed-present": 40,
       "spell-effect-owner-review": 12
     },
-    "level5SeedScenarioRows": 39,
+    "level5SeedScenarioRows": 40,
     "levelOneFiveMinedRows": 770,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -57930,8 +57938,8 @@
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 47,
       "sdk-scenario-needed": 401,
-      "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 103,
+      "sdk-scenario-or-owner-closure-needed": 5,
+      "seed-scenario-present": 104,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
@@ -57947,8 +57955,8 @@
       "feature-owner-review": 2,
       "future-owner-before-sdk": 26,
       "multi-owner-feature-sdk": 9,
-      "owner-review": 6,
-      "seed-present": 103,
+      "owner-review": 5,
+      "seed-present": 104,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -84409,61 +84417,6 @@
     },
     {
       "candidateUnitIds": [
-        "barbarian_extra_attack"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Barbarian"
-      ],
-      "groupId": "l15-sdk-raw-07:owner-review:barbarian-extra-attack",
-      "lane": "owner-review",
-      "levelBands": [
-        "level-5"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"owner-review\",\"barbarian_extra_attack\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Barbarian.md:112"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "barbarian_extra_attack",
-          "className": "Barbarian",
-          "concept": "Barbarian Extra Attack",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
-          "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
-          "source": {
-            "lineEnd": 115,
-            "lineStart": 112,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Barbarian Extra Attack"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-or-owner-closure-needed"
-      ],
-      "suggestedScenario": "Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "barbarian_fast_movement"
       ],
       "categories": [
@@ -84735,6 +84688,61 @@
         "sdk-scenario-or-owner-closure-needed"
       ],
       "suggestedScenario": "Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "barbarian_extra_attack"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Barbarian"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:level-5-barbarian-barbarian-extra-attack",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-5"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"level-5:Barbarian:barbarian_extra_attack\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Barbarian.md:112"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "barbarian_extra_attack",
+          "className": "Barbarian",
+          "concept": "Barbarian Extra Attack",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 115,
+            "lineStart": 112,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Barbarian Extra Attack"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
@@ -92560,6 +92568,31 @@
         "build: wizardBuild,",
         "casterId: fireBoltWizardId,",
         "expectedSpellAttackBonus: 5,"
+      ]
+    },
+    {
+      "candidateUnitId": "barbarian_extra_attack",
+      "className": "Barbarian",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Barbarian Extra Attack",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function assertLevelFiveExtraAttackHandoff",
+          "needles": [
+            "resolveWeaponAttackMiss({",
+            "source: \"classFeatureExtraAttack\"",
+            "sourceUnitId: input.sourceUnitId"
+          ]
+        }
+      ],
+      "levelBand": "level-5",
+      "rowId": "srd521:classes/barbarian:level-5:class-feature-grant:barbarian_extra_attack",
+      "rowKey": "level-5:Barbarian:barbarian_extra_attack",
+      "tracerNeedles": [
+        "barbarianExtraAttackUnitId"
       ]
     },
     {

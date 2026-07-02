@@ -235,7 +235,7 @@
     {
       "number": 39,
       "id": "L5FULL-OWN-01-BARBARIAN-EXTRA-ATTACK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose SDK scenario or SDK closure for Barbarian Extra Attack"
     },
     {
