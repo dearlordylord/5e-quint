@@ -699,11 +699,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 223,
         "lineStart": 223,
@@ -4869,11 +4869,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 312,
         "lineStart": 312,
@@ -5780,11 +5780,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 387,
         "lineStart": 387,
@@ -6910,11 +6910,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 252,
         "lineStart": 252,
@@ -9454,6 +9454,115 @@
         "Cleric spell list Magic Circle",
         "Warlock spell list Magic Circle",
         "Wizard spell list Magic Circle"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "major_image"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:major-image",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"major_image\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:223",
+        ".references/srd-5.2.1/Classes/Sorcerer.md:312",
+        ".references/srd-5.2.1/Classes/Warlock.md:387",
+        ".references/srd-5.2.1/Classes/Wizard.md:252"
+      ],
+      "rowCount": 4,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "major_image",
+          "className": "Bard",
+          "concept": "Bard spell list Major Image",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_major_image",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 223,
+            "lineStart": 223,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "major_image",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Major Image",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_major_image",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 312,
+            "lineStart": 312,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "candidateUnitId": "major_image",
+          "className": "Warlock",
+          "concept": "Warlock spell list Major Image",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_major_image",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 387,
+            "lineStart": 387,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "candidateUnitId": "major_image",
+          "className": "Wizard",
+          "concept": "Wizard spell list Major Image",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_major_image",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 252,
+            "lineStart": 252,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Major Image",
+        "Sorcerer spell list Major Image",
+        "Warlock spell list Major Image",
+        "Wizard spell list Major Image"
       ],
       "sdkInventoryDispositions": [
         "future-owner-before-sdk"
@@ -12628,115 +12737,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "major_image"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Sorcerer",
-        "Warlock",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:major-image",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"major_image\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:223",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:312",
-        ".references/srd-5.2.1/Classes/Warlock.md:387",
-        ".references/srd-5.2.1/Classes/Wizard.md:252"
-      ],
-      "rowCount": 4,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "major_image",
-          "className": "Bard",
-          "concept": "Bard spell list Major Image",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_major_image",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 223,
-            "lineStart": 223,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "major_image",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Major Image",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_major_image",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 312,
-            "lineStart": 312,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "major_image",
-          "className": "Warlock",
-          "concept": "Warlock spell list Major Image",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_major_image",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 387,
-            "lineStart": 387,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "candidateUnitId": "major_image",
-          "className": "Wizard",
-          "concept": "Wizard spell list Major Image",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_major_image",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 252,
-            "lineStart": 252,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Major Image",
-        "Sorcerer spell list Major Image",
-        "Warlock spell list Major Image",
-        "Wizard spell list Major Image"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
@@ -19130,11 +19130,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 223,
         "lineStart": 223,
@@ -42076,11 +42076,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 312,
         "lineStart": 312,
@@ -45298,11 +45298,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 387,
         "lineStart": 387,
@@ -51291,11 +51291,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_major_image",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 252,
         "lineStart": 252,
@@ -57904,18 +57904,18 @@
       "build-progression": 12,
       "character-battle-to-battle": 46,
       "character-sheet": 1,
-      "future-runtime-owner-before-sdk": 46,
-      "spell-effect-owner-review": 29,
+      "future-runtime-owner-before-sdk": 50,
+      "spell-effect-owner-review": 25,
       "table-only-closure": 4
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 109,
-      "unresolved-review": 29
+      "resolved": 113,
+      "unresolved-review": 25
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 29,
+      "closure-review-needed": 25,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 46,
+      "future-owner-before-sdk": 50,
       "sdk-scenario-needed": 2,
       "seed-scenario-present": 45,
       "table-only-closure-needed": 4
@@ -57924,9 +57924,9 @@
     "level5ScenarioGroupsByLane": {
       "battle-spell-sdk": 1,
       "explicit-closure": 12,
-      "future-owner-before-sdk": 25,
+      "future-owner-before-sdk": 26,
       "seed-present": 45,
-      "spell-effect-owner-review": 10,
+      "spell-effect-owner-review": 9,
       "table-only-closure": 1
     },
     "level5SeedScenarioRows": 45,
@@ -57951,14 +57951,14 @@
       "character-sheet": 8,
       "character-sheet-spell-access": 12,
       "class-feature-closure-review": 2,
-      "future-runtime-owner-before-sdk": 48,
+      "future-runtime-owner-before-sdk": 52,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 135,
+      "spell-effect-owner-review": 131,
       "table-only-closure": 15
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 633,
-      "unresolved-review": 137
+      "resolved": 637,
+      "unresolved-review": 133
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -57974,10 +57974,10 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 137,
+      "closure-review-needed": 133,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 48,
+      "future-owner-before-sdk": 52,
       "sdk-scenario-needed": 401,
       "seed-scenario-present": 109,
       "table-only-closure-needed": 15
@@ -57993,11 +57993,11 @@
       "character-sheet-sdk": 7,
       "explicit-closure": 60,
       "feature-owner-review": 2,
-      "future-owner-before-sdk": 27,
+      "future-owner-before-sdk": 28,
       "multi-owner-feature-sdk": 9,
       "seed-present": 109,
       "sheet-spell-access-sdk": 12,
-      "spell-effect-owner-review": 44,
+      "spell-effect-owner-review": 43,
       "table-only-closure": 5
     },
     "scenarioGroupsByTask": {
@@ -83817,6 +83817,115 @@
     },
     {
       "candidateUnitIds": [
+        "major_image"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:major-image",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"major_image\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:223",
+        ".references/srd-5.2.1/Classes/Sorcerer.md:312",
+        ".references/srd-5.2.1/Classes/Warlock.md:387",
+        ".references/srd-5.2.1/Classes/Wizard.md:252"
+      ],
+      "rowCount": 4,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "major_image",
+          "className": "Bard",
+          "concept": "Bard spell list Major Image",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_major_image",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 223,
+            "lineStart": 223,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "major_image",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Major Image",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_major_image",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 312,
+            "lineStart": 312,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "candidateUnitId": "major_image",
+          "className": "Warlock",
+          "concept": "Warlock spell list Major Image",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_major_image",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 387,
+            "lineStart": 387,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "candidateUnitId": "major_image",
+          "className": "Wizard",
+          "concept": "Wizard spell list Major Image",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_major_image",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 252,
+            "lineStart": 252,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Major Image",
+        "Sorcerer spell list Major Image",
+        "Warlock spell list Major Image",
+        "Wizard spell list Major Image"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "meld_into_stone"
       ],
       "categories": [
@@ -86982,115 +87091,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "major_image"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Sorcerer",
-        "Warlock",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:major-image",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"major_image\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:223",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:312",
-        ".references/srd-5.2.1/Classes/Warlock.md:387",
-        ".references/srd-5.2.1/Classes/Wizard.md:252"
-      ],
-      "rowCount": 4,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "major_image",
-          "className": "Bard",
-          "concept": "Bard spell list Major Image",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_major_image",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 223,
-            "lineStart": 223,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "major_image",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Major Image",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_major_image",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 312,
-            "lineStart": 312,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "major_image",
-          "className": "Warlock",
-          "concept": "Warlock spell list Major Image",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_major_image",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 387,
-            "lineStart": 387,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "candidateUnitId": "major_image",
-          "className": "Wizard",
-          "concept": "Wizard spell list Major Image",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_major_image",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 252,
-            "lineStart": 252,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Major Image",
-        "Sorcerer spell list Major Image",
-        "Warlock spell list Major Image",
-        "Wizard spell list Major Image"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {

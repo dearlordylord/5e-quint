@@ -111,6 +111,9 @@ const tableOnlySpellClosureKinds = new Set([
   battleReadinessClosureKind.socialKnowledgeEffect,
   battleReadinessClosureKind.tablePerceptionExploration,
 ]);
+const reviewedPresentationExplorationFutureSpellUnitIds = new Set([
+  "major_image",
+]);
 const characterCreationClosureKinds = new Set(["selection-grant-container"]);
 const futureFeatureClosureKinds = new Set([
   "character-fact-and-runtime-detached-split",
@@ -5195,6 +5198,19 @@ function spellEffectOwnerResult(row) {
     closure.kind ===
     battleReadinessClosureKind.outsideRuntimePresentationExploration
   ) {
+    if (
+      reviewedPresentationExplorationFutureSpellUnitIds.has(
+        row.candidateUnitId,
+      )
+    ) {
+      return {
+        proposedOwnerBoundary: "future-runtime-owner-before-sdk",
+        ownerBoundaryEvidence: {
+          source: "battle-readiness-closure",
+          closure,
+        },
+      };
+    }
     return {
       proposedOwnerBoundary: "spell-effect-owner-review",
       ownerBoundaryEvidence: {

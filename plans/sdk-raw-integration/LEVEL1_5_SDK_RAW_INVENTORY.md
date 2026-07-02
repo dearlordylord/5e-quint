@@ -38,10 +38,10 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 137 |
+| closure-review-needed | 133 |
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
-| future-owner-before-sdk | 48 |
+| future-owner-before-sdk | 52 |
 | sdk-scenario-needed | 401 |
 | seed-scenario-present | 109 |
 | table-only-closure-needed | 15 |
@@ -58,17 +58,17 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-sheet | 8 |
 | character-sheet-spell-access | 12 |
 | class-feature-closure-review | 2 |
-| future-runtime-owner-before-sdk | 48 |
+| future-runtime-owner-before-sdk | 52 |
 | multi-owner-sdk-split | 10 |
-| spell-effect-owner-review | 135 |
+| spell-effect-owner-review | 131 |
 | table-only-closure | 15 |
 
 ### All Level 1-5 Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 633 |
-| unresolved-review | 137 |
+| resolved | 637 |
+| unresolved-review | 133 |
 
 ### Scenario Groups by Task
 
@@ -92,20 +92,20 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-sheet-sdk | 7 |
 | explicit-closure | 60 |
 | feature-owner-review | 2 |
-| future-owner-before-sdk | 27 |
+| future-owner-before-sdk | 28 |
 | multi-owner-feature-sdk | 9 |
 | seed-present | 109 |
 | sheet-spell-access-sdk | 12 |
-| spell-effect-owner-review | 44 |
+| spell-effect-owner-review | 43 |
 | table-only-closure | 5 |
 
 ### Level 5 Completion Rows by SDK Disposition
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 29 |
+| closure-review-needed | 25 |
 | explicit-closure-recorded | 12 |
-| future-owner-before-sdk | 46 |
+| future-owner-before-sdk | 50 |
 | sdk-scenario-needed | 2 |
 | seed-scenario-present | 45 |
 | table-only-closure-needed | 4 |
@@ -117,16 +117,16 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | build-progression | 12 |
 | character-battle-to-battle | 46 |
 | character-sheet | 1 |
-| future-runtime-owner-before-sdk | 46 |
-| spell-effect-owner-review | 29 |
+| future-runtime-owner-before-sdk | 50 |
+| spell-effect-owner-review | 25 |
 | table-only-closure | 4 |
 
 ### Level 5 Completion Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 109 |
-| unresolved-review | 29 |
+| resolved | 113 |
+| unresolved-review | 25 |
 
 ### Level 5 Scenario Groups by Lane
 
@@ -134,9 +134,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | --- | ---: |
 | battle-spell-sdk | 1 |
 | explicit-closure | 12 |
-| future-owner-before-sdk | 25 |
+| future-owner-before-sdk | 26 |
 | seed-present | 45 |
-| spell-effect-owner-review | 10 |
+| spell-effect-owner-review | 9 |
 | table-only-closure | 1 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -292,6 +292,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Fighter | `fighter_tactical_shift` | Fighter Tactical Shift | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Sorcerer, Warlock, Wizard | `gaseous_form` | Sorcerer spell list Gaseous Form<br>Warlock spell list Gaseous Form<br>Wizard spell list Gaseous Form | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Cleric, Warlock, Wizard | `magic_circle` | Cleric spell list Magic Circle<br>Warlock spell list Magic Circle<br>Wizard spell list Magic Circle | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
+| L15-SDK-RAW-07 | future-owner-before-sdk | 4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard | `major_image` | Bard spell list Major Image<br>Sorcerer spell list Major Image<br>Warlock spell list Major Image<br>Wizard spell list Major Image | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 2 | spell-level-3 | Cleric, Druid | `meld_into_stone` | Cleric spell list Meld into Stone<br>Druid spell list Meld into Stone | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Paladin | `paladin_faithful_steed` | Paladin Faithful Steed | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | spell-level-3 | Wizard | `phantom_steed` | Wizard spell list Phantom Steed | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
@@ -347,7 +348,6 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `protection_from_energy` | Wizard spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `sleet_storm` | Wizard spell list Sleet Storm | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `slow` | Wizard spell list Slow | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
-| L15-SDK-RAW-07 | spell-effect-owner-review | 4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard | `major_image` | Bard spell list Major Image<br>Sorcerer spell list Major Image<br>Warlock spell list Major Image<br>Wizard spell list Major Image | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 2 | spell-level-3 | Bard, Wizard | `nondetection` | Bard spell list Nondetection<br>Wizard spell list Nondetection | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 2 | spell-level-3 | Bard, Druid | `plant_growth` | Bard spell list Plant Growth<br>Druid spell list Plant Growth | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 3 | spell-level-3 | Bard, Cleric, Wizard | `sending` | Bard spell list Sending<br>Cleric spell list Sending<br>Wizard spell list Sending | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
@@ -374,7 +374,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Bard spell list Fear | `fear` | `.references/srd-5.2.1/Classes/Bard.md:220` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers. |
 | spell-level-3 | Bard spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Bard.md:221` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Bard spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Bard.md:222` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control | Owner-specific operational evidence is classified and present. |
-| spell-level-3 | Bard spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Bard.md:223` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
+| spell-level-3 | Bard spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Bard.md:223` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
 | spell-level-3 | Bard spell list Mass Healing Word | `mass_healing_word` | `.references/srd-5.2.1/Classes/Bard.md:224` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | sdk-scenario-needed |  | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Bard spell list Nondetection | `nondetection` | `.references/srd-5.2.1/Classes/Bard.md:225` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers. |
 | spell-level-3 | Bard spell list Plant Growth | `plant_growth` | `.references/srd-5.2.1/Classes/Bard.md:226` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy. |
@@ -449,7 +449,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Sorcerer spell list Haste | `haste` | `.references/srd-5.2.1/Classes/Sorcerer.md:309` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Haste | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Sorcerer.md:310` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Lightning Bolt | `lightning_bolt` | `.references/srd-5.2.1/Classes/Sorcerer.md:311` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage | Owner-specific operational evidence is classified and present. |
-| spell-level-3 | Sorcerer spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Sorcerer.md:312` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
+| spell-level-3 | Sorcerer spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Sorcerer.md:312` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
 | spell-level-3 | Sorcerer spell list Protection from Energy | `protection_from_energy` | `.references/srd-5.2.1/Classes/Sorcerer.md:313` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Protection from Energy | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Sleet Storm | `sleet_storm` | `.references/srd-5.2.1/Classes/Sorcerer.md:314` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Sorcerer spell list Slow | `slow` | `.references/srd-5.2.1/Classes/Sorcerer.md:315` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties | Owner-specific operational evidence is classified and present. |
@@ -466,7 +466,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Warlock spell list Gaseous Form | `gaseous_form` | `.references/srd-5.2.1/Classes/Warlock.md:384` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Gaseous Form supplies typed Surface facts for the mist-cloud form, including replacement Fly Speed with hover, creature-space occupancy, narrow-opening passage, liquid-surface treatment, defensive projections, activity restrictions, zero-Hit-Point ending, Magic-action self-ending, and spell-end cleanup. Promoted runtime still needs a mist-cloud form Spell Effect owner that consumes caller/table-spatial witnesses without dispatching on Gaseous Form authored identity. |
 | spell-level-3 | Warlock spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Warlock.md:385` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Warlock spell list Magic Circle | `magic_circle` | `.references/srd-5.2.1/Classes/Warlock.md:386` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name. |
-| spell-level-3 | Warlock spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Warlock.md:387` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
+| spell-level-3 | Warlock spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Warlock.md:387` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
 | spell-level-3 | Warlock spell list Remove Curse | `remove_curse` | `.references/srd-5.2.1/Classes/Warlock.md:388` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects. |
 | spell-level-3 | Warlock spell list Tongues | `tongues` | `.references/srd-5.2.1/Classes/Warlock.md:389` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell. |
 | spell-level-3 | Warlock spell list Vampiric Touch | `vampiric_touch` | `.references/srd-5.2.1/Classes/Warlock.md:390` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Vampiric Touch's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned touch attack occurrence, retain slot-scaled Necrotic damage and spell attack facts for later Magic Action repeats, admit same-target or different-target creature choices within reach on each repeat, resolve damage, and apply caster self-healing equal to half the damage dealt. Table/spatial ownership must supply reach and target-legality witnesses rather than duplicating map or creature-position state inside generic Spell Invocation reducers. |
@@ -487,7 +487,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Wizard spell list Hypnotic Pattern | `hypnotic_pattern` | `.references/srd-5.2.1/Classes/Wizard.md:249` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Lightning Bolt | `lightning_bolt` | `.references/srd-5.2.1/Classes/Wizard.md:250` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Wizard spell list Magic Circle | `magic_circle` | `.references/srd-5.2.1/Classes/Wizard.md:251` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name. |
-| spell-level-3 | Wizard spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Wizard.md:252` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
+| spell-level-3 | Wizard spell list Major Image | `major_image` | `.references/srd-5.2.1/Classes/Wizard.md:252` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers. |
 | spell-level-3 | Wizard spell list Nondetection | `nondetection` | `.references/srd-5.2.1/Classes/Wizard.md:253` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers. |
 | spell-level-3 | Wizard spell list Phantom Steed | `phantom_steed` | `.references/srd-5.2.1/Classes/Wizard.md:254` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Phantom Steed remains closed at an explicit split owner boundary: mount lifecycle/control must model spell-created mount identity, caller-supplied unoccupied placement, Riding Horse stat-block projection with the spell Speed override, caster-or-chosen rider permission, damage-triggered spell end, and one-minute fade/dismount grace; object cleanup must model saddle/bit/bridle distance-vanish; table travel must model the 13 miles/hour fact. These owners must consume typed Surface/profile facts and explicit table witnesses without duplicating Riding Horse data, table geometry, travel state, equipment state, or authored-identity dispatch in generic runtime code. |
 | spell-level-3 | Wizard spell list Protection from Energy | `protection_from_energy` | `.references/srd-5.2.1/Classes/Wizard.md:255` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Protection from Energy | Owner-specific operational evidence is classified and present. |

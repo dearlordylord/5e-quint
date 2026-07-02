@@ -283,7 +283,7 @@
     {
       "number": 47,
       "id": "L5FULL-REV-03-MAJOR-IMAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-5 SDK owner boundary for Major Image"
     },
     {
@@ -458,7 +458,7 @@ closing or implementing the row.
 | 44 | `L5FULL-OWN-06-ROGUE-UNCANNY-DODGE` | owner-review | `rogue_uncanny_dodge` | 1 | `sdk-scenario-or-owner-closure-needed`, resolved owner. | Add SDK scenario or explicit SDK closure. | Row leaves owner-review without duplicating Reaction damage-reduction behavior. | .references/srd-5.2.1/Classes/Rogue.md:109 |
 | 45 | `L5FULL-REV-01-CLAIRVOYANCE` | table-only-closure | `clairvoyance` | 4 | `table-only-closure-needed`, resolved. | Preserve table/perception/exploration closure. | Four rows leave unresolved-review without adding battle-runtime sensor, targeting, visibility, companion, or actor state. | .references/srd-5.2.1/Classes/Bard.md:218<br>.references/srd-5.2.1/Classes/Cleric.md:207<br>.references/srd-5.2.1/Classes/Sorcerer.md:301<br>.references/srd-5.2.1/Classes/Wizard.md:240 |
 | 46 | `L5FULL-REV-02-CREATE-FOOD-AND-WATER` | future-owner-before-sdk | `create_food_and_water` | 1 | `future-owner-before-sdk`, resolved. | Preserve inventory/survival owner closure. | Row leaves unresolved-review without adding battle-runtime inventory, provision, consumption, spoilage, malnutrition, or dehydration state. | .references/srd-5.2.1/Classes/Cleric.md:208 |
-| 47 | `L5FULL-REV-03-MAJOR-IMAGE` | spell-effect-owner-review | `major_image` | 4 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Four rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:223<br>.references/srd-5.2.1/Classes/Sorcerer.md:312<br>.references/srd-5.2.1/Classes/Warlock.md:387<br>.references/srd-5.2.1/Classes/Wizard.md:252 |
+| 47 | `L5FULL-REV-03-MAJOR-IMAGE` | future-owner-before-sdk | `major_image` | 4 | `future-owner-before-sdk`, resolved. | Preserve illusion Spell Effect and table/presentation/perception owner closure. | Four rows leave unresolved-review without adding illusion occurrence, table/presentation/perception, map, line-of-sight, object/creature presence, or believability duplicate state. | .references/srd-5.2.1/Classes/Bard.md:223<br>.references/srd-5.2.1/Classes/Sorcerer.md:312<br>.references/srd-5.2.1/Classes/Warlock.md:387<br>.references/srd-5.2.1/Classes/Wizard.md:252 |
 | 48 | `L5FULL-REV-04-NONDETECTION` | spell-effect-owner-review | `nondetection` | 2 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Two rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:225<br>.references/srd-5.2.1/Classes/Wizard.md:253 |
 | 49 | `L5FULL-REV-05-PLANT-GROWTH` | spell-effect-owner-review | `plant_growth` | 2 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Two rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:226<br>.references/srd-5.2.1/Classes/Druid.md:258 |
 | 50 | `L5FULL-REV-06-SENDING` | spell-effect-owner-review | `sending` | 3 | `closure-review-needed`, unresolved. | Decide precise owner closure or split future owner prerequisite. | Three rows leave unresolved-review. | .references/srd-5.2.1/Classes/Bard.md:227<br>.references/srd-5.2.1/Classes/Cleric.md:218<br>.references/srd-5.2.1/Classes/Wizard.md:257 |
