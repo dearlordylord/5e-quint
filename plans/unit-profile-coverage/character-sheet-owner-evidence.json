@@ -417,7 +417,7 @@
         "packages/character-sheet-runtime/src/ability-checks.ts:characterSheetJumpDistanceAbility"
       ],
       "tests": [
-        "packages/character-sheet-runtime/src/ability-checks.test.ts:expectSecondStoryWorkProjection"
+        "packages/character-sheet-runtime/src/ability-checks.test.ts:secondStoryWorkProjectionTestName"
       ]
     },
     "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience": {

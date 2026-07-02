@@ -43,8 +43,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | --- | ---: |
 | catalog-authored-executable-follow-up | 1 |
 | catalog-authored-review-required | 49 |
-| catalog-installed-owner-evidence-present | 501 |
-| catalog-installed-owner-evidence-required | 4 |
+| catalog-installed-owner-evidence-present | 502 |
+| catalog-installed-owner-evidence-required | 3 |
 | catalog-only/dead-for-now | 207 |
 | level-5-7-follow-up-required | 22 |
 | missing-authored-record | 32 |
@@ -70,11 +70,11 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Battle readiness status | Rows |
 | --- | ---: |
-| accepted | 484 |
+| accepted | 485 |
 | accepted-no-battle-effect | 253 |
 | battle-runtime-required | 36 |
 | not-applicable | 77 |
-| owner-evidence-required | 50 |
+| owner-evidence-required | 49 |
 
 ## Spell-Level 3-4 Pressure Summary
 
@@ -795,7 +795,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Rogue Cunning Action | level-2 | character-level | class feature | `rogue_cunning_action` | `.references/srd-5.2.1/Classes/Rogue.md:81` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Rogue level 2 feature table row | level-2 | character-level | character-creation or progression mechanic | `class_rogue` | `.references/srd-5.2.1/Classes/Rogue.md:37` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
 | Rogue Fast Hands | level-3 | character-level | class feature | `rogue_fast_hands` | `.references/srd-5.2.1/Classes/Rogue.md:159` | present | installed | profile-subset-supported | catalog-installed-owner-evidence-present | accepted | profile-subset-remaining-mechanics-closed: table/tool-check owner; Utilize action owner; magic-item activation owner | Owner-specific operational evidence is classified and present. |
-| Rogue Second-Story Work | level-3 | character-level | class feature | `rogue_second_story_work` | `.references/srd-5.2.1/Classes/Rogue.md:167` | present | installed | supported-profile | catalog-installed-owner-evidence-required | owner-evidence-required | not-recorded | Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts. |
+| Rogue Second-Story Work | level-3 | character-level | class feature | `rogue_second_story_work` | `.references/srd-5.2.1/Classes/Rogue.md:167` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Rogue Steady Aim | level-3 | character-level | class feature | `rogue_steady_aim` | `.references/srd-5.2.1/Classes/Rogue.md:89` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Rogue level 3 feature table row | level-3 | character-level | character-creation or progression mechanic | `class_rogue` | `.references/srd-5.2.1/Classes/Rogue.md:38` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
 | Rogue Subclass | level-3 | character-level | subclass selection | `class_rogue` | `.references/srd-5.2.1/Classes/Rogue.md:85` | present | installed | unsupported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |

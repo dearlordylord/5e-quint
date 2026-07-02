@@ -41,8 +41,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 140 |
 | explicit-closure-needed | 36 |
 | explicit-closure-present | 24 |
-| future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 347 |
+| future-owner-before-sdk | 44 |
+| sdk-scenario-needed | 348 |
 | sdk-scenario-or-owner-closure-needed | 6 |
 | seed-scenario-present | 157 |
 | table-only-closure-needed | 15 |
@@ -56,10 +56,10 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-build-to-battle | 17 |
 | character-build-to-sheet | 112 |
 | character-creation | 29 |
-| character-sheet | 8 |
+| character-sheet | 9 |
 | character-sheet-spell-access | 12 |
 | class-feature-closure-review | 4 |
-| future-runtime-owner-before-sdk | 45 |
+| future-runtime-owner-before-sdk | 44 |
 | multi-owner-sdk-split | 10 |
 | spell-effect-owner-review | 136 |
 | table-only-closure | 15 |
@@ -90,11 +90,11 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | build-battle-sdk | 7 |
 | build-sheet-sdk | 19 |
 | character-creation-sdk | 24 |
-| character-sheet-sdk | 3 |
+| character-sheet-sdk | 4 |
 | explicit-closure | 36 |
 | explicit-closure-present | 24 |
 | feature-owner-review | 4 |
-| future-owner-before-sdk | 24 |
+| future-owner-before-sdk | 23 |
 | multi-owner-feature-sdk | 8 |
 | owner-review | 6 |
 | seed-present | 105 |
