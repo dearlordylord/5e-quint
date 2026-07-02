@@ -316,6 +316,7 @@ const barbarianDangerSenseUnitId = "barbarian_danger_sense";
 const barbarianRecklessAttackUnitId = "barbarian_reckless_attack";
 const bardBardicInspirationUnitId = "bard_bardic_inspiration";
 const monkMartialArtsUnitId = "monk_martial_arts";
+const monkMartialArtsWeaponUnitId = "weapon_dagger";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const rogueSneakAttackWeaponUnitId = "weapon_dagger";
 const rogueSneakAttackName = "Dagger";
@@ -862,7 +863,16 @@ const monkMartialArtsDraftPlan = {
       "background_equipment_choice",
       "option_b",
     ),
-    legalUnitChoice("class_monk", "equipment_purchase", "weapon_dagger"),
+    legalUnitChoice(
+      "class_monk",
+      "equipment_purchase",
+      monkMartialArtsWeaponUnitId,
+    ),
+    legalLoadoutChoice(
+      monkMartialArtsWeaponUnitId,
+      "weapon",
+      "wielded_one_handed",
+    ),
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 

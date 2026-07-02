@@ -235,13 +235,13 @@
     {
       "number": 39,
       "id": "L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Audit the first seed-present source regression batch"
     },
     {
       "number": 40,
       "id": "L12-SH40-REMAINING-BATCH-SPLIT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Split the remaining L1/L2 source harness groups"
     },
     {
@@ -495,8 +495,8 @@ Reviewer-loop convergence:
 | 36 | L12-SH36-MULTI-OWNER-DRUID-WILD-SHAPE - Split the Druid Wild Shape multi-owner SDK group | done | L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | multi-owner-feature-sdk | Druid Wild Shape is split into legal source scenario evidence and explicit owner follow-ups. |
 | 37 | L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE - Close the level-1 class table summary family | done | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH15-NEXT-BATCH-SPLIT | explicit-closure | Level-1 class table summary rows receive explicit non-runtime/table-summary closure evidence. |
 | 38 | L12-SH38-CLOSURE-ALARM - Close the Alarm spell-effect owner review group | done | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH15-NEXT-BATCH-SPLIT | spell-effect-owner-review | Alarm spell-list pressure rows receive closure evidence or concrete future owner tasks. |
-| 39 | L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH - Audit the first seed-present source regression batch | ready-for-research | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS, L12-SH15-NEXT-BATCH-SPLIT | seed-present | First migrated seed-present batch is checked for legal creation, real sheet/battle handoff, and row-specific assertion gaps. |
-| 40 | L12-SH40-REMAINING-BATCH-SPLIT - Split the remaining L1/L2 source harness groups | blocked | L12-SH24-BUILD-SHEET-BARD, L12-SH25-BUILD-SHEET-CLERIC, L12-SH26-BUILD-SHEET-DRUID, L12-SH27-BUILD-BATTLE-BARD, L12-SH28-BUILD-BATTLE-CLERIC, L12-SH29-CREATION-CLERIC-DIVINE-ORDER, L12-SH30-CREATION-DRUID-DRUIDIC, L12-SH31-SPELL-ACCESS-CLERIC, L12-SH32-SHEET-MONK-UNARMORED-DEFENSE, L12-SH33-BATTLE-FEATURE-RECKLESS-ATTACK, L12-SH34-BATTLE-SPELL-CHARM-PERSON, L12-SH35-BATTLE-SPELL-COLOR-SPRAY, L12-SH36-MULTI-OWNER-DRUID-WILD-SHAPE, L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE, L12-SH38-CLOSURE-ALARM, L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH | planning | Recompute remaining groups after the next batch and add the following one-session tasks. |
+| 39 | L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH - Audit the first seed-present source regression batch | done | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS, L12-SH15-NEXT-BATCH-SPLIT | seed-present | First migrated seed-present batch is checked for legal creation, real sheet/battle handoff, and row-specific assertion gaps. |
+| 40 | L12-SH40-REMAINING-BATCH-SPLIT - Split the remaining L1/L2 source harness groups | ready-for-research | L12-SH24-BUILD-SHEET-BARD, L12-SH25-BUILD-SHEET-CLERIC, L12-SH26-BUILD-SHEET-DRUID, L12-SH27-BUILD-BATTLE-BARD, L12-SH28-BUILD-BATTLE-CLERIC, L12-SH29-CREATION-CLERIC-DIVINE-ORDER, L12-SH30-CREATION-DRUID-DRUIDIC, L12-SH31-SPELL-ACCESS-CLERIC, L12-SH32-SHEET-MONK-UNARMORED-DEFENSE, L12-SH33-BATTLE-FEATURE-RECKLESS-ATTACK, L12-SH34-BATTLE-SPELL-CHARM-PERSON, L12-SH35-BATTLE-SPELL-COLOR-SPRAY, L12-SH36-MULTI-OWNER-DRUID-WILD-SHAPE, L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE, L12-SH38-CLOSURE-ALARM, L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH | planning | Recompute remaining groups after the next batch and add the following one-session tasks. |
 | 41 | L12-SH41-WILD-SHAPE-FORM-ACTION-SHAPES - Split remaining Wild Shape form Stat Block action shapes | blocked | L12-SH40-REMAINING-BATCH-SPLIT | generic-stat-block-action-procedure | Wild Shape form action sections outside the supported attack path remain closed until Task 40 sizes their generic Stat Block action owner tasks. |
 | 42 | L12-SH42-WILD-SHAPE-OBJECT-UTILIZE-TABLE - Split Wild Shape generic object and table-placement owners | blocked | L12-SH40-REMAINING-BATCH-SPLIT | generic-object-utilize-table-placement | Generic carried-object inventory, object retrieval, Utilize procedures, and table placement for dropped or merged Wild Shape equipment remain closed until Task 40 sizes the owner work. |
 | 43 | L12-SH43-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-A27 - Decide Wild Shape active-form persistence past battle handoff | blocked | L12-SH40-REMAINING-BATCH-SPLIT | session-active-effect-persistence-owner-decision | Cross-session active Wild Shape persistence remains closed by ASSUMPTIONS.md A27 until Task 40 routes the required owner decision. |
@@ -2253,7 +2253,7 @@ Plan Impact:
 
 ### Task 39 - L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -2300,12 +2300,7 @@ Plan Impact:
 
 ### Task 40 - L12-SH40-REMAINING-BATCH-SPLIT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for Tasks 24-39 to land so the next split can use their
-actual closeouts, inventory drift, and plan-impact notes.
+Status: `ready-for-research`
 
 Input:
 
