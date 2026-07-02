@@ -113,8 +113,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 210;
-const expectedLevelOneTwoSeedScenarioRows = 149;
+const expectedLevelOneTwoCampaignGroups = 212;
+const expectedLevelOneTwoSeedScenarioRows = 152;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -831,7 +831,7 @@ const bardMulticlassBuildSheetScenarioHelperNeedles = [
       '"performance"',
       '"bard_multiclass_musical_instrument_proficiency"',
       '"tool:tool_lute"',
-      "testLoadoutHoleId(\"weapon_longsword\", \"weapon\")",
+      'testLoadoutHoleId("weapon_longsword", "weapon")',
       "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
       "return { draft: afterLoadout, build: result.build };",
     ],
@@ -929,18 +929,15 @@ const clericBuildSheetScenarioRows = [
     rawSources: [".references/srd-5.2.1/Classes/Cleric.md:3"],
   },
   {
-    rowId:
-      "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
+    rowId: "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
     rawSources: [".references/srd-5.2.1/Classes/Cleric.md:12"],
   },
   {
-    rowId:
-      "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
+    rowId: "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
     rawSources: [".references/srd-5.2.1/Classes/Cleric.md:8"],
   },
   {
-    rowId:
-      "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
+    rowId: "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
     rawSources: [".references/srd-5.2.1/Classes/Cleric.md:7"],
   },
   {
@@ -1011,7 +1008,7 @@ const clericMulticlassBuildSheetScenarioHelperNeedles = [
       '"cleric_divine_order"',
       '"divine_order"',
       '"protector"',
-      "testLoadoutHoleId(\"weapon_longsword\", \"weapon\")",
+      'testLoadoutHoleId("weapon_longsword", "weapon")',
       "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
       "return { draft: afterLoadout, build: result.build };",
     ],
@@ -1079,23 +1076,19 @@ const druidBuildSheetScenarioHelperNeedles = [
 ];
 const druidBuildSheetScenarioRows = [
   {
-    rowId:
-      "srd521:classes/druid:level-1:class-container:druid_class_container",
+    rowId: "srd521:classes/druid:level-1:class-container:druid_class_container",
     rawSources: [".references/srd-5.2.1/Classes/Druid.md:3"],
   },
   {
-    rowId:
-      "srd521:classes/druid:level-1:core-trait:druid_armor_training",
+    rowId: "srd521:classes/druid:level-1:core-trait:druid_armor_training",
     rawSources: [".references/srd-5.2.1/Classes/Druid.md:13"],
   },
   {
-    rowId:
-      "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
+    rowId: "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
     rawSources: [".references/srd-5.2.1/Classes/Druid.md:8"],
   },
   {
-    rowId:
-      "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
+    rowId: "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
     rawSources: [".references/srd-5.2.1/Classes/Druid.md:7"],
   },
   {
@@ -1104,18 +1097,15 @@ const druidBuildSheetScenarioRows = [
     rawSources: [".references/srd-5.2.1/Classes/Druid.md:9"],
   },
   {
-    rowId:
-      "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
+    rowId: "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
     rawSources: [".references/srd-5.2.1/Classes/Druid.md:10"],
   },
   {
-    rowId:
-      "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
+    rowId: "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
     rawSources: [".references/srd-5.2.1/Classes/Druid.md:12"],
   },
   {
-    rowId:
-      "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
+    rowId: "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
     rawSources: [".references/srd-5.2.1/Classes/Druid.md:11"],
   },
 ].map((row) => ({
@@ -1175,7 +1165,7 @@ const druidPrimalOrderCreationScenarioNeedles = [
   "characterBuildFeatureUnitIds(fixture.build, unitLibrary)",
   '"druid_primal_order"',
   "fixture.build.spellcasting?.sources",
-  "cantrips: [...druidSpellAccessCantrips, \"guidance\"]",
+  'cantrips: [...druidSpellAccessCantrips, "guidance"]',
   "fixture.build.features",
   '"abilityCheckBonus"',
   'selectedFromUnitId: "druid_primal_order"',
@@ -1244,7 +1234,7 @@ const druidMulticlassBuildSheetScenarioHelperNeedles = [
       '"magician"',
       '"class_cantrip_choices"',
       '"guidance"',
-      "testLoadoutHoleId(\"weapon_longsword\", \"weapon\")",
+      'testLoadoutHoleId("weapon_longsword", "weapon")',
       "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
       "return { draft: afterLoadout, build: result.build };",
     ],
@@ -1292,7 +1282,7 @@ const fighterBuildSheetScenarioNeedles = [
   "selectedUnitChoiceOptionIds(",
   '"fighter_weapon_mastery"',
   '"weapon_mastery_options"',
-  "unitLibrary.requireUnit(\"fighter_weapon_mastery\")",
+  'unitLibrary.requireUnit("fighter_weapon_mastery")',
   '"weapon_mastery_choice"',
   '"class_level_total_choices"',
   '"class_proficient_weapons"',
@@ -1324,18 +1314,15 @@ const fighterBuildSheetScenarioRows = [
     rawSources: [".references/srd-5.2.1/Classes/Fighter.md:3"],
   },
   {
-    rowId:
-      "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
+    rowId: "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
     rawSources: [".references/srd-5.2.1/Classes/Fighter.md:12"],
   },
   {
-    rowId:
-      "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
+    rowId: "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
     rawSources: [".references/srd-5.2.1/Classes/Fighter.md:8"],
   },
   {
-    rowId:
-      "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
+    rowId: "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
     rawSources: [".references/srd-5.2.1/Classes/Fighter.md:7"],
   },
   {
@@ -1544,7 +1531,7 @@ const fighterMulticlassBuildSheetScenarioHelperNeedles = [
       '"fighter_fighting_style"',
       '"fighter_weapon_mastery"',
       '"weapon_mastery_options"',
-      "testLoadoutHoleId(\"weapon_longsword\", \"weapon\")",
+      'testLoadoutHoleId("weapon_longsword", "weapon")',
       "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
       "return { draft: afterLoadout, build: result.build };",
     ],
@@ -2134,7 +2121,7 @@ const seededSdkScenarioRows = [
       {
         anchor: "const bardSpellAccessPreparedSpells =",
         needles: [
-          '"charm_person"',
+          "commandSpellId",
           "colorSpraySpellId",
           "dissonantWhispersSpellId",
           "healingWordSpellId",
@@ -2198,9 +2185,9 @@ const seededSdkScenarioRows = [
         anchor: "const clericSpellAccessPreparedSpells =",
         needles: [
           "blessSpellId",
+          "commandSpellId",
           "cureWoundsSpellId",
           "guidingBoltSpellId",
-          "shieldOfFaithSpellId",
         ],
       },
       {
@@ -2249,7 +2236,7 @@ const seededSdkScenarioRows = [
       "fixture.sheet.build",
       'sourceUnitId: "class_druid"',
       'spellcastingAbility: "wis"',
-      "cantrips: [...druidSpellAccessCantrips, \"guidance\"]",
+      'cantrips: [...druidSpellAccessCantrips, "guidance"]',
       "spellbook: []",
       "preparedSpells: druidSpellAccessPreparedSpells",
       'spellcastingFocuses: ["druidic_focus"]',
@@ -2332,7 +2319,7 @@ const seededSdkScenarioRows = [
     helperNeedles: [
       {
         anchor: "const paladinSpellAccessPreparedSpells =",
-        needles: ["blessSpellId", "cureWoundsSpellId"],
+        needles: ["blessSpellId", "commandSpellId"],
       },
       {
         anchor: "const paladinSpellAccessDraftPlan =",
@@ -4506,6 +4493,86 @@ const seededSdkScenarioRows = [
     helperNeedles: baneSdkHelperNeedles("Warlock"),
   },
   {
+    candidateUnitId: "command",
+    className: "Bard",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Bard.md:69-89",
+      ".references/srd-5.2.1/Classes/Bard.md:163",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+      ".references/srd-5.2.1/Rules-Glossary.md:802-808",
+    ],
+    rowId:
+      "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
+    tracerNeedles: [
+      "const bardBuild = finalizedLevelOneBardCommandBuild();",
+      'sourceUnitId: "class_bard"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([commandSpellId])",
+      "build: bardBuild,",
+      "casterId: commandBardId,",
+      "expectedSpellSaveDc: 12,",
+    ],
+    helperNeedles: commandSdkHelperNeedles("Bard"),
+  },
+  {
+    candidateUnitId: "command",
+    className: "Cleric",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+      ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+      ".references/srd-5.2.1/Classes/Cleric.md:162",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+      ".references/srd-5.2.1/Rules-Glossary.md:802-808",
+    ],
+    rowId:
+      "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
+    tracerNeedles: [
+      "const clericBuild = finalizedLevelOneClericCommandBuild();",
+      'sourceUnitId: "class_cleric"',
+      'spellcastingAbility: "wis"',
+      "preparedSpells: expect.arrayContaining([commandSpellId])",
+    ],
+    helperNeedles: commandSdkHelperNeedles("Cleric"),
+  },
+  {
+    candidateUnitId: "command",
+    className: "Paladin",
+    levelBand: "spell-level-1",
+    label:
+      "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+      ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+      ".references/srd-5.2.1/Classes/Paladin.md:168-176",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+      ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+      ".references/srd-5.2.1/Rules-Glossary.md:802-808",
+    ],
+    rowId:
+      "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
+    tracerNeedles: [
+      "const paladinBuild = finalizedLevelOnePaladinCommandBuild();",
+      'sourceUnitId: "class_paladin"',
+      'spellcastingAbility: "cha"',
+      "preparedSpells: expect.arrayContaining([commandSpellId])",
+    ],
+    helperNeedles: commandSdkHelperNeedles("Paladin"),
+  },
+  {
     candidateUnitId: "shield_of_faith",
     className: "Cleric",
     levelBand: "spell-level-1",
@@ -6313,7 +6380,8 @@ function animalFriendshipSdkHelperNeedles() {
 function charmPersonSdkHelperNeedles() {
   return [
     {
-      anchor: "function finalizedLevelOneBardCharmPersonBuild(): CharacterBuild",
+      anchor:
+        "function finalizedLevelOneBardCharmPersonBuild(): CharacterBuild",
       needles: [
         "finalizedLevelOneBardBuild({",
         'draftIdText: "draft:l1-sdk-bard-charm-person"',
@@ -6716,6 +6784,114 @@ function baneTargetListFillHelperNeedle() {
       "targetId",
       "spellId: baneSpellId",
     ],
+  };
+}
+
+function commandSdkHelperNeedles(className) {
+  return [
+    commandBuildHelperNeedle(className),
+    ...(className === "Paladin" ? [levelOnePaladinBuildHelperNeedle()] : []),
+    commandResolutionHelperNeedle(),
+    commandTargetListFillHelperNeedle(),
+    commandOptionChoiceFillHelperNeedle(),
+  ];
+}
+
+function commandBuildHelperNeedle(className) {
+  const specs = {
+    Bard: {
+      anchor: "function finalizedLevelOneBardCommandBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOneBardBuild({",
+      draftIdText: "draft:l1-sdk-bard-command",
+      expectedBuildLabel: "Bard Command",
+      preparedNeedle: "commandSpellId",
+    },
+    Cleric: {
+      anchor: "function finalizedLevelOneClericCommandBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOneClericBuild({",
+      draftIdText: "draft:l1-sdk-cleric-command",
+      expectedBuildLabel: "Cleric Command",
+      preparedNeedle: "commandSpellId",
+    },
+    Paladin: {
+      anchor: "function finalizedLevelOnePaladinCommandBuild(): CharacterBuild",
+      buildHelper: "finalizedLevelOnePaladinBuild({",
+      draftIdText: "draft:l1-sdk-paladin-command",
+      expectedBuildLabel: "Paladin Command",
+      preparedNeedle: "preparedSpells: [blessSpellId, commandSpellId]",
+    },
+  };
+  const spec = specs[className];
+  if (spec === undefined) {
+    throw new Error(`Unsupported Command seed class ${className}.`);
+  }
+  return {
+    anchor: spec.anchor,
+    needles: [
+      spec.buildHelper,
+      `draftIdText: "${spec.draftIdText}"`,
+      `expectedBuildLabel: "${spec.expectedBuildLabel}"`,
+      spec.preparedNeedle,
+    ],
+  };
+}
+
+function commandResolutionHelperNeedle() {
+  return {
+    anchor: "function assertLevelOneCommand",
+    needles: [
+      'spellSlotActForProcedure(state, commandSpellId, 1, "command")',
+      "act.initialHoles",
+      '"commandOptionChoice"',
+      "commandTargetListFill(",
+      'commandOptionChoiceFill(commandOption, "grovel")',
+      "spellSaveDcForCaster(state, input.casterId)",
+      "spellId: commandSpellId",
+      'procedure: "command"',
+      'label: "Command targets"',
+      "maxTargets: 1",
+      'actionCost: "magicAction"',
+      'ability: "wis"',
+      'dc: { kind: "caster_spell_save_dc" }',
+      "rangeFeet: movementFeet(60)",
+      'label: "Command command option"',
+      '"approach"',
+      '"drop"',
+      '"flee"',
+      '"grovel"',
+      '"halt"',
+      'label: "Command target-list Saving Throw outcomes"',
+      "savingThrowOutcomeFill(save",
+      "{ targetId: monsterId, succeeded: false }",
+      'kind: "commandPending"',
+      'option: "grovel"',
+      "sourceSpellId: commandSpellId",
+      "spellSlotUsesThisTurn",
+      "{ spellLevel: 1, count: 2, expended: 1 }",
+      'candidate.subject.command === "commandGrovel"',
+      'hasCondition(groveledTarget.conditions, "prone")',
+    ],
+  };
+}
+
+function commandTargetListFillHelperNeedle() {
+  return {
+    anchor: "function commandTargetListFill",
+    needles: [
+      'kind: "spellTargetList"',
+      "value: { targetIds: [targetId] }",
+      'kind: "spellTarget"',
+      "casterId",
+      "targetId",
+      "spellId: commandSpellId",
+    ],
+  };
+}
+
+function commandOptionChoiceFillHelperNeedle() {
+  return {
+    anchor: "function commandOptionChoiceFill",
+    needles: ['kind: "commandOptionChoice"', "holeId: hole.holeId", "value"],
   };
 }
 
@@ -8016,7 +8192,9 @@ function assertLevelOneClassTableSummaryClosureEvidence(rows) {
       errors.push(`${row.rowId} has a divergent closure reason`);
     }
     if (evidence.rawAnchor !== "projected-from-row.source") {
-      errors.push(`${row.rowId} does not project its RAW anchor from row.source`);
+      errors.push(
+        `${row.rowId} does not project its RAW anchor from row.source`,
+      );
     }
     if (!row.source.path.startsWith(".references/srd-5.2.1/Classes/")) {
       errors.push(

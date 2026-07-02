@@ -15850,6 +15850,18 @@
       "category": "spell Unit pressure",
       "className": "Bard",
       "concept": "Bard spell list Command",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:69-89",
+          ".references/srd-5.2.1/Classes/Bard.md:163",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+          ".references/srd-5.2.1/Rules-Glossary.md:802-808"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -15857,7 +15869,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 166,
         "lineStart": 166,
@@ -20427,6 +20439,19 @@
       "category": "spell Unit pressure",
       "className": "Cleric",
       "concept": "Cleric spell list Command",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+          ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+          ".references/srd-5.2.1/Classes/Cleric.md:162",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+          ".references/srd-5.2.1/Rules-Glossary.md:802-808"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -20434,7 +20459,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 164,
         "lineStart": 164,
@@ -31676,6 +31701,19 @@
       "category": "spell Unit pressure",
       "className": "Paladin",
       "concept": "Paladin spell list Command",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+          ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+          ".references/srd-5.2.1/Classes/Paladin.md:168-176",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+          ".references/srd-5.2.1/Rules-Glossary.md:802-808"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "spell-level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -31683,7 +31721,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 177,
         "lineStart": 177,
@@ -51462,12 +51500,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 29,
+        "groupCount": 28,
         "lane": "battle-spell-sdk",
         "ownerTaskIds": [
           "L12-SH11-BATTLE-SPELL-FIRST-SLICE"
         ],
-        "rowCount": 72,
+        "rowCount": 69,
         "rowFamily": "source-row",
         "taskFamily": "battle-spell-sdk"
       },
@@ -51574,7 +51612,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 96,
+        "groupCount": 99,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -51586,7 +51624,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 148,
+        "rowCount": 151,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51669,16 +51707,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 96,
+        "groupCount": 99,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 148,
+        "rowCount": 151,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 68,
+        "groupCount": 67,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51689,7 +51727,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 157,
+        "rowCount": 154,
         "rowFamily": "source-row"
       },
       {
@@ -51708,7 +51746,7 @@
       "sourcePathPrefix": ".references/srd-5.2.1/"
     },
     "totals": {
-      "groupCount": 210,
+      "groupCount": 212,
       "rowCount": 400
     }
   },
@@ -52277,6 +52315,24 @@
       "wholeWidthSourceLifecycleProof": true
     },
     {
+      "candidateUnitId": "command",
+      "classification": "already legal creation path",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
+      "rowKey": "spell-level-1:Bard:command",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
       "candidateUnitId": "cure_wounds",
       "classification": "already legal creation path",
       "className": "Bard",
@@ -52606,6 +52662,24 @@
       "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
       "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
       "rowKey": "spell-level-1:Cleric:bless",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "command",
+      "classification": "already legal creation path",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
+      "rowKey": "spell-level-1:Cleric:command",
       "rowKind": "spell-unit-pressure",
       "sourceBuildPath": "legal-creation-draft-finalize",
       "usesRealSheetBattleHandoff": true,
@@ -53638,6 +53712,24 @@
       "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
       "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
       "rowKey": "spell-level-1:Paladin:bless",
+      "rowKind": "spell-unit-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
+    },
+    {
+      "candidateUnitId": "command",
+      "classification": "already legal creation path",
+      "className": "Paladin",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "spell-level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
+      "rowKey": "spell-level-1:Paladin:command",
       "rowKind": "spell-unit-pressure",
       "sourceBuildPath": "legal-creation-draft-finalize",
       "usesRealSheetBattleHandoff": true,
@@ -60423,16 +60515,16 @@
       "explicit-closure-needed": 48,
       "explicit-closure-present": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 350,
+      "sdk-scenario-needed": 347,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 154,
+      "seed-scenario-present": 157,
       "table-only-closure-needed": 15
     },
     "levelOneFourRows": 632,
-    "levelOneTwoCampaignGroups": 210,
+    "levelOneTwoCampaignGroups": 212,
     "levelOneTwoCampaignGroupsByLane": {
       "battle-feature-sdk": 4,
-      "battle-spell-sdk": 29,
+      "battle-spell-sdk": 28,
       "build-battle-sdk": 7,
       "build-sheet-sdk": 7,
       "character-creation-sdk": 10,
@@ -60440,7 +60532,7 @@
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 96,
+      "seed-present": 99,
       "sheet-spell-access-sdk": 3,
       "spell-effect-owner-review": 20,
       "table-only-closure": 2
@@ -60449,14 +60541,14 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 20,
       "explicit-closure-row": 12,
-      "seed-row": 96,
-      "source-row": 68,
+      "seed-row": 99,
+      "source-row": 67,
       "table-only-closure-row": 2
     },
     "levelOneTwoCampaignRows": 400,
     "levelOneTwoCampaignRowsByLane": {
       "battle-feature-sdk": 4,
-      "battle-spell-sdk": 72,
+      "battle-spell-sdk": 69,
       "build-battle-sdk": 10,
       "build-sheet-sdk": 50,
       "character-creation-sdk": 10,
@@ -60464,7 +60556,7 @@
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 148,
+      "seed-present": 151,
       "sheet-spell-access-sdk": 3,
       "spell-effect-owner-review": 67,
       "table-only-closure": 4
@@ -60473,28 +60565,28 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 67,
       "explicit-closure-row": 12,
-      "seed-row": 148,
-      "source-row": 157,
+      "seed-row": 151,
+      "source-row": 154,
       "table-only-closure-row": 4
     },
-    "levelOneTwoSeedMigrationAuditRows": 149,
+    "levelOneTwoSeedMigrationAuditRows": 152,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 85,
+      "already legal creation path": 88,
       "legal build-sheet owner proof": 59,
       "legal creation owner proof": 5
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
       "not-real-sheet-battle": 64,
-      "real-sheet-battle": 85
+      "real-sheet-battle": 88
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 149
+      "legal-creation-draft-finalize": 152
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 85,
-    "scenarioGroups": 414,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 88,
+    "scenarioGroups": 416,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 19,
-      "battle-spell-sdk": 80,
+      "battle-spell-sdk": 79,
       "build-battle-sdk": 7,
       "build-sheet-sdk": 19,
       "character-creation-sdk": 24,
@@ -60505,13 +60597,13 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 8,
       "owner-review": 6,
-      "seed-present": 102,
+      "seed-present": 105,
       "sheet-spell-access-sdk": 8,
       "spell-effect-owner-review": 44,
       "table-only-closure": 6
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 177,
+      "L15-SDK-RAW-03": 179,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -60519,97 +60611,6 @@
     }
   },
   "scenarioGroups": [
-    {
-      "candidateUnitIds": [
-        "command"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Paladin"
-      ],
-      "groupId": "l15-sdk-raw-03:battle-spell-sdk:command",
-      "lane": "battle-spell-sdk",
-      "levelBands": [
-        "spell-level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"battle-spell-sdk\",\"command\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:166",
-        ".references/srd-5.2.1/Classes/Cleric.md:164",
-        ".references/srd-5.2.1/Classes/Paladin.md:177"
-      ],
-      "rowCount": 3,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "command",
-          "className": "Bard",
-          "concept": "Bard spell list Command",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 166,
-            "lineStart": 166,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "command",
-          "className": "Cleric",
-          "concept": "Cleric spell list Command",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 164,
-            "lineStart": 164,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "command",
-          "className": "Paladin",
-          "concept": "Paladin spell list Command",
-          "levelBand": "spell-level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 177,
-            "lineStart": 177,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Command",
-        "Cleric spell list Command",
-        "Paladin spell list Command"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
     {
       "candidateUnitIds": [
         "dancing_lights"
@@ -69119,6 +69120,67 @@
     },
     {
       "candidateUnitIds": [
+        "command"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-bard-command",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Bard:command\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:163",
+        ".references/srd-5.2.1/Classes/Bard.md:166",
+        ".references/srd-5.2.1/Classes/Bard.md:69-89",
+        ".references/srd-5.2.1/Rules-Glossary.md:802-808",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "command",
+          "className": "Bard",
+          "concept": "Bard spell list Command",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 166,
+            "lineStart": 166,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Command"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
         "cure_wounds"
       ],
       "categories": [
@@ -69418,6 +69480,68 @@
       ],
       "sampleConcepts": [
         "Cleric spell list Bless"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "command"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-cleric-command",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Cleric:command\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:162",
+        ".references/srd-5.2.1/Classes/Cleric.md:164",
+        ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+        ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+        ".references/srd-5.2.1/Rules-Glossary.md:802-808",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "command",
+          "className": "Cleric",
+          "concept": "Cleric spell list Command",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 164,
+            "lineStart": 164,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Command"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -70086,6 +70210,68 @@
       ],
       "sampleConcepts": [
         "Paladin spell list Bless"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "command"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Paladin"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:spell-level-1-paladin-command",
+      "lane": "seed-present",
+      "levelBands": [
+        "spell-level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"spell-level-1:Paladin:command\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Paladin.md:168-176",
+        ".references/srd-5.2.1/Classes/Paladin.md:177",
+        ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+        ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+        ".references/srd-5.2.1/Rules-Glossary.md:802-808",
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "command",
+          "className": "Paladin",
+          "concept": "Paladin spell list Command",
+          "levelBand": "spell-level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 177,
+            "lineStart": 177,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Paladin spell list Command"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -93801,7 +93987,7 @@
         {
           "anchor": "const bardSpellAccessPreparedSpells =",
           "needles": [
-            "\"charm_person\"",
+            "commandSpellId",
             "colorSpraySpellId",
             "dissonantWhispersSpellId",
             "healingWordSpellId"
@@ -93871,9 +94057,9 @@
           "anchor": "const clericSpellAccessPreparedSpells =",
           "needles": [
             "blessSpellId",
+            "commandSpellId",
             "cureWoundsSpellId",
-            "guidingBoltSpellId",
-            "shieldOfFaithSpellId"
+            "guidingBoltSpellId"
           ]
         },
         {
@@ -94014,7 +94200,7 @@
           "anchor": "const paladinSpellAccessPreparedSpells =",
           "needles": [
             "blessSpellId",
-            "cureWoundsSpellId"
+            "commandSpellId"
           ]
         },
         {
@@ -97501,6 +97687,303 @@
         "casterId: baneWarlockId,",
         "expectedSpellSaveDc: 12,",
         "{ spellLevel: 1, count: 1, expended: 1 }"
+      ]
+    },
+    {
+      "candidateUnitId": "command",
+      "className": "Bard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:69-89",
+          ".references/srd-5.2.1/Classes/Bard.md:163",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+          ".references/srd-5.2.1/Rules-Glossary.md:802-808"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneBardCommandBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneBardBuild({",
+            "draftIdText: \"draft:l1-sdk-bard-command\"",
+            "expectedBuildLabel: \"Bard Command\"",
+            "commandSpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneCommand",
+          "needles": [
+            "spellSlotActForProcedure(state, commandSpellId, 1, \"command\")",
+            "act.initialHoles",
+            "\"commandOptionChoice\"",
+            "commandTargetListFill(",
+            "commandOptionChoiceFill(commandOption, \"grovel\")",
+            "spellSaveDcForCaster(state, input.casterId)",
+            "spellId: commandSpellId",
+            "procedure: \"command\"",
+            "label: \"Command targets\"",
+            "maxTargets: 1",
+            "actionCost: \"magicAction\"",
+            "ability: \"wis\"",
+            "dc: { kind: \"caster_spell_save_dc\" }",
+            "rangeFeet: movementFeet(60)",
+            "label: \"Command command option\"",
+            "\"approach\"",
+            "\"drop\"",
+            "\"flee\"",
+            "\"grovel\"",
+            "\"halt\"",
+            "label: \"Command target-list Saving Throw outcomes\"",
+            "savingThrowOutcomeFill(save",
+            "{ targetId: monsterId, succeeded: false }",
+            "kind: \"commandPending\"",
+            "option: \"grovel\"",
+            "sourceSpellId: commandSpellId",
+            "spellSlotUsesThisTurn",
+            "{ spellLevel: 1, count: 2, expended: 1 }",
+            "candidate.subject.command === \"commandGrovel\"",
+            "hasCondition(groveledTarget.conditions, \"prone\")"
+          ]
+        },
+        {
+          "anchor": "function commandTargetListFill",
+          "needles": [
+            "kind: \"spellTargetList\"",
+            "value: { targetIds: [targetId] }",
+            "kind: \"spellTarget\"",
+            "casterId",
+            "targetId",
+            "spellId: commandSpellId"
+          ]
+        },
+        {
+          "anchor": "function commandOptionChoiceFill",
+          "needles": [
+            "kind: \"commandOptionChoice\"",
+            "holeId: hole.holeId",
+            "value"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command",
+      "rowKey": "spell-level-1:Bard:command",
+      "tracerNeedles": [
+        "const bardBuild = finalizedLevelOneBardCommandBuild();",
+        "sourceUnitId: \"class_bard\"",
+        "spellcastingAbility: \"cha\"",
+        "preparedSpells: expect.arrayContaining([commandSpellId])",
+        "build: bardBuild,",
+        "casterId: commandBardId,",
+        "expectedSpellSaveDc: 12,"
+      ]
+    },
+    {
+      "candidateUnitId": "command",
+      "className": "Cleric",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:33-35",
+          ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+          ".references/srd-5.2.1/Classes/Cleric.md:162",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+          ".references/srd-5.2.1/Rules-Glossary.md:802-808"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOneClericCommandBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOneClericBuild({",
+            "draftIdText: \"draft:l1-sdk-cleric-command\"",
+            "expectedBuildLabel: \"Cleric Command\"",
+            "commandSpellId"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneCommand",
+          "needles": [
+            "spellSlotActForProcedure(state, commandSpellId, 1, \"command\")",
+            "act.initialHoles",
+            "\"commandOptionChoice\"",
+            "commandTargetListFill(",
+            "commandOptionChoiceFill(commandOption, \"grovel\")",
+            "spellSaveDcForCaster(state, input.casterId)",
+            "spellId: commandSpellId",
+            "procedure: \"command\"",
+            "label: \"Command targets\"",
+            "maxTargets: 1",
+            "actionCost: \"magicAction\"",
+            "ability: \"wis\"",
+            "dc: { kind: \"caster_spell_save_dc\" }",
+            "rangeFeet: movementFeet(60)",
+            "label: \"Command command option\"",
+            "\"approach\"",
+            "\"drop\"",
+            "\"flee\"",
+            "\"grovel\"",
+            "\"halt\"",
+            "label: \"Command target-list Saving Throw outcomes\"",
+            "savingThrowOutcomeFill(save",
+            "{ targetId: monsterId, succeeded: false }",
+            "kind: \"commandPending\"",
+            "option: \"grovel\"",
+            "sourceSpellId: commandSpellId",
+            "spellSlotUsesThisTurn",
+            "{ spellLevel: 1, count: 2, expended: 1 }",
+            "candidate.subject.command === \"commandGrovel\"",
+            "hasCondition(groveledTarget.conditions, \"prone\")"
+          ]
+        },
+        {
+          "anchor": "function commandTargetListFill",
+          "needles": [
+            "kind: \"spellTargetList\"",
+            "value: { targetIds: [targetId] }",
+            "kind: \"spellTarget\"",
+            "casterId",
+            "targetId",
+            "spellId: commandSpellId"
+          ]
+        },
+        {
+          "anchor": "function commandOptionChoiceFill",
+          "needles": [
+            "kind: \"commandOptionChoice\"",
+            "holeId: hole.holeId",
+            "value"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
+      "rowKey": "spell-level-1:Cleric:command",
+      "tracerNeedles": [
+        "const clericBuild = finalizedLevelOneClericCommandBuild();",
+        "sourceUnitId: \"class_cleric\"",
+        "spellcastingAbility: \"wis\"",
+        "preparedSpells: expect.arrayContaining([commandSpellId])"
+      ]
+    },
+    {
+      "candidateUnitId": "command",
+      "className": "Paladin",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Paladin.md:33-56",
+          ".references/srd-5.2.1/Classes/Paladin.md:66-82",
+          ".references/srd-5.2.1/Classes/Paladin.md:168-176",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:90-96",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:154-176",
+          ".references/srd-5.2.1/Spells/Descriptions-A-D.md:820-837",
+          ".references/srd-5.2.1/Rules-Glossary.md:802-808"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "function finalizedLevelOnePaladinCommandBuild(): CharacterBuild",
+          "needles": [
+            "finalizedLevelOnePaladinBuild({",
+            "draftIdText: \"draft:l1-sdk-paladin-command\"",
+            "expectedBuildLabel: \"Paladin Command\"",
+            "preparedSpells: [blessSpellId, commandSpellId]"
+          ]
+        },
+        {
+          "anchor": "function finalizedLevelOnePaladinBuild(input:",
+          "needles": [
+            "createCharacterDraft({",
+            "draftId: characterDraftId(input.draftIdText)",
+            "\"class_paladin\"",
+            "\"class_prepared_spell_choices\"",
+            "...input.preparedSpells",
+            "\"paladin_weapon_mastery\"",
+            "\"weapon_longsword\"",
+            "\"weapon_spear\"",
+            "\"background_criminal\"",
+            "\"class_equipment_choice\"",
+            "\"equipment_purchase\"",
+            "\"wielded_one_handed\"",
+            "input.expectedBuildLabel",
+            "return result.build;"
+          ]
+        },
+        {
+          "anchor": "function assertLevelOneCommand",
+          "needles": [
+            "spellSlotActForProcedure(state, commandSpellId, 1, \"command\")",
+            "act.initialHoles",
+            "\"commandOptionChoice\"",
+            "commandTargetListFill(",
+            "commandOptionChoiceFill(commandOption, \"grovel\")",
+            "spellSaveDcForCaster(state, input.casterId)",
+            "spellId: commandSpellId",
+            "procedure: \"command\"",
+            "label: \"Command targets\"",
+            "maxTargets: 1",
+            "actionCost: \"magicAction\"",
+            "ability: \"wis\"",
+            "dc: { kind: \"caster_spell_save_dc\" }",
+            "rangeFeet: movementFeet(60)",
+            "label: \"Command command option\"",
+            "\"approach\"",
+            "\"drop\"",
+            "\"flee\"",
+            "\"grovel\"",
+            "\"halt\"",
+            "label: \"Command target-list Saving Throw outcomes\"",
+            "savingThrowOutcomeFill(save",
+            "{ targetId: monsterId, succeeded: false }",
+            "kind: \"commandPending\"",
+            "option: \"grovel\"",
+            "sourceSpellId: commandSpellId",
+            "spellSlotUsesThisTurn",
+            "{ spellLevel: 1, count: 2, expended: 1 }",
+            "candidate.subject.command === \"commandGrovel\"",
+            "hasCondition(groveledTarget.conditions, \"prone\")"
+          ]
+        },
+        {
+          "anchor": "function commandTargetListFill",
+          "needles": [
+            "kind: \"spellTargetList\"",
+            "value: { targetIds: [targetId] }",
+            "kind: \"spellTarget\"",
+            "casterId",
+            "targetId",
+            "spellId: commandSpellId"
+          ]
+        },
+        {
+          "anchor": "function commandOptionChoiceFill",
+          "needles": [
+            "kind: \"commandOptionChoice\"",
+            "holeId: hole.holeId",
+            "value"
+          ]
+        }
+      ],
+      "levelBand": "spell-level-1",
+      "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
+      "rowKey": "spell-level-1:Paladin:command",
+      "tracerNeedles": [
+        "const paladinBuild = finalizedLevelOnePaladinCommandBuild();",
+        "sourceUnitId: \"class_paladin\"",
+        "spellcastingAbility: \"cha\"",
+        "preparedSpells: expect.arrayContaining([commandSpellId])"
       ]
     },
     {

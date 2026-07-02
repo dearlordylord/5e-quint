@@ -95,9 +95,7 @@ import {
   spellSlotLevel,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import {
-  readClassCreationFacts,
-} from "@dnd/surface/surface/character-creation-readers";
+import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import { describe, expect, test } from "vitest";
 
 import { settleCharacterSheetFromBattle } from "./index.ts";
@@ -194,6 +192,7 @@ const colorSprayBardId = combatantId("combatant:l1-sdk-color-spray-bard");
 const baneBardId = combatantId("combatant:l1-sdk-bane-bard");
 const baneClericId = combatantId("combatant:l1-sdk-bane-cleric");
 const baneWarlockId = combatantId("combatant:l1-sdk-bane-warlock");
+const commandBardId = combatantId("combatant:l1-sdk-command-bard");
 const animalFriendshipDruidId = combatantId(
   "combatant:l1-sdk-animal-friendship-druid",
 );
@@ -349,6 +348,7 @@ const viciousMockerySpellId = "vicious_mockery";
 const healingWordSpellId = "healing_word";
 const baneSpellId = "bane";
 const blessSpellId = "bless";
+const commandSpellId = "command";
 const shieldOfFaithSpellId = "shield_of_faith";
 const animalFriendshipSpellId = "animal_friendship";
 const charmPersonSpellId = "charm_person";
@@ -468,11 +468,7 @@ const druidWildShapeDraftPlan = {
       "faerie_fire",
       healingWordSpellId,
     ),
-    legalUnitChoice(
-      "druid_primal_order",
-      "primal_order",
-      "warden",
-    ),
+    legalUnitChoice("druid_primal_order", "primal_order", "warden"),
     legalUnitChoice(
       "background_criminal",
       "background_ability_score_increase",
@@ -559,7 +555,7 @@ const bardSpellAccessCantrips = [
   viciousMockerySpellId,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const bardSpellAccessPreparedSpells = [
-  "charm_person",
+  commandSpellId,
   colorSpraySpellId,
   dissonantWhispersSpellId,
   healingWordSpellId,
@@ -580,9 +576,9 @@ const clericSpellAccessCantrips = [
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const clericSpellAccessPreparedSpells = [
   blessSpellId,
+  commandSpellId,
   cureWoundsSpellId,
   guidingBoltSpellId,
-  shieldOfFaithSpellId,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const clericMulticlassProgression = {
   startingClass: classUnitId("class_fighter"),
@@ -605,7 +601,7 @@ const druidSpellAccessPreparedSpells = [
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const paladinSpellAccessPreparedSpells = [
   blessSpellId,
-  cureWoundsSpellId,
+  commandSpellId,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const wizardArcaneRecoveryCantrips = [
   fireBoltSpellId,
@@ -1332,7 +1328,9 @@ describe("level 1 SDK RAW integration", () => {
       ),
     );
     expect(
-      requireRight(characterBuildArmorTraining(fixture.sheet.build, unitLibrary)),
+      requireRight(
+        characterBuildArmorTraining(fixture.sheet.build, unitLibrary),
+      ),
     ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
   });
 
@@ -1398,12 +1396,12 @@ describe("level 1 SDK RAW integration", () => {
       armorClass: 16,
       movement: { speedFeet: movementFeet(30) },
     });
-    expect(attackSubject(fixture.state, barbarianId, "Longsword")).toMatchObject(
-      {
-        tag: "action",
-        actorId: barbarianId,
-      },
-    );
+    expect(
+      attackSubject(fixture.state, barbarianId, "Longsword"),
+    ).toMatchObject({
+      tag: "action",
+      actorId: barbarianId,
+    });
   });
 
   test("Barbarian Unarmored Defense sheet projection derives Armor Class from legal creation and a fresh sheet", () => {
@@ -1798,7 +1796,11 @@ describe("level 1 SDK RAW integration", () => {
         combatantId: druidWildShapeDruidId,
         initiative: 20,
         monsters: [
-          monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
         ],
       },
     });
@@ -1966,7 +1968,8 @@ describe("level 1 SDK RAW integration", () => {
     expect(fixture.build.progression.advancements).toEqual([]);
     expect(fixture.sheet.build).toEqual(fixture.build);
     expect(
-      requireCharacterCombatant(fixture.state, legalFighterId).origin.characterId,
+      requireCharacterCombatant(fixture.state, legalFighterId).origin
+        .characterId,
     ).toBe("character:l1-sdk-legal-fighter");
   });
 
@@ -2097,7 +2100,11 @@ describe("level 1 SDK RAW integration", () => {
       "Longsword",
     );
     const target = requireHole(
-      resolveBattleSubject({ state: fixture.state, subject: attack, fills: [] }),
+      resolveBattleSubject({
+        state: fixture.state,
+        subject: attack,
+        fills: [],
+      }),
       "targetChoice",
     );
     const targetFill = attackTargetFill(
@@ -2124,7 +2131,9 @@ describe("level 1 SDK RAW integration", () => {
         ],
       }),
     ).state;
-    expect(snapshotBattle(afterOrdinaryAction).turn.actionResources).toEqual([]);
+    expect(snapshotBattle(afterOrdinaryAction).turn.actionResources).toEqual(
+      [],
+    );
 
     const act = unitFeatureActForUnitId(
       afterOrdinaryAction,
@@ -3136,10 +3145,12 @@ describe("level 1 SDK RAW integration", () => {
       armorClass: 15,
       movement: { speedFeet: movementFeet(30) },
     });
-    expect(attackSubject(fixture.state, druidId, "Quarterstaff")).toMatchObject({
-      tag: "action",
-      actorId: druidId,
-    });
+    expect(attackSubject(fixture.state, druidId, "Quarterstaff")).toMatchObject(
+      {
+        tag: "action",
+        actorId: druidId,
+      },
+    );
   });
 
   test("Fighter build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {
@@ -3503,7 +3514,9 @@ describe("level 1 SDK RAW integration", () => {
         "bard_multiclass_skill_proficiency",
       ),
     ).toEqual(["performance"]);
-    expect(proficiencies.skills).toEqual(expect.arrayContaining(["performance"]));
+    expect(proficiencies.skills).toEqual(
+      expect.arrayContaining(["performance"]),
+    );
     expect(
       selectedUnitChoiceOptionIds(
         finalized.draft,
@@ -4033,7 +4046,11 @@ describe("level 1 SDK RAW integration", () => {
         combatantId: rogueId,
         initiative: 20,
         monsters: [
-          monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
         ],
       },
     });
@@ -4798,6 +4815,48 @@ describe("level 1 SDK RAW integration", () => {
       casterId: baneWarlockId,
       expectedSpellSaveDc: 12,
       expectedSpellSlots: [{ spellLevel: 1, count: 1, expended: 1 }],
+    });
+  });
+
+  test("Bard, Cleric, and Paladin Command spell-list choices share one Wisdom save selected-command battle resolution", () => {
+    const bardBuild = finalizedLevelOneBardCommandBuild();
+    const clericBuild = finalizedLevelOneClericCommandBuild();
+    const paladinBuild = finalizedLevelOnePaladinCommandBuild();
+
+    expect(bardBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_bard",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([commandSpellId]),
+        }),
+      ]),
+    );
+    expect(clericBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_cleric",
+          spellcastingAbility: "wis",
+          preparedSpells: expect.arrayContaining([commandSpellId]),
+        }),
+      ]),
+    );
+    expect(paladinBuild.spellcasting?.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceUnitId: "class_paladin",
+          spellcastingAbility: "cha",
+          preparedSpells: expect.arrayContaining([commandSpellId]),
+        }),
+      ]),
+    );
+
+    assertLevelOneCommand({
+      battleIdText: "battle:l1-sdk-command-bard",
+      characterIdText: "character:l1-sdk-command-bard",
+      build: bardBuild,
+      casterId: commandBardId,
+      expectedSpellSaveDc: 12,
     });
   });
 
@@ -7739,9 +7798,9 @@ function assertLevelOneBane(input: {
   expect(requireCombatant(resolved.state, monsterId).activeEffects).toEqual([
     expectedLevelOneBaneEffect(input.casterId),
   ]);
-  expect(requireCombatant(resolved.state, secondMonsterId).activeEffects).toEqual(
-    [],
-  );
+  expect(
+    requireCombatant(resolved.state, secondMonsterId).activeEffects,
+  ).toEqual([]);
   expect(caster.concentration).toEqual({
     sourceSpellId: baneSpellId,
     effectKind: "spellEffect",
@@ -7771,6 +7830,177 @@ function expectedLevelOneBaneEffect(
       combatantId: casterId,
     },
   };
+}
+
+function assertLevelOneCommand(input: {
+  readonly battleIdText: string;
+  readonly characterIdText: string;
+  readonly build: CharacterBuild;
+  readonly casterId: CombatantId;
+  readonly expectedSpellSaveDc: number;
+}): void {
+  const state = battleFromSheets({
+    battleIdText: input.battleIdText,
+    characters: [
+      characterSheet({
+        characterIdText: input.characterIdText,
+        build: input.build,
+        combatantId: input.casterId,
+        initiative: 20,
+      }),
+    ],
+    monsters: [
+      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+    ],
+  });
+  const act = spellSlotActForProcedure(state, commandSpellId, 1, "command");
+  const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
+  const commandOption = requireHoleFromList(
+    act.initialHoles,
+    "commandOptionChoice",
+  );
+  const targetFill = commandTargetListFill(
+    targetList,
+    input.casterId,
+    monsterId,
+  );
+  const optionFill = commandOptionChoiceFill(commandOption, "grovel");
+
+  expect(spellSaveDcForCaster(state, input.casterId)).toBe(
+    input.expectedSpellSaveDc,
+  );
+  expect(act.subject).toMatchObject({
+    tag: "actionSpell",
+    actorId: input.casterId,
+    invocation: {
+      tag: "spellSlot",
+      spellId: commandSpellId,
+      slotLevel: 1,
+      procedure: "command",
+    },
+    mode: { tag: "cast" },
+  });
+  expect(targetList).toMatchObject({
+    label: "Command targets",
+    minTargets: 1,
+    maxTargets: 1,
+    requiresTableSpatialFact: true,
+    choices: expect.arrayContaining([monsterId]),
+    spell: {
+      access: { tag: "prepared" },
+      procedure: "command",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      actionCost: "magicAction",
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+      rangeFeet: movementFeet(60),
+    },
+  });
+  expect(commandOption).toMatchObject({
+    label: "Command command option",
+    choices: expect.arrayContaining([
+      "approach",
+      "drop",
+      "flee",
+      "grovel",
+      "halt",
+    ]),
+    spell: {
+      procedure: "command",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      spell: { id: commandSpellId },
+    },
+  });
+
+  const awaitingSaves = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill, optionFill],
+  });
+  const save = requireHole(awaitingSaves, "savingThrowOutcome");
+
+  expect(save).toMatchObject({
+    label: "Command target-list Saving Throw outcomes",
+    ability: "wis",
+    dc: { kind: "caster_spell_save_dc" },
+    spell: {
+      procedure: "command",
+      resource: { tag: "spellSlot", slotLevel: 1 },
+      targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+      rangeFeet: movementFeet(60),
+    },
+  });
+
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(save, [
+          { targetId: monsterId, succeeded: false },
+        ]),
+      ],
+    }),
+  );
+  const caster = requireCharacterCombatant(resolved.state, input.casterId);
+  const target = requireCombatant(resolved.state, monsterId);
+
+  expect(target.activeEffects).toEqual([
+    expect.objectContaining({
+      kind: "commandPending",
+      option: "grovel",
+      sourceSpellId: commandSpellId,
+      sourceCombatantId: input.casterId,
+      expiresAt: expect.objectContaining({
+        kind: "endOfTurn",
+        combatantId: monsterId,
+      }),
+    }),
+  ]);
+  expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
+  expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
+    { kind: "committed", combatantId: input.casterId },
+  ]);
+  expect(caster.concentration).toBeNull();
+  expect(caster.origin.spellcasting?.spellSlots).toEqual([
+    { spellLevel: 1, count: 2, expended: 1 },
+  ]);
+
+  const targetTurn = requireResolved(
+    endTurn({ state: resolved.state, actorId: input.casterId }),
+  ).state;
+  const grovelAct = discoverBattleActs(targetTurn).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "commandGrovel" &&
+      candidate.subject.actorId === monsterId,
+  );
+  expect(grovelAct).toMatchObject({
+    subject: {
+      tag: "runtimeCommand",
+      actorId: monsterId,
+      command: "commandGrovel",
+      sourceCombatantId: input.casterId,
+    },
+    initialHoles: [],
+  });
+  if (grovelAct === undefined) {
+    throw new Error("Expected Command Grovel runtime act.");
+  }
+
+  const groveled = requireResolved(
+    resolveBattleSubject({
+      state: targetTurn,
+      subject: grovelAct.subject,
+      fills: [],
+    }),
+  );
+  const groveledTarget = requireCombatant(groveled.state, monsterId);
+  expect(hasCondition(groveledTarget.conditions, "prone")).toBe(true);
+  expect(groveledTarget.activeEffects).toEqual([]);
 }
 
 function assertLevelOneShieldOfFaith(input: {
@@ -10436,7 +10666,10 @@ function finalizedFighterToBardMulticlassBuild(): {
       expectedRevision: afterInitial.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_fighter", "class_skill_proficiency_choice"),
+          testUnitChoiceHoleId(
+            "class_fighter",
+            "class_skill_proficiency_choice",
+          ),
           "perception",
           "survival",
         ),
@@ -10448,7 +10681,10 @@ function finalizedFighterToBardMulticlassBuild(): {
           "defense",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+          testUnitChoiceHoleId(
+            "fighter_weapon_mastery",
+            "weapon_mastery_options",
+          ),
           "weapon_longsword",
           "weapon_spear",
           "weapon_flail",
@@ -10513,7 +10749,10 @@ function finalizedFighterToBardMulticlassBuild(): {
       unitLibrary,
       expectedRevision: afterPurchase.revision,
       fills: [
-        creationChoiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
+        creationChoiceFill(
+          testLoadoutHoleId("armor_chain_mail", "armor"),
+          "worn",
+        ),
         creationChoiceFill(
           testLoadoutHoleId("equipment_shield", "shield"),
           "wielded",
@@ -10596,7 +10835,10 @@ function finalizedFighterToClericMulticlassBuild(): {
           "defense",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+          testUnitChoiceHoleId(
+            "fighter_weapon_mastery",
+            "weapon_mastery_options",
+          ),
           "weapon_longsword",
           "weapon_spear",
           "weapon_flail",
@@ -10651,7 +10893,10 @@ function finalizedFighterToClericMulticlassBuild(): {
       unitLibrary,
       expectedRevision: afterPurchase.revision,
       fills: [
-        creationChoiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
+        creationChoiceFill(
+          testLoadoutHoleId("armor_chain_mail", "armor"),
+          "worn",
+        ),
         creationChoiceFill(
           testLoadoutHoleId("equipment_shield", "shield"),
           "wielded",
@@ -10734,7 +10979,10 @@ function finalizedFighterToDruidMulticlassBuild(): {
           "defense",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+          testUnitChoiceHoleId(
+            "fighter_weapon_mastery",
+            "weapon_mastery_options",
+          ),
           "weapon_longsword",
           "weapon_spear",
           "weapon_flail",
@@ -10802,7 +11050,10 @@ function finalizedFighterToDruidMulticlassBuild(): {
       unitLibrary,
       expectedRevision: afterPurchase.revision,
       fills: [
-        creationChoiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
+        creationChoiceFill(
+          testLoadoutHoleId("armor_chain_mail", "armor"),
+          "worn",
+        ),
         creationChoiceFill(
           testLoadoutHoleId("equipment_shield", "shield"),
           "wielded",
@@ -10870,7 +11121,10 @@ function finalizedWizardToFighterMulticlassBuild(): {
       expectedRevision: afterInitial.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_wizard", "class_skill_proficiency_choice"),
+          testUnitChoiceHoleId(
+            "class_wizard",
+            "class_skill_proficiency_choice",
+          ),
           "arcana",
           "history",
         ),
@@ -10904,7 +11158,10 @@ function finalizedWizardToFighterMulticlassBuild(): {
           "defense",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+          testUnitChoiceHoleId(
+            "fighter_weapon_mastery",
+            "weapon_mastery_options",
+          ),
           "weapon_longsword",
           "weapon_spear",
           "weapon_flail",
@@ -11227,6 +11484,20 @@ function finalizedLevelOneBardBaneBuild(): CharacterBuild {
   });
 }
 
+function finalizedLevelOneBardCommandBuild(): CharacterBuild {
+  return finalizedLevelOneBardBuild({
+    draftIdText: "draft:l1-sdk-bard-command",
+    expectedBuildLabel: "Bard Command",
+    cantrips: ["dancing_lights", viciousMockerySpellId],
+    preparedSpells: [
+      commandSpellId,
+      colorSpraySpellId,
+      dissonantWhispersSpellId,
+      healingWordSpellId,
+    ],
+  });
+}
+
 function finalizedLevelOneBardBuild(input: {
   readonly draftIdText: string;
   readonly expectedBuildLabel: string;
@@ -11421,6 +11692,20 @@ function finalizedLevelOneClericBaneBuild(): CharacterBuild {
       cureWoundsSpellId,
       guidingBoltSpellId,
       shieldOfFaithSpellId,
+    ],
+  });
+}
+
+function finalizedLevelOneClericCommandBuild(): CharacterBuild {
+  return finalizedLevelOneClericBuild({
+    draftIdText: "draft:l1-sdk-cleric-command",
+    expectedBuildLabel: "Cleric Command",
+    cantrips: ["guidance", sacredFlameSpellId, thaumaturgySpellId],
+    preparedSpells: [
+      blessSpellId,
+      commandSpellId,
+      cureWoundsSpellId,
+      guidingBoltSpellId,
     ],
   });
 }
@@ -11878,6 +12163,14 @@ function finalizedLevelOnePaladinBlessBuild(): CharacterBuild {
     draftIdText: "draft:l1-sdk-paladin-bless",
     expectedBuildLabel: "Paladin Bless",
     preparedSpells: [blessSpellId, cureWoundsSpellId],
+  });
+}
+
+function finalizedLevelOnePaladinCommandBuild(): CharacterBuild {
+  return finalizedLevelOnePaladinBuild({
+    draftIdText: "draft:l1-sdk-paladin-command",
+    expectedBuildLabel: "Paladin Command",
+    preparedSpells: [blessSpellId, commandSpellId],
   });
 }
 
@@ -13897,6 +14190,32 @@ function baneTargetListFill(
       targetId,
       spellId: baneSpellId,
     })),
+  };
+}
+
+function commandTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds: [targetId] },
+    spatialFacts: [
+      { kind: "spellTarget", casterId, targetId, spellId: commandSpellId },
+    ],
+  };
+}
+
+function commandOptionChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "commandOptionChoice" }>,
+  value: Extract<BattleFill, { readonly kind: "commandOptionChoice" }>["value"],
+): Extract<BattleFill, { readonly kind: "commandOptionChoice" }> {
+  return {
+    kind: "commandOptionChoice",
+    holeId: hole.holeId,
+    value,
   };
 }
 
