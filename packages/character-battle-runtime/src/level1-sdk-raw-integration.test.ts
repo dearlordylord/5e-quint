@@ -466,6 +466,7 @@ const druidWildShapeDraftPlan = {
       "option_b",
     ),
     legalUnitChoice("class_druid", "equipment_purchase", "weapon_dagger"),
+    legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed"),
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
@@ -1599,7 +1600,7 @@ describe("level 1 SDK RAW integration", () => {
     });
 
     const active = requireResolved(
-      resolveDruidWildShapeWithoutLoadoutEquipment(
+      resolveDruidWildShapeWithMergedLoadoutEquipment(
         fixture.state,
         druidWildShapeAct(fixture.state, {
           action: "assumeForm",
@@ -12013,7 +12014,7 @@ function druidWildShapeAct(
   return subject;
 }
 
-function resolveDruidWildShapeWithoutLoadoutEquipment(
+function resolveDruidWildShapeWithMergedLoadoutEquipment(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "druidWildShape" }>,
 ): BattleResolutionResult {
@@ -12023,7 +12024,14 @@ function resolveDruidWildShapeWithoutLoadoutEquipment(
     fills: [],
   });
   const hole = requireHole(needsDisposition, "wildShapeEquipmentDisposition");
-  expect(hole.candidates).toEqual([]);
+  expect(hole.candidates).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "mainWeapon",
+        unitId: "weapon_dagger",
+      }),
+    ]),
+  );
   return resolveBattleSubject({
     state,
     subject,
@@ -12033,7 +12041,10 @@ function resolveDruidWildShapeWithoutLoadoutEquipment(
         holeId: hole.holeId,
         value: {
           formLimbs: { kind: "canHandleObjects" },
-          choices: [],
+          choices: hole.candidates.map((item) => ({
+            item,
+            disposition: "merges" as const,
+          })),
         },
       },
     ],

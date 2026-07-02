@@ -106,7 +106,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 212;
-const expectedLevelOneTwoSeedScenarioRows = 121;
+const expectedLevelOneTwoSeedScenarioRows = 122;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -1070,6 +1070,87 @@ const druidMulticlassBuildSheetScenarioRows = [
   ...row,
 }));
 
+const druidWildShapeSdkScenarioLabel =
+  "level1-sdk-raw-integration: Druid Wild Shape splits legal level-2 creation facts, sheet known forms, battle form use, and active-form handoff closure";
+const druidWildShapeSdkScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l2-sdk-druid-wild-shape"',
+  "druidWildShapeDraftPlan",
+  "characterBuildDruidWildShapeFacts({",
+  "knownFormRoster",
+  "characterSheetDruidWildShapeKnownForms(fixture.sheet)",
+  "characterSheetResources(fixture.sheet, unitLibrary)",
+  "resolveDruidWildShapeWithMergedLoadoutEquipment(",
+  'formStatBlockId: "stat_block_rat"',
+  "activeDruidWildShapeForm(activeDruid)?.id",
+  "settleCharacterSheetFromBattle({",
+  "Battle handoff while Wild Shape is active is blocked",
+  'druidWildShapeAct(nextDruidTurn, { action: "dismiss" })',
+  "resourceExpenditures",
+];
+const druidWildShapeSdkHelperNeedles = [
+  {
+    anchor: "const druidWildShapeDraftPlan =",
+    needles: [
+      'classUnitId: "class_druid"',
+      "level: 2",
+      '"class_skill_proficiency_choice"',
+      '"class_cantrip_choices"',
+      '"class_prepared_spell_choices"',
+      '"primal_order"',
+      '"warden"',
+      'legalUnitChoice("class_druid", "class_equipment_choice", "option_b")',
+      'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
+    ],
+  },
+  {
+    anchor: "const levelTwoDruidWildShapeKnownFormIds =",
+    needles: [
+      '"stat_block_rat"',
+      '"stat_block_riding_horse"',
+      '"stat_block_spider"',
+      '"stat_block_wolf"',
+    ],
+  },
+  {
+    anchor: "function resolveDruidWildShapeWithMergedLoadoutEquipment",
+    needles: [
+      "expect(hole.candidates).toEqual(",
+      'kind: "mainWeapon"',
+      'unitId: "weapon_dagger"',
+      'disposition: "merges" as const',
+    ],
+  },
+];
+const druidWildShapeRowId =
+  "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape";
+const druidWildShapeFollowUpTasks = [
+  {
+    taskId: "L12-SH41-WILD-SHAPE-FORM-ACTION-SHAPES",
+    plannedByTaskId: "L12-SH40-REMAINING-BATCH-SPLIT",
+    ownerBoundary: "generic-stat-block-action-procedure",
+    scope:
+      "Admit remaining Wild Shape form Stat Block action sections by Surface action shape: Multiattack, save-gated actions, support/action-options/specials, Bonus Actions, Reactions, and Legendary Actions.",
+  },
+  {
+    taskId: "L12-SH42-WILD-SHAPE-OBJECT-UTILIZE-TABLE",
+    plannedByTaskId: "L12-SH40-REMAINING-BATCH-SPLIT",
+    ownerBoundary: "generic-object-utilize-table-placement",
+    scope:
+      "Own generic carried-object inventory, map/table placement, object retrieval, and generic Utilize/object procedures for Wild Shape dropped or merged equipment without adding Wild Shape-local duplicate object state.",
+  },
+  {
+    taskId: "L12-SH43-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-A27",
+    plannedByTaskId: "L12-SH40-REMAINING-BATCH-SPLIT",
+    ownerBoundary: "session-active-effect-persistence-owner-decision",
+    scope:
+      "Revisit ASSUMPTIONS.md A27 before supporting cross-session active Wild Shape persistence with selected form identity and remaining duration.",
+  },
+];
+const rowFollowUpTasksByRowId = new Map([
+  [druidWildShapeRowId, druidWildShapeFollowUpTasks],
+]);
+
 const seededSdkScenarioRows = [
   ...barbarianBuildSheetScenarioRows,
   ...bardBuildSheetScenarioRows,
@@ -1103,6 +1184,18 @@ const seededSdkScenarioRows = [
     helperNeedles: druidicCreationScenarioHelperNeedles,
   },
   ...druidMulticlassBuildSheetScenarioRows,
+  {
+    candidateUnitId: "druid_wild_shape",
+    className: "Druid",
+    levelBand: "level-2",
+    label: druidWildShapeSdkScenarioLabel,
+    path: barbarianBuildSheetScenarioPath,
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:95-122"],
+    rowId: druidWildShapeRowId,
+    sourceProof: legalBuildBattleHandoffSourceProof,
+    tracerNeedles: druidWildShapeSdkScenarioNeedles,
+    helperNeedles: druidWildShapeSdkHelperNeedles,
+  },
   ...barbarianBuildBattleScenarioRows,
   ...bardBuildBattleScenarioRows,
   ...clericBuildBattleScenarioRows,
@@ -7228,6 +7321,18 @@ function seedMigrationNextAction(classification) {
   return "Retain explicit closure with its owner reason; do not count as SDK lifecycle coverage.";
 }
 
+function followUpTaskIdsText(followUpTasks) {
+  return followUpTasks.map((task) => task.taskId).join(", ");
+}
+
+function seedMigrationNextActionForSeed(seed, classification) {
+  const followUpTasks = rowFollowUpTasksByRowId.get(seed.rowId) ?? [];
+  if (followUpTasks.length === 0) {
+    return seedMigrationNextAction(classification);
+  }
+  return `Keep as source lifecycle seed for the supported Wild Shape path; remaining owner boundaries are assigned to ${followUpTaskIdsText(followUpTasks)} for ${followUpTasks[0].plannedByTaskId}.`;
+}
+
 function buildLevelOneTwoSeedMigrationAudit(seedScenarioSources, miningRows) {
   const rowsById = new Map(miningRows.map((row) => [row.rowId, row]));
   const auditRows = seededSdkScenarioRows
@@ -7254,6 +7359,7 @@ function buildLevelOneTwoSeedMigrationAudit(seedScenarioSources, miningRows) {
         classification === "already legal creation path" &&
         usesRealSheetBattleHandoff;
       const miningRow = rowsById.get(seed.rowId);
+      const followUpTasks = rowFollowUpTasksByRowId.get(seed.rowId) ?? [];
       return {
         rowId: seed.rowId,
         rowKey: seedScenarioRowKey(seed),
@@ -7269,7 +7375,8 @@ function buildLevelOneTwoSeedMigrationAudit(seedScenarioSources, miningRows) {
         usesRealSheetBattleHandoff,
         wholeWidthSourceLifecycleProof,
         reason: seedMigrationAuditReason(classification),
-        nextAction: seedMigrationNextAction(classification),
+        nextAction: seedMigrationNextActionForSeed(seed, classification),
+        ...(followUpTasks.length === 0 ? {} : { followUpTasks }),
         existingSdkScenario: {
           label: seed.label,
           path: toRepoPath(root, seed.path),
@@ -7466,8 +7573,28 @@ function sdkInventoryDisposition(row, proposedOwnerBoundary) {
   return "inventory-review-needed";
 }
 
+function supportSnapshotWithRowFollowUps(row, followUpTasks) {
+  if (followUpTasks.length === 0) return row.supportSnapshot;
+  const closure = row.supportSnapshot.battleReadinessClosure;
+  if (closure?.state !== "recorded") return row.supportSnapshot;
+  return {
+    ...row.supportSnapshot,
+    battleReadinessClosure: {
+      ...closure,
+      followUpTasks,
+    },
+  };
+}
+
+function nextActionWithRowFollowUps(row) {
+  const followUpTasks = rowFollowUpTasksByRowId.get(row.rowId) ?? [];
+  if (followUpTasks.length === 0) return row.nextAction;
+  return `${row.nextAction} Remaining owner boundaries are assigned to ${followUpTaskIdsText(followUpTasks)} for ${followUpTasks[0].plannedByTaskId}.`;
+}
+
 function projectMiningRow(row, ownerEvidence) {
   const seedScenario = seededSdkScenarioByRowId.get(row.rowId);
+  const followUpTasks = rowFollowUpTasksByRowId.get(row.rowId) ?? [];
   const ownerBoundary = normalizeOwnerBoundaryResult(
     ownerBoundaryForMiningRow(row, ownerEvidence),
   );
@@ -7483,7 +7610,7 @@ function projectMiningRow(row, ownerEvidence) {
     concept: row.concept,
     candidateUnitId: row.candidateUnitId,
     source: row.source,
-    supportSnapshot: row.supportSnapshot,
+    supportSnapshot: supportSnapshotWithRowFollowUps(row, followUpTasks),
     finalDisposition: row.supportSnapshot.finalDisposition,
     proposedOwnerBoundary,
     sdkInventoryDisposition: disposition,
@@ -7501,7 +7628,8 @@ function projectMiningRow(row, ownerEvidence) {
       : {
           existingSdkScenario: seedScenario,
         }),
-    nextAction: row.nextAction,
+    ...(followUpTasks.length === 0 ? {} : { followUpTasks }),
+    nextAction: nextActionWithRowFollowUps(row),
   };
 }
 

@@ -41,9 +41,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 142 |
 | explicit-closure-needed | 60 |
 | future-owner-before-sdk | 45 |
-| sdk-scenario-needed | 377 |
+| sdk-scenario-needed | 376 |
 | sdk-scenario-or-owner-closure-needed | 6 |
-| seed-scenario-present | 127 |
+| seed-scenario-present | 128 |
 | table-only-closure-needed | 13 |
 
 ### All Level 1-5 Rows by Proposed Owner Boundary
@@ -93,9 +93,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | explicit-closure | 60 |
 | feature-owner-review | 4 |
 | future-owner-before-sdk | 24 |
-| multi-owner-feature-sdk | 9 |
+| multi-owner-feature-sdk | 8 |
 | owner-review | 6 |
-| seed-present | 93 |
+| seed-present | 94 |
 | sheet-spell-access-sdk | 10 |
 | spell-effect-owner-review | 45 |
 | table-only-closure | 5 |
@@ -187,6 +187,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 - `srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies` / `level-1:Druid:class_druid`: level1-sdk-raw-integration: Druid build-sheet projection derives level-1 class facts from legal creation and a fresh sheet
 - `srd521:classes/druid:level-1:class-feature-grant:druid_druidic` / `level-1:Druid:druid_druidic`: level1-sdk-raw-integration: Druidic creation finalizes language and always-prepared spell access without battle behavior
 - `srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits` / `level-1:Druid:class_druid`: level1-sdk-raw-integration: Druid multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet
+- `srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape` / `level-2:Druid:druid_wild_shape`: level1-sdk-raw-integration: Druid Wild Shape splits legal level-2 creation facts, sheet known forms, battle form use, and active-form handoff closure
 - `srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment` / `level-1:Barbarian:class_barbarian`: level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant
 - `srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery` / `level-1:Barbarian:barbarian_weapon_mastery`: level1-sdk-raw-integration: Barbarian build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant
 - `srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment` / `level-1:Bard:class_bard`: level1-sdk-raw-integration: Bard build-battle handoff projects starting equipment into a battle combatant
@@ -293,8 +294,8 @@ Rows/groups assigned: 400/212.
 | --- | --- | ---: | ---: | --- |
 | closure-review-row | closure-review-needed | 69 | 21 | spell-effect-owner-review |
 | explicit-closure-row | explicit-closure-needed | 24 | 24 | explicit-closure |
-| seed-row | seed-scenario-present | 121 | 87 | seed-present |
-| source-row | sdk-scenario-needed | 184 | 79 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
+| seed-row | seed-scenario-present | 122 | 88 | seed-present |
+| source-row | sdk-scenario-needed | 183 | 78 | battle-feature-sdk, battle-spell-sdk, build-battle-sdk, build-sheet-sdk, character-creation-sdk, character-sheet-sdk, multi-owner-feature-sdk, sheet-spell-access-sdk |
 | table-only-closure-row | table-only-closure-needed | 2 | 1 | table-only-closure |
 
 | Lane | SDK disposition | Row family | Rows | Groups | Task family | Owner tasks | Follow-up tasks |
@@ -306,8 +307,8 @@ Rows/groups assigned: 400/212.
 | character-creation-sdk | sdk-scenario-needed | source-row | 12 | 12 | character-creation-sdk | `L12-SH05-CREATION-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | character-sheet-sdk | sdk-scenario-needed | source-row | 5 | 5 | character-sheet-sdk | `L12-SH08-SHEET-SDK-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | explicit-closure | explicit-closure-needed | explicit-closure-row | 24 | 24 | explicit-closure | `L12-SH04-GROUPING-GENERATOR-GATE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| multi-owner-feature-sdk | sdk-scenario-needed | source-row | 6 | 6 | multi-owner-feature-sdk | `L12-SH12-MULTI-OWNER-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
-| seed-present | seed-scenario-present | seed-row | 121 | 87 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| multi-owner-feature-sdk | sdk-scenario-needed | source-row | 5 | 5 | multi-owner-feature-sdk | `L12-SH12-MULTI-OWNER-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
+| seed-present | seed-scenario-present | seed-row | 122 | 88 | seed-present | `L12-SH03-SEED-MIGRATION-AUDIT`<br>`L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE`<br>`L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION`<br>`L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND`<br>`L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS`<br>`L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK`<br>`L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY`<br>`L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | sheet-spell-access-sdk | sdk-scenario-needed | source-row | 5 | 5 | sheet-spell-access-sdk | `L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | spell-effect-owner-review | closure-review-needed | closure-review-row | 69 | 21 | spell-effect-owner-review | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
 | table-only-closure | table-only-closure-needed | table-only-closure-row | 2 | 1 | table-only-closure | `L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY` | `L12-SH15-NEXT-BATCH-SPLIT` |
@@ -322,20 +323,20 @@ Character Sheet and battle handoff.
 
 | Classification | Rows |
 | --- | ---: |
-| already legal creation path | 81 |
+| already legal creation path | 82 |
 | legal build-sheet owner proof | 37 |
 | legal creation owner proof | 3 |
 
 | Source build path | Rows |
 | --- | ---: |
-| legal-creation-draft-finalize | 121 |
+| legal-creation-draft-finalize | 122 |
 
 | Real sheet/battle handoff | Rows |
 | --- | ---: |
 | not-real-sheet-battle | 40 |
-| real-sheet-battle | 81 |
+| real-sheet-battle | 82 |
 
-Whole-width source lifecycle seed rows: 81/121.
+Whole-width source lifecycle seed rows: 82/122.
 
 | Band | Class | Unit | Row kind | Classification | Source build path | Real sheet/battle handoff | Whole-width source lifecycle proof | Next action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -403,6 +404,7 @@ Whole-width source lifecycle seed rows: 81/121.
 | level-1 | Druid | `class_druid` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
 | level-1 | Druid | `class_druid` | core-trait | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
 | level-1 | Druid | `class_druid` | multiclass-entry | legal build-sheet owner proof | legal-creation-draft-finalize | no | no | Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries. |
+| level-2 | Druid | `druid_wild_shape` | class-feature-grant | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed for the supported Wild Shape path; remaining owner boundaries are assigned to L12-SH41-WILD-SHAPE-FORM-ACTION-SHAPES, L12-SH42-WILD-SHAPE-OBJECT-UTILIZE-TABLE, L12-SH43-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-A27 for L12-SH40-REMAINING-BATCH-SPLIT. |
 | spell-level-0 | Druid | `poison_spray` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Druid | `produce_flame` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
 | spell-level-0 | Druid | `shillelagh` | spell-unit-pressure | already legal creation path | legal-creation-draft-finalize | yes | yes | Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap. |
