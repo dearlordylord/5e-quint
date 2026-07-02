@@ -105,8 +105,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 210;
-const expectedLevelOneTwoSeedScenarioRows = 80;
+const expectedLevelOneTwoCampaignGroups = 209;
+const expectedLevelOneTwoSeedScenarioRows = 89;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -269,7 +269,7 @@ const barbarianBuildSheetScenarioPath =
 const barbarianBuildSheetScenarioNeedles = [
   "barbarianBuildSheetDraftPlan",
   "createLegalSourceCharacterFixture({",
-  "battle: { tag: \"withoutBattle\" }",
+  'battle: { tag: "withoutBattle" }',
   "fixture.sheet.build",
   "readClassCreationFacts(",
   "characterBuildUnitRefs(",
@@ -403,8 +403,164 @@ const barbarianBuildSheetScenarioRows = [
   ...row,
 }));
 
+const bardBuildSheetScenarioLabel =
+  "level1-sdk-raw-integration: Bard build-sheet projection derives level-1 class facts from legal creation and a fresh sheet";
+const bardBuildSheetScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-bard-build-sheet"',
+  "bardSpellAccessDraftPlan",
+  'battle: { tag: "withoutBattle" }',
+  "fixture.sheet.build",
+  "readClassCreationFacts(",
+  "characterBuildUnitRefs(",
+  "primaryAbilities",
+  "characterBuildHitPoints(",
+  ".hitDice",
+  "characterBuildFeatureUnitIds(",
+  "featureGrants",
+  "characterBuildProficiencies(",
+  "savingThrowProficiencies",
+  "proficiencyChoices",
+  "proficiencies.tools",
+  "weaponProficiencies",
+  "characterBuildArmorTraining(",
+  "armorTraining",
+];
+const bardBuildSheetScenarioHelperNeedles = [
+  {
+    anchor: "const bardSpellAccessDraftPlan =",
+    needles: [
+      'classUnitId: "class_bard"',
+      "level: 1",
+      '"class_skill_proficiency_choice"',
+      '"class_tool_proficiency_choice"',
+      '"class_cantrip_choices"',
+      "...bardSpellAccessCantrips",
+      '"class_prepared_spell_choices"',
+      "...bardSpellAccessPreparedSpells",
+      'legalUnitChoice("class_bard", "class_equipment_choice", "option_b")',
+      'legalUnitChoice("class_bard", "equipment_purchase", "weapon_dagger")',
+      'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
+    ],
+  },
+];
+const bardBuildSheetScenarioRows = [
+  {
+    rowId: "srd521:classes/bard:level-1:class-container:bard_class_container",
+    rawSources: [".references/srd-5.2.1/Classes/Bard.md:3"],
+  },
+  {
+    rowId: "srd521:classes/bard:level-1:core-trait:bard_armor_training",
+    rawSources: [".references/srd-5.2.1/Classes/Bard.md:13"],
+  },
+  {
+    rowId: "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
+    rawSources: [".references/srd-5.2.1/Classes/Bard.md:8"],
+  },
+  {
+    rowId: "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
+    rawSources: [".references/srd-5.2.1/Classes/Bard.md:7"],
+  },
+  {
+    rowId:
+      "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Bard.md:9"],
+  },
+  {
+    rowId: "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Bard.md:10"],
+  },
+  {
+    rowId: "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Bard.md:12"],
+  },
+  {
+    rowId: "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Bard.md:11"],
+  },
+].map((row) => ({
+  candidateUnitId: "class_bard",
+  className: "Bard",
+  levelBand: "level-1",
+  label: bardBuildSheetScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: "legal-build-sheet-owner",
+  tracerNeedles: bardBuildSheetScenarioNeedles,
+  helperNeedles: bardBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
+
+const bardMulticlassBuildSheetScenarioLabel =
+  "level1-sdk-raw-integration: Bard multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet";
+const bardMulticlassBuildSheetScenarioNeedles = [
+  "finalizedFighterToBardMulticlassBuild()",
+  "createLegalSourceCharacterSheet({",
+  'characterIdText: "character:l1-sdk-bard-multiclass-build-sheet"',
+  "bardMulticlassProgression",
+  "readClassCreationFacts(",
+  "characterBuildHitPoints(",
+  ".hitDice",
+  "characterBuildFeatureUnitIds(",
+  "featureGrants",
+  "characterBuildProficiencies(",
+  "bard_multiclass_skill_proficiency",
+  "performance",
+  "bard_multiclass_musical_instrument_proficiency",
+  "tool:tool_lute",
+  "proficiencies.tools",
+  "characterBuildArmorTraining(",
+  "armorTraining",
+  "multiclassProficiencies",
+];
+const bardMulticlassBuildSheetScenarioHelperNeedles = [
+  {
+    anchor: "const bardMulticlassProgression =",
+    needles: [
+      'startingClass: classUnitId("class_fighter")',
+      'classUnitId: classUnitId("class_bard")',
+      'hitPointRule: { tag: "fixedHigherLevelGain" }',
+    ],
+  },
+  {
+    anchor: "function finalizedFighterToBardMulticlassBuild():",
+    needles: [
+      "createCharacterDraft({",
+      'draftId: characterDraftId("draft:l1-sdk-bard-multiclass-build-sheet")',
+      "progressionOptionId(bardMulticlassProgression)",
+      '"class_fighter"',
+      '"class_bard"',
+      '"bard_multiclass_skill_proficiency"',
+      '"performance"',
+      '"bard_multiclass_musical_instrument_proficiency"',
+      '"tool:tool_lute"',
+      "testLoadoutHoleId(\"weapon_longsword\", \"weapon\")",
+      "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
+      "return { draft: afterLoadout, build: result.build };",
+    ],
+  },
+];
+const bardMulticlassBuildSheetScenarioRows = [
+  {
+    rowId:
+      "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
+    rawSources: [".references/srd-5.2.1/Classes/Bard.md:23-26"],
+  },
+].map((row) => ({
+  candidateUnitId: "class_bard",
+  className: "Bard",
+  levelBand: "level-1",
+  label: bardMulticlassBuildSheetScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: "legal-build-sheet-owner",
+  tracerNeedles: bardMulticlassBuildSheetScenarioNeedles,
+  helperNeedles: bardMulticlassBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
+
 const seededSdkScenarioRows = [
   ...barbarianBuildSheetScenarioRows,
+  ...bardBuildSheetScenarioRows,
+  ...bardMulticlassBuildSheetScenarioRows,
   ...barbarianBuildBattleScenarioRows,
   {
     candidateUnitId: "barbarian_unarmored_defense",
@@ -466,7 +622,7 @@ const seededSdkScenarioRows = [
       "sacredFlameSavingThrowForTarget(",
       'ability: "dex"',
       'rollMode: "advantage"',
-      'succeeded: true',
+      "succeeded: true",
       '"incapacitated"',
       "targetRollModes",
     ],
@@ -477,14 +633,14 @@ const seededSdkScenarioRows = [
           "battleFromSheets({",
           "characterSheet({",
           "finalizedLevelOneClericSacredFlameBuild()",
-          "battleCombatantSide(\"monsters\")",
+          'battleCombatantSide("monsters")',
         ],
       },
       {
         anchor: "function sacredFlameSavingThrowForTarget",
         needles: [
           "cantripCastActionSpellAct(",
-          "requireHoleFromList(act.initialHoles, \"targetChoice\")",
+          'requireHoleFromList(act.initialHoles, "targetChoice")',
           "spellTargetFill(",
           '"savingThrowOutcome"',
         ],
@@ -635,8 +791,8 @@ const seededSdkScenarioRows = [
       "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
       'sourceUnitId: "class_warlock"',
       'spellcastingAbility: "cha"',
-      "cantrips: [eldritchBlastSpellId, \"prestidigitation\"]",
-      "preparedSpells: [hexSpellId, \"charm_person\"]",
+      'cantrips: [eldritchBlastSpellId, "prestidigitation"]',
+      'preparedSpells: [hexSpellId, "charm_person"]',
       'spellcastingFocuses: ["arcane_focus"]',
       "pactMagic: {",
       'kind: "pactMagic"',
@@ -677,8 +833,7 @@ const seededSdkScenarioRows = [
       ".references/srd-5.2.1/Classes/Bard.md:69-92",
       ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-57",
     ],
-    rowId:
-      "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+    rowId: "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
     tracerNeedles: [
       "createLegalSourceCharacterFixture({",
       'draftIdText: "draft:l1-sdk-bard-spellcasting-access"',
@@ -724,6 +879,7 @@ const seededSdkScenarioRows = [
           "...bardSpellAccessPreparedSpells",
           'legalUnitChoice("class_bard", "class_equipment_choice", "option_b")',
           'legalUnitChoice("class_bard", "equipment_purchase", "weapon_dagger")',
+          'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
         ],
       },
     ],
@@ -771,7 +927,9 @@ const seededSdkScenarioRows = [
           '"class_tool_proficiency_choice"',
           '"class_cantrip_choices"',
           '"class_prepared_spell_choices"',
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "const afterLoadout = requireAcceptedCreationBatch(",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -856,7 +1014,9 @@ const seededSdkScenarioRows = [
           '"class_tool_proficiency_choice"',
           '"class_cantrip_choices"',
           '"class_prepared_spell_choices"',
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "const afterLoadout = requireAcceptedCreationBatch(",
+          'testLoadoutHoleId("weapon_dagger", "weapon")',
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -2596,7 +2756,7 @@ const seededSdkScenarioRows = [
       'sourceUnitId: "class_warlock"',
       'spellcastingAbility: "cha"',
       "preparedSpells: expect.arrayContaining([baneSpellId])",
-      "pactMagic: { kind: \"pactMagic\", slotLevel: 1, count: 1 }",
+      'pactMagic: { kind: "pactMagic", slotLevel: 1, count: 1 }',
       "build: warlockBuild,",
       "casterId: baneWarlockId,",
       "expectedSpellSaveDc: 12,",
@@ -4620,7 +4780,7 @@ function baneResolutionHelperNeedle() {
       'spellSlotActForProcedure(state, baneSpellId, 1, "rollModifier")',
       "baneTargetListFill(targetList, input.casterId",
       "spellSaveDcForCaster(state, input.casterId)",
-      'spellId: baneSpellId',
+      "spellId: baneSpellId",
       'procedure: "rollModifier"',
       'label: "Bane targets"',
       "maxTargets: 3",
@@ -5759,9 +5919,7 @@ function levelOneTwoCampaignGroupDisposition(group) {
 function assertLevelOneTwoCampaignGrouping(rows, groups) {
   const rowsWithoutAssignment = rows.filter(
     (row) =>
-      !levelOneTwoCampaignActiveDispositions.has(
-        row.sdkInventoryDisposition,
-      ) ||
+      !levelOneTwoCampaignActiveDispositions.has(row.sdkInventoryDisposition) ||
       !levelOneTwoCampaignRowFamilyByDisposition.has(
         row.sdkInventoryDisposition,
       ) ||
@@ -5829,7 +5987,9 @@ function buildLevelOneTwoCampaignGrouping(rows, scenarioGroups) {
   const rowCountByLane = countValues(
     campaignRows.map((row) => scenarioLaneForRow(row)),
   );
-  const groupCountByLane = countValues(campaignGroups.map((group) => group.lane));
+  const groupCountByLane = countValues(
+    campaignGroups.map((group) => group.lane),
+  );
   const rowCountByFamily = countValues(
     campaignRows.map((row) =>
       levelOneTwoCampaignRowFamily(row.sdkInventoryDisposition),
@@ -5837,9 +5997,7 @@ function buildLevelOneTwoCampaignGrouping(rows, scenarioGroups) {
   );
   const groupCountByFamily = countValues(
     campaignGroups.map((group) =>
-      levelOneTwoCampaignRowFamily(
-        levelOneTwoCampaignGroupDisposition(group),
-      ),
+      levelOneTwoCampaignRowFamily(levelOneTwoCampaignGroupDisposition(group)),
     ),
   );
 
@@ -6011,13 +6169,11 @@ function seedScenarioEvidenceText(seed, seedScenarioSources) {
   if (seedSourceText === undefined) return "";
   const title = seedScenarioTitle(seed);
   const scenarioText = seedScenarioSourceText(seedSourceText, title) ?? "";
-  const helperTexts = (seed.helperNeedles ?? []).map(
-    (helper) => {
-      const helperPath = helper.path ?? seed.path;
-      const helperSourceText = seedScenarioSources.get(helperPath) ?? "";
-      return seedHelperSourceText(helperSourceText, helper.anchor) ?? "";
-    },
-  );
+  const helperTexts = (seed.helperNeedles ?? []).map((helper) => {
+    const helperPath = helper.path ?? seed.path;
+    const helperSourceText = seedScenarioSources.get(helperPath) ?? "";
+    return seedHelperSourceText(helperSourceText, helper.anchor) ?? "";
+  });
   const calledHelperPattern = new RegExp(
     `\\b(${[
       "assertLevelOne[A-Z]\\w*",
@@ -6398,8 +6554,10 @@ function buildInventory() {
   assertLocalRawSources(miningRows);
   assertSeedScenarios(seedScenarioSources, miningRows);
   assertSurfaceClassSpellAccessCoversMinedRows(miningRows);
-  const levelOneTwoSeedMigrationAuditRows =
-    buildLevelOneTwoSeedMigrationAudit(seedScenarioSources, miningRows);
+  const levelOneTwoSeedMigrationAuditRows = buildLevelOneTwoSeedMigrationAudit(
+    seedScenarioSources,
+    miningRows,
+  );
   const levelOneFourRows = miningRows.filter(
     (row) => row.levelBand !== "level-5" && row.levelBand !== "spell-level-3",
   );
@@ -6514,10 +6672,8 @@ function buildInventory() {
         levelOneTwoSeedMigrationAuditRows.filter(
           (row) => row.wholeWidthSourceLifecycleProof,
         ).length,
-      levelOneTwoCampaignRows:
-        levelOneTwoCampaignGrouping.totals.rowCount,
-      levelOneTwoCampaignGroups:
-        levelOneTwoCampaignGrouping.totals.groupCount,
+      levelOneTwoCampaignRows: levelOneTwoCampaignGrouping.totals.rowCount,
+      levelOneTwoCampaignGroups: levelOneTwoCampaignGrouping.totals.groupCount,
       levelOneTwoCampaignRowsByRowFamily: Object.fromEntries(
         levelOneTwoCampaignGrouping.rowFamilies.map((family) => [
           family.rowFamily,
@@ -6835,7 +6991,8 @@ function renderInventory(inventory) {
     "| Real sheet/battle handoff | Rows |",
     "| --- | ---: |",
     ...renderCountRows(
-      inventory.metrics.levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff,
+      inventory.metrics
+        .levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff,
     ),
     "",
     `Whole-width source lifecycle seed rows: ${inventory.metrics.levelOneTwoWholeWidthSourceLifecycleSeedRows}/${inventory.metrics.levelOneTwoSeedMigrationAuditRows}.`,

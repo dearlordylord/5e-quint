@@ -462,7 +462,7 @@ Reviewer-loop convergence:
 | 21 | L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK - Migrate the Rogue Sneak Attack seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `rogue_sneak_attack` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 22 | L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY - Migrate the Sorcerer Innate Sorcery seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `sorcerer_innate_sorcery` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 23 | L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS - Migrate the Sorcerer Burning Hands seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | Sorcerer `burning_hands` seed uses legal creation and remains a real sheet/battle handoff scenario. |
-| 24 | L12-SH24-BUILD-SHEET-BARD - Add the Bard build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Bard class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
+| 24 | L12-SH24-BUILD-SHEET-BARD - Add the Bard build-sheet SDK group | done | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Bard class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
 | 25 | L12-SH25-BUILD-SHEET-CLERIC - Add the Cleric build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Cleric class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
 | 26 | L12-SH26-BUILD-SHEET-DRUID - Add the Druid build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-sheet-sdk | Druid class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
 | 27 | L12-SH27-BUILD-BATTLE-BARD - Add the Bard build-battle SDK group | ready-for-research | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-battle-sdk | Bard starting equipment proves through legal build, fresh sheet, and battle combatant projection. |
@@ -1552,7 +1552,7 @@ Plan Impact:
 
 ### Task 24 - L12-SH24-BUILD-SHEET-BARD
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -1615,6 +1615,8 @@ Research required before editing:
 - Check terminology for CharacterBuild, Character Sheet, proficiency, and
   multiclass entry.
 - Inspect the existing build-sheet helper patterns before adding assertions.
+- Complete any post-purchase loadout holes required by the legal draft
+  finalization path before finalizing the build.
 
 Output:
 
@@ -1631,7 +1633,7 @@ Acceptance:
 
 Validation:
 
-- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Cleric"`
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Cleric.*build-sheet|Cleric multiclass build-sheet"`
 - `pnpm --filter @dnd/character-battle-runtime typecheck`
 - `pnpm sdk-raw-integration-inventory:check`
 - `git diff --check`
@@ -1659,6 +1661,8 @@ Research required before editing:
 - Check terminology for CharacterBuild, Character Sheet, proficiency, and
   multiclass entry.
 - Inspect the existing build-sheet helper patterns before adding assertions.
+- Complete any post-purchase loadout holes required by the legal draft
+  finalization path before finalizing the build.
 
 Output:
 
@@ -1674,7 +1678,7 @@ Acceptance:
 
 Validation:
 
-- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Druid"`
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Druid.*build-sheet|Druid multiclass build-sheet"`
 - `pnpm --filter @dnd/character-battle-runtime typecheck`
 - `pnpm sdk-raw-integration-inventory:check`
 - `git diff --check`

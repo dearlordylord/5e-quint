@@ -30,6 +30,7 @@ import {
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   characterBuildArmorTraining,
+  characterBuildFeatureUnitIds,
   characterBuildHitPoints,
   characterBuildProficiencies,
   characterBuildUnitRefs,
@@ -43,11 +44,14 @@ import {
   finalizeCharacterDraft,
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
+  progressionOptionId,
   unitChoiceKey,
   unitChoiceSourceHoleIdText,
   unitChoiceSourceUnitId,
   type CharacterBuild,
   type CharacterDraft,
+  type CharacterProgression,
+  type CreationChoiceOptionId,
   type CreationBatchFillResult,
   type CreationFill,
   type CreationHoleIdText,
@@ -100,6 +104,7 @@ import {
   battleFromSheets,
   characterResources,
   characterSheet,
+  createLegalSourceCharacterSheet,
   createLegalSourceCharacterFixture,
   damageRollFillWithGroups,
   legalLoadoutChoice,
@@ -509,6 +514,15 @@ const bardSpellAccessPreparedSpells = [
   dissonantWhispersSpellId,
   healingWordSpellId,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+const bardMulticlassProgression = {
+  startingClass: classUnitId("class_fighter"),
+  advancements: [
+    {
+      classUnitId: classUnitId("class_bard"),
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+    },
+  ],
+} as const satisfies CharacterProgression;
 
 const bardSpellAccessDraftPlan = {
   label: "Bard Spellcasting spell access",
@@ -568,6 +582,7 @@ const bardSpellAccessDraftPlan = {
       "option_b",
     ),
     legalUnitChoice("class_bard", "equipment_purchase", "weapon_dagger"),
+    legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed"),
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
@@ -1287,6 +1302,167 @@ describe("level 1 SDK RAW integration", () => {
       { spellLevel: 1, count: 2, expended: 0 },
     ]);
     expect(characterSheetPactSlots(fixture.sheet)).toBeUndefined();
+  });
+
+  test("Bard build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-bard-build-sheet",
+      draftPlan: bardSpellAccessDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-bard-build-sheet",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_bard"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+
+    const classFactsResult = readClassCreationFacts(
+      unitLibrary.requireUnit(fixture.sheet.build.progression.startingClass),
+    );
+    expect(classFactsResult.tag).toBe("readable");
+    if (classFactsResult.tag !== "readable") return;
+    const classFacts = classFactsResult.value;
+
+    expect(characterBuildUnitRefs(fixture.sheet.build)).toContainEqual({
+      unitId: fixture.sheet.build.progression.startingClass,
+    });
+    expect(classFacts.primaryAbilities).toEqual({
+      abilities: ["cha"],
+      kind: "all_of",
+    });
+    expect(
+      requireRight(characterBuildHitPoints(fixture.sheet.build, unitLibrary))
+        .hitDice,
+    ).toEqual([
+      {
+        classUnitId: fixture.sheet.build.progression.startingClass,
+        dieSize: classFacts.hitPointDie,
+        total: 1,
+      },
+    ]);
+    expect(
+      characterBuildFeatureUnitIds(fixture.sheet.build, unitLibrary),
+    ).toEqual(
+      expect.arrayContaining(
+        classFacts.featureGrants
+          .filter((grant) => grant.level <= 1)
+          .map((grant) => grant.unitId),
+      ),
+    );
+
+    const proficiencies = requireRight(
+      characterBuildProficiencies(fixture.sheet.build, unitLibrary),
+    );
+    expect(proficiencies.savingThrows).toEqual(
+      classFacts.savingThrowProficiencies,
+    );
+    expect(proficiencies.skills).toEqual(
+      expect.arrayContaining(
+        fixture.sheet.build.proficiencyChoices.flatMap((choice) =>
+          choice.kind === "skill" ? [choice.skill] : [],
+        ),
+      ),
+    );
+    expect(proficiencies.tools).toEqual(
+      expect.arrayContaining(
+        fixture.sheet.build.proficiencyChoices.flatMap((choice) =>
+          choice.kind === "tool" ? [choice.toolId] : [],
+        ),
+      ),
+    );
+    expect(proficiencies.weapon).toEqual(
+      expect.arrayContaining(
+        classFacts.weaponProficiencies.flatMap((proficiency) =>
+          proficiency.kind === "weapon_category" ? [proficiency.category] : [],
+        ),
+      ),
+    );
+    expect(
+      requireRight(
+        characterBuildArmorTraining(fixture.sheet.build, unitLibrary),
+      ),
+    ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
+  });
+
+  test("Bard multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet", () => {
+    const finalized = finalizedFighterToBardMulticlassBuild();
+    const sheet = createLegalSourceCharacterSheet({
+      characterIdText: "character:l1-sdk-bard-multiclass-build-sheet",
+      build: finalized.build,
+      hitPoints: { tag: "maximum" },
+    });
+
+    expect(
+      discoverCreationHoles({ draft: finalized.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(finalized.build.progression).toEqual(bardMulticlassProgression);
+    expect(sheet.build).toEqual(finalized.build);
+
+    const classFactsResult = readClassCreationFacts(
+      unitLibrary.requireUnit("class_bard"),
+    );
+    expect(classFactsResult.tag).toBe("readable");
+    if (classFactsResult.tag !== "readable") return;
+    const classFacts = classFactsResult.value;
+
+    expect(
+      requireRight(characterBuildHitPoints(sheet.build, unitLibrary)).hitDice,
+    ).toEqual(
+      expect.arrayContaining([
+        {
+          classUnitId: "class_bard",
+          dieSize: classFacts.hitPointDie,
+          total: 1,
+        },
+      ]),
+    );
+    expect(characterBuildFeatureUnitIds(sheet.build, unitLibrary)).toEqual(
+      expect.arrayContaining(
+        classFacts.featureGrants
+          .filter((grant) => grant.level <= 1)
+          .map((grant) => grant.unitId),
+      ),
+    );
+
+    const proficiencies = requireRight(
+      characterBuildProficiencies(sheet.build, unitLibrary),
+    );
+    expect(
+      selectedUnitChoiceOptionIds(
+        finalized.draft,
+        "class_bard",
+        "bard_multiclass_skill_proficiency",
+      ),
+    ).toEqual(["performance"]);
+    expect(proficiencies.skills).toEqual(expect.arrayContaining(["performance"]));
+    expect(
+      selectedUnitChoiceOptionIds(
+        finalized.draft,
+        "class_bard",
+        "bard_multiclass_musical_instrument_proficiency",
+      ),
+    ).toEqual(["tool:tool_lute"]);
+    expect(proficiencies.tools).toEqual(expect.arrayContaining(["tool_lute"]));
+    expect(
+      requireRight(characterBuildArmorTraining(sheet.build, unitLibrary)),
+    ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
+    expect(classFacts.multiclassProficiencies).toMatchObject({
+      kind: "mixed_choices",
+      fixed: classFacts.armorTraining.map((category) => ({
+        category,
+        kind: "armor_category",
+      })),
+    });
   });
 
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
@@ -7461,6 +7637,151 @@ function levelOneEquipment(
   };
 }
 
+function finalizedFighterToBardMulticlassBuild(): {
+  readonly draft: CharacterDraft;
+  readonly build: CharacterBuild;
+} {
+  const draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId("draft:l1-sdk-bard-multiclass-build-sheet"),
+  });
+  const afterInitial = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        creationChoiceFill(
+          "cc:draft:draft.progression.initial",
+          progressionOptionId(bardMulticlassProgression),
+        ),
+        creationChoiceFill("cc:draft:draft.background", "background_soldier"),
+        creationChoiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: requireRight(
+            abilityScoreAssignment({
+              str: 15,
+              dex: 14,
+              con: 12,
+              int: 8,
+              wis: 10,
+              cha: 13,
+            }),
+          ),
+        },
+        creationChoiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        creationChoiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_fighter", "class_skill_proficiency_choice"),
+          "perception",
+          "survival",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "fighter_fighting_style",
+            "class_feature_feat_choice",
+          ),
+          "defense",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+          "weapon_longsword",
+          "weapon_spear",
+          "weapon_flail",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "class_bard",
+            "bard_multiclass_skill_proficiency",
+          ),
+          "performance",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "class_bard",
+            "bard_multiclass_musical_instrument_proficiency",
+          ),
+          "tool:tool_lute",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_soldier",
+            "background_ability_score_increase",
+          ),
+          "two_and_one:str:con",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("background_soldier", "background_tool_choice"),
+          "tool_dice_set",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_fighter", "class_equipment_choice"),
+          "option_c",
+        ),
+        creationChoiceFill(
+          testUnitChoiceHoleId(
+            "background_soldier",
+            "background_equipment_choice",
+          ),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        creationChoiceFill(
+          testUnitChoiceHoleId("class_fighter", "equipment_purchase"),
+          "armor_chain_mail",
+          "weapon_longsword",
+          "equipment_shield",
+        ),
+      ],
+    }),
+  );
+  const afterLoadout = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        creationChoiceFill(testLoadoutHoleId("armor_chain_mail", "armor"), "worn"),
+        creationChoiceFill(
+          testLoadoutHoleId("equipment_shield", "shield"),
+          "wielded",
+        ),
+        creationChoiceFill(
+          testLoadoutHoleId("weapon_longsword", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected finalized Fighter to Bard multiclass build, received ${creationFinalizationResultSummary(result)}`,
+    );
+  }
+  return { draft: afterLoadout, build: result.build };
+}
+
 function finalizedLevelOneBardDissonantWhispersBuild(): CharacterBuild {
   return finalizedLevelOneBardBuild({
     draftIdText: "draft:l1-sdk-bard-dissonant-whispers",
@@ -7651,7 +7972,20 @@ function finalizedLevelOneBardBuild(input: {
       ],
     }),
   );
-  const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
+  const afterLoadout = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        creationChoiceFill(
+          testLoadoutHoleId("weapon_dagger", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });
   if (result.tag !== "ready") {
     throw new Error(
       `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
@@ -9408,6 +9742,20 @@ function testLoadoutHoleId(
     equipmentUnitId: requireRight(loadoutEquipmentUnitId(equipmentUnitId)),
     slot,
   });
+}
+
+function selectedUnitChoiceOptionIds(
+  draft: CharacterDraft,
+  unitId: UnitRecord["id"],
+  choiceKey: UnitChoiceKey,
+): readonly CreationChoiceOptionId[] {
+  return draft.selections.choices.flatMap((selection) =>
+    selection.kind === "unitChoice" &&
+    selection.source.unitId === unitId &&
+    selection.source.choiceKey === choiceKey
+      ? selection.options.map((option) => option.optionId)
+      : [],
+  );
 }
 
 function unitFeatureActForUnitId(
