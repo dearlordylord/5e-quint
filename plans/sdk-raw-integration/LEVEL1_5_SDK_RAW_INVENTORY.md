@@ -38,10 +38,10 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 138 |
+| closure-review-needed | 137 |
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
-| future-owner-before-sdk | 47 |
+| future-owner-before-sdk | 48 |
 | sdk-scenario-needed | 401 |
 | seed-scenario-present | 109 |
 | table-only-closure-needed | 15 |
@@ -58,17 +58,17 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-sheet | 8 |
 | character-sheet-spell-access | 12 |
 | class-feature-closure-review | 2 |
-| future-runtime-owner-before-sdk | 47 |
+| future-runtime-owner-before-sdk | 48 |
 | multi-owner-sdk-split | 10 |
-| spell-effect-owner-review | 136 |
+| spell-effect-owner-review | 135 |
 | table-only-closure | 15 |
 
 ### All Level 1-5 Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 632 |
-| unresolved-review | 138 |
+| resolved | 633 |
+| unresolved-review | 137 |
 
 ### Scenario Groups by Task
 
@@ -92,20 +92,20 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-sheet-sdk | 7 |
 | explicit-closure | 60 |
 | feature-owner-review | 2 |
-| future-owner-before-sdk | 26 |
+| future-owner-before-sdk | 27 |
 | multi-owner-feature-sdk | 9 |
 | seed-present | 109 |
 | sheet-spell-access-sdk | 12 |
-| spell-effect-owner-review | 45 |
+| spell-effect-owner-review | 44 |
 | table-only-closure | 5 |
 
 ### Level 5 Completion Rows by SDK Disposition
 
 | SDK disposition | Rows |
 | --- | ---: |
-| closure-review-needed | 30 |
+| closure-review-needed | 29 |
 | explicit-closure-recorded | 12 |
-| future-owner-before-sdk | 45 |
+| future-owner-before-sdk | 46 |
 | sdk-scenario-needed | 2 |
 | seed-scenario-present | 45 |
 | table-only-closure-needed | 4 |
@@ -117,16 +117,16 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | build-progression | 12 |
 | character-battle-to-battle | 46 |
 | character-sheet | 1 |
-| future-runtime-owner-before-sdk | 45 |
-| spell-effect-owner-review | 30 |
+| future-runtime-owner-before-sdk | 46 |
+| spell-effect-owner-review | 29 |
 | table-only-closure | 4 |
 
 ### Level 5 Completion Rows by Owner Boundary Status
 
 | Owner boundary status | Rows |
 | --- | ---: |
-| resolved | 108 |
-| unresolved-review | 30 |
+| resolved | 109 |
+| unresolved-review | 29 |
 
 ### Level 5 Scenario Groups by Lane
 
@@ -134,9 +134,9 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | --- | ---: |
 | battle-spell-sdk | 1 |
 | explicit-closure | 12 |
-| future-owner-before-sdk | 24 |
+| future-owner-before-sdk | 25 |
 | seed-present | 45 |
-| spell-effect-owner-review | 11 |
+| spell-effect-owner-review | 10 |
 | table-only-closure | 1 |
 
 ## Cumulative Level 1-4 Source Reports
@@ -285,6 +285,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | spell-level-3 | Druid | `call_lightning` | Druid spell list Call Lightning | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Cleric | `cleric_sear_undead` | Cleric Sear Undead | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | spell-level-3 | Druid | `conjure_animals` | Druid spell list Conjure Animals | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
+| L15-SDK-RAW-07 | future-owner-before-sdk | 1 | spell-level-3 | Cleric | `create_food_and_water` | Cleric spell list Create Food and Water | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 3 | spell-level-3 | Cleric, Druid, Sorcerer | `daylight` | Cleric spell list Daylight<br>Druid spell list Daylight<br>Sorcerer spell list Daylight | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 1 | level-5 | Druid | `druid_wild_resurgence` | Druid Wild Resurgence | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
 | L15-SDK-RAW-07 | future-owner-before-sdk | 4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard | `fear` | Bard spell list Fear<br>Sorcerer spell list Fear<br>Warlock spell list Fear<br>Wizard spell list Fear | Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario. |
@@ -346,7 +347,6 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `protection_from_energy` | Wizard spell list Protection from Energy | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `sleet_storm` | Wizard spell list Sleet Storm | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
 | L15-SDK-RAW-07 | seed-present | 1 | spell-level-3 | Wizard | `slow` | Wizard spell list Slow | Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap. |
-| L15-SDK-RAW-07 | spell-effect-owner-review | 1 | spell-level-3 | Cleric | `create_food_and_water` | Cleric spell list Create Food and Water | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 4 | spell-level-3 | Bard, Sorcerer, Warlock, Wizard | `major_image` | Bard spell list Major Image<br>Sorcerer spell list Major Image<br>Warlock spell list Major Image<br>Wizard spell list Major Image | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 2 | spell-level-3 | Bard, Wizard | `nondetection` | Bard spell list Nondetection<br>Wizard spell list Nondetection | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
 | L15-SDK-RAW-07 | spell-effect-owner-review | 2 | spell-level-3 | Bard, Druid | `plant_growth` | Bard spell list Plant Growth<br>Druid spell list Plant Growth | Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone. |
@@ -391,7 +391,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | spell-level-3 | Cleric spell list Beacon of Hope | `beacon_of_hope` | `.references/srd-5.2.1/Classes/Cleric.md:205` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Beacon of Hope's battle-relevant behavior is closed outside the current promoted battle-runtime boundary: a future active spell-effect owner must admit selected targets without authored-identity dispatch, carry Concentration expiry, maximize later healing received by affected targets, project Advantage onto affected targets' Wisdom Saving Throws, and project Advantage onto affected targets' Death Saving Throws. |
 | spell-level-3 | Cleric spell list Bestow Curse | `bestow_curse` | `.references/srd-5.2.1/Classes/Cleric.md:206` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Bestow Curse supplies typed Surface facts for one chosen curse option and a shared all-curses-ending target boundary, but promoted battle runtime must still model active curse occurrence identity, selected option storage, ability-choice propagation, caster-targeted attack-roll filtering, target-turn forced Dodge, caster attack-roll-or-spell damage riders, slot-tiered Concentration/no-Concentration duration admission, and cleanup from all-curses-ending effects without dispatching on Bestow Curse or Remove Curse authored identity. |
 | spell-level-3 | Cleric spell list Clairvoyance | `clairvoyance` | `.references/srd-5.2.1/Classes/Cleric.md:207` | catalog-only/dead-for-now | accepted-no-battle-effect | table-only-closure | resolved | table-only-closure-needed |  | Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy. |
-| spell-level-3 | Cleric spell list Create Food and Water | `create_food_and_water` | `.references/srd-5.2.1/Classes/Cleric.md:208` | catalog-only/dead-for-now | accepted-no-battle-effect | spell-effect-owner-review | unresolved-review | closure-review-needed |  | Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers. |
+| spell-level-3 | Cleric spell list Create Food and Water | `create_food_and_water` | `.references/srd-5.2.1/Classes/Cleric.md:208` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers. |
 | spell-level-3 | Cleric spell list Daylight | `daylight` | `.references/srd-5.2.1/Classes/Cleric.md:209` | catalog-only/dead-for-now | accepted-no-battle-effect | future-runtime-owner-before-sdk | resolved | future-owner-before-sdk |  | Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers. |
 | spell-level-3 | Cleric spell list Dispel Magic | `dispel_magic` | `.references/srd-5.2.1/Classes/Cleric.md:210` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Dispel Magic | Owner-specific operational evidence is classified and present. |
 | spell-level-3 | Cleric spell list Glyph of Warding | `glyph_of_warding` | `.references/srd-5.2.1/Classes/Cleric.md:211` | catalog-installed-owner-evidence-present | accepted | character-battle-to-battle | resolved | seed-scenario-present | level5-sdk-tracer-bullets: Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery | Owner-specific operational evidence is classified and present. |

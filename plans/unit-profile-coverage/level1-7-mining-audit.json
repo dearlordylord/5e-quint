@@ -9538,7 +9538,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "outside-battle-runtime",
           "owner": "runtime-detached table inventory and survival adjudication owner",
           "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
           "source": "unit-claim",
@@ -41029,7 +41029,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "outside-battle-runtime",
           "owner": "runtime-detached table inventory and survival adjudication owner",
           "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
           "source": "unit-claim",

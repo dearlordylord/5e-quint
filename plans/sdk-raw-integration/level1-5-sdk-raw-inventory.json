@@ -1629,7 +1629,7 @@
       "nextAction": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "outside-battle-runtime",
           "owner": "runtime-detached table inventory and survival adjudication owner",
           "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
           "source": "unit-claim",
@@ -1637,11 +1637,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_create_food_and_water",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 208,
         "lineStart": 208,
@@ -1658,7 +1658,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "outside-battle-runtime",
           "owner": "runtime-detached table inventory and survival adjudication owner",
           "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
           "source": "unit-claim",
@@ -8916,6 +8916,61 @@
     },
     {
       "candidateUnitIds": [
+        "create_food_and_water"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:create-food-and-water",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"create_food_and_water\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:208"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "create_food_and_water",
+          "className": "Cleric",
+          "concept": "Cleric spell list Create Food and Water",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_create_food_and_water",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 208,
+            "lineStart": 208,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Create Food and Water"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "daylight"
       ],
       "categories": [
@@ -12573,61 +12628,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "create_food_and_water"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:create-food-and-water",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"create_food_and_water\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:208"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "create_food_and_water",
-          "className": "Cleric",
-          "concept": "Cleric spell list Create Food and Water",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_create_food_and_water",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 208,
-            "lineStart": 208,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Create Food and Water"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
@@ -23012,7 +23012,7 @@
       "nextAction": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "outside-battle-runtime",
           "owner": "runtime-detached table inventory and survival adjudication owner",
           "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
           "source": "unit-claim",
@@ -23020,11 +23020,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_create_food_and_water",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "future-owner-before-sdk",
       "source": {
         "lineEnd": 208,
         "lineStart": 208,
@@ -23041,7 +23041,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "outside-battle-runtime",
           "owner": "runtime-detached table inventory and survival adjudication owner",
           "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
           "source": "unit-claim",
@@ -57904,18 +57904,18 @@
       "build-progression": 12,
       "character-battle-to-battle": 46,
       "character-sheet": 1,
-      "future-runtime-owner-before-sdk": 45,
-      "spell-effect-owner-review": 30,
+      "future-runtime-owner-before-sdk": 46,
+      "spell-effect-owner-review": 29,
       "table-only-closure": 4
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 108,
-      "unresolved-review": 30
+      "resolved": 109,
+      "unresolved-review": 29
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 30,
+      "closure-review-needed": 29,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 45,
+      "future-owner-before-sdk": 46,
       "sdk-scenario-needed": 2,
       "seed-scenario-present": 45,
       "table-only-closure-needed": 4
@@ -57924,9 +57924,9 @@
     "level5ScenarioGroupsByLane": {
       "battle-spell-sdk": 1,
       "explicit-closure": 12,
-      "future-owner-before-sdk": 24,
+      "future-owner-before-sdk": 25,
       "seed-present": 45,
-      "spell-effect-owner-review": 11,
+      "spell-effect-owner-review": 10,
       "table-only-closure": 1
     },
     "level5SeedScenarioRows": 45,
@@ -57951,14 +57951,14 @@
       "character-sheet": 8,
       "character-sheet-spell-access": 12,
       "class-feature-closure-review": 2,
-      "future-runtime-owner-before-sdk": 47,
+      "future-runtime-owner-before-sdk": 48,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 136,
+      "spell-effect-owner-review": 135,
       "table-only-closure": 15
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 632,
-      "unresolved-review": 138
+      "resolved": 633,
+      "unresolved-review": 137
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -57974,10 +57974,10 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 138,
+      "closure-review-needed": 137,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 47,
+      "future-owner-before-sdk": 48,
       "sdk-scenario-needed": 401,
       "seed-scenario-present": 109,
       "table-only-closure-needed": 15
@@ -57993,11 +57993,11 @@
       "character-sheet-sdk": 7,
       "explicit-closure": 60,
       "feature-owner-review": 2,
-      "future-owner-before-sdk": 26,
+      "future-owner-before-sdk": 27,
       "multi-owner-feature-sdk": 9,
       "seed-present": 109,
       "sheet-spell-access-sdk": 12,
-      "spell-effect-owner-review": 45,
+      "spell-effect-owner-review": 44,
       "table-only-closure": 5
     },
     "scenarioGroupsByTask": {
@@ -83270,6 +83270,61 @@
     },
     {
       "candidateUnitIds": [
+        "create_food_and_water"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Cleric"
+      ],
+      "groupId": "l15-sdk-raw-07:future-owner-before-sdk:create-food-and-water",
+      "lane": "future-owner-before-sdk",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "future-runtime-owner-before-sdk"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"future-owner-before-sdk\",\"create_food_and_water\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Cleric.md:208"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "create_food_and_water",
+          "className": "Cleric",
+          "concept": "Cleric spell list Create Food and Water",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_create_food_and_water",
+          "sdkInventoryDisposition": "future-owner-before-sdk",
+          "source": {
+            "lineEnd": 208,
+            "lineStart": 208,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Cleric spell list Create Food and Water"
+      ],
+      "sdkInventoryDispositions": [
+        "future-owner-before-sdk"
+      ],
+      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
         "daylight"
       ],
       "categories": [
@@ -86927,61 +86982,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
-        "create_food_and_water"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:create-food-and-water",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"create_food_and_water\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:208"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "create_food_and_water",
-          "className": "Cleric",
-          "concept": "Cleric spell list Create Food and Water",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_create_food_and_water",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 208,
-            "lineStart": 208,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric spell list Create Food and Water"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
       "taskId": "L15-SDK-RAW-07"
     },
     {
