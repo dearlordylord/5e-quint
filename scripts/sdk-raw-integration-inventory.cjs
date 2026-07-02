@@ -105,8 +105,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 209;
-const expectedLevelOneTwoSeedScenarioRows = 106;
+const expectedLevelOneTwoCampaignGroups = 208;
+const expectedLevelOneTwoSeedScenarioRows = 107;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -489,6 +489,61 @@ const bardBuildSheetScenarioRows = [
   helperNeedles: bardBuildSheetScenarioHelperNeedles,
   ...row,
 }));
+
+const bardBuildBattleScenarioLabel =
+  "level1-sdk-raw-integration: Bard build-battle handoff projects starting equipment into a battle combatant";
+const bardBuildBattleScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-bard-build-battle"',
+  "bardBuildBattleDraftPlan",
+  'battleIdText: "battle:l1-sdk-bard-build-battle"',
+  "requireCharacterCombatant(fixture.state, bardId)",
+  "fixture.build.equipment.owned",
+  'expect.objectContaining({ unitId: "armor_leather", quantity: 1 })',
+  'expect.objectContaining({ unitId: "weapon_dagger", quantity: 2 })',
+  "origin.selectedLoadout",
+  'armor: { unitId: "armor_leather" }',
+  'weapon: { unitId: "weapon_dagger", grip: "one_handed" }',
+  "origin.attack",
+  'id: "weapon_dagger"',
+  'name: "Dagger"',
+  'mastery: "nick"',
+  "snapshotCombatant(fixture.state, bardId)",
+  "armorClass: 13",
+  'attackSubject(fixture.state, bardId, "Dagger")',
+];
+const bardBuildBattleScenarioHelperNeedles = [
+  {
+    anchor: "const bardBuildBattleDraftPlan =",
+    needles: [
+      "...bardSpellAccessDraftPlan",
+      'label: "Bard build-battle projection"',
+      'legalUnitChoice("class_bard", "class_equipment_choice", "option_a")',
+      'legalLoadoutChoice("armor_leather", "armor", "worn")',
+    ],
+  },
+  {
+    anchor: "const bardSpellAccessDraftPlan =",
+    needles: [
+      'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
+    ],
+  },
+];
+const bardBuildBattleScenarioRows = [
+  {
+    candidateUnitId: "class_bard",
+    className: "Bard",
+    levelBand: "level-1",
+    label: bardBuildBattleScenarioLabel,
+    path: barbarianBuildSheetScenarioPath,
+    rowId:
+      "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
+    rawSources: [".references/srd-5.2.1/Classes/Bard.md:14"],
+    sourceProof: legalBuildBattleHandoffSourceProof,
+    tracerNeedles: bardBuildBattleScenarioNeedles,
+    helperNeedles: bardBuildBattleScenarioHelperNeedles,
+  },
+];
 
 const bardMulticlassBuildSheetScenarioLabel =
   "level1-sdk-raw-integration: Bard multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet";
@@ -880,6 +935,7 @@ const seededSdkScenarioRows = [
   ...druidBuildSheetScenarioRows,
   ...druidMulticlassBuildSheetScenarioRows,
   ...barbarianBuildBattleScenarioRows,
+  ...bardBuildBattleScenarioRows,
   {
     candidateUnitId: "barbarian_unarmored_defense",
     className: "Barbarian",
@@ -1945,7 +2001,7 @@ const seededSdkScenarioRows = [
           '"class_cantrip_choices"',
           '"class_prepared_spell_choices"',
           '"cleric_divine_order"',
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -2019,7 +2075,7 @@ const seededSdkScenarioRows = [
           '"class_cleric"',
           '"class_cantrip_choices"',
           '"class_prepared_spell_choices"',
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -2098,7 +2154,7 @@ const seededSdkScenarioRows = [
           '"class_cleric"',
           '"class_cantrip_choices"',
           '"class_prepared_spell_choices"',
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -2183,7 +2239,7 @@ const seededSdkScenarioRows = [
           '"class_cleric"',
           '"class_cantrip_choices"',
           '"class_prepared_spell_choices"',
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -2266,7 +2322,7 @@ const seededSdkScenarioRows = [
           '"class_cleric"',
           '"class_cantrip_choices"',
           '"class_prepared_spell_choices"',
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -2363,7 +2419,7 @@ const seededSdkScenarioRows = [
           '"class_cantrip_choices"',
           '"warlock_eldritch_invocations"',
           '"eldritch_invocations"',
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -2567,7 +2623,7 @@ const seededSdkScenarioRows = [
           '"class_cantrip_choices"',
           '"warlock_eldritch_invocations"',
           '"eldritch_invocations"',
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -2714,7 +2770,7 @@ const seededSdkScenarioRows = [
           '"class_cantrip_choices"',
           '"warlock_eldritch_invocations"',
           '"eldritch_invocations"',
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },
@@ -2798,7 +2854,7 @@ const seededSdkScenarioRows = [
           '"class_prepared_spell_choices"',
           '"warlock_eldritch_invocations"',
           '"eldritch_invocations"',
-          "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+          "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
           "return result.build;",
         ],
       },

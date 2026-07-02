@@ -565,7 +565,7 @@ export function levelFiveMartialBuild(input: {
       ? {}
       : { abilityScores: input.abilityScores }),
     equipment: {
-      owned: [{ itemId: weaponItemId, unitId: input.weaponUnitId }],
+      owned: [{ itemId: weaponItemId, unitId: input.weaponUnitId, quantity: 1 }],
       loadout: {
         weapon: { itemId: weaponItemId, grip: "one_handed" },
       },

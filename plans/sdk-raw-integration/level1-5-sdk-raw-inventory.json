@@ -14421,6 +14421,13 @@
       "category": "equipment/weapon/armor pressure",
       "className": "Bard",
       "concept": "Bard Starting Equipment",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard build-battle handoff projects starting equipment into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:14"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -14428,7 +14435,7 @@
       "proposedOwnerBoundary": "character-build-to-battle",
       "rowId": "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
       "rowKind": "equipment-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 14,
         "lineStart": 14,
@@ -51033,12 +51040,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 11,
+        "groupCount": 10,
         "lane": "build-battle-sdk",
         "ownerTaskIds": [
           "L12-SH07-BUILD-BATTLE-FIRST-SLICE"
         ],
-        "rowCount": 15,
+        "rowCount": 14,
         "rowFamily": "source-row",
         "taskFamily": "build-battle-sdk"
       },
@@ -51129,7 +51136,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 106,
+        "rowCount": 107,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51207,12 +51214,12 @@
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 106,
+        "rowCount": 107,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 88,
+        "groupCount": 87,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51223,7 +51230,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 199,
+        "rowCount": 198,
         "rowFamily": "source-row"
       },
       {
@@ -51242,7 +51249,7 @@
       "sourcePathPrefix": ".references/srd-5.2.1/"
     },
     "totals": {
-      "groupCount": 209,
+      "groupCount": 208,
       "rowCount": 400
     }
   },
@@ -51643,6 +51650,25 @@
       "sourceProof": "legal-build-sheet-owner",
       "usesRealSheetBattleHandoff": false,
       "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_bard",
+      "classification": "already legal creation path",
+      "className": "Bard",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard build-battle handoff projects starting equipment into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
+      "rowKey": "level-1:Bard:class_bard",
+      "rowKind": "equipment-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-battle-handoff",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
     },
     {
       "candidateUnitId": "class_bard",
@@ -59127,17 +59153,17 @@
       "closure-review-needed": 142,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 392,
+      "sdk-scenario-needed": 391,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 112,
+      "seed-scenario-present": 113,
       "table-only-closure-needed": 13
     },
     "levelOneFourRows": 632,
-    "levelOneTwoCampaignGroups": 209,
+    "levelOneTwoCampaignGroups": 208,
     "levelOneTwoCampaignGroupsByLane": {
       "battle-feature-sdk": 5,
       "battle-spell-sdk": 31,
-      "build-battle-sdk": 11,
+      "build-battle-sdk": 10,
       "build-sheet-sdk": 9,
       "character-creation-sdk": 14,
       "character-sheet-sdk": 6,
@@ -59152,20 +59178,20 @@
       "closure-review-row": 21,
       "explicit-closure-row": 24,
       "seed-row": 75,
-      "source-row": 88,
+      "source-row": 87,
       "table-only-closure-row": 1
     },
     "levelOneTwoCampaignRows": 400,
     "levelOneTwoCampaignRowsByLane": {
       "battle-feature-sdk": 5,
       "battle-spell-sdk": 80,
-      "build-battle-sdk": 15,
+      "build-battle-sdk": 14,
       "build-sheet-sdk": 67,
       "character-creation-sdk": 14,
       "character-sheet-sdk": 6,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 106,
+      "seed-present": 107,
       "sheet-spell-access-sdk": 6,
       "spell-effect-owner-review": 69,
       "table-only-closure": 2
@@ -59173,29 +59199,29 @@
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 69,
       "explicit-closure-row": 24,
-      "seed-row": 106,
-      "source-row": 199,
+      "seed-row": 107,
+      "source-row": 198,
       "table-only-closure-row": 2
     },
-    "levelOneTwoSeedMigrationAuditRows": 106,
+    "levelOneTwoSeedMigrationAuditRows": 107,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 70,
+      "already legal creation path": 71,
       "legal build-sheet owner proof": 35,
       "legal creation owner proof": 1
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
       "not-real-sheet-battle": 36,
-      "real-sheet-battle": 70
+      "real-sheet-battle": 71
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 106
+      "legal-creation-draft-finalize": 107
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 70,
-    "scenarioGroups": 413,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 71,
+    "scenarioGroups": 412,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 20,
       "battle-spell-sdk": 82,
-      "build-battle-sdk": 11,
+      "build-battle-sdk": 10,
       "build-sheet-sdk": 21,
       "character-creation-sdk": 28,
       "character-sheet-sdk": 6,
@@ -59210,7 +59236,7 @@
       "table-only-closure": 5
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 176,
+      "L15-SDK-RAW-03": 175,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -61803,61 +61829,6 @@
         "sdk-scenario-needed"
       ],
       "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "class_bard"
-      ],
-      "categories": [
-        "equipment/weapon/armor pressure"
-      ],
-      "classNames": [
-        "Bard"
-      ],
-      "groupId": "l15-sdk-raw-03:build-battle-sdk:bard",
-      "lane": "build-battle-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-build-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"build-battle-sdk\",\"Bard\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:14"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "equipment-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "class_bard",
-          "className": "Bard",
-          "concept": "Bard Starting Equipment",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-battle",
-          "rowId": "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 14,
-            "lineStart": 14,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard Starting Equipment"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Finalize build and equipment/mastery choices, project to battle, and assert AC, attack, damage, or mastery facts that a user reaches through the SDK path.",
       "taskId": "L15-SDK-RAW-03"
     },
     {
@@ -65668,6 +65639,7 @@
       "categories": [
         "character-creation or progression mechanic",
         "class container",
+        "equipment/weapon/armor pressure",
         "spell access/list pressure"
       ],
       "classNames": [
@@ -65682,6 +65654,7 @@
         "resolved"
       ],
       "proposedOwnerBoundaries": [
+        "character-build-to-battle",
         "character-build-to-sheet",
         "character-sheet-spell-access"
       ],
@@ -65691,6 +65664,7 @@
         ".references/srd-5.2.1/Classes/Bard.md:11",
         ".references/srd-5.2.1/Classes/Bard.md:12",
         ".references/srd-5.2.1/Classes/Bard.md:13",
+        ".references/srd-5.2.1/Classes/Bard.md:14",
         ".references/srd-5.2.1/Classes/Bard.md:23",
         ".references/srd-5.2.1/Classes/Bard.md:23-26",
         ".references/srd-5.2.1/Classes/Bard.md:3",
@@ -65701,10 +65675,11 @@
         ".references/srd-5.2.1/Classes/Bard.md:9",
         ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-57"
       ],
-      "rowCount": 10,
+      "rowCount": 11,
       "rowKinds": [
         "class-container",
         "core-trait",
+        "equipment-pressure",
         "multiclass-entry",
         "spell-access"
       ],
@@ -65832,6 +65807,21 @@
         {
           "candidateUnitId": "class_bard",
           "className": "Bard",
+          "concept": "Bard Starting Equipment",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-battle",
+          "rowId": "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 14,
+            "lineStart": 14,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_bard",
+          "className": "Bard",
           "concept": "Bard multiclass entry traits",
           "levelBand": "level-1",
           "ownerBoundaryStatus": "resolved",
@@ -65867,8 +65857,8 @@
         "Bard Saving Throw Proficiencies",
         "Bard Skill Proficiencies",
         "Bard Spellcasting",
-        "Bard Tool Proficiencies",
-        "Bard Weapon Proficiencies"
+        "Bard Starting Equipment",
+        "Bard Tool Proficiencies"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -90373,6 +90363,58 @@
       ]
     },
     {
+      "candidateUnitId": "class_bard",
+      "className": "Bard",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Bard build-battle handoff projects starting equipment into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Bard.md:14"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const bardBuildBattleDraftPlan =",
+          "needles": [
+            "...bardSpellAccessDraftPlan",
+            "label: \"Bard build-battle projection\"",
+            "legalUnitChoice(\"class_bard\", \"class_equipment_choice\", \"option_a\")",
+            "legalLoadoutChoice(\"armor_leather\", \"armor\", \"worn\")"
+          ]
+        },
+        {
+          "anchor": "const bardSpellAccessDraftPlan =",
+          "needles": [
+            "legalLoadoutChoice(\"weapon_dagger\", \"weapon\", \"wielded_one_handed\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
+      "rowKey": "level-1:Bard:class_bard",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-bard-build-battle\"",
+        "bardBuildBattleDraftPlan",
+        "battleIdText: \"battle:l1-sdk-bard-build-battle\"",
+        "requireCharacterCombatant(fixture.state, bardId)",
+        "fixture.build.equipment.owned",
+        "expect.objectContaining({ unitId: \"armor_leather\", quantity: 1 })",
+        "expect.objectContaining({ unitId: \"weapon_dagger\", quantity: 2 })",
+        "origin.selectedLoadout",
+        "armor: { unitId: \"armor_leather\" }",
+        "weapon: { unitId: \"weapon_dagger\", grip: \"one_handed\" }",
+        "origin.attack",
+        "id: \"weapon_dagger\"",
+        "name: \"Dagger\"",
+        "mastery: \"nick\"",
+        "snapshotCombatant(fixture.state, bardId)",
+        "armorClass: 13",
+        "attackSubject(fixture.state, bardId, \"Dagger\")"
+      ]
+    },
+    {
       "candidateUnitId": "barbarian_unarmored_defense",
       "className": "Barbarian",
       "evidenceNeedles": [],
@@ -91507,7 +91549,7 @@
             "\"class_cantrip_choices\"",
             "\"class_prepared_spell_choices\"",
             "\"cleric_divine_order\"",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -91582,7 +91624,7 @@
             "\"class_cleric\"",
             "\"class_cantrip_choices\"",
             "\"class_prepared_spell_choices\"",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -91663,7 +91705,7 @@
             "\"class_cleric\"",
             "\"class_cantrip_choices\"",
             "\"class_prepared_spell_choices\"",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -91750,7 +91792,7 @@
             "\"class_cleric\"",
             "\"class_cantrip_choices\"",
             "\"class_prepared_spell_choices\"",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -91834,7 +91876,7 @@
             "\"class_cleric\"",
             "\"class_cantrip_choices\"",
             "\"class_prepared_spell_choices\"",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -91931,7 +91973,7 @@
             "\"class_cantrip_choices\"",
             "\"warlock_eldritch_invocations\"",
             "\"eldritch_invocations\"",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -92138,7 +92180,7 @@
             "\"class_cantrip_choices\"",
             "\"warlock_eldritch_invocations\"",
             "\"eldritch_invocations\"",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -92288,7 +92330,7 @@
             "\"class_cantrip_choices\"",
             "\"warlock_eldritch_invocations\"",
             "\"eldritch_invocations\"",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },
@@ -92366,7 +92408,7 @@
             "\"class_prepared_spell_choices\"",
             "\"warlock_eldritch_invocations\"",
             "\"eldritch_invocations\"",
-            "const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });",
+            "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
             "return result.build;"
           ]
         },

@@ -1,6 +1,10 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice
 import { Either } from "effect";
+import type {
+  StartingEquipmentChoice,
+  StartingEquipmentItemRef,
+} from "@dnd/surface/surface/types";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
@@ -30,6 +34,7 @@ import {
   LOADOUT_WEAPON_SLOT,
   PHASE1_ALIGNMENT_OPTION_ID,
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+  PHASE1_ARMOR_LEATHER_UNIT_ID,
   PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
@@ -143,6 +148,11 @@ export type SupportedLoadoutChoice =
       readonly grip: NonNullable<CharacterBuildLoadout["weapon"]>["grip"];
     };
 
+export type SupportedStartingEquipmentUnitStack = {
+  readonly unitId: UnitRecord["id"];
+  readonly quantity: number;
+};
+
 type SourceScopedEquipmentChoiceKey =
   | typeof CLASS_EQUIPMENT_CHOICE_KEY
   | typeof BACKGROUND_EQUIPMENT_CHOICE_KEY;
@@ -161,7 +171,7 @@ export type CharacterCreationSupportProfile = {
   readonly backgroundUnitIds: readonly UnitRecord["id"][];
   readonly purchasableEquipmentUnitIds: readonly UnitRecord["id"][];
   readonly equipmentPurchaseChoiceCount: 3;
-  readonly coinEquipmentChoiceOptionIdsByUnitId: Partial<
+  readonly equipmentChoiceOptionIdsByUnitId: Partial<
     Record<UnitRecord["id"], readonly CreationChoiceOptionId[]>
   >;
   readonly loadoutChoices: readonly SupportedLoadoutChoice[];
@@ -415,7 +425,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
   backgroundUnitIds: SUPPORTED_BACKGROUND_UNIT_IDS,
   purchasableEquipmentUnitIds: SUPPORTED_PURCHASE_UNIT_IDS,
   equipmentPurchaseChoiceCount: 3,
-  coinEquipmentChoiceOptionIdsByUnitId: {
+  equipmentChoiceOptionIdsByUnitId: {
     ...Object.fromEntries(
       SRD_LEVEL_ONE_CLASS_UNIT_IDS.map((classUnitId) => [
         classUnitId,
@@ -423,6 +433,10 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       ]),
     ),
     [PHASE1_CLASS_FIGHTER_UNIT_ID]: [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
+    [SRD_BARD_CLASS_UNIT_ID]: [
+      creationChoiceOptionId("option_b"),
+      creationChoiceOptionId("option_a"),
+    ],
     ...Object.fromEntries(
       SUPPORTED_BACKGROUND_UNIT_IDS.map((backgroundUnitId) => [
         backgroundUnitId,
@@ -434,6 +448,13 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     {
       slot: LOADOUT_ARMOR_SLOT,
       unitId: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+      optionId: PHASE1_LOADOUT_ARMOR_OPTION_ID,
+      label: "Worn",
+      buildSlot: "armor",
+    },
+    {
+      slot: LOADOUT_ARMOR_SLOT,
+      unitId: PHASE1_ARMOR_LEATHER_UNIT_ID,
       optionId: PHASE1_LOADOUT_ARMOR_OPTION_ID,
       label: "Worn",
       buildSlot: "armor",
@@ -591,11 +612,11 @@ export function supportedUnitOptionIdsForSource(
     source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY ||
     source.choiceKey === BACKGROUND_EQUIPMENT_CHOICE_KEY
   ) {
-    const coinEquipmentChoices =
-      CHARACTER_CREATION_SUPPORT_PROFILE.coinEquipmentChoiceOptionIdsByUnitId as Partial<
+    const equipmentChoices =
+      CHARACTER_CREATION_SUPPORT_PROFILE.equipmentChoiceOptionIdsByUnitId as Partial<
         Record<UnitRecord["id"], readonly CreationChoiceOptionId[]>
       >;
-    return coinEquipmentChoices[source.unitId] ?? [];
+    return equipmentChoices[source.unitId] ?? [];
   }
 
   if (source.choiceKey === CLASS_SKILL_PROFICIENCY_CHOICE_KEY) {
@@ -658,6 +679,56 @@ export function supportedEquipmentPurchaseChoiceCount(): number {
 
 export function supportedLoadoutChoices(): readonly SupportedLoadoutChoice[] {
   return CHARACTER_CREATION_SUPPORT_PROFILE.loadoutChoices;
+}
+
+export function supportedStartingEquipmentUnitStacks(
+  choice: StartingEquipmentChoice,
+): readonly SupportedStartingEquipmentUnitStack[] {
+  if (choice.kind === "coin_grant") return [];
+
+  return choice.items.flatMap(supportedStartingEquipmentItemUnitStacks);
+}
+
+export function isSupportedStartingEquipmentChoice(
+  choice: StartingEquipmentChoice,
+): boolean {
+  if (choice.kind === "coin_grant") return true;
+
+  const unitRefItems = choice.items.filter(
+    (
+      item,
+    ): item is Extract<
+      StartingEquipmentItemRef,
+      { readonly kind: "unit_ref" }
+    > =>
+      item.kind === "unit_ref",
+  );
+  return (
+    unitRefItems.length > 0 &&
+    unitRefItems.every((item) => isSupportedEquipmentUnitId(item.unitId))
+  );
+}
+
+function supportedStartingEquipmentItemUnitStacks(
+  item: StartingEquipmentItemRef,
+): readonly SupportedStartingEquipmentUnitStack[] {
+  if (item.kind === "unit_ref") {
+    return isSupportedEquipmentUnitId(item.unitId)
+      ? [{ unitId: item.unitId, quantity: item.quantity ?? 1 }]
+      : [];
+  }
+
+  return [];
+}
+
+function isSupportedEquipmentUnitId(unitId: UnitRecord["id"]): boolean {
+  return supportedEquipmentUnitIds().some(
+    (supportedUnitId) => supportedUnitId === unitId,
+  );
+}
+
+function supportedEquipmentUnitIds(): readonly UnitRecord["id"][] {
+  return CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds;
 }
 
 export function isSupportedProgression(

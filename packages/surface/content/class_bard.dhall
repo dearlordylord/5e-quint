@@ -219,18 +219,25 @@
   [ { coinsGp = 19
     , id = "option_a"
     , items = Some
-      [ { itemName = "Leather Armor"
-        , kind = "draft_owned_item"
+      [ { itemName = None Text
+        , kind = "unit_ref"
         , quantity = None Natural
+        , unitId = Some "armor_leather"
         }
-      , { itemName = "Dagger", kind = "draft_owned_item", quantity = Some 2 }
+      , { itemName = None Text
+        , kind = "unit_ref"
+        , quantity = Some 2
+        , unitId = Some "weapon_dagger"
+        }
       , { itemName = "Musical Instrument"
         , kind = "draft_owned_item"
         , quantity = None Natural
+        , unitId = None Text
         }
       , { itemName = "Entertainer's Pack"
         , kind = "draft_owned_item"
         , quantity = None Natural
+        , unitId = None Text
         }
       ]
     , kind = "item_bundle"

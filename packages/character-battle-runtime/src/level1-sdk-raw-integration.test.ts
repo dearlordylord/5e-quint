@@ -625,6 +625,23 @@ const bardSpellAccessDraftPlan = {
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
+const bardBuildBattleDraftPlan = {
+  ...bardSpellAccessDraftPlan,
+  label: "Bard build-battle projection",
+  sourcePreferences: [
+    ...bardSpellAccessDraftPlan.sourcePreferences.filter(
+      (preference) =>
+        !(
+          preference.source.tag === "unitChoice" &&
+          preference.source.unitId === "class_bard" &&
+          preference.source.choiceKey === "class_equipment_choice"
+        ),
+    ),
+    legalUnitChoice("class_bard", "class_equipment_choice", "option_a"),
+    legalLoadoutChoice("armor_leather", "armor", "worn"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 const clericBuildSheetDraftPlan = {
   label: "Cleric build-sheet projection",
   classUnitId: "class_cleric",
@@ -1542,6 +1559,71 @@ describe("level 1 SDK RAW integration", () => {
         characterBuildArmorTraining(fixture.sheet.build, unitLibrary),
       ),
     ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
+  });
+
+  test("Bard build-battle handoff projects starting equipment into a battle combatant", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-bard-build-battle",
+      draftPlan: bardBuildBattleDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-bard-build-battle",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l1-sdk-bard-build-battle",
+        combatantId: bardId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      },
+    });
+
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(fixture.build.equipment.owned).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ unitId: "armor_leather", quantity: 1 }),
+        expect.objectContaining({ unitId: "weapon_dagger", quantity: 2 }),
+      ]),
+    );
+
+    const bard = requireCharacterCombatant(fixture.state, bardId);
+    expect(bard.origin.characterId).toBe("character:l1-sdk-bard-build-battle");
+    expect(bard.origin.selectedLoadout).toMatchObject({
+      armor: { unitId: "armor_leather" },
+      weapon: { unitId: "weapon_dagger", grip: "one_handed" },
+    });
+    expect(bard.origin.attack).toMatchObject({
+      kind: "weapon",
+      weapon: {
+        id: "weapon_dagger",
+        name: "Dagger",
+        damage: { dice: 1, dieSize: 4 },
+        mastery: "nick",
+      },
+    });
+
+    const snapshot = snapshotCombatant(fixture.state, bardId);
+    expect(snapshot).toMatchObject({
+      hp: Hp(9),
+      maxHp: Hp(9),
+      armorClass: 13,
+      movement: { speedFeet: movementFeet(30) },
+    });
+    expect(attackSubject(fixture.state, bardId, "Dagger")).toMatchObject({
+      tag: "action",
+      actorId: bardId,
+    });
   });
 
   test("Cleric build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {
@@ -8066,7 +8148,7 @@ function levelOneEquipment(
     unitId: requireRight(characterEquipmentItemUnitId(weaponUnitId)),
   });
   return {
-    owned: [{ itemId: weaponItemId, unitId: weaponUnitId }],
+    owned: [{ itemId: weaponItemId, unitId: weaponUnitId, quantity: 1 }],
     loadout: { weapon: { itemId: weaponItemId, grip: "one_handed" } },
   };
 }
@@ -8963,7 +9045,20 @@ function finalizedLevelOneClericBuild(input: {
       ],
     }),
   );
-  const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
+  const afterLoadout = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        creationChoiceFill(
+          testLoadoutHoleId("weapon_dagger", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });
   if (result.tag !== "ready") {
     throw new Error(
       `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,
@@ -9197,7 +9292,7 @@ function finalizedLevelOneDruidBuild(input: {
 
 const defaultDruidWeaponPurchase = {
   unitId: "weapon_dagger",
-  loadout: "not_wielded",
+  loadout: "wielded_one_handed",
 } as const satisfies LevelOneDruidWeaponPurchase;
 
 function finalizedLevelOnePaladinCureWoundsBuild(): CharacterBuild {
@@ -9997,7 +10092,20 @@ function finalizedLevelOneWarlockBuild(input: {
       ],
     }),
   );
-  const result = finalizeCharacterDraft({ draft: afterPurchase, unitLibrary });
+  const afterLoadout = requireAcceptedCreationBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        creationChoiceFill(
+          testLoadoutHoleId("weapon_dagger", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+  const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });
   if (result.tag !== "ready") {
     throw new Error(
       `Expected finalized ${input.expectedBuildLabel} build, received ${creationFinalizationResultSummary(result)}`,

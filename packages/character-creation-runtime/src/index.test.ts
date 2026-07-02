@@ -126,7 +126,9 @@ import {
 import { qntLoadoutSlot } from "./qnt-loadout-bridge.test-support.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
+  isSupportedStartingEquipmentChoice,
   supportedHoleOptionIds,
+  supportedStartingEquipmentUnitStacks,
   type SupportedLoadoutChoice,
 } from "./support-gates.ts";
 import {
@@ -135,6 +137,7 @@ import {
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  CLASS_EQUIPMENT_CHOICE_KEY,
   ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
@@ -150,6 +153,7 @@ import {
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
   progressionOptionId,
   CLASS_SUBCLASS_CHOICE_KEY,
+  SRD_BARD_CLASS_UNIT_ID,
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
   SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS,
   SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
@@ -1909,6 +1913,7 @@ describe("character creation hole discovery", () => {
       cardinality: { tag: "between", min: 1, max: 3 },
       options: [
         { optionId: "armor_chain_mail" },
+        { optionId: "armor_leather" },
         { optionId: "weapon_longsword" },
         { optionId: "weapon_dagger" },
         { optionId: "weapon_quarterstaff" },
@@ -2020,6 +2025,32 @@ describe("character creation hole discovery", () => {
     });
   });
 
+  test("starting equipment support consumes structured Unit refs, not authored item names", () => {
+    expect(
+      isSupportedStartingEquipmentChoice({
+        id: "synthetic-authored-name",
+        kind: "item_bundle",
+        items: [
+          { itemName: "Dagger", kind: "draft_owned_item", quantity: 2 },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      isSupportedStartingEquipmentChoice({
+        id: "synthetic-unknown-unit",
+        kind: "item_bundle",
+        items: [{ kind: "unit_ref", unitId: "missing_equipment" }],
+      }),
+    ).toBe(false);
+    expect(
+      supportedStartingEquipmentUnitStacks({
+        id: "synthetic-unit-stack",
+        kind: "item_bundle",
+        items: [{ kind: "unit_ref", unitId: "weapon_dagger", quantity: 2 }],
+      }),
+    ).toEqual([{ unitId: "weapon_dagger", quantity: 2 }]);
+  });
+
   test("does not open purchase for Fighter item-bundle equipment choices", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
@@ -2124,6 +2155,44 @@ describe("character creation hole discovery", () => {
 
     expect(
       holeById(holes, testLoadoutHoleId("weapon_flail", "weapon")),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+      options: [{ optionId: "wielded_one_handed" }],
+    });
+  });
+
+  test("opens one loadout hole per slot when multiple owned weapons are loadout-compatible", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        progression: testProgression("class_barbarian", 1),
+        background: "background_soldier",
+        choices: [
+          selectedChoice("class_barbarian", "class_equipment_choice", "option_b"),
+          selectedChoice(
+            "background_soldier",
+            "background_equipment_choice",
+            "option_b",
+          ),
+        ],
+        equipment: {
+          selectedUnitIds: [
+            "weapon_longsword",
+            "weapon_dagger",
+            "equipment_shield",
+          ],
+        },
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holes.filter(
+        (hole) => hole.source.tag === "loadout" && hole.source.slot === "weapon",
+      ),
+    ).toHaveLength(1);
+    expect(
+      holeById(holes, testLoadoutHoleId("weapon_longsword", "weapon")),
     ).toMatchObject({
       kind: "choice",
       cardinality: { tag: "exactly", count: 1 },
@@ -4087,11 +4156,56 @@ describe("character creation finalization", () => {
     ]);
   });
 
+  test("rejects non-Fighter purchased equipment that is only globally supported", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:bard-unsupported-purchased-chain-mail",
+      progression: testProgression("class_bard", 1),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("class_bard", "class_equipment_choice")]: [
+          creationChoiceOptionId("option_a"),
+        ],
+      },
+    });
+    const chainMailDraft: CharacterDraft = {
+      ...draft,
+      selections: {
+        ...draft.selections,
+        choices: [
+          ...draft.selections.choices,
+          selectedLoadoutChoice("armor_chain_mail", "armor", "worn"),
+        ],
+        equipment: {
+          selectedUnitIds: ["armor_chain_mail"],
+        },
+      },
+    };
+
+    const result = finalizeCharacterDraft({ draft: chainMailDraft, unitLibrary });
+
+    expect(result.tag).toBe("invalid");
+    if (result.tag !== "invalid") return;
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        message: "Finalized build must own supported purchased equipment.",
+      }),
+    );
+  });
+
   test("finalizes each supported level-1 SRD class-container source facts from Surface class records", () => {
     for (const classUnitId of SRD_LEVEL_ONE_CLASS_UNIT_IDS) {
       const draft = completeSupportedProgressionDraft({
         draftId: `draft:srd-level-1-${classUnitId}`,
         progression: testProgression(classUnitId, 1),
+        ...(classUnitId === SRD_BARD_CLASS_UNIT_ID
+          ? {
+              preferredOptionIdsBySource: {
+                [testUnitChoiceSourceKey(
+                  SRD_BARD_CLASS_UNIT_ID,
+                  CLASS_EQUIPMENT_CHOICE_KEY,
+                )]: [creationChoiceOptionId("option_b")],
+              },
+            }
+          : {}),
       });
       const classFacts = readableClassFacts(classUnitId);
       const result = finalizeCharacterDraft({ draft, unitLibrary });
@@ -8207,6 +8321,12 @@ describe("character creation finalization", () => {
     const originalPurchasableEquipmentUnitIds =
       mutableProfile.purchasableEquipmentUnitIds;
     const originalLoadoutChoices = mutableProfile.loadoutChoices;
+    const chainMailLoadout = originalLoadoutChoices.find(
+      (choice) => choice.unitId === "armor_chain_mail",
+    )!;
+    const shieldLoadout = originalLoadoutChoices.find(
+      (choice) => choice.unitId === "equipment_shield",
+    )!;
     const spearWeaponLoadout: SupportedLoadoutChoice = {
       slot: "weapon",
       unitId: "weapon_spear",
@@ -8227,8 +8347,8 @@ describe("character creation finalization", () => {
       "equipment_shield",
     ];
     mutableProfile.loadoutChoices = [
-      originalLoadoutChoices[0]!,
-      originalLoadoutChoices[1]!,
+      chainMailLoadout,
+      shieldLoadout,
       spearWeaponLoadout,
     ];
 

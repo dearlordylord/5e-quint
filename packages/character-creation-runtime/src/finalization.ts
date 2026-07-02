@@ -62,6 +62,9 @@ import {
   eligibleExpertiseSkills,
   grantExpertiseSkillSourceForSelection,
   sameCreationHoleSource,
+  selectedEquipmentUnitIdsForLoadout,
+  selectedStartingEquipmentUnitStacksForBuild,
+  selectedEquipmentUnitStacksForBuild,
   selectedFeatAbilityScoreIncreaseOptions,
   sameOptionIdMultiset,
   skillExpertiseFromChoiceSelections,
@@ -129,6 +132,7 @@ import {
 } from "./language-codecs.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
+  isSupportedStartingEquipmentChoice,
   isSupportedProgression,
   supportedBackgroundUnitIds,
   supportedLoadoutChoiceForSource,
@@ -250,7 +254,7 @@ export function finalizeCharacterDraft(input: {
     };
   }
 
-  const selections = finalizedSelections(input.draft);
+  const selections = finalizedSelections(input.draft, input.unitLibrary);
   if (selections == null) {
     return {
       tag: "invalid",
@@ -317,11 +321,18 @@ function hasCardinalityCompleteChoiceSelection(
 
 export function finalizedSelections(
   draft: CharacterDraft,
+  unitLibrary: UnitCatalog,
 ): FinalizedCharacterSelections | undefined {
   // Narrow an in-progress draft's optional selections into the complete
   // finalization shape. Projection code below should consume this required
   // shape instead of repeatedly re-checking draft fields for undefined.
   const selections = draft.selections;
+  const equipment =
+    selections.equipment ??
+    (selectedEquipmentUnitIdsForLoadout({ draft, unitLibrary }).length > 0
+      ? { selectedUnitIds: [] }
+      : undefined);
+
   if (
     selections.progression == null ||
     selections.background == null ||
@@ -330,7 +341,7 @@ export function finalizedSelections(
     selections.species == null ||
     selections.languages == null ||
     selections.alignment == null ||
-    selections.equipment == null
+    equipment == null
   ) {
     return undefined;
   }
@@ -350,7 +361,7 @@ export function finalizedSelections(
     languages: selections.languages,
     alignment: selections.alignment,
     choices: selections.choices,
-    equipment: selections.equipment,
+    equipment,
   };
 }
 
@@ -432,7 +443,7 @@ export function executableSupportIssues(
       "Finalized Wizard spellbook selections must be distinct across class and feature grants.",
     ),
     ...expectedValueIssue(
-      isSupportedEquipmentSelection(selections),
+      isSupportedEquipmentSelection(selections, unitLibrary),
       "Finalized build must own supported purchased equipment.",
     ),
   ];
@@ -1763,7 +1774,7 @@ export function allFinalizedChoicesSupported(
       }
 
       if (sameCreationHoleSource(choice.source, classEquipmentHole.source)) {
-        return supportedStartingEquipmentCoinGrantChoice(
+        return supportedStartingEquipmentChoice(
           choice,
           selectedClassUnitId,
           CLASS_EQUIPMENT_CHOICE_KEY,
@@ -1774,7 +1785,7 @@ export function allFinalizedChoicesSupported(
       if (
         sameCreationHoleSource(choice.source, backgroundEquipmentHole.source)
       ) {
-        return supportedStartingEquipmentCoinGrantChoice(
+        return supportedStartingEquipmentChoice(
           choice,
           selections.background,
           BACKGROUND_EQUIPMENT_CHOICE_KEY,
@@ -2059,7 +2070,12 @@ function supportedFinalizationChoiceHoles(
   const backgroundToolHole = backgroundToolChoiceSpec(
     input.backgroundFacts.toolProficiency,
   );
-  const selectedEquipment = new Set(input.selections.equipment.selectedUnitIds);
+  const selectedEquipment = new Set(
+    selectedEquipmentUnitIdsForLoadout({
+      draft: { selections: input.selections },
+      unitLibrary: input.unitLibrary,
+    }),
+  );
 
   return [
     classSkillHole,
@@ -2415,7 +2431,7 @@ function isPresent<T>(value: T | undefined): value is T {
   return value !== undefined;
 }
 
-function supportedStartingEquipmentCoinGrantChoice(
+function supportedStartingEquipmentChoice(
   selection: Extract<CharacterChoiceSelection, { readonly kind: "unitChoice" }>,
   unitId: UnitRecord["id"],
   choiceKey:
@@ -2445,17 +2461,36 @@ function supportedStartingEquipmentCoinGrantChoice(
   const selectedChoice = choices.find(
     (choice) => choice.id === selectedOptionId,
   );
-  return selectedChoice?.kind === "coin_grant";
+  return (
+    selectedChoice !== undefined &&
+    isSupportedStartingEquipmentChoice(selectedChoice)
+  );
 }
 
 export function isSupportedEquipmentSelection(
   selections: FinalizedCharacterSelections,
+  unitLibrary?: UnitCatalog,
 ): boolean {
-  const supportedUnitIds = supportedPurchasableEquipmentUnitIdsForClass(
+  const purchasedUnitIds = selections.equipment.selectedUnitIds;
+  const purchasedSupportedUnitIds = supportedPurchasableEquipmentUnitIdsForClass(
     startingClassUnitId(selections.progression),
   );
-  return selections.equipment.selectedUnitIds.every((unitId) =>
-    (supportedUnitIds as readonly string[]).includes(unitId),
+  const purchasesSupported = purchasedUnitIds.every((unitId) =>
+    (purchasedSupportedUnitIds as readonly string[]).includes(unitId),
+  );
+  if (!purchasesSupported || unitLibrary === undefined) {
+    return purchasesSupported;
+  }
+
+  const startingEquipmentSupportedUnitIds =
+    CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds;
+  return selectedStartingEquipmentUnitStacksForBuild({
+    draft: { selections },
+    unitLibrary,
+  }).every((stack) =>
+    (startingEquipmentSupportedUnitIds as readonly string[]).includes(
+      stack.unitId,
+    ),
   );
 }
 
@@ -2771,6 +2806,10 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
   loadoutChoices: readonly LoadoutChoiceSelection[],
   unitLibrary: UnitCatalog,
 ): Either.Either<CharacterBuildEquipment, FinalizationIssues> {
+  const selectedEquipmentUnitStacks = selectedEquipmentUnitStacksForBuild({
+    draft: { selections },
+    unitLibrary,
+  });
   const loadout = loadoutChoices.reduce<CharacterBuildLoadout>(
     (equipment, selection) => {
       const loadoutChoice = supportedLoadoutChoiceForSource(selection.source);
@@ -2825,8 +2864,9 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
     {},
   );
   const owned = traverseValidation(
-    selections.equipment.selectedUnitIds,
-    (unitId) => {
+    selectedEquipmentUnitStacks,
+    (stack) => {
+      const unitId = stack.unitId;
       const itemUnitId = characterEquipmentItemUnitId(unitId);
       return Either.isLeft(itemUnitId)
         ? Either.left(
@@ -2840,6 +2880,7 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
               unitId: itemUnitId.right,
             }),
             unitId,
+            quantity: stack.quantity,
           });
     },
   );

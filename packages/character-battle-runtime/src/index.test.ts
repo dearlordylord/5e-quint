@@ -4549,7 +4549,7 @@ function monkBuild(input: {
       owned: [
         ...(weaponItemId === undefined || input.weaponUnitId === undefined
           ? []
-          : [{ itemId: weaponItemId, unitId: input.weaponUnitId }]),
+          : [{ itemId: weaponItemId, unitId: input.weaponUnitId, quantity: 1 }]),
         ...(offHandWeaponItemId === undefined ||
         input.offHandWeaponUnitId === undefined
           ? []
@@ -4557,14 +4557,15 @@ function monkBuild(input: {
               {
                 itemId: offHandWeaponItemId,
                 unitId: input.offHandWeaponUnitId,
+                quantity: 1,
               },
             ]),
         ...(armorItemId === undefined
           ? []
-          : [{ itemId: armorItemId, unitId: "armor_leather" }]),
+          : [{ itemId: armorItemId, unitId: "armor_leather", quantity: 1 }]),
         ...(shieldItemId === undefined
           ? []
-          : [{ itemId: shieldItemId, unitId: "equipment_shield" }]),
+          : [{ itemId: shieldItemId, unitId: "equipment_shield", quantity: 1 }]),
       ],
       loadout: {
         ...(weaponItemId === undefined
@@ -4638,7 +4639,7 @@ function pactBladeInvocationBuild(
           ],
     equipment: {
       owned: [
-        { itemId: weaponItemId, unitId: weaponUnitId },
+        { itemId: weaponItemId, unitId: weaponUnitId, quantity: 1 },
         ...(input.offHandWeaponUnitId === undefined ||
         offHandWeaponItemId === undefined
           ? []
@@ -4646,6 +4647,7 @@ function pactBladeInvocationBuild(
               {
                 itemId: offHandWeaponItemId,
                 unitId: input.offHandWeaponUnitId,
+                quantity: 1,
               },
             ]),
       ],
@@ -4929,7 +4931,7 @@ function defenseBuild(input: {
       },
     ],
     equipment: {
-      owned: [{ itemId: armorItemId, unitId: "armor_chain_mail" }],
+      owned: [{ itemId: armorItemId, unitId: "armor_chain_mail", quantity: 1 }],
       loadout: input.wearingArmor ? { armor: armorItemId } : {},
     },
   };
@@ -5006,7 +5008,7 @@ function weaponMasteryLongswordFighterBuild(): CharacterBuild {
       },
     ],
     equipment: {
-      owned: [{ itemId: longswordItemId, unitId: "weapon_longsword" }],
+      owned: [{ itemId: longswordItemId, unitId: "weapon_longsword", quantity: 1 }],
       loadout: {
         weapon: {
           itemId: longswordItemId,
@@ -5033,7 +5035,9 @@ function weaponMasteryQuarterstaffFighterBuild(): CharacterBuild {
       },
     ],
     equipment: {
-      owned: [{ itemId: quarterstaffItemId, unitId: "weapon_quarterstaff" }],
+      owned: [
+        { itemId: quarterstaffItemId, unitId: "weapon_quarterstaff", quantity: 1 },
+      ],
       loadout: {
         weapon: {
           itemId: quarterstaffItemId,
@@ -5060,7 +5064,7 @@ function weaponMasteryGreataxeFighterBuild(): CharacterBuild {
       },
     ],
     equipment: {
-      owned: [{ itemId: greataxeItemId, unitId: "weapon_greataxe" }],
+      owned: [{ itemId: greataxeItemId, unitId: "weapon_greataxe", quantity: 1 }],
       loadout: {
         weapon: {
           itemId: greataxeItemId,
@@ -5097,7 +5101,7 @@ function trueStrikeWizardBuild(): CharacterBuild {
     proficiencyChoices: [],
     features: [],
     equipment: {
-      owned: [{ itemId: daggerItemId, unitId: "weapon_dagger" }],
+      owned: [{ itemId: daggerItemId, unitId: "weapon_dagger", quantity: 1 }],
       loadout: {
         weapon: {
           itemId: daggerItemId,

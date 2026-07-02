@@ -700,10 +700,10 @@ function armorClassBuild(input: {
       owned: [
         ...(armorItemId === undefined || input.armor === undefined
           ? []
-          : [{ itemId: armorItemId, unitId: input.armor }]),
+          : [{ itemId: armorItemId, unitId: input.armor, quantity: 1 }]),
         ...(shieldItemId === undefined
           ? []
-          : [{ itemId: shieldItemId, unitId: "equipment_shield" }]),
+          : [{ itemId: shieldItemId, unitId: "equipment_shield", quantity: 1 }]),
       ],
       loadout: {
         ...(armorItemId === undefined ? {} : { armor: armorItemId }),

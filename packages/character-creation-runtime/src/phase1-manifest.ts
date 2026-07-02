@@ -107,6 +107,7 @@ export const SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS = [
   "species_tiefling",
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID = "armor_chain_mail";
+export const PHASE1_ARMOR_LEATHER_UNIT_ID = "armor_leather";
 export const PHASE1_WEAPON_LONGSWORD_UNIT_ID = "weapon_longsword";
 export const PHASE1_WEAPON_DAGGER_UNIT_ID = "weapon_dagger";
 export const PHASE1_WEAPON_SPEAR_UNIT_ID = "weapon_spear";
@@ -131,6 +132,7 @@ export const SUPPORTED_BACKGROUND_UNIT_IDS =
   SRD_CHARACTER_ADMISSION_BACKGROUND_UNIT_IDS;
 export const SUPPORTED_PURCHASE_UNIT_IDS = [
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+  PHASE1_ARMOR_LEATHER_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PHASE1_WEAPON_DAGGER_UNIT_ID,
   PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,

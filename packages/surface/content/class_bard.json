@@ -540,12 +540,12 @@
       "id": "option_a",
       "items": [
         {
-          "itemName": "Leather Armor",
-          "kind": "draft_owned_item"
+          "kind": "unit_ref",
+          "unitId": "armor_leather"
         },
         {
-          "itemName": "Dagger",
-          "kind": "draft_owned_item",
+          "kind": "unit_ref",
+          "unitId": "weapon_dagger",
           "quantity": 2
         },
         {

@@ -506,7 +506,7 @@ function defenseBuild(input: {
       },
     ],
     equipment: {
-      owned: [{ itemId: armorItemId, unitId: "armor_chain_mail" }],
+      owned: [{ itemId: armorItemId, unitId: "armor_chain_mail", quantity: 1 }],
       loadout: input.wearingArmor ? { armor: armorItemId } : {},
     },
   };

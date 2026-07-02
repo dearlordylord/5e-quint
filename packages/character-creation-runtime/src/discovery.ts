@@ -112,6 +112,7 @@ import {
   type CreationChoiceOptionId,
   type CreationHole,
   type CreationHoleSource,
+  type LoadoutSlot,
   type ToolProficiencyId,
   type UnitCatalog,
   type UnitChoiceKey,
@@ -120,6 +121,9 @@ import {
   supportedBackgroundUnitIds,
   supportedEquipmentPurchaseChoiceCount,
   isSupportedProgression,
+  isSupportedStartingEquipmentChoice,
+  supportedStartingEquipmentUnitStacks,
+  type SupportedStartingEquipmentUnitStack,
   supportedLoadoutChoices,
   supportedProgressionsForClass,
   supportedPurchasableEquipmentUnitIdsForClass,
@@ -1076,9 +1080,10 @@ export function discoverEquipmentHoles(input: {
     input.draft.selections.progression == null
       ? undefined
       : startingClassUnitId(input.draft.selections.progression);
-  if (classUnitId == null || !hasSupportedCoinEquipmentPath(input)) {
+  if (classUnitId == null || !hasSupportedEquipmentPath(input)) {
     return [];
   }
+  const supportsEquipmentPurchase = hasSupportedCoinEquipmentPath(input);
   const purchaseHole = choiceHole({
     source: unitSource(classUnitId, EQUIPMENT_PURCHASE_CHOICE_KEY),
     cardinality: boundedChoiceCardinality({
@@ -1096,27 +1101,49 @@ export function discoverEquipmentHoles(input: {
     input.draft,
     purchaseHole,
   );
+  const selectedEquipmentUnitIds = uniqueValues([
+    ...(hasValidPurchaseSelection
+      ? (input.draft.selections.equipment?.selectedUnitIds ?? [])
+      : []),
+    ...selectedStartingEquipmentUnitStacksForBuild(input).map(
+      (stack) => stack.unitId,
+    ),
+  ]);
+  const hasEquipmentForLoadout = selectedEquipmentUnitIds.length > 0;
+  const discoveredLoadoutSlots = new Set<LoadoutSlot>();
+  const loadoutHoles = supportedLoadoutChoices().flatMap((loadoutChoice) => {
+    if (discoveredLoadoutSlots.has(loadoutChoice.slot)) {
+      return [];
+    }
+
+    const holes = unselectedLoadoutHole(
+      input.draft,
+      choiceHole({
+        source: loadoutSource(loadoutChoice.unitId, loadoutChoice.slot),
+        cardinality: EXACTLY_ONE_CHOICE,
+        options: [
+          {
+            optionId: loadoutChoice.optionId,
+            label: loadoutChoice.label,
+            unitRef: { unitId: loadoutChoice.unitId },
+          },
+        ],
+      }),
+      loadoutChoice.unitId,
+      selectedEquipmentUnitIds,
+      hasEquipmentForLoadout,
+    );
+    if (holes.length > 0) {
+      discoveredLoadoutSlots.add(loadoutChoice.slot);
+    }
+    return holes;
+  });
 
   return [
-    ...unselectedPurchaseHole(input.draft, purchaseHole),
-    ...supportedLoadoutChoices().flatMap((loadoutChoice) =>
-      unselectedLoadoutHole(
-        input.draft,
-        choiceHole({
-          source: loadoutSource(loadoutChoice.unitId, loadoutChoice.slot),
-          cardinality: EXACTLY_ONE_CHOICE,
-          options: [
-            {
-              optionId: loadoutChoice.optionId,
-              label: loadoutChoice.label,
-              unitRef: { unitId: loadoutChoice.unitId },
-            },
-          ],
-        }),
-        loadoutChoice.unitId,
-        hasValidPurchaseSelection,
-      ),
-    ),
+    ...(supportsEquipmentPurchase
+      ? unselectedPurchaseHole(input.draft, purchaseHole)
+      : []),
+    ...loadoutHoles,
   ];
 }
 
@@ -1154,7 +1181,7 @@ export function startingEquipmentChoiceHole(
   });
 }
 
-export function hasSupportedCoinEquipmentPath(input: {
+export function hasSupportedEquipmentPath(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
 }): boolean {
@@ -1185,7 +1212,7 @@ export function hasSupportedCoinEquipmentPath(input: {
   }
 
   return (
-    selectedCoinGrantStartingEquipmentChoice(
+    selectedSupportedStartingEquipmentChoice(
       draft,
       startingEquipmentChoiceHole(
         unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
@@ -1193,7 +1220,7 @@ export function hasSupportedCoinEquipmentPath(input: {
       ),
       classFacts.value.startingEquipment,
     ) != null &&
-    selectedCoinGrantStartingEquipmentChoice(
+    selectedSupportedStartingEquipmentChoice(
       draft,
       startingEquipmentChoiceHole(
         unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
@@ -1204,17 +1231,31 @@ export function hasSupportedCoinEquipmentPath(input: {
   );
 }
 
-export function selectedCoinGrantStartingEquipmentChoice(
-  draft: CharacterDraft,
+export function hasSupportedCoinEquipmentPath(input: {
+  readonly draft: CharacterDraft;
+  readonly unitLibrary: UnitCatalog;
+}): boolean {
+  return (
+    selectedEquipmentChoices(input).every(
+      (choice) => choice.kind === "coin_grant",
+    ) && hasSupportedEquipmentPath(input)
+  );
+}
+
+function selectedSupportedStartingEquipmentChoice(
+  draft: Pick<CharacterDraft, "selections">,
   hole: CreationHole | undefined,
   choices: readonly StartingEquipmentChoice[],
 ): StartingEquipmentChoice | undefined {
   const selectedChoice = selectedStartingEquipmentChoice(draft, hole, choices);
-  return selectedChoice?.kind === "coin_grant" ? selectedChoice : undefined;
+  return selectedChoice !== undefined &&
+    isSupportedStartingEquipmentChoice(selectedChoice)
+    ? selectedChoice
+    : undefined;
 }
 
 export function selectedStartingEquipmentChoice(
-  draft: CharacterDraft,
+  draft: Pick<CharacterDraft, "selections">,
   hole: CreationHole | undefined,
   choices: readonly StartingEquipmentChoice[],
 ): StartingEquipmentChoice | undefined {
@@ -1230,6 +1271,86 @@ export function selectedStartingEquipmentChoice(
 
   const optionId = selection.options[0]?.optionId;
   return choices.find((choice) => choice.id === optionId);
+}
+
+export function selectedEquipmentUnitIdsForLoadout(input: {
+  readonly draft: Pick<CharacterDraft, "selections">;
+  readonly unitLibrary: UnitCatalog;
+}): readonly UnitRecord["id"][] {
+  return uniqueValues(
+    selectedEquipmentUnitStacksForBuild(input).map((stack) => stack.unitId),
+  );
+}
+
+function selectedPurchasedEquipmentUnitStacks(input: {
+  readonly draft: Pick<CharacterDraft, "selections">;
+}): readonly SupportedStartingEquipmentUnitStack[] {
+  return (input.draft.selections.equipment?.selectedUnitIds ?? []).map(
+    (unitId) => ({ unitId, quantity: 1 }),
+  );
+}
+
+export function selectedEquipmentUnitStacksForBuild(input: {
+  readonly draft: Pick<CharacterDraft, "selections">;
+  readonly unitLibrary: UnitCatalog;
+}): readonly SupportedStartingEquipmentUnitStack[] {
+  return [
+    ...selectedPurchasedEquipmentUnitStacks(input),
+    ...selectedStartingEquipmentUnitStacksForBuild(input),
+  ];
+}
+
+export function selectedStartingEquipmentUnitStacksForBuild(input: {
+  readonly draft: Pick<CharacterDraft, "selections">;
+  readonly unitLibrary: UnitCatalog;
+}): readonly SupportedStartingEquipmentUnitStack[] {
+  return selectedEquipmentChoices(input).flatMap((choice) =>
+    supportedStartingEquipmentUnitStacks(choice),
+  );
+}
+
+function selectedEquipmentChoices(input: {
+  readonly draft: Pick<CharacterDraft, "selections">;
+  readonly unitLibrary: UnitCatalog;
+}): readonly StartingEquipmentChoice[] {
+  const draft = input.draft;
+  const progression = draft.selections.progression;
+  const classUnitId =
+    progression == null ? undefined : startingClassUnitId(progression);
+  const backgroundUnitId = draft.selections.background;
+  if (classUnitId == null || backgroundUnitId == null) {
+    return [];
+  }
+
+  const classUnit = input.unitLibrary.getUnit(classUnitId);
+  const backgroundUnit = input.unitLibrary.getUnit(backgroundUnitId);
+  if (Option.isNone(classUnit) || Option.isNone(backgroundUnit)) {
+    return [];
+  }
+  const classFacts = readClassCreationFacts(classUnit.value);
+  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
+  if (classFacts.tag !== "readable" || backgroundFacts.tag !== "readable") {
+    return [];
+  }
+
+  return [
+    selectedStartingEquipmentChoice(
+      draft,
+      startingEquipmentChoiceHole(
+        unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
+        classFacts.value.startingEquipment,
+      ),
+      classFacts.value.startingEquipment,
+    ),
+    selectedStartingEquipmentChoice(
+      draft,
+      startingEquipmentChoiceHole(
+        unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
+        backgroundFacts.value.startingEquipment,
+      ),
+      backgroundFacts.value.startingEquipment,
+    ),
+  ].flatMap((choice) => (choice === undefined ? [] : [choice]));
 }
 
 export function unselectedUnitChoiceHole(
@@ -1268,13 +1389,14 @@ export function unselectedLoadoutHole(
   draft: CharacterDraft,
   hole: CreationHole | undefined,
   unitId: UnitRecord["id"],
-  hasValidPurchaseSelection: boolean,
+  selectedEquipmentUnitIds: readonly UnitRecord["id"][],
+  hasEquipmentForLoadout: boolean,
 ): readonly CreationHole[] {
   if (hole === undefined) {
     return [];
   }
-  return hasValidPurchaseSelection &&
-    hasPurchasedUnit(draft, unitId) &&
+  return hasEquipmentForLoadout &&
+    selectedEquipmentUnitIds.includes(unitId) &&
     !hasValidLoadoutSlotSelectionForHole(draft, hole)
     ? [hole]
     : [];
@@ -1316,6 +1438,10 @@ export function hasPurchasedUnit(
   unitId: UnitRecord["id"],
 ): boolean {
   return draft.selections.equipment?.selectedUnitIds.includes(unitId) ?? false;
+}
+
+function uniqueValues<T>(values: readonly T[]): readonly T[] {
+  return [...new Set(values)];
 }
 
 export function hasValidSelectionForHole(

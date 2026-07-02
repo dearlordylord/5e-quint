@@ -1772,7 +1772,10 @@ function parseStoredEquipment(
     if (
       !isRecord(item) ||
       typeof item.itemId !== "string" ||
-      typeof item.unitId !== "string"
+      typeof item.unitId !== "string" ||
+      typeof item.quantity !== "number" ||
+      !Number.isInteger(item.quantity) ||
+      item.quantity < 1
     ) {
       return characterSheetIssue(
         "Character Build owned equipment item is invalid.",
@@ -1784,7 +1787,11 @@ function parseStoredEquipment(
         "Character Build owned equipment item id is invalid.",
       );
     }
-    owned.push({ itemId: item.itemId, unitId: item.unitId });
+    owned.push({
+      itemId: item.itemId,
+      unitId: item.unitId,
+      quantity: item.quantity,
+    });
   }
   const loadout = parseStoredLoadout(value.loadout);
   if (Either.isLeft(loadout)) return Either.left(loadout.left);

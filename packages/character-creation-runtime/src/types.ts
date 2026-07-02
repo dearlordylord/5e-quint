@@ -1265,6 +1265,7 @@ export type CharacterBuildLoadout = {
 export type CharacterBuildOwnedEquipmentItem = {
   readonly itemId: CharacterEquipmentItemId;
   readonly unitId: UnitRecord["id"];
+  readonly quantity: number;
 };
 
 // The build records durable owned equipment separately from the initial loadout.
