@@ -574,11 +574,11 @@ const clericMulticlassProgression = {
     },
   ],
 } as const satisfies CharacterProgression;
-const druidBuildSheetCantrips = [
+const druidSpellAccessCantrips = [
   poisonSpraySpellId,
   produceFlameSpellId,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
-const druidBuildSheetPreparedSpells = [
+const druidSpellAccessPreparedSpells = [
   animalFriendshipSpellId,
   cureWoundsSpellId,
   "entangle",
@@ -801,12 +801,12 @@ const druidBuildSheetDraftPlan = {
     legalUnitChoice(
       "class_druid",
       "class_cantrip_choices",
-      ...druidBuildSheetCantrips,
+      ...druidSpellAccessCantrips,
     ),
     legalUnitChoice(
       "class_druid",
       "class_prepared_spell_choices",
-      ...druidBuildSheetPreparedSpells,
+      ...druidSpellAccessPreparedSpells,
     ),
     legalUnitChoice("druid_primal_order", "primal_order", "magician"),
     legalUnitChoice("druid_primal_order", "class_cantrip_choices", "guidance"),
@@ -839,6 +839,11 @@ const druidicCreationDraftPlan = {
 const druidPrimalOrderCreationDraftPlan = {
   ...druidBuildSheetDraftPlan,
   label: "Druid Primal Order creation",
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const druidSpellAccessDraftPlan = {
+  ...druidBuildSheetDraftPlan,
+  label: "Druid Spellcasting spell access",
 } as const satisfies LegalSourceCharacterDraftPlan;
 
 const druidBuildBattleDraftPlan = {
@@ -1969,7 +1974,7 @@ describe("level 1 SDK RAW integration", () => {
     expect(fixture.build.spellcasting?.sources).toEqual([
       expect.objectContaining({
         sourceUnitId: "class_druid",
-        preparedSpells: druidBuildSheetPreparedSpells,
+        preparedSpells: druidSpellAccessPreparedSpells,
       }),
     ]);
     expect(
@@ -2025,7 +2030,7 @@ describe("level 1 SDK RAW integration", () => {
     expect(fixture.build.spellcasting?.sources).toEqual([
       expect.objectContaining({
         sourceUnitId: "class_druid",
-        cantrips: [...druidBuildSheetCantrips, "guidance"],
+        cantrips: [...druidSpellAccessCantrips, "guidance"],
       }),
     ]);
     expect(fixture.build.features).toEqual(
@@ -2146,6 +2151,49 @@ describe("level 1 SDK RAW integration", () => {
         spellbook: [],
         preparedSpells: clericSpellAccessPreparedSpells,
         spellcastingFocuses: ["holy_symbol"],
+      },
+    ]);
+    expect(fixture.build.spellcasting?.slotPools).toEqual({
+      spellcasting: {
+        kind: "spellcasting",
+        slots: [{ spellLevel: 1, count: 2 }],
+      },
+    });
+    expect(characterSheetSpellSlots(fixture.sheet)).toEqual([
+      { spellLevel: 1, count: 2, expended: 0 },
+    ]);
+    expect(characterSheetPactSlots(fixture.sheet)).toBeUndefined();
+  });
+
+  test("Druid Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-druid-spellcasting-access",
+      draftPlan: druidSpellAccessDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-druid-spellcasting-access",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_druid"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(fixture.build.spellcasting?.sources).toEqual([
+      {
+        sourceUnitId: "class_druid",
+        spellcastingAbility: "wis",
+        cantrips: [...druidSpellAccessCantrips, "guidance"],
+        spellbook: [],
+        preparedSpells: druidSpellAccessPreparedSpells,
+        spellcastingFocuses: ["druidic_focus"],
       },
     ]);
     expect(fixture.build.spellcasting?.slotPools).toEqual({

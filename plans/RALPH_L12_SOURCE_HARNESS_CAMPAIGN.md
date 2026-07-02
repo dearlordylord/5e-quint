@@ -301,7 +301,7 @@
     {
       "number": 50,
       "id": "L12-SH50-SPELL-ACCESS-DRUID",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the Druid sheet spell-access SDK group"
     },
     {
@@ -612,7 +612,7 @@ Reviewer-loop convergence:
 | 47 | L12-SH47-BUILD-BATTLE-FIGHTER - Add the Fighter build-battle SDK group | done | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-battle-sdk | Fighter starting equipment and Weapon Mastery prove through legal build, fresh sheet, and battle combatant projection. |
 | 48 | L12-SH48-CREATION-DRUID-PRIMAL-ORDER - Add the Druid Primal Order creation SDK group | done | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-creation-sdk | Druid Primal Order selection proves through legal draft holes and finalized build facts. |
 | 49 | L12-SH49-CREATION-FIGHTER-FIGHTING-STYLE - Add the Fighter Fighting Style creation SDK group | done | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-creation-sdk | Fighter Fighting Style selection proves through legal draft holes and finalized build facts. |
-| 50 | L12-SH50-SPELL-ACCESS-DRUID - Add the Druid sheet spell-access SDK group | ready-for-research | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | sheet-spell-access-sdk | Druid Spellcasting projects known/prepared/list/slot facts from legal creation to sheet. |
+| 50 | L12-SH50-SPELL-ACCESS-DRUID - Add the Druid sheet spell-access SDK group | done | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | sheet-spell-access-sdk | Druid Spellcasting projects known/prepared/list/slot facts from legal creation to sheet. |
 | 51 | L12-SH51-SPELL-ACCESS-PALADIN - Add the Paladin sheet spell-access SDK group | ready-for-research | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | sheet-spell-access-sdk | Paladin Spellcasting projects prepared/list/slot facts from legal creation to sheet. |
 | 52 | L12-SH52-SHEET-PALADIN-LAY-ON-HANDS - Add the Paladin Lay On Hands sheet SDK group | ready-for-research | L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-sheet-sdk | Paladin Lay On Hands projects the sheet-owned healing pool from legal creation and a fresh sheet. |
 | 53 | L12-SH53-SHEET-WIZARD-ARCANE-RECOVERY - Add the Wizard Arcane Recovery sheet SDK group | ready-for-research | L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-sheet-sdk | Wizard Arcane Recovery projects the sheet-owned recovery fact from legal creation and a fresh sheet. |
@@ -2886,7 +2886,7 @@ Plan Impact:
 
 ### Task 50 - L12-SH50-SPELL-ACCESS-DRUID
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

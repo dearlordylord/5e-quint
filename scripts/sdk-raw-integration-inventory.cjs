@@ -113,8 +113,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 211;
-const expectedLevelOneTwoSeedScenarioRows = 145;
+const expectedLevelOneTwoCampaignGroups = 210;
+const expectedLevelOneTwoSeedScenarioRows = 146;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -1065,9 +1065,9 @@ const druidBuildSheetScenarioHelperNeedles = [
       "level: 1",
       '"class_skill_proficiency_choice"',
       '"class_cantrip_choices"',
-      "...druidBuildSheetCantrips",
+      "...druidSpellAccessCantrips",
       '"class_prepared_spell_choices"',
-      "...druidBuildSheetPreparedSpells",
+      "...druidSpellAccessPreparedSpells",
       '"druid_primal_order"',
       '"primal_order"',
       '"magician"',
@@ -1145,7 +1145,7 @@ const druidicCreationScenarioNeedles = [
   '"classFeatureLanguageGrant"',
   '"Druidic"',
   "fixture.build.spellcasting?.sources",
-  "druidBuildSheetPreparedSpells",
+  "druidSpellAccessPreparedSpells",
   '.not.toContain("speak_with_animals")',
   'unitLibrary.requireUnit("druid_druidic")',
   '"grant_language"',
@@ -1175,7 +1175,7 @@ const druidPrimalOrderCreationScenarioNeedles = [
   "characterBuildFeatureUnitIds(fixture.build, unitLibrary)",
   '"druid_primal_order"',
   "fixture.build.spellcasting?.sources",
-  "cantrips: [...druidBuildSheetCantrips, \"guidance\"]",
+  "cantrips: [...druidSpellAccessCantrips, \"guidance\"]",
   "fixture.build.features",
   '"abilityCheckBonus"',
   'selectedFromUnitId: "druid_primal_order"',
@@ -2222,6 +2222,77 @@ const seededSdkScenarioRows = [
           "...clericSpellAccessPreparedSpells",
           'legalUnitChoice("class_cleric", "class_equipment_choice", "option_b")',
           'legalUnitChoice("class_cleric", "equipment_purchase", "weapon_dagger")',
+          'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "class_druid",
+    className: "Druid",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Druid Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    sourceProof: "legal-build-sheet-owner",
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Druid.md:57-80",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:26-57",
+    ],
+    rowId: "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-druid-spellcasting-access"',
+      "druidSpellAccessDraftPlan",
+      'battle: { tag: "withoutBattle" }',
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+      "fixture.sheet.build",
+      'sourceUnitId: "class_druid"',
+      'spellcastingAbility: "wis"',
+      "cantrips: [...druidSpellAccessCantrips, \"guidance\"]",
+      "spellbook: []",
+      "preparedSpells: druidSpellAccessPreparedSpells",
+      'spellcastingFocuses: ["druidic_focus"]',
+      "slotPools",
+      "characterSheetSpellSlots(fixture.sheet)",
+      "characterSheetPactSlots(fixture.sheet)",
+    ],
+    helperNeedles: [
+      {
+        anchor: "const druidSpellAccessCantrips =",
+        needles: ["poisonSpraySpellId", "produceFlameSpellId"],
+      },
+      {
+        anchor: "const druidSpellAccessPreparedSpells =",
+        needles: [
+          "animalFriendshipSpellId",
+          "cureWoundsSpellId",
+          '"entangle"',
+          "healingWordSpellId",
+        ],
+      },
+      {
+        anchor: "const druidSpellAccessDraftPlan =",
+        needles: [
+          "...druidBuildSheetDraftPlan",
+          'label: "Druid Spellcasting spell access"',
+        ],
+      },
+      {
+        anchor: "const druidBuildSheetDraftPlan =",
+        needles: [
+          'classUnitId: "class_druid"',
+          "level: 1",
+          '"class_skill_proficiency_choice"',
+          '"class_cantrip_choices"',
+          "...druidSpellAccessCantrips",
+          '"class_prepared_spell_choices"',
+          "...druidSpellAccessPreparedSpells",
+          '"druid_primal_order"',
+          '"primal_order"',
+          '"magician"',
+          'legalUnitChoice("class_druid", "class_equipment_choice", "option_b")',
+          'legalUnitChoice("class_druid", "equipment_purchase", "weapon_dagger")',
           'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
         ],
       },

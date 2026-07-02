@@ -23660,6 +23660,14 @@
       "category": "spell access/list pressure",
       "className": "Druid",
       "concept": "Druid Spellcasting",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:57-80",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:26-57"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -23667,7 +23675,7 @@
       "proposedOwnerBoundary": "character-sheet-spell-access",
       "rowId": "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
       "rowKind": "spell-access",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 80,
         "lineStart": 57,
@@ -51555,7 +51563,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 144,
+        "rowCount": 145,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51564,12 +51572,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 5,
+        "groupCount": 4,
         "lane": "sheet-spell-access-sdk",
         "ownerTaskIds": [
           "L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE"
         ],
-        "rowCount": 5,
+        "rowCount": 4,
         "rowFamily": "source-row",
         "taskFamily": "sheet-spell-access-sdk"
       },
@@ -51642,12 +51650,12 @@
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 144,
+        "rowCount": 145,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 72,
+        "groupCount": 71,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51658,7 +51666,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 161,
+        "rowCount": 160,
         "rowFamily": "source-row"
       },
       {
@@ -51677,7 +51685,7 @@
       "sourcePathPrefix": ".references/srd-5.2.1/"
     },
     "totals": {
-      "groupCount": 211,
+      "groupCount": 210,
       "rowCount": 400
     }
   },
@@ -52911,6 +52919,25 @@
       "rowId": "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
       "rowKey": "level-1:Druid:class_druid",
       "rowKind": "multiclass-entry",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_druid",
+      "classification": "legal build-sheet owner proof",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+      "rowKey": "level-1:Druid:class_druid",
+      "rowKind": "spell-access",
       "sourceBuildPath": "legal-creation-draft-finalize",
       "sourceProof": "legal-build-sheet-owner",
       "usesRealSheetBattleHandoff": false,
@@ -60316,13 +60343,13 @@
       "explicit-closure-needed": 48,
       "explicit-closure-present": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 354,
+      "sdk-scenario-needed": 353,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 150,
+      "seed-scenario-present": 151,
       "table-only-closure-needed": 15
     },
     "levelOneFourRows": 632,
-    "levelOneTwoCampaignGroups": 211,
+    "levelOneTwoCampaignGroups": 210,
     "levelOneTwoCampaignGroupsByLane": {
       "battle-feature-sdk": 4,
       "battle-spell-sdk": 29,
@@ -60334,7 +60361,7 @@
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
       "seed-present": 93,
-      "sheet-spell-access-sdk": 5,
+      "sheet-spell-access-sdk": 4,
       "spell-effect-owner-review": 20,
       "table-only-closure": 2
     },
@@ -60343,7 +60370,7 @@
       "closure-review-row": 20,
       "explicit-closure-row": 12,
       "seed-row": 93,
-      "source-row": 72,
+      "source-row": 71,
       "table-only-closure-row": 2
     },
     "levelOneTwoCampaignRows": 400,
@@ -60357,8 +60384,8 @@
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 144,
-      "sheet-spell-access-sdk": 5,
+      "seed-present": 145,
+      "sheet-spell-access-sdk": 4,
       "spell-effect-owner-review": 67,
       "table-only-closure": 4
     },
@@ -60366,25 +60393,25 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 67,
       "explicit-closure-row": 12,
-      "seed-row": 144,
-      "source-row": 161,
+      "seed-row": 145,
+      "source-row": 160,
       "table-only-closure-row": 4
     },
-    "levelOneTwoSeedMigrationAuditRows": 145,
+    "levelOneTwoSeedMigrationAuditRows": 146,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 85,
-      "legal build-sheet owner proof": 55,
+      "legal build-sheet owner proof": 56,
       "legal creation owner proof": 5
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 60,
+      "not-real-sheet-battle": 61,
       "real-sheet-battle": 85
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 145
+      "legal-creation-draft-finalize": 146
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 85,
-    "scenarioGroups": 415,
+    "scenarioGroups": 414,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 19,
       "battle-spell-sdk": 80,
@@ -60399,12 +60426,12 @@
       "multi-owner-feature-sdk": 8,
       "owner-review": 6,
       "seed-present": 99,
-      "sheet-spell-access-sdk": 10,
+      "sheet-spell-access-sdk": 9,
       "spell-effect-owner-review": 44,
       "table-only-closure": 6
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 178,
+      "L15-SDK-RAW-03": 177,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -66267,7 +66294,8 @@
       "categories": [
         "character-creation or progression mechanic",
         "class container",
-        "equipment/weapon/armor pressure"
+        "equipment/weapon/armor pressure",
+        "spell access/list pressure"
       ],
       "classNames": [
         "Druid"
@@ -66282,7 +66310,8 @@
       ],
       "proposedOwnerBoundaries": [
         "character-build-to-battle",
-        "character-build-to-sheet"
+        "character-build-to-sheet",
+        "character-sheet-spell-access"
       ],
       "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Druid:class_druid\"]",
       "rawSources": [
@@ -66294,16 +66323,20 @@
         ".references/srd-5.2.1/Classes/Druid.md:23",
         ".references/srd-5.2.1/Classes/Druid.md:23-27",
         ".references/srd-5.2.1/Classes/Druid.md:3",
+        ".references/srd-5.2.1/Classes/Druid.md:57",
+        ".references/srd-5.2.1/Classes/Druid.md:57-80",
         ".references/srd-5.2.1/Classes/Druid.md:7",
         ".references/srd-5.2.1/Classes/Druid.md:8",
-        ".references/srd-5.2.1/Classes/Druid.md:9"
+        ".references/srd-5.2.1/Classes/Druid.md:9",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:26-57"
       ],
-      "rowCount": 10,
+      "rowCount": 11,
       "rowKinds": [
         "class-container",
         "core-trait",
         "equipment-pressure",
-        "multiclass-entry"
+        "multiclass-entry",
+        "spell-access"
       ],
       "rows": [
         {
@@ -66455,6 +66488,21 @@
             "lineStart": 23,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
           }
+        },
+        {
+          "candidateUnitId": "class_druid",
+          "className": "Druid",
+          "concept": "Druid Spellcasting",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-sheet-spell-access",
+          "rowId": "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 80,
+            "lineStart": 57,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
         }
       ],
       "sampleConcepts": [
@@ -66463,9 +66511,9 @@
         "Druid Primary Ability",
         "Druid Saving Throw Proficiencies",
         "Druid Skill Proficiencies",
+        "Druid Spellcasting",
         "Druid Starting Equipment",
-        "Druid Tool Proficiencies",
-        "Druid Weapon Proficiencies"
+        "Druid Tool Proficiencies"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -71383,61 +71431,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "class_druid"
-      ],
-      "categories": [
-        "spell access/list pressure"
-      ],
-      "classNames": [
-        "Druid"
-      ],
-      "groupId": "l15-sdk-raw-03:sheet-spell-access-sdk:druid:spell-access",
-      "lane": "sheet-spell-access-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-sheet-spell-access"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"sheet-spell-access-sdk\",\"Druid\",\"spell-access\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Druid.md:57"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-access"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "class_druid",
-          "className": "Druid",
-          "concept": "Druid Spellcasting",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-sheet-spell-access",
-          "rowId": "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 80,
-            "lineStart": 57,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Druid Spellcasting"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create the sheet through class or subclass spell access and assert known/prepared/list/slot facts; leave spell effects to the spell-unit scenario groups.",
       "taskId": "L15-SDK-RAW-03"
     },
     {
@@ -91146,9 +91139,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...druidBuildSheetCantrips",
+            "...druidSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...druidBuildSheetPreparedSpells",
+            "...druidSpellAccessPreparedSpells",
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"magician\"",
@@ -91201,9 +91194,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...druidBuildSheetCantrips",
+            "...druidSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...druidBuildSheetPreparedSpells",
+            "...druidSpellAccessPreparedSpells",
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"magician\"",
@@ -91256,9 +91249,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...druidBuildSheetCantrips",
+            "...druidSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...druidBuildSheetPreparedSpells",
+            "...druidSpellAccessPreparedSpells",
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"magician\"",
@@ -91311,9 +91304,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...druidBuildSheetCantrips",
+            "...druidSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...druidBuildSheetPreparedSpells",
+            "...druidSpellAccessPreparedSpells",
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"magician\"",
@@ -91366,9 +91359,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...druidBuildSheetCantrips",
+            "...druidSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...druidBuildSheetPreparedSpells",
+            "...druidSpellAccessPreparedSpells",
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"magician\"",
@@ -91421,9 +91414,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...druidBuildSheetCantrips",
+            "...druidSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...druidBuildSheetPreparedSpells",
+            "...druidSpellAccessPreparedSpells",
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"magician\"",
@@ -91476,9 +91469,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...druidBuildSheetCantrips",
+            "...druidSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...druidBuildSheetPreparedSpells",
+            "...druidSpellAccessPreparedSpells",
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"magician\"",
@@ -91531,9 +91524,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...druidBuildSheetCantrips",
+            "...druidSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...druidBuildSheetPreparedSpells",
+            "...druidSpellAccessPreparedSpells",
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"magician\"",
@@ -91593,9 +91586,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...druidBuildSheetCantrips",
+            "...druidSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...druidBuildSheetPreparedSpells",
+            "...druidSpellAccessPreparedSpells",
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"magician\"",
@@ -91621,7 +91614,7 @@
         "\"classFeatureLanguageGrant\"",
         "\"Druidic\"",
         "fixture.build.spellcasting?.sources",
-        "druidBuildSheetPreparedSpells",
+        "druidSpellAccessPreparedSpells",
         ".not.toContain(\"speak_with_animals\")",
         "unitLibrary.requireUnit(\"druid_druidic\")",
         "\"grant_language\"",
@@ -91658,9 +91651,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...druidBuildSheetCantrips",
+            "...druidSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...druidBuildSheetPreparedSpells",
+            "...druidSpellAccessPreparedSpells",
             "\"druid_primal_order\"",
             "\"primal_order\"",
             "\"magician\"",
@@ -91683,7 +91676,7 @@
         "characterBuildFeatureUnitIds(fixture.build, unitLibrary)",
         "\"druid_primal_order\"",
         "fixture.build.spellcasting?.sources",
-        "cantrips: [...druidBuildSheetCantrips, \"guidance\"]",
+        "cantrips: [...druidSpellAccessCantrips, \"guidance\"]",
         "fixture.build.features",
         "\"abilityCheckBonus\"",
         "selectedFromUnitId: \"druid_primal_order\"",
@@ -93837,6 +93830,82 @@
         "spellbook: []",
         "preparedSpells: clericSpellAccessPreparedSpells",
         "spellcastingFocuses: [\"holy_symbol\"]",
+        "slotPools",
+        "characterSheetSpellSlots(fixture.sheet)",
+        "characterSheetPactSlots(fixture.sheet)"
+      ]
+    },
+    {
+      "candidateUnitId": "class_druid",
+      "className": "Druid",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:57-80",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:26-57"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const druidSpellAccessCantrips =",
+          "needles": [
+            "poisonSpraySpellId",
+            "produceFlameSpellId"
+          ]
+        },
+        {
+          "anchor": "const druidSpellAccessPreparedSpells =",
+          "needles": [
+            "animalFriendshipSpellId",
+            "cureWoundsSpellId",
+            "\"entangle\"",
+            "healingWordSpellId"
+          ]
+        },
+        {
+          "anchor": "const druidSpellAccessDraftPlan =",
+          "needles": [
+            "...druidBuildSheetDraftPlan",
+            "label: \"Druid Spellcasting spell access\""
+          ]
+        },
+        {
+          "anchor": "const druidBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_druid\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_cantrip_choices\"",
+            "...druidSpellAccessCantrips",
+            "\"class_prepared_spell_choices\"",
+            "...druidSpellAccessPreparedSpells",
+            "\"druid_primal_order\"",
+            "\"primal_order\"",
+            "\"magician\"",
+            "legalUnitChoice(\"class_druid\", \"class_equipment_choice\", \"option_b\")",
+            "legalUnitChoice(\"class_druid\", \"equipment_purchase\", \"weapon_dagger\")",
+            "legalLoadoutChoice(\"weapon_dagger\", \"weapon\", \"wielded_one_handed\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+      "rowKey": "level-1:Druid:class_druid",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-druid-spellcasting-access\"",
+        "druidSpellAccessDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+        "fixture.sheet.build",
+        "sourceUnitId: \"class_druid\"",
+        "spellcastingAbility: \"wis\"",
+        "cantrips: [...druidSpellAccessCantrips, \"guidance\"]",
+        "spellbook: []",
+        "preparedSpells: druidSpellAccessPreparedSpells",
+        "spellcastingFocuses: [\"druidic_focus\"]",
         "slotPools",
         "characterSheetSpellSlots(fixture.sheet)",
         "characterSheetPactSlots(fixture.sheet)"
