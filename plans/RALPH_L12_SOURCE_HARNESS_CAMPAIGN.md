@@ -337,7 +337,7 @@
     {
       "number": 56,
       "id": "L12-SH56-BATTLE-SPELL-COMMAND",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the Command battle-spell SDK group"
     },
     {
@@ -618,7 +618,7 @@ Reviewer-loop convergence:
 | 53 | L12-SH53-SHEET-WIZARD-ARCANE-RECOVERY - Add the Wizard Arcane Recovery sheet SDK group | done | L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-sheet-sdk | Wizard Arcane Recovery projects the sheet-owned recovery fact from legal creation and a fresh sheet. |
 | 54 | L12-SH54-BATTLE-FEATURE-FIGHTER-ACTION-SURGE - Add the Fighter Action Surge battle-feature SDK group | done | L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | battle-feature-sdk | Fighter Action Surge resolves from legal sheet-to-battle handoff through focused battle behavior. |
 | 55 | L12-SH55-BATTLE-FEATURE-ROGUE-CUNNING-ACTION - Add the Rogue Cunning Action battle-feature SDK group | done | L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | battle-feature-sdk | Rogue Cunning Action resolves from legal sheet-to-battle handoff through focused battle behavior. |
-| 56 | L12-SH56-BATTLE-SPELL-COMMAND - Add the Command battle-spell SDK group | ready-for-research | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | battle-spell-sdk | Command resolves once through battle behavior and preserves class spell-access evidence for three access rows. |
+| 56 | L12-SH56-BATTLE-SPELL-COMMAND - Add the Command battle-spell SDK group | done | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | battle-spell-sdk | Command resolves once through battle behavior and preserves class spell-access evidence for three access rows. |
 | 57 | L12-SH57-BATTLE-SPELL-ENTANGLE - Add the Entangle battle-spell SDK group | ready-for-research | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | battle-spell-sdk | Entangle resolves once through battle behavior and preserves class spell-access evidence for two access rows. |
 | 58 | L12-SH58-CLOSURE-COMPREHEND-LANGUAGES - Close the Comprehend Languages spell-effect owner review group | ready-for-research | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH40-REMAINING-BATCH-SPLIT | spell-effect-owner-review | Comprehend Languages spell-list pressure rows receive closure evidence or concrete future owner tasks. |
 | 59 | L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE - Close the level-2 class table summary family | ready-for-research | L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE, L12-SH40-REMAINING-BATCH-SPLIT | explicit-closure | Level-2 class table summary rows receive explicit non-runtime/table-summary closure evidence. |
@@ -3153,7 +3153,7 @@ Plan Impact:
 
 ### Task 56 - L12-SH56-BATTLE-SPELL-COMMAND
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
