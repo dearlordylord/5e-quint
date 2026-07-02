@@ -111,6 +111,8 @@ export const SRD_ARMOR_CHAIN_SHIRT_UNIT_ID = "armor_chain_shirt";
 export const PHASE1_ARMOR_LEATHER_UNIT_ID = "armor_leather";
 export const PHASE1_WEAPON_LONGSWORD_UNIT_ID = "weapon_longsword";
 export const PHASE1_WEAPON_DAGGER_UNIT_ID = "weapon_dagger";
+export const SRD_WEAPON_GREATSWORD_UNIT_ID = "weapon_greatsword";
+export const SRD_WEAPON_JAVELIN_UNIT_ID = "weapon_javelin";
 export const SRD_WEAPON_MACE_UNIT_ID = "weapon_mace";
 export const SRD_WEAPON_SICKLE_UNIT_ID = "weapon_sickle";
 export const PHASE1_WEAPON_SPEAR_UNIT_ID = "weapon_spear";
@@ -145,6 +147,8 @@ export const SUPPORTED_PURCHASE_UNIT_IDS = [
 export const SUPPORTED_STARTING_EQUIPMENT_UNIT_IDS = [
   ...SUPPORTED_PURCHASE_UNIT_IDS,
   SRD_ARMOR_CHAIN_SHIRT_UNIT_ID,
+  SRD_WEAPON_GREATSWORD_UNIT_ID,
+  SRD_WEAPON_JAVELIN_UNIT_ID,
   SRD_WEAPON_MACE_UNIT_ID,
   SRD_WEAPON_SICKLE_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;

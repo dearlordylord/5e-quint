@@ -70,25 +70,25 @@ let fighter =
         [ { coinsGp = 4
           , id = "option_a"
           , items = Some
-            [ { itemName = Some "Chain Mail"
-              , kind = "draft_owned_item"
+            [ { itemName = None Text
+              , kind = "unit_ref"
               , quantity = None Natural
-              , unitId = None Text
+              , unitId = Some "armor_chain_mail"
               }
-            , { itemName = Some "Greatsword"
-              , kind = "draft_owned_item"
+            , { itemName = None Text
+              , kind = "unit_ref"
               , quantity = None Natural
-              , unitId = None Text
+              , unitId = Some "weapon_greatsword"
               }
-            , { itemName = Some "Flail"
-              , kind = "draft_owned_item"
+            , { itemName = None Text
+              , kind = "unit_ref"
               , quantity = None Natural
-              , unitId = None Text
+              , unitId = Some "weapon_flail"
               }
-            , { itemName = Some "Javelin"
-              , kind = "draft_owned_item"
+            , { itemName = None Text
+              , kind = "unit_ref"
               , quantity = Some 8
-              , unitId = None Text
+              , unitId = Some "weapon_javelin"
               }
             , { itemName = Some "Dungeoneer's Pack"
               , kind = "draft_owned_item"

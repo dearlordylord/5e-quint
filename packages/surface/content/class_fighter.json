@@ -96,21 +96,21 @@
       "id": "option_a",
       "items": [
         {
-          "itemName": "Chain Mail",
-          "kind": "draft_owned_item"
+          "kind": "unit_ref",
+          "unitId": "armor_chain_mail"
         },
         {
-          "itemName": "Greatsword",
-          "kind": "draft_owned_item"
+          "kind": "unit_ref",
+          "unitId": "weapon_greatsword"
         },
         {
-          "itemName": "Flail",
-          "kind": "draft_owned_item"
+          "kind": "unit_ref",
+          "unitId": "weapon_flail"
         },
         {
-          "itemName": "Javelin",
-          "kind": "draft_owned_item",
-          "quantity": 8
+          "kind": "unit_ref",
+          "quantity": 8,
+          "unitId": "weapon_javelin"
         },
         {
           "itemName": "Dungeoneer's Pack",

@@ -322,6 +322,8 @@ import weaponClubInput from "../../content/weapon_club.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
 import weaponGreataxeInput from "../../content/weapon_greataxe.json";
+import weaponGreatswordInput from "../../content/weapon_greatsword.json";
+import weaponJavelinInput from "../../content/weapon_javelin.json";
 import weaponLongswordInput from "../../content/weapon_longsword.json";
 import weaponMaceInput from "../../content/weapon_mace.json";
 import weaponQuarterstaffInput from "../../content/weapon_quarterstaff.json";
@@ -772,6 +774,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     weaponClubInput,
     weaponDaggerInput,
     weaponGreataxeInput,
+    weaponGreatswordInput,
+    weaponJavelinInput,
     weaponLongswordInput,
     weaponMaceInput,
     weaponSickleInput,

@@ -437,7 +437,10 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
         [creationChoiceOptionId("option_b")],
       ]),
     ),
-    [PHASE1_CLASS_FIGHTER_UNIT_ID]: [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
+    [PHASE1_CLASS_FIGHTER_UNIT_ID]: [
+      PHASE1_CLASS_EQUIPMENT_OPTION_ID,
+      creationChoiceOptionId("option_a"),
+    ],
     [SRD_BARD_CLASS_UNIT_ID]: [
       creationChoiceOptionId("option_b"),
       creationChoiceOptionId("option_a"),

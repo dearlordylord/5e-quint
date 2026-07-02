@@ -312,6 +312,8 @@
 {"unitId":"weapon_dagger","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
 {"unitId":"weapon_longsword","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
 {"unitId":"weapon_greataxe","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
+{"unitId":"weapon_greatsword","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
+{"unitId":"weapon_javelin","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
 {"unitId":"weapon_mace","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
 {"unitId":"weapon_spear","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}
 {"unitId":"weapon_flail","collectionId":"srd-5.2.1","claim":{"tag":"unsupported-profile","reason":"Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix."}}

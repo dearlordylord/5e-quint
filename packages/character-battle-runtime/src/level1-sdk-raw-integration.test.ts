@@ -149,6 +149,9 @@ type DruidWildShapeAssumeFormSubject = Extract<
 
 const fighterId = combatantId("combatant:l1-sdk-fighter");
 const legalFighterId = combatantId("combatant:l1-sdk-legal-fighter");
+const fighterBuildBattleId = combatantId(
+  "combatant:l1-sdk-fighter-build-battle",
+);
 const barbarianId = combatantId("combatant:l1-sdk-barbarian");
 const dangerSenseBarbarianId = combatantId(
   "combatant:l2-sdk-danger-sense-barbarian",
@@ -849,6 +852,31 @@ const druidBuildBattleDraftPlan = {
     legalLoadoutChoice("armor_leather", "armor", "worn"),
     legalLoadoutChoice("equipment_shield", "shield", "wielded"),
     legalLoadoutChoice("weapon_quarterstaff", "weapon", "wielded_one_handed"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const fighterBuildBattleDraftPlan = {
+  ...fighterLifecycleDraftPlan,
+  label: "Fighter build-battle projection",
+  sourcePreferences: [
+    ...fighterLifecycleDraftPlan.sourcePreferences.filter(
+      (preference) =>
+        !(
+          preference.source.tag === "unitChoice" &&
+          preference.source.unitId === "class_fighter" &&
+          (preference.source.choiceKey === "class_equipment_choice" ||
+            preference.source.choiceKey === "equipment_purchase")
+        ) &&
+        !(
+          preference.source.tag === "loadout" &&
+          (preference.source.equipmentUnitId === "armor_chain_mail" ||
+            preference.source.equipmentUnitId === "equipment_shield" ||
+            preference.source.equipmentUnitId === "weapon_longsword")
+        ),
+    ),
+    legalUnitChoice("class_fighter", "class_equipment_choice", "option_a"),
+    legalLoadoutChoice("armor_chain_mail", "armor", "worn"),
+    legalLoadoutChoice("weapon_flail", "weapon", "wielded_one_handed"),
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
@@ -2563,6 +2591,95 @@ describe("level 1 SDK RAW integration", () => {
         eligibleWeapons: { kind: "class_proficient_weapons" },
         family: "weapon_mastery_choice",
       },
+    });
+  });
+
+  test("Fighter build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-fighter-build-battle",
+      draftPlan: fighterBuildBattleDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-fighter-build-battle",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l1-sdk-fighter-build-battle",
+        combatantId: fighterBuildBattleId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      },
+    });
+
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(fixture.build.equipment.owned).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ unitId: "armor_chain_mail", quantity: 1 }),
+        expect.objectContaining({ unitId: "weapon_greatsword", quantity: 1 }),
+        expect.objectContaining({ unitId: "weapon_flail", quantity: 1 }),
+        expect.objectContaining({ unitId: "weapon_javelin", quantity: 8 }),
+      ]),
+    );
+    expect(
+      selectedUnitChoiceOptionIds(
+        fixture.draft,
+        "fighter_weapon_mastery",
+        "weapon_mastery_options",
+      ),
+    ).toEqual(["weapon_longsword", "weapon_spear", "weapon_flail"]);
+
+    const fighter = requireCharacterCombatant(
+      fixture.state,
+      fighterBuildBattleId,
+    );
+    expect(fighter.origin.characterId).toBe(
+      "character:l1-sdk-fighter-build-battle",
+    );
+    expect(fighter.origin.selectedLoadout).toMatchObject({
+      armor: { unitId: "armor_chain_mail" },
+      weapon: { unitId: "weapon_flail", grip: "one_handed" },
+    });
+    expect(fighter.origin.weaponMasteries).toEqual(
+      expect.arrayContaining([
+        { weaponUnitId: "weapon_longsword" },
+        { weaponUnitId: "weapon_spear" },
+        { weaponUnitId: "weapon_flail" },
+      ]),
+    );
+    expect(fighter.origin.attack).toMatchObject({
+      kind: "weapon",
+      ability: "str",
+      abilityModifier: abilityModifier(3),
+      weapon: {
+        id: "weapon_flail",
+        name: "Flail",
+        damage: { dice: 1, dieSize: 8 },
+        mastery: "sap",
+      },
+    });
+
+    const snapshot = snapshotCombatant(fixture.state, fighterBuildBattleId);
+    expect(snapshot).toMatchObject({
+      hp: Hp(12),
+      maxHp: Hp(12),
+      movement: { speedFeet: movementFeet(30) },
+    });
+    expect(
+      attackSubject(fixture.state, fighterBuildBattleId, "Flail"),
+    ).toMatchObject({
+      tag: "action",
+      actorId: fighterBuildBattleId,
     });
   });
 

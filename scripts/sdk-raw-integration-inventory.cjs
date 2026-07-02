@@ -113,8 +113,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 212;
-const expectedLevelOneTwoSeedScenarioRows = 141;
+const expectedLevelOneTwoCampaignGroups = 211;
+const expectedLevelOneTwoSeedScenarioRows = 143;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -709,6 +709,84 @@ const druidBuildBattleScenarioRows = [
     helperNeedles: druidBuildBattleScenarioHelperNeedles,
   },
 ];
+
+const fighterBuildBattleScenarioLabel =
+  "level1-sdk-raw-integration: Fighter build-battle handoff projects starting equipment and Weapon Mastery into a battle combatant";
+const fighterBuildBattleScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-fighter-build-battle"',
+  "fighterBuildBattleDraftPlan",
+  'battleIdText: "battle:l1-sdk-fighter-build-battle"',
+  "requireCharacterCombatant(",
+  "fighterBuildBattleId",
+  "fixture.build.equipment.owned",
+  'expect.objectContaining({ unitId: "armor_chain_mail", quantity: 1 })',
+  'expect.objectContaining({ unitId: "weapon_greatsword", quantity: 1 })',
+  'expect.objectContaining({ unitId: "weapon_flail", quantity: 1 })',
+  'expect.objectContaining({ unitId: "weapon_javelin", quantity: 8 })',
+  "selectedUnitChoiceOptionIds(",
+  '"fighter_weapon_mastery"',
+  '"weapon_mastery_options"',
+  "origin.selectedLoadout",
+  'armor: { unitId: "armor_chain_mail" }',
+  'weapon: { unitId: "weapon_flail", grip: "one_handed" }',
+  "origin.weaponMasteries",
+  '{ weaponUnitId: "weapon_longsword" }',
+  '{ weaponUnitId: "weapon_spear" }',
+  '{ weaponUnitId: "weapon_flail" }',
+  "origin.attack",
+  'id: "weapon_flail"',
+  'name: "Flail"',
+  'mastery: "sap"',
+  "snapshotCombatant(fixture.state, fighterBuildBattleId)",
+  'attackSubject(fixture.state, fighterBuildBattleId, "Flail")',
+];
+const fighterBuildBattleScenarioHelperNeedles = [
+  {
+    anchor: "const fighterBuildBattleDraftPlan =",
+    needles: [
+      "...fighterLifecycleDraftPlan",
+      'label: "Fighter build-battle projection"',
+      'legalUnitChoice("class_fighter", "class_equipment_choice", "option_a")',
+      'legalLoadoutChoice("armor_chain_mail", "armor", "worn")',
+      'legalLoadoutChoice("weapon_flail", "weapon", "wielded_one_handed")',
+    ],
+  },
+  {
+    path: paths.seedScenarioFiles.fighterLifecycleSupport,
+    anchor: "export const fighterLifecycleDraftPlan =",
+    needles: [
+      '"fighter_weapon_mastery"',
+      '"weapon_mastery_options"',
+      '"weapon_longsword"',
+      '"weapon_spear"',
+      '"weapon_flail"',
+    ],
+  },
+];
+const fighterBuildBattleScenarioRows = [
+  {
+    candidateUnitId: "class_fighter",
+    rowId:
+      "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:13"],
+  },
+  {
+    candidateUnitId: "fighter_weapon_mastery",
+    rowId:
+      "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
+    rawSources: [".references/srd-5.2.1/Classes/Fighter.md:70-74"],
+  },
+].map((row) => ({
+  className: "Fighter",
+  levelBand: "level-1",
+  label: fighterBuildBattleScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: legalBuildBattleHandoffSourceProof,
+  tracerNeedles: fighterBuildBattleScenarioNeedles,
+  helperNeedles: fighterBuildBattleScenarioHelperNeedles,
+  ...row,
+}));
 
 const bardMulticlassBuildSheetScenarioLabel =
   "level1-sdk-raw-integration: Bard multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet";
@@ -1601,6 +1679,7 @@ const seededSdkScenarioRows = [
   ...bardBuildBattleScenarioRows,
   ...clericBuildBattleScenarioRows,
   ...druidBuildBattleScenarioRows,
+  ...fighterBuildBattleScenarioRows,
   {
     candidateUnitId: "barbarian_unarmored_defense",
     className: "Barbarian",
