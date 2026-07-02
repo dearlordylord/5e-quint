@@ -3736,6 +3736,22 @@ const seededSdkScenarioRows = [
     tracerNeedles: ["rogueCunningStrikeUnitId"],
   },
   {
+    candidateUnitId: "rogue_uncanny_dodge",
+    className: "Rogue",
+    levelBand: "level-5",
+    label:
+      "level5-sdk-tracer-bullets: Rogue Uncanny Dodge projects through sheet handoff and halves visible attack-roll damage",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
+    tracerNeedles: [
+      "rogueUncannyDodgeUnitId",
+      "REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE",
+      'kind: "reactionRollOrDamageReduction"',
+      'modifierKind: "attackDamageReduction"',
+    ],
+  },
+  {
     candidateUnitId: "sorcerer_sorcerous_restoration",
     className: "Sorcerer",
     levelBand: "level-5",

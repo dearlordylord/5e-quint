@@ -6,6 +6,7 @@ import {
   breakBattleConcentration,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
+  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   combatantId,
   discoverBattleActs,
   endTurn,
@@ -218,6 +219,7 @@ const monkFocusUnitId = "monk_monks_focus";
 const monkStunningStrikeUnitId = "monk_stunning_strike";
 const rogueSneakAttackUnitId = "rogue_sneak_attack";
 const rogueCunningStrikeUnitId = "rogue_cunning_strike";
+const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 const sorcererFontOfMagicUnitId = "sorcerer_font_of_magic";
 const hasteSpellId = "haste";
 const protectionFromEnergySpellId = "protection_from_energy";
@@ -350,6 +352,10 @@ type OngoingSpellTargetChoiceFill = Extract<
 type OngoingSpellTarget = OngoingSpellTargetChoiceFill["value"];
 type OngoingSpellTargetWithinRangeFact =
   OngoingSpellTargetChoiceFill["spatialFacts"][number];
+type ReactionRollOrDamageReductionChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "reactionRollOrDamageReduction" }
+>;
 
 describe("level 5 SDK tracer bullets", () => {
   test("Barbarian Fast Movement projects through sheet handoff and increases Speed plus Dash without Heavy armor", () => {
@@ -694,6 +700,129 @@ describe("level 5 SDK tracer bullets", () => {
     expect(
       resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn,
     ).toEqual([{ attackerId: rogueId, unitId: rogueSneakAttackUnitId }]);
+  });
+
+  test("Rogue Uncanny Dodge projects through sheet handoff and halves visible attack-roll damage", () => {
+    const scimitarDamageDieRoll = 6;
+    const expectedUncannyDodgeDamage = 4;
+    const state = battleFromSheets({
+      battleIdText: "battle:l5-tracer-uncanny-dodge",
+      characters: [
+        characterSheet({
+          characterIdText: "character:l5-tracer-uncanny-dodge",
+          build: levelFiveMartialBuild({
+            classUnitId: "class_rogue",
+            weaponUnitId: "weapon_dagger",
+            abilityScores: {
+              str: 10,
+              dex: 16,
+              con: 14,
+              int: 10,
+              wis: 10,
+              cha: 10,
+            },
+          }),
+          combatantId: rogueId,
+          initiative: 10,
+        }),
+      ],
+      monsters: [
+        monsterBattleInput(
+          monsterId,
+          20,
+          srdStatBlock("stat_block_goblin_warrior"),
+        ),
+      ],
+    });
+
+    expect(
+      requireCharacterCombatant(state, rogueId).origin.characterUnitRefs,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: rogueUncannyDodgeUnitId,
+          supportProfiles: expect.arrayContaining([
+            REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+          ]),
+        }),
+      ]),
+    );
+
+    const beforeHp = requireCharacterCombatant(state, rogueId).hp;
+    const subject = attackSubject(state, monsterId, "Scimitar");
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetSelection = attackTargetFill(
+      target,
+      monsterId,
+      rogueId,
+      "Scimitar",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetSelection],
+      }),
+      "attackRoll",
+    );
+    const attackRoll = attackRollFill(roll, { total: 20, naturalD20: 15 });
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetSelection, attackRoll],
+    });
+
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Uncanny Dodge Reaction window.");
+    }
+    const choice = requireUncannyDodgeAttackDamageChoice(
+      awaitingReaction,
+      rogueId,
+    );
+    expect(choice.initialHoles).toEqual([]);
+    expect(choice.choice.reduction).toEqual({ kind: "halfDamage" });
+
+    const afterReaction = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHoleFromList(awaitingReaction.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: rogueId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            unitId: rogueUncannyDodgeUnitId,
+            modifierKind: "attackDamageReduction",
+            fills: [],
+          },
+        },
+      ),
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected Uncanny Dodge damage roll hole.");
+    }
+    const damage = requireHole(afterReaction, "rolledDice");
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: afterReaction.state,
+        subject,
+        fills: ordinaryAttackDamageFills({
+          state: afterReaction.state,
+          subject,
+          prefixFills: [targetSelection, attackRoll],
+          damage,
+          damageDice: [[scimitarDamageDieRoll]],
+        }),
+      }),
+    );
+    const rogue = requireCharacterCombatant(resolved.state, rogueId);
+
+    expect(rogue.hp).toBe(Hp(Number(beforeHp) - expectedUncannyDodgeDamage));
+    expect(rogue.reactionAvailable).toBe(false);
+    expect(resolved.snapshot.pendingInterrupt).toBeNull();
   });
 
   test("Haste casts from a level-5 spellcaster sheet and projects speed, AC, Dexterity save, action, slot, and lethargy behavior", () => {
@@ -3166,6 +3295,23 @@ function requireCounterspellChoice(
   );
   if (choice === undefined) {
     throw new Error("Expected Counterspell Reaction choice.");
+  }
+  return choice;
+}
+
+function requireUncannyDodgeAttackDamageChoice(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+  reactorId: CombatantId,
+): ReactionRollOrDamageReductionChoice {
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
+    (candidate): candidate is ReactionRollOrDamageReductionChoice =>
+      candidate.kind === "reactionRollOrDamageReduction" &&
+      candidate.reactorId === reactorId &&
+      candidate.choice.kind === "attackDamageReduction" &&
+      candidate.choice.unitId === rogueUncannyDodgeUnitId,
+  );
+  if (choice === undefined) {
+    throw new Error("Expected Uncanny Dodge attack-damage Reaction choice.");
   }
   return choice;
 }

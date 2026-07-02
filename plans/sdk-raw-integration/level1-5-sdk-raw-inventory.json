@@ -3983,6 +3983,10 @@
       "category": "class feature",
       "className": "Rogue",
       "concept": "Rogue Uncanny Dodge",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Rogue Uncanny Dodge projects through sheet handoff and halves visible attack-roll damage",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -4013,7 +4017,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 112,
         "lineStart": 109,
@@ -10098,61 +10102,6 @@
     },
     {
       "candidateUnitIds": [
-        "rogue_uncanny_dodge"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Rogue"
-      ],
-      "groupId": "l15-sdk-raw-07:owner-review:rogue-uncanny-dodge",
-      "lane": "owner-review",
-      "levelBands": [
-        "level-5"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"owner-review\",\"rogue_uncanny_dodge\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Rogue.md:109"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "rogue_uncanny_dodge",
-          "className": "Rogue",
-          "concept": "Rogue Uncanny Dodge",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
-          "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
-          "source": {
-            "lineEnd": 112,
-            "lineStart": 109,
-            "path": ".references/srd-5.2.1/Classes/Rogue.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Rogue Uncanny Dodge"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-or-owner-closure-needed"
-      ],
-      "suggestedScenario": "Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "barbarian_extra_attack"
       ],
       "categories": [
@@ -10584,6 +10533,61 @@
       ],
       "sampleConcepts": [
         "Rogue Cunning Strike"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "rogue_uncanny_dodge"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Rogue"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:level-5-rogue-rogue-uncanny-dodge",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-5"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"level-5:Rogue:rogue_uncanny_dodge\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Rogue.md:109"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "rogue_uncanny_dodge",
+          "className": "Rogue",
+          "concept": "Rogue Uncanny Dodge",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 112,
+            "lineStart": 109,
+            "path": ".references/srd-5.2.1/Classes/Rogue.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Rogue Uncanny Dodge"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -37189,6 +37193,10 @@
       "category": "class feature",
       "className": "Rogue",
       "concept": "Rogue Uncanny Dodge",
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Rogue Uncanny Dodge projects through sheet handoff and halves visible attack-roll damage",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-5",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -37219,7 +37227,7 @@
       "proposedOwnerBoundary": "character-battle-to-battle",
       "rowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 112,
         "lineStart": 109,
@@ -57908,19 +57916,17 @@
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 45,
       "sdk-scenario-needed": 2,
-      "sdk-scenario-or-owner-closure-needed": 1,
-      "seed-scenario-present": 44
+      "seed-scenario-present": 45
     },
     "level5ScenarioGroups": 94,
     "level5ScenarioGroupsByLane": {
       "battle-spell-sdk": 1,
       "explicit-closure": 12,
       "future-owner-before-sdk": 24,
-      "owner-review": 1,
-      "seed-present": 44,
+      "seed-present": 45,
       "spell-effect-owner-review": 12
     },
-    "level5SeedScenarioRows": 44,
+    "level5SeedScenarioRows": 45,
     "levelOneFiveMinedRows": 770,
     "levelOneFiveRowsByLevelBand": {
       "level-1": 156,
@@ -57970,8 +57976,7 @@
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 47,
       "sdk-scenario-needed": 401,
-      "sdk-scenario-or-owner-closure-needed": 1,
-      "seed-scenario-present": 108,
+      "seed-scenario-present": 109,
       "table-only-closure-needed": 11
     },
     "levelOneFourRows": 632,
@@ -57987,8 +57992,7 @@
       "feature-owner-review": 2,
       "future-owner-before-sdk": 26,
       "multi-owner-feature-sdk": 9,
-      "owner-review": 1,
-      "seed-present": 108,
+      "seed-present": 109,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 46,
       "table-only-closure": 4
@@ -84449,61 +84453,6 @@
     },
     {
       "candidateUnitIds": [
-        "rogue_uncanny_dodge"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Rogue"
-      ],
-      "groupId": "l15-sdk-raw-07:owner-review:rogue-uncanny-dodge",
-      "lane": "owner-review",
-      "levelBands": [
-        "level-5"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-battle-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"owner-review\",\"rogue_uncanny_dodge\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Rogue.md:109"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "rogue_uncanny_dodge",
-          "className": "Rogue",
-          "concept": "Rogue Uncanny Dodge",
-          "levelBand": "level-5",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-battle-to-battle",
-          "rowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
-          "sdkInventoryDisposition": "sdk-scenario-or-owner-closure-needed",
-          "source": {
-            "lineEnd": 112,
-            "lineStart": 109,
-            "path": ".references/srd-5.2.1/Classes/Rogue.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Rogue Uncanny Dodge"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-or-owner-closure-needed"
-      ],
-      "suggestedScenario": "Existing owner evidence is present but SDK coverage is not settled; either write the SDK scenario or document why lower-owner evidence is the durable closure.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "barbarian_extra_attack"
       ],
       "categories": [
@@ -84935,6 +84884,61 @@
       ],
       "sampleConcepts": [
         "Rogue Cunning Strike"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "rogue_uncanny_dodge"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Rogue"
+      ],
+      "groupId": "l15-sdk-raw-07:seed-present:level-5-rogue-rogue-uncanny-dodge",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-5"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-battle-to-battle"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"seed-present\",\"level-5:Rogue:rogue_uncanny_dodge\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Rogue.md:109"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "rogue_uncanny_dodge",
+          "className": "Rogue",
+          "concept": "Rogue Uncanny Dodge",
+          "levelBand": "level-5",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-battle-to-battle",
+          "rowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 112,
+            "lineStart": 109,
+            "path": ".references/srd-5.2.1/Classes/Rogue.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Rogue Uncanny Dodge"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -92778,6 +92782,25 @@
       "rowKey": "level-5:Rogue:rogue_cunning_strike",
       "tracerNeedles": [
         "rogueCunningStrikeUnitId"
+      ]
+    },
+    {
+      "candidateUnitId": "rogue_uncanny_dodge",
+      "className": "Rogue",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level5-sdk-tracer-bullets: Rogue Uncanny Dodge projects through sheet handoff and halves visible attack-roll damage",
+        "path": "packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts"
+      },
+      "helperNeedles": [],
+      "levelBand": "level-5",
+      "rowId": "srd521:classes/rogue:level-5:class-feature-grant:rogue_uncanny_dodge",
+      "rowKey": "level-5:Rogue:rogue_uncanny_dodge",
+      "tracerNeedles": [
+        "rogueUncannyDodgeUnitId",
+        "REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE",
+        "kind: \"reactionRollOrDamageReduction\"",
+        "modifierKind: \"attackDamageReduction\""
       ]
     },
     {
