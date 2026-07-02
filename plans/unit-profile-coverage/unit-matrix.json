@@ -49,8 +49,8 @@
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 554,
-      "numerator": 331,
-      "percent": "59.7%"
+      "numerator": 332,
+      "percent": "59.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 332
+      "value": 333
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 191,
@@ -67,8 +67,8 @@
       "percent": "97.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 332,
-      "numerator": 332,
+      "denominator": 333,
+      "numerator": 333,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -38772,6 +38772,24 @@
       "executableMechanics": false,
       "kind": "weapon",
       "profiles": [],
+      "sourceRecordPath": "packages/surface/content/weapon_mace.json",
+      "unitId": "weapon_mace"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "weapon",
+      "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_spear.json",
       "unitId": "weapon_spear"
     },
@@ -43010,24 +43028,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/weapon_longbow.json",
       "unitId": "weapon_longbow"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "non-runtime-authored-data",
-          "planningLane": "no promoted runtime lane",
-          "reason": "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": false,
-      "kind": "weapon",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/weapon_mace.json",
-      "unitId": "weapon_mace"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

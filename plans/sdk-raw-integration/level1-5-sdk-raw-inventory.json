@@ -19213,6 +19213,13 @@
       "category": "equipment/weapon/armor pressure",
       "className": "Cleric",
       "concept": "Cleric Starting Equipment",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric build-battle handoff projects starting equipment into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:13"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -19220,7 +19227,7 @@
       "proposedOwnerBoundary": "character-build-to-battle",
       "rowId": "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
       "rowKind": "equipment-pressure",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 13,
         "lineStart": 13,
@@ -51040,12 +51047,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 10,
+        "groupCount": 9,
         "lane": "build-battle-sdk",
         "ownerTaskIds": [
           "L12-SH07-BUILD-BATTLE-FIRST-SLICE"
         ],
-        "rowCount": 14,
+        "rowCount": 13,
         "rowFamily": "source-row",
         "taskFamily": "build-battle-sdk"
       },
@@ -51136,7 +51143,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 107,
+        "rowCount": 108,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51214,12 +51221,12 @@
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 107,
+        "rowCount": 108,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 87,
+        "groupCount": 86,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51230,7 +51237,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 198,
+        "rowCount": 197,
         "rowFamily": "source-row"
       },
       {
@@ -51249,7 +51256,7 @@
       "sourcePathPrefix": ".references/srd-5.2.1/"
     },
     "totals": {
-      "groupCount": 208,
+      "groupCount": 207,
       "rowCount": 400
     }
   },
@@ -51948,6 +51955,25 @@
       "sourceProof": "legal-build-sheet-owner",
       "usesRealSheetBattleHandoff": false,
       "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_cleric",
+      "classification": "already legal creation path",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric build-battle handoff projects starting equipment into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as source lifecycle seed; add row-specific assertions only when future RAW review finds a gap.",
+      "reason": "The represented source character build is finalized through character creation and then projected through sheet and battle handoff.",
+      "rowId": "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
+      "rowKey": "level-1:Cleric:class_cleric",
+      "rowKind": "equipment-pressure",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-battle-handoff",
+      "usesRealSheetBattleHandoff": true,
+      "wholeWidthSourceLifecycleProof": true
     },
     {
       "candidateUnitId": "class_cleric",
@@ -59153,17 +59179,17 @@
       "closure-review-needed": 142,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 391,
+      "sdk-scenario-needed": 390,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 113,
+      "seed-scenario-present": 114,
       "table-only-closure-needed": 13
     },
     "levelOneFourRows": 632,
-    "levelOneTwoCampaignGroups": 208,
+    "levelOneTwoCampaignGroups": 207,
     "levelOneTwoCampaignGroupsByLane": {
       "battle-feature-sdk": 5,
       "battle-spell-sdk": 31,
-      "build-battle-sdk": 10,
+      "build-battle-sdk": 9,
       "build-sheet-sdk": 9,
       "character-creation-sdk": 14,
       "character-sheet-sdk": 6,
@@ -59178,20 +59204,20 @@
       "closure-review-row": 21,
       "explicit-closure-row": 24,
       "seed-row": 75,
-      "source-row": 87,
+      "source-row": 86,
       "table-only-closure-row": 1
     },
     "levelOneTwoCampaignRows": 400,
     "levelOneTwoCampaignRowsByLane": {
       "battle-feature-sdk": 5,
       "battle-spell-sdk": 80,
-      "build-battle-sdk": 14,
+      "build-battle-sdk": 13,
       "build-sheet-sdk": 67,
       "character-creation-sdk": 14,
       "character-sheet-sdk": 6,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 107,
+      "seed-present": 108,
       "sheet-spell-access-sdk": 6,
       "spell-effect-owner-review": 69,
       "table-only-closure": 2
@@ -59199,29 +59225,29 @@
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 69,
       "explicit-closure-row": 24,
-      "seed-row": 107,
-      "source-row": 198,
+      "seed-row": 108,
+      "source-row": 197,
       "table-only-closure-row": 2
     },
-    "levelOneTwoSeedMigrationAuditRows": 107,
+    "levelOneTwoSeedMigrationAuditRows": 108,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
-      "already legal creation path": 71,
+      "already legal creation path": 72,
       "legal build-sheet owner proof": 35,
       "legal creation owner proof": 1
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
       "not-real-sheet-battle": 36,
-      "real-sheet-battle": 71
+      "real-sheet-battle": 72
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 107
+      "legal-creation-draft-finalize": 108
     },
-    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 71,
-    "scenarioGroups": 412,
+    "levelOneTwoWholeWidthSourceLifecycleSeedRows": 72,
+    "scenarioGroups": 411,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 20,
       "battle-spell-sdk": 82,
-      "build-battle-sdk": 10,
+      "build-battle-sdk": 9,
       "build-sheet-sdk": 21,
       "character-creation-sdk": 28,
       "character-sheet-sdk": 6,
@@ -59236,7 +59262,7 @@
       "table-only-closure": 5
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 175,
+      "L15-SDK-RAW-03": 174,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -61829,61 +61855,6 @@
         "sdk-scenario-needed"
       ],
       "suggestedScenario": "Create a level-appropriate caster for each listed access row or pair one spell execution with explicit class-access assertions, cast through battle discovery/resolution, and assert RAW-facing effects and resources.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "class_cleric"
-      ],
-      "categories": [
-        "equipment/weapon/armor pressure"
-      ],
-      "classNames": [
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-03:build-battle-sdk:cleric",
-      "lane": "build-battle-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-build-to-battle"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"build-battle-sdk\",\"Cleric\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:13"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "equipment-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "class_cleric",
-          "className": "Cleric",
-          "concept": "Cleric Starting Equipment",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-build-to-battle",
-          "rowId": "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 13,
-            "lineStart": 13,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric Starting Equipment"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Finalize build and equipment/mastery choices, project to battle, and assert AC, attack, damage, or mastery facts that a user reaches through the SDK path.",
       "taskId": "L15-SDK-RAW-03"
     },
     {
@@ -65872,7 +65843,8 @@
       ],
       "categories": [
         "character-creation or progression mechanic",
-        "class container"
+        "class container",
+        "equipment/weapon/armor pressure"
       ],
       "classNames": [
         "Cleric"
@@ -65886,6 +65858,7 @@
         "resolved"
       ],
       "proposedOwnerBoundaries": [
+        "character-build-to-battle",
         "character-build-to-sheet"
       ],
       "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Cleric:class_cleric\"]",
@@ -65893,6 +65866,7 @@
         ".references/srd-5.2.1/Classes/Cleric.md:10",
         ".references/srd-5.2.1/Classes/Cleric.md:11",
         ".references/srd-5.2.1/Classes/Cleric.md:12",
+        ".references/srd-5.2.1/Classes/Cleric.md:13",
         ".references/srd-5.2.1/Classes/Cleric.md:22",
         ".references/srd-5.2.1/Classes/Cleric.md:22-26",
         ".references/srd-5.2.1/Classes/Cleric.md:3",
@@ -65900,10 +65874,11 @@
         ".references/srd-5.2.1/Classes/Cleric.md:8",
         ".references/srd-5.2.1/Classes/Cleric.md:9"
       ],
-      "rowCount": 8,
+      "rowCount": 9,
       "rowKinds": [
         "class-container",
         "core-trait",
+        "equipment-pressure",
         "multiclass-entry"
       ],
       "rows": [
@@ -66015,6 +65990,21 @@
         {
           "candidateUnitId": "class_cleric",
           "className": "Cleric",
+          "concept": "Cleric Starting Equipment",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-build-to-battle",
+          "rowId": "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 13,
+            "lineStart": 13,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "candidateUnitId": "class_cleric",
+          "className": "Cleric",
           "concept": "Cleric multiclass entry traits",
           "levelBand": "level-1",
           "ownerBoundaryStatus": "resolved",
@@ -66034,9 +66024,9 @@
         "Cleric Primary Ability",
         "Cleric Saving Throw Proficiencies",
         "Cleric Skill Proficiencies",
+        "Cleric Starting Equipment",
         "Cleric Weapon Proficiencies",
-        "Cleric class container",
-        "Cleric multiclass entry traits"
+        "Cleric class container"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -90412,6 +90402,56 @@
         "snapshotCombatant(fixture.state, bardId)",
         "armorClass: 13",
         "attackSubject(fixture.state, bardId, \"Dagger\")"
+      ]
+    },
+    {
+      "candidateUnitId": "class_cleric",
+      "className": "Cleric",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric build-battle handoff projects starting equipment into a battle combatant",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:13"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const clericBuildBattleDraftPlan =",
+          "needles": [
+            "...clericBuildSheetDraftPlan",
+            "label: \"Cleric build-battle projection\"",
+            "legalUnitChoice(\"class_cleric\", \"class_equipment_choice\", \"option_a\")",
+            "legalLoadoutChoice(\"armor_chain_shirt\", \"armor\", \"worn\")",
+            "legalLoadoutChoice(\"equipment_shield\", \"shield\", \"wielded\")",
+            "legalLoadoutChoice(\"weapon_mace\", \"weapon\", \"wielded_one_handed\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
+      "rowKey": "level-1:Cleric:class_cleric",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-cleric-build-battle\"",
+        "clericBuildBattleDraftPlan",
+        "battleIdText: \"battle:l1-sdk-cleric-build-battle\"",
+        "requireCharacterCombatant(fixture.state, clericId)",
+        "fixture.build.equipment.owned",
+        "expect.objectContaining({ unitId: \"armor_chain_shirt\", quantity: 1 })",
+        "expect.objectContaining({ unitId: \"equipment_shield\", quantity: 1 })",
+        "expect.objectContaining({ unitId: \"weapon_mace\", quantity: 1 })",
+        "origin.selectedLoadout",
+        "armor: { unitId: \"armor_chain_shirt\" }",
+        "shield: { unitId: \"equipment_shield\" }",
+        "weapon: { unitId: \"weapon_mace\", grip: \"one_handed\" }",
+        "origin.attack",
+        "id: \"weapon_mace\"",
+        "name: \"Mace\"",
+        "mastery: \"sap\"",
+        "snapshotCombatant(fixture.state, clericId)",
+        "armorClass: 16",
+        "attackSubject(fixture.state, clericId, \"Mace\")"
       ]
     },
     {

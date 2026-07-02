@@ -154,6 +154,7 @@ const dangerSenseBarbarianId = combatantId(
   "combatant:l2-sdk-danger-sense-barbarian",
 );
 const bardId = combatantId("combatant:l1-sdk-bard");
+const clericId = combatantId("combatant:l1-sdk-cleric");
 const dissonantWhispersBardId = combatantId(
   "combatant:l1-sdk-dissonant-whispers-bard",
 );
@@ -694,6 +695,25 @@ const clericBuildSheetDraftPlan = {
     ),
     legalUnitChoice("class_cleric", "equipment_purchase", "weapon_dagger"),
     legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed"),
+  ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const clericBuildBattleDraftPlan = {
+  ...clericBuildSheetDraftPlan,
+  label: "Cleric build-battle projection",
+  sourcePreferences: [
+    ...clericBuildSheetDraftPlan.sourcePreferences.filter(
+      (preference) =>
+        !(
+          preference.source.tag === "unitChoice" &&
+          preference.source.unitId === "class_cleric" &&
+          preference.source.choiceKey === "class_equipment_choice"
+        ),
+    ),
+    legalUnitChoice("class_cleric", "class_equipment_choice", "option_a"),
+    legalLoadoutChoice("armor_chain_shirt", "armor", "worn"),
+    legalLoadoutChoice("equipment_shield", "shield", "wielded"),
+    legalLoadoutChoice("weapon_mace", "weapon", "wielded_one_handed"),
   ],
 } as const satisfies LegalSourceCharacterDraftPlan;
 
@@ -1707,6 +1727,75 @@ describe("level 1 SDK RAW integration", () => {
         characterBuildArmorTraining(fixture.sheet.build, unitLibrary),
       ),
     ).toEqual(expect.arrayContaining([...classFacts.armorTraining]));
+  });
+
+  test("Cleric build-battle handoff projects starting equipment into a battle combatant", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-cleric-build-battle",
+      draftPlan: clericBuildBattleDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-cleric-build-battle",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: {
+        tag: "withBattle",
+        battleIdText: "battle:l1-sdk-cleric-build-battle",
+        combatantId: clericId,
+        initiative: 20,
+        monsters: [
+          monsterBattleInput(
+            monsterId,
+            10,
+            srdStatBlock("stat_block_skeleton"),
+          ),
+        ],
+      },
+    });
+
+    expect(fixture.tag).toBe("withBattle");
+    if (fixture.tag !== "withBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(fixture.build.equipment.owned).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ unitId: "armor_chain_shirt", quantity: 1 }),
+        expect.objectContaining({ unitId: "equipment_shield", quantity: 1 }),
+        expect.objectContaining({ unitId: "weapon_mace", quantity: 1 }),
+      ]),
+    );
+
+    const cleric = requireCharacterCombatant(fixture.state, clericId);
+    expect(cleric.origin.characterId).toBe(
+      "character:l1-sdk-cleric-build-battle",
+    );
+    expect(cleric.origin.selectedLoadout).toMatchObject({
+      armor: { unitId: "armor_chain_shirt" },
+      shield: { unitId: "equipment_shield" },
+      weapon: { unitId: "weapon_mace", grip: "one_handed" },
+    });
+    expect(cleric.origin.attack).toMatchObject({
+      kind: "weapon",
+      weapon: {
+        id: "weapon_mace",
+        name: "Mace",
+        damage: { dice: 1, dieSize: 6 },
+        mastery: "sap",
+      },
+    });
+
+    const snapshot = snapshotCombatant(fixture.state, clericId);
+    expect(snapshot).toMatchObject({
+      hp: Hp(10),
+      maxHp: Hp(10),
+      armorClass: 16,
+      movement: { speedFeet: movementFeet(30) },
+    });
+    expect(attackSubject(fixture.state, clericId, "Mace")).toMatchObject({
+      tag: "action",
+      actorId: clericId,
+    });
   });
 
   test("Druid build-sheet projection derives level-1 class facts from legal creation and a fresh sheet", () => {

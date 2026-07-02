@@ -396,16 +396,16 @@
       "id": "option_a",
       "items": [
         {
-          "itemName": "Chain Shirt",
-          "kind": "draft_owned_item"
+          "kind": "unit_ref",
+          "unitId": "armor_chain_shirt"
         },
         {
-          "itemName": "Shield",
-          "kind": "draft_owned_item"
+          "kind": "unit_ref",
+          "unitId": "equipment_shield"
         },
         {
-          "itemName": "Mace",
-          "kind": "draft_owned_item"
+          "kind": "unit_ref",
+          "unitId": "weapon_mace"
         },
         {
           "itemName": "Holy Symbol",

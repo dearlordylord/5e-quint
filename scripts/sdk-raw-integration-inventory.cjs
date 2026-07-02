@@ -105,8 +105,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 208;
-const expectedLevelOneTwoSeedScenarioRows = 107;
+const expectedLevelOneTwoCampaignGroups = 207;
+const expectedLevelOneTwoSeedScenarioRows = 108;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -545,6 +545,59 @@ const bardBuildBattleScenarioRows = [
   },
 ];
 
+const clericBuildBattleScenarioLabel =
+  "level1-sdk-raw-integration: Cleric build-battle handoff projects starting equipment into a battle combatant";
+const clericBuildBattleScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-cleric-build-battle"',
+  "clericBuildBattleDraftPlan",
+  'battleIdText: "battle:l1-sdk-cleric-build-battle"',
+  "requireCharacterCombatant(fixture.state, clericId)",
+  "fixture.build.equipment.owned",
+  'expect.objectContaining({ unitId: "armor_chain_shirt", quantity: 1 })',
+  'expect.objectContaining({ unitId: "equipment_shield", quantity: 1 })',
+  'expect.objectContaining({ unitId: "weapon_mace", quantity: 1 })',
+  "origin.selectedLoadout",
+  'armor: { unitId: "armor_chain_shirt" }',
+  'shield: { unitId: "equipment_shield" }',
+  'weapon: { unitId: "weapon_mace", grip: "one_handed" }',
+  "origin.attack",
+  'id: "weapon_mace"',
+  'name: "Mace"',
+  'mastery: "sap"',
+  "snapshotCombatant(fixture.state, clericId)",
+  "armorClass: 16",
+  'attackSubject(fixture.state, clericId, "Mace")',
+];
+const clericBuildBattleScenarioHelperNeedles = [
+  {
+    anchor: "const clericBuildBattleDraftPlan =",
+    needles: [
+      "...clericBuildSheetDraftPlan",
+      'label: "Cleric build-battle projection"',
+      'legalUnitChoice("class_cleric", "class_equipment_choice", "option_a")',
+      'legalLoadoutChoice("armor_chain_shirt", "armor", "worn")',
+      'legalLoadoutChoice("equipment_shield", "shield", "wielded")',
+      'legalLoadoutChoice("weapon_mace", "weapon", "wielded_one_handed")',
+    ],
+  },
+];
+const clericBuildBattleScenarioRows = [
+  {
+    candidateUnitId: "class_cleric",
+    className: "Cleric",
+    levelBand: "level-1",
+    label: clericBuildBattleScenarioLabel,
+    path: barbarianBuildSheetScenarioPath,
+    rowId:
+      "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
+    rawSources: [".references/srd-5.2.1/Classes/Cleric.md:13"],
+    sourceProof: legalBuildBattleHandoffSourceProof,
+    tracerNeedles: clericBuildBattleScenarioNeedles,
+    helperNeedles: clericBuildBattleScenarioHelperNeedles,
+  },
+];
+
 const bardMulticlassBuildSheetScenarioLabel =
   "level1-sdk-raw-integration: Bard multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet";
 const bardMulticlassBuildSheetScenarioNeedles = [
@@ -936,6 +989,7 @@ const seededSdkScenarioRows = [
   ...druidMulticlassBuildSheetScenarioRows,
   ...barbarianBuildBattleScenarioRows,
   ...bardBuildBattleScenarioRows,
+  ...clericBuildBattleScenarioRows,
   {
     candidateUnitId: "barbarian_unarmored_defense",
     className: "Barbarian",

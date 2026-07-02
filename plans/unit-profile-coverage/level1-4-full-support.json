@@ -11311,12 +11311,66 @@
         "group": "class-starting-equipment-unit-refs",
         "label": "SRD class concrete equipment refs",
         "metrics": {
-          "denominator": 0,
-          "numerator": 0,
-          "percent": "n/a"
+          "denominator": 5,
+          "numerator": 5,
+          "percent": "100%"
         },
-        "rows": [],
-        "rowsByStatus": {}
+        "rows": [
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_bard",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_leather.json",
+            "status": "installed",
+            "unitId": "armor_leather"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_bard",
+            "quantity": 2,
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_dagger.json",
+            "status": "installed",
+            "unitId": "weapon_dagger"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_cleric",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_chain_shirt.json",
+            "status": "installed",
+            "unitId": "armor_chain_shirt"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "shield",
+            "ownerUnitId": "class_cleric",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/equipment_shield.json",
+            "status": "installed",
+            "unitId": "equipment_shield"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_cleric",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_mace.json",
+            "status": "installed",
+            "unitId": "weapon_mace"
+          }
+        ],
+        "rowsByStatus": {
+          "installed": 5
+        }
       },
       {
         "blockerRows": [],
@@ -11325,11 +11379,41 @@
         "group": "starting-equipment-concrete-unit-refs",
         "label": "Unique SRD concrete equipment refs",
         "metrics": {
-          "denominator": 4,
-          "numerator": 4,
+          "denominator": 8,
+          "numerator": 8,
           "percent": "100%"
         },
         "rows": [
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_cleric",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_chain_shirt.json",
+            "status": "installed",
+            "unitId": "armor_chain_shirt"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "armor",
+            "ownerUnitId": "class_bard",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/armor_leather.json",
+            "status": "installed",
+            "unitId": "armor_leather"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "shield",
+            "ownerUnitId": "class_cleric",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/equipment_shield.json",
+            "status": "installed",
+            "unitId": "equipment_shield"
+          },
           {
             "group": "starting-equipment-unit-refs",
             "kind": "weapon",
@@ -11340,6 +11424,16 @@
             "sourceRecordPath": "packages/surface/content/weapon_dagger.json",
             "status": "installed",
             "unitId": "weapon_dagger"
+          },
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_cleric",
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_mace.json",
+            "status": "installed",
+            "unitId": "weapon_mace"
           },
           {
             "group": "starting-equipment-unit-refs",
@@ -11373,13 +11467,13 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 4
+          "installed": 8
         }
       }
     ],
     "metrics": {
-      "denominator": 107,
-      "numerator": 107,
+      "denominator": 116,
+      "numerator": 116,
       "percent": "100%"
     },
     "openBlockerCount": 0

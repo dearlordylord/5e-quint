@@ -2483,7 +2483,7 @@ export function isSupportedEquipmentSelection(
   }
 
   const startingEquipmentSupportedUnitIds =
-    CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds;
+    CHARACTER_CREATION_SUPPORT_PROFILE.startingEquipmentUnitIds;
   return selectedStartingEquipmentUnitStacksForBuild({
     draft: { selections },
     unitLibrary,

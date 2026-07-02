@@ -107,9 +107,11 @@ export const SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS = [
   "species_tiefling",
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID = "armor_chain_mail";
+export const SRD_ARMOR_CHAIN_SHIRT_UNIT_ID = "armor_chain_shirt";
 export const PHASE1_ARMOR_LEATHER_UNIT_ID = "armor_leather";
 export const PHASE1_WEAPON_LONGSWORD_UNIT_ID = "weapon_longsword";
 export const PHASE1_WEAPON_DAGGER_UNIT_ID = "weapon_dagger";
+export const SRD_WEAPON_MACE_UNIT_ID = "weapon_mace";
 export const PHASE1_WEAPON_SPEAR_UNIT_ID = "weapon_spear";
 export const PHASE1_WEAPON_FLAIL_UNIT_ID = "weapon_flail";
 export const PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID = "weapon_quarterstaff";
@@ -138,6 +140,11 @@ export const SUPPORTED_PURCHASE_UNIT_IDS = [
   PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_SHIELD_UNIT_ID,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+export const SUPPORTED_STARTING_EQUIPMENT_UNIT_IDS = [
+  ...SUPPORTED_PURCHASE_UNIT_IDS,
+  SRD_ARMOR_CHAIN_SHIRT_UNIT_ID,
+  SRD_WEAPON_MACE_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS = [
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,

@@ -35,6 +35,7 @@ import {
   PHASE1_ALIGNMENT_OPTION_ID,
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
   PHASE1_ARMOR_LEATHER_UNIT_ID,
+  SRD_ARMOR_CHAIN_SHIRT_UNIT_ID,
   PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
@@ -57,6 +58,7 @@ import {
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
+  SRD_WEAPON_MACE_UNIT_ID,
   PRIMAL_ORDER_CHOICE_KEY,
   PALADIN_FIGHTING_STYLE_CHOICE_KEY,
   RANGER_FIGHTING_STYLE_CHOICE_KEY,
@@ -78,6 +80,7 @@ import {
   SUPPORTED_LANGUAGE_OPTION_IDS,
   SUPPORTED_PURCHASE_OPTION_IDS,
   SUPPORTED_PURCHASE_UNIT_IDS,
+  SUPPORTED_STARTING_EQUIPMENT_UNIT_IDS,
   SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS,
   SUPPORTED_SPECIES_OPTION_IDS,
   SUPPORTED_SPECIES_SIZE_OPTION_IDS,
@@ -170,6 +173,7 @@ export type CharacterCreationSupportProfile = {
   >;
   readonly backgroundUnitIds: readonly UnitRecord["id"][];
   readonly purchasableEquipmentUnitIds: readonly UnitRecord["id"][];
+  readonly startingEquipmentUnitIds: readonly UnitRecord["id"][];
   readonly equipmentPurchaseChoiceCount: 3;
   readonly equipmentChoiceOptionIdsByUnitId: Partial<
     Record<UnitRecord["id"], readonly CreationChoiceOptionId[]>
@@ -424,6 +428,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
   },
   backgroundUnitIds: SUPPORTED_BACKGROUND_UNIT_IDS,
   purchasableEquipmentUnitIds: SUPPORTED_PURCHASE_UNIT_IDS,
+  startingEquipmentUnitIds: SUPPORTED_STARTING_EQUIPMENT_UNIT_IDS,
   equipmentPurchaseChoiceCount: 3,
   equipmentChoiceOptionIdsByUnitId: {
     ...Object.fromEntries(
@@ -434,6 +439,10 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     ),
     [PHASE1_CLASS_FIGHTER_UNIT_ID]: [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
     [SRD_BARD_CLASS_UNIT_ID]: [
+      creationChoiceOptionId("option_b"),
+      creationChoiceOptionId("option_a"),
+    ],
+    [SRD_CLERIC_CLASS_UNIT_ID]: [
       creationChoiceOptionId("option_b"),
       creationChoiceOptionId("option_a"),
     ],
@@ -448,6 +457,13 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     {
       slot: LOADOUT_ARMOR_SLOT,
       unitId: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+      optionId: PHASE1_LOADOUT_ARMOR_OPTION_ID,
+      label: "Worn",
+      buildSlot: "armor",
+    },
+    {
+      slot: LOADOUT_ARMOR_SLOT,
+      unitId: SRD_ARMOR_CHAIN_SHIRT_UNIT_ID,
       optionId: PHASE1_LOADOUT_ARMOR_OPTION_ID,
       label: "Worn",
       buildSlot: "armor",
@@ -477,6 +493,14 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     {
       slot: LOADOUT_WEAPON_SLOT,
       unitId: PHASE1_WEAPON_DAGGER_UNIT_ID,
+      optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
+      label: "Wielded one-handed",
+      buildSlot: "weapon",
+      grip: "one_handed",
+    },
+    {
+      slot: LOADOUT_WEAPON_SLOT,
+      unitId: SRD_WEAPON_MACE_UNIT_ID,
       optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
       label: "Wielded one-handed",
       buildSlot: "weapon",
@@ -728,7 +752,7 @@ function isSupportedEquipmentUnitId(unitId: UnitRecord["id"]): boolean {
 }
 
 function supportedEquipmentUnitIds(): readonly UnitRecord["id"][] {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds;
+  return CHARACTER_CREATION_SUPPORT_PROFILE.startingEquipmentUnitIds;
 }
 
 export function isSupportedProgression(
