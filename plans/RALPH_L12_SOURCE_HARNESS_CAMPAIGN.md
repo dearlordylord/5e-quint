@@ -241,7 +241,7 @@
     {
       "number": 40,
       "id": "L12-SH40-REMAINING-BATCH-SPLIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split the remaining L1/L2 source harness groups"
     },
     {
@@ -261,6 +261,108 @@
       "id": "L12-SH43-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-A27",
       "status": "blocked",
       "title": "Decide Wild Shape active-form persistence past battle handoff"
+    },
+    {
+      "number": 44,
+      "id": "L12-SH44-BUILD-SHEET-FIGHTER",
+      "status": "ready-for-research",
+      "title": "Add the Fighter build-sheet SDK group"
+    },
+    {
+      "number": 45,
+      "id": "L12-SH45-BUILD-SHEET-MONK",
+      "status": "ready-for-research",
+      "title": "Add the Monk build-sheet SDK group"
+    },
+    {
+      "number": 46,
+      "id": "L12-SH46-BUILD-BATTLE-DRUID",
+      "status": "ready-for-research",
+      "title": "Add the Druid build-battle SDK group"
+    },
+    {
+      "number": 47,
+      "id": "L12-SH47-BUILD-BATTLE-FIGHTER",
+      "status": "ready-for-research",
+      "title": "Add the Fighter build-battle SDK group"
+    },
+    {
+      "number": 48,
+      "id": "L12-SH48-CREATION-DRUID-PRIMAL-ORDER",
+      "status": "ready-for-research",
+      "title": "Add the Druid Primal Order creation SDK group"
+    },
+    {
+      "number": 49,
+      "id": "L12-SH49-CREATION-FIGHTER-FIGHTING-STYLE",
+      "status": "ready-for-research",
+      "title": "Add the Fighter Fighting Style creation SDK group"
+    },
+    {
+      "number": 50,
+      "id": "L12-SH50-SPELL-ACCESS-DRUID",
+      "status": "ready-for-research",
+      "title": "Add the Druid sheet spell-access SDK group"
+    },
+    {
+      "number": 51,
+      "id": "L12-SH51-SPELL-ACCESS-PALADIN",
+      "status": "ready-for-research",
+      "title": "Add the Paladin sheet spell-access SDK group"
+    },
+    {
+      "number": 52,
+      "id": "L12-SH52-SHEET-PALADIN-LAY-ON-HANDS",
+      "status": "ready-for-research",
+      "title": "Add the Paladin Lay On Hands sheet SDK group"
+    },
+    {
+      "number": 53,
+      "id": "L12-SH53-SHEET-WIZARD-ARCANE-RECOVERY",
+      "status": "ready-for-research",
+      "title": "Add the Wizard Arcane Recovery sheet SDK group"
+    },
+    {
+      "number": 54,
+      "id": "L12-SH54-BATTLE-FEATURE-FIGHTER-ACTION-SURGE",
+      "status": "ready-for-research",
+      "title": "Add the Fighter Action Surge battle-feature SDK group"
+    },
+    {
+      "number": 55,
+      "id": "L12-SH55-BATTLE-FEATURE-ROGUE-CUNNING-ACTION",
+      "status": "ready-for-research",
+      "title": "Add the Rogue Cunning Action battle-feature SDK group"
+    },
+    {
+      "number": 56,
+      "id": "L12-SH56-BATTLE-SPELL-COMMAND",
+      "status": "ready-for-research",
+      "title": "Add the Command battle-spell SDK group"
+    },
+    {
+      "number": 57,
+      "id": "L12-SH57-BATTLE-SPELL-ENTANGLE",
+      "status": "ready-for-research",
+      "title": "Add the Entangle battle-spell SDK group"
+    },
+    {
+      "number": 58,
+      "id": "L12-SH58-CLOSURE-COMPREHEND-LANGUAGES",
+      "status": "ready-for-research",
+      "title": "Close the Comprehend Languages spell-effect owner review group"
+    },
+    {
+      "number": 59,
+      "id": "L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Close the level-2 class table summary family"
+    },
+    {
+      "number": 60,
+      "id": "L12-SH60-REMAINING-BATCH-SPLIT-2",
+      "status": "blocked",
+      "title": "Split the next remaining L1/L2 source harness groups"
     }
   ]
 }
@@ -352,8 +454,12 @@ Campaign assignment by lane:
 Every L1/L2 row in the five active dispositions is assigned by the table above.
 After Tasks 5-14 and 17-23, the generated grouping has 80 seed-present rows
 across 73 groups. Task 15 expands the first runnable follow-up batch as Tasks
-24-39. Task 40 is the next split gate and preserves the remaining generated
-groups as executable planning work rather than prose backlog.
+24-39. Task 40 recomputed the post-Task-39 inventory and found 112 remaining
+needed L1/L2 groups: 78 source-scenario groups, 20 spell-effect owner-review
+groups, 12 explicit level-2 table-closure groups, and 2 table-only closure
+groups. Tasks 44-59 are the next runnable one-session batch. Task 60 preserves
+the remaining generated groups as executable planning work rather than prose
+backlog.
 
 ## Source Artifacts
 
@@ -472,7 +578,7 @@ Reviewer-loop convergence:
 | 13 | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY - Close the first spell-effect owner review family | done | L12-SH04-GROUPING-GENERATOR-GATE | closure-review | Goodberry spell-list pressure family classified as table-only inventory/survival closure. |
 | 14 | L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS - Add the first small QNT harness pressure witness | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | QNT/harness-pressure | Small deterministic source-side witness or existing obligation strengthening. |
 | 15 | L12-SH15-NEXT-BATCH-SPLIT - Expand the next one-session task batches | done | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS | planning | Added Tasks 24-39 as the next runnable batch and Task 40 as the remaining-group splitter. |
-| 16 | L12-SH16-CLEANROOM-GATE-PLAN - Prepare the later cleanroom replay gate | blocked | L12-SH40-REMAINING-BATCH-SPLIT | later cleanroom gate | Cleanroom replay gate plan after source-side harness stabilizes. |
+| 16 | L12-SH16-CLEANROOM-GATE-PLAN - Prepare the later cleanroom replay gate | blocked | L12-SH60-REMAINING-BATCH-SPLIT-2 | later cleanroom gate | Cleanroom replay gate remains behind source-side stabilization because the current L1/L2 inventory still has unresolved source scenario and closure groups. |
 | 17 | L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE - Migrate the Barbarian Rage seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `barbarian_rage` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 18 | L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION - Migrate the Bardic Inspiration seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `bard_bardic_inspiration` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 19 | L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND - Migrate the Fighter Second Wind seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `fighter_second_wind` seed uses legal creation and remains a real sheet/battle handoff scenario. |
@@ -496,10 +602,27 @@ Reviewer-loop convergence:
 | 37 | L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE - Close the level-1 class table summary family | done | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH15-NEXT-BATCH-SPLIT | explicit-closure | Level-1 class table summary rows receive explicit non-runtime/table-summary closure evidence. |
 | 38 | L12-SH38-CLOSURE-ALARM - Close the Alarm spell-effect owner review group | done | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH15-NEXT-BATCH-SPLIT | spell-effect-owner-review | Alarm spell-list pressure rows receive closure evidence or concrete future owner tasks. |
 | 39 | L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH - Audit the first seed-present source regression batch | done | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS, L12-SH15-NEXT-BATCH-SPLIT | seed-present | First migrated seed-present batch is checked for legal creation, real sheet/battle handoff, and row-specific assertion gaps. |
-| 40 | L12-SH40-REMAINING-BATCH-SPLIT - Split the remaining L1/L2 source harness groups | ready-for-research | L12-SH24-BUILD-SHEET-BARD, L12-SH25-BUILD-SHEET-CLERIC, L12-SH26-BUILD-SHEET-DRUID, L12-SH27-BUILD-BATTLE-BARD, L12-SH28-BUILD-BATTLE-CLERIC, L12-SH29-CREATION-CLERIC-DIVINE-ORDER, L12-SH30-CREATION-DRUID-DRUIDIC, L12-SH31-SPELL-ACCESS-CLERIC, L12-SH32-SHEET-MONK-UNARMORED-DEFENSE, L12-SH33-BATTLE-FEATURE-RECKLESS-ATTACK, L12-SH34-BATTLE-SPELL-CHARM-PERSON, L12-SH35-BATTLE-SPELL-COLOR-SPRAY, L12-SH36-MULTI-OWNER-DRUID-WILD-SHAPE, L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE, L12-SH38-CLOSURE-ALARM, L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH | planning | Recompute remaining groups after the next batch and add the following one-session tasks. |
-| 41 | L12-SH41-WILD-SHAPE-FORM-ACTION-SHAPES - Split remaining Wild Shape form Stat Block action shapes | blocked | L12-SH40-REMAINING-BATCH-SPLIT | generic-stat-block-action-procedure | Wild Shape form action sections outside the supported attack path remain closed until Task 40 sizes their generic Stat Block action owner tasks. |
-| 42 | L12-SH42-WILD-SHAPE-OBJECT-UTILIZE-TABLE - Split Wild Shape generic object and table-placement owners | blocked | L12-SH40-REMAINING-BATCH-SPLIT | generic-object-utilize-table-placement | Generic carried-object inventory, object retrieval, Utilize procedures, and table placement for dropped or merged Wild Shape equipment remain closed until Task 40 sizes the owner work. |
-| 43 | L12-SH43-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-A27 - Decide Wild Shape active-form persistence past battle handoff | blocked | L12-SH40-REMAINING-BATCH-SPLIT | session-active-effect-persistence-owner-decision | Cross-session active Wild Shape persistence remains closed by ASSUMPTIONS.md A27 until Task 40 routes the required owner decision. |
+| 40 | L12-SH40-REMAINING-BATCH-SPLIT - Split the remaining L1/L2 source harness groups | done | L12-SH24-BUILD-SHEET-BARD, L12-SH25-BUILD-SHEET-CLERIC, L12-SH26-BUILD-SHEET-DRUID, L12-SH27-BUILD-BATTLE-BARD, L12-SH28-BUILD-BATTLE-CLERIC, L12-SH29-CREATION-CLERIC-DIVINE-ORDER, L12-SH30-CREATION-DRUID-DRUIDIC, L12-SH31-SPELL-ACCESS-CLERIC, L12-SH32-SHEET-MONK-UNARMORED-DEFENSE, L12-SH33-BATTLE-FEATURE-RECKLESS-ATTACK, L12-SH34-BATTLE-SPELL-CHARM-PERSON, L12-SH35-BATTLE-SPELL-COLOR-SPRAY, L12-SH36-MULTI-OWNER-DRUID-WILD-SHAPE, L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE, L12-SH38-CLOSURE-ALARM, L12-SH39-SEED-PRESENT-AUDIT-FIRST-BATCH | planning | Recomputed 112 remaining needed L1/L2 groups and added Tasks 44-59 plus the next split gate. |
+| 41 | L12-SH41-WILD-SHAPE-FORM-ACTION-SHAPES - Split remaining Wild Shape form Stat Block action shapes | blocked | none | generic-stat-block-action-procedure | No current SRD 5.2.1 eligible Wild Shape Beast form exposes reachable non-attack action sections; keep future non-attack action shapes closed until a concrete form or generic Stat Block action owner demands them. |
+| 42 | L12-SH42-WILD-SHAPE-OBJECT-UTILIZE-TABLE - Split Wild Shape generic object and table-placement owners | blocked | none | generic-object-utilize-table-placement | Generic object-use, object retrieval, Utilize, and dropped-object table-placement work needs a concrete consumer or owner-design decision before implementation. |
+| 43 | L12-SH43-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-A27 - Decide Wild Shape active-form persistence past battle handoff | blocked | none | session-active-effect-persistence-owner-decision | Cross-session active Wild Shape persistence remains closed by ASSUMPTIONS.md A27 until the session active-effect persistence owner is decided. |
+| 44 | L12-SH44-BUILD-SHEET-FIGHTER - Add the Fighter build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-sheet-sdk | Fighter class container, core traits, proficiencies, and multiclass entry traits prove through legal build-to-sheet projection. |
+| 45 | L12-SH45-BUILD-SHEET-MONK - Add the Monk build-sheet SDK group | ready-for-research | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-sheet-sdk | Monk class container, core traits, proficiencies, tool choice, and multiclass entry traits prove through legal build-to-sheet projection. |
+| 46 | L12-SH46-BUILD-BATTLE-DRUID - Add the Druid build-battle SDK group | ready-for-research | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-battle-sdk | Druid starting equipment proves through legal build, fresh sheet, and battle combatant projection. |
+| 47 | L12-SH47-BUILD-BATTLE-FIGHTER - Add the Fighter build-battle SDK group | ready-for-research | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-battle-sdk | Fighter starting equipment and Weapon Mastery prove through legal build, fresh sheet, and battle combatant projection. |
+| 48 | L12-SH48-CREATION-DRUID-PRIMAL-ORDER - Add the Druid Primal Order creation SDK group | ready-for-research | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-creation-sdk | Druid Primal Order selection proves through legal draft holes and finalized build facts. |
+| 49 | L12-SH49-CREATION-FIGHTER-FIGHTING-STYLE - Add the Fighter Fighting Style creation SDK group | ready-for-research | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-creation-sdk | Fighter Fighting Style selection proves through legal draft holes and finalized build facts. |
+| 50 | L12-SH50-SPELL-ACCESS-DRUID - Add the Druid sheet spell-access SDK group | ready-for-research | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | sheet-spell-access-sdk | Druid Spellcasting projects known/prepared/list/slot facts from legal creation to sheet. |
+| 51 | L12-SH51-SPELL-ACCESS-PALADIN - Add the Paladin sheet spell-access SDK group | ready-for-research | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | sheet-spell-access-sdk | Paladin Spellcasting projects prepared/list/slot facts from legal creation to sheet. |
+| 52 | L12-SH52-SHEET-PALADIN-LAY-ON-HANDS - Add the Paladin Lay On Hands sheet SDK group | ready-for-research | L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-sheet-sdk | Paladin Lay On Hands projects the sheet-owned healing pool from legal creation and a fresh sheet. |
+| 53 | L12-SH53-SHEET-WIZARD-ARCANE-RECOVERY - Add the Wizard Arcane Recovery sheet SDK group | ready-for-research | L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-sheet-sdk | Wizard Arcane Recovery projects the sheet-owned recovery fact from legal creation and a fresh sheet. |
+| 54 | L12-SH54-BATTLE-FEATURE-FIGHTER-ACTION-SURGE - Add the Fighter Action Surge battle-feature SDK group | ready-for-research | L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | battle-feature-sdk | Fighter Action Surge resolves from legal sheet-to-battle handoff through focused battle behavior. |
+| 55 | L12-SH55-BATTLE-FEATURE-ROGUE-CUNNING-ACTION - Add the Rogue Cunning Action battle-feature SDK group | ready-for-research | L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | battle-feature-sdk | Rogue Cunning Action resolves from legal sheet-to-battle handoff through focused battle behavior. |
+| 56 | L12-SH56-BATTLE-SPELL-COMMAND - Add the Command battle-spell SDK group | ready-for-research | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | battle-spell-sdk | Command resolves once through battle behavior and preserves class spell-access evidence for three access rows. |
+| 57 | L12-SH57-BATTLE-SPELL-ENTANGLE - Add the Entangle battle-spell SDK group | ready-for-research | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | battle-spell-sdk | Entangle resolves once through battle behavior and preserves class spell-access evidence for two access rows. |
+| 58 | L12-SH58-CLOSURE-COMPREHEND-LANGUAGES - Close the Comprehend Languages spell-effect owner review group | ready-for-research | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH40-REMAINING-BATCH-SPLIT | spell-effect-owner-review | Comprehend Languages spell-list pressure rows receive closure evidence or concrete future owner tasks. |
+| 59 | L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE - Close the level-2 class table summary family | ready-for-research | L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE, L12-SH40-REMAINING-BATCH-SPLIT | explicit-closure | Level-2 class table summary rows receive explicit non-runtime/table-summary closure evidence. |
+| 60 | L12-SH60-REMAINING-BATCH-SPLIT-2 - Split the next remaining L1/L2 source harness groups | blocked | L12-SH44-BUILD-SHEET-FIGHTER, L12-SH45-BUILD-SHEET-MONK, L12-SH46-BUILD-BATTLE-DRUID, L12-SH47-BUILD-BATTLE-FIGHTER, L12-SH48-CREATION-DRUID-PRIMAL-ORDER, L12-SH49-CREATION-FIGHTER-FIGHTING-STYLE, L12-SH50-SPELL-ACCESS-DRUID, L12-SH51-SPELL-ACCESS-PALADIN, L12-SH52-SHEET-PALADIN-LAY-ON-HANDS, L12-SH53-SHEET-WIZARD-ARCANE-RECOVERY, L12-SH54-BATTLE-FEATURE-FIGHTER-ACTION-SURGE, L12-SH55-BATTLE-FEATURE-ROGUE-CUNNING-ACTION, L12-SH56-BATTLE-SPELL-COMMAND, L12-SH57-BATTLE-SPELL-ENTANGLE, L12-SH58-CLOSURE-COMPREHEND-LANGUAGES, L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE | planning | Recompute remaining groups after Tasks 44-59 and add the following one-session batch. |
 
 ## Task Details
 
@@ -1217,9 +1340,9 @@ Status: `blocked`
 
 Blocker Type: dependency
 
-Blocker Detail: Waits for `L12-SH40-REMAINING-BATCH-SPLIT` and should remain
-behind source-side stabilization. If source evidence is still moving, this task should
-update its dependency list rather than editing cleanroom targets.
+Blocker Detail: Waits for `L12-SH60-REMAINING-BATCH-SPLIT-2` and should remain
+behind source-side stabilization. The post-Task-39 inventory still has unresolved
+L1/L2 source scenario and closure groups, so cleanroom replay is premature.
 
 Input:
 
@@ -2300,7 +2423,7 @@ Plan Impact:
 
 ### Task 40 - L12-SH40-REMAINING-BATCH-SPLIT
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
@@ -2340,16 +2463,23 @@ Validation:
 
 Plan Impact:
 
-- `applied` when the next live queue update lands.
+- `applied`; post-Task-39 inventory has 112 remaining needed L1/L2 groups
+  across source scenario, closure-review, explicit-closure, and table-only
+  lanes. Tasks 44-59 are the next runnable one-session batch. Task 60 is the
+  next remaining-group split gate. Task 16 remains blocked behind further
+  source-side stabilization.
 
 ### Task 41 - L12-SH41-WILD-SHAPE-FORM-ACTION-SHAPES
 
 Status: `blocked`
 
-Blocker Type: dependency
+Blocker Type: source-content-absent
 
-Blocker Detail: Waits for `L12-SH40-REMAINING-BATCH-SPLIT` to recompute the
-remaining queue and size the generic Stat Block action owner work.
+Blocker Detail: The current SRD 5.2.1 eligible Wild Shape Beast form catalog has
+no reachable non-Attack action sections. Keep future Multiattack, save-gated
+actions, support/action options/specials, Bonus Actions, Reactions, and
+Legendary Actions closed until a concrete form or generic Stat Block action
+owner needs executable support.
 
 Input:
 
@@ -2390,16 +2520,19 @@ Validation:
 
 Plan Impact:
 
-- `update-required` when Task 40 promotes this into runnable owner work.
+- `update-required` when a concrete eligible form or generic Stat Block action
+  owner makes this runnable.
 
 ### Task 42 - L12-SH42-WILD-SHAPE-OBJECT-UTILIZE-TABLE
 
 Status: `blocked`
 
-Blocker Type: dependency
+Blocker Type: owner-design-required
 
-Blocker Detail: Waits for `L12-SH40-REMAINING-BATCH-SPLIT` to recompute the
-remaining queue and size the generic object/Utilize/table-placement owner work.
+Blocker Detail: Generic object-use, object retrieval, Utilize, and dropped-object
+table-placement behavior needs a concrete generic owner or consumer before
+implementation. Current Wild Shape support already stores the form-limb witness
+needed by future consumers.
 
 Input:
 
@@ -2439,17 +2572,18 @@ Validation:
 
 Plan Impact:
 
-- `update-required` when Task 40 promotes this into runnable owner work.
+- `update-required` when a generic object/Utilize/table-placement owner or
+  consumer is selected.
 
 ### Task 43 - L12-SH43-WILD-SHAPE-ACTIVE-FORM-PERSISTENCE-A27
 
 Status: `blocked`
 
-Blocker Type: dependency
+Blocker Type: owner-decision-required
 
-Blocker Detail: Waits for `L12-SH40-REMAINING-BATCH-SPLIT` to route whether
-cross-session active-form persistence needs an owner decision before
-implementation.
+Blocker Detail: ASSUMPTIONS.md A27 keeps active Wild Shape persistence across
+non-battle time closed until a session active-effect persistence owner is
+decided.
 
 Input:
 
@@ -2488,7 +2622,769 @@ Validation:
 
 Plan Impact:
 
-- `update-required` when Task 40 promotes or blocks this with an owner decision.
+- `update-required` when A27 is revised or a session active-effect persistence
+  owner is selected.
+
+### Task 44 - L12-SH44-BUILD-SHEET-FIGHTER
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:build-sheet-sdk:fighter`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Fighter.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Fighter level-1 class traits and multiclass entry rows in the local SRD.
+- Check terminology for CharacterBuild, Character Sheet, proficiency, Weapon
+  Mastery, Fighting Style, and multiclass entry.
+- Inspect existing build-sheet class groups and reuse the legal fixture seam.
+
+Output:
+
+- One Fighter build-sheet scenario group from legal creation to a fresh sheet.
+- Inventory evidence for Fighter class container, core traits, proficiencies,
+  Weapon Mastery source facts, and multiclass entry traits.
+
+Acceptance:
+
+- The task covers only the Fighter build-sheet group.
+- The scenario finalizes through legal draft holes.
+- Fighting Style choice behavior remains in the Fighter creation group unless
+  already projected as a build/sheet source fact.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Fighter.*build-sheet|Fighter multiclass build-sheet"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Fighter exposes a build-sheet fixture gap that changes remaining
+  class-wide task shape.
+
+### Task 45 - L12-SH45-BUILD-SHEET-MONK
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:build-sheet-sdk:monk`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Monk.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Monk level-1 class traits and multiclass entry rows in the local SRD.
+- Check terminology for CharacterBuild, Character Sheet, proficiency, tool
+  proficiency, and multiclass entry.
+- Inspect existing build-sheet class groups before adding assertions.
+
+Output:
+
+- One Monk build-sheet scenario group from legal creation to a fresh sheet.
+- Inventory evidence for Monk class container, core traits, proficiencies, tool
+  choice, and multiclass entry traits.
+
+Acceptance:
+
+- The task covers only the Monk build-sheet group.
+- The scenario finalizes through legal draft holes.
+- Unarmored Defense and Martial Arts behavior remains in their focused groups.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Monk.*build-sheet|Monk multiclass build-sheet"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Monk exposes a build-sheet fixture gap that changes remaining
+  class-wide task shape.
+
+### Task 46 - L12-SH46-BUILD-BATTLE-DRUID
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:build-battle-sdk:druid`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Druid.md`
+- `.references/srd-5.2.1/Equipment.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Druid starting equipment and relevant Equipment rules in the local SRD.
+- Check terminology for equipment, Armor Class, attack, damage, and handoff.
+- Reuse the existing build-battle projection path without adding spell or Wild
+  Shape behavior.
+
+Output:
+
+- One Druid build-battle scenario group from legal creation through fresh sheet
+  to battle combatant.
+- Inventory evidence for Druid Starting Equipment battle projection.
+
+Acceptance:
+
+- The task covers only the Druid build-battle group.
+- Assertions prove user-reachable equipment or combatant projection facts.
+- Spell execution and Wild Shape remain in their own groups.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Druid.*build-battle|Druid Starting Equipment"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Druid exposes a shared build-battle projection gap.
+
+### Task 47 - L12-SH47-BUILD-BATTLE-FIGHTER
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:build-battle-sdk:fighter`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Fighter.md`
+- `.references/srd-5.2.1/Equipment.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Fighter starting equipment, Weapon Mastery, and relevant Equipment rules
+  in the local SRD.
+- Check terminology for equipment, Weapon Mastery, attack, damage, and handoff.
+- Inspect the Barbarian build-battle group before adding assertions.
+
+Output:
+
+- One Fighter build-battle scenario group from legal creation through fresh sheet
+  to battle combatant.
+- Inventory evidence for Fighter Starting Equipment and Weapon Mastery battle
+  projection.
+
+Acceptance:
+
+- The task covers only the Fighter build-battle group.
+- Assertions prove user-reachable equipment or combatant projection facts.
+- Action Surge and Fighting Style remain in their own groups.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Fighter.*build-battle|Fighter Starting Equipment|Fighter Weapon Mastery"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Fighter exposes a shared build-battle projection gap.
+
+### Task 48 - L12-SH48-CREATION-DRUID-PRIMAL-ORDER
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:character-creation-sdk:druid-primal-order`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Druid.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Druid Primal Order source text in the local SRD.
+- Check terminology for creation choice, class feature, and finalized build
+  facts.
+- Inspect existing creation group patterns before adding assertions.
+
+Output:
+
+- One legal creation scenario for Druid Primal Order.
+- Inventory evidence for the selected finalized-build facts and any sheet facts
+  owned by the creation boundary.
+
+Acceptance:
+
+- The task covers only the Druid Primal Order creation group.
+- The choice is made through discovered creation holes.
+- Druidic, Spellcasting, and Wild Shape remain in their own groups.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Primal Order|Druid"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Primal Order reveals a missing creation-hole owner.
+
+### Task 49 - L12-SH49-CREATION-FIGHTER-FIGHTING-STYLE
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:character-creation-sdk:fighter-fighting-style`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Fighter.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Fighter Fighting Style source text in the local SRD.
+- Check terminology for creation choice, feat, class feature, and finalized build
+  facts.
+- Inspect existing creation group patterns before adding assertions.
+
+Output:
+
+- One legal creation scenario for Fighter Fighting Style.
+- Inventory evidence for the selected finalized-build facts and any sheet facts
+  owned by the creation boundary.
+
+Acceptance:
+
+- The task covers only the Fighter Fighting Style creation group.
+- The choice is made through discovered creation holes.
+- Battle behavior for the selected fighting style is not added unless already
+  owned by existing typed runtime facts.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Fighting Style|Fighter"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Fighting Style reveals a missing creation-hole owner.
+
+### Task 50 - L12-SH50-SPELL-ACCESS-DRUID
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:sheet-spell-access-sdk:druid:spell-access`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Druid.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Druid Spellcasting and local spell preparation/slot text.
+- Check terminology for prepared spells, Spell Slots, and spell list access.
+- Inspect Bard and Cleric spell-access groups before adding assertions.
+
+Output:
+
+- One Druid sheet spell-access scenario from legal creation to a fresh sheet.
+- Inventory evidence for known/prepared/list/slot facts.
+
+Acceptance:
+
+- The task covers only the Druid spell-access group.
+- Spell execution remains in spell scenario groups.
+- Druidic always-prepared access remains covered by the Druidic creation group.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Druid.*Spellcasting|Spellcasting.*Druid"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Druid spell access changes remaining class spell-access task
+  shape.
+
+### Task 51 - L12-SH51-SPELL-ACCESS-PALADIN
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:sheet-spell-access-sdk:paladin:spell-access`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Paladin.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Paladin Spellcasting and local spell preparation/slot text.
+- Check terminology for prepared spells, Spell Slots, and spell list access.
+- Inspect existing spell-access groups before adding assertions.
+
+Output:
+
+- One Paladin sheet spell-access scenario from legal creation to a fresh sheet.
+- Inventory evidence for prepared/list/slot facts.
+
+Acceptance:
+
+- The task covers only the Paladin spell-access group.
+- Spell execution and Paladin's Smite remain in their own groups.
+- Assertions use sheet-projected facts, not authored identity dispatch in runtime
+  behavior.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Paladin.*Spellcasting|Spellcasting.*Paladin"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless Paladin spell access changes remaining class spell-access task
+  shape.
+
+### Task 52 - L12-SH52-SHEET-PALADIN-LAY-ON-HANDS
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:character-sheet-sdk:paladin-lay-on-hands`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Paladin.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Paladin Lay On Hands in the local SRD.
+- Check terminology for healing pool, Magic Action, Hit Points, and Character
+  Sheet projection.
+- Confirm whether this task can assert sheet-owned pool facts without adding
+  battle healing behavior.
+
+Output:
+
+- One Paladin Lay On Hands sheet scenario from legal creation to fresh sheet.
+- Inventory evidence for the sheet-owned Lay On Hands pool projection.
+
+Acceptance:
+
+- The task covers only the Paladin Lay On Hands sheet group.
+- Healing execution remains out of scope unless the existing runtime already owns
+  the typed behavior.
+- No duplicate pool state is stored beside the canonical sheet fact.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Lay On Hands|Paladin"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if Lay On Hands needs a separate battle healing owner before
+  SDK evidence can land.
+
+### Task 53 - L12-SH53-SHEET-WIZARD-ARCANE-RECOVERY
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:character-sheet-sdk:wizard-arcane-recovery`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `.references/srd-5.2.1/Classes/Wizard.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Wizard Arcane Recovery in the local SRD.
+- Check terminology for Short Rest, Spell Slot restoration, and Character Sheet
+  projection.
+- Inspect existing sheet-owned resource projection patterns.
+
+Output:
+
+- One Wizard Arcane Recovery sheet scenario from legal creation to fresh sheet.
+- Inventory evidence for the sheet-owned Arcane Recovery projection.
+
+Acceptance:
+
+- The task covers only the Wizard Arcane Recovery sheet group.
+- Short Rest execution is not added unless already owned by existing typed sheet
+  runtime facts.
+- Spellbook and Ritual Adept remain in their own groups.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Arcane Recovery|Wizard"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if Arcane Recovery needs a separate rest/recovery owner
+  before SDK evidence can land.
+
+### Task 54 - L12-SH54-BATTLE-FEATURE-FIGHTER-ACTION-SURGE
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-04:battle-feature-sdk:fighter-action-surge`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `packages/battle-runtime/src/`
+- `.references/srd-5.2.1/Classes/Fighter.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Fighter Action Surge in the local SRD.
+- Check terminology for additional action, resource spending, and turn action
+  economy.
+- Inspect relevant battle-runtime owner before editing.
+
+Output:
+
+- One Fighter Action Surge source-side battle-feature scenario.
+- Runtime, QNT, or evidence updates only if existing battle owners are missing
+  the required typed behavior.
+
+Acceptance:
+
+- The scenario starts from legal level-2 creation and real sheet-to-battle
+  projection.
+- Runtime behavior does not dispatch on authored identity.
+- If behavior changes, the relevant Quint owner and focused validation are
+  updated with the runtime change.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Action Surge|Fighter"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- Relevant focused battle-runtime test or MBT only if executable battle behavior
+  changes.
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if Action Surge needs a new shared action-economy owner or
+  QNT parity task before SDK evidence can land.
+
+### Task 55 - L12-SH55-BATTLE-FEATURE-ROGUE-CUNNING-ACTION
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-04:battle-feature-sdk:rogue-cunning-action`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `packages/battle-runtime/src/`
+- `.references/srd-5.2.1/Classes/Rogue.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Rogue Cunning Action in the local SRD.
+- Check terminology for Bonus Action, Dash, Disengage, and Hide.
+- Inspect relevant battle-runtime owner before editing.
+
+Output:
+
+- One Rogue Cunning Action source-side battle-feature scenario.
+- Runtime, QNT, or evidence updates only if existing battle owners are missing
+  the required typed behavior.
+
+Acceptance:
+
+- The scenario starts from legal level-2 creation and real sheet-to-battle
+  projection.
+- Runtime behavior does not dispatch on authored identity.
+- Hide/discovery behavior is split if it exceeds one session or belongs to a
+  separate owner.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Cunning Action|Rogue"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- Relevant focused battle-runtime test or MBT only if executable battle behavior
+  changes.
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if Cunning Action needs a new shared Bonus Action or Hide
+  owner before SDK evidence can land.
+
+### Task 56 - L12-SH56-BATTLE-SPELL-COMMAND
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:battle-spell-sdk:command`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `packages/battle-runtime/src/`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Command and spellcasting rules in the local SRD.
+- Check terminology for spell commands, Saving Throw, and target action on next
+  turn.
+- Confirm whether existing battle spell owners support the selected typed
+  command effect.
+
+Output:
+
+- One Command spell scenario group covering the three access rows through legal
+  class spell access and battle resolution.
+- Runtime/QNT/evidence updates only for missing typed behavior needed by the
+  selected execution path.
+
+Acceptance:
+
+- The task covers only the Command spell group.
+- One execution path proves spell behavior; class-specific rows are covered by
+  explicit access assertions.
+- Runtime behavior uses typed spell/effect facts, not spell id/name dispatch.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Command"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- Relevant focused battle-runtime test or MBT only if executable battle behavior
+  changes.
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if Command must split by owner or exposes a reusable
+  forced-action spell owner gap.
+
+### Task 57 - L12-SH57-BATTLE-SPELL-ENTANGLE
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:battle-spell-sdk:entangle`.
+- `packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts`
+- `packages/character-battle-runtime/src/sdk-integration-test-support.ts`
+- `packages/battle-runtime/src/`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Entangle and spellcasting rules in the local SRD.
+- Check terminology for Concentration, area, Saving Throw, Restrained, and
+  difficult terrain if applicable.
+- Confirm whether existing battle spell owners support the selected typed area
+  condition effect.
+
+Output:
+
+- One Entangle spell scenario group covering the two access rows through legal
+  class spell access and battle resolution.
+- Runtime/QNT/evidence updates only for missing typed behavior needed by the
+  selected execution path.
+
+Acceptance:
+
+- The task covers only the Entangle spell group.
+- One execution path proves spell behavior; class-specific rows are covered by
+  explicit access assertions.
+- Runtime behavior uses typed spell/effect facts, not spell id/name dispatch.
+
+Validation:
+
+- `pnpm --filter @dnd/character-battle-runtime exec vitest run src/level1-sdk-raw-integration.test.ts -t "Entangle"`
+- `pnpm --filter @dnd/character-battle-runtime typecheck`
+- `pnpm sdk-raw-integration-inventory:check`
+- Relevant focused battle-runtime test or MBT only if executable battle behavior
+  changes.
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if Entangle must split by owner or exposes a reusable
+  area-control spell owner gap.
+
+### Task 58 - L12-SH58-CLOSURE-COMPREHEND-LANGUAGES
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated group `l15-sdk-raw-03:spell-effect-owner-review:comprehend-languages`.
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Comprehend Languages and spellcasting rules in the local SRD.
+- Check terminology for language understanding, literal meaning, and table
+  adjudication.
+- Determine whether Comprehend Languages is runtime-detached closure, existing
+  source owner sufficient, or missing a future owner.
+
+Output:
+
+- Closure evidence for Comprehend Languages, or concrete follow-up owner task(s)
+  if it needs future runtime/spec support.
+- Inventory/profile updates if closure status changes.
+
+Acceptance:
+
+- The task covers only the Comprehend Languages closure-review group.
+- Closure reasons cite local SRD passages.
+- Only real owner/user decisions become blocked; Ralph-performable research
+  remains runnable.
+
+Validation:
+
+- `pnpm unit-profile-coverage:check`
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if Comprehend Languages reveals a reusable language/reading
+  closure family or a missing runtime owner task.
+
+### Task 59 - L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE
+
+Status: `ready-for-research`
+
+Input:
+
+- Generated groups `l15-sdk-raw-04:explicit-closure:*:class-table-summary:*`.
+- `.references/srd-5.2.1/Classes/`
+- `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+- `plans/sdk-raw-integration/LEVEL1_5_SDK_RAW_INVENTORY.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read the level-2 class tables in the local SRD.
+- Confirm every selected row has the same non-runtime table-summary owner
+  reason.
+- Inspect Task 37 closure evidence before adding any new evidence shape.
+
+Output:
+
+- Explicit closure evidence for the level-2 class table summary family.
+- Inventory/report updates if the generated disposition changes.
+
+Acceptance:
+
+- The task covers only the level-2 class table summary closure family.
+- Closure reasons cite local SRD anchors and do not mark table summaries as
+  executable runtime behavior.
+- No generated evidence duplicates facts that can be projected from existing
+  inventory rows.
+
+Validation:
+
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if any level-2 class table row needs a separate owner.
+
+### Task 60 - L12-SH60-REMAINING-BATCH-SPLIT-2
+
+Status: `blocked`
+
+Blocker Type: dependency
+
+Blocker Detail: Waits for Tasks 44-59 to land, then recomputes the remaining
+L1/L2 inventory groups and creates the next one-session batch.
+
+Input:
+
+- This plan after Tasks 44-59 land.
+- Generated L1/L2 campaign grouping after the next batch.
+- Task closeouts and plan-impact notes from Tasks 44-59.
+- `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+- `plans/sdk-raw-integration/LEVEL1_5_SDK_RAW_INVENTORY.md`
+
+Research required before editing:
+
+- Recompute remaining uncovered L1/L2 groups by lane.
+- Apply the Task 15 sizing rules: one class group, one spell execution group,
+  one small identical closure family, or one owner split per task.
+- Check whether Task 16 should remain blocked behind further source-side work.
+
+Output:
+
+- Concrete Ralph tasks for the following one-session batch.
+- Updated `ralph-task-index`, DAG, and task details.
+- Status and dependency updates for tasks that become runnable.
+
+Acceptance:
+
+- Remaining desired work is represented as executable tasks or blocked tasks
+  with precise blockers.
+- No new task is larger than one coding-agent session.
+- Every new blocked task has `Blocker Type` and `Blocker Detail`.
+- Every new task has Input, Output, Acceptance, Validation, and Plan Impact
+  sections.
+
+Validation:
+
+- Static plan consistency checks from Task 1.
+- `pnpm sdk-raw-integration-inventory:check`
+- `git diff --check`
+
+Plan Impact:
+
+- `applied` when the next live queue update lands.
 
 ## Verification Matrix
 
