@@ -187,7 +187,7 @@
     {
       "number": 31,
       "id": "L12-SH31-SPELL-ACCESS-CLERIC",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the Cleric sheet spell-access SDK group"
     },
     {
@@ -469,7 +469,7 @@ Reviewer-loop convergence:
 | 28 | L12-SH28-BUILD-BATTLE-CLERIC - Add the Cleric build-battle SDK group | done | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | build-battle-sdk | Cleric starting equipment proves through legal build, fresh sheet, and battle combatant projection. |
 | 29 | L12-SH29-CREATION-CLERIC-DIVINE-ORDER - Add the Cleric Divine Order creation SDK group | done | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | character-creation-sdk | Cleric Divine Order selection proves through legal draft holes and finalized build facts. |
 | 30 | L12-SH30-CREATION-DRUID-DRUIDIC - Add the Druidic creation SDK group | done | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | character-creation-sdk | Druidic language and always-prepared spell access prove through legal draft holes and finalized build facts. |
-| 31 | L12-SH31-SPELL-ACCESS-CLERIC - Add the Cleric sheet spell-access SDK group | ready-for-research | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | sheet-spell-access-sdk | Cleric Spellcasting projects known/prepared/list/slot facts from legal creation to sheet. |
+| 31 | L12-SH31-SPELL-ACCESS-CLERIC - Add the Cleric sheet spell-access SDK group | done | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | sheet-spell-access-sdk | Cleric Spellcasting projects known/prepared/list/slot facts from legal creation to sheet. |
 | 32 | L12-SH32-SHEET-MONK-UNARMORED-DEFENSE - Add the Monk Unarmored Defense sheet SDK group | ready-for-research | L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | character-sheet-sdk | Monk Unarmored Defense projects Armor Class from legal creation and a fresh sheet. |
 | 33 | L12-SH33-BATTLE-FEATURE-RECKLESS-ATTACK - Add the Barbarian Reckless Attack battle-feature SDK group | ready-for-research | L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | battle-feature-sdk | Barbarian Reckless Attack resolves from legal sheet-to-battle handoff through focused battle behavior. |
 | 34 | L12-SH34-BATTLE-SPELL-CHARM-PERSON - Add the Charm Person battle-spell SDK group | ready-for-research | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH15-NEXT-BATCH-SPLIT | battle-spell-sdk | Charm Person resolves once through battle behavior and preserves class spell-access evidence for five access rows. |
@@ -1861,7 +1861,7 @@ Plan Impact:
 
 ### Task 31 - L12-SH31-SPELL-ACCESS-CLERIC
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

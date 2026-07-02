@@ -524,12 +524,12 @@ const bardMulticlassProgression = {
     },
   ],
 } as const satisfies CharacterProgression;
-const clericBuildSheetCantrips = [
+const clericSpellAccessCantrips = [
   "guidance",
   sacredFlameSpellId,
   thaumaturgySpellId,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
-const clericBuildSheetPreparedSpells = [
+const clericSpellAccessPreparedSpells = [
   blessSpellId,
   cureWoundsSpellId,
   guidingBoltSpellId,
@@ -669,12 +669,12 @@ const clericBuildSheetDraftPlan = {
     legalUnitChoice(
       "class_cleric",
       "class_cantrip_choices",
-      ...clericBuildSheetCantrips,
+      ...clericSpellAccessCantrips,
     ),
     legalUnitChoice(
       "class_cleric",
       "class_prepared_spell_choices",
-      ...clericBuildSheetPreparedSpells,
+      ...clericSpellAccessPreparedSpells,
     ),
     legalUnitChoice("cleric_divine_order", "divine_order", "protector"),
     legalUnitChoice(
@@ -696,6 +696,11 @@ const clericBuildSheetDraftPlan = {
     legalUnitChoice("class_cleric", "equipment_purchase", "weapon_dagger"),
     legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed"),
   ],
+} as const satisfies LegalSourceCharacterDraftPlan;
+
+const clericSpellAccessDraftPlan = {
+  ...clericBuildSheetDraftPlan,
+  label: "Cleric Spellcasting spell access",
 } as const satisfies LegalSourceCharacterDraftPlan;
 
 const clericDivineOrderCreationDraftPlan = {
@@ -1587,6 +1592,49 @@ describe("level 1 SDK RAW integration", () => {
         spellbook: [],
         preparedSpells: bardSpellAccessPreparedSpells,
         spellcastingFocuses: ["musical_instrument"],
+      },
+    ]);
+    expect(fixture.build.spellcasting?.slotPools).toEqual({
+      spellcasting: {
+        kind: "spellcasting",
+        slots: [{ spellLevel: 1, count: 2 }],
+      },
+    });
+    expect(characterSheetSpellSlots(fixture.sheet)).toEqual([
+      { spellLevel: 1, count: 2, expended: 0 },
+    ]);
+    expect(characterSheetPactSlots(fixture.sheet)).toBeUndefined();
+  });
+
+  test("Cleric Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-cleric-spellcasting-access",
+      draftPlan: clericSpellAccessDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-cleric-spellcasting-access",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_cleric"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(fixture.build.spellcasting?.sources).toEqual([
+      {
+        sourceUnitId: "class_cleric",
+        spellcastingAbility: "wis",
+        cantrips: clericSpellAccessCantrips,
+        spellbook: [],
+        preparedSpells: clericSpellAccessPreparedSpells,
+        spellcastingFocuses: ["holy_symbol"],
       },
     ]);
     expect(fixture.build.spellcasting?.slotPools).toEqual({

@@ -19320,6 +19320,14 @@
       "category": "spell access/list pressure",
       "className": "Cleric",
       "concept": "Cleric Spellcasting",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-57"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -19327,7 +19335,7 @@
       "proposedOwnerBoundary": "character-sheet-spell-access",
       "rowId": "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
       "rowKind": "spell-access",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 79,
         "lineStart": 56,
@@ -51157,7 +51165,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 110,
+        "rowCount": 111,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51166,12 +51174,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 6,
+        "groupCount": 5,
         "lane": "sheet-spell-access-sdk",
         "ownerTaskIds": [
           "L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE"
         ],
-        "rowCount": 6,
+        "rowCount": 5,
         "rowFamily": "source-row",
         "taskFamily": "sheet-spell-access-sdk"
       },
@@ -51235,12 +51243,12 @@
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 110,
+        "rowCount": 111,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 84,
+        "groupCount": 83,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51251,7 +51259,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 195,
+        "rowCount": 194,
         "rowFamily": "source-row"
       },
       {
@@ -51270,7 +51278,7 @@
       "sourcePathPrefix": ".references/srd-5.2.1/"
     },
     "totals": {
-      "groupCount": 207,
+      "groupCount": 206,
       "rowCount": 400
     }
   },
@@ -52022,6 +52030,25 @@
       "rowId": "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
       "rowKey": "level-1:Cleric:class_cleric",
       "rowKind": "multiclass-entry",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-build-sheet-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "class_cleric",
+      "classification": "legal build-sheet owner proof",
+      "className": "Cleric",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as build/sheet source seed; add battle assertions only for rows owned by battle boundaries.",
+      "reason": "The represented source character build is finalized through character creation and projected into a fresh Character Sheet at the build/sheet owner boundary.",
+      "rowId": "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+      "rowKey": "level-1:Cleric:class_cleric",
+      "rowKind": "spell-access",
       "sourceBuildPath": "legal-creation-draft-finalize",
       "sourceProof": "legal-build-sheet-owner",
       "usesRealSheetBattleHandoff": false,
@@ -59231,13 +59258,13 @@
       "closure-review-needed": 142,
       "explicit-closure-needed": 60,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 388,
+      "sdk-scenario-needed": 387,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 116,
+      "seed-scenario-present": 117,
       "table-only-closure-needed": 13
     },
     "levelOneFourRows": 632,
-    "levelOneTwoCampaignGroups": 207,
+    "levelOneTwoCampaignGroups": 206,
     "levelOneTwoCampaignGroupsByLane": {
       "battle-feature-sdk": 5,
       "battle-spell-sdk": 31,
@@ -59248,7 +59275,7 @@
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
       "seed-present": 77,
-      "sheet-spell-access-sdk": 6,
+      "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 21,
       "table-only-closure": 1
     },
@@ -59256,7 +59283,7 @@
       "closure-review-row": 21,
       "explicit-closure-row": 24,
       "seed-row": 77,
-      "source-row": 84,
+      "source-row": 83,
       "table-only-closure-row": 1
     },
     "levelOneTwoCampaignRows": 400,
@@ -59269,33 +59296,33 @@
       "character-sheet-sdk": 6,
       "explicit-closure": 24,
       "multi-owner-feature-sdk": 6,
-      "seed-present": 110,
-      "sheet-spell-access-sdk": 6,
+      "seed-present": 111,
+      "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 69,
       "table-only-closure": 2
     },
     "levelOneTwoCampaignRowsByRowFamily": {
       "closure-review-row": 69,
       "explicit-closure-row": 24,
-      "seed-row": 110,
-      "source-row": 195,
+      "seed-row": 111,
+      "source-row": 194,
       "table-only-closure-row": 2
     },
-    "levelOneTwoSeedMigrationAuditRows": 110,
+    "levelOneTwoSeedMigrationAuditRows": 111,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 72,
-      "legal build-sheet owner proof": 35,
+      "legal build-sheet owner proof": 36,
       "legal creation owner proof": 3
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 38,
+      "not-real-sheet-battle": 39,
       "real-sheet-battle": 72
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 110
+      "legal-creation-draft-finalize": 111
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 72,
-    "scenarioGroups": 411,
+    "scenarioGroups": 410,
     "scenarioGroupsByLane": {
       "battle-feature-sdk": 20,
       "battle-spell-sdk": 82,
@@ -59309,12 +59336,12 @@
       "multi-owner-feature-sdk": 9,
       "owner-review": 6,
       "seed-present": 83,
-      "sheet-spell-access-sdk": 11,
+      "sheet-spell-access-sdk": 10,
       "spell-effect-owner-review": 45,
       "table-only-closure": 5
     },
     "scenarioGroupsByTask": {
-      "L15-SDK-RAW-03": 174,
+      "L15-SDK-RAW-03": 173,
       "L15-SDK-RAW-04": 33,
       "L15-SDK-RAW-05": 107,
       "L15-SDK-RAW-06": 25,
@@ -65786,7 +65813,8 @@
       "categories": [
         "character-creation or progression mechanic",
         "class container",
-        "equipment/weapon/armor pressure"
+        "equipment/weapon/armor pressure",
+        "spell access/list pressure"
       ],
       "classNames": [
         "Cleric"
@@ -65801,7 +65829,8 @@
       ],
       "proposedOwnerBoundaries": [
         "character-build-to-battle",
-        "character-build-to-sheet"
+        "character-build-to-sheet",
+        "character-sheet-spell-access"
       ],
       "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Cleric:class_cleric\"]",
       "rawSources": [
@@ -65812,16 +65841,20 @@
         ".references/srd-5.2.1/Classes/Cleric.md:22",
         ".references/srd-5.2.1/Classes/Cleric.md:22-26",
         ".references/srd-5.2.1/Classes/Cleric.md:3",
+        ".references/srd-5.2.1/Classes/Cleric.md:56",
+        ".references/srd-5.2.1/Classes/Cleric.md:56-78",
         ".references/srd-5.2.1/Classes/Cleric.md:7",
         ".references/srd-5.2.1/Classes/Cleric.md:8",
-        ".references/srd-5.2.1/Classes/Cleric.md:9"
+        ".references/srd-5.2.1/Classes/Cleric.md:9",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-57"
       ],
-      "rowCount": 9,
+      "rowCount": 10,
       "rowKinds": [
         "class-container",
         "core-trait",
         "equipment-pressure",
-        "multiclass-entry"
+        "multiclass-entry",
+        "spell-access"
       ],
       "rows": [
         {
@@ -65958,6 +65991,21 @@
             "lineStart": 22,
             "path": ".references/srd-5.2.1/Classes/Cleric.md"
           }
+        },
+        {
+          "candidateUnitId": "class_cleric",
+          "className": "Cleric",
+          "concept": "Cleric Spellcasting",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-sheet-spell-access",
+          "rowId": "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 79,
+            "lineStart": 56,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
         }
       ],
       "sampleConcepts": [
@@ -65966,9 +66014,9 @@
         "Cleric Primary Ability",
         "Cleric Saving Throw Proficiencies",
         "Cleric Skill Proficiencies",
+        "Cleric Spellcasting",
         "Cleric Starting Equipment",
-        "Cleric Weapon Proficiencies",
-        "Cleric class container"
+        "Cleric Weapon Proficiencies"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -70073,61 +70121,6 @@
         "seed-scenario-present"
       ],
       "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
-        "class_cleric"
-      ],
-      "categories": [
-        "spell access/list pressure"
-      ],
-      "classNames": [
-        "Cleric"
-      ],
-      "groupId": "l15-sdk-raw-03:sheet-spell-access-sdk:cleric:spell-access",
-      "lane": "sheet-spell-access-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-sheet-spell-access"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"sheet-spell-access-sdk\",\"Cleric\",\"spell-access\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Cleric.md:56"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "spell-access"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "class_cleric",
-          "className": "Cleric",
-          "concept": "Cleric Spellcasting",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-sheet-spell-access",
-          "rowId": "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 79,
-            "lineStart": 56,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Cleric Spellcasting"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Create the sheet through class or subclass spell access and assert known/prepared/list/slot facts; leave spell effects to the spell-unit scenario groups.",
       "taskId": "L15-SDK-RAW-03"
     },
     {
@@ -89389,9 +89382,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...clericBuildSheetCantrips",
+            "...clericSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...clericBuildSheetPreparedSpells",
+            "...clericSpellAccessPreparedSpells",
             "\"cleric_divine_order\"",
             "\"divine_order\"",
             "\"protector\"",
@@ -89444,9 +89437,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...clericBuildSheetCantrips",
+            "...clericSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...clericBuildSheetPreparedSpells",
+            "...clericSpellAccessPreparedSpells",
             "\"cleric_divine_order\"",
             "\"divine_order\"",
             "\"protector\"",
@@ -89499,9 +89492,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...clericBuildSheetCantrips",
+            "...clericSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...clericBuildSheetPreparedSpells",
+            "...clericSpellAccessPreparedSpells",
             "\"cleric_divine_order\"",
             "\"divine_order\"",
             "\"protector\"",
@@ -89554,9 +89547,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...clericBuildSheetCantrips",
+            "...clericSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...clericBuildSheetPreparedSpells",
+            "...clericSpellAccessPreparedSpells",
             "\"cleric_divine_order\"",
             "\"divine_order\"",
             "\"protector\"",
@@ -89609,9 +89602,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...clericBuildSheetCantrips",
+            "...clericSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...clericBuildSheetPreparedSpells",
+            "...clericSpellAccessPreparedSpells",
             "\"cleric_divine_order\"",
             "\"divine_order\"",
             "\"protector\"",
@@ -89664,9 +89657,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...clericBuildSheetCantrips",
+            "...clericSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...clericBuildSheetPreparedSpells",
+            "...clericSpellAccessPreparedSpells",
             "\"cleric_divine_order\"",
             "\"divine_order\"",
             "\"protector\"",
@@ -89719,9 +89712,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...clericBuildSheetCantrips",
+            "...clericSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...clericBuildSheetPreparedSpells",
+            "...clericSpellAccessPreparedSpells",
             "\"cleric_divine_order\"",
             "\"divine_order\"",
             "\"protector\"",
@@ -89781,9 +89774,9 @@
             "level: 1",
             "\"class_skill_proficiency_choice\"",
             "\"class_cantrip_choices\"",
-            "...clericBuildSheetCantrips",
+            "...clericSpellAccessCantrips",
             "\"class_prepared_spell_choices\"",
-            "...clericBuildSheetPreparedSpells",
+            "...clericSpellAccessPreparedSpells",
             "\"cleric_divine_order\"",
             "\"divine_order\"",
             "\"protector\"",
@@ -91015,6 +91008,80 @@
         "spellbook: []",
         "preparedSpells: bardSpellAccessPreparedSpells",
         "spellcastingFocuses: [\"musical_instrument\"]",
+        "slotPools",
+        "characterSheetSpellSlots(fixture.sheet)",
+        "characterSheetPactSlots(fixture.sheet)"
+      ]
+    },
+    {
+      "candidateUnitId": "class_cleric",
+      "className": "Cleric",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Cleric Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+          ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-57"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const clericSpellAccessCantrips =",
+          "needles": [
+            "\"guidance\"",
+            "sacredFlameSpellId",
+            "thaumaturgySpellId"
+          ]
+        },
+        {
+          "anchor": "const clericSpellAccessPreparedSpells =",
+          "needles": [
+            "blessSpellId",
+            "cureWoundsSpellId",
+            "guidingBoltSpellId",
+            "shieldOfFaithSpellId"
+          ]
+        },
+        {
+          "anchor": "const clericSpellAccessDraftPlan =",
+          "needles": [
+            "...clericBuildSheetDraftPlan",
+            "label: \"Cleric Spellcasting spell access\""
+          ]
+        },
+        {
+          "anchor": "const clericBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_cleric\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_cantrip_choices\"",
+            "...clericSpellAccessCantrips",
+            "\"class_prepared_spell_choices\"",
+            "...clericSpellAccessPreparedSpells",
+            "legalUnitChoice(\"class_cleric\", \"class_equipment_choice\", \"option_b\")",
+            "legalUnitChoice(\"class_cleric\", \"equipment_purchase\", \"weapon_dagger\")",
+            "legalLoadoutChoice(\"weapon_dagger\", \"weapon\", \"wielded_one_handed\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+      "rowKey": "level-1:Cleric:class_cleric",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-cleric-spellcasting-access\"",
+        "clericSpellAccessDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+        "fixture.sheet.build",
+        "sourceUnitId: \"class_cleric\"",
+        "spellcastingAbility: \"wis\"",
+        "cantrips: clericSpellAccessCantrips",
+        "spellbook: []",
+        "preparedSpells: clericSpellAccessPreparedSpells",
+        "spellcastingFocuses: [\"holy_symbol\"]",
         "slotPools",
         "characterSheetSpellSlots(fixture.sheet)",
         "characterSheetPactSlots(fixture.sheet)"

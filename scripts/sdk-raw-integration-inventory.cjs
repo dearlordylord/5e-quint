@@ -105,8 +105,8 @@ const levelOneTwoCampaignActiveDispositions = new Set([
   "table-only-closure-needed",
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
-const expectedLevelOneTwoCampaignGroups = 207;
-const expectedLevelOneTwoSeedScenarioRows = 110;
+const expectedLevelOneTwoCampaignGroups = 206;
+const expectedLevelOneTwoSeedScenarioRows = 111;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -710,9 +710,9 @@ const clericBuildSheetScenarioHelperNeedles = [
       "level: 1",
       '"class_skill_proficiency_choice"',
       '"class_cantrip_choices"',
-      "...clericBuildSheetCantrips",
+      "...clericSpellAccessCantrips",
       '"class_prepared_spell_choices"',
-      "...clericBuildSheetPreparedSpells",
+      "...clericSpellAccessPreparedSpells",
       '"cleric_divine_order"',
       '"divine_order"',
       '"protector"',
@@ -1390,6 +1390,74 @@ const seededSdkScenarioRows = [
           "...bardSpellAccessPreparedSpells",
           'legalUnitChoice("class_bard", "class_equipment_choice", "option_b")',
           'legalUnitChoice("class_bard", "equipment_purchase", "weapon_dagger")',
+          'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
+        ],
+      },
+    ],
+  },
+  {
+    candidateUnitId: "class_cleric",
+    className: "Cleric",
+    levelBand: "level-1",
+    label:
+      "level1-sdk-raw-integration: Cleric Spellcasting projects level-1 cantrips, prepared spells, and Spell Slots from legal creation to a fresh sheet",
+    path: paths.seedScenarioFiles.level1BattleFeatures,
+    sourceProof: "legal-build-sheet-owner",
+    rawSources: [
+      ".references/srd-5.2.1/Classes/Cleric.md:56-78",
+      ".references/srd-5.2.1/Spells/Gaining-and-Casting.md:1-57",
+    ],
+    rowId: "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+    tracerNeedles: [
+      "createLegalSourceCharacterFixture({",
+      'draftIdText: "draft:l1-sdk-cleric-spellcasting-access"',
+      "clericSpellAccessDraftPlan",
+      'battle: { tag: "withoutBattle" }',
+      "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+      "fixture.sheet.build",
+      'sourceUnitId: "class_cleric"',
+      'spellcastingAbility: "wis"',
+      "cantrips: clericSpellAccessCantrips",
+      "spellbook: []",
+      "preparedSpells: clericSpellAccessPreparedSpells",
+      'spellcastingFocuses: ["holy_symbol"]',
+      "slotPools",
+      "characterSheetSpellSlots(fixture.sheet)",
+      "characterSheetPactSlots(fixture.sheet)",
+    ],
+    helperNeedles: [
+      {
+        anchor: "const clericSpellAccessCantrips =",
+        needles: ['"guidance"', "sacredFlameSpellId", "thaumaturgySpellId"],
+      },
+      {
+        anchor: "const clericSpellAccessPreparedSpells =",
+        needles: [
+          "blessSpellId",
+          "cureWoundsSpellId",
+          "guidingBoltSpellId",
+          "shieldOfFaithSpellId",
+        ],
+      },
+      {
+        anchor: "const clericSpellAccessDraftPlan =",
+        needles: [
+          "...clericBuildSheetDraftPlan",
+          'label: "Cleric Spellcasting spell access"',
+        ],
+      },
+      {
+        anchor: "const clericBuildSheetDraftPlan =",
+        needles: [
+          'classUnitId: "class_cleric"',
+          "level: 1",
+          '"class_skill_proficiency_choice"',
+          '"class_cantrip_choices"',
+          "...clericSpellAccessCantrips",
+          '"class_prepared_spell_choices"',
+          "...clericSpellAccessPreparedSpells",
+          'legalUnitChoice("class_cleric", "class_equipment_choice", "option_b")',
+          'legalUnitChoice("class_cleric", "equipment_purchase", "weapon_dagger")',
           'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
         ],
       },
