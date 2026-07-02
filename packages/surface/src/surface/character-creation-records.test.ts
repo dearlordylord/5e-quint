@@ -215,7 +215,7 @@ describe("character-creation Surface records", () => {
     });
   });
 
-  test("decodes and reads Ranger level 4 Ability Score Improvement grant", () => {
+  test("decodes and reads Ranger level 4 and 5 feature grants", () => {
     const classRecord = decodeClassRecordSync(classRangerInput);
     const unit = decodeUnitRecordSync(classRangerInput);
     const result = readClassCreationFacts(unit);
@@ -228,6 +228,7 @@ describe("character-creation Surface records", () => {
         className: "ranger",
         featureGrants: expect.arrayContaining([
           { level: 4, unitId: "ranger_ability_score_improvement_l4" },
+          { level: 5, unitId: "ranger_extra_attack" },
         ]),
       },
     });

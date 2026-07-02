@@ -1301,6 +1301,17 @@ describe("character creation hole discovery", () => {
     );
   });
 
+  test("models Ranger Extra Attack as a level 5 class feature grant", () => {
+    const rangerFacts = readClassCreationFacts(
+      unitLibrary.requireUnit("class_ranger"),
+    );
+    expect(rangerFacts.tag).toBe("readable");
+    if (rangerFacts.tag !== "readable") return;
+    expect(rangerFacts.value.featureGrants).toEqual(
+      expect.arrayContaining([{ level: 5, unitId: "ranger_extra_attack" }]),
+    );
+  });
+
   test("models Ranger level 2 Deft Explorer and Fighting Style acquisition choices", () => {
     const rangerFacts = readClassCreationFacts(
       unitLibrary.requireUnit("class_ranger"),

@@ -3687,6 +3687,26 @@ const seededSdkScenarioRows = [
     ],
   },
   {
+    candidateUnitId: "ranger_extra_attack",
+    className: "Ranger",
+    levelBand: "level-5",
+    label: "level5-sdk-tracer-bullets: Ranger Extra Attack",
+    path: paths.seedScenarioFiles.level5Tracer,
+    rowId:
+      "srd521:classes/ranger:level-5:class-feature-grant:ranger_extra_attack",
+    tracerNeedles: ["rangerExtraAttackUnitId"],
+    helperNeedles: [
+      {
+        anchor: "function assertLevelFiveExtraAttackHandoff",
+        needles: [
+          "resolveWeaponAttackMiss({",
+          'source: "classFeatureExtraAttack"',
+          "sourceUnitId: input.sourceUnitId",
+        ],
+      },
+    ],
+  },
+  {
     candidateUnitId: "monk_extra_attack",
     className: "Monk",
     levelBand: "level-5",

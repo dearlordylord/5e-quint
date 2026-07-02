@@ -7781,6 +7781,29 @@ describe("SRD Unit catalog boundary", () => {
     });
   });
 
+  test("installs Ranger Extra Attack as a level-5 class feature grant", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_ranger")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 5, unitId: "ranger_extra_attack" },
+      ]),
+      kind: "class",
+    });
+    expect(result.catalog.requireUnit("ranger_extra_attack")).toMatchObject({
+      acquiredAtLevel: 5,
+      className: "ranger",
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: [{ additional: 1, kind: "scale_attack_count" }],
+      },
+    });
+  });
+
   test("installs Find Familiar with catalog-backed familiar form references", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
