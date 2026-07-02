@@ -361,7 +361,7 @@
     {
       "number": 60,
       "id": "L12-SH60-REMAINING-BATCH-SPLIT-2",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Split the next remaining L1/L2 source harness groups"
     }
   ]
@@ -622,7 +622,7 @@ Reviewer-loop convergence:
 | 57 | L12-SH57-BATTLE-SPELL-ENTANGLE - Add the Entangle battle-spell SDK group | done | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | battle-spell-sdk | Entangle resolves once through battle behavior and preserves class spell-access evidence for two access rows. |
 | 58 | L12-SH58-CLOSURE-COMPREHEND-LANGUAGES - Close the Comprehend Languages spell-effect owner review group | done | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH40-REMAINING-BATCH-SPLIT | spell-effect-owner-review | Comprehend Languages spell-list pressure rows receive closure evidence or concrete future owner tasks. |
 | 59 | L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE - Close the level-2 class table summary family | done | L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE, L12-SH40-REMAINING-BATCH-SPLIT | explicit-closure | Level-2 class table summary rows receive explicit non-runtime/table-summary closure evidence. |
-| 60 | L12-SH60-REMAINING-BATCH-SPLIT-2 - Split the next remaining L1/L2 source harness groups | blocked | L12-SH44-BUILD-SHEET-FIGHTER, L12-SH45-BUILD-SHEET-MONK, L12-SH46-BUILD-BATTLE-DRUID, L12-SH47-BUILD-BATTLE-FIGHTER, L12-SH48-CREATION-DRUID-PRIMAL-ORDER, L12-SH49-CREATION-FIGHTER-FIGHTING-STYLE, L12-SH50-SPELL-ACCESS-DRUID, L12-SH51-SPELL-ACCESS-PALADIN, L12-SH52-SHEET-PALADIN-LAY-ON-HANDS, L12-SH53-SHEET-WIZARD-ARCANE-RECOVERY, L12-SH54-BATTLE-FEATURE-FIGHTER-ACTION-SURGE, L12-SH55-BATTLE-FEATURE-ROGUE-CUNNING-ACTION, L12-SH56-BATTLE-SPELL-COMMAND, L12-SH57-BATTLE-SPELL-ENTANGLE, L12-SH58-CLOSURE-COMPREHEND-LANGUAGES, L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE | planning | Recompute remaining groups after Tasks 44-59 and add the following one-session batch. |
+| 60 | L12-SH60-REMAINING-BATCH-SPLIT-2 - Split the next remaining L1/L2 source harness groups | ready-for-research | L12-SH44-BUILD-SHEET-FIGHTER, L12-SH45-BUILD-SHEET-MONK, L12-SH46-BUILD-BATTLE-DRUID, L12-SH47-BUILD-BATTLE-FIGHTER, L12-SH48-CREATION-DRUID-PRIMAL-ORDER, L12-SH49-CREATION-FIGHTER-FIGHTING-STYLE, L12-SH50-SPELL-ACCESS-DRUID, L12-SH51-SPELL-ACCESS-PALADIN, L12-SH52-SHEET-PALADIN-LAY-ON-HANDS, L12-SH53-SHEET-WIZARD-ARCANE-RECOVERY, L12-SH54-BATTLE-FEATURE-FIGHTER-ACTION-SURGE, L12-SH55-BATTLE-FEATURE-ROGUE-CUNNING-ACTION, L12-SH56-BATTLE-SPELL-COMMAND, L12-SH57-BATTLE-SPELL-ENTANGLE, L12-SH58-CLOSURE-COMPREHEND-LANGUAGES, L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE | planning | Recompute remaining groups after Tasks 44-59 and add the following one-session batch. |
 
 ## Task Details
 
@@ -3339,7 +3339,7 @@ Plan Impact:
 
 ### Task 60 - L12-SH60-REMAINING-BATCH-SPLIT-2
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
