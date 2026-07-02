@@ -361,8 +361,32 @@
     {
       "number": 60,
       "id": "L12-SH60-REMAINING-BATCH-SPLIT-2",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split the next remaining L1/L2 source harness groups"
+    },
+    {
+      "number": 61,
+      "id": "L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE",
+      "status": "ready-for-research",
+      "title": "Reconcile Rogue Second-Story Work owner evidence"
+    },
+    {
+      "number": 62,
+      "id": "L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE",
+      "status": "ready-for-research",
+      "title": "Promote Gaseous Form mist-cloud state admission"
+    },
+    {
+      "number": 63,
+      "id": "L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES",
+      "status": "blocked",
+      "title": "Promote Gaseous Form movement and passive projections"
+    },
+    {
+      "number": 64,
+      "id": "L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP",
+      "status": "blocked",
+      "title": "Promote Gaseous Form restrictions and cleanup"
     }
   ]
 }
@@ -418,9 +442,11 @@ stable.
 
 ## Denominator Snapshot
 
-The current L1/L2 source harness denominator comes from
+The original Task 1 L1/L2 source harness baseline came from
 `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`, filtered to
-`level-1`, `level-2`, `spell-level-0`, and `spell-level-1`.
+`level-1`, `level-2`, `spell-level-0`, and `spell-level-1`. These baseline
+counts are preserved for campaign history; they are not the current generated
+grouping after Tasks 1-60.
 
 | Metric | Count |
 | --- | ---: |
@@ -433,7 +459,20 @@ The current L1/L2 source harness denominator comes from
 | `closure-review-needed` rows | 69 |
 | `table-only-closure-needed` rows | 2 |
 
-Campaign assignment by lane:
+Post-Task-60, the current generated L1/L2 grouping still assigns all 400 rows,
+but several rows have moved into seed or explicit-closure-present families as
+source evidence landed:
+
+| Current generated family | Rows | Groups | Disposition |
+| --- | ---: | ---: | --- |
+| source-row | 154 | 67 | `sdk-scenario-needed` |
+| seed-row | 151 | 99 | `seed-scenario-present` |
+| closed-explicit-closure-row | 24 | 24 | `explicit-closure-present` |
+| explicit-closure-row | 0 | 0 | `explicit-closure-needed` |
+| closure-review-row | 67 | 20 | `closure-review-needed` |
+| table-only-closure-row | 4 | 2 | `table-only-closure-needed` |
+
+Original campaign assignment by lane:
 
 | Lane | Rows | Groups | Disposition | Initial owner in this plan |
 | --- | ---: | ---: | --- | --- |
@@ -451,15 +490,17 @@ Campaign assignment by lane:
 | spell-effect-owner-review | 69 | 21 | `closure-review-needed` | Task 13, Task 38, then Task 40 follow-ups |
 | table-only-closure | 2 | 1 | `table-only-closure-needed` | Task 13 and Task 40 follow-ups |
 
-Every L1/L2 row in the five active dispositions is assigned by the table above.
+Every original L1/L2 row in the five active baseline dispositions is assigned
+by the table above.
 After Tasks 5-14 and 17-23, the generated grouping has 80 seed-present rows
 across 73 groups. Task 15 expands the first runnable follow-up batch as Tasks
 24-39. Task 40 recomputed the post-Task-39 inventory and found 112 remaining
 needed L1/L2 groups: 78 source-scenario groups, 20 spell-effect owner-review
 groups, 12 explicit level-2 table-closure groups, and 2 table-only closure
-groups. Tasks 44-59 are the next runnable one-session batch. Task 60 preserves
-the remaining generated groups as executable planning work rather than prose
-backlog.
+groups. Tasks 44-59 were the next runnable one-session batch. Task 60
+recomputed the current generated artifacts, found no remaining L1/L2
+owner-evidence or runtime-required rows, and moved the next visible source-side
+owner-evidence work into level-3 Tasks 61-64.
 
 ## Source Artifacts
 
@@ -578,7 +619,7 @@ Reviewer-loop convergence:
 | 13 | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY - Close the first spell-effect owner review family | done | L12-SH04-GROUPING-GENERATOR-GATE | closure-review | Goodberry spell-list pressure family classified as table-only inventory/survival closure. |
 | 14 | L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS - Add the first small QNT harness pressure witness | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH04-GROUPING-GENERATOR-GATE | QNT/harness-pressure | Small deterministic source-side witness or existing obligation strengthening. |
 | 15 | L12-SH15-NEXT-BATCH-SPLIT - Expand the next one-session task batches | done | L12-SH03-SEED-MIGRATION-AUDIT, L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH08-SHEET-SDK-FIRST-SLICE, L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH10-BATTLE-FEATURE-FIRST-SLICE, L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH12-MULTI-OWNER-FIRST-SLICE, L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH14-QNT-HARNESS-PRESSURE-FIRST-WITNESS, L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE, L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION, L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND, L12-SH20-SEED-MIGRATE-MONK-MARTIAL-ARTS, L12-SH21-SEED-MIGRATE-ROGUE-SNEAK-ATTACK, L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY, L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS | planning | Added Tasks 24-39 as the next runnable batch and Task 40 as the remaining-group splitter. |
-| 16 | L12-SH16-CLEANROOM-GATE-PLAN - Prepare the later cleanroom replay gate | blocked | L12-SH60-REMAINING-BATCH-SPLIT-2 | later cleanroom gate | Cleanroom replay gate remains behind source-side stabilization because the current L1/L2 inventory still has unresolved source scenario and closure groups. |
+| 16 | L12-SH16-CLEANROOM-GATE-PLAN - Prepare the later cleanroom replay gate | blocked | L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE, L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE, L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES, L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP | later cleanroom gate | Cleanroom replay gate remains behind the newly visible level-3 source-side owner-evidence follow-ups. |
 | 17 | L12-SH17-SEED-MIGRATE-BARBARIAN-RAGE - Migrate the Barbarian Rage seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `barbarian_rage` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 18 | L12-SH18-SEED-MIGRATE-BARDIC-INSPIRATION - Migrate the Bardic Inspiration seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `bard_bardic_inspiration` seed uses legal creation and remains a real sheet/battle handoff scenario. |
 | 19 | L12-SH19-SEED-MIGRATE-FIGHTER-SECOND-WIND - Migrate the Fighter Second Wind seed to legal source creation | done | L12-SH02-LEGAL-FIXTURE-SEAM, L12-SH03-SEED-MIGRATION-AUDIT | seed-present | `fighter_second_wind` seed uses legal creation and remains a real sheet/battle handoff scenario. |
@@ -622,7 +663,11 @@ Reviewer-loop convergence:
 | 57 | L12-SH57-BATTLE-SPELL-ENTANGLE - Add the Entangle battle-spell SDK group | done | L12-SH11-BATTLE-SPELL-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | battle-spell-sdk | Entangle resolves once through battle behavior and preserves class spell-access evidence for two access rows. |
 | 58 | L12-SH58-CLOSURE-COMPREHEND-LANGUAGES - Close the Comprehend Languages spell-effect owner review group | done | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH40-REMAINING-BATCH-SPLIT | spell-effect-owner-review | Comprehend Languages spell-list pressure rows receive closure evidence or concrete future owner tasks. |
 | 59 | L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE - Close the level-2 class table summary family | done | L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE, L12-SH40-REMAINING-BATCH-SPLIT | explicit-closure | Level-2 class table summary rows receive explicit non-runtime/table-summary closure evidence. |
-| 60 | L12-SH60-REMAINING-BATCH-SPLIT-2 - Split the next remaining L1/L2 source harness groups | ready-for-research | L12-SH44-BUILD-SHEET-FIGHTER, L12-SH45-BUILD-SHEET-MONK, L12-SH46-BUILD-BATTLE-DRUID, L12-SH47-BUILD-BATTLE-FIGHTER, L12-SH48-CREATION-DRUID-PRIMAL-ORDER, L12-SH49-CREATION-FIGHTER-FIGHTING-STYLE, L12-SH50-SPELL-ACCESS-DRUID, L12-SH51-SPELL-ACCESS-PALADIN, L12-SH52-SHEET-PALADIN-LAY-ON-HANDS, L12-SH53-SHEET-WIZARD-ARCANE-RECOVERY, L12-SH54-BATTLE-FEATURE-FIGHTER-ACTION-SURGE, L12-SH55-BATTLE-FEATURE-ROGUE-CUNNING-ACTION, L12-SH56-BATTLE-SPELL-COMMAND, L12-SH57-BATTLE-SPELL-ENTANGLE, L12-SH58-CLOSURE-COMPREHEND-LANGUAGES, L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE | planning | Recompute remaining groups after Tasks 44-59 and add the following one-session batch. |
+| 60 | L12-SH60-REMAINING-BATCH-SPLIT-2 - Split the next remaining L1/L2 source harness groups | done | L12-SH44-BUILD-SHEET-FIGHTER, L12-SH45-BUILD-SHEET-MONK, L12-SH46-BUILD-BATTLE-DRUID, L12-SH47-BUILD-BATTLE-FIGHTER, L12-SH48-CREATION-DRUID-PRIMAL-ORDER, L12-SH49-CREATION-FIGHTER-FIGHTING-STYLE, L12-SH50-SPELL-ACCESS-DRUID, L12-SH51-SPELL-ACCESS-PALADIN, L12-SH52-SHEET-PALADIN-LAY-ON-HANDS, L12-SH53-SHEET-WIZARD-ARCANE-RECOVERY, L12-SH54-BATTLE-FEATURE-FIGHTER-ACTION-SURGE, L12-SH55-BATTLE-FEATURE-ROGUE-CUNNING-ACTION, L12-SH56-BATTLE-SPELL-COMMAND, L12-SH57-BATTLE-SPELL-ENTANGLE, L12-SH58-CLOSURE-COMPREHEND-LANGUAGES, L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE | planning | Recomputed current inventory: no L1/L2 owner-evidence or runtime-required rows remain; added level-3 follow-up Tasks 61-64. |
+| 61 | L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE - Reconcile Rogue Second-Story Work owner evidence | ready-for-research | L12-SH60-REMAINING-BATCH-SPLIT-2 | unit-profile/evidence | Reconcile Rogue Second-Story Work's supported character-sheet profile with the SDK inventory owner-evidence row. |
+| 62 | L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE - Promote Gaseous Form mist-cloud state admission | ready-for-research | L12-SH60-REMAINING-BATCH-SPLIT-2 | battle-runtime/spell-effect-owner | Add the typed mist-cloud form active-effect admission and lifecycle skeleton without authored-identity dispatch. |
+| 63 | L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES - Promote Gaseous Form movement and passive projections | blocked | L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE | battle-runtime/spell-effect-owner | Project mist-cloud movement replacement, Dash budget, Resistance, Prone Immunity, and Saving Throw Advantage from the admitted active effect. |
+| 64 | L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP - Promote Gaseous Form restrictions and cleanup | blocked | L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES | battle-runtime/spell-effect-owner | Add mist-cloud action/object/speech restrictions, self-ending, zero-Hit-Point and spell-end cleanup, and table/spatial witness handling. |
 
 ## Task Details
 
@@ -1340,9 +1385,13 @@ Status: `blocked`
 
 Blocker Type: dependency
 
-Blocker Detail: Waits for `L12-SH60-REMAINING-BATCH-SPLIT-2` and should remain
-behind source-side stabilization. The post-Task-39 inventory still has unresolved
-L1/L2 source scenario and closure groups, so cleanroom replay is premature.
+Blocker Detail: Waits for `L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE`,
+`L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE`,
+`L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES`, and
+`L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP`. Task 60 found no remaining L1/L2
+owner-evidence or runtime-required rows, but the current source-side inventory
+still has level-3 owner-evidence follow-ups that should land before cleanroom
+replay is treated as stable.
 
 Input:
 
@@ -3339,12 +3388,7 @@ Plan Impact:
 
 ### Task 60 - L12-SH60-REMAINING-BATCH-SPLIT-2
 
-Status: `ready-for-research`
-
-Blocker Type: dependency
-
-Blocker Detail: Waits for Tasks 44-59 to land, then recomputes the remaining
-L1/L2 inventory groups and creates the next one-session batch.
+Status: `done`
 
 Input:
 
@@ -3366,6 +3410,10 @@ Output:
 - Concrete Ralph tasks for the following one-session batch.
 - Updated `ralph-task-index`, DAG, and task details.
 - Status and dependency updates for tasks that become runnable.
+- Task 60 found no remaining L1/L2 rows with `owner-evidence-required`,
+  `battle-runtime-required`, or executable follow-up final dispositions. The
+  next visible source-side owner-evidence work is level-3 Rogue Second-Story
+  Work plus Gaseous Form's level-3 spell rows, now split into Tasks 61-64.
 
 Acceptance:
 
@@ -3384,7 +3432,260 @@ Validation:
 
 Plan Impact:
 
-- `applied` when the next live queue update lands.
+- `applied`; current L1/L2 battle-readiness rows are complete, Task 16 remains
+  blocked behind level-3 source-side stabilization, and Tasks 61-64 are the next
+  concrete owner-evidence follow-ups.
+
+### Task 61 - L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE
+
+Status: `ready-for-research`
+
+Input:
+
+- `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+- `plans/sdk-raw-integration/LEVEL1_5_SDK_RAW_INVENTORY.md`
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `packages/character-sheet-runtime/src/ability-checks.test.ts`
+- `.references/srd-5.2.1/Classes/Rogue.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Rogue Second-Story Work in the local SRD and the Movement, Speed, Long
+  Jump, High Jump, Ability, and Ability Check glossary entries.
+- Inspect the existing Second-Story Work character-sheet tests and unit-profile
+  claim before adding any new evidence.
+- Search for existing linked-Speed and jump-distance ability-substitution facts
+  before changing a data shape.
+
+Output:
+
+- Reconciled owner evidence for `rogue_second_story_work` so the SDK inventory
+  no longer reports `catalog-installed-owner-evidence-required` for the level-3
+  row when the existing supported character-sheet profile and deterministic
+  projection evidence are sufficient.
+- Focused character-sheet evidence update only if the existing test/evidence
+  reference is stale.
+
+Acceptance:
+
+- The task does not add duplicated Climb Speed or jump-distance values beside
+  canonical Speed and Ability Score facts.
+- The supported profile remains character-sheet-owned and does not introduce
+  battle-runtime authored-identity dispatch.
+- If the existing evidence is stale, the fix points to an actual test name
+  symbol used by `test()` or `it()`.
+
+Validation:
+
+- `pnpm unit-profile-coverage:check`
+- `pnpm sdk-raw-integration-inventory:check`
+- Focused character-sheet test only if evidence or runtime changes:
+  `pnpm --filter @dnd/character-sheet-runtime exec vitest run src/ability-checks.test.ts -t "Second-Story Work"`
+- `pnpm --filter @dnd/character-sheet-runtime typecheck` if character-sheet
+  runtime or tests change.
+- `git diff --check`
+
+Plan Impact:
+
+- `none` unless reconciliation shows the generated SDK inventory cannot consume
+  existing supported-profile evidence without a script/schema change.
+
+### Task 62 - L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE
+
+Status: `ready-for-research`
+
+Input:
+
+- Current Gaseous Form rows in
+  `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `packages/surface/content/gaseous_form.json`
+- `packages/battle-runtime/src/`
+- `packages/shared-algebras/proofs/rule-core/`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Gaseous Form and spellcasting duration/Concentration rules in the local
+  SRD.
+- Check terminology for Magic Action, Concentration, Speed, Fly Speed, hover,
+  Resistance, Immunity, Saving Throw, Hit Points, and spell end.
+- Inspect existing active Spell Effect state, self-transformation, movement, and
+  spell-end cleanup owners before adding a mist-cloud effect type.
+
+Output:
+
+- A typed mist-cloud form active-effect admission and lifecycle skeleton derived
+  from Surface procedure facts, not from spell id, spell name, or provenance.
+- Initial deterministic admission/projection evidence for the Gaseous Form Unit
+  profile subset covered by this slice.
+- Focused runtime and Quint owner updates for active-effect creation,
+  Concentration ownership, duration, target association, and spell-end identity.
+
+Acceptance:
+
+- The active-effect state makes mismatched source spell, target, duration, and
+  cleanup ownership unrepresentable at the boundary where the runtime consumes
+  it.
+- No movement replacement, passive defensive projections, action restrictions,
+  or table/spatial witnesses are silently claimed in this task; those remain in
+  Tasks 63-64.
+- Runtime support is admitted by typed Surface/effect shape rather than Gaseous
+  Form authored identity.
+
+Validation:
+
+- Focused battle-runtime tests for mist-cloud active-effect admission.
+- Relevant focused QNT owner test or proof if the owner changes.
+- `pnpm rules-kernel-coverage:check`
+- `pnpm unit-profile-coverage:check`
+- `pnpm sdk-raw-integration-inventory:check`
+- Battle MBT only if the changed owner already has a focused MBT lane and the
+  executable behavior change requires it; follow the MBT protocol in
+  `AGENTS.md`.
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if the active-effect owner must be split further before
+  movement/passive projections can consume it.
+
+### Task 63 - L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES
+
+Status: `blocked`
+
+Blocker Type: dependency
+
+Blocker Detail: Waits for `L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE` to provide a
+typed mist-cloud active-effect occurrence that movement and passive projection
+owners can consume.
+
+Input:
+
+- Output from `L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE`
+- `packages/battle-runtime/src/`
+- `packages/shared-algebras/proofs/rule-core/`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read the Gaseous Form movement and defensive-passive paragraphs in the local
+  SRD.
+- Inspect existing effective movement, Dash budget, Resistance, condition
+  Immunity, and Saving Throw roll-mode projection owners.
+- Search for existing active-effect passive projection state before adding any
+  field.
+
+Output:
+
+- Mist-cloud movement replacement: the target's only movement method becomes a
+  10-foot Fly Speed with hover, including effective movement and Dash budget
+  projections.
+- Passive projections for Bludgeoning, Piercing, and Slashing Resistance, Prone
+  Immunity, and Strength, Dexterity, and Constitution Saving Throw Advantage.
+- Focused runtime and parity evidence for those projections.
+
+Acceptance:
+
+- Movement replacement is derived from the active effect and does not duplicate
+  base Speed facts.
+- Passive projections remain generic effect projections and do not branch on
+  spell id, name, class spell list, or provenance.
+- Table/spatial occupancy, narrow-opening passage, liquid treatment, action
+  restrictions, and cleanup remain out of scope for this task.
+
+Validation:
+
+- Focused battle-runtime tests for movement and passive projections.
+- Relevant focused QNT owner test or proof if the owner changes.
+- `pnpm rules-kernel-coverage:check`
+- `pnpm unit-profile-coverage:check`
+- `pnpm sdk-raw-integration-inventory:check`
+- Battle MBT only if required by a changed focused owner; follow the MBT
+  protocol in `AGENTS.md`.
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if movement replacement or passive projection ownership must
+  split into separate runtime/QNT owners.
+
+### Task 64 - L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP
+
+Status: `blocked`
+
+Blocker Type: dependency
+
+Blocker Detail: Waits for `L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES` so final
+Gaseous Form support can build on an admitted mist-cloud occurrence with
+movement and passive projections.
+
+Input:
+
+- Output from `L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE`
+- Output from `L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES`
+- `packages/battle-runtime/src/`
+- `packages/shared-algebras/proofs/rule-core/`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Research required before editing:
+
+- Read Gaseous Form restrictions, zero-Hit-Point ending, and self-ending text in
+  the local SRD.
+- Inspect existing action discovery, spellcasting interdiction, object
+  interaction, zero-Hit-Point cleanup, and spell-end cleanup owners.
+- Identify which creature-space occupancy, narrow-opening passage, and liquid
+  treatment facts must remain caller/table-spatial witnesses.
+
+Output:
+
+- Mist-cloud restrictions for talking, object manipulation/drop/use/interaction,
+  attacks, and spellcasting.
+- Magic-action self-ending, zero-Hit-Point ending, and normal spell-end cleanup
+  for the active mist-cloud form.
+- Explicit caller/table-spatial witness handling or closure for occupying
+  another creature's space, passing narrow openings, and treating liquids as
+  solid surfaces.
+- Final Gaseous Form supported-profile or profile-subset-supported claim and SDK
+  inventory evidence for Sorcerer, Warlock, and Wizard spell-list rows.
+
+Acceptance:
+
+- Restrictions and cleanup are driven by typed active-effect state and existing
+  action/object/spell cleanup owners, not authored Gaseous Form identity.
+- Table/spatial facts are consumed as witnesses or explicitly closed; the
+  runtime does not invent duplicate map, liquid, opening, or creature-space
+  state.
+- The three Gaseous Form spell-list rows converge to accepted evidence or carry
+  a precise remaining blocker.
+
+Validation:
+
+- Focused battle-runtime tests for restrictions, self-ending, zero-Hit-Point
+  ending, and spell-end cleanup.
+- Relevant focused QNT owner test or proof if the owner changes.
+- `pnpm rules-kernel-coverage:check`
+- `pnpm unit-profile-coverage:check`
+- `pnpm sdk-raw-integration-inventory:check`
+- Battle MBT only if required by a changed focused owner; follow the MBT
+  protocol in `AGENTS.md`.
+- `git diff --check`
+
+Plan Impact:
+
+- `update-required` if table/spatial witnesses expose a missing shared
+  occupancy, narrow-passage, or liquid-surface owner that must become a separate
+  task.
 
 ## Verification Matrix
 
@@ -3410,10 +3711,11 @@ with non-mutating checks:
 - Confirm every task has Input, Output, Acceptance, Validation, and Plan Impact
   sections.
 - Confirm no task is blocked without `Blocker Type` and `Blocker Detail`.
-- Confirm the denominator table assigns all 400 L1/L2 rows:
-  - 225 `sdk-scenario-needed`
-  - 80 `seed-scenario-present`
-  - 24 `explicit-closure-needed`
-  - 69 `closure-review-needed`
-  - 2 `table-only-closure-needed`
+- Confirm the post-Task-60 generated grouping assigns all 400 L1/L2 rows:
+  - 154 `sdk-scenario-needed`
+  - 151 `seed-scenario-present`
+  - 24 `explicit-closure-present`
+  - 0 `explicit-closure-needed`
+  - 67 `closure-review-needed`
+  - 4 `table-only-closure-needed`
 - Run `git diff --check`.
