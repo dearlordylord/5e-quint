@@ -2733,16 +2733,43 @@ function expectFailure(
 }
 
 function assertHarnessTemplatesMentionRequiredGates() {
-  const scaffoldTaskRoot = path.join(
-    __dirname,
-    "../plans/cleanroom-scaffolds/tasks",
+  const candidates = [
+    {
+      root: path.join(__dirname, "../plans/cleanroom-scaffolds/tasks"),
+      reviewFiles: [
+        "REVIEWER_CHECKLIST.template.md",
+        "REVIEW_LOOP.example.template.json",
+      ],
+      deciderFiles: [
+        "DECIDER_CHECKLIST.template.md",
+        "DECIDER_DECISION.example.template.json",
+      ],
+    },
+    {
+      root: path.join(__dirname, "../tasks"),
+      reviewFiles: ["REVIEWER_CHECKLIST.md", "REVIEW_LOOP.example.json"],
+      deciderFiles: ["DECIDER_CHECKLIST.md", "DECIDER_DECISION.example.json"],
+    },
+    {
+      root: path.join(process.cwd(), "tasks"),
+      reviewFiles: ["REVIEWER_CHECKLIST.md", "REVIEW_LOOP.example.json"],
+      deciderFiles: ["DECIDER_CHECKLIST.md", "DECIDER_DECISION.example.json"],
+    },
+  ];
+  const gateFiles = candidates.find((candidate) =>
+    [...candidate.reviewFiles, ...candidate.deciderFiles].every((fileName) =>
+      fs.existsSync(path.join(candidate.root, fileName)),
+    ),
   );
-  const reviewTemplates = [
-    "REVIEWER_CHECKLIST.template.md",
-    "REVIEW_LOOP.example.template.json",
-  ]
+  if (gateFiles === undefined) {
+    throw new Error(
+      "cleanroom harness self-test could not find source scaffold templates " +
+        "or rendered target task files.",
+    );
+  }
+  const reviewTemplates = gateFiles.reviewFiles
     .map((fileName) =>
-      fs.readFileSync(path.join(scaffoldTaskRoot, fileName), "utf8"),
+      fs.readFileSync(path.join(gateFiles.root, fileName), "utf8"),
     )
     .join("\n");
   for (const checklist of requiredReviewChecklists) {
@@ -2750,12 +2777,9 @@ function assertHarnessTemplatesMentionRequiredGates() {
       throw new Error(`review templates omit checklist ${checklist}.`);
     }
   }
-  const deciderTemplates = [
-    "DECIDER_CHECKLIST.template.md",
-    "DECIDER_DECISION.example.template.json",
-  ]
+  const deciderTemplates = gateFiles.deciderFiles
     .map((fileName) =>
-      fs.readFileSync(path.join(scaffoldTaskRoot, fileName), "utf8"),
+      fs.readFileSync(path.join(gateFiles.root, fileName), "utf8"),
     )
     .join("\n");
   for (const gate of requiredDeciderGates) {
