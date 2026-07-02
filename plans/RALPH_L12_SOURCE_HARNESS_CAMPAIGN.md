@@ -367,7 +367,7 @@
     {
       "number": 61,
       "id": "L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile Rogue Second-Story Work owner evidence"
     },
     {
@@ -664,7 +664,7 @@ Reviewer-loop convergence:
 | 58 | L12-SH58-CLOSURE-COMPREHEND-LANGUAGES - Close the Comprehend Languages spell-effect owner review group | done | L12-SH13-CLOSURE-REVIEW-FIRST-FAMILY, L12-SH40-REMAINING-BATCH-SPLIT | spell-effect-owner-review | Comprehend Languages spell-list pressure rows receive closure evidence or concrete future owner tasks. |
 | 59 | L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE - Close the level-2 class table summary family | done | L12-SH37-CLASS-TABLE-LEVEL1-CLOSURE, L12-SH40-REMAINING-BATCH-SPLIT | explicit-closure | Level-2 class table summary rows receive explicit non-runtime/table-summary closure evidence. |
 | 60 | L12-SH60-REMAINING-BATCH-SPLIT-2 - Split the next remaining L1/L2 source harness groups | done | L12-SH44-BUILD-SHEET-FIGHTER, L12-SH45-BUILD-SHEET-MONK, L12-SH46-BUILD-BATTLE-DRUID, L12-SH47-BUILD-BATTLE-FIGHTER, L12-SH48-CREATION-DRUID-PRIMAL-ORDER, L12-SH49-CREATION-FIGHTER-FIGHTING-STYLE, L12-SH50-SPELL-ACCESS-DRUID, L12-SH51-SPELL-ACCESS-PALADIN, L12-SH52-SHEET-PALADIN-LAY-ON-HANDS, L12-SH53-SHEET-WIZARD-ARCANE-RECOVERY, L12-SH54-BATTLE-FEATURE-FIGHTER-ACTION-SURGE, L12-SH55-BATTLE-FEATURE-ROGUE-CUNNING-ACTION, L12-SH56-BATTLE-SPELL-COMMAND, L12-SH57-BATTLE-SPELL-ENTANGLE, L12-SH58-CLOSURE-COMPREHEND-LANGUAGES, L12-SH59-CLASS-TABLE-LEVEL2-CLOSURE | planning | Recomputed current inventory: no L1/L2 owner-evidence or runtime-required rows remain; added level-3 follow-up Tasks 61-64. |
-| 61 | L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE - Reconcile Rogue Second-Story Work owner evidence | ready-for-research | L12-SH60-REMAINING-BATCH-SPLIT-2 | unit-profile/evidence | Reconcile Rogue Second-Story Work's supported character-sheet profile with the SDK inventory owner-evidence row. |
+| 61 | L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE - Reconcile Rogue Second-Story Work owner evidence | done | L12-SH60-REMAINING-BATCH-SPLIT-2 | unit-profile/evidence | Reconcile Rogue Second-Story Work's supported character-sheet profile with the SDK inventory owner-evidence row. |
 | 62 | L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE - Promote Gaseous Form mist-cloud state admission | ready-for-research | L12-SH60-REMAINING-BATCH-SPLIT-2 | battle-runtime/spell-effect-owner | Add the typed mist-cloud form active-effect admission and lifecycle skeleton without authored-identity dispatch. |
 | 63 | L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES - Promote Gaseous Form movement and passive projections | blocked | L12-SH62-GASEOUS-FORM-MIST-CLOUD-STATE | battle-runtime/spell-effect-owner | Project mist-cloud movement replacement, Dash budget, Resistance, Prone Immunity, and Saving Throw Advantage from the admitted active effect. |
 | 64 | L12-SH64-GASEOUS-FORM-RESTRICTIONS-CLEANUP - Promote Gaseous Form restrictions and cleanup | blocked | L12-SH63-GASEOUS-FORM-MOVEMENT-PASSIVES | battle-runtime/spell-effect-owner | Add mist-cloud action/object/speech restrictions, self-ending, zero-Hit-Point and spell-end cleanup, and table/spatial witness handling. |
@@ -3438,7 +3438,7 @@ Plan Impact:
 
 ### Task 61 - L12-SH61-SECOND-STORY-WORK-OWNER-EVIDENCE
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 
