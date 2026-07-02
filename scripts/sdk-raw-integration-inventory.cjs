@@ -106,7 +106,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 209;
-const expectedLevelOneTwoSeedScenarioRows = 97;
+const expectedLevelOneTwoSeedScenarioRows = 106;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -712,12 +712,173 @@ const clericMulticlassBuildSheetScenarioRows = [
   ...row,
 }));
 
+const druidBuildSheetScenarioLabel =
+  "level1-sdk-raw-integration: Druid build-sheet projection derives level-1 class facts from legal creation and a fresh sheet";
+const druidBuildSheetScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-druid-build-sheet"',
+  "druidBuildSheetDraftPlan",
+  'battle: { tag: "withoutBattle" }',
+  "fixture.sheet.build",
+  "readClassCreationFacts(",
+  "characterBuildUnitRefs(",
+  "primaryAbilities",
+  "characterBuildHitPoints(",
+  ".hitDice",
+  "characterBuildProficiencies(",
+  "savingThrowProficiencies",
+  "proficiencyChoices",
+  "toolProficiencies",
+  "proficiencies.tools",
+  "weaponProficiencies",
+  "characterBuildArmorTraining(",
+  "armorTraining",
+];
+const druidBuildSheetScenarioHelperNeedles = [
+  {
+    anchor: "const druidBuildSheetDraftPlan =",
+    needles: [
+      'classUnitId: "class_druid"',
+      "level: 1",
+      '"class_skill_proficiency_choice"',
+      '"class_cantrip_choices"',
+      "...druidBuildSheetCantrips",
+      '"class_prepared_spell_choices"',
+      "...druidBuildSheetPreparedSpells",
+      '"druid_primal_order"',
+      '"primal_order"',
+      '"magician"',
+      'legalUnitChoice("class_druid", "class_equipment_choice", "option_b")',
+      'legalUnitChoice("class_druid", "equipment_purchase", "weapon_dagger")',
+      'legalLoadoutChoice("weapon_dagger", "weapon", "wielded_one_handed")',
+    ],
+  },
+];
+const druidBuildSheetScenarioRows = [
+  {
+    rowId:
+      "srd521:classes/druid:level-1:class-container:druid_class_container",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:3"],
+  },
+  {
+    rowId:
+      "srd521:classes/druid:level-1:core-trait:druid_armor_training",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:13"],
+  },
+  {
+    rowId:
+      "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:8"],
+  },
+  {
+    rowId:
+      "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:7"],
+  },
+  {
+    rowId:
+      "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:9"],
+  },
+  {
+    rowId:
+      "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:10"],
+  },
+  {
+    rowId:
+      "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:12"],
+  },
+  {
+    rowId:
+      "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:11"],
+  },
+].map((row) => ({
+  candidateUnitId: "class_druid",
+  className: "Druid",
+  levelBand: "level-1",
+  label: druidBuildSheetScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: "legal-build-sheet-owner",
+  tracerNeedles: druidBuildSheetScenarioNeedles,
+  helperNeedles: druidBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
+
+const druidMulticlassBuildSheetScenarioLabel =
+  "level1-sdk-raw-integration: Druid multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet";
+const druidMulticlassBuildSheetScenarioNeedles = [
+  "finalizedFighterToDruidMulticlassBuild()",
+  "createLegalSourceCharacterSheet({",
+  'characterIdText: "character:l1-sdk-druid-multiclass-build-sheet"',
+  "druidMulticlassProgression",
+  "readClassCreationFacts(",
+  "characterBuildHitPoints(",
+  ".hitDice",
+  "characterBuildProficiencies(",
+  "savingThrowProficiencies",
+  "proficiencies.tools",
+  "characterBuildArmorTraining(",
+  "armorTraining",
+  "multiclassProficiencies",
+];
+const druidMulticlassBuildSheetScenarioHelperNeedles = [
+  {
+    anchor: "const druidMulticlassProgression =",
+    needles: [
+      'startingClass: classUnitId("class_fighter")',
+      'classUnitId: classUnitId("class_druid")',
+      'hitPointRule: { tag: "fixedHigherLevelGain" }',
+    ],
+  },
+  {
+    anchor: "function finalizedFighterToDruidMulticlassBuild():",
+    needles: [
+      "createCharacterDraft({",
+      'draftId: characterDraftId("draft:l1-sdk-druid-multiclass-build-sheet")',
+      "progressionOptionId(druidMulticlassProgression)",
+      '"class_fighter"',
+      '"fighter_fighting_style"',
+      '"fighter_weapon_mastery"',
+      '"druid_primal_order"',
+      '"primal_order"',
+      '"magician"',
+      '"class_cantrip_choices"',
+      '"guidance"',
+      "testLoadoutHoleId(\"weapon_longsword\", \"weapon\")",
+      "const result = finalizeCharacterDraft({ draft: afterLoadout, unitLibrary });",
+      "return { draft: afterLoadout, build: result.build };",
+    ],
+  },
+];
+const druidMulticlassBuildSheetScenarioRows = [
+  {
+    rowId:
+      "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:23-27"],
+  },
+].map((row) => ({
+  candidateUnitId: "class_druid",
+  className: "Druid",
+  levelBand: "level-1",
+  label: druidMulticlassBuildSheetScenarioLabel,
+  path: barbarianBuildSheetScenarioPath,
+  sourceProof: "legal-build-sheet-owner",
+  tracerNeedles: druidMulticlassBuildSheetScenarioNeedles,
+  helperNeedles: druidMulticlassBuildSheetScenarioHelperNeedles,
+  ...row,
+}));
+
 const seededSdkScenarioRows = [
   ...barbarianBuildSheetScenarioRows,
   ...bardBuildSheetScenarioRows,
   ...bardMulticlassBuildSheetScenarioRows,
   ...clericBuildSheetScenarioRows,
   ...clericMulticlassBuildSheetScenarioRows,
+  ...druidBuildSheetScenarioRows,
+  ...druidMulticlassBuildSheetScenarioRows,
   ...barbarianBuildBattleScenarioRows,
   {
     candidateUnitId: "barbarian_unarmored_defense",
