@@ -1241,7 +1241,7 @@
       "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -1249,11 +1249,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tongues",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 233,
         "lineStart": 233,
@@ -1270,7 +1270,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -2334,7 +2334,7 @@
       "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -2342,11 +2342,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_tongues",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 221,
         "lineStart": 221,
@@ -2363,7 +2363,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -5124,7 +5124,7 @@
       "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -5132,11 +5132,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_tongues",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 317,
         "lineStart": 317,
@@ -5153,7 +5153,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -5886,7 +5886,7 @@
       "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -5894,11 +5894,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_tongues",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 389,
         "lineStart": 389,
@@ -5915,7 +5915,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -7507,7 +7507,7 @@
       "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -7515,11 +7515,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tongues",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 263,
         "lineStart": 263,
@@ -7536,7 +7536,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -13033,133 +13033,6 @@
     },
     {
       "candidateUnitIds": [
-        "tongues"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Sorcerer",
-        "Warlock",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:tongues",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"tongues\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:233",
-        ".references/srd-5.2.1/Classes/Cleric.md:221",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:317",
-        ".references/srd-5.2.1/Classes/Warlock.md:389",
-        ".references/srd-5.2.1/Classes/Wizard.md:263"
-      ],
-      "rowCount": 5,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "tongues",
-          "className": "Bard",
-          "concept": "Bard spell list Tongues",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tongues",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 233,
-            "lineStart": 233,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "tongues",
-          "className": "Cleric",
-          "concept": "Cleric spell list Tongues",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_tongues",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 221,
-            "lineStart": 221,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "tongues",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Tongues",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_tongues",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 317,
-            "lineStart": 317,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "tongues",
-          "className": "Warlock",
-          "concept": "Warlock spell list Tongues",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_tongues",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 389,
-            "lineStart": 389,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "candidateUnitId": "tongues",
-          "className": "Wizard",
-          "concept": "Wizard spell list Tongues",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tongues",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 263,
-            "lineStart": 263,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Tongues",
-        "Cleric spell list Tongues",
-        "Sorcerer spell list Tongues",
-        "Warlock spell list Tongues",
-        "Wizard spell list Tongues"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "water_breathing"
       ],
       "categories": [
@@ -13624,6 +13497,133 @@
         "Bard spell list Speak with Dead",
         "Cleric spell list Speak with Dead",
         "Wizard spell list Speak with Dead"
+      ],
+      "sdkInventoryDispositions": [
+        "table-only-closure-needed"
+      ],
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "tongues"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Cleric",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:table-only-closure:tongues",
+      "lane": "table-only-closure",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "table-only-closure"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"table-only-closure\",\"tongues\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:233",
+        ".references/srd-5.2.1/Classes/Cleric.md:221",
+        ".references/srd-5.2.1/Classes/Sorcerer.md:317",
+        ".references/srd-5.2.1/Classes/Warlock.md:389",
+        ".references/srd-5.2.1/Classes/Wizard.md:263"
+      ],
+      "rowCount": 5,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "tongues",
+          "className": "Bard",
+          "concept": "Bard spell list Tongues",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tongues",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 233,
+            "lineStart": 233,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "tongues",
+          "className": "Cleric",
+          "concept": "Cleric spell list Tongues",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_tongues",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 221,
+            "lineStart": 221,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "candidateUnitId": "tongues",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Tongues",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_tongues",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 317,
+            "lineStart": 317,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "candidateUnitId": "tongues",
+          "className": "Warlock",
+          "concept": "Warlock spell list Tongues",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_tongues",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 389,
+            "lineStart": 389,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "candidateUnitId": "tongues",
+          "className": "Wizard",
+          "concept": "Wizard spell list Tongues",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tongues",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 263,
+            "lineStart": 263,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Tongues",
+        "Cleric spell list Tongues",
+        "Sorcerer spell list Tongues",
+        "Warlock spell list Tongues",
+        "Wizard spell list Tongues"
       ],
       "sdkInventoryDispositions": [
         "table-only-closure-needed"
@@ -19672,7 +19672,7 @@
       "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -19680,11 +19680,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tongues",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 233,
         "lineStart": 233,
@@ -19701,7 +19701,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -23717,7 +23717,7 @@
       "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -23725,11 +23725,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_tongues",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 221,
         "lineStart": 221,
@@ -23746,7 +23746,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -42331,7 +42331,7 @@
       "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -42339,11 +42339,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_tongues",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 317,
         "lineStart": 317,
@@ -42360,7 +42360,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -45404,7 +45404,7 @@
       "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -45412,11 +45412,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_tongues",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 389,
         "lineStart": 389,
@@ -45433,7 +45433,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -51888,7 +51888,7 @@
       "nextAction": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
       "ownerBoundaryEvidence": {
         "closure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -51896,11 +51896,11 @@
         },
         "source": "battle-readiness-closure"
       },
-      "ownerBoundaryStatus": "unresolved-review",
-      "proposedOwnerBoundary": "spell-effect-owner-review",
+      "ownerBoundaryStatus": "resolved",
+      "proposedOwnerBoundary": "table-only-closure",
       "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tongues",
       "rowKind": "spell-unit-pressure",
-      "sdkInventoryDisposition": "closure-review-needed",
+      "sdkInventoryDisposition": "table-only-closure-needed",
       "source": {
         "lineEnd": 263,
         "lineStart": 263,
@@ -51917,7 +51917,7 @@
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell.",
           "source": "unit-claim",
@@ -57905,20 +57905,20 @@
       "character-battle-to-battle": 46,
       "character-sheet": 1,
       "future-runtime-owner-before-sdk": 58,
-      "spell-effect-owner-review": 11,
-      "table-only-closure": 10
+      "spell-effect-owner-review": 6,
+      "table-only-closure": 15
     },
     "level5CompletionRowsByOwnerBoundaryStatus": {
-      "resolved": 127,
-      "unresolved-review": 11
+      "resolved": 132,
+      "unresolved-review": 6
     },
     "level5CompletionRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 11,
+      "closure-review-needed": 6,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 58,
       "sdk-scenario-needed": 2,
       "seed-scenario-present": 45,
-      "table-only-closure-needed": 10
+      "table-only-closure-needed": 15
     },
     "level5ScenarioGroups": 94,
     "level5ScenarioGroupsByLane": {
@@ -57926,8 +57926,8 @@
       "explicit-closure": 12,
       "future-owner-before-sdk": 30,
       "seed-present": 45,
-      "spell-effect-owner-review": 3,
-      "table-only-closure": 3
+      "spell-effect-owner-review": 2,
+      "table-only-closure": 4
     },
     "level5SeedScenarioRows": 45,
     "levelOneFiveMinedRows": 770,
@@ -57953,12 +57953,12 @@
       "class-feature-closure-review": 2,
       "future-runtime-owner-before-sdk": 60,
       "multi-owner-sdk-split": 10,
-      "spell-effect-owner-review": 117,
-      "table-only-closure": 21
+      "spell-effect-owner-review": 112,
+      "table-only-closure": 26
     },
     "levelOneFiveRowsByOwnerBoundaryStatus": {
-      "resolved": 651,
-      "unresolved-review": 119
+      "resolved": 656,
+      "unresolved-review": 114
     },
     "levelOneFiveRowsByRowKind": {
       "class-container": 12,
@@ -57974,13 +57974,13 @@
       "subclass-spell-access": 5
     },
     "levelOneFiveRowsBySdkInventoryDisposition": {
-      "closure-review-needed": 119,
+      "closure-review-needed": 114,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
       "future-owner-before-sdk": 60,
       "sdk-scenario-needed": 401,
       "seed-scenario-present": 109,
-      "table-only-closure-needed": 21
+      "table-only-closure-needed": 26
     },
     "levelOneFourRows": 632,
     "scenarioGroups": 433,
@@ -57997,8 +57997,8 @@
       "multi-owner-feature-sdk": 9,
       "seed-present": 109,
       "sheet-spell-access-sdk": 12,
-      "spell-effect-owner-review": 37,
-      "table-only-closure": 7
+      "spell-effect-owner-review": 36,
+      "table-only-closure": 8
     },
     "scenarioGroupsByTask": {
       "L15-SDK-RAW-03": 174,
@@ -87387,133 +87387,6 @@
     },
     {
       "candidateUnitIds": [
-        "tongues"
-      ],
-      "categories": [
-        "spell Unit pressure"
-      ],
-      "classNames": [
-        "Bard",
-        "Cleric",
-        "Sorcerer",
-        "Warlock",
-        "Wizard"
-      ],
-      "groupId": "l15-sdk-raw-07:spell-effect-owner-review:tongues",
-      "lane": "spell-effect-owner-review",
-      "levelBands": [
-        "spell-level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "unresolved-review"
-      ],
-      "proposedOwnerBoundaries": [
-        "spell-effect-owner-review"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"spell-effect-owner-review\",\"tongues\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Bard.md:233",
-        ".references/srd-5.2.1/Classes/Cleric.md:221",
-        ".references/srd-5.2.1/Classes/Sorcerer.md:317",
-        ".references/srd-5.2.1/Classes/Warlock.md:389",
-        ".references/srd-5.2.1/Classes/Wizard.md:263"
-      ],
-      "rowCount": 5,
-      "rowKinds": [
-        "spell-unit-pressure"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "tongues",
-          "className": "Bard",
-          "concept": "Bard spell list Tongues",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tongues",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 233,
-            "lineStart": 233,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "candidateUnitId": "tongues",
-          "className": "Cleric",
-          "concept": "Cleric spell list Tongues",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_tongues",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 221,
-            "lineStart": 221,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "candidateUnitId": "tongues",
-          "className": "Sorcerer",
-          "concept": "Sorcerer spell list Tongues",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_tongues",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 317,
-            "lineStart": 317,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "candidateUnitId": "tongues",
-          "className": "Warlock",
-          "concept": "Warlock spell list Tongues",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_tongues",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 389,
-            "lineStart": 389,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "candidateUnitId": "tongues",
-          "className": "Wizard",
-          "concept": "Wizard spell list Tongues",
-          "levelBand": "spell-level-3",
-          "ownerBoundaryStatus": "unresolved-review",
-          "proposedOwnerBoundary": "spell-effect-owner-review",
-          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tongues",
-          "sdkInventoryDisposition": "closure-review-needed",
-          "source": {
-            "lineEnd": 263,
-            "lineStart": 263,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Bard spell list Tongues",
-        "Cleric spell list Tongues",
-        "Sorcerer spell list Tongues",
-        "Warlock spell list Tongues",
-        "Wizard spell list Tongues"
-      ],
-      "sdkInventoryDispositions": [
-        "closure-review-needed"
-      ],
-      "suggestedScenario": "Resolve the missing or unfamiliar spell closure evidence before implementation; do not infer table-only or future-owner status from prose alone.",
-      "taskId": "L15-SDK-RAW-07"
-    },
-    {
-      "candidateUnitIds": [
         "water_breathing"
       ],
       "categories": [
@@ -87978,6 +87851,133 @@
         "Bard spell list Speak with Dead",
         "Cleric spell list Speak with Dead",
         "Wizard spell list Speak with Dead"
+      ],
+      "sdkInventoryDispositions": [
+        "table-only-closure-needed"
+      ],
+      "suggestedScenario": "Add or retain an explicit SDK-scope closure assertion tied to the local RAW anchor and recorded table-only closure evidence.",
+      "taskId": "L15-SDK-RAW-07"
+    },
+    {
+      "candidateUnitIds": [
+        "tongues"
+      ],
+      "categories": [
+        "spell Unit pressure"
+      ],
+      "classNames": [
+        "Bard",
+        "Cleric",
+        "Sorcerer",
+        "Warlock",
+        "Wizard"
+      ],
+      "groupId": "l15-sdk-raw-07:table-only-closure:tongues",
+      "lane": "table-only-closure",
+      "levelBands": [
+        "spell-level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "table-only-closure"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-07\",\"table-only-closure\",\"tongues\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Bard.md:233",
+        ".references/srd-5.2.1/Classes/Cleric.md:221",
+        ".references/srd-5.2.1/Classes/Sorcerer.md:317",
+        ".references/srd-5.2.1/Classes/Warlock.md:389",
+        ".references/srd-5.2.1/Classes/Wizard.md:263"
+      ],
+      "rowCount": 5,
+      "rowKinds": [
+        "spell-unit-pressure"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "tongues",
+          "className": "Bard",
+          "concept": "Bard spell list Tongues",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/bard:spell-level-3:spell-unit-pressure:bard_spell_list_tongues",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 233,
+            "lineStart": 233,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "candidateUnitId": "tongues",
+          "className": "Cleric",
+          "concept": "Cleric spell list Tongues",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/cleric:spell-level-3:spell-unit-pressure:cleric_spell_list_tongues",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 221,
+            "lineStart": 221,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "candidateUnitId": "tongues",
+          "className": "Sorcerer",
+          "concept": "Sorcerer spell list Tongues",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_tongues",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 317,
+            "lineStart": 317,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "candidateUnitId": "tongues",
+          "className": "Warlock",
+          "concept": "Warlock spell list Tongues",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/warlock:spell-level-3:spell-unit-pressure:warlock_spell_list_tongues",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 389,
+            "lineStart": 389,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "candidateUnitId": "tongues",
+          "className": "Wizard",
+          "concept": "Wizard spell list Tongues",
+          "levelBand": "spell-level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "table-only-closure",
+          "rowId": "srd521:classes/wizard:spell-level-3:spell-unit-pressure:wizard_spell_list_tongues",
+          "sdkInventoryDisposition": "table-only-closure-needed",
+          "source": {
+            "lineEnd": 263,
+            "lineStart": 263,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Bard spell list Tongues",
+        "Cleric spell list Tongues",
+        "Sorcerer spell list Tongues",
+        "Warlock spell list Tongues",
+        "Wizard spell list Tongues"
       ],
       "sdkInventoryDispositions": [
         "table-only-closure-needed"

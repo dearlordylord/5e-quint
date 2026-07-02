@@ -42503,11 +42503,11 @@
       },
       "claim": {
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
+          "kind": "social-knowledge-effect",
           "owner": "runtime-detached language/communication owner",
           "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell."
         },
-        "reason": "Tongues is an SRD level-3 Spell Definition whose current Surface record models Action casting, Touch range, V/M miniature-ziggurat components, 1-hour duration, one touched creature target, spoken-or-signed language understanding, and outward intelligibility to any creature that knows at least one language and can hear the speech or see the signing. Task 28 claims no promoted battle-runtime profile because hearing or seeing communication, knowing at least one language, language comprehension, and conversation outcomes are runtime-detached table/social communication facts outside promoted battle Unit profiles; the spell must not introduce autonomous behavior, commanded-action execution, or authored-identity dispatch in runtime code.",
+        "reason": "Tongues is an SRD level-3 Spell Definition whose current Surface record models Action casting, Touch range, V/M miniature-ziggurat components, 1-hour duration, one touched creature target, spoken-or-signed language understanding, and outward intelligibility to any creature that knows at least one language and can hear the speech or see the signing. Task 54 preserves the no-promoted-battle-runtime closure because hearing or seeing communication, knowing at least one language, language comprehension, and conversation outcomes are runtime-detached table/social communication facts outside promoted battle Unit profiles; the spell must not introduce autonomous behavior, commanded-action execution, or authored-identity dispatch in runtime code.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
