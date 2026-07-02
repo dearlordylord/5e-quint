@@ -836,6 +836,11 @@ const druidicCreationDraftPlan = {
   label: "Druidic creation",
 } as const satisfies LegalSourceCharacterDraftPlan;
 
+const druidPrimalOrderCreationDraftPlan = {
+  ...druidBuildSheetDraftPlan,
+  label: "Druid Primal Order creation",
+} as const satisfies LegalSourceCharacterDraftPlan;
+
 const druidBuildBattleDraftPlan = {
   ...druidBuildSheetDraftPlan,
   label: "Druid build-battle projection",
@@ -1921,6 +1926,82 @@ describe("level 1 SDK RAW integration", () => {
           expect.objectContaining({
             kind: "grant_hidden_language_messages",
             languageId: "druidic",
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("Druid Primal Order creation finalizes the selected Magician role into build facts", () => {
+    const fixture = createLegalSourceCharacterFixture({
+      draftIdText: "draft:l1-sdk-druid-primal-order-creation",
+      draftPlan: druidPrimalOrderCreationDraftPlan,
+      sheet: {
+        characterIdText: "character:l1-sdk-druid-primal-order-creation",
+        hitPoints: { tag: "maximum" },
+      },
+      battle: { tag: "withoutBattle" },
+    });
+
+    expect(fixture.tag).toBe("withoutBattle");
+    if (fixture.tag !== "withoutBattle") return;
+    expect(
+      discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length,
+    ).toBe(0);
+    expect(fixture.build.progression).toEqual({
+      startingClass: classUnitId("class_druid"),
+      advancements: [],
+    });
+    expect(fixture.sheet.build).toEqual(fixture.build);
+    expect(characterBuildFeatureUnitIds(fixture.build, unitLibrary)).toEqual(
+      expect.arrayContaining(["druid_primal_order"]),
+    );
+    expect(fixture.build.spellcasting?.sources).toEqual([
+      expect.objectContaining({
+        sourceUnitId: "class_druid",
+        cantrips: [...druidBuildSheetCantrips, "guidance"],
+      }),
+    ]);
+    expect(fixture.build.features).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "abilityCheckBonus",
+          selectedFromUnitId: "druid_primal_order",
+          ability: "int",
+          skills: ["arcana", "nature"],
+          bonus: {
+            kind: "abilityModifier",
+            ability: "wis",
+            minimum: 1,
+          },
+        },
+      ]),
+    );
+    expect(unitLibrary.requireUnit("druid_primal_order")).toMatchObject({
+      kind: "class_feature",
+      mechanics: {
+        family: "class_feature_acquisition_choice",
+        choiceKey: "primal_order",
+        options: expect.arrayContaining([
+          expect.objectContaining({
+            id: "magician",
+            mechanics: {
+              family: "passive",
+              grants: expect.arrayContaining([
+                expect.objectContaining({
+                  kind: "grant_spell_access_choice",
+                  mode: "known",
+                  spellLevel: 0,
+                  spellList: "druid",
+                }),
+                expect.objectContaining({
+                  kind: "modify_roll_numeric",
+                  on: ["ability_check"],
+                  skillFilter: { kind: "fixed", skills: ["arcana", "nature"] },
+                  abilityFilter: ["int"],
+                }),
+              ]),
+            },
           }),
         ]),
       },

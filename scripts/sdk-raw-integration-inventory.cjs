@@ -114,7 +114,7 @@ const levelOneTwoCampaignActiveDispositions = new Set([
 ]);
 const expectedLevelOneTwoCampaignRows = 400;
 const expectedLevelOneTwoCampaignGroups = 211;
-const expectedLevelOneTwoSeedScenarioRows = 143;
+const expectedLevelOneTwoSeedScenarioRows = 144;
 const handBuiltSourceSeedRowIds = new Set([]);
 
 const buildSheetRowKinds = new Set([
@@ -1163,6 +1163,47 @@ const druidicCreationScenarioHelperNeedles = [
   ...druidBuildSheetScenarioHelperNeedles,
 ];
 
+const druidPrimalOrderCreationScenarioLabel =
+  "level1-sdk-raw-integration: Druid Primal Order creation finalizes the selected Magician role into build facts";
+const druidPrimalOrderCreationScenarioNeedles = [
+  "createLegalSourceCharacterFixture({",
+  'draftIdText: "draft:l1-sdk-druid-primal-order-creation"',
+  "druidPrimalOrderCreationDraftPlan",
+  'battle: { tag: "withoutBattle" }',
+  "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+  "fixture.sheet.build",
+  "characterBuildFeatureUnitIds(fixture.build, unitLibrary)",
+  '"druid_primal_order"',
+  "fixture.build.spellcasting?.sources",
+  "cantrips: [...druidBuildSheetCantrips, \"guidance\"]",
+  "fixture.build.features",
+  '"abilityCheckBonus"',
+  'selectedFromUnitId: "druid_primal_order"',
+  'ability: "int"',
+  'skills: ["arcana", "nature"]',
+  'ability: "wis"',
+  "minimum: 1",
+  'unitLibrary.requireUnit("druid_primal_order")',
+  '"class_feature_acquisition_choice"',
+  'choiceKey: "primal_order"',
+  'id: "magician"',
+  '"grant_spell_access_choice"',
+  '"known"',
+  'spellList: "druid"',
+  '"modify_roll_numeric"',
+  '"ability_check"',
+];
+const druidPrimalOrderCreationScenarioHelperNeedles = [
+  {
+    anchor: "const druidPrimalOrderCreationDraftPlan =",
+    needles: [
+      'label: "Druid Primal Order creation"',
+      "...druidBuildSheetDraftPlan",
+    ],
+  },
+  ...druidBuildSheetScenarioHelperNeedles,
+];
+
 const druidMulticlassBuildSheetScenarioLabel =
   "level1-sdk-raw-integration: Druid multiclass build-sheet projection derives entry traits from legal creation and a fresh sheet";
 const druidMulticlassBuildSheetScenarioNeedles = [
@@ -1657,6 +1698,19 @@ const seededSdkScenarioRows = [
     sourceProof: "legal-creation-owner",
     tracerNeedles: druidicCreationScenarioNeedles,
     helperNeedles: druidicCreationScenarioHelperNeedles,
+  },
+  {
+    candidateUnitId: "druid_primal_order",
+    className: "Druid",
+    levelBand: "level-1",
+    label: druidPrimalOrderCreationScenarioLabel,
+    path: barbarianBuildSheetScenarioPath,
+    rowId:
+      "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+    rawSources: [".references/srd-5.2.1/Classes/Druid.md:87-93"],
+    sourceProof: "legal-creation-owner",
+    tracerNeedles: druidPrimalOrderCreationScenarioNeedles,
+    helperNeedles: druidPrimalOrderCreationScenarioHelperNeedles,
   },
   ...druidMulticlassBuildSheetScenarioRows,
   ...fighterBuildSheetScenarioRows,

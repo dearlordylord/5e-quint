@@ -289,7 +289,7 @@
     {
       "number": 48,
       "id": "L12-SH48-CREATION-DRUID-PRIMAL-ORDER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the Druid Primal Order creation SDK group"
     },
     {
@@ -610,7 +610,7 @@ Reviewer-loop convergence:
 | 45 | L12-SH45-BUILD-SHEET-MONK - Add the Monk build-sheet SDK group | done | L12-SH06-BUILD-SHEET-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-sheet-sdk | Monk class container, core traits, proficiencies, tool choice, and multiclass entry traits prove through legal build-to-sheet projection. |
 | 46 | L12-SH46-BUILD-BATTLE-DRUID - Add the Druid build-battle SDK group | done | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-battle-sdk | Druid starting equipment proves through legal build, fresh sheet, and battle combatant projection. |
 | 47 | L12-SH47-BUILD-BATTLE-FIGHTER - Add the Fighter build-battle SDK group | done | L12-SH07-BUILD-BATTLE-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | build-battle-sdk | Fighter starting equipment and Weapon Mastery prove through legal build, fresh sheet, and battle combatant projection. |
-| 48 | L12-SH48-CREATION-DRUID-PRIMAL-ORDER - Add the Druid Primal Order creation SDK group | ready-for-research | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-creation-sdk | Druid Primal Order selection proves through legal draft holes and finalized build facts. |
+| 48 | L12-SH48-CREATION-DRUID-PRIMAL-ORDER - Add the Druid Primal Order creation SDK group | done | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-creation-sdk | Druid Primal Order selection proves through legal draft holes and finalized build facts. |
 | 49 | L12-SH49-CREATION-FIGHTER-FIGHTING-STYLE - Add the Fighter Fighting Style creation SDK group | ready-for-research | L12-SH05-CREATION-SDK-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | character-creation-sdk | Fighter Fighting Style selection proves through legal draft holes and finalized build facts. |
 | 50 | L12-SH50-SPELL-ACCESS-DRUID - Add the Druid sheet spell-access SDK group | ready-for-research | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | sheet-spell-access-sdk | Druid Spellcasting projects known/prepared/list/slot facts from legal creation to sheet. |
 | 51 | L12-SH51-SPELL-ACCESS-PALADIN - Add the Paladin sheet spell-access SDK group | ready-for-research | L12-SH09-SHEET-SPELL-ACCESS-FIRST-SLICE, L12-SH40-REMAINING-BATCH-SPLIT | sheet-spell-access-sdk | Paladin Spellcasting projects prepared/list/slot facts from legal creation to sheet. |
@@ -2801,7 +2801,7 @@ Plan Impact:
 
 ### Task 48 - L12-SH48-CREATION-DRUID-PRIMAL-ORDER
 
-Status: `ready-for-research`
+Status: `done`
 
 Input:
 

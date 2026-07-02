@@ -23084,6 +23084,13 @@
       "category": "class feature",
       "className": "Druid",
       "concept": "Druid Primal Order",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Primal Order creation finalizes the selected Magician role into build facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:87-93"
+        ]
+      },
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-1",
       "nextAction": "Owner-specific operational evidence is classified and present.",
@@ -23116,7 +23123,7 @@
       "proposedOwnerBoundary": "character-creation",
       "rowId": "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "sdk-scenario-needed",
+      "sdkInventoryDisposition": "seed-scenario-present",
       "source": {
         "lineEnd": 94,
         "lineStart": 87,
@@ -51459,12 +51466,12 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 12,
+        "groupCount": 11,
         "lane": "character-creation-sdk",
         "ownerTaskIds": [
           "L12-SH05-CREATION-SDK-FIRST-SLICE"
         ],
-        "rowCount": 12,
+        "rowCount": 11,
         "rowFamily": "source-row",
         "taskFamily": "character-creation-sdk"
       },
@@ -51529,7 +51536,7 @@
         "followUpTaskIds": [
           "L12-SH15-NEXT-BATCH-SPLIT"
         ],
-        "groupCount": 91,
+        "groupCount": 92,
         "lane": "seed-present",
         "ownerTaskIds": [
           "L12-SH03-SEED-MIGRATION-AUDIT",
@@ -51541,7 +51548,7 @@
           "L12-SH22-SEED-MIGRATE-SORCERER-INNATE-SORCERY",
           "L12-SH23-SEED-MIGRATE-SORCERER-BURNING-HANDS"
         ],
-        "rowCount": 142,
+        "rowCount": 143,
         "rowFamily": "seed-row",
         "taskFamily": "seed-present"
       },
@@ -51624,16 +51631,16 @@
       },
       {
         "disposition": "seed-scenario-present",
-        "groupCount": 91,
+        "groupCount": 92,
         "lanes": [
           "seed-present"
         ],
-        "rowCount": 142,
+        "rowCount": 143,
         "rowFamily": "seed-row"
       },
       {
         "disposition": "sdk-scenario-needed",
-        "groupCount": 74,
+        "groupCount": 73,
         "lanes": [
           "battle-feature-sdk",
           "battle-spell-sdk",
@@ -51644,7 +51651,7 @@
           "multi-owner-feature-sdk",
           "sheet-spell-access-sdk"
         ],
-        "rowCount": 163,
+        "rowCount": 162,
         "rowFamily": "source-row"
       },
       {
@@ -52706,6 +52713,25 @@
       "reason": "The represented source character build is finalized through character creation at the row owner boundary; battle handoff is not required for this owner.",
       "rowId": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
       "rowKey": "level-1:Druid:druid_druidic",
+      "rowKind": "class-feature-grant",
+      "sourceBuildPath": "legal-creation-draft-finalize",
+      "sourceProof": "legal-creation-owner",
+      "usesRealSheetBattleHandoff": false,
+      "wholeWidthSourceLifecycleProof": false
+    },
+    {
+      "candidateUnitId": "druid_primal_order",
+      "classification": "legal creation owner proof",
+      "className": "Druid",
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Primal Order creation finalizes the selected Magician role into build facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts"
+      },
+      "levelBand": "level-1",
+      "nextAction": "Keep as source creation seed; add sheet or battle assertions only for rows owned by those boundaries.",
+      "reason": "The represented source character build is finalized through character creation at the row owner boundary; battle handoff is not required for this owner.",
+      "rowId": "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+      "rowKey": "level-1:Druid:druid_primal_order",
       "rowKind": "class-feature-grant",
       "sourceBuildPath": "legal-creation-draft-finalize",
       "sourceProof": "legal-creation-owner",
@@ -60264,9 +60290,9 @@
       "explicit-closure-needed": 48,
       "explicit-closure-present": 12,
       "future-owner-before-sdk": 45,
-      "sdk-scenario-needed": 356,
+      "sdk-scenario-needed": 355,
       "sdk-scenario-or-owner-closure-needed": 6,
-      "seed-scenario-present": 148,
+      "seed-scenario-present": 149,
       "table-only-closure-needed": 15
     },
     "levelOneFourRows": 632,
@@ -60276,12 +60302,12 @@
       "battle-spell-sdk": 29,
       "build-battle-sdk": 7,
       "build-sheet-sdk": 7,
-      "character-creation-sdk": 12,
+      "character-creation-sdk": 11,
       "character-sheet-sdk": 5,
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 91,
+      "seed-present": 92,
       "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 20,
       "table-only-closure": 2
@@ -60290,8 +60316,8 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 20,
       "explicit-closure-row": 12,
-      "seed-row": 91,
-      "source-row": 74,
+      "seed-row": 92,
+      "source-row": 73,
       "table-only-closure-row": 2
     },
     "levelOneTwoCampaignRows": 400,
@@ -60300,12 +60326,12 @@
       "battle-spell-sdk": 72,
       "build-battle-sdk": 10,
       "build-sheet-sdk": 50,
-      "character-creation-sdk": 12,
+      "character-creation-sdk": 11,
       "character-sheet-sdk": 5,
       "explicit-closure": 12,
       "explicit-closure-present": 12,
       "multi-owner-feature-sdk": 5,
-      "seed-present": 142,
+      "seed-present": 143,
       "sheet-spell-access-sdk": 5,
       "spell-effect-owner-review": 67,
       "table-only-closure": 4
@@ -60314,22 +60340,22 @@
       "closed-explicit-closure-row": 12,
       "closure-review-row": 67,
       "explicit-closure-row": 12,
-      "seed-row": 142,
-      "source-row": 163,
+      "seed-row": 143,
+      "source-row": 162,
       "table-only-closure-row": 4
     },
-    "levelOneTwoSeedMigrationAuditRows": 143,
+    "levelOneTwoSeedMigrationAuditRows": 144,
     "levelOneTwoSeedMigrationAuditRowsByClassification": {
       "already legal creation path": 85,
       "legal build-sheet owner proof": 55,
-      "legal creation owner proof": 3
+      "legal creation owner proof": 4
     },
     "levelOneTwoSeedMigrationAuditRowsByRealSheetBattleHandoff": {
-      "not-real-sheet-battle": 58,
+      "not-real-sheet-battle": 59,
       "real-sheet-battle": 85
     },
     "levelOneTwoSeedMigrationAuditRowsBySourceBuildPath": {
-      "legal-creation-draft-finalize": 143
+      "legal-creation-draft-finalize": 144
     },
     "levelOneTwoWholeWidthSourceLifecycleSeedRows": 85,
     "scenarioGroups": 415,
@@ -60338,7 +60364,7 @@
       "battle-spell-sdk": 80,
       "build-battle-sdk": 7,
       "build-sheet-sdk": 19,
-      "character-creation-sdk": 26,
+      "character-creation-sdk": 25,
       "character-sheet-sdk": 5,
       "explicit-closure": 48,
       "explicit-closure-present": 12,
@@ -60346,7 +60372,7 @@
       "future-owner-before-sdk": 24,
       "multi-owner-feature-sdk": 8,
       "owner-review": 6,
-      "seed-present": 97,
+      "seed-present": 98,
       "sheet-spell-access-sdk": 10,
       "spell-effect-owner-review": 44,
       "table-only-closure": 6
@@ -64309,61 +64335,6 @@
     },
     {
       "candidateUnitIds": [
-        "druid_primal_order"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Druid"
-      ],
-      "groupId": "l15-sdk-raw-03:character-creation-sdk:druid-primal-order",
-      "lane": "character-creation-sdk",
-      "levelBands": [
-        "level-1"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "character-creation"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"character-creation-sdk\",\"druid_primal_order\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Druid.md:87"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "druid_primal_order",
-          "className": "Druid",
-          "concept": "Druid Primal Order",
-          "levelBand": "level-1",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "character-creation",
-          "rowId": "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
-          "sdkInventoryDisposition": "sdk-scenario-needed",
-          "source": {
-            "lineEnd": 94,
-            "lineStart": 87,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Druid Primal Order"
-      ],
-      "sdkInventoryDispositions": [
-        "sdk-scenario-needed"
-      ],
-      "suggestedScenario": "Finalize the build through character creation and assert the SRD-facing selected feature, option, proficiency, or retained Unit refs without claiming sheet or battle execution.",
-      "taskId": "L15-SDK-RAW-03"
-    },
-    {
-      "candidateUnitIds": [
         "fighter_fighting_style"
       ],
       "categories": [
@@ -66580,6 +66551,62 @@
       ],
       "sampleConcepts": [
         "Druid Druidic"
+      ],
+      "sdkInventoryDispositions": [
+        "seed-scenario-present"
+      ],
+      "suggestedScenario": "Keep the existing tracer as the SDK regression and add row-specific assertions only if RAW review finds a gap.",
+      "taskId": "L15-SDK-RAW-03"
+    },
+    {
+      "candidateUnitIds": [
+        "druid_primal_order"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Druid"
+      ],
+      "groupId": "l15-sdk-raw-03:seed-present:level-1-druid-druid-primal-order",
+      "lane": "seed-present",
+      "levelBands": [
+        "level-1"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "character-creation"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-03\",\"seed-present\",\"level-1:Druid:druid_primal_order\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Druid.md:87",
+        ".references/srd-5.2.1/Classes/Druid.md:87-93"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "druid_primal_order",
+          "className": "Druid",
+          "concept": "Druid Primal Order",
+          "levelBand": "level-1",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "character-creation",
+          "rowId": "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+          "sdkInventoryDisposition": "seed-scenario-present",
+          "source": {
+            "lineEnd": 94,
+            "lineStart": 87,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Druid Primal Order"
       ],
       "sdkInventoryDispositions": [
         "seed-scenario-present"
@@ -91576,6 +91603,76 @@
         "\"prepared\"",
         "\"speak_with_animals\"",
         "\"grant_hidden_language_messages\""
+      ]
+    },
+    {
+      "candidateUnitId": "druid_primal_order",
+      "className": "Druid",
+      "evidenceNeedles": [],
+      "existingSdkScenario": {
+        "label": "level1-sdk-raw-integration: Druid Primal Order creation finalizes the selected Magician role into build facts",
+        "path": "packages/character-battle-runtime/src/level1-sdk-raw-integration.test.ts",
+        "rawSources": [
+          ".references/srd-5.2.1/Classes/Druid.md:87-93"
+        ]
+      },
+      "helperNeedles": [
+        {
+          "anchor": "const druidPrimalOrderCreationDraftPlan =",
+          "needles": [
+            "label: \"Druid Primal Order creation\"",
+            "...druidBuildSheetDraftPlan"
+          ]
+        },
+        {
+          "anchor": "const druidBuildSheetDraftPlan =",
+          "needles": [
+            "classUnitId: \"class_druid\"",
+            "level: 1",
+            "\"class_skill_proficiency_choice\"",
+            "\"class_cantrip_choices\"",
+            "...druidBuildSheetCantrips",
+            "\"class_prepared_spell_choices\"",
+            "...druidBuildSheetPreparedSpells",
+            "\"druid_primal_order\"",
+            "\"primal_order\"",
+            "\"magician\"",
+            "legalUnitChoice(\"class_druid\", \"class_equipment_choice\", \"option_b\")",
+            "legalUnitChoice(\"class_druid\", \"equipment_purchase\", \"weapon_dagger\")",
+            "legalLoadoutChoice(\"weapon_dagger\", \"weapon\", \"wielded_one_handed\")"
+          ]
+        }
+      ],
+      "levelBand": "level-1",
+      "rowId": "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+      "rowKey": "level-1:Druid:druid_primal_order",
+      "tracerNeedles": [
+        "createLegalSourceCharacterFixture({",
+        "draftIdText: \"draft:l1-sdk-druid-primal-order-creation\"",
+        "druidPrimalOrderCreationDraftPlan",
+        "battle: { tag: \"withoutBattle\" }",
+        "discoverCreationHoles({ draft: fixture.draft, unitLibrary }).length",
+        "fixture.sheet.build",
+        "characterBuildFeatureUnitIds(fixture.build, unitLibrary)",
+        "\"druid_primal_order\"",
+        "fixture.build.spellcasting?.sources",
+        "cantrips: [...druidBuildSheetCantrips, \"guidance\"]",
+        "fixture.build.features",
+        "\"abilityCheckBonus\"",
+        "selectedFromUnitId: \"druid_primal_order\"",
+        "ability: \"int\"",
+        "skills: [\"arcana\", \"nature\"]",
+        "ability: \"wis\"",
+        "minimum: 1",
+        "unitLibrary.requireUnit(\"druid_primal_order\")",
+        "\"class_feature_acquisition_choice\"",
+        "choiceKey: \"primal_order\"",
+        "id: \"magician\"",
+        "\"grant_spell_access_choice\"",
+        "\"known\"",
+        "spellList: \"druid\"",
+        "\"modify_roll_numeric\"",
+        "\"ability_check\""
       ]
     },
     {
