@@ -145,7 +145,7 @@
     {
       "number": 24,
       "id": "L12-SH24-BUILD-SHEET-BARD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Add the Bard build-sheet SDK group"
     },
     {
