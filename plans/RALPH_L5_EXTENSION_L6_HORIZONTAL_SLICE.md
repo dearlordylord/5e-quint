@@ -7,13 +7,13 @@
     {
       "number": 1,
       "id": "L5UG-PRE-01-L5-FULL-QUEUE-CLOSED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify the L5 full SRD queue is closed"
     },
     {
       "number": 2,
       "id": "L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add level-1-5 support report plumbing"
     },
     {
@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L5UG-MCP-01-LEVEL5-VERTICAL-DECISION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Choose the level-5 MCP vertical scenario"
     },
     {
@@ -311,11 +311,11 @@ Every Ralph task must run the task-base check before research or edits:
 
 |   # | Task                                                                                       | Status             | Depends on                                                                                      | Notes                                                                                 |
 | --: | ------------------------------------------------------------------------------------------ | ------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-|   1 | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED - Verify the L5 full SRD queue is closed                  | ready-for-research | none                                                                                            | Confirms the SDK/accounting queue is actually closed before ultra-golden work starts.  |
-|   2 | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING - Add level-1-5 support report plumbing              | blocked            | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Adds the generated level-support report path before ultra-golden consumes it.          |
+|   1 | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED - Verify the L5 full SRD queue is closed                  | done               | none                                                                                            | Confirms the SDK/accounting queue is actually closed before ultra-golden work starts.  |
+|   2 | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING - Add level-1-5 support report plumbing              | ready-for-research | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Adds the generated level-support report path before ultra-golden consumes it.          |
 |   3 | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-5 into the ultra-golden aggregate          | blocked            | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING                                                           | Extends the aggregate gate without weakening older scopes.                             |
 |   4 | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-5 non-MCP ultra-golden layers | blocked           | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE                                                                | Confirms support, QNT/generator, and parity layers before MCP evidence closeout.       |
-|   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | blocked            | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Chooses the smallest honest SRD-only vertical from post-SDK-supported behavior.        |
+|   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | ready-for-research | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Chooses the smallest honest SRD-only vertical from post-SDK-supported behavior.        |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | blocked        | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds creation/finalization/sheet proof before battle handoff.                          |
 |   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | blocked            | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION                    | Adds battle handoff only after sheet coverage and non-MCP blockers are known.          |
 |   8 | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY - Register the level-5 MCP scenario in acceptance coverage | blocked        | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF                                                               | Wires the executable scenario into MCP acceptance coverage.                             |
@@ -377,7 +377,7 @@ Every Ralph task must run the task-base check before research or edits:
 
 ### Task 1 - L5UG-PRE-01-L5-FULL-QUEUE-CLOSED
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: none
 
@@ -418,15 +418,17 @@ Verification:
 - Shared verification commands that are relevant to a read-only prerequisite
   check.
 
+Plan Impact:
+
+- Applied. Current generated L5 SDK/accounting artifacts agree with the closed
+  post-L5 baseline, with no unresolved L5 row reopening the full SRD queue.
+- Task 2 and Task 5 are unblocked for research.
+
 ### Task 2 - L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L5UG-PRE-01-L5-FULL-QUEUE-CLOSED`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L5UG-PRE-01-L5-FULL-QUEUE-CLOSED`.
 
 Inputs:
 
@@ -565,13 +567,9 @@ Verification:
 
 ### Task 5 - L5UG-MCP-01-LEVEL5-VERTICAL-DECISION
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L5UG-PRE-01-L5-FULL-QUEUE-CLOSED`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L5UG-PRE-01-L5-FULL-QUEUE-CLOSED`.
 
 Inputs:
 
