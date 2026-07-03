@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "QAR-05-SHARED-INVARIANT-PROOF-HARNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Bound shared-algebras inductive proof execution"
     },
     {
@@ -74,7 +74,7 @@
       "number": 12,
       "id": "QAR-12-INDUCTIVE-WITNESS-SEEDS",
       "status": "blocked",
-      "title": "Add reachability witnesses for priority inductive specs"
+      "title": "Repair priority inductive specs and add reachability witnesses"
     },
     {
       "number": 13,
@@ -177,14 +177,14 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 2 | QAR-02-MBT-LANE-INVENTORY-GATE - Add static test-lane and MBT inventory gates | done | QAR-01-TEST-LANE-ISOLATION | Adds static guards after default lane shape is decided. |
 | 3 | QAR-03-SHARED-QNT-PROOF-HARNESS - Consolidate bounded QNT proof harness behavior | done | QAR-01-TEST-LANE-ISOLATION | Consolidates bounded proof execution before new proof lanes. |
 | 4 | QAR-04-CHARACTER-CREATION-QNT-PROOFS - Add character-creation QNT proof lane | ready-for-research | QAR-03-SHARED-QNT-PROOF-HARNESS | Adds the missing character-creation proof lane. |
-| 5 | QAR-05-SHARED-INVARIANT-PROOF-HARNESS - Bound shared-algebras inductive proof execution | ready-for-research | QAR-03-SHARED-QNT-PROOF-HARNESS | Bounds shared inductive proofs. |
+| 5 | QAR-05-SHARED-INVARIANT-PROOF-HARNESS - Bound shared-algebras inductive proof execution | done | QAR-03-SHARED-QNT-PROOF-HARNESS | Bounds shared inductive proofs. |
 | 6 | QAR-06-ACTION-COST-ADMISSION-RESULT - Make action and spell admission explicit in QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Removes admission-by-state-equality. |
 | 7 | QAR-07-DAMAGE-PAIR-NONZERO - Encode nonzero damage-allocation preconditions | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Encodes the nonzero total precondition. |
 | 8 | QAR-08-SHOVE-PROJECTION-UNION - Replace Shove flattened projection with a closed union | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces impossible Shove projection combinations. |
 | 9 | QAR-09-CUNNING-STRIKE-TYPED-QNT - Replace Cunning Strike string projections with typed QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces raw Cunning Strike strings. |
 | 10 | QAR-10-ACID-ARROW-TYPED-TIMING - Replace Acid Arrow string timing with typed QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces raw Acid Arrow timing strings. |
 | 11 | QAR-11-RUN-BLOCK-SEPARATION-GUARD - Separate QNT run blocks from owner modules | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING | Cleans owner modules after semantic edits land. |
-| 12 | QAR-12-INDUCTIVE-WITNESS-SEEDS - Add reachability witnesses for priority inductive specs | blocked | QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-11-RUN-BLOCK-SEPARATION-GUARD | Adds reachability witnesses after affected specs settle. |
+| 12 | QAR-12-INDUCTIVE-WITNESS-SEEDS - Repair priority inductive specs and add reachability witnesses | blocked | QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-11-RUN-BLOCK-SEPARATION-GUARD | Admits state-space repair modules and adds reachability witnesses after affected specs settle. |
 | 13 | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD - Harden MBT closure leaf whitelist checks | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Hardens closure checks before driver conversions. |
 | 14 | QAR-14-STARRY-WISP-WITNESS-CONVERSION - Convert Starry Wisp object driver to a literal witness | blocked | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Converts the clearest heavy driver to a literal witness. |
 | 15 | QAR-15-RULE-CORE-SPELLS-MBT-SPLIT - Split rule-core spells MBT by procedure family | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits spell MBT closure after admission semantics are explicit. |
@@ -391,7 +391,7 @@ Plan Impact:
 
 ### Task 5 - QAR-05-SHARED-INVARIANT-PROOF-HARNESS
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -723,9 +723,14 @@ Depends on:
 
 Output:
 
+- Repair and admit the QAR-05 state-space repair inductive modules into the
+  active bounded lane:
+  `attack-damage-composition-inductive.qnt`,
+  `damage-component-adjustments-inductive.qnt`, and
+  `spell-procedure-profiles-inductive.qnt`.
 - Add meaningful reachability witnesses for priority inductive specs:
-  action-turn procedures, damage component adjustments, and movement spatial
-  grapple.
+  action-turn procedures, attack damage composition, damage component
+  adjustments, movement spatial grapple, and spell procedure profiles.
 - Witnesses must prove important actions or cases are reachable, not merely
   restate type bounds.
 - Keep witnesses in test/proof modules according to the QAR-11 convention.
@@ -734,6 +739,8 @@ Acceptance:
 
 - Each priority inductive family has at least one witness that reaches a
   nontrivial state under sampled `quint run` / proof-lane execution.
+- The QAR-05 state-space repair modules are removed from the repair list by
+  entering the active bounded inductive proof lane.
 - Dead or unreachable modeled cases are fixed or split into follow-up tasks.
 
 Verification:

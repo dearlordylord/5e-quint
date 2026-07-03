@@ -4,9 +4,21 @@ import { fileURLToPath } from "node:url";
 
 export type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
 
+export type QntModuleDiscoveryConfig = {
+  readonly packageRootUrl: URL;
+  readonly corpusRootRelativePath: string;
+  readonly recursive: boolean;
+};
+
 export type ProofModule = {
   readonly modulePath: string;
   readonly runNames: NonEmptyReadonlyArray<string>;
+};
+
+export type InductiveProofModule = {
+  readonly modulePath: string;
+  readonly invariantName: string;
+  readonly maxSteps: number;
 };
 
 export type ProofModuleOutcome =
@@ -17,10 +29,7 @@ export type ProofModuleOutcome =
       readonly detail: string;
     };
 
-export type ProofModuleDiscoveryConfig = {
-  readonly packageRootUrl: URL;
-  readonly corpusRootRelativePath: string;
-  readonly recursive: boolean;
+export type ProofModuleDiscoveryConfig = QntModuleDiscoveryConfig & {
   readonly runNamePrefix?: string;
 };
 
@@ -30,9 +39,24 @@ export type ProofModuleRunConfig = {
   readonly matchPattern?: string;
 };
 
+export type InductiveProofModuleRunConfig = {
+  readonly packageRootUrl: URL;
+  readonly proofModule: InductiveProofModule;
+};
+
+type ProofProcessConfig = {
+  readonly packageRootUrl: URL;
+  readonly modulePath: string;
+  readonly args: NonEmptyReadonlyArray<string>;
+  readonly timedOutDetail: string;
+  readonly env?: NodeJS.ProcessEnv;
+  readonly requiredStdoutFragment?: string;
+};
+
 const runBlockPattern = /^[ \t]*run\s+([A-Za-z_][A-Za-z0-9_]*)\b/gm;
 
 export const proofModuleTimeoutMs = 360_000;
+const apalacheJavaBin = `${process.env.HOME ?? ""}/.local/java/jdk-17.0.18+8-jre/bin`;
 
 function asDirectoryPath(path: string): string {
   return path === "" || path.endsWith("/") ? path : `${path}/`;
@@ -73,19 +97,26 @@ function discoverQntPaths(
   });
 }
 
-export function discoverRunBlockProofModules(
-  config: ProofModuleDiscoveryConfig,
-): readonly ProofModule[] {
+export function discoverQntModulePaths(
+  config: QntModuleDiscoveryConfig,
+): readonly string[] {
   const corpusRootRelativePath = asDirectoryPath(config.corpusRootRelativePath);
   const corpusRootUrl = new URL(corpusRootRelativePath, config.packageRootUrl);
   return discoverQntPaths(corpusRootUrl, "", config.recursive)
+    .map((relativePath) => `${corpusRootRelativePath}${relativePath}`)
+    .sort((left, right) => left.localeCompare(right));
+}
+
+export function discoverRunBlockProofModules(
+  config: ProofModuleDiscoveryConfig,
+): readonly ProofModule[] {
+  return discoverQntModulePaths(config)
     .flatMap((relativePath): readonly ProofModule[] => {
-      const modulePath = `${corpusRootRelativePath}${relativePath}`;
       const runNames = extractRunNames(
-        readFileSync(new URL(modulePath, config.packageRootUrl), "utf8"),
+        readFileSync(new URL(relativePath, config.packageRootUrl), "utf8"),
         config.runNamePrefix,
       );
-      return runNames === null ? [] : [{ modulePath, runNames }];
+      return runNames === null ? [] : [{ modulePath: relativePath, runNames }];
     })
     .sort((left, right) => left.modulePath.localeCompare(right.modulePath));
 }
@@ -142,14 +173,17 @@ function killProcessTree(rootPid: number): void {
   }
 }
 
-export async function runProofModule(
-  config: ProofModuleRunConfig,
+function quintVerifyEnv(): NodeJS.ProcessEnv {
+  if (process.env.HOME === undefined) return process.env;
+  return {
+    ...process.env,
+    PATH: `${apalacheJavaBin}:${process.env.PATH ?? ""}`,
+  };
+}
+
+async function runProofProcess(
+  config: ProofProcessConfig,
 ): Promise<ProofModuleOutcome> {
-  const specPath = fileURLToPath(
-    new URL(config.proofModule.modulePath, config.packageRootUrl),
-  );
-  const matchPattern =
-    config.matchPattern ?? exactRunNameMatch(config.proofModule.runNames);
   const result = await new Promise<{
     readonly timedOut: boolean;
     readonly error: Error | null;
@@ -160,18 +194,11 @@ export async function runProofModule(
     let deadline: ReturnType<typeof setTimeout> | undefined;
     const child = execFile(
       "pnpm",
-      [
-        "exec",
-        "quint",
-        "test",
-        "--backend",
-        "typescript",
-        "--match",
-        matchPattern,
-        specPath,
-      ],
+      ["exec", "quint", ...config.args],
       {
+        cwd: fileURLToPath(config.packageRootUrl),
         encoding: "utf8",
+        env: config.env ?? process.env,
         maxBuffer: 64 * 1024 * 1024,
       },
       (error, stdout, stderr) => {
@@ -191,22 +218,75 @@ export async function runProofModule(
   });
 
   if (result.error === null) {
-    if (!result.stdout.includes("passing")) {
+    if (
+      config.requiredStdoutFragment !== undefined &&
+      !result.stdout.includes(config.requiredStdoutFragment)
+    ) {
       return {
         tag: "failed",
-        module: config.proofModule.modulePath,
-        detail: `quint test produced no "passing" summary:\n${result.stdout}`,
+        module: config.modulePath,
+        detail:
+          `quint produced no "${config.requiredStdoutFragment}" summary:\n` +
+          result.stdout,
       };
     }
-    return { tag: "passed", module: config.proofModule.modulePath };
+    return { tag: "passed", module: config.modulePath };
   }
 
-  const banner = result.timedOut
-    ? `this module's run-block proofs were hard-killed at ${proofModuleTimeoutMs / 1000}s without finishing`
-    : result.error.message;
+  const banner = result.timedOut ? config.timedOutDetail : result.error.message;
   return {
     tag: "failed",
-    module: config.proofModule.modulePath,
+    module: config.modulePath,
     detail: `${banner}\n${result.stderr}${result.stdout}`.trimEnd(),
   };
+}
+
+export async function runProofModule(
+  config: ProofModuleRunConfig,
+): Promise<ProofModuleOutcome> {
+  const specPath = fileURLToPath(
+    new URL(config.proofModule.modulePath, config.packageRootUrl),
+  );
+  const matchPattern =
+    config.matchPattern ?? exactRunNameMatch(config.proofModule.runNames);
+  return runProofProcess({
+    packageRootUrl: config.packageRootUrl,
+    modulePath: config.proofModule.modulePath,
+    args: [
+      "test",
+      "--backend",
+      "typescript",
+      "--match",
+      matchPattern,
+      specPath,
+    ],
+    timedOutDetail: `this module's run-block proofs were hard-killed at ${proofModuleTimeoutMs / 1000}s without finishing`,
+    requiredStdoutFragment: "passing",
+  });
+}
+
+export async function runInductiveProofModule(
+  config: InductiveProofModuleRunConfig,
+): Promise<ProofModuleOutcome> {
+  const specPath = fileURLToPath(
+    new URL(config.proofModule.modulePath, config.packageRootUrl),
+  );
+  return runProofProcess({
+    packageRootUrl: config.packageRootUrl,
+    modulePath: config.proofModule.modulePath,
+    args: [
+      "verify",
+      specPath,
+      "--inductive-invariant",
+      config.proofModule.invariantName,
+      "--invariant",
+      config.proofModule.invariantName,
+      "--max-steps",
+      String(config.proofModule.maxSteps),
+      "--verbosity",
+      "1",
+    ],
+    timedOutDetail: `this module's inductive proof was hard-killed at ${proofModuleTimeoutMs / 1000}s without finishing`,
+    env: quintVerifyEnv(),
+  });
 }
