@@ -49,37 +49,37 @@
     {
       "number": 41,
       "id": "L3-FOLLOWUP-BLINK-PLANAR-PHASE-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "future-follow-up",
       "title": "Promote Blink planar phase lifecycle"
     },
     {
       "number": 42,
       "id": "L3-FOLLOWUP-CONJURE-ANIMALS-PACK-EFFECT",
-      "status": "ready-for-research",
+      "status": "future-follow-up",
       "title": "Promote Conjure Animals pack effect"
     },
     {
       "number": 43,
       "id": "L3-FOLLOWUP-MAGIC-CIRCLE-WARDED-AREA",
-      "status": "ready-for-research",
+      "status": "future-follow-up",
       "title": "Promote Magic Circle warded area"
     },
     {
       "number": 44,
       "id": "L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE",
-      "status": "ready-for-research",
+      "status": "future-follow-up",
       "title": "Promote Meld into Stone merged state"
     },
     {
       "number": 45,
       "id": "L12G-FOLLOWUP-RANGER-FAVORED-ENEMY-FREE-CAST-SCALING",
-      "status": "ready-for-research",
+      "status": "future-follow-up",
       "title": "Promote Ranger Favored Enemy free-cast scaling"
     },
     {
       "number": 46,
       "id": "L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL",
-      "status": "ready-for-research",
+      "status": "future-follow-up",
       "title": "Promote Wizard Evocation Savant new Spell Slot level grant"
     },
     {
