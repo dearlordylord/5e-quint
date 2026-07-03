@@ -3,7 +3,7 @@
     "authoredReadinessBlockerCount": 0,
     "selectedIdentityBlockerCount": 5,
     "status": "blocked",
-    "strictTargetOpenCount": 2
+    "strictTargetOpenCount": 0
   },
   "frontierRows": [
     {
@@ -3353,12 +3353,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "later-level-only"
+        "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Later-level residuals first trigger within Character Levels 1-5 at character level 5, so they are open in this scope. Follow-up task: SRDINV78.",
+      "reason": "L12G-FOLLOWUP-RANGER-FAVORED-ENEMY-FREE-CAST-SCALING: Promote Favored Enemy's class-level free-cast count scaling by consuming the Surface grant_spell_free_casts scaling tiers instead of the current fixed base count, including the Ranger level 5 capacity increase to three Hunter's Mark free casts while preserving the existing marked-damage-rider invocation, Concentration, Bonus Action, Long Rest reset, and Spell Slot fallback behavior. Owner: Character Sheet resource projection plus Character Battle handoff and battle-runtime class-feature free-cast resource owners. Required output: Supported-profile or profile-subset-supported ranger_favored_enemy claim update with deterministic admission/resource projection evidence, focused Character Sheet and Character Battle runtime tests, and promoted Quint/runtime parity if the battle resource model changes; no authored-identity dispatch or duplicate free-cast state.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -3378,8 +3378,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "ranger_favored_enemy"
     },
     {
@@ -4793,12 +4793,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "later-level-only"
+        "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Later-level residuals first trigger within Character Levels 1-5 at character level 5, so they are open in this scope.",
+      "reason": "L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL: Promote Evocation Savant's new_spell_slot_level_access grant when a Wizard later gains access to a new Wizard Spell Slot level after subclass acquisition, first at Wizard level 5 for level 3 Spell Slots, by discovering and finalizing exactly one eligible Wizard Evocation spell into the existing Wizard spellbook without duplicating spellbook state, spell rosters, or authored feature identity dispatch. Owner: character-creation-runtime class-level advancement and Wizard spellbook learning owner. Required output: Supported-profile or profile-subset-supported wizard_evocation_savant claim update with focused Character Creation advancement tests and QNT/runtime replay covering the level-5 new-slot-level grant, duplicate spellbook rejection, and preservation of the existing acquisition-time level-3 choices.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-mbt evidence.",
         "status": "witness-present"
@@ -4818,8 +4818,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "wizard_evocation_savant"
     },
     {
@@ -5155,7 +5155,7 @@
       ]
     },
     {
-      "count": 9,
+      "count": 11,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -5167,7 +5167,9 @@
         "magic_circle",
         "meld_into_stone",
         "phantom_steed",
-        "sorcerer_metamagic"
+        "ranger_favored_enemy",
+        "sorcerer_metamagic",
+        "wizard_evocation_savant"
       ]
     },
     {
@@ -5189,15 +5191,6 @@
         "animate_dead",
         "druid_wild_companion",
         "find_steed"
-      ]
-    },
-    {
-      "count": 2,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "ranger_favored_enemy",
-        "wizard_evocation_savant"
       ]
     }
   ],
@@ -5234,21 +5227,11 @@
     },
     "strictTargetClosure": {
       "denominator": 262,
-      "numerator": 260,
-      "percent": "99.2%"
+      "numerator": 262,
+      "percent": "100%"
     }
   },
-  "openFrontier": [
-    {
-      "count": 2,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "ranger_favored_enemy",
-        "wizard_evocation_savant"
-      ]
-    }
-  ],
+  "openFrontier": [],
   "outsideDenominator": {
     "companionWorktree": [
       {
@@ -14044,13 +14027,12 @@
       "unsupported-profile": 71
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 9,
+      "blocked-follow-up-split": 11,
       "closed-character-fact-and-runtime-detached-split": 4,
       "closed-companion-control-boundary": 3,
       "closed-outside-battle-runtime-boundary": 20,
       "closed-runtime-detached-table-adjudication": 47,
       "closed-selection-grant-container": 12,
-      "open-profile-accounting": 2,
       "supported-profile": 165
     },
     "nonSupportedFrontier": 97,

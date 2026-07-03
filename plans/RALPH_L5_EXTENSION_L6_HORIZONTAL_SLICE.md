@@ -37,7 +37,7 @@
     {
       "number": 39,
       "id": "L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-1-5 later-level residual accounting rows"
     },
     {
@@ -69,6 +69,18 @@
       "id": "L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE",
       "status": "ready-for-research",
       "title": "Promote Meld into Stone merged state"
+    },
+    {
+      "number": 45,
+      "id": "L12G-FOLLOWUP-RANGER-FAVORED-ENEMY-FREE-CAST-SCALING",
+      "status": "ready-for-research",
+      "title": "Promote Ranger Favored Enemy free-cast scaling"
+    },
+    {
+      "number": 46,
+      "id": "L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL",
+      "status": "ready-for-research",
+      "title": "Promote Wizard Evocation Savant new Spell Slot level grant"
     },
     {
       "number": 5,
@@ -358,12 +370,14 @@ Every Ralph task must run the task-base check before research or edits:
 |   3 | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-5 into the ultra-golden aggregate          | done               | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING                                                           | Extends the aggregate gate without weakening older scopes.                             |
 |   4 | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-5 non-MCP ultra-golden layers | done | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Split current non-MCP support blockers into concrete dependency-rewired follow-up tasks. |
 |  38 | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING - Resolve level-1-5 open spell-effect accounting rows | done | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Records concrete follow-up splits for the four table/spatial spell-effect rows and closes current strict accounting. |
-|  39 | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS - Resolve level-1-5 later-level residual accounting rows | ready-for-research | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Resolves the two later-level residual open rows before final ultra-golden refresh. |
+|  39 | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS - Resolve level-1-5 later-level residual accounting rows | done | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Records concrete follow-up splits for the two later-level residual rows and closes current strict accounting. |
 |  40 | L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES - Resolve level-1-5 selected-identity replay gaps | ready-for-research | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Adds or closes the five selected-identity replay blockers without using MCP scenario evidence as parity. |
 |  41 | L3-FOLLOWUP-BLINK-PLANAR-PHASE-LIFECYCLE - Promote Blink planar phase lifecycle | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for Blink's planar phase lifecycle and table/spatial plane-position witnesses. |
 |  42 | L3-FOLLOWUP-CONJURE-ANIMALS-PACK-EFFECT - Promote Conjure Animals pack effect | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for the spectral pack occurrence and table/spatial pack-position witnesses. |
 |  43 | L3-FOLLOWUP-MAGIC-CIRCLE-WARDED-AREA - Promote Magic Circle warded area | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for the warded Cylinder and table/spatial crossing witnesses. |
 |  44 | L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE - Promote Meld into Stone merged state | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for stone merged-state lifecycle and terrain/object occupancy witnesses. |
+|  45 | L12G-FOLLOWUP-RANGER-FAVORED-ENEMY-FREE-CAST-SCALING - Promote Ranger Favored Enemy free-cast scaling | ready-for-research | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future resource owner for Favored Enemy's Ranger-level free-cast count scaling. |
+|  46 | L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL - Promote Wizard Evocation Savant new Spell Slot level grant | ready-for-research | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future character-advancement owner for Evocation Savant's later new Spell Slot level grant. |
 |   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | ready-for-research | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Chooses the smallest honest SRD-only vertical from post-SDK-supported behavior.        |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | blocked        | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds creation/finalization/sheet proof before battle handoff.                          |
 |   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | blocked            | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff only after sheet coverage and non-MCP support blockers have concrete resolutions. |
@@ -893,7 +907,7 @@ Verification:
 
 ### Task 39 - L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`
 
@@ -940,6 +954,126 @@ Verification:
   change.
 - Focused runtime/QNT tests and the relevant MBT only if this task changes
   battle runtime or QNT parity behavior.
+
+Plan Impact:
+
+- Applied. `ranger_favored_enemy` and `wizard_evocation_savant` now have
+  checker-owned `followUpTasks`, so the generated level-1-5 strict gate
+  classifies them as `blocked-follow-up-split` instead of
+  `open-profile-accounting`.
+- Added Tasks 45-46 as dependency-ordered Ralph follow-ups for those exact
+  promoted owner slices. They do not block Tasks 7 or 10 because Task 39's
+  generated accounting now closes the current strict target by explicit split.
+
+### Task 45 - L12G-FOLLOWUP-RANGER-FAVORED-ENEMY-FREE-CAST-SCALING
+
+Status: `ready-for-research`
+
+Depends on: `L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS`
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- Ranger Favored Enemy Surface feature mechanics and `grant_spell_free_casts`
+  facts
+- Relevant SRD Ranger class text under `.references/srd-5.2.1/Classes/Ranger.md`
+- `UBIQUITOUS_LANGUAGE.md`
+- Character Sheet resource projection, Character Battle handoff, battle runtime,
+  QNT, and MBT owners for class-feature spell free-cast resources
+
+Current state:
+
+- Favored Enemy currently has profile-subset support for always-prepared
+  Hunter's Mark access, the two-use Ranger level 1 free-cast resource, Long Rest
+  reset, existing marked-damage-rider invocation, Concentration, Bonus Action
+  cost, and Spell Slot fallback.
+- Task 39 records the follow-up split for later Ranger-level free-cast count
+  scaling. The SRD first brings that residual into level-1-5 scope at Ranger
+  level 5.
+
+Output:
+
+- Promote Favored Enemy's Ranger-level free-cast count scaling from Surface
+  `grant_spell_free_casts` class-level tiers through Character Sheet resource
+  projection, Character Battle handoff, and any required battle-runtime
+  resource model.
+- Include the Ranger level 5 capacity increase to three Hunter's Mark free
+  casts while preserving the existing marked-damage rider, Concentration,
+  Bonus Action, Long Rest reset, and Spell Slot fallback behavior.
+- Do not add duplicate free-cast state and do not dispatch on authored class,
+  feature, or spell identity.
+
+Completion / Success Criteria:
+
+- `ranger_favored_enemy` has a supported-profile or profile-subset-supported
+  claim update with deterministic admission/resource projection evidence.
+- Focused Character Sheet and Character Battle runtime tests cover the scaled
+  free-cast capacity and existing Hunter's Mark behavior.
+- Promoted Quint/runtime parity is updated if the battle resource model changes.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability.
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check` if rules-kernel joins or QNT ownership
+  change.
+- Focused runtime/QNT tests and relevant MBT only if runtime or QNT parity
+  behavior changes.
+
+### Task 46 - L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL
+
+Status: `ready-for-research`
+
+Depends on: `L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS`
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- Wizard Evocation Savant Surface feature mechanics and
+  `wizard_spellbook_learning` facts
+- Relevant SRD Wizard class text under `.references/srd-5.2.1/Classes/Wizard.md`
+- `UBIQUITOUS_LANGUAGE.md`
+- Character Creation class-level advancement, Wizard spellbook learning, QNT,
+  and runtime replay owners
+
+Current state:
+
+- Evocation Savant currently has profile-subset support for the level-3
+  acquisition-time two-spell Evocation spellbook choice, retained subclass
+  feature Unit refs, duplicate spellbook rejection, and the replay evidence that
+  the later new Spell Slot level grant does not create a level-3 Character
+  Creation hole.
+- Task 39 records the follow-up split for the later grant. The SRD first brings
+  that residual into level-1-5 scope when the Wizard gains level 3 Spell Slots
+  at Wizard level 5.
+
+Output:
+
+- Promote Evocation Savant's `new_spell_slot_level_access` grant when a Wizard
+  later gains access to a new Wizard Spell Slot level after subclass
+  acquisition.
+- Discover and finalize exactly one eligible Wizard Evocation spell into the
+  existing Wizard spellbook without duplicating spellbook state, duplicating an
+  Evoker spell roster, or dispatching on authored feature or spell identity.
+- Preserve the existing acquisition-time level-3 choices and duplicate
+  spellbook rejection behavior.
+
+Completion / Success Criteria:
+
+- `wizard_evocation_savant` has a supported-profile or profile-subset-supported
+  claim update with focused Character Creation advancement evidence.
+- Focused runtime and QNT replay cover the level-5 new Spell Slot level grant,
+  duplicate spellbook rejection, and preservation of the existing
+  acquisition-time level-3 choices.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability.
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check` if rules-kernel joins or QNT ownership
+  change.
+- Focused runtime/QNT tests and relevant MBT only if runtime or QNT parity
+  behavior changes.
 
 ### Task 40 - L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES
 

@@ -8,14 +8,14 @@ This strict view tracks executable SRD character-level-1 through character-level
 
 Full-support claim: **blocked**.
 
-Blockers: strict=2, selected-identity=5, SRD-authored-readiness=0.
+Blockers: strict=0, selected-identity=5, SRD-authored-readiness=0.
 
 ## Metrics
 
 | Metric | Result |
 | --- | ---: |
 | Strict runtime/profile support | 165/262 (63%) |
-| Strict target closure | 260/262 (99.2%) |
+| Strict target closure | 262/262 (100%) |
 | Selected identity readiness | 186/191 (97.4%) |
 | Diagnostic product readiness | 769/770 (99.9%) |
 | SRD authored product readiness | 115/115 (100%) |
@@ -62,7 +62,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Gate | Status | Result | Blocking issue |
 | --- | --- | ---: | --- |
-| Strict runtime/profile closure | blocked | 260/262 (99.2%) | 2 strict denominator row(s) still open |
+| Strict runtime/profile closure | pass | 262/262 (100%) | _none_ |
 | Selected identity readiness | blocked | 186/191 (97.4%) | 5 selected-identity blocker row(s) |
 | SRD authored product readiness | pass | 115/115 (100%) | _none_ |
 
@@ -114,16 +114,15 @@ This gate checks authored records and retained Unit references that must resolve
 | closed-runtime-detached-table-adjudication | 47 | `alarm`, `animal_messenger`, `arcane_lock`, `arcanists_magic_aura`, `augury`, `calm_emotions`, `charm_person`, `clairvoyance`, `comprehend_languages`, `darkness`, `darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `detect_thoughts`, `enthrall`, `find_traps`, `fly`, `gentle_repose`, `gust_of_wind`, `identify`, `knock`, `locate_animals_or_plants`, `locate_object`, `magic_mouth`, `major_image`, `mind_spike`, `minor_illusion`, `monk_monks_focus`, `nondetection`, `pass_without_trace`, `plant_growth`, `rope_trick`, `sending`, `silence`, `silent_image`, `speak_with_animals`, `speak_with_dead`, `speak_with_plants`, `spike_growth`, `suggestion`, `thaumaturgy`, `tiny_hut`, `tongues`, `water_breathing`, `water_walk`, `zone_of_truth` |
 | closed-outside-battle-runtime-boundary | 20 | `bard_bonus_proficiencies`, `beacon_of_hope`, `bestow_curse`, `call_lightning`, `continual_flame`, `create_food_and_water`, `daylight`, `enlarge_reduce`, `fear`, `levitate`, `moonbeam`, `prayer_of_healing`, `remove_curse`, `revivify`, `rogue_fast_hands`, `sleet_storm`, `spirit_guardians`, `stinking_cloud`, `vampiric_touch`, `wind_wall` |
 | closed-selection-grant-container | 12 | `barbarian_ability_score_improvement_l4`, `bard_ability_score_improvement_l4`, `cleric_ability_score_improvement_l4`, `druid_ability_score_improvement_l4`, `fighter_ability_score_improvement_l4`, `monk_ability_score_improvement_l4`, `paladin_ability_score_improvement_l4`, `ranger_ability_score_improvement_l4`, `rogue_ability_score_improvement_l4`, `sorcerer_ability_score_improvement_l4`, `warlock_ability_score_improvement_l4`, `wizard_ability_score_improvement_l4` |
-| blocked-follow-up-split | 9 | `blink`, `conjure_animals`, `dispel_magic`, `gaseous_form`, `glyph_of_warding`, `magic_circle`, `meld_into_stone`, `phantom_steed`, `sorcerer_metamagic` |
+| blocked-follow-up-split | 11 | `blink`, `conjure_animals`, `dispel_magic`, `gaseous_form`, `glyph_of_warding`, `magic_circle`, `meld_into_stone`, `phantom_steed`, `ranger_favored_enemy`, `sorcerer_metamagic`, `wizard_evocation_savant` |
 | closed-character-fact-and-runtime-detached-split | 4 | `druid_druidic`, `druid_wild_shape`, `rogue_thieves_cant`, `sorcerer_font_of_magic` |
 | closed-companion-control-boundary | 3 | `animate_dead`, `druid_wild_companion`, `find_steed` |
-| open-profile-accounting | 2 | `ranger_favored_enemy`, `wizard_evocation_savant` |
 
 ## Open Frontier
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| open-profile-accounting | 2 | `ranger_favored_enemy`, `wizard_evocation_savant` |
+| _none_ | 0 | _none_ |
 
 ## Rules-Kernel Join
 
@@ -202,7 +201,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `plant_growth` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy. |
 | `prayer_of_healing` | closed-outside-battle-runtime-boundary | profile-subset-supported | witness-present | installed | outside-battle-runtime | Prayer of Healing application consumes completed-cast recipient eligibility facts; map geometry, range over the entire casting, Magic-action sequencing for the 10-minute cast, and interruption detection are not stored as parallel Character Sheet state. |
 | `ranger_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | installed | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
-| `ranger_favored_enemy` | open-profile-accounting | profile-subset-supported | witness-present | installed | later-level-only | Later-level residuals first trigger within Character Levels 1-5 at character level 5, so they are open in this scope. Follow-up task: SRDINV78. |
+| `ranger_favored_enemy` | blocked-follow-up-split | profile-subset-supported | witness-present | installed | follow-up-split | L12G-FOLLOWUP-RANGER-FAVORED-ENEMY-FREE-CAST-SCALING: Promote Favored Enemy's class-level free-cast count scaling by consuming the Surface grant_spell_free_casts scaling tiers instead of the current fixed base count, including the Ranger level 5 capacity increase to three Hunter's Mark free casts while preserving the existing marked-damage-rider invocation, Concentration, Bonus Action, Long Rest reset, and Spell Slot fallback behavior. Owner: Character Sheet resource projection plus Character Battle handoff and battle-runtime class-feature free-cast resource owners. Required output: Supported-profile or profile-subset-supported ranger_favored_enemy claim update with deterministic admission/resource projection evidence, focused Character Sheet and Character Battle runtime tests, and promoted Quint/runtime parity if the battle resource model changes; no authored-identity dispatch or duplicate free-cast state. |
 | `remove_curse` | closed-outside-battle-runtime-boundary | unsupported-profile | not-required | installed | outside-battle-runtime | Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects. |
 | `revivify` | closed-outside-battle-runtime-boundary | unsupported-profile | not-required | installed | outside-battle-runtime | Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup. |
 | `rogue_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | installed | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
@@ -232,7 +231,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `water_walk` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution. |
 | `wind_wall` | closed-outside-battle-runtime-boundary | unsupported-profile | not-required | not-in-unit-catalog | outside-battle-runtime | Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers. |
 | `wizard_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | installed | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
-| `wizard_evocation_savant` | open-profile-accounting | profile-subset-supported | witness-present | installed | later-level-only | Later-level residuals first trigger within Character Levels 1-5 at character level 5, so they are open in this scope. |
+| `wizard_evocation_savant` | blocked-follow-up-split | profile-subset-supported | witness-present | installed | follow-up-split | L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL: Promote Evocation Savant's new_spell_slot_level_access grant when a Wizard later gains access to a new Wizard Spell Slot level after subclass acquisition, first at Wizard level 5 for level 3 Spell Slots, by discovering and finalizing exactly one eligible Wizard Evocation spell into the existing Wizard spellbook without duplicating spellbook state, spell rosters, or authored feature identity dispatch. Owner: character-creation-runtime class-level advancement and Wizard spellbook learning owner. Required output: Supported-profile or profile-subset-supported wizard_evocation_savant claim update with focused Character Creation advancement tests and QNT/runtime replay covering the level-5 new-slot-level grant, duplicate spellbook rejection, and preservation of the existing acquisition-time level-3 choices. |
 | `zone_of_truth` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | social-knowledge-effect | Zone of Truth's truthfulness constraint, conversation answers, deliberate-lie judgment, evasive response handling, and caster save-outcome knowledge require table/social adjudication facts; promoted battle runtime must not add conversation-state or lie-detection state without a clear executable battle owner. |
 
 ## Outside Denominator Pressure

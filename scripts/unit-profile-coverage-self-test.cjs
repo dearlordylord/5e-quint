@@ -203,6 +203,45 @@ function assertLaterLevelOnlyScopeAccounting() {
       `Self-test failed: expected level-5 open residual reason to name the in-scope report and follow-up task, got ${JSON.stringify(level5Status)}`,
     );
   }
+
+  const followUpSplitUnit = {
+    ...unit,
+    claim: {
+      ...unit.claim,
+      followUpTasks: [
+        {
+          id: "L12G-FIXTURE-LATER-LEVEL-SPLIT",
+          title: "Fixture Later Level Split",
+          owner: "fixture owner",
+          mechanic: "fixture level 5 scaling",
+          requiredOutput: "fixture supported profile",
+        },
+      ],
+    },
+  };
+  const level4FollowUpStatus = strictStatusForUnitForTest(
+    followUpSplitUnit,
+    4,
+  );
+  if (level4FollowUpStatus.status !== "closed-later-level-only") {
+    fail(
+      `Self-test failed: expected out-of-scope later-level residual with follow-up split to stay closed-later-level-only, got ${JSON.stringify(level4FollowUpStatus)}`,
+    );
+  }
+  if (!level4FollowUpStatus.reason.includes("Fixture scaling first triggers")) {
+    fail(
+      `Self-test failed: expected out-of-scope later-level residual with follow-up split to keep the later-level reason, got ${JSON.stringify(level4FollowUpStatus)}`,
+    );
+  }
+  const level5FollowUpStatus = strictStatusForUnitForTest(
+    followUpSplitUnit,
+    5,
+  );
+  if (level5FollowUpStatus.status !== "blocked-follow-up-split") {
+    fail(
+      `Self-test failed: expected in-scope later-level residual with follow-up split to close as blocked-follow-up-split, got ${JSON.stringify(level5FollowUpStatus)}`,
+    );
+  }
 }
 
 function assertSelectionGrantContainerScopeAccounting() {

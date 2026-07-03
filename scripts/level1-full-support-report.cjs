@@ -603,8 +603,15 @@ function sourceRowSummary(rows) {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-function closureKindsForClaim(claim) {
-  if (Array.isArray(claim?.followUpTasks) && claim.followUpTasks.length > 0) {
+function closureKindsForClaim(claim, status) {
+  if (status === "closed-later-level-only") {
+    return [laterLevelOnlyClosureKind];
+  }
+  if (
+    status === "blocked-follow-up-split" &&
+    Array.isArray(claim?.followUpTasks) &&
+    claim.followUpTasks.length > 0
+  ) {
     return ["follow-up-split"];
   }
   if (claim?.tag === "profile-subset-supported") {
@@ -761,6 +768,13 @@ function inScopeLaterLevelOpenReason(claim, scope) {
   return `Later-level residuals first trigger within ${scope.title} at character ${levelLabel} ${levels.join(", ")}, so they are open in this scope.${taskText}`;
 }
 
+function laterLevelClosureReasonForClaim(claim) {
+  return laterLevelResidualEntries(claim)
+    .map((entry) => entry.battleReadinessClosure?.reason ?? entry.mechanic)
+    .filter(Boolean)
+    .join("; ");
+}
+
 function hasOnlyLaterLevelResiduals(claim, scope) {
   if (claim?.tag === "unsupported-profile") {
     return isLaterLevelClosureBeyondScope(
@@ -882,18 +896,18 @@ function strictStatusForUnit(unit, scope) {
       reason: "The Unit has a supported-profile claim.",
     };
   }
-  if (hasFollowUpSplit(claim)) {
-    return {
-      status: "blocked-follow-up-split",
-      reason: closureReasonForClaim(claim),
-    };
-  }
   if (hasOnlyLaterLevelResiduals(claim, scope)) {
     return {
       status: "closed-later-level-only",
       reason:
-        closureReasonForClaim(claim) ||
+        laterLevelClosureReasonForClaim(claim) ||
         `The remaining residuals first trigger after character level ${scope.maxCharacterLevel}.`,
+    };
+  }
+  if (hasFollowUpSplit(claim)) {
+    return {
+      status: "blocked-follow-up-split",
+      reason: closureReasonForClaim(claim),
     };
   }
   if (hasOnlyCompanionControlBoundaryResiduals(claim)) {
@@ -989,7 +1003,7 @@ function rowForStrictUnit(unit, sourceRows, rulesKernelProfileJoin, scope) {
       selectedIdentityMbtEvidenceTag,
     ),
     sourceRecordPath: unit.sourceRecordPath,
-    closureKinds: closureKindsForClaim(unit.claim),
+    closureKinds: closureKindsForClaim(unit.claim, status.status),
     rulesKernel:
       unit.claim?.tag === "supported-profile"
         ? rulesKernelUnitJoin(unit, rulesKernelProfileJoin)
