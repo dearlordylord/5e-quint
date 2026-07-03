@@ -10,7 +10,8 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.mbt.test.ts\"",
+    "test:mbt:reducer-route-connectors": "vitest run src/reducer-route-connectors.mbt.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

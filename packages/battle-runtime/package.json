@@ -10,7 +10,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.mbt.test.ts\"",
     "test:qnt-proofs": "RUN_QNT_PROOFS=1 vitest run src/battle-runtime-qnt-proofs.test.ts",
     "test:mbt:acid-arrow-timing": "vitest run src/acid-arrow-timing.mbt.test.ts",
     "test:mbt:after-hit-damage-riders": "vitest run src/after-hit-damage-riders.mbt.test.ts",

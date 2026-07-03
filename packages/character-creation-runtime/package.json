@@ -10,7 +10,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.mbt.test.ts\"",
     "test:mbt:weapon-mastery-level-gain": "vitest run src/weapon-mastery-level-gain.mbt.test.ts",
     "typecheck": "tsc --noEmit"
   },

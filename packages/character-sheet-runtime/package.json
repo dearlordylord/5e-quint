@@ -13,7 +13,7 @@
     "audit:split": "node ../../scripts/audit-character-sheet-runtime-split.mjs",
     "quality": "pnpm audit:split && pnpm typecheck && pnpm test",
     "test:mbt:weapon-mastery-class-level-reselection": "vitest run src/weapon-mastery-class-level-reselection.mbt.test.ts",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.mbt.test.ts\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
