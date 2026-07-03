@@ -6700,7 +6700,7 @@ exec
 --
 -- DEFERRED.
 --   • "Movement is unaffected by Difficult Terrain" — movement-
---     conversion / spatial predicate per plans/CONTENT_SURFACE_DEFERRED.md
+--     conversion / spatial predicate per the historical content-surface deferred plan
 --     §B (see Jump precedent). Caller-owned.
 --   • "Spells and other magical effects can [not] reduce the target's
 --     Speed" — no source-narrowed "block_speed_modification" atom;

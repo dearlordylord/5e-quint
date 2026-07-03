@@ -17,8 +17,9 @@ sweep that produces `survey-results-<source>.jsonl` and
 
 Stage-2 (this prompt) is re-run per cluster, by the main session, as
 the surface evolves. Each pass digests one cluster, lands widenings,
-and moves units to `clean` / `partial` / deferred. See
-`plans/CONTENT_SURFACE_DEFERRED.md` for the running ledger.
+and moves units to `clean` / `partial` / deferred. The old deferred-plan ledger
+has been removed from the active tree; use current survey outputs and active
+planning artifacts when a durable backlog needs to be reopened.
 
 ## Why Stage-2 is distinct from Stage-1
 
@@ -58,8 +59,8 @@ widening for a capability that is architecturally caller-owned. The
 sub-agent must reject these proactively and classify as `dm_agenda`,
 never propose a surface widening even if it fits TypeScript.
 
-**DM-agenda capabilities** (caller/session-owned per `ARCHITECTURE.md`
-§1 + `plans/CONTENT_SURFACE_DEFERRED.md` §B):
+**DM-agenda capabilities** (caller/session-owned per `ARCHITECTURE.md` §1 and
+the historical content-surface deferred classification):
 
 - **Spatial** — distance, adjacency, line of sight, movement geometry,
   "within N ft", "in range", "reach", barrier permeability (lead, stone),
@@ -85,7 +86,7 @@ never propose a surface widening even if it fits TypeScript.
 If a unit's proposal names one of these capabilities — even if wrapped
 as `grant_sense`, `detect`, `create_object`, or similar type-sound
 atoms — classify as `dm_agenda` and, if not already present, suggest
-adding the unit to `plans/CONTENT_SURFACE_DEFERRED.md` §B.
+recording the unit in a fresh active backlog.
 
 Do NOT:
 - Propose a `grant_sense` variant for language comprehension, object
@@ -124,7 +125,7 @@ each unit and, where `stale` or `partial`, author the Dhall encoding.
 
 1. `packages/surface/src/surface/types.ts` —
    relevant sections: <LIST THE SPECIFIC TYPES / ATOMS FOR THIS CLUSTER>.
-2. `plans/CONTENT_SURFACE_DEFERRED.md` — especially §<LIST RELEVANT §A/§B/§C>.
+2. Current active backlog or survey report rows for this cluster.
 3. `ARCHITECTURE.md` lines 100–130 — spatial / DM rulings caller-provided.
 4. `scripts/content-surface-survey/BATCH_DIGEST_PROMPT.md` — this file's
    DM-agenda rules (§"Hard rules for DM agenda") and classification

@@ -107,8 +107,8 @@ this lane:
 
 ## Plan Impact
 
-- `plans/RALPH_L3_MORNING_SPELL_BOUNDARY_BATCH.md` should stay closed; Task 12
-  is the final lane consolidation.
+- The deleted L3 morning spell boundary batch should stay closed; Task 12 is
+  the final lane consolidation.
 - `plans/ACTIVE_PLAN.md` should not advertise a non-existent promoted-unit lane
   as the next runnable queue. Future work should launch from a concrete new
   spell-level-3 pressure lane or another existing lane plan.

@@ -259,7 +259,6 @@ Every Ralph task must run the task-base check before research or edits:
 
 ## Source Artifacts
 
-- `plans/RALPH_L5_FULL_SRD_COMPLETION.md`
 - `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`
 - `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`
 - `plans/unit-profile-coverage/srd-unit-inventory.json`
@@ -281,8 +280,8 @@ Every Ralph task must run the task-base check before research or edits:
 ## Lane Rules
 
 - This queue may change checker, MCP test, generated report, and planning files.
-  It must not reopen SDK/accounting rows already closed by the first queue
-  unless a checker-owned contradiction is found.
+  It must not reopen SDK/accounting rows already closed by the completed L5
+  full SRD baseline unless a checker-owned contradiction is found.
 - Keep L5 and L6 scope SRD-only. PHB+ content remains out of scope. Level 6
   does not include spell-level-4 work.
 - MCP scenarios must follow returned tool state: use returned draft revisions,
@@ -297,8 +296,9 @@ Every Ralph task must run the task-base check before research or edits:
   contents, feature resources, battle spell slots, or battle actions. Thread or
   project existing owners.
 - If level-1-5 ultra-golden cannot pass because a non-MCP layer is genuinely
-  missing support or parity after the first queue is closed, split that missing
-  work into concrete Ralph tasks in this plan instead of hiding it in prose.
+  missing support or parity after the completed L5 full SRD baseline, split
+  that missing work into concrete Ralph tasks in this plan instead of hiding it
+  in prose.
 - If level-6 full support or level-1-6 ultra-golden cannot pass because a real
   owner, catalog, checker, parity, or MCP layer is missing, split the missing
   work into concrete Ralph tasks and update `ralph-task-index`, `## DAG / Queue
@@ -351,8 +351,8 @@ Every Ralph task must run the task-base check before research or edits:
 
 ## Shared Verification
 
-- RAW/ubiquitous-language check: before modeling or asserting level-5 behavior,
-  read the relevant `.references/srd-5.2.1/` passages and
+- RAW/ubiquitous-language check: before modeling or asserting level-5 or level-6
+  behavior, read the relevant `.references/srd-5.2.1/` passages and
   `UBIQUITOUS_LANGUAGE.md`.
 - Reviewer-loop convergence: run RAW traceability, ubiquitous-language/domain,
   architecture/connascence, and code-review passes until no reasonable findings
@@ -383,7 +383,6 @@ Depends on: none
 
 Inputs:
 
-- `plans/RALPH_L5_FULL_SRD_COMPLETION.md`
 - `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`
 - `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`
 - `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
@@ -392,20 +391,18 @@ Inputs:
 
 Current state:
 
-- The L5 SDK/accounting queue is expected to run first from
-  `plans/RALPH_L5_FULL_SRD_COMPLETION.md`.
-- This queue should not start ultra-golden implementation while the first queue
-  still has runnable or blocked tasks.
+- The L5 SDK/accounting queue is complete and removed from the active tree.
+- This queue should not start ultra-golden implementation while generated L5
+  accounting or SDK inventory still disagrees with that closed baseline.
 
 Output:
 
-- Verify `plans/RALPH_L5_FULL_SRD_COMPLETION.md` has no remaining tasks with a
-  runnable, blocked, or deferred status.
-- Verify the first queue's final generated-refresh task has landed and current
-  generated artifacts agree with the post-L5 accounting state.
-- If the first queue is not closed, mark this task `blocked` with
-  `Blocker Type: dependency` and name the unfinished task ids. Do not edit the
-  rest of this plan.
+- Verify current generated artifacts agree with the post-L5 accounting state.
+- Verify the L5 accounting and SDK inventory have no unresolved row that would
+  reopen the completed L5 full SRD queue.
+- If the closed L5 baseline is contradicted by current artifacts, mark this task
+  `blocked` with `Blocker Type: dependency` and name the contradicting row ids.
+  Do not edit the rest of this plan.
 
 Completion / Success Criteria:
 
@@ -598,8 +595,8 @@ Output:
 - Write `plans/unit-profile-coverage/L5_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`.
 - Choose the smallest honest SRD-only level-5 MCP vertical.
 - Prefer a Wizard or other class path that can prove level-3 spell access and
-  battle handoff using already-supported level-5 behavior after the first queue
-  closes.
+  battle handoff using already-supported level-5 behavior after the completed
+  L5 full SRD baseline.
 - Record exact local SRD anchors, existing owner boundaries, selected Unit or
   spell candidates, expected Spell Slot projection, and why the vertical covers
   the required MCP flows.
@@ -631,7 +628,8 @@ Blocker Detail: waiting for `L5UG-MCP-01-LEVEL5-VERTICAL-DECISION`.
 
 Inputs:
 
-- `plans/unit-profile-coverage/L5_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
+- Future Task 5 output:
+  `plans/unit-profile-coverage/L5_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
 - `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
 - `packages/mcp/src/character-tools.ts`
 - `packages/mcp/src/protocol-server.ts`
@@ -679,7 +677,8 @@ Blocker Detail: waiting for `L5UG-MCP-02-LEVEL5-SHEET-SCENARIO` and
 Inputs:
 
 - The level-5 sheet scenario helper from Task 6.
-- `plans/unit-profile-coverage/L5_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
+- Future Task 5 output:
+  `plans/unit-profile-coverage/L5_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
 - `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
 - Battle handoff and selected behavior owners named by the Task 5 decision.
 - Current Task 4 non-MCP layer reconciliation result.
@@ -944,19 +943,18 @@ Blocker Detail: waiting for `L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH`.
 
 Inputs:
 
-- `plans/RALPH_L5_FULL_SRD_COMPLETION.md`
 - This plan's Tasks 1 through 10.
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`
 - Current generated coverage checker output.
 
 Output:
 
-- Verify the L5 full SRD queue and L5 ultra-golden queue have no remaining
-  runnable, blocked, or deferred tasks.
+- Verify the completed L5 full SRD baseline and L5 ultra-golden queue have no
+  remaining runnable, blocked, or deferred work.
 - Verify level-1-5 generated support and ultra-golden artifacts agree with the
   completed queues.
-- If either L5 queue is not closed, leave this task blocked and name the
-  unfinished task ids.
+- If either the L5 full SRD baseline or L5 ultra-golden queue is not closed,
+  leave this task blocked and name the unfinished or contradicting task ids.
 
 Completion / Success Criteria:
 
@@ -1766,7 +1764,8 @@ Blocker Detail: waiting for `L6UG-MCP-01-LEVEL6-VERTICAL-DECISION`.
 
 Inputs:
 
-- `plans/unit-profile-coverage/L6_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
+- Future Task 32 output:
+  `plans/unit-profile-coverage/L6_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
 - `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
 - `packages/mcp/src/character-tools.ts`
 - `packages/mcp/src/protocol-server.ts`
@@ -1805,7 +1804,8 @@ Blocker Detail: waiting for `L6UG-MCP-02-LEVEL6-SHEET-SCENARIO` and
 Inputs:
 
 - The level-6 sheet scenario helper from Task 33.
-- `plans/unit-profile-coverage/L6_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
+- Future Task 32 output:
+  `plans/unit-profile-coverage/L6_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
 - Battle handoff and selected behavior owners named by Task 32.
 
 Output:

@@ -21,7 +21,7 @@ This prototype's authored surface models deterministic combat/runtime mechanics.
 Local repo precedent is consistent on that boundary:
 
 - `content/mind_spike.dhall` explicitly defers persistent target-location knowledge as DM agenda, citing sibling spells like `Locate Object`.
-- `/workspace/typescript/dnd/plans/CONTENT_SURFACE_DEFERRED.md` explicitly lists `Locate Object` under session-owned effects: "object-location sense is spatial/session-owned."
+- the historical content-surface deferred plan explicitly lists `Locate Object` under session-owned effects: "object-location sense is spatial/session-owned."
 - `content/identify.dhall` treats information-disclosure payloads as DM agenda rather than forcing a fake effect atom.
 
 ## Why I Did Not Author A Placeholder

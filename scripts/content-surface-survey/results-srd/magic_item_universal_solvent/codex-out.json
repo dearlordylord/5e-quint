@@ -6687,7 +6687,7 @@ a runtime projection.
 
 ## Per-unit red/green loop
 
-See [`plans/CONTENT_SURFACE_PROTOTYPE.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_PROTOTYPE.md)
+See the historical content-surface prototype plan
 §"Per-unit red/green loop".
 
 Short version: encode → trace → review mermaid → **green** (next
@@ -6712,7 +6712,7 @@ is the queue for the red/green loop.** Before authoring a unit in
 Don't invent widenings from scratch when a proposal already exists —
 evaluate, accept / refactor / reject, then author.
 
-See `plans/CONTENT_SURFACE_DEFERRED.md` for the current queue of
+See the historical content-surface deferred plan for the current queue of
 deferred widenings drawn from authored units + the sub-agent corpus.
 
 The nightly run that produced the corpus ran ~500 units; we're in
@@ -6763,9 +6763,9 @@ the atom vocabulary right *before* that integration cost is paid.
 
 ## Related docs
 
-- [`plans/CONTENT_SURFACE_PROTOTYPE.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_PROTOTYPE.md) — the red/green loop spec.
-- [`plans/CONTENT_SURFACE_SURVEY.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_SURVEY.md) — the survey pipeline that produced the sub-agent corpus.
-- [`plans/CONTENT_SURFACE_DEFERRED.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_DEFERRED.md) — queue of deferred widenings.
+- the historical content-surface prototype plan — the red/green loop spec.
+- the historical content-surface survey plan — the survey pipeline that produced the sub-agent corpus.
+- the historical content-surface deferred plan — queue of deferred widenings.
 - [`.references/xphb-srd-pairing/INDEX.md`](/workspace/typescript/dnd/.references/xphb-srd-pairing/INDEX.md) — taxonomy research entrypoint.
 - [`scripts/content-surface-survey/README.md`](/workspace/typescript/dnd/scripts/content-surface-survey/README.md) — survey generator / worker docs.
 
@@ -6904,7 +6904,7 @@ content/spike_growth.dhall:25:          , castingTime = { kind = "action" }
 content/fly.dhall:36:          , castingTime = { kind = "action" }
 content/hold_monster.dhall:30:          , castingTime = { kind = "action" }
 content/mage_armor.dhall:29:          , castingTime = { kind = "action" }
-content/protection_from_poison.dhall:17:-- item A1 in plans/CONTENT_SURFACE_DEFERRED.md. Encoding just
+content/protection_from_poison.dhall:17:-- item A1 in the historical content-surface deferred plan. Encoding just
 content/protection_from_poison.dhall:34:          , castingTime = { kind = "action" }
 content/heal.dhall:34:          , castingTime = { kind = "action" }
 content/entangle.dhall:35:          , castingTime = { kind = "action" }
@@ -6935,7 +6935,7 @@ content/grease.dhall:45:          , castingTime = { kind = "action" }
 content/mind_blank.dhall:7:--    read its thoughts, or magically detect its location, and no spell
 content/mind_blank.dhall:17:--     location / gather information / observe remotely / control its
 content/mind_blank.dhall:19:--     mutation, remote sensing, allegiance/alignment, location
-content/mind_blank.dhall:20:--     sensing). Per plans/CONTENT_SURFACE_DEFERRED.md §B class.
+content/mind_blank.dhall:20:--     sensing). Per the historical content-surface deferred plan §B class.
 content/mind_blank.dhall:31:          "Until the spell ends, one willing creature you touch has Immunity to Psychic damage and the Charmed condition. The target is also unaffected by anything that would sense its emotions or alignment, read its thoughts, or magically detect its location, and no spell — not even Wish — can gather information about the target, observe it remotely, or control its mind."
 content/mind_blank.dhall:36:          , castingTime = { kind = "action" }
 content/longstrider.dhall:29:          , castingTime = { kind = "action" }
@@ -6954,7 +6954,7 @@ content/fire_bolt.dhall:4:--   "You hurl a mote of fire at a creature or an obje
 content/fire_bolt.dhall:6:--    target takes 1d10 Fire damage. A flammable object hit by this
 content/fire_bolt.dhall:14:-- PARTIAL: the ignition rider ("a flammable object hit by this spell
 content/fire_bolt.dhall:16:-- DM agenda (world-object / narrative mutation per
-content/fire_bolt.dhall:17:-- plans/CONTENT_SURFACE_DEFERRED.md §B — same class as
+content/fire_bolt.dhall:17:-- the historical content-surface deferred plan §B — same class as
 content/fire_bolt.dhall:19:-- unattended flammable objects is a world-state effect the session
 content/fire_bolt.dhall:20:-- owns; the content surface does not model object material, the
 content/fire_bolt.dhall:21:-- worn/carried predicate, nor burning-object state. Core attack +
@@ -6964,7 +6964,7 @@ content/fire_bolt.dhall:26:-- DEFERRED.md §B world-object discussion). The atta
 content/fire_bolt.dhall:27:-- object branch is session-resolved.
 content/fire_bolt.dhall:38:          "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: The damage increases by 1d10 when you reach levels 5 (2d10), 11 (3d10), and 17 (4d10)."
 content/fire_bolt.dhall:43:          , castingTime = { kind = "action" }
-content/hypnotic_pattern.dhall:25:-- CONTENT_SURFACE_DEFERRED.md A[detect-magic-like]) and DM agenda
+content/hypnotic_pattern.dhall:25:-- the historical content-surface deferred plan A[detect-magic-like]) and DM agenda
 content/hypnotic_pattern.dhall:26:-- (action allocation by an ally). Omitted.
 content/hypnotic_pattern.dhall:42:          , castingTime = { kind = "action" }
 content/mind_spike.dhall:8:--    target's location until the spell ends, but only while the two of
@@ -7059,7 +7059,7 @@ content/compulsion.dhall:51:          , castingTime = { kind = "action" }
 content/faerie_fire.dhall:4:--   "Objects in a 20-foot Cube within range are outlined in blue,
 content/faerie_fire.dhall:7:--    duration, objects and affected creatures shed Dim Light in a
 content/faerie_fire.dhall:9:--   "Attack rolls against an affected creature or object have
-content/faerie_fire.dhall:14:-- proposal, see plans/CONTENT_SURFACE_DEFERRED.md A3) authored
+content/faerie_fire.dhall:14:-- proposal, see the historical content-surface deferred plan A3) authored
 content/faerie_fire.dhall:15:-- using existing surface: activation family + save_gate phase +
 content/faerie_fire.dhall:21:-- Objects are NOT gated by the save ("Objects...are outlined"
 content/faerie_fire.dhall:22:-- unconditionally); only creatures save. Modeling the object-branch
@@ -7098,7 +7098,7 @@ content/color_spray.dhall:36:          , castingTime = { kind = "action" }
 content/detect_magic.dhall:7:--    creature or object in the area that bears the magic, and if an
 content/detect_magic.dhall:35:          "For the duration, you sense the presence of magical effects within 30 feet of yourself. If you sense such effects, you can take the Magic action to see a faint aura around any visible creature or object in the area that bears the magic, and if an effect was created by a spell, you learn the spell's school of magic."
 content/detect_magic.dhall:40:          , castingTime = { kind = "action", ritual = True }
-content/mass_suggestion.dhall:41:--     and plans/CONTENT_SURFACE_DEFERRED.md §B Command precedent).
+content/mass_suggestion.dhall:41:--     and the historical content-surface deferred plan §B Command precedent).
 content/mass_suggestion.dhall:64:          , castingTime = { kind = "action" }
 content/fear.dhall:18:--   1. "drop whatever it is holding" — object-drop is a world-object
 content/fear.dhall:19:--      state mutation (§B world-object agenda, sibling to Fire Bolt's
@@ -7122,7 +7122,7 @@ content/magic_item_potion_of_heroism.dhall:109:      , destruction = { kind = "p
 content/sequester.json:2:  "description": "With a touch, you magically sequester an object or a willing creature. For the duration, the target has the Invisible condition and (if a creature) the Unconscious condition. You may set a caster-defined early-end trigger; the spell also ends if the target takes any damage.",
 content/mind_spike.json:2:  "description": "You drive a spike of psionic energy into the mind of one creature you can see within range. The target makes a Wisdom saving throw, taking 3d8 Psychic damage on a failed save or half as much damage on a successful one. On a failed save, you also always know the target's location until the spell ends, but only while the two of you are on the same plane of existence. While you have this knowledge, the target can't become hidden from you, and if it has the Invisible condition, it gains no benefit from that condition against you. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 2.",
 content/freedom_of_movement.dhall:22:--     representable on the surface today (no attacker/source filter
-content/freedom_of_movement.dhall:34:--     conversion / spatial predicate per plans/CONTENT_SURFACE_DEFERRED.md
+content/freedom_of_movement.dhall:34:--     conversion / spatial predicate per the historical content-surface deferred plan
 content/freedom_of_movement.dhall:57:          , castingTime = { kind = "action" }
 content/summon_dragon.json:10:      "m": "an object with the image of a dragon engraved on it worth 500+ GP",
 content/magic_item_chime_of_opening.json:4:    "kind": "permanent_on_empty"

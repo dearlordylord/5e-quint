@@ -31,9 +31,6 @@ This plan rolls up the bounded program of work to reach the achievable 100% QNT 
   and checker issues.
 - `plans/rules-kernel-coverage/generator-readiness.jsonl` — semantic-core status per obligation.
 - `plans/unit-profile-coverage/` — per-Unit support and selected-identity tracking.
-- `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` — historical
-  candidate list drained by the portable parity witness lane; use current
-  checker-owned artifacts for any future witness-shape planning.
 - `plans/rules-kernel-coverage/HIT_POINT_DAMAGE_RUST_DRY_RUN.md` and
   `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md` —
   current manual Rust dry-run evidence.
@@ -82,9 +79,6 @@ Checked source-of-truth artifacts:
 - `plans/rules-kernel-coverage/HIT_POINT_RECOVERY_RUST_DRY_RUN.md` is the
   current Hit Point recovery manual Rust dry-run vertical, scoped to pure
   healing projection without adding parallel Character Sheet state.
-- `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` is a drained
-  historical candidate list. It records the former candidate shapes only; it is
-  not a runnable queue or source of current blocker/deepening work.
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
   `plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md` are the durable
   outputs of the closed ultra-golden metric lane.
@@ -106,8 +100,8 @@ Active generator and Rust queues:
 - Optional battle composite-slice deepening candidates are historical planning
   inputs only. `QCP-CS1` through `QCP-CS8` have either landed as focused MBT
   witnesses or carry a recorded witness-shape policy decision in
-  `obligations.jsonl`; do not reopen them from
-  `plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md`.
+  `obligations.jsonl`; do not reopen them from deleted historical candidate
+  files.
 - No runnable QNT deepening lane is active. The drained Lane B plan was deleted
   after its durable outputs moved into checked artifacts, git history, and the
   portable parity witness closeout below.
@@ -246,9 +240,10 @@ Output: one composite slice per missing profile, following the pilot template. S
 Acceptance: new obligation row per slice; parity test green; checker green.
 
 Current source-of-truth check:
-`plans/rules-kernel-coverage/COMPOSITE_SLICE_CANDIDATES.md` is drained
-historical input; future battle slice work should start from the checked
-obligation registry and generated report, not from that candidate list.
+The former composite-slice candidate list is drained historical input and has
+been removed from the active tree; future battle slice work should start from
+the checked obligation registry and generated report, not from that candidate
+list.
 
 ### Task 4 - QCP-NON-SEMANTIC-AUDIT
 

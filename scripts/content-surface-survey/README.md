@@ -1,6 +1,7 @@
 # Content surface coverage survey
 
-Plan: `/plans/CONTENT_SURFACE_SURVEY.md`.
+The original content-surface survey plan has been drained into this local
+pipeline documentation and the tracked survey corpus.
 
 This directory runs a parallelized per-unit encoding survey across SRD 5.2.1 (and a PHB-only research sample) to decide between Option A and Option B for the content surface's scaling-shape encoding.
 

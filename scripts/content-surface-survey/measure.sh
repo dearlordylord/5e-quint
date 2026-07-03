@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# measure.sh — evaluate the loop against acceptance criteria in
-# plans/CONTENT_SURFACE_LOOP_ACCEPTANCE.md. Emits one line per criterion
+# measure.sh — evaluate the loop against the historical loop acceptance
+# criteria. Emits one line per criterion
 # with ✓ (pass) or ✗ (fail) + the underlying number. One-shot, no args.
 
 set -euo pipefail

@@ -17122,13 +17122,13 @@
     },
     {
       "claimKind": "accepted-session-boundary-follow-up",
-      "note": "Out-of-battle companion persistence is a future character/session ownership task, not a battle-runtime admission shortcut: current battle setup can admit a caller-supplied source-linked companion combatant when the owner has legal companion access, but it does not model or persist the out-of-battle ritual or feature event that created the companion. Future work must add durable character/session companion facts, stable companion identity, selected form, retained mutable facts that cross battle boundaries, and battle setup consumption of that state without duplicating authored identity dispatch. See plans/COMPANION_SESSION_ADMISSION_AND_REAPPEARANCE_PLAN.md#L13COMP-01-COMPANION-SESSION-ADMISSION.",
+      "note": "Out-of-battle companion persistence is a future character/session ownership task, not a battle-runtime admission shortcut: current battle setup can admit a caller-supplied source-linked companion combatant when the owner has legal companion access, but it does not model or persist the out-of-battle ritual or feature event that created the companion. Future work must add durable character/session companion facts, stable companion identity, selected form, retained mutable facts that cross battle boundaries, and battle setup consumption of that state without duplicating authored identity dispatch. Historical companion-session admission lane recorded this follow-up before that lane was removed from the active tree.",
       "profileIds": [],
       "taskId": "L3COMP-FOLLOWUP-COMPANION-SESSION-PERSISTENCE"
     },
     {
       "claimKind": "accepted-runtime-discovery-mcp-surface-follow-up",
-      "note": "MCP companion execution must stay behind battle-runtime-discovered generic subjects and fills. Remaining future work must complete companion admission/cast and later protocol coverage through resolve_battle_act/fill_battle_hole so MCP carries runtime-returned act/fill data instead of defining companion commands or invoking authored-identity tools. Temporary dismissal, reappearance, permanent dismissal, shared senses, and Touch spell delivery are already reducer-discovered battle subjects/fills. See plans/COMPANION_SESSION_ADMISSION_AND_REAPPEARANCE_PLAN.md#L13COMP-03-GENERIC-MCP-COMPANION-ACTS.",
+      "note": "MCP companion execution must stay behind battle-runtime-discovered generic subjects and fills. Remaining future work must complete companion admission/cast and later protocol coverage through resolve_battle_act/fill_battle_hole so MCP carries runtime-returned act/fill data instead of defining companion commands or invoking authored-identity tools. Temporary dismissal, reappearance, permanent dismissal, shared senses, and Touch spell delivery are already reducer-discovered battle subjects/fills. Historical companion-session admission lane recorded this follow-up before that lane was removed from the active tree.",
       "profileIds": [],
       "taskId": "L3COMP-FOLLOWUP-REDUCER-DISCOVERED-COMPANION-ACTS"
     },

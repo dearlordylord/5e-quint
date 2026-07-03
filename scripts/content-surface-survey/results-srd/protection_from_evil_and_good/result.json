@@ -27,6 +27,6 @@
   ],
   "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Session 2026-04-16: Shared CreatureType enum across target-side (Hold Person, Charm Person) and attacker-side (this unit). Material-cost metadata captures the 25-GP Holy Water 'which the spell consumes'. Charm/frighten immunity and save-advantage-against-already-applied-X-by-type deferred (see CONTENT_SURFACE_DEFERRED.md A5).",
+  "notes": "Session 2026-04-16: Shared CreatureType enum across target-side (Hold Person, Charm Person) and attacker-side (this unit). Material-cost metadata captures the 25-GP Holy Water 'which the spell consumes'. Charm/frighten immunity and save-advantage-against-already-applied-X-by-type deferred (see the historical content-surface deferred plan A5).",
   "session": "2026-04-16-interactive"
 }

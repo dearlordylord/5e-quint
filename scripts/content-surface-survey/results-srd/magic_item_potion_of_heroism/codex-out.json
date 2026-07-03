@@ -7754,7 +7754,7 @@ exec
 -- DEFERRED. "Advantage on saving throws to avoid or end the Poisoned
 -- condition" is a save-trigger narrow to a specific condition — the
 -- skill/ability/condition-scoped roll filter covered by deferred
--- item A1 in plans/CONTENT_SURFACE_DEFERRED.md. Encoding just
+-- item A1 in the historical content-surface deferred plan. Encoding just
 -- "Advantage on saving_throw" would over-apply; omitted for now.
 
 let protectionFromPoison =

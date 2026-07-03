@@ -1,43 +1,32 @@
-# Active Plan: Level 5 Full SRD Completion
+# Active Plan: L5 Extension And L6 Horizontal Slice
 
 This is a coordination rollup, not a Ralph launch queue. Do not run Ralph
-against `plans/ACTIVE_PLAN.md` for this effort. Launch task-by-task from
-`plans/RALPH_L5_FULL_SRD_COMPLETION.md`.
+against `plans/ACTIVE_PLAN.md`. Launch Ralph from
+`plans/RALPH_L5_EXTENSION_L6_HORIZONTAL_SLICE.md`.
 
 ## Current State
 
-The active work is the character-level-5 full SRD completion queue. The
-pre-work audit is complete and recorded in
+The active work is the combined Ralph queue for:
+
+- the unfinished level-5 ultra-golden MCP extension;
+- the level-6 full SRD horizontal slice;
+- the level-6 ultra-golden MCP extension.
+
+The prior level-5 full SRD launch queue is complete and has been removed from
+the active tree. Its durable accounting inputs remain in
 `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md` and
 `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`.
 
-The level-5 frontier is SRD-only and row-grained:
-
-- 28 character-level rows.
-- 110 spell-level-3 class-list rows.
-- 138 total level-5 completion rows.
-
-Level-5 progression deltas are closed through generic owners: Proficiency
-Bonus, Spell Access, Spell Slots, Pact Magic, Weapon Mastery, feature resources,
-and character-battle handoff are not new per-class runtime tasks.
-
-The only launch source for Ralph is
-`plans/RALPH_L5_FULL_SRD_COMPLETION.md`. It contains a 57-task queue covering
-seed verification, explicit class-table closure, per-spell SDK scenarios,
-per-Unit owner reviews, future-owner-before-SDK closures, unresolved spell-owner
-reviews, two artifact-reconciliation closures inside the future-owner lane, and
-a final generated-refresh task.
-
-The earlier level-1-4 and L5 lane files were removed from the active tree; they
-are historical records in git history, not active launch sources.
+The current Ralph launch source is
+`plans/RALPH_L5_EXTENSION_L6_HORIZONTAL_SLICE.md`.
 
 ## Source Of Truth
 
-Read these before starting work in this queue:
+Read these before starting or reviewing this queue:
 
+- `plans/RALPH_L5_EXTENSION_L6_HORIZONTAL_SLICE.md`
 - `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`
 - `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`
-- `plans/RALPH_L5_FULL_SRD_COMPLETION.md`
 - `plans/unit-profile-coverage/level1-7-mining-audit.json`
 - `plans/unit-profile-coverage/LEVEL1_7_MINING_AUDIT.md`
 - `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
@@ -52,27 +41,22 @@ Read these before starting work in this queue:
 
 ## Work Shape
 
-The Ralph queue is task-shaped from the current SDK inventory, not from the
-older L5 implementation lanes:
+The active Ralph queue is task-shaped from the current generated accounting and
+SDK inventory, not from older L5 implementation lanes:
 
 | Lane | Rows | Work |
 | --- | ---: | --- |
-| Existing SDK seeds | 6 | Verify current seed scenario evidence remains discoverable. |
-| Explicit class-table closure | 12 | Close level-5 class-table summary rows as SDK-scope table-only rows after citing the progression-delta audit. |
-| Battle spell SDK scenarios | 35 | Add SDK RAW scenarios or class-access assertions for supported spell Units. |
-| Owner review for supported feature rows | 6 | Decide SDK scenario vs explicit SDK closure per Unit. |
-| Feature owner review | 0 | No level-5 class-feature owner-review rows remain before SDK admission. |
-| Future owner before SDK | 45 | Preserve future-owner closures until durable owners exist. |
-| Artifact reconciliation inside future-owner lane | 4 | Reconcile `gaseous_form` and `phantom_steed` mining-vs-SDK disposition text before treating the future-owner closures as durable. |
-| Spell-effect owner review | 36 | Resolve owner boundaries for twelve spell identities. |
+| Level-5 ultra-golden | 10 | Prove level-1-5 support report plumbing, non-MCP reconciliation, and MCP scenario evidence. |
+| Level-6 full SRD | 17 | Preserve existing seeds, close table/progression rows, resolve L6 feature owners, and refresh accounting. |
+| Level-6 ultra-golden | 10 | Add level-1-6 report plumbing, ultra-golden scope, MCP scenario evidence, and final generated refresh. |
 
 ## Verification
 
 - RAW and ubiquitous-language check: before changing or closing a row, read the
   listed local SRD anchors and `UBIQUITOUS_LANGUAGE.md`.
 - Progression check: before closing class-table summaries or resource/slot
-  deltas, read `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md` and
-  preserve its generic-owner decisions.
+  deltas, read the relevant progression/mining audit and preserve generic-owner
+  decisions.
 - Reviewer-loop convergence: run RAW traceability, ubiquitous-language/domain,
   architecture/connascence, and code-review passes until no reasonable findings
   remain.

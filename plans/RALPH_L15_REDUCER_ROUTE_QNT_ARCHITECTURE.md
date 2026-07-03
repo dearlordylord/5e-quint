@@ -267,7 +267,6 @@ Task 1 must recompute this number after any branch-scope or driver changes.
 - `plans/unit-profile-coverage/level1-7-mining-audit.json`
 - `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`
 - `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`
-- `plans/RALPH_L5_FULL_SRD_COMPLETION.md`
 - `packages/battle-runtime/*.mbt.qnt`
 - `packages/battle-runtime/*.route.mbt.qnt`
 - `packages/battle-runtime/battle-runtime-reducer-route.qnt`

@@ -13,7 +13,7 @@ _(none)_
 
 ## Notes
 
-Session 2026-04-16: First unit with slot-scaled duration. upcastTiers [ { atSlot=3, amount=8 }, { atSlot=5, amount=24 } ]. Skill-check advantage rider still deferred (needs OngoingOperation array + skill-scoped roll-advantage — see CONTENT_SURFACE_DEFERRED.md A1).
+Session 2026-04-16: First unit with slot-scaled duration. upcastTiers [ { atSlot=3, amount=8 }, { atSlot=5, amount=24 } ]. Skill-check advantage rider still deferred (needs OngoingOperation array + skill-scoped roll-advantage — see the historical content-surface deferred plan A1).
 
 ## Artifacts
 

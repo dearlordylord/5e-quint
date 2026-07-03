@@ -38,7 +38,7 @@
 --     suggestion and compliance judgment ("must sound achievable",
 --     "doesn't obviously harm") are DM agenda (narrative mutation /
 --     session-owned compliance, per BATCH_DIGEST_PROMPT.md §DM rules
---     and plans/CONTENT_SURFACE_DEFERRED.md §B Command precedent).
+--     and the historical Command deferred precedent).
 --   • "Creatures that can't be Charmed are immune" — handled by the
 --     target's own condition-immunity state at resolution time; not
 --     a per-spell filter.

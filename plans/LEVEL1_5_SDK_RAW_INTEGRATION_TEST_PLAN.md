@@ -90,7 +90,6 @@ the control surface for progress.
 - `plans/sdk-raw-integration/LEVEL1_5_SDK_RAW_INVENTORY.md`
 - `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`
 - `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`
-- `plans/RALPH_L5_FULL_SRD_COMPLETION.md`
 - package READMEs and focused tests in `packages/character-creation-runtime/`,
   `packages/character-sheet-runtime/`,
   `packages/character-battle-runtime/`, and `packages/battle-runtime/`

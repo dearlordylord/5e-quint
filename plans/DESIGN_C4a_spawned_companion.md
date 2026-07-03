@@ -28,12 +28,12 @@ Pattern-A units (inline level-parameterized stat block):
 - **Summon Celestial** (L5) — Celestial Spirit; mode = Avenger / Defender.
 - **Summon Fiend** (L6) — Fiendish Spirit; mode = Demon / Devil / Yugoloth.
 
-## Active Follow-Up Links
+## Historical Follow-Up
 
-- `plans/COMPANION_SESSION_ADMISSION_AND_REAPPEARANCE_PLAN.md` (landed and
-  deleted 2026-06-12; in git history) records the
-  deferred out-of-battle companion session/admission workflow and the generic
-  reducer-discovered reappearance path for temporarily dismissed companions.
+The companion session admission and reappearance lane landed and was deleted on
+2026-06-12; git history records the deferred out-of-battle companion
+session/admission workflow and the generic reducer-discovered reappearance path
+for temporarily dismissed companions.
 
 ## Concrete fields the stat block contains (per RAW text)
 

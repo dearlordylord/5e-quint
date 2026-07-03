@@ -238,8 +238,9 @@ unit in `content/`, consult the corresponding `results-srd/<slug>/proposal.md`.
 Don't invent widenings from scratch when a proposal already exists —
 evaluate, accept / refactor / reject, then author.
 
-See `plans/CONTENT_SURFACE_DEFERRED.md` for the current queue of
-deferred widenings drawn from authored records + the sub-agent corpus.
+Deferred widening context now lives in the survey corpus and current active
+planning artifacts; the old content-surface plan files have been removed from
+the active tree.
 
 As authored records land in this package, their outcomes should be reflected
 back into the survey corpus as ground-truth verdicts before the corpus is used
@@ -292,8 +293,5 @@ runtime packages own executable semantics and parity tests.
 
 ## Related docs
 
-- [`plans/CONTENT_SURFACE_PROTOTYPE.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_PROTOTYPE.md) — historical authoring-loop plan.
-- [`plans/CONTENT_SURFACE_SURVEY.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_SURVEY.md) — the survey pipeline that produced the sub-agent corpus.
-- [`plans/CONTENT_SURFACE_DEFERRED.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_DEFERRED.md) — queue of deferred widenings.
 - [`.references/xphb-srd-pairing/INDEX.md`](/workspace/typescript/dnd/.references/xphb-srd-pairing/INDEX.md) — taxonomy research entrypoint.
 - [`scripts/content-surface-survey/README.md`](/workspace/typescript/dnd/scripts/content-surface-survey/README.md) — survey generator / worker docs.

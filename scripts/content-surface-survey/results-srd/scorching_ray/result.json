@@ -22,6 +22,6 @@
   "landed_widenings": [],
   "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Session 2026-04-16: Migrated onHit/onMiss to array shape. Phase-count slot scaling ('+1 ray per slot above 2') remains deferred (see CONTENT_SURFACE_DEFERRED.md A2).",
+  "notes": "Session 2026-04-16: Migrated onHit/onMiss to array shape. Phase-count slot scaling ('+1 ray per slot above 2') remains deferred (see the historical content-surface deferred plan A2).",
   "session": "2026-04-16-interactive"
 }

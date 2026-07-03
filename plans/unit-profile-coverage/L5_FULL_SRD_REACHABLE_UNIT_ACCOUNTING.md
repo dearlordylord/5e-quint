@@ -207,7 +207,9 @@ This table groups the 110 class-list rows into their 42 spell identities. The
 
 ## Next Action Mapping
 
-Each row maps to `plans/RALPH_L5_FULL_SRD_COMPLETION.md`.
+Each row mapped to the completed L5 full SRD launch queue, which has been
+removed from the active tree after closeout. Current follow-up work starts from
+`plans/RALPH_L5_EXTENSION_L6_HORIZONTAL_SLICE.md`.
 
 | Bucket | Rows | Ralph action |
 | --- | ---: | --- |
@@ -270,8 +272,9 @@ description anchor below.
 
 The four earlier L5 lane plans and generated finalization plan were removed
 from the active tree after this audit. They are historical implementation lanes,
-not the remaining launch queue. The active launch source after this audit is
-`plans/RALPH_L5_FULL_SRD_COMPLETION.md`.
+not the remaining launch queue. The later L5 full SRD launch queue has also
+closed and been removed from the active tree; the active launch source is now
+`plans/RALPH_L5_EXTENSION_L6_HORIZONTAL_SLICE.md`.
 
 The L4 planning precedent included a separate progression-delta audit. L5 now
 has the same accounting layer at

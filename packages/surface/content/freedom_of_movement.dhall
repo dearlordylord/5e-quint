@@ -31,8 +31,8 @@
 --
 -- DEFERRED.
 --   • "Movement is unaffected by Difficult Terrain" — movement-
---     conversion / spatial predicate per plans/CONTENT_SURFACE_DEFERRED.md
---     §B (see Jump precedent). Caller-owned.
+--     conversion / spatial predicate per the historical deferred
+--     content-surface classification. Caller-owned.
 --   • "Spells and other magical effects can [not] reduce the target's
 --     Speed" — no source-narrowed "block_speed_modification" atom;
 --     defer pending a second pressure case.

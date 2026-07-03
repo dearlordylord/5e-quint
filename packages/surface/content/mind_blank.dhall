@@ -17,7 +17,7 @@
 --     location / gather information / observe remotely / control its
 --     mind" — all DM-agenda per ARCHITECTURE.md §1 (narrative
 --     mutation, remote sensing, allegiance/alignment, location
---     sensing). Per plans/CONTENT_SURFACE_DEFERRED.md §B class.
+--     sensing). Historical deferred content-surface class.
 
 let mindBlank =
       { kind = "spell"

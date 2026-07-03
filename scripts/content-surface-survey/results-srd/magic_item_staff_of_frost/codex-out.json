@@ -6950,9 +6950,9 @@ the atom vocabulary right *before* that integration cost is paid.
 
 ## Related docs
 
-- [`plans/CONTENT_SURFACE_PROTOTYPE.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_PROTOTYPE.md) — the red/green loop spec.
-- [`plans/CONTENT_SURFACE_SURVEY.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_SURVEY.md) — the survey pipeline that produced the sub-agent corpus.
-- [`plans/CONTENT_SURFACE_DEFERRED.md`](/workspace/typescript/dnd/plans/CONTENT_SURFACE_DEFERRED.md) — queue of deferred widenings.
+- the historical content-surface prototype plan — the red/green loop spec.
+- the historical content-surface survey plan — the survey pipeline that produced the sub-agent corpus.
+- the historical content-surface deferred plan — queue of deferred widenings.
 - [`.references/xphb-srd-pairing/INDEX.md`](/workspace/typescript/dnd/.references/xphb-srd-pairing/INDEX.md) — taxonomy research entrypoint.
 - [`scripts/content-surface-survey/README.md`](/workspace/typescript/dnd/scripts/content-surface-survey/README.md) — survey generator / worker docs.
 
