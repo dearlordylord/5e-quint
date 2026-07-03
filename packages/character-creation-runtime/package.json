@@ -11,6 +11,7 @@
   },
   "scripts": {
     "test": "vitest run --exclude \"**/*.mbt.test.ts\"",
+    "test:qnt-proofs": "RUN_QNT_PROOFS=1 vitest run src/character-creation-runtime-qnt-proofs.test.ts",
     "test:mbt:weapon-mastery-level-gain": "vitest run src/weapon-mastery-level-gain.mbt.test.ts",
     "typecheck": "tsc --noEmit"
   },
