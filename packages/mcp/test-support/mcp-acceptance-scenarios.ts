@@ -50,6 +50,15 @@ const levelFiveWizardSlotCapacities = [
 const levelFiveWizardUnexpendedSpellSlots = levelFiveWizardSlotCapacities.map(
   (slot) => ({ ...slot, expended: 0 }),
 );
+const levelFiveWizardAfterFireballSpellSlots =
+  levelFiveWizardSlotCapacities.map((slot) => ({
+    ...slot,
+    expended: slot.spellLevel === 3 ? 1 : 0,
+  }));
+const levelFiveWizardFireballDraftId =
+  "draft:stdio-level-five-elf-soldier-wizard-fireball";
+const levelFiveWizardFireballCombatantId = "wizard-level-5";
+const levelFiveWizardFireballBattleId = "battle:stdio-level-five-fireball";
 
 const agentConversationScenarios = [
   {
@@ -1078,10 +1087,9 @@ export async function verifyLevelFiveWizardFireballSheetScenario(
     unitSummaries(units, "spell").some((unit) => unit.id === "fireball"),
   );
 
-  const wizardDraftId = "draft:stdio-level-five-elf-soldier-wizard-fireball";
   const finalizedWizard = await createAndFinalizeElfWizardFive(
     client,
-    wizardDraftId,
+    levelFiveWizardFireballDraftId,
   );
   assert.equal(get(finalizedWizard, "finalization.tag"), "ready");
   assert.equal(
@@ -1111,7 +1119,7 @@ export async function verifyLevelFiveWizardFireballSheetScenario(
   const listedBeforeBattle = await callTool(client, "list_characters", {});
   const wizard = characterRow(
     listedBeforeBattle,
-    testCharacterId(wizardDraftId),
+    testCharacterId(levelFiveWizardFireballDraftId),
   );
   assert.equal(get(wizard, "displayName"), "Elf Soldier Wizard 5");
   assert.equal(get(wizard, "hitPoints.current"), 32);
@@ -1130,6 +1138,114 @@ export async function verifyLevelFiveWizardFireballSheetScenario(
   assert.deepEqual(
     get(wizard, "spellSlots"),
     levelFiveWizardUnexpendedSpellSlots,
+  );
+}
+
+export async function verifyLevelFiveWizardFireballBattleHandoff(
+  client: Client,
+) {
+  const workflow = await callTool(client, "describe_mcp_workflow", {});
+  assert.equal(get(workflow, "resultPaths.battleActs"), "snapshot.acts");
+  assert.equal(
+    get(workflow, "resultPaths.battleCombatants"),
+    "snapshot.combatants",
+  );
+
+  const units = await callTool(client, "list_catalog_units", {});
+  assert.ok(
+    unitSummaries(units, "spell").some((unit) => unit.id === "fireball"),
+  );
+
+  const finalizedWizard = await createAndFinalizeElfWizardFive(
+    client,
+    levelFiveWizardFireballDraftId,
+  );
+  assert.equal(get(finalizedWizard, "finalization.tag"), "ready");
+
+  const listedBeforeBattle = await callTool(client, "list_characters", {});
+  assert.deepEqual(
+    get(
+      characterRow(
+        listedBeforeBattle,
+        testCharacterId(levelFiveWizardFireballDraftId),
+      ),
+      "spellSlots",
+    ),
+    levelFiveWizardUnexpendedSpellSlots,
+  );
+
+  const selected = await callTool(client, "select_stat_block", {
+    statBlockId: "stat_block_sphinx_of_wonder",
+  });
+  assert.equal(
+    get(selected, "selectedStatBlock.statBlock.displayName"),
+    "Sphinx of Wonder",
+  );
+
+  const started = await callTool(client, "start_battle", {
+    battleId: levelFiveWizardFireballBattleId,
+    initialCombatants: [
+      {
+        kind: "characterSession",
+        characterId: testCharacterId(levelFiveWizardFireballDraftId),
+        combatantId: levelFiveWizardFireballCombatantId,
+        initiative: 16,
+        side: "party",
+      },
+      statBlockCombatant("sphinx", "stat_block_sphinx_of_wonder", 8),
+    ],
+  });
+  assert.equal(
+    get(started, "snapshot.battleId"),
+    levelFiveWizardFireballBattleId,
+  );
+  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+    levelFiveWizardFireballCombatantId,
+    "sphinx",
+  ]);
+  assert.deepEqual(
+    wizardSpellSlotsFor(started, levelFiveWizardFireballCombatantId),
+    levelFiveWizardUnexpendedSpellSlots,
+  );
+
+  const wizardActs = await callTool(client, "discover_battle_acts", {});
+  assert.equal(
+    get(wizardActs, "snapshot.currentActorId"),
+    levelFiveWizardFireballCombatantId,
+  );
+  const fireballAct = battleActByLabel(wizardActs, "Fireball");
+  assert.ok(fireballAct, "Missing Fireball act");
+  const savingThrowHole = singleInitialHoleOfKind(
+    fireballAct,
+    "savingThrowOutcome",
+  );
+
+  const afterSavingThrow = await callTool(client, "fill_battle_hole", {
+    subject: fireballAct.subject,
+    fill: {
+      kind: "savingThrowOutcome",
+      holeId: savingThrowHole.holeId,
+      value: {
+        area: {
+          kind: "fireballArea",
+          originAnchorId: "sphinx",
+          affectedTargetIds: ["sphinx"],
+          objectIgnitionFacts: [],
+        },
+        outcomes: [{ targetId: "sphinx", succeeded: false }],
+      },
+    },
+  });
+  assert.equal(get(afterSavingThrow, "result.tag"), "needsHoles");
+  const damageHole = resultHole(afterSavingThrow, "rolledDice");
+  const afterDamage = await callTool(client, "fill_battle_hole", {
+    subject: fireballAct.subject,
+    fill: rolledDiceFill(damageHole.holeId, [[4, 4, 4, 4, 3, 3, 3, 3]]),
+  });
+  assert.equal(get(afterDamage, "result.tag"), "resolved");
+  assert.deepEqual(
+    wizardSpellSlotsFor(afterDamage, levelFiveWizardFireballCombatantId),
+    levelFiveWizardAfterFireballSpellSlots,
   );
 }
 
@@ -2141,9 +2257,21 @@ function battleActByLabel(payload: JsonObject, label: string) {
   return (
     get(payload, "snapshot.acts") as ReadonlyArray<{
       readonly label: string;
+      readonly subject: JsonObject;
       readonly initialHoles: readonly JsonObject[];
     }>
   ).find((act) => act.label === label);
+}
+
+function singleInitialHoleOfKind(
+  act: { readonly initialHoles: readonly JsonObject[] },
+  kind: string,
+) {
+  const matchingHoles = initialHolesOfKind(act, kind);
+  assert.equal(matchingHoles.length, 1);
+  const [hole] = matchingHoles;
+  assert.ok(hole, `Missing ${kind} initial hole`);
+  return hole;
 }
 
 function initialHolesOfKind(

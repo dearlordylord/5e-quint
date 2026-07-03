@@ -97,13 +97,13 @@
     {
       "number": 7,
       "id": "L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Extend the level-5 MCP scenario through battle handoff"
     },
     {
       "number": 8,
       "id": "L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Register the level-5 MCP scenario in acceptance coverage"
     },
     {
@@ -380,8 +380,8 @@ Every Ralph task must run the task-base check before research or edits:
 |  46 | L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL - Promote Wizard Evocation Savant new Spell Slot level grant | future-follow-up | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future character-advancement owner for Evocation Savant's later new Spell Slot level grant; parked outside this L5/L6 completion pass. |
 |   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | done               | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Selected the Wizard 5 Fireball MCP vertical and rejected future-owner alternatives.     |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | done | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds Wizard 5 Fireball creation/finalization/sheet proof before battle handoff.         |
-|   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | ready-for-research | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff after Task 6 sheet coverage; non-MCP support dependencies are complete. |
-|   8 | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY - Register the level-5 MCP scenario in acceptance coverage | blocked        | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF                                                               | Wires the executable scenario into MCP acceptance coverage.                             |
+|   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | done | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff after Task 6 sheet coverage; non-MCP support dependencies are complete. |
+|   8 | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY - Register the level-5 MCP scenario in acceptance coverage | ready-for-research | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF                                                               | Wires the executable scenario into MCP acceptance coverage.                             |
 |   9 | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE - Admit level-1-5 MCP scenario evidence              | blocked            | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY                                                            | Updates checker-owned MCP evidence only after executable coverage exists.              |
 |  10 | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-5 ultra-golden gate    | blocked            | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Final generated refresh after scope, non-MCP support blockers, parity, and MCP evidence land. |
 |  11 | L6FULL-PRE-01-L5-QUEUES-CLOSED - Verify L5 full and L5 ultra-golden queues are closed | blocked | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH | L6 starts only after the L5 extension has landed. |
@@ -1293,17 +1293,12 @@ Verification:
 
 ### Task 7 - L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L5UG-MCP-02-LEVEL5-SHEET-SCENARIO`,
 `L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`,
 `L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS`,
 `L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L5UG-MCP-02-LEVEL5-SHEET-SCENARIO`; the non-MCP
-support dependencies are already complete.
 
 Inputs:
 
@@ -1347,13 +1342,9 @@ Verification:
 
 ### Task 8 - L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF`.
 
 Inputs:
 
