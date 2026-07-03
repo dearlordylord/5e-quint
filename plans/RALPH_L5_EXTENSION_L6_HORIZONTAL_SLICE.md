@@ -1,0 +1,1946 @@
+# Ralph L5 Extension and L6 Horizontal Slice
+
+<!-- ralph-task-index
+{
+  "schema": "ralph-plan.v1",
+  "tasks": [
+    {
+      "number": 1,
+      "id": "L5UG-PRE-01-L5-FULL-QUEUE-CLOSED",
+      "status": "ready-for-research",
+      "title": "Verify the L5 full SRD queue is closed"
+    },
+    {
+      "number": 2,
+      "id": "L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING",
+      "status": "blocked",
+      "title": "Add level-1-5 support report plumbing"
+    },
+    {
+      "number": 3,
+      "id": "L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE",
+      "status": "blocked",
+      "title": "Wire level-1-5 into the ultra-golden aggregate"
+    },
+    {
+      "number": 4,
+      "id": "L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION",
+      "status": "blocked",
+      "title": "Reconcile level-1-5 non-MCP ultra-golden layers"
+    },
+    {
+      "number": 5,
+      "id": "L5UG-MCP-01-LEVEL5-VERTICAL-DECISION",
+      "status": "blocked",
+      "title": "Choose the level-5 MCP vertical scenario"
+    },
+    {
+      "number": 6,
+      "id": "L5UG-MCP-02-LEVEL5-SHEET-SCENARIO",
+      "status": "blocked",
+      "title": "Implement level-5 MCP creation and sheet scenario coverage"
+    },
+    {
+      "number": 7,
+      "id": "L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF",
+      "status": "blocked",
+      "title": "Extend the level-5 MCP scenario through battle handoff"
+    },
+    {
+      "number": 8,
+      "id": "L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY",
+      "status": "blocked",
+      "title": "Register the level-5 MCP scenario in acceptance coverage"
+    },
+    {
+      "number": 9,
+      "id": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+      "status": "blocked",
+      "title": "Admit level-1-5 MCP scenario evidence"
+    },
+    {
+      "number": 10,
+      "id": "L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH",
+      "status": "blocked",
+      "title": "Refresh and verify the level-1-5 ultra-golden gate"
+    },
+    {
+      "number": 11,
+      "id": "L6FULL-PRE-01-L5-QUEUES-CLOSED",
+      "status": "blocked",
+      "title": "Verify L5 full and L5 ultra-golden queues are closed"
+    },
+    {
+      "number": 12,
+      "id": "L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY",
+      "status": "blocked",
+      "title": "Verify level-6 scope and inventory baseline"
+    },
+    {
+      "number": 13,
+      "id": "L6FULL-SEED-01-RANGER-ROVING",
+      "status": "blocked",
+      "title": "Verify existing Ranger Roving level-6 support evidence"
+    },
+    {
+      "number": 14,
+      "id": "L6FULL-SEED-02-ROGUE-EXPERTISE",
+      "status": "blocked",
+      "title": "Verify existing Rogue Expertise level-6 support evidence"
+    },
+    {
+      "number": 15,
+      "id": "L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES",
+      "status": "blocked",
+      "title": "Explicitly close the twelve level-6 class-table summary rows"
+    },
+    {
+      "number": 16,
+      "id": "L6FULL-ASI-01-FIGHTER-ASI-L6",
+      "status": "blocked",
+      "title": "Admit or close Fighter level-6 Ability Score Improvement"
+    },
+    {
+      "number": 17,
+      "id": "L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE",
+      "status": "blocked",
+      "title": "Resolve level-6 owner evidence for Barbarian Mindless Rage"
+    },
+    {
+      "number": 18,
+      "id": "L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES",
+      "status": "blocked",
+      "title": "Resolve level-6 owner evidence for Bard Magical Discoveries"
+    },
+    {
+      "number": 19,
+      "id": "L6FULL-OWN-03-CLERIC-BLESSED-HEALER",
+      "status": "blocked",
+      "title": "Resolve level-6 owner evidence for Cleric Blessed Healer"
+    },
+    {
+      "number": 20,
+      "id": "L6FULL-OWN-04-DRUID-NATURAL-RECOVERY",
+      "status": "blocked",
+      "title": "Resolve level-6 owner evidence for Druid Natural Recovery"
+    },
+    {
+      "number": 21,
+      "id": "L6FULL-OWN-05-MONK-EMPOWERED-STRIKES",
+      "status": "blocked",
+      "title": "Resolve level-6 owner evidence for Monk Empowered Strikes"
+    },
+    {
+      "number": 22,
+      "id": "L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY",
+      "status": "blocked",
+      "title": "Resolve level-6 owner evidence for Monk Wholeness of Body"
+    },
+    {
+      "number": 23,
+      "id": "L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION",
+      "status": "blocked",
+      "title": "Resolve level-6 owner evidence for Paladin Aura of Protection"
+    },
+    {
+      "number": 24,
+      "id": "L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY",
+      "status": "blocked",
+      "title": "Resolve level-6 owner evidence for Sorcerer Elemental Affinity"
+    },
+    {
+      "number": 25,
+      "id": "L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK",
+      "status": "blocked",
+      "title": "Resolve level-6 owner evidence for Warlock Dark One's Own Luck"
+    },
+    {
+      "number": 26,
+      "id": "L6FULL-OWN-10-WIZARD-SCULPT-SPELLS",
+      "status": "blocked",
+      "title": "Resolve level-6 owner evidence for Wizard Sculpt Spells"
+    },
+    {
+      "number": 27,
+      "id": "L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH",
+      "status": "blocked",
+      "title": "Refresh and verify level-6 full SRD accounting"
+    },
+    {
+      "number": 28,
+      "id": "L6UG-PRE-01-L6-FULL-QUEUE-CLOSED",
+      "status": "blocked",
+      "title": "Verify the L6 full SRD queue is closed"
+    },
+    {
+      "number": 29,
+      "id": "L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING",
+      "status": "blocked",
+      "title": "Add level-1-6 support report plumbing"
+    },
+    {
+      "number": 30,
+      "id": "L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE",
+      "status": "blocked",
+      "title": "Wire level-1-6 into the ultra-golden aggregate"
+    },
+    {
+      "number": 31,
+      "id": "L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION",
+      "status": "blocked",
+      "title": "Reconcile level-1-6 non-MCP ultra-golden layers"
+    },
+    {
+      "number": 32,
+      "id": "L6UG-MCP-01-LEVEL6-VERTICAL-DECISION",
+      "status": "blocked",
+      "title": "Choose the level-6 MCP vertical scenario"
+    },
+    {
+      "number": 33,
+      "id": "L6UG-MCP-02-LEVEL6-SHEET-SCENARIO",
+      "status": "blocked",
+      "title": "Implement level-6 MCP creation and sheet scenario coverage"
+    },
+    {
+      "number": 34,
+      "id": "L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF",
+      "status": "blocked",
+      "title": "Extend the level-6 MCP scenario through battle handoff"
+    },
+    {
+      "number": 35,
+      "id": "L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY",
+      "status": "blocked",
+      "title": "Register the level-6 MCP scenario in acceptance coverage"
+    },
+    {
+      "number": 36,
+      "id": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+      "status": "blocked",
+      "title": "Admit level-1-6 MCP scenario evidence"
+    },
+    {
+      "number": 37,
+      "id": "L6UG-FINAL-01-ULTRA-GOLDEN-REFRESH",
+      "status": "blocked",
+      "title": "Refresh and verify the level-1-6 ultra-golden gate"
+    }
+  ]
+}
+-->
+
+## Scope
+
+This combined Ralph queue runs the unfinished level-5 ultra-golden MCP
+extension first, then completes the level-6 horizontal SRD slice, then raises
+the level-6 result to ultra-golden MCP scope coverage. The level-6 work mirrors
+the level-5 completion semantics: verify existing evidence, add SDK/tracer or
+owner evidence only where support is real, explicitly close table/progression
+rows, author or admit missing SRD feature records where needed, resolve future
+owner boundaries before SDK claims, refresh generated accounting, and then add
+checker-owned MCP scenario evidence.
+
+Run it as a single Ralph plan:
+
+```bash
+scripts/ralph-run.sh plans/RALPH_L5_EXTENSION_L6_HORIZONTAL_SLICE.md
+```
+
+## Ralph Task-Base Check
+
+Every Ralph task must run the task-base check before research or edits:
+
+1. Log the task-provided Base SHA or Base ref.
+2. Log `HEAD`.
+3. Run `git merge-base --is-ancestor <Base SHA> HEAD`.
+4. Stop and report a branch-base mismatch if the ancestor check fails. Do not
+   rebase or repair branch state inside the task.
+
+## Source Artifacts
+
+- `plans/RALPH_L5_FULL_SRD_COMPLETION.md`
+- `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`
+- `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/LEVEL1_7_MINING_AUDIT.md`
+- `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+- `plans/sdk-raw-integration/LEVEL1_5_SDK_RAW_INVENTORY.md`
+- `scripts/unit-profile-coverage-check.cjs`
+- `scripts/ultra-golden-gate.cjs`
+- `scripts/unit-profile-coverage-config.cjs`
+- `plans/unit-profile-coverage/mcp-scenario-evidence.json`
+- `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
+- `packages/mcp/src/mcp-protocol.test.ts`
+- `packages/mcp/src/mcp-scenario-evidence.test.ts`
+- `.references/srd-5.2.1/Classes/`
+- `.references/srd-5.2.1/Spells/`
+- `UBIQUITOUS_LANGUAGE.md`
+- `ASSUMPTIONS.md`
+
+## Lane Rules
+
+- This queue may change checker, MCP test, generated report, and planning files.
+  It must not reopen SDK/accounting rows already closed by the first queue
+  unless a checker-owned contradiction is found.
+- Keep L5 and L6 scope SRD-only. PHB+ content remains out of scope. Level 6
+  does not include spell-level-4 work.
+- MCP scenarios must follow returned tool state: use returned draft revisions,
+  hole ids, option ids, character ids, battle ids, and battle holes. Do not
+  branch runtime behavior on authored Unit, class, feature, spell, or scenario
+  names.
+- Prefer one level-5 vertical scenario that covers workflow discovery,
+  character creation or advancement, durable Character Sheet state, and battle
+  handoff. Add a second scenario only if one vertical cannot honestly cover all
+  four required MCP flows.
+- Do not add duplicate state for Spell Slots, prepared spells, spellbook
+  contents, feature resources, battle spell slots, or battle actions. Thread or
+  project existing owners.
+- If level-1-5 ultra-golden cannot pass because a non-MCP layer is genuinely
+  missing support or parity after the first queue is closed, split that missing
+  work into concrete Ralph tasks in this plan instead of hiding it in prose.
+- If level-6 full support or level-1-6 ultra-golden cannot pass because a real
+  owner, catalog, checker, parity, or MCP layer is missing, split the missing
+  work into concrete Ralph tasks and update `ralph-task-index`, `## DAG / Queue
+  Order`, and downstream dependencies. Do not close rows with prose-only
+  placeholders.
+- Do not run MBT for plan-only or MCP-only tasks. Run focused MBT only if a task
+  changes battle runtime or QNT parity behavior.
+
+## DAG / Queue Order
+
+|   # | Task                                                                                       | Status             | Depends on                                                                                      | Notes                                                                                 |
+| --: | ------------------------------------------------------------------------------------------ | ------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+|   1 | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED - Verify the L5 full SRD queue is closed                  | ready-for-research | none                                                                                            | Confirms the SDK/accounting queue is actually closed before ultra-golden work starts.  |
+|   2 | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING - Add level-1-5 support report plumbing              | blocked            | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Adds the generated level-support report path before ultra-golden consumes it.          |
+|   3 | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-5 into the ultra-golden aggregate          | blocked            | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING                                                           | Extends the aggregate gate without weakening older scopes.                             |
+|   4 | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-5 non-MCP ultra-golden layers | blocked           | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE                                                                | Confirms support, QNT/generator, and parity layers before MCP evidence closeout.       |
+|   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | blocked            | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Chooses the smallest honest SRD-only vertical from post-SDK-supported behavior.        |
+|   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | blocked        | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds creation/finalization/sheet proof before battle handoff.                          |
+|   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | blocked            | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION                    | Adds battle handoff only after sheet coverage and non-MCP blockers are known.          |
+|   8 | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY - Register the level-5 MCP scenario in acceptance coverage | blocked        | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF                                                               | Wires the executable scenario into MCP acceptance coverage.                             |
+|   9 | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE - Admit level-1-5 MCP scenario evidence              | blocked            | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY                                                            | Updates checker-owned MCP evidence only after executable coverage exists.              |
+|  10 | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-5 ultra-golden gate    | blocked            | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE                                                           | Final generated refresh after scope, parity, and MCP evidence land.                    |
+|  11 | L6FULL-PRE-01-L5-QUEUES-CLOSED - Verify L5 full and L5 ultra-golden queues are closed | blocked | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH | L6 starts only after the L5 extension has landed. |
+|  12 | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY - Verify level-6 scope and inventory baseline | blocked | L6FULL-PRE-01-L5-QUEUES-CLOSED | Confirms the 25-row L6 baseline and excludes spell-level-4. |
+|  13 | L6FULL-SEED-01-RANGER-ROVING - Verify existing Ranger Roving level-6 support evidence | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/runtime evidence. |
+|  14 | L6FULL-SEED-02-ROGUE-EXPERTISE - Verify existing Rogue Expertise level-6 support evidence | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/character-creation evidence. |
+|  15 | L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES - Explicitly close the twelve level-6 class-table summary rows | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Table/progression rows remain explicit non-runtime closures. |
+|  16 | L6FULL-ASI-01-FIGHTER-ASI-L6 - Admit or close Fighter level-6 Ability Score Improvement | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Special repeated ASI/catalog admission task. |
+|  17 | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE - Resolve level-6 owner evidence for Barbarian Mindless Rage | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  18 | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES - Resolve level-6 owner evidence for Bard Magical Discoveries | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  19 | L6FULL-OWN-03-CLERIC-BLESSED-HEALER - Resolve level-6 owner evidence for Cleric Blessed Healer | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  20 | L6FULL-OWN-04-DRUID-NATURAL-RECOVERY - Resolve level-6 owner evidence for Druid Natural Recovery | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  21 | L6FULL-OWN-05-MONK-EMPOWERED-STRIKES - Resolve level-6 owner evidence for Monk Empowered Strikes | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  22 | L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY - Resolve level-6 owner evidence for Monk Wholeness of Body | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  23 | L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION - Resolve level-6 owner evidence for Paladin Aura of Protection | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  24 | L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY - Resolve level-6 owner evidence for Sorcerer Elemental Affinity | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  25 | L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK - Resolve level-6 owner evidence for Warlock Dark One's Own Luck | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  26 | L6FULL-OWN-10-WIZARD-SCULPT-SPELLS - Resolve level-6 owner evidence for Wizard Sculpt Spells | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  27 | L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH - Refresh and verify level-6 full SRD accounting | blocked | L6FULL-SEED-01-RANGER-ROVING, L6FULL-SEED-02-ROGUE-EXPERTISE, L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES, L6FULL-ASI-01-FIGHTER-ASI-L6, L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE, L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES, L6FULL-OWN-03-CLERIC-BLESSED-HEALER, L6FULL-OWN-04-DRUID-NATURAL-RECOVERY, L6FULL-OWN-05-MONK-EMPOWERED-STRIKES, L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY, L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION, L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY, L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK, L6FULL-OWN-10-WIZARD-SCULPT-SPELLS | Final generated refresh after all L6 rows are supported or explicitly closed. |
+|  28 | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED - Verify the L6 full SRD queue is closed | blocked | L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH | Ultra-golden L6 starts only after L6 full closure. |
+|  29 | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING - Add level-1-6 support report plumbing | blocked | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Adds checker-owned `level-1-6` report artifacts. |
+|  30 | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-6 into the ultra-golden aggregate | blocked | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING | Extends aggregate scope without weakening older scopes. |
+|  31 | L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-6 non-MCP ultra-golden layers | blocked | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Support, QNT/generator, and parity layers before MCP closeout. |
+|  32 | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION - Choose the level-6 MCP vertical scenario | blocked | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Chooses the smallest honest SRD-only L6 vertical. |
+|  33 | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO - Implement level-6 MCP creation and sheet scenario coverage | blocked | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION | Proves creation/advancement and durable sheet state. |
+|  34 | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF - Extend the level-6 MCP scenario through battle handoff | blocked | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO, L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Battle handoff only after non-MCP blockers are known. |
+|  35 | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY - Register the level-6 MCP scenario in acceptance coverage | blocked | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF | Wires executable scenario into acceptance metadata. |
+|  36 | L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE - Admit level-1-6 MCP scenario evidence | blocked | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY | Updates checker-owned MCP evidence after executable coverage exists. |
+|  37 | L6UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-6 ultra-golden gate | blocked | L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE | Final generated refresh after scope, parity, and MCP evidence land. |
+
+## Shared Verification
+
+- RAW/ubiquitous-language check: before modeling or asserting level-5 behavior,
+  read the relevant `.references/srd-5.2.1/` passages and
+  `UBIQUITOUS_LANGUAGE.md`.
+- Reviewer-loop convergence: run RAW traceability, ubiquitous-language/domain,
+  architecture/connascence, and code-review passes until no reasonable findings
+  remain.
+- Base commands:
+  `pnpm unit-profile-coverage:check:self-test`,
+  `pnpm unit-profile-coverage:check`,
+  `pnpm rules-kernel-coverage:check:self-test`,
+  `pnpm rules-kernel-coverage:check`,
+  `pnpm sdk-raw-integration-inventory:check`,
+  `pnpm cleanroom-branch-coverage:check`,
+  `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`,
+  `git diff --check`.
+- If checker or generated report files change, run:
+  `pnpm unit-profile-coverage:check --write`,
+  then rerun `pnpm unit-profile-coverage:check`.
+- If battle runtime or QNT parity behavior changes, add the focused runtime/QNT
+  verification required by that task. Do not use broad MBT as exploratory
+  validation.
+
+## Task Details
+
+### Task 1 - L5UG-PRE-01-L5-FULL-QUEUE-CLOSED
+
+Status: `ready-for-research`
+
+Depends on: none
+
+Inputs:
+
+- `plans/RALPH_L5_FULL_SRD_COMPLETION.md`
+- `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`
+- `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`
+- `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+- Current `pnpm sdk-raw-integration-inventory:check` and
+  `pnpm unit-profile-coverage:check` results.
+
+Current state:
+
+- The L5 SDK/accounting queue is expected to run first from
+  `plans/RALPH_L5_FULL_SRD_COMPLETION.md`.
+- This queue should not start ultra-golden implementation while the first queue
+  still has runnable or blocked tasks.
+
+Output:
+
+- Verify `plans/RALPH_L5_FULL_SRD_COMPLETION.md` has no remaining tasks with a
+  runnable, blocked, or deferred status.
+- Verify the first queue's final generated-refresh task has landed and current
+  generated artifacts agree with the post-L5 accounting state.
+- If the first queue is not closed, mark this task `blocked` with
+  `Blocker Type: dependency` and name the unfinished task ids. Do not edit the
+  rest of this plan.
+
+Completion / Success Criteria:
+
+- It is safe to run the ultra-golden queue because the SDK/accounting queue is
+  closed.
+- `pnpm sdk-raw-integration-inventory:check` passes.
+- `pnpm unit-profile-coverage:check` passes or any failure is documented as a
+  pre-existing repository/worktree problem unrelated to level-5 closure.
+- Task 2 and Task 5 are unblocked only after this task is accepted.
+
+Verification:
+
+- Shared verification commands that are relevant to a read-only prerequisite
+  check.
+
+### Task 2 - L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING
+
+Status: `blocked`
+
+Depends on: `L5UG-PRE-01-L5-FULL-QUEUE-CLOSED`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L5UG-PRE-01-L5-FULL-QUEUE-CLOSED`.
+
+Inputs:
+
+- `scripts/unit-profile-coverage-check.cjs`
+- `scripts/unit-profile-coverage-config.cjs`
+- Existing level-support report paths for level 1 through level 4.
+- `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`
+- `plans/sdk-raw-integration/level1-5-sdk-raw-inventory.json`
+
+Current state:
+
+- Unit-profile coverage currently emits level-support reports through
+  `level-1-4`.
+- L5 SDK/accounting artifacts exist separately and are not yet exposed as a
+  checker-owned level-support report.
+
+Output:
+
+- Add the checker/config paths needed for a generated `level-1-5` support
+  report and JSON artifact.
+- Derive the level-1-5 report from generated inventory/accounting inputs rather
+  than hand-maintained prose.
+- Preserve existing level-1 through level-1-4 report outputs.
+
+Completion / Success Criteria:
+
+- The repository has generated level-1-5 support report paths wired through the
+  checker.
+- Running the checker write path can produce the new artifacts without
+  weakening older level reports.
+- Any open level-1-5 support blockers are checker-readable.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- Shared verification.
+
+### Task 3 - L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE
+
+Status: `blocked`
+
+Depends on: `L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING`.
+
+Inputs:
+
+- `scripts/ultra-golden-gate.cjs`
+- `scripts/unit-profile-coverage-config.cjs`
+- The generated level-1-5 support report and JSON path from Task 2.
+- `plans/unit-profile-coverage/mcp-scenario-evidence.json`
+- Existing `ULTRA_GOLDEN_GATE.md` and `ultra-golden-gate.json` shape.
+
+Current state:
+
+- `scripts/ultra-golden-gate.cjs` currently scopes the aggregate through
+  `level-1-4`.
+- Task 2 must create the level-1-5 support report input before this task wires
+  it into the aggregate.
+
+Output:
+
+- Add `level-1-5` to the ultra-golden aggregate scope.
+- Preserve older scope behavior and report wording.
+- Make missing level-1-5 layer evidence appear as explicit checker blockers.
+
+Completion / Success Criteria:
+
+- `ULTRA_GOLDEN_GATE.md` and `ultra-golden-gate.json` include a `level-1-5`
+  scope.
+- Existing level-1, level-1-2, level-1-3, and level-1-4 scope results are not
+  weakened.
+- No generated coverage artifact is hand-edited outside the checker write path.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- Shared verification.
+
+### Task 4 - L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION
+
+Status: `blocked`
+
+Depends on: `L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE`.
+
+Inputs:
+
+- The level-1-5 ultra-golden output from Task 3.
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `plans/cleanroom-branch-coverage/`
+- `pnpm rules-kernel-coverage:check` output.
+- `pnpm cleanroom-branch-coverage:check` output.
+
+Current state:
+
+- Ultra-golden is conjunctive: support completeness, QNT/generator readiness,
+  MBT/parity evidence, and MCP scenario evidence must all pass for the scoped
+  level.
+- The first L5 queue is expected to close SDK/accounting rows, but it does not
+  by itself prove the non-MCP ultra-golden layers for `level-1-5`.
+
+Output:
+
+- Reconcile `level-1-5` support completeness, QNT/generator readiness, and
+  MBT/parity evidence after Task 3 adds the scope.
+- If these layers already pass from existing evidence, record the checker-owned
+  result and preserve it.
+- If a non-MCP layer is missing evidence, do not let downstream MCP battle
+  handoff unblock prematurely. Either resolve the blocker in this task, or add
+  concrete Ralph tasks for the blocker and update `ralph-task-index`,
+  `## DAG / Queue Order`, and downstream dependencies so Task 7 and Task 10
+  depend on the new blocker tasks.
+
+Completion / Success Criteria:
+
+- The only remaining `level-1-5` ultra-golden blockers are MCP scenario evidence
+  blockers, or this plan has concrete additional tasks for every non-MCP
+  blocker and downstream dependencies have been rewired to wait for them.
+- No parity evidence is inferred from SDK scenarios unless the checker already
+  admits that witness kind for the layer.
+- If any non-MCP blocker remains unresolved and no dependency-rewired follow-up
+  task was added, this task is not complete and must stay non-done.
+- No MBT is run unless this task changes battle runtime or QNT parity behavior.
+
+Verification:
+
+- Shared verification plus any focused checker command needed by split blocker
+  tasks.
+
+### Task 5 - L5UG-MCP-01-LEVEL5-VERTICAL-DECISION
+
+Status: `blocked`
+
+Depends on: `L5UG-PRE-01-L5-FULL-QUEUE-CLOSED`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L5UG-PRE-01-L5-FULL-QUEUE-CLOSED`.
+
+Inputs:
+
+- `plans/unit-profile-coverage/L5_FULL_SRD_REACHABLE_UNIT_ACCOUNTING.md`
+- `plans/unit-profile-coverage/L5_PROGRESSION_DELTA_AUDIT.md`
+- `plans/sdk-raw-integration/LEVEL1_5_SDK_RAW_INVENTORY.md`
+- `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
+- `.references/srd-5.2.1/Classes/`
+- `.references/srd-5.2.1/Spells/`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Current state:
+
+- L4 uses the executable MCP scenario
+  `create-level-four-wizard-asi-and-battle-handoff`.
+- L5 needs a comparable user-facing vertical that proves level-5 character
+  state, spell access, durable Character Sheet projection, and battle handoff.
+
+Output:
+
+- Write `plans/unit-profile-coverage/L5_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`.
+- Choose the smallest honest SRD-only level-5 MCP vertical.
+- Prefer a Wizard or other class path that can prove level-3 spell access and
+  battle handoff using already-supported level-5 behavior after the first queue
+  closes.
+- Record exact local SRD anchors, existing owner boundaries, selected Unit or
+  spell candidates, expected Spell Slot projection, and why the vertical covers
+  the required MCP flows.
+- Update Tasks 6 and 7 in this plan if the chosen scenario requires more
+  precise acceptance than the defaults below.
+
+Completion / Success Criteria:
+
+- The decision artifact names one primary scenario and rejects plausible
+  alternatives with concrete reasons.
+- The chosen scenario does not depend on future-owner-before-SDK rows.
+- The scenario can be executed through MCP-returned holes/tool state rather than
+  hard-coded internal state.
+
+Verification:
+
+- RAW/ubiquitous-language check for the selected class and spell anchors.
+- `git diff --check`.
+
+### Task 6 - L5UG-MCP-02-LEVEL5-SHEET-SCENARIO
+
+Status: `blocked`
+
+Depends on: `L5UG-MCP-01-LEVEL5-VERTICAL-DECISION`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L5UG-MCP-01-LEVEL5-VERTICAL-DECISION`.
+
+Inputs:
+
+- `plans/unit-profile-coverage/L5_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
+- `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
+- `packages/mcp/src/character-tools.ts`
+- `packages/mcp/src/protocol-server.ts`
+- Local SRD anchors named by the Task 5 decision artifact.
+
+Current state:
+
+- MCP tests currently include level-3 and level-4 verticals, but no level-5
+  vertical.
+
+Output:
+
+- Add the level-5 MCP scenario helper and creation/finalization path in
+  `packages/mcp/test-support/mcp-acceptance-scenarios.ts`.
+- Prove durable Character Sheet state for the chosen level-5 character before
+  battle starts.
+- Keep battle start or battle action assertions out of this task unless they
+  are needed to make the helper compile.
+
+Completion / Success Criteria:
+
+- The scenario can create or advance the selected SRD level-5 character through
+  MCP-returned holes/tool state.
+- For a full-caster level-5 path, the Character Sheet exposes level-3 spell
+  access and expected Spell Slot progression without duplicate Spell Slot state.
+- The helper follows returned revisions, hole ids, and option ids.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
+- Shared verification.
+
+### Task 7 - L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF
+
+Status: `blocked`
+
+Depends on: `L5UG-MCP-02-LEVEL5-SHEET-SCENARIO`,
+`L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L5UG-MCP-02-LEVEL5-SHEET-SCENARIO` and
+`L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`.
+
+Inputs:
+
+- The level-5 sheet scenario helper from Task 6.
+- `plans/unit-profile-coverage/L5_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
+- `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
+- Battle handoff and selected behavior owners named by the Task 5 decision.
+- Current Task 4 non-MCP layer reconciliation result.
+
+Current state:
+
+- Task 6 proves the level-5 character/sheet path.
+- This task owns only battle handoff and the selected supported level-5 battle
+  behavior.
+
+Output:
+
+- Extend the Task 6 scenario through `start_battle`.
+- Inspect battle projection for the selected level-5 character.
+- Exercise or discover the selected supported level-5 battle behavior from
+  Task 5 without adding new runtime semantics.
+
+Completion / Success Criteria:
+
+- The battle starts from the durable character created by the level-5 scenario.
+- Battle handoff exposes the expected level-5 state and, for a full-caster path,
+  level-3 Spell Slot/access projection.
+- The scenario follows returned battle ids, combatant ids, and battle holes.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
+- Shared verification.
+
+### Task 8 - L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY
+
+Status: `blocked`
+
+Depends on: `L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF`.
+
+Inputs:
+
+- The executable level-5 MCP scenario from Tasks 6 and 7.
+- `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
+- `packages/mcp/src/mcp-protocol.test.ts`
+- `packages/mcp/src/mcp-scenario-evidence.test.ts`
+
+Current state:
+
+- The executable scenario must be listed in MCP acceptance metadata before the
+  evidence manifest can cite it.
+
+Output:
+
+- Add the level-5 scenario to the MCP acceptance scenario registry.
+- Register the scenario in `packages/mcp/src/mcp-protocol.test.ts` or the
+  package-local acceptance runner entry point used by the registry.
+- Preserve existing level-1 through level-4 scenarios.
+
+Completion / Success Criteria:
+
+- `verifyAgentConversationScenarios` and the protocol acceptance test include
+  the level-5 scenario.
+- The scenario id is stable and suitable for
+  `plans/unit-profile-coverage/mcp-scenario-evidence.json`.
+- `pnpm --filter @dnd/mcp test:mcp-scenario-evidence` passes.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
+- `git diff --check`.
+
+### Task 9 - L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE
+
+Status: `blocked`
+
+Depends on: `L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY`.
+
+Inputs:
+
+- Registered scenario id from Task 8.
+- `plans/unit-profile-coverage/mcp-scenario-evidence.json`
+- `packages/mcp/src/mcp-scenario-evidence.test.ts`
+- `scripts/ultra-golden-gate.cjs`
+- Existing level-1 through level-1-4 MCP evidence rows.
+
+Current state:
+
+- `plans/unit-profile-coverage/mcp-scenario-evidence.json` currently records
+  required MCP flows through `level-1-4`.
+
+Output:
+
+- Add `level-1-5` to the required MCP flow scope where appropriate.
+- Add checker-owned MCP scenario evidence rows for the executable level-5
+  scenario.
+- Add or update the level-1-5 MCP scope audit decision so evidence admission is
+  explicit and checker-owned.
+- If any required flow lacks executable evidence, do not admit a placeholder
+  closure. Add concrete Ralph implementation tasks and update `ralph-task-index`,
+  `## DAG / Queue Order`, and this task's dependencies so this task cannot
+  complete before those tasks land.
+
+Completion / Success Criteria:
+
+- `packages/mcp/src/mcp-scenario-evidence.test.ts` accepts the manifest.
+- Every `level-1-5` required flow has executable `mcp-scenario` evidence.
+- If executable evidence is still missing for any required flow, this task is
+  not complete and must stay non-done with dependency-rewired follow-up tasks in
+  the plan.
+- The manifest references real repo-relative owner and test paths.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
+- Shared verification.
+
+### Task 10 - L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH
+
+Status: `blocked`
+
+Depends on: `L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE`.
+
+Inputs:
+
+- All generated artifacts touched by Tasks 2, 3, 4, and 9.
+- `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`
+- `plans/unit-profile-coverage/ultra-golden-gate.json`
+- `plans/unit-profile-coverage/mcp-scenario-evidence.json`
+- Shared verification command output.
+
+Current state:
+
+- The final generated reports must be refreshed only after scope, non-MCP
+  layers, and MCP evidence are all reconciled.
+
+Output:
+
+- Regenerate unit-profile and ultra-golden artifacts.
+- Confirm `level-1-5` passes every ultra-golden layer.
+- Update planning text only when a durable new fact was learned during the
+  queue.
+
+Completion / Success Criteria:
+
+- `ULTRA_GOLDEN_GATE.md` reports `level-1-5` as pass across support
+  completeness, QNT/generator readiness, MBT/parity evidence, and MCP scenario
+  evidence.
+- `plans/unit-profile-coverage/ultra-golden-gate.json` records the same result.
+- Existing level-1 through level-1-4 results remain pass.
+- No new broad TODO or prose-only blocker remains in this plan.
+- Task 11 is unblocked only after this task is accepted.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check:self-test`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check:self-test`
+- `pnpm rules-kernel-coverage:check`
+- `pnpm sdk-raw-integration-inventory:check`
+- `pnpm cleanroom-branch-coverage:check`
+- `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
+- `git diff --check`
+
+## L6 RAW Anchors
+
+| Row | Anchor |
+| --- | ------ |
+| Barbarian table | `.references/srd-5.2.1/Classes/Barbarian.md:40` |
+| Barbarian Mindless Rage | `.references/srd-5.2.1/Classes/Barbarian.md:182` |
+| Bard table | `.references/srd-5.2.1/Classes/Bard.md:41` |
+| Bard Magical Discoveries | `.references/srd-5.2.1/Classes/Bard.md:336` |
+| Cleric table | `.references/srd-5.2.1/Classes/Cleric.md:40` |
+| Cleric Blessed Healer | `.references/srd-5.2.1/Classes/Cleric.md:334` |
+| Druid table | `.references/srd-5.2.1/Classes/Druid.md:37` |
+| Druid Natural Recovery | `.references/srd-5.2.1/Classes/Druid.md:412` |
+| Fighter table and repeated ASI | `.references/srd-5.2.1/Classes/Fighter.md:36`, `.references/srd-5.2.1/Classes/Fighter.md:90` |
+| Monk table | `.references/srd-5.2.1/Classes/Monk.md:37` |
+| Monk Empowered Strikes | `.references/srd-5.2.1/Classes/Monk.md:128` |
+| Monk Wholeness of Body | `.references/srd-5.2.1/Classes/Monk.md:202` |
+| Paladin table | `.references/srd-5.2.1/Classes/Paladin.md:40` |
+| Paladin Aura of Protection | `.references/srd-5.2.1/Classes/Paladin.md:136` |
+| Ranger table | `.references/srd-5.2.1/Classes/Ranger.md:40` |
+| Ranger Roving | `.references/srd-5.2.1/Classes/Ranger.md:114` |
+| Rogue table | `.references/srd-5.2.1/Classes/Rogue.md:41` |
+| Rogue Expertise | `.references/srd-5.2.1/Classes/Rogue.md:57` |
+| Sorcerer table | `.references/srd-5.2.1/Classes/Sorcerer.md:40` |
+| Sorcerer Elemental Affinity | `.references/srd-5.2.1/Classes/Sorcerer.md:432` |
+| Warlock table | `.references/srd-5.2.1/Classes/Warlock.md:40` |
+| Warlock Dark One's Own Luck | `.references/srd-5.2.1/Classes/Warlock.md:477` |
+| Wizard table | `.references/srd-5.2.1/Classes/Wizard.md:40` |
+| Wizard Sculpt Spells | `.references/srd-5.2.1/Classes/Wizard.md:421` |
+
+## L6 Closure Protocol
+
+Every L6 full-support task must read its RAW anchor and
+`UBIQUITOUS_LANGUAGE.md` before changing code or accounting. For each row,
+choose one checker-readable outcome:
+
+- Existing support verified: preserve installed SRD catalog data and owner
+  evidence, and do not duplicate state already owned by Surface, Character
+  Creation, Character Sheet, battle runtime, QNT, or generated accounting.
+- New support admitted: author SRD-only Surface records if missing, add the
+  narrowest support profile and owner evidence, and add focused tests for the
+  package whose owner actually executes or projects the rule.
+- Future-owner-before-SDK closure: explicitly record why the rule belongs to a
+  future owner before SDK/runtime evidence can honestly exist. Do not mark it
+  supported and do not add placeholder support metadata.
+- Table/progression closure: keep table summary rows non-runtime and
+  checker-owned; do not invent runtime behavior for a table row that only points
+  to separately modeled feature grants.
+
+If a task proposes a new field or status, first search for existing fields
+across the repo. Reuse, project, or narrow existing data instead of duplicating
+it. Any new data shape must make contradictory provenance, contradictory
+ownership, and unsupported-without-evidence states unrepresentable.
+
+## L6 Shared Verification
+
+- RAW/ubiquitous-language check: before modeling, closing, or asserting an L6
+  row, read the exact `.references/srd-5.2.1/` anchor and
+  `UBIQUITOUS_LANGUAGE.md`.
+- Reviewer-loop convergence: run RAW traceability, ubiquitous-language/domain,
+  architecture/connascence, and code-review passes until no reasonable findings
+  remain. Fix reasonable findings between rounds.
+- Base commands:
+  `pnpm unit-profile-coverage:check:self-test`,
+  `pnpm unit-profile-coverage:check`,
+  `pnpm rules-kernel-coverage:check:self-test`,
+  `pnpm rules-kernel-coverage:check`,
+  `pnpm sdk-raw-integration-inventory:check`,
+  `pnpm cleanroom-branch-coverage:check`,
+  `git diff --check`.
+- MCP extension tasks also run
+  `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`.
+- If generated unit-profile artifacts change, run
+  `pnpm unit-profile-coverage:check --write`, then rerun
+  `pnpm unit-profile-coverage:check`.
+- Run focused SDK/runtime package tests only when the task touches that
+  package's behavior. Run focused MBT only if the task changes battle runtime or
+  QNT parity behavior.
+
+## L6 Task Details
+
+### Task 11 - L6FULL-PRE-01-L5-QUEUES-CLOSED
+
+Status: `blocked`
+
+Depends on: `L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH`.
+
+Inputs:
+
+- `plans/RALPH_L5_FULL_SRD_COMPLETION.md`
+- This plan's Tasks 1 through 10.
+- `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`
+- Current generated coverage checker output.
+
+Output:
+
+- Verify the L5 full SRD queue and L5 ultra-golden queue have no remaining
+  runnable, blocked, or deferred tasks.
+- Verify level-1-5 generated support and ultra-golden artifacts agree with the
+  completed queues.
+- If either L5 queue is not closed, leave this task blocked and name the
+  unfinished task ids.
+
+Completion / Success Criteria:
+
+- It is safe to start level-6 work from a closed L5 baseline.
+- `pnpm unit-profile-coverage:check` and
+  `pnpm sdk-raw-integration-inventory:check` pass, or any failure is documented
+  as a pre-existing repository/worktree problem unrelated to L5 closure.
+- Task 12 is unblocked only after this task is accepted.
+
+Verification:
+
+- L6 shared verification commands relevant to a read-only prerequisite check.
+
+### Task 12 - L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-01-L5-QUEUES-CLOSED`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-01-L5-QUEUES-CLOSED`.
+
+Inputs:
+
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/LEVEL1_7_MINING_AUDIT.md`
+- `scripts/srd-unit-inventory.cjs`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Current state:
+
+- Generated inventory currently has 25 `level-6` rows: 12
+  `class-table-summary` rows, 2 `catalog-installed-owner-evidence-present`
+  feature rows, and 11 `level-5-7-follow-up-required` feature rows.
+- The mining audit currently reports battle-readiness as `not-applicable` for
+  the L6 rows. Do not translate every follow-up row into battle-runtime work;
+  choose the owner from the RAW rule shape and existing support boundaries.
+- Level 6 does not open spell-level-4 work.
+
+Output:
+
+- Confirm the 25-row baseline and record any checker-owned drift before
+  downstream tasks begin.
+- Confirm the L6 slice is character-level level 6 only, not spell-level-4.
+
+Completion / Success Criteria:
+
+- Any inventory drift is either reconciled in this plan's task list or this
+  task remains blocked with exact row ids.
+- Downstream tasks have a stable L6 row baseline.
+- Tasks 13 through 26 are unblocked only after this task is accepted.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+### Task 13 - L6FULL-SEED-01-RANGER-ROVING
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Ranger.md:40`
+- `.references/srd-5.2.1/Classes/Ranger.md:114`
+- `packages/surface/content/ranger_roving.json`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts`
+- `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts`
+- `plans/unit-profile-coverage/QMBT41_ROVING_FEATURE_WIDENING_SLICE_PLAN.md`
+- `plans/unit-profile-coverage/task-claims.jsonl` entry for `QMBT44`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Verify `ranger_roving` remains installed SRD catalog data with
+  checker-readable owner evidence.
+- Verify the current `unit-evidence.jsonl` selected-identity evidence row still
+  joins to the intended runtime owner.
+- Verify the existing selected-identity battle evidence remains tied to the
+  supported runtime owner rather than authored-identity dispatch.
+- Do not rewrite this row unless a checker-owned contradiction is found.
+
+Completion / Success Criteria:
+
+- The L6 row remains `catalog-installed-owner-evidence-present` or equivalent
+  current checker-owned supported disposition.
+- Any changed evidence paths are real repo-relative files and pass the relevant
+  checker.
+
+Verification:
+
+- L6 shared verification.
+- Focused battle-runtime verification only if this task changes battle runtime
+  or QNT parity behavior.
+
+### Task 14 - L6FULL-SEED-02-ROGUE-EXPERTISE
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Rogue.md:41`
+- `.references/srd-5.2.1/Classes/Rogue.md:57`
+- `packages/surface/content/rogue_expertise.json`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `packages/character-creation-runtime/src/rogue-expertise-level6.test.ts`
+- `packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Verify `rogue_expertise` remains installed SRD catalog data with level-6
+  character-creation owner evidence.
+- Verify the current `unit-evidence.jsonl` selected-identity evidence row still
+  joins to the intended character-creation owner.
+- Preserve the distinction between the level-1 and level-6 grants while using
+  the single authored feature record where the catalog already owns that
+  identity.
+
+Completion / Success Criteria:
+
+- The L6 row remains `catalog-installed-owner-evidence-present` or equivalent
+  current checker-owned supported disposition.
+- Existing level-6 creation evidence still passes.
+
+Verification:
+
+- `pnpm --filter @dnd/character-creation-runtime test -- rogue-expertise-level6`
+- L6 shared verification.
+
+### Task 15 - L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- L6 table anchors listed in `## L6 RAW Anchors`.
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/LEVEL1_7_MINING_AUDIT.md`
+
+Output:
+
+- Explicitly preserve or refresh non-runtime closure for the twelve level-6
+  class-table summary rows: Barbarian, Bard, Cleric, Druid, Fighter, Monk,
+  Paladin, Ranger, Rogue, Sorcerer, Warlock, and Wizard.
+- Ensure table rows point to separately modeled progression/runtime rows,
+  including class traits, feature grants, spell-access/progression facts,
+  mastery/equipment facts, resources, or other narrower owners where the SRD
+  table column has executable meaning. Do not carry duplicated runtime support
+  state on the table summary row itself.
+
+Completion / Success Criteria:
+
+- All twelve L6 class-table summary rows are checker-owned non-runtime
+  closures.
+- No table row is counted as runtime support for a separately owned
+  progression/runtime row.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- L6 shared verification.
+
+### Task 16 - L6FULL-ASI-01-FIGHTER-ASI-L6
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Fighter.md:36`
+- `.references/srd-5.2.1/Classes/Fighter.md:90`
+- `packages/surface/content/class_fighter.json`
+- `packages/surface/content/fighter_ability_score_improvement_l4.json`
+- `packages/character-creation-runtime/src/index.test.ts`
+- `scripts/srd-unit-inventory.cjs`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Current state:
+
+- `fighter_ability_score_improvement_l6` has test-only synthetic pressure in
+  `packages/character-creation-runtime/src/index.test.ts`.
+- The actual SRD authored/catalog record is missing and must not be treated as
+  supported until the catalog/accounting boundary is honestly resolved.
+
+Output:
+
+- Decide whether the correct model is a distinct SRD level-6 feature record, a
+  recurring-level projection from the existing ASI feature family, or another
+  domain-backed representation that makes repeated ASI identity unambiguous.
+- Update Surface catalog, class progression, owner evidence, and inventory
+  accounting together if the row is admitted.
+- Do not copy test-only synthetic identity into publishable source unless it is
+  an SRD-authored identity and the Surface catalog owns it.
+
+Completion / Success Criteria:
+
+- The L6 fighter ASI row is either supported with real catalog and
+  character-creation evidence, or explicitly closed with a durable reason that
+  prevents unsupported SDK/runtime claims.
+- Any repeated-ASI representation avoids duplicated derived state and makes
+  level-4 versus level-6 ownership unambiguous.
+
+Verification:
+
+- Focused character-creation runtime tests if creation behavior changes.
+- `pnpm unit-profile-coverage:check --write`
+- L6 shared verification.
+
+### Task 17 - L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Barbarian.md:40`
+- `.references/srd-5.2.1/Classes/Barbarian.md:182`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Resolve `barbarian_mindless_rage` by authoring/admitting SRD catalog data and
+  owner evidence if supported, or by recording a future-owner-before-SDK closure
+  if the necessary condition/charmed/frightened rage owner is not durable yet.
+
+Completion / Success Criteria:
+
+- The row no longer has `level-5-7-follow-up-required`.
+- Any supported path has executable owner evidence; any closed path has a
+  checker-readable owner-boundary reason.
+
+Verification:
+
+- L6 shared verification plus focused runtime tests only for changed owners.
+
+### Task 18 - L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Bard.md:41`
+- `.references/srd-5.2.1/Classes/Bard.md:336`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Resolve `bard_magical_discoveries` through the Character Creation / spell
+  selection owner if support is present, or close it as future-owner-before-SDK
+  if expanded spell-list choice support is not durable yet.
+
+Completion / Success Criteria:
+
+- The row is supported with catalog and creation/sheet evidence, or explicitly
+  closed with a checker-readable owner boundary.
+- No runtime behavior dispatches on Bard or spell authored identity.
+
+Verification:
+
+- L6 shared verification plus focused character-creation tests if behavior
+  changes.
+
+### Task 19 - L6FULL-OWN-03-CLERIC-BLESSED-HEALER
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Cleric.md:40`
+- `.references/srd-5.2.1/Classes/Cleric.md:334`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Resolve `cleric_blessed_healer` by identifying whether spell healing rider
+  execution has a current battle-runtime/rules-kernel owner, or by recording
+  future-owner-before-SDK closure until that owner exists.
+
+Completion / Success Criteria:
+
+- The row is supported with executable owner evidence or explicitly closed with
+  a durable missing-owner reason.
+
+Verification:
+
+- L6 shared verification plus focused spell/healing runtime tests only if
+  behavior changes.
+
+### Task 20 - L6FULL-OWN-04-DRUID-NATURAL-RECOVERY
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Druid.md:37`
+- `.references/srd-5.2.1/Classes/Druid.md:412`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Resolve `druid_natural_recovery` by identifying the rest-triggered spell-slot
+  recovery owner, or by recording future-owner-before-SDK closure until rest
+  recovery support exists.
+
+Completion / Success Criteria:
+
+- The row is supported with resource/rest owner evidence or explicitly closed
+  with a checker-readable owner boundary.
+- Do not duplicate spell-slot state beside the existing slot owner.
+
+Verification:
+
+- L6 shared verification plus focused resource/rest tests only if behavior
+  changes.
+
+### Task 21 - L6FULL-OWN-05-MONK-EMPOWERED-STRIKES
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Monk.md:37`
+- `.references/srd-5.2.1/Classes/Monk.md:128`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Resolve `monk_empowered_strikes` by admitting supported unarmed-strike damage
+  typing evidence, or by closing it to the future combat/damage owner if the
+  runtime cannot honestly apply the rule yet.
+
+Completion / Success Criteria:
+
+- The row is supported with executable attack/damage owner evidence or closed
+  with a durable owner-boundary reason.
+
+Verification:
+
+- L6 shared verification plus focused battle-runtime/MBT only if attack or QNT
+  parity behavior changes.
+
+### Task 22 - L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Monk.md:37`
+- `.references/srd-5.2.1/Classes/Monk.md:202`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Resolve `monk_wholeness_of_body` by admitting supported healing/resource
+  evidence, or by closing it to the future action/resource owner if that
+  execution path is not durable yet.
+
+Completion / Success Criteria:
+
+- The row is supported with executable owner evidence or explicitly closed with
+  a checker-readable owner boundary.
+
+Verification:
+
+- L6 shared verification plus focused runtime tests only if behavior changes.
+
+### Task 23 - L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Paladin.md:40`
+- `.references/srd-5.2.1/Classes/Paladin.md:136`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Resolve `paladin_aura_of_protection` by identifying the aura/save-bonus
+  projection owner, or by recording future-owner-before-SDK closure until aura
+  spatial projection and saving throw modifier support exist.
+
+Completion / Success Criteria:
+
+- The row is supported with executable owner evidence or explicitly closed with
+  a durable owner-boundary reason.
+- No aura state is duplicated if existing battle/character facts can project it.
+
+Verification:
+
+- L6 shared verification plus focused battle-runtime/MBT only if save or aura
+  parity behavior changes.
+
+### Task 24 - L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Sorcerer.md:40`
+- `.references/srd-5.2.1/Classes/Sorcerer.md:432`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Resolve `sorcerer_elemental_affinity` by identifying the spell damage rider
+  and resistance-spend owner, or by recording future-owner-before-SDK closure
+  until those execution facts are durable.
+
+Completion / Success Criteria:
+
+- The row is supported with executable owner evidence or explicitly closed with
+  a checker-readable owner boundary.
+- Do not dispatch on subclass authored identity; use typed spell/damage and
+  resource facts.
+
+Verification:
+
+- L6 shared verification plus focused spell/runtime tests only if behavior
+  changes.
+
+### Task 25 - L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Warlock.md:40`
+- `.references/srd-5.2.1/Classes/Warlock.md:477`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Resolve `warlock_dark_ones_own_luck` by admitting supported d10 modifier and
+  rest-resource owner evidence, or by closing it to the future check/save
+  reactionless modifier owner.
+
+Completion / Success Criteria:
+
+- The row is supported with executable owner evidence or explicitly closed with
+  a durable owner-boundary reason.
+
+Verification:
+
+- L6 shared verification plus focused runtime tests only if behavior changes.
+
+### Task 26 - L6FULL-OWN-10-WIZARD-SCULPT-SPELLS
+
+Status: `blocked`
+
+Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Wizard.md:40`
+- `.references/srd-5.2.1/Classes/Wizard.md:421`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Output:
+
+- Resolve `wizard_sculpt_spells` by identifying whether area spell target
+  exclusion/save-damage handling has a durable owner, or by recording
+  future-owner-before-SDK closure until that owner exists.
+
+Completion / Success Criteria:
+
+- The row is supported with executable owner evidence or explicitly closed with
+  a checker-readable owner boundary.
+- Do not branch on Wizard or spell authored identity; use typed area/spell
+  support facts.
+
+Verification:
+
+- L6 shared verification plus focused spell/battle MBT only if parity behavior
+  changes.
+
+### Task 27 - L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH
+
+Status: `blocked`
+
+Depends on: `L6FULL-SEED-01-RANGER-ROVING`,
+`L6FULL-SEED-02-ROGUE-EXPERTISE`,
+`L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES`,
+`L6FULL-ASI-01-FIGHTER-ASI-L6`,
+`L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE`,
+`L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES`,
+`L6FULL-OWN-03-CLERIC-BLESSED-HEALER`,
+`L6FULL-OWN-04-DRUID-NATURAL-RECOVERY`,
+`L6FULL-OWN-05-MONK-EMPOWERED-STRIKES`,
+`L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY`,
+`L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION`,
+`L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY`,
+`L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK`,
+`L6FULL-OWN-10-WIZARD-SCULPT-SPELLS`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for all L6 full queue row-closure tasks.
+
+Inputs:
+
+- All generated artifacts touched by Tasks 12 through 26.
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/LEVEL1_7_MINING_AUDIT.md`
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+
+Output:
+
+- Regenerate unit-profile inventory/accounting artifacts.
+- Verify no `level-6` row remains in an unresolved follow-up disposition unless
+  this plan has a concrete blocked follow-up task for it.
+- Update planning text only when a durable new fact was learned during the
+  queue.
+
+Completion / Success Criteria:
+
+- All 25 L6 rows are either supported with owner evidence or explicitly closed
+  in checker-owned accounting.
+- The 12 table rows remain non-runtime closures.
+- `ranger_roving` and `rogue_expertise` support evidence remains present.
+- `fighter_ability_score_improvement_l6` no longer relies only on synthetic
+  test pressure.
+- Task 28 is unblocked only after this task is accepted.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- L6 shared verification.
+
+### Task 28 - L6UG-PRE-01-L6-FULL-QUEUE-CLOSED
+
+Status: `blocked`
+
+Depends on: `L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH`.
+
+Inputs:
+
+- Tasks 11 through 27.
+- Current generated L6 inventory/accounting artifacts.
+
+Output:
+
+- Verify the L6 full queue is closed before ultra-golden implementation starts.
+- If any L6 full task is not closed, leave this task blocked and name the
+  unfinished task ids.
+
+Completion / Success Criteria:
+
+- It is safe to expose level-1-6 full-support plumbing because L6 full
+  accounting is closed.
+- Task 29 and Task 32 are unblocked only after this task is accepted.
+
+Verification:
+
+- L6 shared verification commands relevant to a read-only prerequisite check.
+
+### Task 29 - L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING
+
+Status: `blocked`
+
+Depends on: `L6UG-PRE-01-L6-FULL-QUEUE-CLOSED`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6UG-PRE-01-L6-FULL-QUEUE-CLOSED`.
+
+Inputs:
+
+- `scripts/unit-profile-coverage-check.cjs`
+- `scripts/unit-profile-coverage-config.cjs`
+- Existing `level-1` through `level-1-5` support report paths.
+- L6 generated inventory/accounting artifacts from Task 27.
+
+Output:
+
+- Add checker/config paths for generated `level-1-6` support report and JSON
+  artifact.
+- Derive the report from generated inventory/accounting inputs rather than
+  hand-maintained prose.
+- Preserve older level-support report outputs.
+
+Completion / Success Criteria:
+
+- The checker write path can produce `level-1-6` support artifacts.
+- Any open level-1-6 support blockers are checker-readable.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- L6 shared verification.
+
+### Task 30 - L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE
+
+Status: `blocked`
+
+Depends on: `L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING`.
+
+Inputs:
+
+- `scripts/ultra-golden-gate.cjs`
+- `scripts/unit-profile-coverage-config.cjs`
+- Generated level-1-6 support report and JSON path from Task 29.
+- `plans/unit-profile-coverage/mcp-scenario-evidence.json`
+
+Output:
+
+- Add `level-1-6` to the ultra-golden aggregate scope.
+- Preserve older scope behavior and report wording.
+- Make missing level-1-6 layer evidence appear as explicit checker blockers.
+
+Completion / Success Criteria:
+
+- `ULTRA_GOLDEN_GATE.md` and `ultra-golden-gate.json` include a `level-1-6`
+  scope.
+- Existing `level-1` through `level-1-5` results are not weakened.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- L6 shared verification.
+
+### Task 31 - L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION
+
+Status: `blocked`
+
+Depends on: `L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE`.
+
+Inputs:
+
+- The level-1-6 ultra-golden output from Task 30.
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- `plans/rules-kernel-coverage/`
+- `plans/cleanroom-branch-coverage/`
+
+Output:
+
+- Reconcile `level-1-6` support completeness, QNT/generator readiness, and
+  MBT/parity evidence before MCP evidence closeout.
+- If a non-MCP layer is missing evidence, either resolve it here or add
+  concrete Ralph tasks and rewire Tasks 34 and 37 to wait for them.
+
+Completion / Success Criteria:
+
+- The only remaining `level-1-6` ultra-golden blockers are MCP scenario
+  evidence blockers, or this plan has concrete additional tasks for every
+  non-MCP blocker.
+- No parity evidence is inferred from SDK scenarios unless the checker already
+  admits that witness kind.
+
+Verification:
+
+- L6 shared verification plus any focused checker command needed by split
+  blocker tasks.
+
+### Task 32 - L6UG-MCP-01-LEVEL6-VERTICAL-DECISION
+
+Status: `blocked`
+
+Depends on: `L6UG-PRE-01-L6-FULL-QUEUE-CLOSED`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6UG-PRE-01-L6-FULL-QUEUE-CLOSED`.
+
+Inputs:
+
+- Task 27's closed L6 accounting result.
+- `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
+- `.references/srd-5.2.1/Classes/`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Output:
+
+- Write `plans/unit-profile-coverage/L6_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`.
+- Choose the smallest honest SRD-only level-6 MCP vertical that proves workflow
+  discovery, character creation or advancement, durable Character Sheet state,
+  and battle handoff.
+- Prefer an already-supported level-6 row with current battle handoff evidence,
+  such as `ranger_roving`, if it can honestly cover the required MCP flows after
+  Task 27. `rogue_expertise` is a plausible sheet/creation alternative only if
+  it can also be paired with a supported level-6 battle handoff without
+  inventing runtime semantics. Do not choose a future-owner closure.
+- Record exact SRD anchors, owner boundaries, expected projections, and why
+  plausible alternatives were rejected.
+
+Completion / Success Criteria:
+
+- The decision artifact names one primary scenario and rejects alternatives
+  with concrete reasons.
+- The selected scenario has an honest battle handoff path before Task 32 is
+  accepted; if no such path exists, Task 32 stays non-done and the plan must be
+  revised with concrete prerequisite tasks before downstream MCP work proceeds.
+- The scenario can be executed through MCP-returned tool state rather than
+  hard-coded internals.
+
+Verification:
+
+- RAW/ubiquitous-language check for the selected anchors.
+- `git diff --check`
+
+### Task 33 - L6UG-MCP-02-LEVEL6-SHEET-SCENARIO
+
+Status: `blocked`
+
+Depends on: `L6UG-MCP-01-LEVEL6-VERTICAL-DECISION`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6UG-MCP-01-LEVEL6-VERTICAL-DECISION`.
+
+Inputs:
+
+- `plans/unit-profile-coverage/L6_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
+- `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
+- `packages/mcp/src/character-tools.ts`
+- `packages/mcp/src/protocol-server.ts`
+
+Output:
+
+- Add the level-6 MCP scenario helper and creation/advancement/finalization path.
+- Prove durable Character Sheet state for the selected level-6 character before
+  battle starts.
+- Keep battle start or battle action assertions out of this task unless they
+  are needed to make the helper compile.
+
+Completion / Success Criteria:
+
+- The scenario can create or advance the selected SRD level-6 character through
+  MCP-returned holes/tool state.
+- The helper follows returned revisions, hole ids, and option ids.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
+- L6 shared verification.
+
+### Task 34 - L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF
+
+Status: `blocked`
+
+Depends on: `L6UG-MCP-02-LEVEL6-SHEET-SCENARIO`,
+`L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6UG-MCP-02-LEVEL6-SHEET-SCENARIO` and
+`L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`.
+
+Inputs:
+
+- The level-6 sheet scenario helper from Task 33.
+- `plans/unit-profile-coverage/L6_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
+- Battle handoff and selected behavior owners named by Task 32.
+
+Output:
+
+- Extend the Task 33 scenario through `start_battle` for the level-6 vertical
+  selected by Task 32.
+- Inspect battle projection for the selected level-6 character.
+- Exercise or discover the selected supported level-6 battle behavior without
+  adding new runtime semantics.
+
+Completion / Success Criteria:
+
+- The battle starts from the durable character created by the level-6 scenario.
+- The scenario follows returned battle ids, combatant ids, and battle holes.
+- The scenario proves the selected level-6 battle handoff path from Task 32
+  without placeholder assertions or new runtime semantics.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
+- L6 shared verification.
+
+### Task 35 - L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY
+
+Status: `blocked`
+
+Depends on: `L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF`.
+
+Inputs:
+
+- Executable level-6 MCP scenario from Tasks 33 and 34.
+- `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
+- `packages/mcp/src/mcp-protocol.test.ts`
+- `packages/mcp/src/mcp-scenario-evidence.test.ts`
+
+Output:
+
+- Add the level-6 scenario to MCP acceptance scenario metadata and runner
+  coverage.
+- Preserve existing level-1 through level-5 scenarios.
+
+Completion / Success Criteria:
+
+- MCP acceptance coverage includes the level-6 scenario.
+- The scenario id is stable and suitable for
+  `plans/unit-profile-coverage/mcp-scenario-evidence.json`.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
+- `git diff --check`
+
+### Task 36 - L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE
+
+Status: `blocked`
+
+Depends on: `L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY`.
+
+Inputs:
+
+- Registered scenario id from Task 35.
+- `plans/unit-profile-coverage/mcp-scenario-evidence.json`
+- `packages/mcp/src/mcp-scenario-evidence.test.ts`
+- `scripts/ultra-golden-gate.cjs`
+
+Output:
+
+- Add `level-1-6` to required MCP flow scope where appropriate.
+- Add checker-owned MCP scenario evidence rows for the executable level-6
+  scenario.
+- Add or update the level-1-6 MCP scope audit decision so evidence admission is
+  explicit and checker-owned.
+- If any required flow lacks executable evidence, add concrete Ralph
+  implementation tasks and rewire dependencies instead of admitting a
+  placeholder.
+
+Completion / Success Criteria:
+
+- Every `level-1-6` required flow has executable `mcp-scenario` evidence.
+- The manifest references real repo-relative owner and test paths.
+
+Verification:
+
+- `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
+- L6 shared verification.
+
+### Task 37 - L6UG-FINAL-01-ULTRA-GOLDEN-REFRESH
+
+Status: `blocked`
+
+Depends on: `L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE`
+
+Blocker Type: dependency
+
+Blocker Detail: waiting for `L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE`.
+
+Inputs:
+
+- All generated artifacts touched by Tasks 29, 30, 31, and 36.
+- `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`
+- `plans/unit-profile-coverage/ultra-golden-gate.json`
+- `plans/unit-profile-coverage/mcp-scenario-evidence.json`
+
+Output:
+
+- Regenerate unit-profile and ultra-golden artifacts.
+- Confirm `level-1-6` passes every ultra-golden layer.
+- Update planning text only when a durable new fact was learned during the
+  queue.
+
+Completion / Success Criteria:
+
+- `ULTRA_GOLDEN_GATE.md` reports `level-1-6` as pass across support
+  completeness, QNT/generator readiness, MBT/parity evidence, and MCP scenario
+  evidence.
+- `plans/unit-profile-coverage/ultra-golden-gate.json` records the same result.
+- Existing level-1 through level-1-5 results remain pass.
+- No broad TODO or prose-only blocker remains in this plan.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check:self-test`
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check:self-test`
+- `pnpm rules-kernel-coverage:check`
+- `pnpm sdk-raw-integration-inventory:check`
+- `pnpm cleanroom-branch-coverage:check`
+- `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
+- `git diff --check`
