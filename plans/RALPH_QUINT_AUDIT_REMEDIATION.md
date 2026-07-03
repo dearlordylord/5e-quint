@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "QAR-06-ACTION-COST-ADMISSION-RESULT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Make action and spell admission explicit in QNT"
     },
     {
@@ -178,7 +178,7 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 3 | QAR-03-SHARED-QNT-PROOF-HARNESS - Consolidate bounded QNT proof harness behavior | done | QAR-01-TEST-LANE-ISOLATION | Consolidates bounded proof execution before new proof lanes. |
 | 4 | QAR-04-CHARACTER-CREATION-QNT-PROOFS - Add character-creation QNT proof lane | done | QAR-03-SHARED-QNT-PROOF-HARNESS | Adds the missing character-creation proof lane. |
 | 5 | QAR-05-SHARED-INVARIANT-PROOF-HARNESS - Bound shared-algebras inductive proof execution | done | QAR-03-SHARED-QNT-PROOF-HARNESS | Bounds shared inductive proofs. |
-| 6 | QAR-06-ACTION-COST-ADMISSION-RESULT - Make action and spell admission explicit in QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Removes admission-by-state-equality. |
+| 6 | QAR-06-ACTION-COST-ADMISSION-RESULT - Make action and spell admission explicit in QNT | done | QAR-01-TEST-LANE-ISOLATION | Removes admission-by-state-equality. |
 | 7 | QAR-07-DAMAGE-PAIR-NONZERO - Encode nonzero damage-allocation preconditions | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Encodes the nonzero total precondition. |
 | 8 | QAR-08-SHOVE-PROJECTION-UNION - Replace Shove flattened projection with a closed union | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces impossible Shove projection combinations. |
 | 9 | QAR-09-CUNNING-STRIKE-TYPED-QNT - Replace Cunning Strike string projections with typed QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces raw Cunning Strike strings. |
@@ -429,7 +429,7 @@ Plan Impact:
 
 ### Task 6 - QAR-06-ACTION-COST-ADMISSION-RESULT
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: dependency
 

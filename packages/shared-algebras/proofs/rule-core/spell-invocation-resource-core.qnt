@@ -153,7 +153,7 @@ module spellInvocationResourceCore {
     facts: SpellInvocationResourceFacts,
     actionCost: ActionCost
   ): SpellInvocationResult = {
-    val spentTurn = spendActionCost(state.turn, actionCost)
+    val actionSpend = spendActionCost(state.turn, actionCost)
     val slotExpenditureState = spellInvocationExpenditureState(state)
     val slotExpenditure = applySpellSlotExpenditure(
       slotExpenditureState,
@@ -163,7 +163,7 @@ module spellInvocationResourceCore {
       facts.hasSpellAccess,
       legalSpellInvocationResourceFacts(facts),
       legalSpellcastingProcedureState(state),
-      spentTurn != state.turn,
+      actionSpend.admitted,
       spellSlotExpenditureAccepted(slotExpenditure),
     }
     val slotExpended = admitted and spellSlotWasExpended(slotExpenditure)
@@ -172,7 +172,7 @@ module spellInvocationResourceCore {
       state:
         if (not(admitted)) state
         else {
-          turn: spentTurn,
+          turn: actionSpend.turn,
           slotLedger: nextSlotExpenditureState.slotLedger,
           slotSpellCastThisTurn: nextSlotExpenditureState.slotSpellCastThisTurn,
         },
@@ -236,4 +236,34 @@ module spellInvocationResourceCore {
       invocation,
       repeatedDamageAllocationInvocationResourceFacts(facts)
     )
+
+  run test_spell_invocation_distinguishes_free_cost_from_rejected_unchanged = {
+    val inactiveTurn = initialTurnProcedureState.with("currentActorOwnsTurn", false)
+    val state = initialSpellcastingProcedureState.with("turn", inactiveTurn)
+    val facts = {
+      invocationAction: ActionTimeSpellInvocation,
+      hasSpellAccess: true,
+      slotSpend: SpellInvocationWithoutSlot,
+      selectedSlotLevel: 0,
+      targetCount: 1,
+      targetCardinality: SpellInvocationBoundedTargets({
+        minimumTargetCount: 1,
+        maximumTargetCount: 1,
+      }),
+      targetsAreValid: true,
+    }
+    val freeInvocation = resolveSpellInvocationResourceWithActionCost(
+      state,
+      facts,
+      FreeCost
+    )
+    val rejectedInvocation = resolveSpellInvocationResource(state, facts)
+    all {
+      assert(freeInvocation.admitted),
+      assert(freeInvocation.state == state),
+      assert(not(freeInvocation.slotExpended)),
+      assert(not(rejectedInvocation.admitted)),
+      assert(rejectedInvocation.state == state),
+    }
+  }
 }

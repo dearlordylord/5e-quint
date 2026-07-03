@@ -55,6 +55,11 @@ module actionTurnProcedures {
     admitted: bool,
   }
 
+  type ActionCostSpendResult = {
+    turn: TurnProcedureState,
+    admitted: bool,
+  }
+
   pure def initialTurnProcedureState: TurnProcedureState = {
     actionQuota: ActionAvailable,
     bonusActionAvailable: true,
@@ -100,148 +105,158 @@ module actionTurnProcedures {
     else if (cost == BonusActionCost) canSpendBonusAction(state)
     else canSpendAction(state)
 
-  pure def spendActionCost(state: TurnProcedureState, cost: ActionCost): TurnProcedureState =
-    if (not(canSpendActionCost(state, cost))) state
-    else if (cost == FreeCost) state
-    else if (cost == BonusActionCost) {
-      actionQuota: state.actionQuota,
-      bonusActionAvailable: false,
-      reactionAvailable: state.reactionAvailable,
-      dashMovementBonusFeet: state.dashMovementBonusFeet,
-      disengaged: state.disengaged,
-      dodging: state.dodging,
-      hidden: state.hidden,
-      helpAttackHeld: state.helpAttackHeld,
-      readiedMovementHeld: state.readiedMovementHeld,
-      startOfTurnHookActive: state.startOfTurnHookActive,
-      endOfTurnHookActive: state.endOfTurnHookActive,
-      currentActorOwnsTurn: state.currentActorOwnsTurn,
+  pure def spendActionCost(state: TurnProcedureState, cost: ActionCost): ActionCostSpendResult =
+    if (not(canSpendActionCost(state, cost))) {
+      turn: state,
+      admitted: false,
+    } else if (cost == FreeCost) {
+      turn: state,
+      admitted: true,
+    } else if (cost == BonusActionCost) {
+      turn: {
+        actionQuota: state.actionQuota,
+        bonusActionAvailable: false,
+        reactionAvailable: state.reactionAvailable,
+        dashMovementBonusFeet: state.dashMovementBonusFeet,
+        disengaged: state.disengaged,
+        dodging: state.dodging,
+        hidden: state.hidden,
+        helpAttackHeld: state.helpAttackHeld,
+        readiedMovementHeld: state.readiedMovementHeld,
+        startOfTurnHookActive: state.startOfTurnHookActive,
+        endOfTurnHookActive: state.endOfTurnHookActive,
+        currentActorOwnsTurn: state.currentActorOwnsTurn,
+      },
+      admitted: true,
     } else {
-      actionQuota: ActionSpent,
-      bonusActionAvailable: state.bonusActionAvailable,
-      reactionAvailable: state.reactionAvailable,
-      dashMovementBonusFeet: state.dashMovementBonusFeet,
-      disengaged: state.disengaged,
-      dodging: state.dodging,
-      hidden: state.hidden,
-      helpAttackHeld: state.helpAttackHeld,
-      readiedMovementHeld: state.readiedMovementHeld,
-      startOfTurnHookActive: state.startOfTurnHookActive,
-      endOfTurnHookActive: state.endOfTurnHookActive,
-      currentActorOwnsTurn: state.currentActorOwnsTurn,
+      turn: {
+        actionQuota: ActionSpent,
+        bonusActionAvailable: state.bonusActionAvailable,
+        reactionAvailable: state.reactionAvailable,
+        dashMovementBonusFeet: state.dashMovementBonusFeet,
+        disengaged: state.disengaged,
+        dodging: state.dodging,
+        hidden: state.hidden,
+        helpAttackHeld: state.helpAttackHeld,
+        readiedMovementHeld: state.readiedMovementHeld,
+        startOfTurnHookActive: state.startOfTurnHookActive,
+        endOfTurnHookActive: state.endOfTurnHookActive,
+        currentActorOwnsTurn: state.currentActorOwnsTurn,
+      },
+      admitted: true,
     }
 
   pure def resolveDash(state: TurnProcedureState, speedFeet: int, cost: ActionCost): TurnProcedureState = {
-    val spent = spendActionCost(state, cost)
-    if (spent == state and cost != FreeCost) state
+    val spend = spendActionCost(state, cost)
+    if (not(spend.admitted)) state
     else {
-      actionQuota: spent.actionQuota,
-      bonusActionAvailable: spent.bonusActionAvailable,
-      reactionAvailable: spent.reactionAvailable,
-      dashMovementBonusFeet: spent.dashMovementBonusFeet + speedFeet,
-      disengaged: spent.disengaged,
-      dodging: spent.dodging,
-      hidden: spent.hidden,
-      helpAttackHeld: spent.helpAttackHeld,
-      readiedMovementHeld: spent.readiedMovementHeld,
-      startOfTurnHookActive: spent.startOfTurnHookActive,
-      endOfTurnHookActive: spent.endOfTurnHookActive,
-      currentActorOwnsTurn: spent.currentActorOwnsTurn,
+      actionQuota: spend.turn.actionQuota,
+      bonusActionAvailable: spend.turn.bonusActionAvailable,
+      reactionAvailable: spend.turn.reactionAvailable,
+      dashMovementBonusFeet: spend.turn.dashMovementBonusFeet + speedFeet,
+      disengaged: spend.turn.disengaged,
+      dodging: spend.turn.dodging,
+      hidden: spend.turn.hidden,
+      helpAttackHeld: spend.turn.helpAttackHeld,
+      readiedMovementHeld: spend.turn.readiedMovementHeld,
+      startOfTurnHookActive: spend.turn.startOfTurnHookActive,
+      endOfTurnHookActive: spend.turn.endOfTurnHookActive,
+      currentActorOwnsTurn: spend.turn.currentActorOwnsTurn,
     }
   }
 
   pure def resolveDisengage(state: TurnProcedureState, cost: ActionCost): TurnProcedureState = {
-    val spent = spendActionCost(state, cost)
-    if (spent == state and cost != FreeCost) state
+    val spend = spendActionCost(state, cost)
+    if (not(spend.admitted)) state
     else {
-      actionQuota: spent.actionQuota,
-      bonusActionAvailable: spent.bonusActionAvailable,
-      reactionAvailable: spent.reactionAvailable,
-      dashMovementBonusFeet: spent.dashMovementBonusFeet,
+      actionQuota: spend.turn.actionQuota,
+      bonusActionAvailable: spend.turn.bonusActionAvailable,
+      reactionAvailable: spend.turn.reactionAvailable,
+      dashMovementBonusFeet: spend.turn.dashMovementBonusFeet,
       disengaged: true,
-      dodging: spent.dodging,
-      hidden: spent.hidden,
-      helpAttackHeld: spent.helpAttackHeld,
-      readiedMovementHeld: spent.readiedMovementHeld,
-      startOfTurnHookActive: spent.startOfTurnHookActive,
-      endOfTurnHookActive: spent.endOfTurnHookActive,
-      currentActorOwnsTurn: spent.currentActorOwnsTurn,
+      dodging: spend.turn.dodging,
+      hidden: spend.turn.hidden,
+      helpAttackHeld: spend.turn.helpAttackHeld,
+      readiedMovementHeld: spend.turn.readiedMovementHeld,
+      startOfTurnHookActive: spend.turn.startOfTurnHookActive,
+      endOfTurnHookActive: spend.turn.endOfTurnHookActive,
+      currentActorOwnsTurn: spend.turn.currentActorOwnsTurn,
     }
   }
 
   pure def resolveDodge(state: TurnProcedureState): TurnProcedureState = {
-    val spent = spendActionCost(state, StandardActionCost(DodgeAction))
-    if (spent == state) state
+    val spend = spendActionCost(state, StandardActionCost(DodgeAction))
+    if (not(spend.admitted)) state
     else {
-      actionQuota: spent.actionQuota,
-      bonusActionAvailable: spent.bonusActionAvailable,
-      reactionAvailable: spent.reactionAvailable,
-      dashMovementBonusFeet: spent.dashMovementBonusFeet,
-      disengaged: spent.disengaged,
+      actionQuota: spend.turn.actionQuota,
+      bonusActionAvailable: spend.turn.bonusActionAvailable,
+      reactionAvailable: spend.turn.reactionAvailable,
+      dashMovementBonusFeet: spend.turn.dashMovementBonusFeet,
+      disengaged: spend.turn.disengaged,
       dodging: true,
-      hidden: spent.hidden,
-      helpAttackHeld: spent.helpAttackHeld,
-      readiedMovementHeld: spent.readiedMovementHeld,
-      startOfTurnHookActive: spent.startOfTurnHookActive,
-      endOfTurnHookActive: spent.endOfTurnHookActive,
-      currentActorOwnsTurn: spent.currentActorOwnsTurn,
+      hidden: spend.turn.hidden,
+      helpAttackHeld: spend.turn.helpAttackHeld,
+      readiedMovementHeld: spend.turn.readiedMovementHeld,
+      startOfTurnHookActive: spend.turn.startOfTurnHookActive,
+      endOfTurnHookActive: spend.turn.endOfTurnHookActive,
+      currentActorOwnsTurn: spend.turn.currentActorOwnsTurn,
     }
   }
 
   pure def resolveHelpAttack(state: TurnProcedureState, targetFactSatisfied: bool): TurnProcedureState = {
-    val spent = spendActionCost(state, StandardActionCost(HelpAction))
-    if (not(targetFactSatisfied) or spent == state) state
+    val spend = spendActionCost(state, StandardActionCost(HelpAction))
+    if (not(targetFactSatisfied) or not(spend.admitted)) state
     else {
-      actionQuota: spent.actionQuota,
-      bonusActionAvailable: spent.bonusActionAvailable,
-      reactionAvailable: spent.reactionAvailable,
-      dashMovementBonusFeet: spent.dashMovementBonusFeet,
-      disengaged: spent.disengaged,
-      dodging: spent.dodging,
-      hidden: spent.hidden,
+      actionQuota: spend.turn.actionQuota,
+      bonusActionAvailable: spend.turn.bonusActionAvailable,
+      reactionAvailable: spend.turn.reactionAvailable,
+      dashMovementBonusFeet: spend.turn.dashMovementBonusFeet,
+      disengaged: spend.turn.disengaged,
+      dodging: spend.turn.dodging,
+      hidden: spend.turn.hidden,
       helpAttackHeld: true,
-      readiedMovementHeld: spent.readiedMovementHeld,
-      startOfTurnHookActive: spent.startOfTurnHookActive,
-      endOfTurnHookActive: spent.endOfTurnHookActive,
-      currentActorOwnsTurn: spent.currentActorOwnsTurn,
+      readiedMovementHeld: spend.turn.readiedMovementHeld,
+      startOfTurnHookActive: spend.turn.startOfTurnHookActive,
+      endOfTurnHookActive: spend.turn.endOfTurnHookActive,
+      currentActorOwnsTurn: spend.turn.currentActorOwnsTurn,
     }
   }
 
   pure def resolveHide(state: TurnProcedureState, facts: HideProcedureFacts, cost: ActionCost): TurnProcedureState = {
-    val spent = spendActionCost(state, cost)
-    if (not(facts.prerequisiteSatisfied) or spent == state) state
+    val spend = spendActionCost(state, cost)
+    if (not(facts.prerequisiteSatisfied) or not(spend.admitted)) state
     else {
-      actionQuota: spent.actionQuota,
-      bonusActionAvailable: spent.bonusActionAvailable,
-      reactionAvailable: spent.reactionAvailable,
-      dashMovementBonusFeet: spent.dashMovementBonusFeet,
-      disengaged: spent.disengaged,
-      dodging: spent.dodging,
+      actionQuota: spend.turn.actionQuota,
+      bonusActionAvailable: spend.turn.bonusActionAvailable,
+      reactionAvailable: spend.turn.reactionAvailable,
+      dashMovementBonusFeet: spend.turn.dashMovementBonusFeet,
+      disengaged: spend.turn.disengaged,
+      dodging: spend.turn.dodging,
       hidden: facts.checkTotal >= facts.dc,
-      helpAttackHeld: spent.helpAttackHeld,
-      readiedMovementHeld: spent.readiedMovementHeld,
-      startOfTurnHookActive: spent.startOfTurnHookActive,
-      endOfTurnHookActive: spent.endOfTurnHookActive,
-      currentActorOwnsTurn: spent.currentActorOwnsTurn,
+      helpAttackHeld: spend.turn.helpAttackHeld,
+      readiedMovementHeld: spend.turn.readiedMovementHeld,
+      startOfTurnHookActive: spend.turn.startOfTurnHookActive,
+      endOfTurnHookActive: spend.turn.endOfTurnHookActive,
+      currentActorOwnsTurn: spend.turn.currentActorOwnsTurn,
     }
   }
 
   pure def resolveSearch(state: TurnProcedureState, facts: SearchProcedureFacts): TurnProcedureState = {
-    val spent = spendActionCost(state, StandardActionCost(SearchAction))
-    if (not(facts.hiddenTargetExists) or spent == state) state
+    val spend = spendActionCost(state, StandardActionCost(SearchAction))
+    if (not(facts.hiddenTargetExists) or not(spend.admitted)) state
     else {
-      actionQuota: spent.actionQuota,
-      bonusActionAvailable: spent.bonusActionAvailable,
-      reactionAvailable: spent.reactionAvailable,
-      dashMovementBonusFeet: spent.dashMovementBonusFeet,
-      disengaged: spent.disengaged,
-      dodging: spent.dodging,
-      hidden: if (facts.checkTotal >= facts.dc) false else spent.hidden,
-      helpAttackHeld: spent.helpAttackHeld,
-      readiedMovementHeld: spent.readiedMovementHeld,
-      startOfTurnHookActive: spent.startOfTurnHookActive,
-      endOfTurnHookActive: spent.endOfTurnHookActive,
-      currentActorOwnsTurn: spent.currentActorOwnsTurn,
+      actionQuota: spend.turn.actionQuota,
+      bonusActionAvailable: spend.turn.bonusActionAvailable,
+      reactionAvailable: spend.turn.reactionAvailable,
+      dashMovementBonusFeet: spend.turn.dashMovementBonusFeet,
+      disengaged: spend.turn.disengaged,
+      dodging: spend.turn.dodging,
+      hidden: if (facts.checkTotal >= facts.dc) false else spend.turn.hidden,
+      helpAttackHeld: spend.turn.helpAttackHeld,
+      readiedMovementHeld: spend.turn.readiedMovementHeld,
+      startOfTurnHookActive: spend.turn.startOfTurnHookActive,
+      endOfTurnHookActive: spend.turn.endOfTurnHookActive,
+      currentActorOwnsTurn: spend.turn.currentActorOwnsTurn,
     }
   }
 
@@ -256,7 +271,7 @@ module actionTurnProcedures {
       facts.differentLightWeapon,
     }
     {
-      turn: if (admitted) spendActionCost(state, BonusActionCost) else state,
+      turn: if (admitted) spendActionCost(state, BonusActionCost).turn else state,
       admitted: admitted,
     }
   }
@@ -285,22 +300,34 @@ module actionTurnProcedures {
     }
   }
 
+  run test_action_cost_spend_distinguishes_free_cost_from_rejected_unchanged = {
+    val inactiveTurn = initialTurnProcedureState.with("currentActorOwnsTurn", false)
+    val freeSpend = spendActionCost(inactiveTurn, FreeCost)
+    val rejectedSpend = spendActionCost(inactiveTurn, BonusActionCost)
+    all {
+      assert(freeSpend.admitted),
+      assert(freeSpend.turn == inactiveTurn),
+      assert(not(rejectedSpend.admitted)),
+      assert(rejectedSpend.turn == inactiveTurn),
+    }
+  }
+
   pure def resolveReadyMovement(state: TurnProcedureState, triggerSelected: bool): TurnProcedureState = {
-    val spent = spendActionCost(state, StandardActionCost(ReadyAction))
-    if (not(triggerSelected) or spent == state) state
+    val spend = spendActionCost(state, StandardActionCost(ReadyAction))
+    if (not(triggerSelected) or not(spend.admitted)) state
     else {
-      actionQuota: spent.actionQuota,
-      bonusActionAvailable: spent.bonusActionAvailable,
-      reactionAvailable: spent.reactionAvailable,
-      dashMovementBonusFeet: spent.dashMovementBonusFeet,
-      disengaged: spent.disengaged,
-      dodging: spent.dodging,
-      hidden: spent.hidden,
-      helpAttackHeld: spent.helpAttackHeld,
+      actionQuota: spend.turn.actionQuota,
+      bonusActionAvailable: spend.turn.bonusActionAvailable,
+      reactionAvailable: spend.turn.reactionAvailable,
+      dashMovementBonusFeet: spend.turn.dashMovementBonusFeet,
+      disengaged: spend.turn.disengaged,
+      dodging: spend.turn.dodging,
+      hidden: spend.turn.hidden,
+      helpAttackHeld: spend.turn.helpAttackHeld,
       readiedMovementHeld: true,
       startOfTurnHookActive: true,
-      endOfTurnHookActive: spent.endOfTurnHookActive,
-      currentActorOwnsTurn: spent.currentActorOwnsTurn,
+      endOfTurnHookActive: spend.turn.endOfTurnHookActive,
+      currentActorOwnsTurn: spend.turn.currentActorOwnsTurn,
     }
   }
 

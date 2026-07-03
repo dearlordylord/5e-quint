@@ -124,7 +124,7 @@ module battleRuntimeSeeInvisibility {
       not(state.fighter.incapacitated) and
       not(fighterHasRage(state))
     ) {
-      val spent = spendFighterSpellActionCost(state, SpellMagicAction)
+      val spent = spendFighterSpellActionCost(state, SpellMagicAction).state
       commitActorSpellSlotUse({
         ...spent,
         fighter: combatantWithSeeInvisibleAndEthereal(

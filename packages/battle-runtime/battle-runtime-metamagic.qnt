@@ -971,7 +971,7 @@ module battleRuntimeMetamagic {
       )
       {
         state: commitActorQuickenedLevelOnePlusSpellCast(commitActorSpellSlotUse({
-          ...spendFighterSpellActionCost(state, SpellBonusAction),
+          ...spendFighterSpellActionCost(state, SpellBonusAction).state,
           fighter: healed,
         }, Fighter), Fighter),
         sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
@@ -1014,11 +1014,13 @@ module battleRuntimeMetamagic {
           slotLevel,
           rolledDice,
         )
-      else
-        state
-    if (canModify and resolved != state) {
+      else {
+        state: state,
+        admitted: false,
+      }
+    if (canModify and resolved.admitted) {
       {
-        state: commitActorQuickenedLevelOnePlusSpellCast(resolved, Fighter),
+        state: commitActorQuickenedLevelOnePlusSpellCast(resolved.state, Fighter),
         sorceryPointsRemaining: sorceryPointsRemaining - selectedCost,
       }
     } else {
@@ -1058,7 +1060,7 @@ module battleRuntimeMetamagic {
     ) {
       {
         state: commitActorQuickenedLevelOnePlusSpellCast(commitActorSpellSlotUse({
-          ...spendFighterSpellActionCost(state, SpellBonusAction),
+          ...spendFighterSpellActionCost(state, SpellBonusAction).state,
           fighter: saveGatedDamageTarget(BurningHandsSaveGate, state.fighter, fighterSavingThrowSucceeded, damageRoll, fighterConcentrationSaveSucceeded, Fighter),
           goblin: saveGatedDamageTarget(BurningHandsSaveGate, state.goblin, goblinSavingThrowSucceeded, damageRoll, goblinConcentrationSaveSucceeded, Fighter),
         }, Fighter), Fighter),

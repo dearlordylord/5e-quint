@@ -39,6 +39,11 @@ module battleRuntimeMovementBridge {
     grappleActive: bool,
   }
 
+  type BattleRuntimeActionCostSpendResult = {
+    step: BattleRuntimeMovementStep,
+    admitted: bool,
+  }
+
   pure def battleRuntimeStepFromTurn(
     projection: BattleRuntimeMovementProjection,
     turn: TurnProcedureState
@@ -146,23 +151,25 @@ module battleRuntimeMovementBridge {
     battleRuntimeStepFromTurn(projection, turn)
   }
 
-  pure def battleRuntimeSpendAttackAction(projection: BattleRuntimeMovementProjection): BattleRuntimeMovementStep =
-    battleRuntimeStepFromTurn(
-      projection,
-      spendActionCost(battleRuntimeTurnProjection(projection), StandardActionCost(AttackAction)),
-    )
+  pure def battleRuntimeSpendActionCost(
+    projection: BattleRuntimeMovementProjection,
+    cost: ActionCost
+  ): BattleRuntimeActionCostSpendResult = {
+    val spend = spendActionCost(battleRuntimeTurnProjection(projection), cost)
+    {
+      step: battleRuntimeStepFromTurn(projection, spend.turn),
+      admitted: spend.admitted,
+    }
+  }
 
-  pure def battleRuntimeSpendMagicAction(projection: BattleRuntimeMovementProjection): BattleRuntimeMovementStep =
-    battleRuntimeStepFromTurn(
-      projection,
-      spendActionCost(battleRuntimeTurnProjection(projection), StandardActionCost(MagicAction)),
-    )
+  pure def battleRuntimeSpendAttackAction(projection: BattleRuntimeMovementProjection): BattleRuntimeActionCostSpendResult =
+    battleRuntimeSpendActionCost(projection, StandardActionCost(AttackAction))
 
-  pure def battleRuntimeSpendBonusAction(projection: BattleRuntimeMovementProjection): BattleRuntimeMovementStep =
-    battleRuntimeStepFromTurn(
-      projection,
-      spendActionCost(battleRuntimeTurnProjection(projection), BonusActionCost),
-    )
+  pure def battleRuntimeSpendMagicAction(projection: BattleRuntimeMovementProjection): BattleRuntimeActionCostSpendResult =
+    battleRuntimeSpendActionCost(projection, StandardActionCost(MagicAction))
+
+  pure def battleRuntimeSpendBonusAction(projection: BattleRuntimeMovementProjection): BattleRuntimeActionCostSpendResult =
+    battleRuntimeSpendActionCost(projection, BonusActionCost)
 
   pure def battleRuntimeLightPropertyExtraAttackResult(
     projection: BattleRuntimeMovementProjection,
