@@ -13,13 +13,13 @@
     {
       "number": 2,
       "id": "QAR-02-MBT-LANE-INVENTORY-GATE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add static test-lane and MBT inventory gates"
     },
     {
       "number": 3,
       "id": "QAR-03-SHARED-QNT-PROOF-HARNESS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Consolidate bounded QNT proof harness behavior"
     },
     {
@@ -37,31 +37,31 @@
     {
       "number": 6,
       "id": "QAR-06-ACTION-COST-ADMISSION-RESULT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Make action and spell admission explicit in QNT"
     },
     {
       "number": 7,
       "id": "QAR-07-DAMAGE-PAIR-NONZERO",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Encode nonzero damage-allocation preconditions"
     },
     {
       "number": 8,
       "id": "QAR-08-SHOVE-PROJECTION-UNION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Replace Shove flattened projection with a closed union"
     },
     {
       "number": 9,
       "id": "QAR-09-CUNNING-STRIKE-TYPED-QNT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Replace Cunning Strike string projections with typed QNT"
     },
     {
       "number": 10,
       "id": "QAR-10-ACID-ARROW-TYPED-TIMING",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Replace Acid Arrow string timing with typed QNT"
     },
     {
@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Harden MBT closure leaf whitelist checks"
     },
     {
@@ -103,13 +103,13 @@
     {
       "number": 17,
       "id": "QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Move Hunter's Prey execution to semantic support profiles"
     },
     {
       "number": 18,
       "id": "QAR-18-OPEN-HAND-SEMANTIC-CHOICES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Move Open Hand execution to semantic effect variants"
     },
     {
@@ -174,23 +174,23 @@ mismatch. The Ralph runner or decider owns branch repair.
 |   # | Task | Status | Depends on | Notes |
 | --: | ---- | ------ | ---------- | ----- |
 | 1 | QAR-01-TEST-LANE-ISOLATION - Isolate default test lanes from MBT discovery | done | none | First runnable task; makes default tests non-MBT. |
-| 2 | QAR-02-MBT-LANE-INVENTORY-GATE - Add static test-lane and MBT inventory gates | blocked | QAR-01-TEST-LANE-ISOLATION | Adds static guards after default lane shape is decided. |
-| 3 | QAR-03-SHARED-QNT-PROOF-HARNESS - Consolidate bounded QNT proof harness behavior | blocked | QAR-01-TEST-LANE-ISOLATION | Consolidates bounded proof execution before new proof lanes. |
+| 2 | QAR-02-MBT-LANE-INVENTORY-GATE - Add static test-lane and MBT inventory gates | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Adds static guards after default lane shape is decided. |
+| 3 | QAR-03-SHARED-QNT-PROOF-HARNESS - Consolidate bounded QNT proof harness behavior | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Consolidates bounded proof execution before new proof lanes. |
 | 4 | QAR-04-CHARACTER-CREATION-QNT-PROOFS - Add character-creation QNT proof lane | blocked | QAR-03-SHARED-QNT-PROOF-HARNESS | Adds the missing character-creation proof lane. |
 | 5 | QAR-05-SHARED-INVARIANT-PROOF-HARNESS - Bound shared-algebras inductive proof execution | blocked | QAR-03-SHARED-QNT-PROOF-HARNESS | Bounds shared inductive proofs. |
-| 6 | QAR-06-ACTION-COST-ADMISSION-RESULT - Make action and spell admission explicit in QNT | blocked | QAR-01-TEST-LANE-ISOLATION | Removes admission-by-state-equality. |
-| 7 | QAR-07-DAMAGE-PAIR-NONZERO - Encode nonzero damage-allocation preconditions | blocked | QAR-01-TEST-LANE-ISOLATION | Encodes the nonzero total precondition. |
-| 8 | QAR-08-SHOVE-PROJECTION-UNION - Replace Shove flattened projection with a closed union | blocked | QAR-01-TEST-LANE-ISOLATION | Replaces impossible Shove projection combinations. |
-| 9 | QAR-09-CUNNING-STRIKE-TYPED-QNT - Replace Cunning Strike string projections with typed QNT | blocked | QAR-01-TEST-LANE-ISOLATION | Replaces raw Cunning Strike strings. |
-| 10 | QAR-10-ACID-ARROW-TYPED-TIMING - Replace Acid Arrow string timing with typed QNT | blocked | QAR-01-TEST-LANE-ISOLATION | Replaces raw Acid Arrow timing strings. |
+| 6 | QAR-06-ACTION-COST-ADMISSION-RESULT - Make action and spell admission explicit in QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Removes admission-by-state-equality. |
+| 7 | QAR-07-DAMAGE-PAIR-NONZERO - Encode nonzero damage-allocation preconditions | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Encodes the nonzero total precondition. |
+| 8 | QAR-08-SHOVE-PROJECTION-UNION - Replace Shove flattened projection with a closed union | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces impossible Shove projection combinations. |
+| 9 | QAR-09-CUNNING-STRIKE-TYPED-QNT - Replace Cunning Strike string projections with typed QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces raw Cunning Strike strings. |
+| 10 | QAR-10-ACID-ARROW-TYPED-TIMING - Replace Acid Arrow string timing with typed QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces raw Acid Arrow timing strings. |
 | 11 | QAR-11-RUN-BLOCK-SEPARATION-GUARD - Separate QNT run blocks from owner modules | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING | Cleans owner modules after semantic edits land. |
 | 12 | QAR-12-INDUCTIVE-WITNESS-SEEDS - Add reachability witnesses for priority inductive specs | blocked | QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-11-RUN-BLOCK-SEPARATION-GUARD | Adds reachability witnesses after affected specs settle. |
-| 13 | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD - Harden MBT closure leaf whitelist checks | blocked | QAR-01-TEST-LANE-ISOLATION | Hardens closure checks before driver conversions. |
+| 13 | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD - Harden MBT closure leaf whitelist checks | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Hardens closure checks before driver conversions. |
 | 14 | QAR-14-STARRY-WISP-WITNESS-CONVERSION - Convert Starry Wisp object driver to a literal witness | blocked | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Converts the clearest heavy driver to a literal witness. |
 | 15 | QAR-15-RULE-CORE-SPELLS-MBT-SPLIT - Split rule-core spells MBT by procedure family | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits spell MBT closure after admission semantics are explicit. |
 | 16 | QAR-16-RULE-CORE-FEATURES-MBT-SPLIT - Split rule-core features MBT by feature family | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits feature MBT closure after closure rules are hardened. |
-| 17 | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION - Move Hunter's Prey execution to semantic support profiles | blocked | QAR-01-TEST-LANE-ISOLATION | Removes execution dispatch on selected authored option ids. |
-| 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | blocked | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
+| 17 | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION - Move Hunter's Prey execution to semantic support profiles | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Removes execution dispatch on selected authored option ids. |
+| 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
 | 19 | QAR-19-AUTHORED-ID-CHECKER-HARDENING - Harden authored-identity dispatch checking | blocked | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES | Tightens the checker after known migrations land. |
 | 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | blocked | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING | Final repeated review loop and whole-plan verification. |
 
@@ -274,7 +274,7 @@ Plan Impact:
 
 ### Task 2 - QAR-02-MBT-LANE-INVENTORY-GATE
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
@@ -315,7 +315,7 @@ Plan Impact:
 
 ### Task 3 - QAR-03-SHARED-QNT-PROOF-HARNESS
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
@@ -429,7 +429,7 @@ Plan Impact:
 
 ### Task 6 - QAR-06-ACTION-COST-ADMISSION-RESULT
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
@@ -484,7 +484,7 @@ Plan Impact:
 
 ### Task 7 - QAR-07-DAMAGE-PAIR-NONZERO
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
@@ -524,7 +524,7 @@ Plan Impact:
 
 ### Task 8 - QAR-08-SHOVE-PROJECTION-UNION
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
@@ -571,7 +571,7 @@ Plan Impact:
 
 ### Task 9 - QAR-09-CUNNING-STRIKE-TYPED-QNT
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
@@ -614,7 +614,7 @@ Plan Impact:
 
 ### Task 10 - QAR-10-ACID-ARROW-TYPED-TIMING
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
@@ -749,7 +749,7 @@ Plan Impact:
 
 ### Task 13 - QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
@@ -929,7 +929,7 @@ Plan Impact:
 
 ### Task 17 - QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
@@ -984,7 +984,7 @@ Plan Impact:
 
 ### Task 18 - QAR-18-OPEN-HAND-SEMANTIC-CHOICES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
