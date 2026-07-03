@@ -57,7 +57,7 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | level-1-4 | qnt-generator-readiness | pass | _none_ |
 | level-1-4 | mbt-parity-evidence | pass | _none_ |
 | level-1-4 | mcp-scenario-evidence | pass | _none_ |
-| level-1-5 | support-completeness | blocked | 11 blocker(s) |
+| level-1-5 | support-completeness | blocked | 7 blocker(s) |
 | level-1-5 | qnt-generator-readiness | pass | _none_ |
 | level-1-5 | mbt-parity-evidence | pass | _none_ |
 | level-1-5 | mcp-scenario-evidence | blocked | 4 blocker(s) |

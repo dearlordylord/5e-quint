@@ -3,7 +3,7 @@
     "authoredReadinessBlockerCount": 0,
     "selectedIdentityBlockerCount": 5,
     "status": "blocked",
-    "strictTargetOpenCount": 6
+    "strictTargetOpenCount": 2
   },
   "frontierRows": [
     {
@@ -494,12 +494,12 @@
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
-        "table-spatial-derivation"
+        "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Blink supplies typed Surface facts for the caster-turn-end random table, Ethereal Plane transition, already-on-plane spell-ending predicate, origin-space identity, origin-plane perception, Ethereal-only interaction, and return placement/fallback. Promoted battle runtime still needs a planar phase lifecycle owner that consumes caller/table-spatial plane occupancy, origin-space, visible-unoccupied availability within 10 feet, and nearest-unoccupied fallback witnesses without dispatching on Blink authored identity.",
+      "reason": "L3-FOLLOWUP-BLINK-PLANAR-PHASE-LIFECYCLE: Promote Blink's typed planar phase lifecycle as a Spell Effect using Surface phase-transition facts, caster-turn-end random-table branch, already-on-Ethereal spell-ending predicate, origin-space tracking, Ethereal-only interaction limits, start-of-next-turn and spell-end return placement, caller/table-supplied plane occupancy, visible-unoccupied return choices, and nearest-unoccupied fallback witnesses. Owner: future planar phase lifecycle Spell Effect owner plus table/spatial plane-position witness owner. Required output: Supported-profile or profile-subset-supported Blink claim with deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the planar phase lifecycle without storing durable map or plane-position state and without dispatching on Blink id, name, or provenance.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -531,8 +531,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "blink"
     },
     {
@@ -884,12 +884,12 @@
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
-        "table-spatial-derivation"
+        "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.",
+      "reason": "L3-FOLLOWUP-CONJURE-ANIMALS-PACK-EFFECT: Promote Conjure Animals' spectral pack occurrence as a Spell Effect carrying pack lifecycle, slot-scaled Slashing damage, caster-selected animal-form source fact, caster-proximity Strength Saving Throw Advantage, caster-turn reposition command, optional Dexterity Saving Throw damage triggers, and shared once-per-turn per-creature trigger state, consuming caller/table-supplied pack position, caster proximity, visible-creature eligibility, movement/reposition destination, and trigger witnesses. Owner: future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner. Required output: Supported-profile or profile-subset-supported Conjure Animals claim with deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the pack Spell Effect without adding companion-control state or dispatching on Conjure Animals id, name, or provenance.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -909,8 +909,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "conjure_animals"
     },
     {
@@ -2635,12 +2635,12 @@
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
-        "table-spatial-derivation"
+        "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
+      "reason": "L3-FOLLOWUP-MAGIC-CIRCLE-WARDED-AREA: Promote Magic Circle's warded Cylinder as a Spell Effect carrying chosen creature-type set, normal or reversed direction branch, willing nonmagical entry or exit prevention, Charisma Saving Throw gates for teleportation and interplanar-travel crossing, protected-target Attack Roll Disadvantage, and source-scoped possession plus Charmed/Frightened prevention, consuming table-supplied ground-point placement, Cylinder membership, protected-target location, crossing-attempt, and magical-travel witnesses. Owner: future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner. Required output: Supported-profile or profile-subset-supported Magic Circle claim with deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the warded-area Spell Effect without duplicating battle map state or dispatching on Magic Circle id, name, or provenance.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -2684,8 +2684,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "magic_circle"
     },
     {
@@ -2811,12 +2811,12 @@
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
-        "table-spatial-derivation"
+        "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
+      "reason": "L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE: Promote Meld into Stone's merged-state Spell Effect carrying stone containment target, hidden merged occupancy, outside-sense limits, passage-of-time awareness, self-spell permission, voluntary Movement exit, otherwise-no-movement restriction, minor-damage harmlessness, partial-destruction or shape-change expulsion with 6d6 Force damage, complete-destruction or transmutation expulsion with 50 Force damage, closest-unoccupied placement, and Prone rider, consuming table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and placement. Owner: future merged-state Spell Effect owner plus table terrain/object occupancy witness owner. Required output: Supported-profile or profile-subset-supported Meld into Stone claim with deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the merged-state Spell Effect without duplicating battle map/object state or dispatching on Meld into Stone id, name, or provenance.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -2848,8 +2848,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "meld_into_stone"
     },
     {
@@ -5155,26 +5155,17 @@
       ]
     },
     {
-      "count": 6,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "blink",
-        "conjure_animals",
-        "magic_circle",
-        "meld_into_stone",
-        "ranger_favored_enemy",
-        "wizard_evocation_savant"
-      ]
-    },
-    {
-      "count": 5,
+      "count": 9,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
+        "blink",
+        "conjure_animals",
         "dispel_magic",
         "gaseous_form",
         "glyph_of_warding",
+        "magic_circle",
+        "meld_into_stone",
         "phantom_steed",
         "sorcerer_metamagic"
       ]
@@ -5198,6 +5189,15 @@
         "animate_dead",
         "druid_wild_companion",
         "find_steed"
+      ]
+    },
+    {
+      "count": 2,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "ranger_favored_enemy",
+        "wizard_evocation_savant"
       ]
     }
   ],
@@ -5234,20 +5234,16 @@
     },
     "strictTargetClosure": {
       "denominator": 262,
-      "numerator": 256,
-      "percent": "97.7%"
+      "numerator": 260,
+      "percent": "99.2%"
     }
   },
   "openFrontier": [
     {
-      "count": 6,
+      "count": 2,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "blink",
-        "conjure_animals",
-        "magic_circle",
-        "meld_into_stone",
         "ranger_favored_enemy",
         "wizard_evocation_savant"
       ]
@@ -14048,13 +14044,13 @@
       "unsupported-profile": 71
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 5,
+      "blocked-follow-up-split": 9,
       "closed-character-fact-and-runtime-detached-split": 4,
       "closed-companion-control-boundary": 3,
       "closed-outside-battle-runtime-boundary": 20,
       "closed-runtime-detached-table-adjudication": 47,
       "closed-selection-grant-container": 12,
-      "open-profile-accounting": 6,
+      "open-profile-accounting": 2,
       "supported-profile": 165
     },
     "nonSupportedFrontier": 97,

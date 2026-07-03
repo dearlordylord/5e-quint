@@ -1032,7 +1032,7 @@
         {
           "blockers": [
             {
-              "count": 6,
+              "count": 2,
               "kind": "strict-target-open"
             },
             {
@@ -1040,13 +1040,13 @@
               "kind": "selected-identity-blocker"
             }
           ],
-          "blockingCount": 11,
+          "blockingCount": 7,
           "evidence": {
             "claimGate": {
               "authoredReadinessBlockerCount": 0,
               "selectedIdentityBlockerCount": 5,
               "status": "blocked",
-              "strictTargetOpenCount": 6
+              "strictTargetOpenCount": 2
             },
             "selectedIdentityReadiness": {
               "denominator": 191,
@@ -1060,8 +1060,8 @@
             },
             "strictTargetClosure": {
               "denominator": 262,
-              "numerator": 256,
-              "percent": "97.7%"
+              "numerator": 260,
+              "percent": "99.2%"
             }
           },
           "id": "support-completeness",

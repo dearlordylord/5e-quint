@@ -31,7 +31,7 @@
     {
       "number": 38,
       "id": "L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-1-5 open spell-effect accounting rows"
     },
     {
@@ -45,6 +45,30 @@
       "id": "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES",
       "status": "ready-for-research",
       "title": "Resolve level-1-5 selected-identity replay gaps"
+    },
+    {
+      "number": 41,
+      "id": "L3-FOLLOWUP-BLINK-PLANAR-PHASE-LIFECYCLE",
+      "status": "ready-for-research",
+      "title": "Promote Blink planar phase lifecycle"
+    },
+    {
+      "number": 42,
+      "id": "L3-FOLLOWUP-CONJURE-ANIMALS-PACK-EFFECT",
+      "status": "ready-for-research",
+      "title": "Promote Conjure Animals pack effect"
+    },
+    {
+      "number": 43,
+      "id": "L3-FOLLOWUP-MAGIC-CIRCLE-WARDED-AREA",
+      "status": "ready-for-research",
+      "title": "Promote Magic Circle warded area"
+    },
+    {
+      "number": 44,
+      "id": "L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE",
+      "status": "ready-for-research",
+      "title": "Promote Meld into Stone merged state"
     },
     {
       "number": 5,
@@ -333,9 +357,13 @@ Every Ralph task must run the task-base check before research or edits:
 |   2 | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING - Add level-1-5 support report plumbing              | done               | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Adds the generated level-support report path before ultra-golden consumes it.          |
 |   3 | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-5 into the ultra-golden aggregate          | done               | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING                                                           | Extends the aggregate gate without weakening older scopes.                             |
 |   4 | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-5 non-MCP ultra-golden layers | done | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Split current non-MCP support blockers into concrete dependency-rewired follow-up tasks. |
-|  38 | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING - Resolve level-1-5 open spell-effect accounting rows | ready-for-research | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Resolves the four table/spatial spell-effect open rows before battle handoff can unblock. |
+|  38 | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING - Resolve level-1-5 open spell-effect accounting rows | done | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Records concrete follow-up splits for the four table/spatial spell-effect rows and closes current strict accounting. |
 |  39 | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS - Resolve level-1-5 later-level residual accounting rows | ready-for-research | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Resolves the two later-level residual open rows before final ultra-golden refresh. |
 |  40 | L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES - Resolve level-1-5 selected-identity replay gaps | ready-for-research | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Adds or closes the five selected-identity replay blockers without using MCP scenario evidence as parity. |
+|  41 | L3-FOLLOWUP-BLINK-PLANAR-PHASE-LIFECYCLE - Promote Blink planar phase lifecycle | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for Blink's planar phase lifecycle and table/spatial plane-position witnesses. |
+|  42 | L3-FOLLOWUP-CONJURE-ANIMALS-PACK-EFFECT - Promote Conjure Animals pack effect | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for the spectral pack occurrence and table/spatial pack-position witnesses. |
+|  43 | L3-FOLLOWUP-MAGIC-CIRCLE-WARDED-AREA - Promote Magic Circle warded area | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for the warded Cylinder and table/spatial crossing witnesses. |
+|  44 | L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE - Promote Meld into Stone merged state | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for stone merged-state lifecycle and terrain/object occupancy witnesses. |
 |   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | ready-for-research | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Chooses the smallest honest SRD-only vertical from post-SDK-supported behavior.        |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | blocked        | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds creation/finalization/sheet proof before battle handoff.                          |
 |   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | blocked            | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff only after sheet coverage and non-MCP support blockers have concrete resolutions. |
@@ -618,7 +646,7 @@ Plan Impact:
 
 ### Task 38 - L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`
 
@@ -672,6 +700,196 @@ Verification:
   change.
 - Focused runtime/QNT tests and the relevant MBT only if this task changes
   battle runtime or QNT parity behavior.
+
+Plan Impact:
+
+- Applied. `blink`, `conjure_animals`, `magic_circle`, and
+  `meld_into_stone` now have checker-owned `followUpTasks`, so the generated
+  level-1-5 strict gate classifies them as `blocked-follow-up-split` instead
+  of `open-profile-accounting`.
+- Added Tasks 41-44 as dependency-ordered Ralph follow-ups for those exact
+  promoted owner slices. They do not block Tasks 7 or 10 because Task 38's
+  generated accounting now closes the current strict target by explicit split.
+
+### Task 41 - L3-FOLLOWUP-BLINK-PLANAR-PHASE-LIFECYCLE
+
+Status: `ready-for-research`
+
+Depends on: `L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- Blink Surface spell definition and support-profile facts
+- Relevant SRD spell text under `.references/srd-5.2.1/Spells/`
+- `UBIQUITOUS_LANGUAGE.md`
+- Battle runtime, QNT, and MBT owners for active Spell Effect lifecycles
+
+Current state:
+
+- Blink is installed as an SRD Surface Spell Definition, but no promoted
+  battle-runtime profile owns its planar phase lifecycle.
+- Task 38 records the follow-up split in the Unit claim.
+
+Output:
+
+- Promote Blink's typed planar phase lifecycle as a Spell Effect using Surface
+  phase-transition facts, caster-turn-end random-table branch,
+  already-on-Ethereal spell-ending predicate, origin-space tracking,
+  Ethereal-only interaction limits, start-of-next-turn and spell-end return
+  placement, caller/table-supplied plane occupancy, visible-unoccupied return
+  choices, and nearest-unoccupied fallback witnesses.
+- Do not store durable map or plane-position state and do not dispatch on
+  Blink id, name, or provenance.
+
+Completion / Success Criteria:
+
+- Blink has a supported-profile or profile-subset-supported claim with
+  deterministic admission/projection evidence, focused runtime tests, and
+  promoted Quint/runtime parity for the planar phase lifecycle.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability.
+- `pnpm unit-profile-coverage:check`
+- Focused runtime/QNT tests and relevant MBT only if runtime or QNT parity
+  behavior changes.
+
+### Task 42 - L3-FOLLOWUP-CONJURE-ANIMALS-PACK-EFFECT
+
+Status: `ready-for-research`
+
+Depends on: `L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- Conjure Animals Surface spell definition and support-profile facts
+- Relevant SRD spell text under `.references/srd-5.2.1/Spells/`
+- `UBIQUITOUS_LANGUAGE.md`
+- Battle runtime, QNT, and MBT owners for active Spell Effect lifecycles
+
+Current state:
+
+- Conjure Animals is installed as an SRD Surface Spell Definition, but no
+  promoted battle-runtime profile owns its spectral pack occurrence.
+- Task 38 records the follow-up split in the Unit claim.
+
+Output:
+
+- Promote Conjure Animals' spectral pack occurrence as a Spell Effect carrying
+  pack lifecycle, slot-scaled Slashing damage, caster-selected animal-form
+  source fact, caster-proximity Strength Saving Throw Advantage, caster-turn
+  reposition command, optional Dexterity Saving Throw damage triggers, and
+  shared once-per-turn per-creature trigger state.
+- Consume caller/table-supplied pack position, caster proximity,
+  visible-creature eligibility, movement/reposition destination, and trigger
+  witnesses without adding companion-control state or authored-identity
+  dispatch.
+
+Completion / Success Criteria:
+
+- Conjure Animals has a supported-profile or profile-subset-supported claim
+  with deterministic admission/projection evidence, focused runtime tests, and
+  promoted Quint/runtime parity for the pack Spell Effect.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability.
+- `pnpm unit-profile-coverage:check`
+- Focused runtime/QNT tests and relevant MBT only if runtime or QNT parity
+  behavior changes.
+
+### Task 43 - L3-FOLLOWUP-MAGIC-CIRCLE-WARDED-AREA
+
+Status: `ready-for-research`
+
+Depends on: `L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- Magic Circle Surface spell definition and support-profile facts
+- Relevant SRD spell text under `.references/srd-5.2.1/Spells/`
+- `UBIQUITOUS_LANGUAGE.md`
+- Battle runtime, QNT, and MBT owners for active Spell Effect lifecycles
+
+Current state:
+
+- Magic Circle is installed as an SRD Surface Spell Definition, but no promoted
+  battle-runtime profile owns its warded-area effect.
+- Task 38 records the follow-up split in the Unit claim.
+
+Output:
+
+- Promote Magic Circle's warded Cylinder as a Spell Effect carrying chosen
+  creature-type set, normal or reversed direction branch, willing nonmagical
+  entry or exit prevention, Charisma Saving Throw gates for teleportation and
+  interplanar-travel crossing, protected-target Attack Roll Disadvantage, and
+  source-scoped possession plus Charmed/Frightened prevention.
+- Consume table-supplied ground-point placement, Cylinder membership,
+  protected-target location, crossing-attempt, and magical-travel witnesses
+  without duplicating battle map state or dispatching on Magic Circle identity.
+
+Completion / Success Criteria:
+
+- Magic Circle has a supported-profile or profile-subset-supported claim with
+  deterministic admission/projection evidence, focused runtime tests, and
+  promoted Quint/runtime parity for the warded-area Spell Effect.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability.
+- `pnpm unit-profile-coverage:check`
+- Focused runtime/QNT tests and relevant MBT only if runtime or QNT parity
+  behavior changes.
+
+### Task 44 - L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE
+
+Status: `ready-for-research`
+
+Depends on: `L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- Meld into Stone Surface spell definition and support-profile facts
+- Relevant SRD spell text under `.references/srd-5.2.1/Spells/`
+- `UBIQUITOUS_LANGUAGE.md`
+- Battle runtime, QNT, and MBT owners for active Spell Effect lifecycles
+
+Current state:
+
+- Meld into Stone is installed as an SRD Surface Spell Definition, but no
+  promoted battle-runtime profile owns its merged-state lifecycle.
+- Task 38 records the follow-up split in the Unit claim.
+
+Output:
+
+- Promote Meld into Stone's merged-state Spell Effect carrying stone
+  containment target, hidden merged occupancy, outside-sense limits,
+  passage-of-time awareness, self-spell permission, voluntary Movement exit,
+  otherwise-no-movement restriction, minor-damage harmlessness,
+  partial-destruction or shape-change expulsion with 6d6 Force damage,
+  complete-destruction or transmutation expulsion with 50 Force damage,
+  closest-unoccupied placement, and Prone rider.
+- Consume table terrain/object witnesses for stone size, shape, material, entry
+  location, damage/destruction/transmutation events, fit-after-shape-change
+  predicates, and placement without duplicating battle map/object state or
+  dispatching on Meld into Stone identity.
+
+Completion / Success Criteria:
+
+- Meld into Stone has a supported-profile or profile-subset-supported claim
+  with deterministic admission/projection evidence, focused runtime tests, and
+  promoted Quint/runtime parity for the merged-state Spell Effect.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability.
+- `pnpm unit-profile-coverage:check`
+- Focused runtime/QNT tests and relevant MBT only if runtime or QNT parity
+  behavior changes.
 
 ### Task 39 - L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS
 
