@@ -39,6 +39,17 @@ const expectedTools = [
 
 const levelFourWizardProgressionOptionId =
   "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_4:fixed_hp_gain";
+const levelFiveWizardProgressionOptionId =
+  "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain";
+
+const levelFiveWizardSlotCapacities = [
+  { count: 4, spellLevel: 1 },
+  { count: 3, spellLevel: 2 },
+  { count: 2, spellLevel: 3 },
+] as const;
+const levelFiveWizardUnexpendedSpellSlots = levelFiveWizardSlotCapacities.map(
+  (slot) => ({ ...slot, expended: 0 }),
+);
 
 const agentConversationScenarios = [
   {
@@ -1049,6 +1060,79 @@ export async function verifyLevelFourWizardVertical(client: Client) {
   assert.ok(battleActByLabel(wizardActs, "Scorching Ray"));
 }
 
+export async function verifyLevelFiveWizardFireballSheetScenario(
+  client: Client,
+) {
+  const workflow = await callTool(client, "describe_mcp_workflow", {});
+  assert.equal(get(workflow, "resultPaths.creationHoles"), "holes");
+  assert.equal(
+    get(workflow, "resultPaths.draftRevision"),
+    "draft.revision or storedDraft.revision",
+  );
+
+  const units = await callTool(client, "list_catalog_units", {});
+  assert.ok(
+    unitSummaries(units, "class").some((unit) => unit.id === "class_wizard"),
+  );
+  assert.ok(
+    unitSummaries(units, "spell").some((unit) => unit.id === "fireball"),
+  );
+
+  const wizardDraftId = "draft:stdio-level-five-elf-soldier-wizard-fireball";
+  const finalizedWizard = await createAndFinalizeElfWizardFive(
+    client,
+    wizardDraftId,
+  );
+  assert.equal(get(finalizedWizard, "finalization.tag"), "ready");
+  assert.equal(
+    get(finalizedWizard, "finalization.build.species"),
+    "species_elf",
+  );
+  assert.deepEqual(
+    get(
+      finalizedWizard,
+      "finalization.build.spellcasting.slotPools.spellcasting.slots",
+    ),
+    levelFiveWizardSlotCapacities,
+  );
+  assert.ok(
+    stringArrayAt(
+      finalizedWizard,
+      "finalization.build.spellcasting.sources.0.spellbook",
+    ).includes("fireball"),
+  );
+  assert.ok(
+    stringArrayAt(
+      finalizedWizard,
+      "finalization.build.spellcasting.sources.0.preparedSpells",
+    ).includes("fireball"),
+  );
+
+  const listedBeforeBattle = await callTool(client, "list_characters", {});
+  const wizard = characterRow(
+    listedBeforeBattle,
+    testCharacterId(wizardDraftId),
+  );
+  assert.equal(get(wizard, "displayName"), "Elf Soldier Wizard 5");
+  assert.equal(get(wizard, "hitPoints.current"), 32);
+  assert.equal(get(wizard, "hitPoints.maximum"), 32);
+  assert.ok(
+    stringArrayAt(wizard, "build.spellcasting.sources.0.spellbook").includes(
+      "fireball",
+    ),
+  );
+  assert.ok(
+    stringArrayAt(
+      wizard,
+      "build.spellcasting.sources.0.preparedSpells",
+    ).includes("fireball"),
+  );
+  assert.deepEqual(
+    get(wizard, "spellSlots"),
+    levelFiveWizardUnexpendedSpellSlots,
+  );
+}
+
 async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
   await callTool(client, "create_character_draft", { draftId });
   await fillBaseOrcSoldier(
@@ -1383,15 +1467,86 @@ async function createAndFinalizeElfWizardThree(
 }
 
 async function createAndFinalizeElfWizardFour(client: Client, draftId: string) {
+  return createAndFinalizeElfSoldierWizardWithAsi(client, draftId, {
+    progressionOptionId: levelFourWizardProgressionOptionId,
+    wizardSpellbookOptionIds: [
+      "detect_magic",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+      "thunderwave",
+      "chromatic_orb",
+      "scorching_ray",
+      "mirror_image",
+      "misty_step",
+      "acid_arrow",
+      "shatter",
+    ],
+    wizardPreparedSpellOptionIds: [
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "chromatic_orb",
+      "scorching_ray",
+      "misty_step",
+      "acid_arrow",
+    ],
+  });
+}
+
+async function createAndFinalizeElfWizardFive(client: Client, draftId: string) {
+  return createAndFinalizeElfSoldierWizardWithAsi(client, draftId, {
+    progressionOptionId: levelFiveWizardProgressionOptionId,
+    wizardSpellbookOptionIds: [
+      "detect_magic",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+      "thunderwave",
+      "chromatic_orb",
+      "scorching_ray",
+      "mirror_image",
+      "misty_step",
+      "acid_arrow",
+      "shatter",
+      "fireball",
+      "lightning_bolt",
+    ],
+    wizardPreparedSpellOptionIds: [
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "chromatic_orb",
+      "scorching_ray",
+      "misty_step",
+      "acid_arrow",
+      "fireball",
+      "lightning_bolt",
+    ],
+  });
+}
+
+async function createAndFinalizeElfSoldierWizardWithAsi(
+  client: Client,
+  draftId: string,
+  input: {
+    readonly progressionOptionId: string;
+    readonly wizardSpellbookOptionIds: readonly string[];
+    readonly wizardPreparedSpellOptionIds: readonly string[];
+  },
+) {
   const created = await callTool(client, "create_character_draft", { draftId });
-  await callTool(client, "fill_creation_holes", {
+  const createdRevision = returnedDraftRevision(created);
+  const initialFill = await callTool(client, "fill_creation_holes", {
     draftId,
-    expectedRevision: 0,
+    expectedRevision: createdRevision,
     fills: [
       choiceFillFromReturnedHole(
         created,
         "cc:draft:draft.progression.initial",
-        levelFourWizardProgressionOptionId,
+        input.progressionOptionId,
       ),
       choiceFillFromReturnedHole(
         created,
@@ -1429,10 +1584,12 @@ async function createAndFinalizeElfWizardFour(client: Client, draftId: string) {
       ),
     ],
   });
+  const afterInitialRevision = acceptedFillDraftRevision(initialFill);
 
   const classChoices = await callTool(client, "discover_creation_holes", {
     draftId,
   });
+  assert.equal(returnedDraftRevision(classChoices), afterInitialRevision);
   assert.deepEqual(holeIds(classChoices), [
     unitHoleId("class_wizard", "class_skill_proficiency_choice"),
     unitHoleId(
@@ -1449,9 +1606,9 @@ async function createAndFinalizeElfWizardFour(client: Client, draftId: string) {
     unitHoleId("background_soldier", "background_equipment_choice"),
   ]);
 
-  await callTool(client, "fill_creation_holes", {
+  const classFill = await callTool(client, "fill_creation_holes", {
     draftId,
-    expectedRevision: 1,
+    expectedRevision: returnedDraftRevision(classChoices),
     fills: [
       choiceFillFromReturnedHole(
         classChoices,
@@ -1483,29 +1640,12 @@ async function createAndFinalizeElfWizardFour(client: Client, draftId: string) {
       choiceFillFromReturnedHole(
         classChoices,
         unitHoleId("class_wizard", "wizard_spellbook_choices"),
-        "detect_magic",
-        "mage_armor",
-        "magic_missile",
-        "shield",
-        "sleep",
-        "thunderwave",
-        "chromatic_orb",
-        "scorching_ray",
-        "mirror_image",
-        "misty_step",
-        "acid_arrow",
-        "shatter",
+        ...input.wizardSpellbookOptionIds,
       ),
       choiceFillFromReturnedHole(
         classChoices,
         unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
-        "mage_armor",
-        "magic_missile",
-        "shield",
-        "chromatic_orb",
-        "scorching_ray",
-        "misty_step",
-        "acid_arrow",
+        ...input.wizardPreparedSpellOptionIds,
       ),
       choiceFillFromReturnedHole(
         classChoices,
@@ -1529,10 +1669,12 @@ async function createAndFinalizeElfWizardFour(client: Client, draftId: string) {
       ),
     ],
   });
+  const afterClassRevision = acceptedFillDraftRevision(classFill);
 
   const featureChoices = await callTool(client, "discover_creation_holes", {
     draftId,
   });
+  assert.equal(returnedDraftRevision(featureChoices), afterClassRevision);
   assert.deepEqual(holeIds(featureChoices), [
     unitHoleId("wizard_scholar", "class_feature_proficiency_choice"),
     unitHoleId("wizard_evocation_savant", "wizard_spellbook_choices"),
@@ -1542,9 +1684,9 @@ async function createAndFinalizeElfWizardFour(client: Client, draftId: string) {
     ),
     unitHoleId("class_wizard", "equipment_purchase"),
   ]);
-  await callTool(client, "fill_creation_holes", {
+  const featureFill = await callTool(client, "fill_creation_holes", {
     draftId,
-    expectedRevision: 2,
+    expectedRevision: returnedDraftRevision(featureChoices),
     fills: [
       choiceFillFromReturnedHole(
         featureChoices,
@@ -1574,17 +1716,19 @@ async function createAndFinalizeElfWizardFour(client: Client, draftId: string) {
       ),
     ],
   });
+  const afterFeatureRevision = acceptedFillDraftRevision(featureFill);
 
   const loadoutChoices = await callTool(client, "discover_creation_holes", {
     draftId,
   });
+  assert.equal(returnedDraftRevision(loadoutChoices), afterFeatureRevision);
   assert.deepEqual(holeIds(loadoutChoices), [
     loadoutHoleId("equipment_shield", "shield"),
     loadoutHoleId("weapon_longsword", "weapon"),
   ]);
-  await callTool(client, "fill_creation_holes", {
+  const loadoutFill = await callTool(client, "fill_creation_holes", {
     draftId,
-    expectedRevision: 3,
+    expectedRevision: returnedDraftRevision(loadoutChoices),
     fills: [
       choiceFillFromReturnedHole(
         loadoutChoices,
@@ -1598,10 +1742,12 @@ async function createAndFinalizeElfWizardFour(client: Client, draftId: string) {
       ),
     ],
   });
+  const afterLoadoutRevision = acceptedFillDraftRevision(loadoutFill);
 
   const complete = await callTool(client, "discover_creation_holes", {
     draftId,
   });
+  assert.equal(returnedDraftRevision(complete), afterLoadoutRevision);
   assert.deepEqual(holeIds(complete), []);
   return callTool(client, "finalize_character", { draftId });
 }
@@ -1725,6 +1871,18 @@ function returnedChoiceHole(payload: JsonObject, holeId: string) {
 
 function choiceFill(holeId: string, ...optionIds: readonly string[]) {
   return { kind: "choice", holeId, optionIds };
+}
+
+function acceptedFillDraftRevision(payload: JsonObject) {
+  assert.equal(get(payload, "result.tag"), "accepted");
+  return returnedDraftRevision(payload);
+}
+
+function returnedDraftRevision(payload: JsonObject) {
+  const revision =
+    get(payload, "storedDraft.revision") ?? get(payload, "draft.revision");
+  assert.equal(typeof revision, "number");
+  return revision;
 }
 
 function attackSubject(actorId: string, attackName: string) {
