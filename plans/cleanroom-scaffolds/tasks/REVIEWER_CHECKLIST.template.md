@@ -36,6 +36,18 @@ run multiple checklists, but each checklist result must be recorded separately.
 - Every selected in-scope branch has passing harness-generated target replay
   evidence.
 - Evidence uses {{quintBindingName}} and records observed `mbt::actionTaken`.
+- Passing evidence records `stateCheck.observedProjectionSource`.
+- `qRoute` evidence uses the route event-list comparator, records the target
+  reducer entrypoint sequence, and names the observed reducer route-event
+  source plus reducer/public API path that produced it.
+- `qComponentRoute` evidence uses the component route event-list comparator,
+  records the target component entrypoint sequence, and names the observed
+  component route-event source plus reducer/public API path that produced it.
+- Semantic projection evidence is tagged `semantic-projection`, uses neither
+  route-event comparator, and names its semantic projection source plus public
+  API path.
+- Equal expected/observed projection hashes without the matching source record
+  are rejected.
 - Focused target-language tests are listed only as diagnostics.
 
 ### code-shape-depth
@@ -82,6 +94,9 @@ run multiple checklists, but each checklist result must be recorded separately.
 
 - `tasks/VALIDATION_REPORT.md` renders branch coverage from target replay
   evidence.
+- `tasks/VALIDATION_REPORT.md` is a readable view only; generated report rows
+  or adapter-local expected route tables cannot substitute for
+  `tasks/target-replay-evidence/*.json`.
 - Covered rows identify the full source obligation id:
   `<driver path>#<branch family>:<branch action>`.
 - Rows with diagnostic tests but no target replay evidence are not marked

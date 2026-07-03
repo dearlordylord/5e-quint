@@ -72,6 +72,12 @@ const harnessWitnessProtocolNames = [
   "comparator",
   "expectedProjectionSha256",
   "observedProjectionSha256",
+  "observedProjectionSource",
+  "targetEntrypointSequence",
+  "routeEventSource",
+  "reducerPublicApiPath",
+  "semanticProjectionSource",
+  "targetPublicApiPath",
   "checkedTargetStateFields",
   "harnessTestPath",
 ];
@@ -2598,6 +2604,16 @@ function validFixture(rootPath) {
         observedProjectionSha256: sha256Text(
           `projection ${obligation.branchAction}`,
         ),
+        observedProjectionSource: {
+          tag: "qRoute",
+          targetEntrypointSequence: [
+            "engine.battle.startBattle",
+            "engine.battle.discoverBattleActs",
+            "engine.battle.resolveBattleSubject",
+          ],
+          routeEventSource: "BattleEntrypointTrace.route_events",
+          reducerPublicApiPath: "engine.battle.resolveBattleSubject",
+        },
         checkedTargetStateFields: ["BattleState.pendingForceProjectiles"],
       },
       result: { tag: "pass" },

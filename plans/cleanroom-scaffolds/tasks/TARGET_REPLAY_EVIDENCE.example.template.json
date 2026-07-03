@@ -25,12 +25,85 @@
       ],
       "stateCheck": {
         "tag": "state-match",
-        "projection": "<qRoute, qComponentRoute, or source-driver projection name>",
-        "comparator": "<route-event-list, component-route-event-list, or projection comparator id>",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
         "expectedProjectionSha256": "<sha256 hex>",
         "observedProjectionSha256": "<same sha256 hex on pass>",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "<public reducer entrypoint 1>",
+            "<production reducer/public API path used to obtain the events>"
+          ],
+          "routeEventSource": "<target trace/log/state field that emitted observed route events>",
+          "reducerPublicApiPath": "<production reducer/public API path used to obtain the events>"
+        },
         "checkedTargetStateFields": [
           "<TargetState.field or harness projection field>"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "cleanroom-input/qnt/<package>/<component-driver>.mbt.qnt",
+      "qntFileSha256": "<sha256 from source branch inventory>",
+      "branchFamily": "<branch family from source branch inventory>",
+      "branchAction": "<branch action from source branch inventory>",
+      "observedActionTaken": "<same action observed from mbt::actionTaken>",
+      "harnessTestPath": "{{enginePath}}/qnt-adapters/<component-driver-adapter>",
+      "traceId": "<seed or deterministic replay id>",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "<sha256 hex>",
+        "observedProjectionSha256": "<same sha256 hex on pass>",
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "<production component/public API path used to obtain the events>"
+          ],
+          "routeEventSource": "<target trace/log/state field that emitted observed component route events>",
+          "reducerPublicApiPath": "<production component/public API path used to obtain the events>"
+        },
+        "checkedTargetStateFields": [
+          "<TargetState.field or harness component-route projection field>"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "cleanroom-input/qnt/<package>/<semantic-driver>.mbt.qnt",
+      "qntFileSha256": "<sha256 from source branch inventory>",
+      "branchFamily": "<branch family from source branch inventory>",
+      "branchAction": "<branch action from source branch inventory>",
+      "observedActionTaken": "<same action observed from mbt::actionTaken>",
+      "harnessTestPath": "{{enginePath}}/qnt-adapters/<semantic-driver-adapter>",
+      "traceId": "<seed or deterministic replay id>",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "<semantic source-driver projection name such as qState>",
+        "comparator": "<semantic projection comparator id>",
+        "expectedProjectionSha256": "<sha256 hex>",
+        "observedProjectionSha256": "<same sha256 hex on pass>",
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "<production public API path used to obtain the projection>"
+          ],
+          "semanticProjectionSource": "<target trace/log/state field that emitted the semantic projection>",
+          "targetPublicApiPath": "<production public API path used to obtain the projection>"
+        },
+        "checkedTargetStateFields": [
+          "<TargetState.field or harness semantic projection field>"
         ]
       },
       "result": {

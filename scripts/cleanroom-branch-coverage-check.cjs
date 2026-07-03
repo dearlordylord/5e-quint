@@ -55,6 +55,13 @@ const sha256Pattern = /^[0-9a-f]{64}$/i;
 const qntAcceptanceTags = new Set(["qnt-semantic", "qnt-route"]);
 const qntRouteProjection = "qRoute";
 const qntRouteComparator = "route-event-list";
+const qntComponentRouteProjection = "qComponentRoute";
+const qntComponentRouteComparator = "component-route-event-list";
+const observedProjectionSourceTags = new Set([
+  qntRouteProjection,
+  qntComponentRouteProjection,
+  "semantic-projection",
+]);
 const characterCreationFullVerticalDriverPath =
   "packages/character-creation-runtime/character-creation-runtime.mbt.qnt";
 const characterCreationFullVerticalSemanticOwnerPath =
@@ -213,6 +220,141 @@ function validatePassingStateCheck(stateCheck, context, issues) {
   ) {
     issues.push(
       `${context}: passing target replay stateCheck requires checkedTargetStateFields.`,
+    );
+  }
+  validateObservedProjectionSource(stateCheck, context, issues);
+}
+
+function validateNonEmptyStringArray(value, context, issues) {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    value.some((item) => typeof item !== "string" || item.trim() === "")
+  ) {
+    issues.push(`${context} must be a non-empty string array.`);
+  }
+}
+
+function validateObservedProjectionSource(stateCheck, context, issues) {
+  const source = stateCheck.observedProjectionSource;
+  if (!isRecord(source)) {
+    issues.push(
+      `${context}: passing target replay stateCheck requires observedProjectionSource.`,
+    );
+    return;
+  }
+  if (!observedProjectionSourceTags.has(source.tag)) {
+    issues.push(
+      `${context}: observedProjectionSource.tag must be one of ${Array.from(observedProjectionSourceTags).join(", ")}.`,
+    );
+    return;
+  }
+  validateNonEmptyStringArray(
+    source.targetEntrypointSequence,
+    `${context}: observedProjectionSource.targetEntrypointSequence`,
+    issues,
+  );
+  if (source.tag === qntRouteProjection) {
+    validateRouteProjectionSource(
+      stateCheck,
+      source,
+      qntRouteProjection,
+      qntRouteComparator,
+      context,
+      issues,
+    );
+    return;
+  }
+  if (source.tag === qntComponentRouteProjection) {
+    validateRouteProjectionSource(
+      stateCheck,
+      source,
+      qntComponentRouteProjection,
+      qntComponentRouteComparator,
+      context,
+      issues,
+    );
+    return;
+  }
+  if (
+    stateCheck.projection === qntRouteProjection ||
+    stateCheck.projection === qntComponentRouteProjection
+  ) {
+    issues.push(
+      `${context}: semantic-projection observedProjectionSource must not be used for route projections.`,
+    );
+  }
+  if (
+    stateCheck.comparator === qntRouteComparator ||
+    stateCheck.comparator === qntComponentRouteComparator
+  ) {
+    issues.push(
+      `${context}: semantic-projection observedProjectionSource must not use route comparators.`,
+    );
+  }
+  for (const field of ["semanticProjectionSource", "targetPublicApiPath"]) {
+    if (typeof source[field] !== "string" || source[field].trim() === "") {
+      issues.push(
+        `${context}: semantic-projection observedProjectionSource requires ${field}.`,
+      );
+    }
+  }
+  validateSourcePathAppearsInEntrypointSequence(
+    source,
+    "targetPublicApiPath",
+    context,
+    issues,
+  );
+}
+
+function validateRouteProjectionSource(
+  stateCheck,
+  source,
+  expectedProjection,
+  expectedComparator,
+  context,
+  issues,
+) {
+  if (stateCheck.projection !== expectedProjection) {
+    issues.push(
+      `${context}: observedProjectionSource ${source.tag} requires stateCheck.projection ${expectedProjection}.`,
+    );
+  }
+  if (stateCheck.comparator !== expectedComparator) {
+    issues.push(
+      `${context}: observedProjectionSource ${source.tag} requires stateCheck.comparator ${expectedComparator}.`,
+    );
+  }
+  for (const field of ["routeEventSource", "reducerPublicApiPath"]) {
+    if (typeof source[field] !== "string" || source[field].trim() === "") {
+      issues.push(
+        `${context}: ${source.tag} observedProjectionSource requires ${field}.`,
+      );
+    }
+  }
+  validateSourcePathAppearsInEntrypointSequence(
+    source,
+    "reducerPublicApiPath",
+    context,
+    issues,
+  );
+}
+
+function validateSourcePathAppearsInEntrypointSequence(
+  source,
+  pathField,
+  context,
+  issues,
+) {
+  if (
+    typeof source[pathField] !== "string" ||
+    !Array.isArray(source.targetEntrypointSequence)
+  ) {
+    return;
+  }
+  if (!source.targetEntrypointSequence.includes(source[pathField])) {
+    issues.push(
+      `${context}: observedProjectionSource.${pathField} must be included in targetEntrypointSequence.`,
     );
   }
 }
@@ -1313,8 +1455,8 @@ function expectedReplayStateCheck(routeRow) {
   if (!isRecord(routeRow)) return undefined;
   if (routeRow.route === "component-first") {
     return {
-      projection: "qComponentRoute",
-      comparator: "component-route-event-list",
+      projection: qntComponentRouteProjection,
+      comparator: qntComponentRouteComparator,
     };
   }
   if (routeRow.route === "reducer-routed") {
@@ -1325,8 +1467,8 @@ function expectedReplayStateCheck(routeRow) {
     routeRow.componentConnectorPath.trim() !== ""
   ) {
     return {
-      projection: "qComponentRoute",
-      comparator: "component-route-event-list",
+      projection: qntComponentRouteProjection,
+      comparator: qntComponentRouteComparator,
     };
   }
   if (
@@ -2988,6 +3130,12 @@ function runSelfTest() {
           expectedProjectionSha256: projectionSha,
           observedProjectionSha256: projectionSha,
           checkedTargetStateFields: ["FixtureState.value"],
+          observedProjectionSource: {
+            tag: "semantic-projection",
+            targetEntrypointSequence: ["fixture.engine.replayBranch"],
+            semanticProjectionSource: "FixtureHarness.projectState",
+            targetPublicApiPath: "fixture.engine.replayBranch",
+          },
         },
         result: { tag: "pass" },
         ...(obligation.branchAction === "doSample"
@@ -3020,8 +3168,18 @@ function runSelfTest() {
     };
     const routeProjectionEvidence = stable(targetEvidence);
     for (const run of routeProjectionEvidence.runs) {
-      run.stateCheck.projection = "qRoute";
-      run.stateCheck.comparator = "route-event-list";
+      run.stateCheck.projection = qntRouteProjection;
+      run.stateCheck.comparator = qntRouteComparator;
+      run.stateCheck.observedProjectionSource = {
+        tag: qntRouteProjection,
+        targetEntrypointSequence: [
+          "fixture.battle.startBattle",
+          "fixture.battle.discoverBattleActs",
+          "fixture.battle.resolveBattleSubject",
+        ],
+        routeEventSource: "FixtureBattleTrace.routeEvents",
+        reducerPublicApiPath: "fixture.battle.resolveBattleSubject",
+      };
     }
     const routeProjectionResult = validateTargetReplayEvidence(
       routeProjectionEvidence,
@@ -3084,8 +3242,14 @@ function runSelfTest() {
     };
     const componentProjectionEvidence = stable(targetEvidence);
     for (const run of componentProjectionEvidence.runs) {
-      run.stateCheck.projection = "qComponentRoute";
-      run.stateCheck.comparator = "component-route-event-list";
+      run.stateCheck.projection = qntComponentRouteProjection;
+      run.stateCheck.comparator = qntComponentRouteComparator;
+      run.stateCheck.observedProjectionSource = {
+        tag: qntComponentRouteProjection,
+        targetEntrypointSequence: ["fixture.ruleCore.resolveComponent"],
+        routeEventSource: "FixtureRuleCoreTrace.componentRouteEvents",
+        reducerPublicApiPath: "fixture.ruleCore.resolveComponent",
+      };
     }
     const componentProjectionResult = validateTargetReplayEvidence(
       componentProjectionEvidence,
@@ -3355,6 +3519,12 @@ function runSelfTest() {
       semanticRun.traceId = `${run.traceId} semantic`;
       semanticRun.stateCheck.projection = "qState";
       semanticRun.stateCheck.comparator = "fixture-state-projection-v1";
+      semanticRun.stateCheck.observedProjectionSource = {
+        tag: "semantic-projection",
+        targetEntrypointSequence: ["fixture.character.create"],
+        semanticProjectionSource: "FixtureCharacterTrace.qStateProjection",
+        targetPublicApiPath: "fixture.character.create",
+      };
       semanticRun.stateCheck.qntAcceptance = {
         tag: "qnt-semantic",
         ownerPath: semanticOwnerPath,
@@ -3363,6 +3533,16 @@ function runSelfTest() {
       routeRun.traceId = `${run.traceId} route`;
       routeRun.stateCheck.projection = qntRouteProjection;
       routeRun.stateCheck.comparator = qntRouteComparator;
+      routeRun.stateCheck.observedProjectionSource = {
+        tag: qntRouteProjection,
+        targetEntrypointSequence: [
+          "fixture.battle.startBattle",
+          "fixture.battle.discoverBattleActs",
+          "fixture.battle.resolveBattleSubject",
+        ],
+        routeEventSource: "FixtureBattleTrace.routeEvents",
+        reducerPublicApiPath: "fixture.battle.resolveBattleSubject",
+      };
       routeRun.stateCheck.qntAcceptance = {
         tag: "qnt-route",
         connectorPath: routeConnectorPath,
@@ -3480,6 +3660,65 @@ function runSelfTest() {
     ) {
       throw new Error(
         `expected mismatched projection evidence to fail, got ${JSON.stringify(mismatchedProjectionResult.issues)}`,
+      );
+    }
+    const metadataOnlyProjectionEvidence = stable(targetEvidence);
+    delete metadataOnlyProjectionEvidence.runs[0].stateCheck
+      .observedProjectionSource;
+    const metadataOnlyProjectionResult = validateTargetReplayEvidence(
+      metadataOnlyProjectionEvidence,
+      inventory,
+      inventorySha,
+    );
+    if (
+      !metadataOnlyProjectionResult.issues.some((issue) =>
+        issue.includes("requires observedProjectionSource"),
+      )
+    ) {
+      throw new Error(
+        `expected metadata-only projection evidence to fail, got ${JSON.stringify(metadataOnlyProjectionResult.issues)}`,
+      );
+    }
+    const wrongRouteSourceEvidence = stable(routeProjectionEvidence);
+    wrongRouteSourceEvidence.runs[0].stateCheck.observedProjectionSource = {
+      tag: "semantic-projection",
+      targetEntrypointSequence: ["fixture.engine.replayBranch"],
+      semanticProjectionSource: "FixtureHarness.projectState",
+      targetPublicApiPath: "fixture.engine.replayBranch",
+    };
+    const wrongRouteSourceResult = validateTargetReplayEvidence(
+      wrongRouteSourceEvidence,
+      inventory,
+      inventorySha,
+      { routeInventory: routeProjectionInventory },
+    );
+    if (
+      !wrongRouteSourceResult.issues.some((issue) =>
+        issue.includes("must not be used for route projections"),
+      )
+    ) {
+      throw new Error(
+        `expected semantic source for qRoute evidence to fail, got ${JSON.stringify(wrongRouteSourceResult.issues)}`,
+      );
+    }
+    const divergentRoutePathEvidence = stable(routeProjectionEvidence);
+    divergentRoutePathEvidence.runs[0].stateCheck.observedProjectionSource
+      .reducerPublicApiPath = "fixture.battle.unlistedRouteReader";
+    const divergentRoutePathResult = validateTargetReplayEvidence(
+      divergentRoutePathEvidence,
+      inventory,
+      inventorySha,
+      { routeInventory: routeProjectionInventory },
+    );
+    if (
+      !divergentRoutePathResult.issues.some((issue) =>
+        issue.includes(
+          "reducerPublicApiPath must be included in targetEntrypointSequence",
+        ),
+      )
+    ) {
+      throw new Error(
+        `expected divergent reducer public API path to fail, got ${JSON.stringify(divergentRoutePathResult.issues)}`,
       );
     }
     const missingSampledInputEvidence = stable(targetEvidence);

@@ -13,13 +13,13 @@
     {
       "number": 2,
       "id": "CRP-02-ROUTE-EVENT-PROVENANCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Require target replay evidence from observed route events"
     },
     {
       "number": 3,
       "id": "CRP-03-WITNESS-NAME-QUARANTINE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Separate witness sampled-input names from domain vocabulary"
     },
     {
@@ -145,8 +145,8 @@ The expanded queue must account for these families:
 | Task | Status | Depends On | Output |
 | --- | --- | --- | --- |
 | `CRP-01` | `ready-for-research` | none | populated backlog denominator rows |
-| `CRP-02` | `ready-for-research` | none | replay evidence provenance contract |
-| `CRP-03` | `blocked` | `CRP-02` | witness/domain vocabulary split |
+| `CRP-02` | `done` | none | replay evidence provenance contract |
+| `CRP-03` | `ready-for-research` | `CRP-02` | witness/domain vocabulary split |
 | `CRP-04` | `blocked` | `CRP-01` | creation fill-batch implementation task rows |
 | `CRP-05` | `blocked` | `CRP-01`, `CRP-02` | session battle entry implementation task rows |
 | `CRP-06` | `blocked` | `CRP-01` | settlement/rest owner implementation task rows |
@@ -246,7 +246,7 @@ raw inventory rows.
 
 ### Task 2 - CRP-02-ROUTE-EVENT-PROVENANCE
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -299,12 +299,7 @@ on route-event provenance as an acceptance gate.
 
 ### Task 3 - CRP-03-WITNESS-NAME-QUARANTINE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `CRP-02` because the witness-name policy must be
-attached to real route-event evidence, not metadata-only evidence.
+Status: `ready-for-research`
 
 Goal:
 
@@ -420,8 +415,7 @@ Status: `blocked`
 
 Blocker Type: dependency
 
-Blocker Detail: depends on `CRP-01` for concrete backlog rows and `CRP-02` for
-route-event provenance.
+Blocker Detail: depends on `CRP-01` for concrete backlog rows.
 
 Goal:
 
@@ -529,8 +523,7 @@ Status: `blocked`
 
 Blocker Type: dependency
 
-Blocker Detail: depends on `CRP-02` for route-event provenance and `CRP-03` for
-sampled-input witness naming.
+Blocker Detail: depends on `CRP-03` for sampled-input witness naming.
 
 Goal:
 

@@ -43,15 +43,24 @@ and record a bootstrap blocker in `tasks/BLOCKERS.md`.
   cleanroom ledgers, prior reports, previous adapters, and target code are not
   acceptance evidence.
 - Generate target replay evidence under `tasks/target-replay-evidence/`.
-  Match `tasks/TARGET_REPLAY_EVIDENCE.example.json` exactly. Diagnostic
-  target-language tests are allowed, but they do not close branch coverage.
+  Match `tasks/TARGET_REPLAY_EVIDENCE.example.json` exactly. Passing evidence
+  must record the target entrypoint sequence and an `observedProjectionSource`
+  tagged as `qRoute`, `qComponentRoute`, or `semantic-projection`. `qRoute`
+  and `qComponentRoute` evidence must name the observed route-event source and
+  reducer/public API path that produced those events; semantic projections must
+  name the semantic projection source and public API path. Equal
+  expected/observed projection hashes without that source record do not close
+  branch coverage. Diagnostic target-language tests are allowed, but they do
+  not close branch coverage.
 - Copy the accepted task's rolling artifacts into
   `tasks/history/<taskId>/`, then append `tasks/RUN_LEDGER.json` with the
   history artifact hashes, target replay evidence refs, command results,
   manifest source commit SHA, and source branch inventory SHA.
-- Update `tasks/VALIDATION_REPORT.md` from target replay evidence, not from
-  prose claims. The report is the readable view; `tasks/RUN_LEDGER.json` is
-  the machine-readable run ledger.
+- Update `tasks/VALIDATION_REPORT.md` from accepted target replay evidence,
+  not from prose claims, generated report rows, or adapter-local expected
+  routes. The report is the readable view; executable route-event provenance
+  lives in `tasks/target-replay-evidence/*.json`, and `tasks/RUN_LEDGER.json`
+  is the machine-readable run ledger.
 
 ## Required Outputs
 

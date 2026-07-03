@@ -108,7 +108,12 @@ artifacts and target replay evidence; a task is not accepted until it passes.
   action, observed `mbt::actionTaken`, sampled `mbt::nondetPicks` when present,
   trace id or seed, pass/fail result, and a state/projection check with a
   comparator id, expected and observed projection SHA-256 values, and checked
-  target state fields.
+  target state fields. Passing checks must also include
+  `stateCheck.observedProjectionSource`: `qRoute` and `qComponentRoute`
+  sources name the target entrypoint sequence, route-event source, and
+  reducer/public API path used to obtain those events, while
+  `semantic-projection` sources name the semantic projection source and public
+  API path.
 - Diagnostic target-language tests are allowed, but a diagnostic row is not
   target replay evidence and cannot close branch coverage.
 
