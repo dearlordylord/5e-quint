@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "QAR-01-TEST-LANE-ISOLATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Isolate default test lanes from MBT discovery"
     },
     {
@@ -173,7 +173,7 @@ mismatch. The Ralph runner or decider owns branch repair.
 
 |   # | Task | Status | Depends on | Notes |
 | --: | ---- | ------ | ---------- | ----- |
-| 1 | QAR-01-TEST-LANE-ISOLATION - Isolate default test lanes from MBT discovery | ready-for-research | none | First runnable task; makes default tests non-MBT. |
+| 1 | QAR-01-TEST-LANE-ISOLATION - Isolate default test lanes from MBT discovery | done | none | First runnable task; makes default tests non-MBT. |
 | 2 | QAR-02-MBT-LANE-INVENTORY-GATE - Add static test-lane and MBT inventory gates | blocked | QAR-01-TEST-LANE-ISOLATION | Adds static guards after default lane shape is decided. |
 | 3 | QAR-03-SHARED-QNT-PROOF-HARNESS - Consolidate bounded QNT proof harness behavior | blocked | QAR-01-TEST-LANE-ISOLATION | Consolidates bounded proof execution before new proof lanes. |
 | 4 | QAR-04-CHARACTER-CREATION-QNT-PROOFS - Add character-creation QNT proof lane | blocked | QAR-03-SHARED-QNT-PROOF-HARNESS | Adds the missing character-creation proof lane. |
@@ -238,7 +238,7 @@ a follow-up task.
 
 ### Task 1 - QAR-01-TEST-LANE-ISOLATION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
