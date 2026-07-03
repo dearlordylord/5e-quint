@@ -372,12 +372,12 @@ Every Ralph task must run the task-base check before research or edits:
 |  38 | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING - Resolve level-1-5 open spell-effect accounting rows | done | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Records concrete follow-up splits for the four table/spatial spell-effect rows and closes current strict accounting. |
 |  39 | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS - Resolve level-1-5 later-level residual accounting rows | done | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Records concrete follow-up splits for the two later-level residual rows and closes current strict accounting. |
 |  40 | L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES - Resolve level-1-5 selected-identity replay gaps | done | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Adds or closes the five selected-identity replay blockers without using MCP scenario evidence as parity. |
-|  41 | L3-FOLLOWUP-BLINK-PLANAR-PHASE-LIFECYCLE - Promote Blink planar phase lifecycle | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for Blink's planar phase lifecycle and table/spatial plane-position witnesses. |
-|  42 | L3-FOLLOWUP-CONJURE-ANIMALS-PACK-EFFECT - Promote Conjure Animals pack effect | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for the spectral pack occurrence and table/spatial pack-position witnesses. |
-|  43 | L3-FOLLOWUP-MAGIC-CIRCLE-WARDED-AREA - Promote Magic Circle warded area | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for the warded Cylinder and table/spatial crossing witnesses. |
-|  44 | L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE - Promote Meld into Stone merged state | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for stone merged-state lifecycle and terrain/object occupancy witnesses. |
-|  45 | L12G-FOLLOWUP-RANGER-FAVORED-ENEMY-FREE-CAST-SCALING - Promote Ranger Favored Enemy free-cast scaling | ready-for-research | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future resource owner for Favored Enemy's Ranger-level free-cast count scaling. |
-|  46 | L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL - Promote Wizard Evocation Savant new Spell Slot level grant | ready-for-research | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future character-advancement owner for Evocation Savant's later new Spell Slot level grant. |
+|  41 | L3-FOLLOWUP-BLINK-PLANAR-PHASE-LIFECYCLE - Promote Blink planar phase lifecycle | future-follow-up | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for Blink's planar phase lifecycle and table/spatial plane-position witnesses; parked outside this L5/L6 completion pass. |
+|  42 | L3-FOLLOWUP-CONJURE-ANIMALS-PACK-EFFECT - Promote Conjure Animals pack effect | future-follow-up | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for the spectral pack occurrence and table/spatial plane-position witnesses; parked outside this L5/L6 completion pass. |
+|  43 | L3-FOLLOWUP-MAGIC-CIRCLE-WARDED-AREA - Promote Magic Circle warded area | future-follow-up | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for the warded Cylinder and table/spatial crossing witnesses; parked outside this L5/L6 completion pass. |
+|  44 | L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE - Promote Meld into Stone merged state | future-follow-up | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for stone merged-state lifecycle and terrain/object occupancy witnesses; parked outside this L5/L6 completion pass. |
+|  45 | L12G-FOLLOWUP-RANGER-FAVORED-ENEMY-FREE-CAST-SCALING - Promote Ranger Favored Enemy free-cast scaling | future-follow-up | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future resource owner for Favored Enemy's Ranger-level free-cast count scaling; parked outside this L5/L6 completion pass. |
+|  46 | L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL - Promote Wizard Evocation Savant new Spell Slot level grant | future-follow-up | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future character-advancement owner for Evocation Savant's later new Spell Slot level grant; parked outside this L5/L6 completion pass. |
 |   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | ready-for-research | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Chooses the smallest honest SRD-only vertical from post-SDK-supported behavior.        |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | blocked        | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds creation/finalization/sheet proof before battle handoff.                          |
 |   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | blocked            | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff only after sheet coverage and non-MCP support blockers have concrete resolutions. |
@@ -727,7 +727,12 @@ Plan Impact:
 
 ### Task 41 - L3-FOLLOWUP-BLINK-PLANAR-PHASE-LIFECYCLE
 
-Status: `ready-for-research`
+Status: `future-follow-up`
+
+Future Follow-up Reason: owner-directed queue control. This is a future-owner follow-up
+record created by Task 38 so the current level-1-5 strict accounting can close
+by explicit split. It does not block Tasks 7 or 10 and is parked outside this
+combined L5 ultra-golden plus L6 horizontal completion pass.
 
 Depends on: `L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`
 
@@ -771,7 +776,12 @@ Verification:
 
 ### Task 42 - L3-FOLLOWUP-CONJURE-ANIMALS-PACK-EFFECT
 
-Status: `ready-for-research`
+Status: `future-follow-up`
+
+Future Follow-up Reason: owner-directed queue control. This is a future-owner follow-up
+record created by Task 38 so the current level-1-5 strict accounting can close
+by explicit split. It does not block Tasks 7 or 10 and is parked outside this
+combined L5 ultra-golden plus L6 horizontal completion pass.
 
 Depends on: `L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`
 
@@ -816,7 +826,12 @@ Verification:
 
 ### Task 43 - L3-FOLLOWUP-MAGIC-CIRCLE-WARDED-AREA
 
-Status: `ready-for-research`
+Status: `future-follow-up`
+
+Future Follow-up Reason: owner-directed queue control. This is a future-owner follow-up
+record created by Task 38 so the current level-1-5 strict accounting can close
+by explicit split. It does not block Tasks 7 or 10 and is parked outside this
+combined L5 ultra-golden plus L6 horizontal completion pass.
 
 Depends on: `L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`
 
@@ -860,7 +875,12 @@ Verification:
 
 ### Task 44 - L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE
 
-Status: `ready-for-research`
+Status: `future-follow-up`
+
+Future Follow-up Reason: owner-directed queue control. This is a future-owner follow-up
+record created by Task 38 so the current level-1-5 strict accounting can close
+by explicit split. It does not block Tasks 7 or 10 and is parked outside this
+combined L5 ultra-golden plus L6 horizontal completion pass.
 
 Depends on: `L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`
 
@@ -967,7 +987,12 @@ Plan Impact:
 
 ### Task 45 - L12G-FOLLOWUP-RANGER-FAVORED-ENEMY-FREE-CAST-SCALING
 
-Status: `ready-for-research`
+Status: `future-follow-up`
+
+Future Follow-up Reason: owner-directed queue control. This is a future-owner follow-up
+record created by Task 39 so the current level-1-5 strict accounting can close
+by explicit split. It does not block Tasks 7 or 10 and is parked outside this
+combined L5 ultra-golden plus L6 horizontal completion pass.
 
 Depends on: `L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS`
 
@@ -1022,7 +1047,12 @@ Verification:
 
 ### Task 46 - L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL
 
-Status: `ready-for-research`
+Status: `future-follow-up`
+
+Future Follow-up Reason: owner-directed queue control. This is a future-owner follow-up
+record created by Task 39 so the current level-1-5 strict accounting can close
+by explicit split. It does not block Tasks 7 or 10 and is parked outside this
+combined L5 ultra-golden plus L6 horizontal completion pass.
 
 Depends on: `L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS`
 
