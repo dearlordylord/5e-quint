@@ -85,13 +85,13 @@
     {
       "number": 5,
       "id": "L5UG-MCP-01-LEVEL5-VERTICAL-DECISION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose the level-5 MCP vertical scenario"
     },
     {
       "number": 6,
       "id": "L5UG-MCP-02-LEVEL5-SHEET-SCENARIO",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Implement level-5 MCP creation and sheet scenario coverage"
     },
     {
@@ -378,9 +378,9 @@ Every Ralph task must run the task-base check before research or edits:
 |  44 | L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE - Promote Meld into Stone merged state | future-follow-up | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for stone merged-state lifecycle and terrain/object occupancy witnesses; parked outside this L5/L6 completion pass. |
 |  45 | L12G-FOLLOWUP-RANGER-FAVORED-ENEMY-FREE-CAST-SCALING - Promote Ranger Favored Enemy free-cast scaling | future-follow-up | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future resource owner for Favored Enemy's Ranger-level free-cast count scaling; parked outside this L5/L6 completion pass. |
 |  46 | L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL - Promote Wizard Evocation Savant new Spell Slot level grant | future-follow-up | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future character-advancement owner for Evocation Savant's later new Spell Slot level grant; parked outside this L5/L6 completion pass. |
-|   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | ready-for-research | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Chooses the smallest honest SRD-only vertical from post-SDK-supported behavior.        |
-|   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | blocked        | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds creation/finalization/sheet proof before battle handoff.                          |
-|   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | blocked            | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff only after sheet coverage and non-MCP support blockers have concrete resolutions. |
+|   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | done               | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Selected the Wizard 5 Fireball MCP vertical and rejected future-owner alternatives.     |
+|   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | ready-for-implementation | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds Wizard 5 Fireball creation/finalization/sheet proof before battle handoff.         |
+|   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | blocked            | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff after Task 6 sheet coverage; non-MCP support dependencies are complete. |
 |   8 | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY - Register the level-5 MCP scenario in acceptance coverage | blocked        | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF                                                               | Wires the executable scenario into MCP acceptance coverage.                             |
 |   9 | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE - Admit level-1-5 MCP scenario evidence              | blocked            | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY                                                            | Updates checker-owned MCP evidence only after executable coverage exists.              |
 |  10 | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-5 ultra-golden gate    | blocked            | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Final generated refresh after scope, non-MCP support blockers, parity, and MCP evidence land. |
@@ -1177,7 +1177,7 @@ Plan Impact:
 
 ### Task 5 - L5UG-MCP-01-LEVEL5-VERTICAL-DECISION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L5UG-PRE-01-L5-FULL-QUEUE-CLOSED`
 
@@ -1224,24 +1224,36 @@ Verification:
 - RAW/ubiquitous-language check for the selected class and spell anchors.
 - `git diff --check`.
 
+Plan Impact:
+
+- Applied. Added
+  `plans/unit-profile-coverage/L5_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`,
+  selecting `create-level-five-wizard-fireball-and-battle-handoff` as the
+  SRD-only level-5 MCP vertical.
+- Task 6 is unblocked and narrowed to the Wizard 5 Fireball creation, finalized
+  Character Sheet, Fireball Spell Access, and 4/3/2 Spell Slot projection
+  acceptance target.
+- Task 7 remains blocked on Task 6 and is narrowed to the same finalized
+  character's battle handoff, Fireball act discovery/resolution, and level-3
+  Spell Slot expenditure target.
+
 ### Task 6 - L5UG-MCP-02-LEVEL5-SHEET-SCENARIO
 
-Status: `blocked`
+Status: `ready-for-implementation`
 
 Depends on: `L5UG-MCP-01-LEVEL5-VERTICAL-DECISION`
 
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L5UG-MCP-01-LEVEL5-VERTICAL-DECISION`.
-
 Inputs:
 
-- Future Task 5 output:
+- Task 5 output:
   `plans/unit-profile-coverage/L5_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
 - `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
 - `packages/mcp/src/character-tools.ts`
 - `packages/mcp/src/protocol-server.ts`
-- Local SRD anchors named by the Task 5 decision artifact.
+- Local SRD anchors named by the Task 5 decision artifact:
+  Wizard level 5 table, Wizard spellbook progression, Wizard subclass,
+  Memorize Spell exclusion, Wizard level-3 spell list, Fireball description,
+  and project Spell Access/Spell Slot vocabulary.
 
 Current state:
 
@@ -1252,8 +1264,16 @@ Output:
 
 - Add the level-5 MCP scenario helper and creation/finalization path in
   `packages/mcp/test-support/mcp-acceptance-scenarios.ts`.
-- Prove durable Character Sheet state for the chosen level-5 character before
-  battle starts.
+- Create an Elf Soldier Wizard 5 through MCP-returned holes/tool state, selecting
+  the returned Wizard 5 progression option, Evoker subclass path, Wizard
+  cantrips, Wizard spellbook, prepared spells, equipment, loadout, and any
+  current Wizard feature holes returned by the workflow.
+- Include `fireball` in both the Wizard spellbook and prepared Spell Access.
+  Prefer one additional supported level-3 Wizard spell such as
+  `lightning_bolt` or `counterspell` for the second level-5 spellbook addition,
+  but do not make that second spell the behavior under test.
+- Prove durable Character Sheet state for the finalized Wizard 5 before battle
+  starts.
 - Keep battle start or battle action assertions out of this task unless they
   are needed to make the helper compile.
 
@@ -1261,8 +1281,9 @@ Completion / Success Criteria:
 
 - The scenario can create or advance the selected SRD level-5 character through
   MCP-returned holes/tool state.
-- For a full-caster level-5 path, the Character Sheet exposes level-3 spell
-  access and expected Spell Slot progression without duplicate Spell Slot state.
+- The Character Sheet exposes Wizard 5, Fireball Spell Access through the
+  spellbook/prepared-spell projection, and Spell Slots 4/3/2 with zero
+  expenditure without duplicate Spell Slot state.
 - The helper follows returned revisions, hole ids, and option ids.
 
 Verification:
@@ -1281,18 +1302,17 @@ Depends on: `L5UG-MCP-02-LEVEL5-SHEET-SCENARIO`,
 
 Blocker Type: dependency
 
-Blocker Detail: waiting for `L5UG-MCP-02-LEVEL5-SHEET-SCENARIO`,
-`L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`,
-`L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS`, and
-`L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES`.
+Blocker Detail: waiting for `L5UG-MCP-02-LEVEL5-SHEET-SCENARIO`; the non-MCP
+support dependencies are already complete.
 
 Inputs:
 
 - The level-5 sheet scenario helper from Task 6.
-- Future Task 5 output:
+- Task 5 output:
   `plans/unit-profile-coverage/L5_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
 - `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
-- Battle handoff and selected behavior owners named by the Task 5 decision.
+- Battle handoff and selected Fireball behavior owners named by the Task 5
+  decision.
 - Current Task 4 non-MCP layer reconciliation result.
 - Completed non-MCP blocker tasks 38, 39, and 40.
 
@@ -1305,15 +1325,19 @@ Current state:
 Output:
 
 - Extend the Task 6 scenario through `start_battle`.
-- Inspect battle projection for the selected level-5 character.
-- Exercise or discover the selected supported level-5 battle behavior from
-  Task 5 without adding new runtime semantics.
+- Inspect battle projection for the finalized Wizard 5 character.
+- Discover the Fireball act through returned `discover_battle_acts` labels or
+  subject payloads without adding production spell-id dispatch.
+- If exercising Fireball, fill returned battle holes with caller-supplied
+  `fireballArea`, explicit `objectIgnitionFacts`, and rolled dice facts, then
+  assert one level-3 Spell Slot is spent.
 
 Completion / Success Criteria:
 
 - The battle starts from the durable character created by the level-5 scenario.
-- Battle handoff exposes the expected level-5 state and, for a full-caster path,
-  level-3 Spell Slot/access projection.
+- Battle handoff exposes Wizard 5 state and Spell Slots 4/3/2 before Fireball.
+- If Fireball is resolved, the post-Fireball battle projection is Spell Slots
+  4/3/2 with one level-3 slot expended.
 - The scenario follows returned battle ids, combatant ids, and battle holes.
 
 Verification:
