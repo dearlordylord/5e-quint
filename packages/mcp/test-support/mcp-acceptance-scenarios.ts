@@ -137,6 +137,19 @@ const agentConversationScenarios = [
       "This is a known-good MCP scenario for level 4. It still relies on MCP-returned holes and option ids for sequencing, while autonomous natural-language planning remains outside this acceptance runner.",
   },
   {
+    id: "create-level-five-wizard-fireball-and-battle-handoff",
+    name: "Create a level 5 Wizard and cast Fireball",
+    userSays:
+      "Create an Elf Soldier Wizard 5 Evoker with Fireball, then cast Fireball in battle.",
+    agentReads:
+      "After the Wizard 5 progression fill, discovery returns Wizard cantrip, spellbook, prepared-spell, equipment, loadout, subclass, and feature holes. The finalized Character Sheet exposes Fireball Spell Access plus four level-1 Spell Slots, three level-2 Spell Slots, and two level-3 Spell Slots before battle.",
+    agentDecision:
+      "It selects Fireball only through returned spellbook and prepared-spell option ids, starts battle from the finalized Character Sheet, follows the returned Fireball subject and battle holes, supplies area, saving throw, object ignition, and rolled dice facts, then verifies one level-3 Spell Slot is expended.",
+    executableCoverage: "verifyLevelFiveWizardFireballBattleHandoff",
+    insufficiency:
+      "This is a known-good MCP scenario for level 5. It proves durable Wizard 5 sheet state, Fireball Spell Access, level-3 Spell Slot projection, and battle handoff while keeping tactical fills caller-owned.",
+  },
+  {
     id: "select-monsters",
     name: "Select monsters",
     userSays: "Fight a Goblin Warrior, then fight a Skeleton.",
@@ -2344,7 +2357,7 @@ function parseString(value: unknown, context: string) {
 }
 
 export function verifyAgentConversationScenarios() {
-  assert.equal(agentConversationScenarios.length, 15);
+  assert.equal(agentConversationScenarios.length, 16);
   const scenarioIds = new Set<string>();
   for (const scenario of agentConversationScenarios) {
     assert.match(scenario.id, /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);

@@ -5,6 +5,7 @@ import { describe, test } from "vitest";
 import {
   verifyAgentConversationScenarios,
   verifyBaselineVertical,
+  verifyLevelFiveWizardFireballBattleHandoff,
   verifyLevelFourWizardVertical,
   verifyLevelThreeWizardVertical,
   verifyToolContract,
@@ -35,6 +36,25 @@ describe("MCP protocol server", () => {
       await verifyWidthVertical(client);
       await verifyLevelThreeWizardVertical(client);
       await verifyLevelFourWizardVertical(client);
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  }, 30_000);
+
+  test("runs the level 5 Wizard Fireball acceptance client over in-memory MCP", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const { server } = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "dnd-level-five-protocol-acceptance-client",
+      version: "0.1.0",
+    });
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+
+      await verifyLevelFiveWizardFireballBattleHandoff(client);
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
