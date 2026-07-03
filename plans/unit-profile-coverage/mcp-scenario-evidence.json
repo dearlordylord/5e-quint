@@ -8,45 +8,73 @@
   "requiredFlows": [
     {
       "flowId": "mcp-workflow-discovery",
-      "scopeIds": ["level-1", "level-1-2", "level-1-3", "level-1-4"],
+      "scopeIds": [
+        "level-1",
+        "level-1-2",
+        "level-1-3",
+        "level-1-4",
+        "level-1-5"
+      ],
       "followUpTaskIdsByScope": {
         "level-1": "C3-MCP-LEVEL12-SCENARIO-GATE",
         "level-1-2": "C3-MCP-LEVEL12-SCENARIO-GATE",
         "level-1-3": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
-        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE"
+        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+        "level-1-5": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
       },
       "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow."
     },
     {
       "flowId": "character-creation",
-      "scopeIds": ["level-1", "level-1-2", "level-1-3", "level-1-4"],
+      "scopeIds": [
+        "level-1",
+        "level-1-2",
+        "level-1-3",
+        "level-1-4",
+        "level-1-5"
+      ],
       "followUpTaskIdsByScope": {
         "level-1": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
         "level-1-2": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
         "level-1-3": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
-        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE"
+        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+        "level-1-5": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
       },
       "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence."
     },
     {
       "flowId": "character-sheet",
-      "scopeIds": ["level-1", "level-1-2", "level-1-3", "level-1-4"],
+      "scopeIds": [
+        "level-1",
+        "level-1-2",
+        "level-1-3",
+        "level-1-4",
+        "level-1-5"
+      ],
       "followUpTaskIdsByScope": {
         "level-1": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
         "level-1-2": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
         "level-1-3": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
-        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE"
+        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+        "level-1-5": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
       },
       "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools."
     },
     {
       "flowId": "battle",
-      "scopeIds": ["level-1", "level-1-2", "level-1-3", "level-1-4"],
+      "scopeIds": [
+        "level-1",
+        "level-1-2",
+        "level-1-3",
+        "level-1-4",
+        "level-1-5"
+      ],
       "followUpTaskIdsByScope": {
         "level-1": "C11-BATTLE-MCP-EVIDENCE",
         "level-1-2": "C11-BATTLE-MCP-EVIDENCE",
         "level-1-3": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
-        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE"
+        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+        "level-1-5": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
       },
       "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools."
     }
@@ -287,6 +315,20 @@
         "character-sheet",
         "battle"
       ]
+    },
+    {
+      "scopeId": "level-1-5",
+      "auditTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+      "result": "new-scenario-required",
+      "reason": "Level-1-5 is now in the ultra-golden aggregate, but no executable level-5 MCP scenario evidence has been admitted yet.",
+      "reusedFlowIds": [],
+      "requiredEvidence": {
+        "scenarioGoal": "Admit a registered executable level-5 MCP acceptance scenario that covers workflow discovery, character creation, Character Sheet durability, and battle handoff for the level-1-5 scope.",
+        "inputs": [
+          "Registered scenario id from L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY",
+          "Executable @dnd/mcp test evidence covering mcp-workflow-discovery, character-creation, character-sheet, and battle for level-1-5"
+        ]
+      }
     }
   ]
 }

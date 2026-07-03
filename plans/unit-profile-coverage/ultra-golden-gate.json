@@ -1,5 +1,7 @@
 {
-  "blockedScopeIds": [],
+  "blockedScopeIds": [
+    "level-1-5"
+  ],
   "definition": {
     "aggregateRule": "Ultra-golden passes only when every required layer passes for every scoped level report. The checker deliberately does not publish a blended ultra-golden percentage.",
     "layers": [
@@ -1020,6 +1022,241 @@
       "scopeId": "level-1-4",
       "status": "pass",
       "title": "Character Levels 1-4"
+    },
+    {
+      "layerResult": {
+        "completeLayers": 2,
+        "totalLayers": 4
+      },
+      "layers": [
+        {
+          "blockers": [
+            {
+              "count": 6,
+              "kind": "strict-target-open"
+            },
+            {
+              "count": 5,
+              "kind": "selected-identity-blocker"
+            }
+          ],
+          "blockingCount": 11,
+          "evidence": {
+            "claimGate": {
+              "authoredReadinessBlockerCount": 0,
+              "selectedIdentityBlockerCount": 5,
+              "status": "blocked",
+              "strictTargetOpenCount": 6
+            },
+            "selectedIdentityReadiness": {
+              "denominator": 191,
+              "numerator": 186,
+              "percent": "97.4%"
+            },
+            "srdAuthoredProductReadiness": {
+              "denominator": 115,
+              "numerator": 115,
+              "percent": "100%"
+            },
+            "strictTargetClosure": {
+              "denominator": 262,
+              "numerator": 256,
+              "percent": "97.7%"
+            }
+          },
+          "id": "support-completeness",
+          "status": "blocked"
+        },
+        {
+          "blockingCount": 0,
+          "evidence": {
+            "generatorReadySemanticCoreObligations": {
+              "denominator": 59,
+              "numerator": 59
+            },
+            "qntCoveredObligations": {
+              "denominator": 73,
+              "numerator": 73
+            }
+          },
+          "generatorBlockingRows": [],
+          "id": "qnt-generator-readiness",
+          "missingOrOpenObligations": [],
+          "status": "pass"
+        },
+        {
+          "blockingCount": 0,
+          "evidence": {
+            "parityWitnessedObligations": {
+              "denominator": 73,
+              "numerator": 73
+            },
+            "witnessKinds": {
+              "deterministic-qnt-replay": 11,
+              "focused-mbt": 70,
+              "runtime-test": 25
+            }
+          },
+          "id": "mbt-parity-evidence",
+          "missingWitnessRows": [],
+          "status": "pass"
+        },
+        {
+          "auditDecision": {
+            "auditTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+            "reason": "Level-1-5 is now in the ultra-golden aggregate, but no executable level-5 MCP scenario evidence has been admitted yet.",
+            "requiredEvidence": {
+              "inputs": [
+                "Registered scenario id from L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY",
+                "Executable @dnd/mcp test evidence covering mcp-workflow-discovery, character-creation, character-sheet, and battle for level-1-5"
+              ],
+              "scenarioGoal": "Admit a registered executable level-5 MCP acceptance scenario that covers workflow discovery, character creation, Character Sheet durability, and battle handoff for the level-1-5 scope."
+            },
+            "result": "new-scenario-required",
+            "reusedFlowIds": [],
+            "scopeId": "level-1-5"
+          },
+          "blockingCount": 4,
+          "evidence": {
+            "check": {
+              "command": "pnpm --filter @dnd/mcp test:mcp-scenario-evidence",
+              "packageName": "@dnd/mcp",
+              "script": "test:mcp-scenario-evidence"
+            },
+            "scenarioEvidenceFlows": {
+              "denominator": 4,
+              "numerator": 0
+            },
+            "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
+            "witnessKind": "mcp-scenario"
+          },
+          "evidenceRows": [],
+          "id": "mcp-scenario-evidence",
+          "missingEvidenceRows": [
+            {
+              "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
+              "flowId": "mcp-workflow-discovery",
+              "followUpTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
+              "flowId": "character-creation",
+              "followUpTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
+              "flowId": "character-sheet",
+              "followUpTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
+              "flowId": "battle",
+              "followUpTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
+            }
+          ],
+          "requiredFlows": [
+            {
+              "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
+              "flowId": "mcp-workflow-discovery",
+              "followUpTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
+              "flowId": "character-creation",
+              "followUpTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
+              "flowId": "character-sheet",
+              "followUpTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
+            },
+            {
+              "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
+              "flowId": "battle",
+              "followUpTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE"
+            }
+          ],
+          "status": "blocked"
+        }
+      ],
+      "scopedObligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+        "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+        "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING",
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING",
+        "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+        "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
+        "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+        "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
+        "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+        "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+        "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
+        "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+        "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.HIT_POINT_RESTORATION",
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+        "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
+        "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+        "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+        "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
+        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
+        "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
+        "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+        "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
+        "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
+        "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+        "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+        "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+        "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
+        "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+        "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
+        "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+        "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
+        "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
+        "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+        "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+        "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+        "SHEET.WEAPON_MASTERY.RESELECTION"
+      ],
+      "scopeId": "level-1-5",
+      "status": "blocked",
+      "title": "Character Levels 1-5"
     }
   ],
   "selectedIdentityEvidenceAudit": {
@@ -1105,6 +1342,2777 @@
         "rowCount": 0,
         "rows": [],
         "scopeId": "level-1-4"
+      },
+      {
+        "metrics": {
+          "auditedEvidenceRows": {
+            "denominator": 162,
+            "numerator": 162
+          },
+          "joinedEvidenceRows": {
+            "denominator": 162,
+            "numerator": 82
+          },
+          "missingJoinRows": {
+            "denominator": 162,
+            "numerator": 80
+          }
+        },
+        "rowCount": 80,
+        "rows": [
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "unit-feature.passive-saving-throw-roll-mode"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+                "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json",
+            "unitId": "barbarian_danger_sense"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "movement-forced-movement"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "unit-feature.passive-speed-bonus"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+                "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/barbarian_fast_movement.json",
+            "unitId": "barbarian_fast_movement"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1D2-BARDIC-INSPIRATION-SCALING"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "unit-feature.bardic-inspiration-grant",
+              "unit-feature.bardic-inspiration-failed-d20-test"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+                "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/bard_bardic_inspiration.json",
+            "unitId": "bard_bardic_inspiration"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "character-creation"
+              ],
+              "requiredFlowIds": [
+                "character-creation"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "character-creation.skill-expertise-choice"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/bard_expertise.json",
+            "unitId": "bard_expertise"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "character-sheet"
+              ],
+              "requiredFlowIds": [
+                "character-sheet"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "character-sheet.ability-check-proficiency-bonus"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/character-sheet-runtime/src/ability-check-proficiency-bonus.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
+            "unitId": "bard_jack_of_all_trades"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "character-creation"
+              ],
+              "requiredFlowIds": [
+                "character-creation"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "character-creation.class-feature-resource-projection"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/cleric_channel_divinity.json",
+            "unitId": "cleric_channel_divinity"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "unit-feature.remarkable-athlete"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+                "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json",
+            "unitId": "fighter_remarkable_athlete"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "unit-feature.remarkable-athlete"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+                "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json",
+            "unitId": "fighter_remarkable_athlete"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/monk-martial-arts-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1D2-MONK-MARTIAL-ARTS-SCALING"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "unit-feature.martial-arts-attack-projection"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+                "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/monk_martial_arts.json",
+            "unitId": "monk_martial_arts"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [],
+              "requiredFlowIds": [],
+              "status": "not-applicable"
+            },
+            "profileIds": [
+              "unit-feature.stunning-strike"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "missing-unit-profile-join",
+              "unitProfileJoinRowCount": 0,
+              "unitProfileWitnessOwners": []
+            },
+            "sourceRecordPath": "packages/surface/content/monk_stunning_strike.json",
+            "unitId": "monk_stunning_strike"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "unit-feature.passive-speed-bonus"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+                "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/monk_unarmored_movement.json",
+            "unitId": "monk_unarmored_movement"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "character-creation",
+                "character-sheet"
+              ],
+              "requiredFlowIds": [
+                "character-creation",
+                "character-sheet"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "character-creation.class-feature-source-fact-projection",
+              "character-sheet.class-feature-long-rest-use-state",
+              "character-sheet.monk-uncanny-metabolism-initiative-recovery"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 3,
+              "unitProfileWitnessOwners": [
+                "packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts",
+                "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/monk_uncanny_metabolism.json",
+            "unitId": "monk_uncanny_metabolism"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "character-creation"
+              ],
+              "requiredFlowIds": [
+                "character-creation"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "character-creation.class-feature-feat-choice",
+              "character-creation.class-feature-option-projection",
+              "character-creation.fighting-style-cantrip-advancement-replacement"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts",
+                "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json",
+            "unitId": "paladin_fighting_style"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "healing-stabilization"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "character-sheet"
+              ],
+              "requiredFlowIds": [
+                "character-sheet"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "character-sheet.healing-resource-action"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/paladin_lay_on_hands.json",
+            "unitId": "paladin_lay_on_hands"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-after-hit-damage"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json",
+            "unitId": "paladin_paladins_smite"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "unit-feature.paladin-sacred-weapon"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+                "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
+            "unitId": "paladin_sacred_weapon"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "unit-feature.paladin-sacred-weapon"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+                "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
+            "unitId": "paladin_sacred_weapon"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "character-creation"
+              ],
+              "requiredFlowIds": [
+                "character-creation"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "character-creation.skill-expertise-choice"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/ranger_deft_explorer.json",
+            "unitId": "ranger_deft_explorer"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "character-creation"
+              ],
+              "requiredFlowIds": [
+                "character-creation"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "character-creation.class-feature-feat-choice",
+              "character-creation.class-feature-option-projection",
+              "character-creation.fighting-style-cantrip-advancement-replacement"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts",
+                "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/ranger_fighting_style.json",
+            "unitId": "ranger_fighting_style"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/feature-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1D2-SORCERER-INNATE-SORCERY"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "unit-feature.innate-sorcery-activation"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+                "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/sorcerer_innate_sorcery.json",
+            "unitId": "sorcerer_innate_sorcery"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-sheet-runtime/src/arcane-recovery-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "short-rest-spell-slot-recovery"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "character-sheet"
+              ],
+              "requiredFlowIds": [
+                "character-sheet"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "character-sheet.short-rest-spell-slot-recovery"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/wizard_arcane_recovery.json",
+            "unitId": "wizard_arcane_recovery"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
+            },
+            "kind": "class_feature",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "character-creation"
+              ],
+              "requiredFlowIds": [
+                "character-creation"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "character-creation.skill-expertise-choice"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
+            "unitId": "wizard_scholar"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-acid-arrow-attack-timing"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/acid-arrow-timing.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/acid_arrow.json",
+            "unitId": "acid_arrow"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.scalar-buff"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/aid.json",
+            "unitId": "aid"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-self-transformation-mode"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/self-transformation-mode-lifecycle.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/alter_self.json",
+            "unitId": "alter_self"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "roll-modifier-buff"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-roll-modifier"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+                "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/bane.json",
+            "unitId": "bane"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.scalar-buff"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/barkskin.json",
+            "unitId": "barkskin"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "roll-modifier-buff"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-roll-modifier"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+                "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/bless.json",
+            "unitId": "bless"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-blur-attack-roll-defense"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/blur-attack-roll-defense-lifecycle.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-blur.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/blur.json",
+            "unitId": "blur"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "level1-damage-spell-selected-identity"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack",
+              "spell.readied-action-time-spell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/burning_hands.json",
+            "unitId": "burning_hands"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "attack-spell-shape"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack",
+              "spell.readied-action-time-spell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/chill_touch.json",
+            "unitId": "chill_touch"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "level1-damage-spell-selected-identity"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-chained-attack-damage",
+              "spell.readied-action-time-spell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 3,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/chained-attack-sequence.mbt.test.ts",
+                "packages/battle-runtime/src/chromatic-orb-chained-spell.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/chromatic_orb.json",
+            "unitId": "chromatic_orb"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "movement-forced-movement"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-command-halt-grovel",
+              "spell.invocation-command-drop-held-object",
+              "spell.invocation-command-approach-route",
+              "spell.invocation-command-flee-route"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/command.json",
+            "unitId": "command"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "reaction-interruption"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.reaction-counterspell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/counterspell-reaction-spell.test.ts",
+                "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts",
+                "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/counterspell.json",
+            "unitId": "counterspell"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1E-DIVINE-FAVOR"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-weapon-damage-rider"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts",
+                "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/divine_favor.json",
+            "unitId": "divine_favor"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1E-DIVINE-SMITE"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-after-hit-damage"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/divine_smite.json",
+            "unitId": "divine_smite"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-dragons-breath-initial",
+              "spell.invocation-dragons-breath-granted-action"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/dragons-breath-granted-action.mbt.test.ts",
+                "packages/battle-runtime/src/dragons-breath-initial-effect.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/dragons_breath.json",
+            "unitId": "dragons_breath"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-roll-modifier"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+                "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/enhance_ability.json",
+            "unitId": "enhance_ability"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1E-ENSNARING-STRIKE"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-after-hit-restraint-turn-start-damage"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/ensnaring_strike.json",
+            "unitId": "ensnaring_strike"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1E-FALSE-LIFE"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.scalar-buff"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/false_life.json",
+            "unitId": "false_life"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "attack-spell-shape"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/fire_bolt.json",
+            "unitId": "fire_bolt"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/fireball-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B23-FIREBALL-IDENTITY-WITNESS"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/fireball.json",
+            "unitId": "fireball"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-spell-created-held-object"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+                "packages/battle-runtime/src/spell-created-held-object-lifecycle.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-flame-blade.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/flame_blade.json",
+            "unitId": "flame_blade"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-flaming-sphere-hazard-ram"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/flaming-sphere-hazard-ram.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/flaming_sphere.json",
+            "unitId": "flaming_sphere"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "roll-modifier-buff"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-roll-modifier"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+                "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/guidance.json",
+            "unitId": "guidance"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "attack-spell-shape"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack",
+              "spell.readied-action-time-spell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/guiding_bolt.json",
+            "unitId": "guiding_bolt"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-object-contact-damage"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/heat-metal-object-contact.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/heat_metal.json",
+            "unitId": "heat_metal"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "reaction-interruption"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.reaction-hellish-rebuke",
+              "spell.invocation-damage-save-or-attack"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/counterspell-reaction-spell.test.ts",
+                "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts",
+                "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/hellish_rebuke.json",
+            "unitId": "hellish_rebuke"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "level1-damage-spell-selected-identity"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/ice_knife.json",
+            "unitId": "ice_knife"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "attack-spell-shape"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack",
+              "spell.readied-action-time-spell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/inflict_wounds.json",
+            "unitId": "inflict_wounds"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-direct-condition"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/direct-condition-lifecycle.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/invisibility.json",
+            "unitId": "invisibility"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/lightning-bolt-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B24-LIGHTNING-BOLT-IDENTITY-WITNESS"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/lightning_bolt.json",
+            "unitId": "lightning_bolt"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1E-LONGSTRIDER"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.scalar-buff"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/longstrider.json",
+            "unitId": "longstrider"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/mage-armor-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1H-MAGE-ARMOR"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack",
+              "spell.readied-action-time-spell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/mage_armor.json",
+            "unitId": "mage_armor"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-magic-weapon-enhancement"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts",
+                "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/magic_weapon.json",
+            "unitId": "magic_weapon"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-mirror-image-hit-interception"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/mirror-image-hit-interception.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/mirror_image.json",
+            "unitId": "mirror_image"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-self-teleport"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/self-teleport-lifecycle.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/misty_step.json",
+            "unitId": "misty_step"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "level1-damage-spell-selected-identity"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack",
+              "spell.readied-action-time-spell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/poison_spray.json",
+            "unitId": "poison_spray"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-ray-of-enfeeblement-d20-lifecycle",
+              "spell.invocation-ray-of-enfeeblement-damage-penalty"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json",
+            "unitId": "ray_of_enfeeblement"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "level1-damage-spell-selected-identity"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack",
+              "spell.readied-action-time-spell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/ray_of_sickness.json",
+            "unitId": "ray_of_sickness"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "level1-damage-spell-selected-identity"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack",
+              "spell.readied-action-time-spell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/sacred_flame.json",
+            "unitId": "sacred_flame"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-independent-attack-sequence"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-eldritch-blast.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/scorching_ray.json",
+            "unitId": "scorching_ray"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1E-SEARING-SMITE"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-after-hit-timed-damage-save"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/searing_smite.json",
+            "unitId": "searing_smite"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-see-invisible-observer-sight"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+                "packages/battle-runtime/src/see-invisibility-observer-sight.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/see_invisibility.json",
+            "unitId": "see_invisibility"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/shatter.json",
+            "unitId": "shatter"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "reaction-interruption"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.reaction-shield"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/shield.json",
+            "unitId": "shield"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "roll-modifier-buff"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.scalar-buff"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/shield_of_faith.json",
+            "unitId": "shield_of_faith"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1E-SHILLELAGH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-weapon-attack-override"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts",
+                "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/shillelagh.json",
+            "unitId": "shillelagh"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/shining-smite-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B25-SHINING-SMITE-IDENTITY-WITNESS"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-after-hit-damage-illumination"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/shining_smite.json",
+            "unitId": "shining_smite"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "attack-spell-shape"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack",
+              "spell.readied-action-time-spell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/shocking_grasp.json",
+            "unitId": "shocking_grasp"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "condition-saving-throw-lifecycle"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-sleep-target-admission",
+              "spell.invocation-sleep-repeat-save-lifecycle"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/sleep.json",
+            "unitId": "sleep"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "level1-damage-spell-selected-identity"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/sorcerous_burst.json",
+            "unitId": "sorcerous_burst"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.scalar-buff"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/spider_climb.json",
+            "unitId": "spider_climb"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-spiritual-weapon-attack-proxy"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/spiritual_weapon.json",
+            "unitId": "spiritual_weapon"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "level1-damage-spell-selected-identity"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/starry_wisp.json",
+            "unitId": "starry_wisp"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "level1-spatial-witness"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 2,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/thunderwave.json",
+            "unitId": "thunderwave"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L1E-TRUE-STRIKE"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-spell-hosted-weapon-attack"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts",
+                "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/true_strike.json",
+            "unitId": "true_strike"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "level1-damage-spell-selected-identity"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-damage-save-or-attack",
+              "spell.readied-action-time-spell"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 4,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/vicious_mockery.json",
+            "unitId": "vicious_mockery"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-warding-bond-linked-effect"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/warding-bond-damage-sharing.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/warding_bond.json",
+            "unitId": "warding_bond"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-web-restraint-hazard"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/web-restraint-hazard.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/web.json",
+            "unitId": "web"
+          }
+        ],
+        "scopeId": "level-1-5"
       }
     ]
   },
@@ -1112,10 +4120,11 @@
     "level12FullSupport": "plans/unit-profile-coverage/level1-2-full-support.json",
     "level13FullSupport": "plans/unit-profile-coverage/level1-3-full-support.json",
     "level14FullSupport": "plans/unit-profile-coverage/level1-4-full-support.json",
+    "level15FullSupport": "plans/unit-profile-coverage/level1-5-full-support.json",
     "level1FullSupport": "plans/unit-profile-coverage/level1-full-support.json",
     "mcpScenarioEvidence": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
     "rulesKernelMatrix": "plans/rules-kernel-coverage/matrix.json",
     "unitMatrix": "plans/unit-profile-coverage/unit-matrix.json"
   },
-  "status": "pass"
+  "status": "blocked"
 }

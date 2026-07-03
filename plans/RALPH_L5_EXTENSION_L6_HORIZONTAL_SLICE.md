@@ -19,13 +19,13 @@
     {
       "number": 3,
       "id": "L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Wire level-1-5 into the ultra-golden aggregate"
     },
     {
       "number": 4,
       "id": "L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Reconcile level-1-5 non-MCP ultra-golden layers"
     },
     {
@@ -313,8 +313,8 @@ Every Ralph task must run the task-base check before research or edits:
 | --: | ------------------------------------------------------------------------------------------ | ------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 |   1 | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED - Verify the L5 full SRD queue is closed                  | done               | none                                                                                            | Confirms the SDK/accounting queue is actually closed before ultra-golden work starts.  |
 |   2 | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING - Add level-1-5 support report plumbing              | done               | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Adds the generated level-support report path before ultra-golden consumes it.          |
-|   3 | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-5 into the ultra-golden aggregate          | ready-for-research | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING                                                           | Extends the aggregate gate without weakening older scopes.                             |
-|   4 | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-5 non-MCP ultra-golden layers | blocked           | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE                                                                | Confirms support, QNT/generator, and parity layers before MCP evidence closeout.       |
+|   3 | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-5 into the ultra-golden aggregate          | done               | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING                                                           | Extends the aggregate gate without weakening older scopes.                             |
+|   4 | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-5 non-MCP ultra-golden layers | ready-for-research | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE                                                                | Confirms support, QNT/generator, and parity layers before MCP evidence closeout.       |
 |   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | ready-for-research | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Chooses the smallest honest SRD-only vertical from post-SDK-supported behavior.        |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | blocked        | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds creation/finalization/sheet proof before battle handoff.                          |
 |   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | blocked            | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION                    | Adds battle handoff only after sheet coverage and non-MCP blockers are known.          |
@@ -476,7 +476,7 @@ Plan Impact:
 
 ### Task 3 - L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING`
 
@@ -514,15 +514,23 @@ Verification:
 - `pnpm unit-profile-coverage:check --write`
 - Shared verification.
 
+Plan Impact:
+
+- Applied. `level-1-5` is now a generated ultra-golden aggregate scope in
+  `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
+  `plans/unit-profile-coverage/ultra-golden-gate.json`.
+- Existing `level-1`, `level-1-2`, `level-1-3`, and `level-1-4` scope results
+  still pass.
+- The generated `level-1-5` scope is blocked only by support completeness and
+  MCP scenario evidence; its QNT/generator-readiness and MBT/parity-evidence
+  layers pass.
+- Task 4 is unblocked for research.
+
 ### Task 4 - L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE`.
 
 Inputs:
 
@@ -538,8 +546,12 @@ Current state:
 - Ultra-golden is conjunctive: support completeness, QNT/generator readiness,
   MBT/parity evidence, and MCP scenario evidence must all pass for the scoped
   level.
-- The first L5 queue is expected to close SDK/accounting rows, but it does not
-  by itself prove the non-MCP ultra-golden layers for `level-1-5`.
+- The generated `level-1-5` ultra-golden scope exists and is blocked.
+- Its non-MCP blocker is support completeness: `level1-5-full-support.json`
+  reports 6 strict target open rows and 5 selected-identity readiness gaps.
+- `level-1-5` QNT/generator-readiness and MBT/parity-evidence layers pass.
+- MCP scenario evidence is separately blocked by the four required MCP flows
+  owned by `L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE`.
 
 Output:
 

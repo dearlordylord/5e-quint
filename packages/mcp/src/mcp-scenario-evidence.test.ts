@@ -42,7 +42,7 @@ const manifestPath = resolve(
   "plans/unit-profile-coverage/mcp-scenario-evidence.json",
 );
 const packageJsonPath = resolve(repoRoot, "packages/mcp/package.json");
-const taskIdPattern = /^(?:C\d+|L13UG-A\d+|L14G-\d+)-[A-Z0-9-]+$/;
+const taskIdPattern = /^(?:C\d+|L13UG-A\d+|L14G-\d+|L5UG)-[A-Z0-9-]+$/;
 
 function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, "utf8")) as T;
