@@ -25,8 +25,26 @@
     {
       "number": 4,
       "id": "L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile level-1-5 non-MCP ultra-golden layers"
+    },
+    {
+      "number": 38,
+      "id": "L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING",
+      "status": "ready-for-research",
+      "title": "Resolve level-1-5 open spell-effect accounting rows"
+    },
+    {
+      "number": 39,
+      "id": "L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS",
+      "status": "ready-for-research",
+      "title": "Resolve level-1-5 later-level residual accounting rows"
+    },
+    {
+      "number": 40,
+      "id": "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES",
+      "status": "ready-for-research",
+      "title": "Resolve level-1-5 selected-identity replay gaps"
     },
     {
       "number": 5,
@@ -314,13 +332,16 @@ Every Ralph task must run the task-base check before research or edits:
 |   1 | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED - Verify the L5 full SRD queue is closed                  | done               | none                                                                                            | Confirms the SDK/accounting queue is actually closed before ultra-golden work starts.  |
 |   2 | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING - Add level-1-5 support report plumbing              | done               | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Adds the generated level-support report path before ultra-golden consumes it.          |
 |   3 | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-5 into the ultra-golden aggregate          | done               | L5UG-SCOPE-01-LEVEL15-REPORT-PLUMBING                                                           | Extends the aggregate gate without weakening older scopes.                             |
-|   4 | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-5 non-MCP ultra-golden layers | ready-for-research | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE                                                                | Confirms support, QNT/generator, and parity layers before MCP evidence closeout.       |
+|   4 | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-5 non-MCP ultra-golden layers | done | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Split current non-MCP support blockers into concrete dependency-rewired follow-up tasks. |
+|  38 | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING - Resolve level-1-5 open spell-effect accounting rows | ready-for-research | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Resolves the four table/spatial spell-effect open rows before battle handoff can unblock. |
+|  39 | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS - Resolve level-1-5 later-level residual accounting rows | ready-for-research | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Resolves the two later-level residual open rows before final ultra-golden refresh. |
+|  40 | L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES - Resolve level-1-5 selected-identity replay gaps | ready-for-research | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Adds or closes the five selected-identity replay blockers without using MCP scenario evidence as parity. |
 |   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | ready-for-research | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Chooses the smallest honest SRD-only vertical from post-SDK-supported behavior.        |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | blocked        | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds creation/finalization/sheet proof before battle handoff.                          |
-|   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | blocked            | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION                    | Adds battle handoff only after sheet coverage and non-MCP blockers are known.          |
+|   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | blocked            | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff only after sheet coverage and non-MCP support blockers have concrete resolutions. |
 |   8 | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY - Register the level-5 MCP scenario in acceptance coverage | blocked        | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF                                                               | Wires the executable scenario into MCP acceptance coverage.                             |
 |   9 | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE - Admit level-1-5 MCP scenario evidence              | blocked            | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY                                                            | Updates checker-owned MCP evidence only after executable coverage exists.              |
-|  10 | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-5 ultra-golden gate    | blocked            | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE                                                           | Final generated refresh after scope, parity, and MCP evidence land.                    |
+|  10 | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-5 ultra-golden gate    | blocked            | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Final generated refresh after scope, non-MCP support blockers, parity, and MCP evidence land. |
 |  11 | L6FULL-PRE-01-L5-QUEUES-CLOSED - Verify L5 full and L5 ultra-golden queues are closed | blocked | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH | L6 starts only after the L5 extension has landed. |
 |  12 | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY - Verify level-6 scope and inventory baseline | blocked | L6FULL-PRE-01-L5-QUEUES-CLOSED | Confirms the 25-row L6 baseline and excludes spell-level-4. |
 |  13 | L6FULL-SEED-01-RANGER-ROVING - Verify existing Ranger Roving level-6 support evidence | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/runtime evidence. |
@@ -528,7 +549,7 @@ Plan Impact:
 
 ### Task 4 - L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE`
 
@@ -559,6 +580,9 @@ Output:
   MBT/parity evidence after Task 3 adds the scope.
 - If these layers already pass from existing evidence, record the checker-owned
   result and preserve it.
+- Record the current checker-owned result: QNT/generator readiness and
+  MBT/parity evidence pass for `level-1-5`, while support completeness remains
+  blocked by 6 strict open rows and 5 selected-identity gaps.
 - If a non-MCP layer is missing evidence, do not let downstream MCP battle
   handoff unblock prematurely. Either resolve the blocker in this task, or add
   concrete Ralph tasks for the blocker and update `ralph-task-index`,
@@ -580,6 +604,182 @@ Verification:
 
 - Shared verification plus any focused checker command needed by split blocker
   tasks.
+
+Plan Impact:
+
+- Applied. The checker-owned `level-1-5` QNT/generator-readiness and
+  MBT/parity-evidence layers pass.
+- The remaining non-MCP support-completeness blockers are split into concrete
+  follow-up tasks: Task 38 for four table/spatial spell-effect rows, Task 39
+  for two later-level residual rows, and Task 40 for five selected-identity
+  replay gaps.
+- Tasks 7 and 10 now depend on Tasks 38, 39, and 40 so battle handoff and final
+  ultra-golden refresh cannot proceed before these non-MCP blockers resolve.
+
+### Task 38 - L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING
+
+Status: `ready-for-research`
+
+Depends on: `L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`
+
+Inputs:
+
+- `plans/unit-profile-coverage/level1-5-full-support.json`
+- `plans/unit-profile-coverage/LEVEL1_5_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- Relevant SRD spell text under `.references/srd-5.2.1/Spells/`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Current state:
+
+- `level1-5-full-support.json` reports `open-profile-accounting` strict rows
+  for `blink`, `conjure_animals`, `magic_circle`, and `meld_into_stone`.
+- All four rows are table/spatial derivation spell-effect boundaries. The
+  current blocker text says each needs a promoted owner that consumes
+  table-supplied spatial or environment witnesses without duplicating map,
+  object, companion-control, or authored spell identity state.
+
+Output:
+
+- Resolve each of the four rows through the correct layer: supported or
+  profile-subset-supported evidence if a real owner exists, durable closure if
+  the promoted runtime boundary does not own the behavior, or a narrower
+  dependency-rewired Ralph task if a row cannot honestly close here.
+- Update `plans/unit-profile-coverage/unit-claims.jsonl`,
+  `plans/unit-profile-coverage/unit-evidence.jsonl`, Surface content,
+  runtime/QNT owners, and generated reports only where the chosen resolution
+  requires it.
+- Preserve QNT/generator and MBT/parity evidence discipline. Do not infer
+  parity from SDK or MCP scenarios.
+
+Completion / Success Criteria:
+
+- `level1-5-full-support.json` no longer reports `blink`,
+  `conjure_animals`, `magic_circle`, or `meld_into_stone` in
+  `open-profile-accounting`.
+- If any of those units remains open, this plan has an additional concrete
+  dependency-rewired task for that exact row before Task 7 and Task 10 can run.
+- No runtime owner duplicates table/spatial, object, companion-control, or
+  authored identity state.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability for the
+  affected spell text.
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check` if rules-kernel joins or QNT ownership
+  change.
+- Focused runtime/QNT tests and the relevant MBT only if this task changes
+  battle runtime or QNT parity behavior.
+
+### Task 39 - L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS
+
+Status: `ready-for-research`
+
+Depends on: `L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`
+
+Inputs:
+
+- `plans/unit-profile-coverage/level1-5-full-support.json`
+- `plans/unit-profile-coverage/LEVEL1_5_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- Relevant SRD class text under `.references/srd-5.2.1/Classes/`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Current state:
+
+- `level1-5-full-support.json` reports `open-profile-accounting` strict rows
+  for `ranger_favored_enemy` and `wizard_evocation_savant`.
+- Both rows are classified as `later-level-only` residuals that first enter the
+  level-1-5 scope at character level 5.
+
+Output:
+
+- Resolve `ranger_favored_enemy` and `wizard_evocation_savant` through the
+  correct source-owned layer: supported/profile-subset evidence, explicit
+  non-runtime closure, or a narrower dependency-rewired Ralph task if either
+  row cannot honestly close here.
+- Update the unit profile coverage evidence and generated reports so the
+  full-support checker owns the result.
+
+Completion / Success Criteria:
+
+- `level1-5-full-support.json` no longer reports `ranger_favored_enemy` or
+  `wizard_evocation_savant` in `open-profile-accounting`.
+- If either row remains open, this plan has an additional concrete
+  dependency-rewired task for that exact row before Task 7 and Task 10 can run.
+- The resolution is based on SRD source shape and runtime ownership, not class
+  or feature authored identity dispatch.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability for the
+  affected class text.
+- `pnpm unit-profile-coverage:check`
+- `pnpm rules-kernel-coverage:check` if rules-kernel joins or QNT ownership
+  change.
+- Focused runtime/QNT tests and the relevant MBT only if this task changes
+  battle runtime or QNT parity behavior.
+
+### Task 40 - L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES
+
+Status: `ready-for-research`
+
+Depends on: `L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`
+
+Inputs:
+
+- `plans/unit-profile-coverage/level1-5-full-support.json`
+- `plans/unit-profile-coverage/LEVEL1_5_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/unit-evidence.jsonl`
+- Existing selected-identity MBT/runtime-test owners named in
+  `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`
+- Relevant SRD spell text under `.references/srd-5.2.1/Spells/`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Current state:
+
+- `level1-5-full-support.json` reports selected-identity readiness blockers
+  for `glyph_of_warding`, `haste`, `protection_from_energy`, `sleet_storm`,
+  and `slow`.
+- `level-1-5` MBT/parity evidence already passes for reducer-semantic
+  obligations. These five rows are selected Unit identity replay gaps, not MCP
+  scenario evidence gaps.
+
+Output:
+
+- Add legitimate selected-identity replay evidence for the five Unit ids, or
+  update the claim/closure if a row is not actually selected-identity
+  applicable.
+- Preserve the separation between selected-identity evidence, rules-kernel
+  parity evidence, and MCP scenario evidence. Do not use SDK or MCP scenarios
+  as selected-identity or parity witnesses unless the checker explicitly
+  admits that witness kind.
+- Refresh generated unit-profile and ultra-golden reports after the evidence
+  changes.
+
+Completion / Success Criteria:
+
+- `level1-5-full-support.json` reports zero selected-identity blockers for
+  `glyph_of_warding`, `haste`, `protection_from_energy`, `sleet_storm`, and
+  `slow`.
+- `ULTRA_GOLDEN_GATE.md` continues to show `level-1-5` QNT/generator readiness
+  and MBT/parity evidence as checker-owned pass layers.
+- If any selected-identity row remains open, this plan has an additional
+  concrete dependency-rewired task for that exact row before Task 7 and Task 10
+  can run.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability for the
+  affected spell text.
+- `pnpm unit-profile-coverage:check`
+- Focused selected-identity runtime tests or MBT as required by the evidence
+  owner. If MBT is required, use the repo MBT scarcity and background/timing
+  protocol.
 
 ### Task 5 - L5UG-MCP-01-LEVEL5-VERTICAL-DECISION
 
@@ -681,12 +881,16 @@ Verification:
 Status: `blocked`
 
 Depends on: `L5UG-MCP-02-LEVEL5-SHEET-SCENARIO`,
-`L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`
+`L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`,
+`L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS`,
+`L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES`
 
 Blocker Type: dependency
 
-Blocker Detail: waiting for `L5UG-MCP-02-LEVEL5-SHEET-SCENARIO` and
-`L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`.
+Blocker Detail: waiting for `L5UG-MCP-02-LEVEL5-SHEET-SCENARIO`,
+`L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`,
+`L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS`, and
+`L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES`.
 
 Inputs:
 
@@ -696,6 +900,7 @@ Inputs:
 - `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
 - Battle handoff and selected behavior owners named by the Task 5 decision.
 - Current Task 4 non-MCP layer reconciliation result.
+- Completed non-MCP blocker tasks 38, 39, and 40.
 
 Current state:
 
@@ -817,15 +1022,21 @@ Verification:
 
 Status: `blocked`
 
-Depends on: `L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE`
+Depends on: `L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE`,
+`L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`,
+`L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS`,
+`L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES`
 
 Blocker Type: dependency
 
-Blocker Detail: waiting for `L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE`.
+Blocker Detail: waiting for `L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE`,
+`L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`,
+`L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS`, and
+`L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES`.
 
 Inputs:
 
-- All generated artifacts touched by Tasks 2, 3, 4, and 9.
+- All generated artifacts touched by Tasks 2, 3, 4, 9, 38, 39, and 40.
 - `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`
 - `plans/unit-profile-coverage/ultra-golden-gate.json`
 - `plans/unit-profile-coverage/mcp-scenario-evidence.json`
