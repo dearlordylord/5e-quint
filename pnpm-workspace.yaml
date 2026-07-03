@@ -8,3 +8,8 @@ packages:
   - "packages/shared"
   - "packages/shared-algebras"
   - "packages/surface"
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  msgpackr-extract: true
+  unrs-resolver: true
