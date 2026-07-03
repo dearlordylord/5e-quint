@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "QAR-03-SHARED-QNT-PROOF-HARNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Consolidate bounded QNT proof harness behavior"
     },
     {
@@ -175,7 +175,7 @@ mismatch. The Ralph runner or decider owns branch repair.
 | --: | ---- | ------ | ---------- | ----- |
 | 1 | QAR-01-TEST-LANE-ISOLATION - Isolate default test lanes from MBT discovery | done | none | First runnable task; makes default tests non-MBT. |
 | 2 | QAR-02-MBT-LANE-INVENTORY-GATE - Add static test-lane and MBT inventory gates | done | QAR-01-TEST-LANE-ISOLATION | Adds static guards after default lane shape is decided. |
-| 3 | QAR-03-SHARED-QNT-PROOF-HARNESS - Consolidate bounded QNT proof harness behavior | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Consolidates bounded proof execution before new proof lanes. |
+| 3 | QAR-03-SHARED-QNT-PROOF-HARNESS - Consolidate bounded QNT proof harness behavior | done | QAR-01-TEST-LANE-ISOLATION | Consolidates bounded proof execution before new proof lanes. |
 | 4 | QAR-04-CHARACTER-CREATION-QNT-PROOFS - Add character-creation QNT proof lane | blocked | QAR-03-SHARED-QNT-PROOF-HARNESS | Adds the missing character-creation proof lane. |
 | 5 | QAR-05-SHARED-INVARIANT-PROOF-HARNESS - Bound shared-algebras inductive proof execution | blocked | QAR-03-SHARED-QNT-PROOF-HARNESS | Bounds shared inductive proofs. |
 | 6 | QAR-06-ACTION-COST-ADMISSION-RESULT - Make action and spell admission explicit in QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Removes admission-by-state-equality. |
@@ -315,7 +315,7 @@ Plan Impact:
 
 ### Task 3 - QAR-03-SHARED-QNT-PROOF-HARNESS
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: dependency
 
