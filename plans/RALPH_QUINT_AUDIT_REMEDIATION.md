@@ -25,13 +25,13 @@
     {
       "number": 4,
       "id": "QAR-04-CHARACTER-CREATION-QNT-PROOFS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add character-creation QNT proof lane"
     },
     {
       "number": 5,
       "id": "QAR-05-SHARED-INVARIANT-PROOF-HARNESS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Bound shared-algebras inductive proof execution"
     },
     {
@@ -176,8 +176,8 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 1 | QAR-01-TEST-LANE-ISOLATION - Isolate default test lanes from MBT discovery | done | none | First runnable task; makes default tests non-MBT. |
 | 2 | QAR-02-MBT-LANE-INVENTORY-GATE - Add static test-lane and MBT inventory gates | done | QAR-01-TEST-LANE-ISOLATION | Adds static guards after default lane shape is decided. |
 | 3 | QAR-03-SHARED-QNT-PROOF-HARNESS - Consolidate bounded QNT proof harness behavior | done | QAR-01-TEST-LANE-ISOLATION | Consolidates bounded proof execution before new proof lanes. |
-| 4 | QAR-04-CHARACTER-CREATION-QNT-PROOFS - Add character-creation QNT proof lane | blocked | QAR-03-SHARED-QNT-PROOF-HARNESS | Adds the missing character-creation proof lane. |
-| 5 | QAR-05-SHARED-INVARIANT-PROOF-HARNESS - Bound shared-algebras inductive proof execution | blocked | QAR-03-SHARED-QNT-PROOF-HARNESS | Bounds shared inductive proofs. |
+| 4 | QAR-04-CHARACTER-CREATION-QNT-PROOFS - Add character-creation QNT proof lane | ready-for-research | QAR-03-SHARED-QNT-PROOF-HARNESS | Adds the missing character-creation proof lane. |
+| 5 | QAR-05-SHARED-INVARIANT-PROOF-HARNESS - Bound shared-algebras inductive proof execution | ready-for-research | QAR-03-SHARED-QNT-PROOF-HARNESS | Bounds shared inductive proofs. |
 | 6 | QAR-06-ACTION-COST-ADMISSION-RESULT - Make action and spell admission explicit in QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Removes admission-by-state-equality. |
 | 7 | QAR-07-DAMAGE-PAIR-NONZERO - Encode nonzero damage-allocation preconditions | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Encodes the nonzero total precondition. |
 | 8 | QAR-08-SHOVE-PROJECTION-UNION - Replace Shove flattened projection with a closed union | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces impossible Shove projection combinations. |
@@ -355,7 +355,7 @@ Plan Impact:
 
 ### Task 4 - QAR-04-CHARACTER-CREATION-QNT-PROOFS
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
@@ -391,7 +391,7 @@ Plan Impact:
 
 ### Task 5 - QAR-05-SHARED-INVARIANT-PROOF-HARNESS
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
