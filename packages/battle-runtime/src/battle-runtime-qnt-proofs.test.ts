@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  discoverProofModuleNames,
+  discoverProofModules,
   proofModuleTimeoutMs,
   runProofModule,
 } from "./battle-runtime-qnt-proofs.ts";
 
-const proofModules = discoverProofModuleNames();
+const proofModules = discoverProofModules();
 const runProofs = process.env.RUN_QNT_PROOFS === "1";
 
 // Always-on in `pnpm test`: a fast, Quint-free reminder plus a glob guard. The
@@ -31,10 +31,13 @@ test("QNT proof lane is opt-in -- run `pnpm test:qnt-proofs` to check SRD parity
 // so a normal `pnpm test` never stumbles into the multi-minute corpus run.
 describe.skipIf(!runProofs)("QNT proofs (opt-in, bounded per module)", () => {
   test.concurrent.each(proofModules)(
-    "%s",
-    async (moduleName) => {
-      const outcome = await runProofModule(moduleName);
-      expect(outcome).toEqual({ tag: "passed", module: moduleName });
+    "$modulePath",
+    async (proofModule) => {
+      const outcome = await runProofModule(proofModule);
+      expect(outcome).toEqual({
+        tag: "passed",
+        module: proofModule.modulePath,
+      });
     },
     // Outlast the runner's own hard-kill deadline so the child is killed first
     // and the failure carries the captured quint output, not a bare vitest
