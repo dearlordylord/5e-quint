@@ -41,11 +41,14 @@
         "totalDrivers",
         "battleLaneDrivers",
         "ruleCoreComponentDrivers",
-        "battleRuntimeBranchObligations",
+        "totalBranchObligations",
         "battleLaneBranchObligations",
         "ruleCoreComponentBranchObligations",
+        "laneCounts",
+        "laneBranchObligations",
         "diagnosticBattleDrivers",
         "diagnosticReducerRoutedDrivers",
+        "routeClassCounts",
         "sourceCitations"
       ],
       "properties": {
@@ -64,7 +67,7 @@
           "type": "integer",
           "minimum": 0
         },
-        "battleRuntimeBranchObligations": {
+        "totalBranchObligations": {
           "type": "integer",
           "minimum": 0
         },
@@ -76,6 +79,12 @@
           "type": "integer",
           "minimum": 0
         },
+        "laneCounts": {
+          "$ref": "#/$defs/countsByLane"
+        },
+        "laneBranchObligations": {
+          "$ref": "#/$defs/countsByLane"
+        },
         "diagnosticBattleDrivers": {
           "type": "integer",
           "minimum": 0
@@ -83,6 +92,42 @@
         "diagnosticReducerRoutedDrivers": {
           "type": "integer",
           "minimum": 0
+        },
+        "routeClassCounts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "catalog-after-substrate",
+            "component-first",
+            "reducer-routed",
+            "replay-refresh-only"
+          ],
+          "properties": {
+            "catalog-after-substrate": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "component-first": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reducer-routed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "replay-refresh-only": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "source-qnt-corpus-blocker": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "substrate-first": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
         },
         "sourceCitations": {
           "type": "array",
@@ -111,6 +156,39 @@
         }
       }
     },
+    "countsByLane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "creation",
+        "sheet",
+        "handoff",
+        "battle",
+        "rules-core"
+      ],
+      "properties": {
+        "creation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sheet": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "handoff": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "battle": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rules-core": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "backlogRow": {
       "type": "object",
       "additionalProperties": false,
@@ -118,37 +196,64 @@
         "driverPath",
         "lane",
         "routeClass",
+        "connectorPaths",
+        "connectorBlockerId",
         "durableOwner",
+        "ownerClassification",
         "sourceTaskId",
-        "rustTaskId",
+        "targetTaskId",
         "status",
         "blockerId"
       ],
       "properties": {
         "driverPath": {
           "type": "string",
-          "pattern": "^packages/battle-runtime/.+\\.mbt\\.qnt$"
+          "pattern": "^packages/(battle-runtime|character-battle-runtime|character-creation-runtime|character-sheet-runtime)/.+\\.mbt\\.qnt$"
         },
         "lane": {
           "enum": [
+            "creation",
+            "sheet",
+            "handoff",
             "battle",
-            "rule-core"
+            "rules-core"
           ]
         },
         "routeClass": {
           "enum": [
-            "QNT-CONNECTOR",
-            "QNT-BLOCKER",
-            "RUST-SUBSTRATE",
-            "RUST-ROUTE-MIGRATION",
-            "HARNESS-GAP",
-            "CATALOG-DEFER",
-            "REPLAY-REFRESH"
+            "reducer-routed",
+            "component-first",
+            "substrate-first",
+            "catalog-after-substrate",
+            "replay-refresh-only",
+            "source-qnt-corpus-blocker"
           ]
+        },
+        "connectorPaths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "connectorBlockerId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
         },
         "durableOwner": {
           "type": "string",
           "minLength": 1
+        },
+        "ownerClassification": {
+          "enum": [
+            "durable-owner",
+            "component-owner",
+            "owner-todo",
+            "source-blocker"
+          ]
         },
         "sourceTaskId": {
           "type": [
@@ -157,7 +262,7 @@
           ],
           "minLength": 1
         },
-        "rustTaskId": {
+        "targetTaskId": {
           "type": [
             "string",
             "null"

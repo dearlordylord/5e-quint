@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "CRP-01-DENOMINATOR-BACKLOG",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Populate the reducer convergence denominator backlog"
     },
     {
@@ -25,19 +25,19 @@
     {
       "number": 4,
       "id": "CRP-04-CREATION-FILL-BATCH",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Task-shape character creation fill-batch acceptance"
     },
     {
       "number": 5,
       "id": "CRP-05-SESSION-BATTLE-ENTRY",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Task-shape character session to battle entry acceptance"
     },
     {
       "number": 6,
       "id": "CRP-06-SETTLEMENT-REST-OWNERS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Task-shape settlement and rest ownership acceptance"
     },
     {
@@ -101,10 +101,12 @@ Source-side denominator facts from
   save-gated spell ordering, Hit Point restoration ordering, death saving
   throw, Concentration break teardown, and scalar-buff active effects.
 
-Source-side gap:
+Source-side backlog:
 
 - `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json` exists but
-  has zero rows. It is not yet the executable implementation denominator.
+  now has one row for each current `levelDenominators[0].driverRouteAssignments[]`
+  row, with route class, connector or blocker, owner classification, source
+  task id, target task placeholder, status, and blocker id fields.
 
 Historical target evidence:
 
@@ -144,12 +146,12 @@ The expanded queue must account for these families:
 
 | Task | Status | Depends On | Output |
 | --- | --- | --- | --- |
-| `CRP-01` | `ready-for-research` | none | populated backlog denominator rows |
+| `CRP-01` | `done` | none | populated backlog denominator rows |
 | `CRP-02` | `done` | none | replay evidence provenance contract |
 | `CRP-03` | `ready-for-research` | `CRP-02` | witness/domain vocabulary split |
-| `CRP-04` | `blocked` | `CRP-01` | creation fill-batch implementation task rows |
-| `CRP-05` | `blocked` | `CRP-01`, `CRP-02` | session battle entry implementation task rows |
-| `CRP-06` | `blocked` | `CRP-01` | settlement/rest owner implementation task rows |
+| `CRP-04` | `ready-for-research` | `CRP-01` | creation fill-batch implementation task rows |
+| `CRP-05` | `ready-for-research` | `CRP-01`, `CRP-02` | session battle entry implementation task rows |
+| `CRP-06` | `ready-for-research` | `CRP-01` | settlement/rest owner implementation task rows |
 | `CRP-07` | `blocked` | `CRP-02`, `CRP-03` | active diagnostic seed implementation tasks |
 | `CRP-08` | `blocked` | `CRP-01`-`CRP-07` | locked task template/checker contract |
 | `CRP-09` | `blocked` | `CRP-08` | executable implementation queue |
@@ -194,7 +196,7 @@ explicitly changes into runtime behavior and names a focused MBT command.
 
 ### Task 1 - CRP-01-DENOMINATOR-BACKLOG
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -353,12 +355,7 @@ unblocked or assigned to exact source-QNT rename follow-ups.
 
 ### Task 4 - CRP-04-CREATION-FILL-BATCH
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `CRP-01` because the creation rows must be emitted
-from concrete backlog rows, not handwritten from memory.
+Status: `ready-for-research`
 
 Goal:
 
@@ -411,11 +408,7 @@ dependency-shaped, and measurable.
 
 ### Task 5 - CRP-05-SESSION-BATTLE-ENTRY
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `CRP-01` for concrete backlog rows.
+Status: `ready-for-research`
 
 Goal:
 
@@ -463,12 +456,7 @@ depends on route-event provenance.
 
 ### Task 6 - CRP-06-SETTLEMENT-REST-OWNERS
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `CRP-01` because owner rows must be derived from the
-backlog denominator.
+Status: `ready-for-research`
 
 Goal:
 

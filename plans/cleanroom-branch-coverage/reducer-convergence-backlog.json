@@ -1,35 +1,1604 @@
 {
   "schemaVersion": 1,
   "schemaPath": "plans/cleanroom-branch-coverage/reducer-convergence-backlog.schema.json",
-  "generatedBy": "RRCONV-01-DENOMINATOR-BACKLOG-SCHEMA",
+  "generatedBy": "CRP-01-DENOMINATOR-BACKLOG",
   "denominator": {
     "tag": "source-derived-driver-denominator",
-    "totalDrivers": 76,
-    "battleLaneDrivers": 66,
+    "totalDrivers": 101,
+    "battleLaneDrivers": 67,
     "ruleCoreComponentDrivers": 10,
-    "battleRuntimeBranchObligations": 559,
-    "battleLaneBranchObligations": 415,
+    "totalBranchObligations": 721,
+    "battleLaneBranchObligations": 412,
     "ruleCoreComponentBranchObligations": 144,
+    "laneCounts": {
+      "creation": 8,
+      "sheet": 10,
+      "handoff": 6,
+      "battle": 67,
+      "rules-core": 10
+    },
+    "laneBranchObligations": {
+      "creation": 55,
+      "sheet": 67,
+      "handoff": 43,
+      "battle": 412,
+      "rules-core": 144
+    },
     "diagnosticBattleDrivers": 6,
     "diagnosticReducerRoutedDrivers": 6,
+    "routeClassCounts": {
+      "reducer-routed": 75,
+      "catalog-after-substrate": 15,
+      "replay-refresh-only": 1,
+      "component-first": 10
+    },
     "sourceCitations": [
       {
-        "artifactPath": "plans/cleanroom-scaffolds/tasks/ACTIVE_WORK.template.json",
-        "fact": "assignment level-1-2-full has 66 battle queue drivers and 10 rules-core queue drivers after replay-refresh-only witnesses are omitted; assignment reducer-spine-diagnostic-battle has 6 battle queue drivers."
+        "artifactPath": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+        "fact": "levelDenominators[0].driverRouteAssignments has 101 rows: 75 reducer-routed, 15 catalog-after-substrate, 10 component-first, and 1 replay-refresh-only; lanes are classified by package prefix as 67 battle, 8 creation, 6 handoff, 10 rules-core, and 10 sheet."
       },
       {
         "artifactPath": "plans/cleanroom-branch-coverage/source-branch-inventory.json",
-        "fact": "ordinary implementation packages/battle-runtime/*.mbt.qnt drivers split into 66 battle-lane drivers and 10 rule-core component drivers, carrying 415 and 144 branch obligations respectively; replay-refresh-only witnesses remain in source inventory but outside the ordinary queue."
+        "fact": "Each backlog driverPath is required to appear in source-branch-inventory.json branchObligations; branch obligation counts are copied from the route denominator rows."
       },
       {
-        "artifactPath": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
-        "fact": "active reducer-spine diagnostic batch lists the 6 diagnostic battle drivers as reducer-routed."
+        "artifactPath": "plans/cleanroom-guidance/reducer-spine.md",
+        "fact": "Reducer-spine guidance defines the shared target reducer surface and forbids adapter-local route islands for target replay acceptance."
       },
       {
         "artifactPath": "plans/RALPH_L15_REDUCER_ROUTE_QNT_ARCHITECTURE.md",
-        "fact": "route architecture defines the prior reducer-route denominator and executable route/component connector expectations consumed by this backlog."
+        "fact": "The route architecture names qRoute and qComponentRoute connector expectations consumed by the backlog rows."
       }
     ]
   },
-  "rows": []
+  "rows": [
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns Search action resources, target admission progress, hidden-target reveal state, roll-modifier active effects, and Concentration; hidden candidate discovery, vicinity, target admission facts, and roll totals remain table/caller boundary fills.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-adrenaline-rush.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-next-attack-roll-mode.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-opportunity-attack-denial.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns the chained spell-attack procedure fill frontier through the typed spell procedure subject: damage-type choice, per-step target history, Attack Roll resolution, Hit Point damage, and leap continuation. Table-supplied spell-target and leap-range facts stay boundary fills.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns Command pending active effects, Prone condition application, Movement spent on Approach/Flee, and interrupt-stack opening for Flee Opportunity Attack windows; held-object inventory and route geometry stay boundary fills.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns the concentrating source and active Spell Effect instances; Concentration cleanup routes through BattleConcentrationOwner and BattleActiveEffectOwner, and no adapter-local concentration or active-effect ledger is allowed.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns target Hit Points, Stable, Unconscious, Dead, and death-save counters; the adapter owns only sampled roll evidence.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-attack-action-area-save-damage-replacement.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns independent spell-attack sequence progress through the typed spell procedure subject: per-beam target admission, Attack Roll resolution, Hit Point damage, and sequence continuation. Object target identity, Armor Class, range, and Hit Point facts remain table-supplied boundary fills at the object-target boundary.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns restored target Hit Points and zero-Hit-Point lifecycle cleanup; the healing frontier does not own a duplicate HP ledger.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "completed-reducer-route-tracer",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-interrupt-stack-resume.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns interrupt-stack push/resume frames, reaction availability, spell-slot/action-economy spend, active effects, Hit Points, and continuation holes; table choices stay boundary fills.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-mixed-target-outcomes.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-concentration-hazard-exact-damage.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-spell-base-armor-class-effect.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns current actor, turn action resource, spell-slot expenditure, and target Hit Points; the adapter owns only replay evidence.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "completed-reducer-route-tracer",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns reaction availability, reaction spell-slot spend, triggering spell slot spend or non-spend, interrupt-stack clear/resume, and Hit Point effects; table-trigger facts and chosen reaction decisions stay boundary fills.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "FCSF-05-REACTION-INTERRUPT-PAYLOAD-TAXONOMY",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "replay-refresh-only",
+      "connectorPaths": [],
+      "connectorBlockerId": "replay-refresh-only-baseline-witness",
+      "durableOwner": "source-blocker: baseline composition witness is not a queued cleanroom implementation driver.",
+      "ownerClassification": "source-blocker",
+      "sourceTaskId": "completed-baseline-reducer-spine-witness",
+      "targetTaskId": "not-queued-replay-refresh-only",
+      "status": "blocked",
+      "blockerId": "replay-refresh-only-baseline-witness"
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns roll-modifier active Spell Effects and Concentration teardown; table-supplied choice frontiers remain explicit fills, while the Thaumaturgy one-minute-effect count stays boundary evidence instead of a duplicate ledger.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spell-damage-reduction.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns subject frontier progress and spell resource effects; ordering-error labels remain reducer result facts, not adapter state.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "completed-reducer-route-tracer",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns active Spell Effect projections, Hit Points, Hit Point maximum, Temporary Hit Points, Speed, Armor Class, and Concentration; no route-local buff ledger is introduced.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-scalar-buff.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns the target Speed projection and active Spell Effect instance; the route connector does not introduce a duplicate speed/effect ledger.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns Sleep active-effect state, Concentration, condition lifecycle, and turn-boundary repeat-save frontier; no duplicate repeat-save or condition ledger is introduced.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "catalog-after-substrate",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState turn-boundary state owns initiative/round advancement while HP and active effects remain with their own owners; same-timing order stays at the table/boundary frontier.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-held-weapon-release-cleanup.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-damage-rider-cleanup.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR17-WEAPON-HOSTED-RIDER-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns the selected weapon attack, target Hit Points, Topple condition lifecycle, Sap active-effect rider, and Cleave once-per-turn rider use; selected mastery identity remains an admitted source reference, not the behavior dispatch key.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "BattleState owns spell-attack procedure progress, HP/zero-HP lifecycle, conditions, Concentration, and active-effect teardown; no local Shield or HP replay ledger is introduced.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/creature-attack.mbt.qnt",
+      "lane": "battle",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/battle-runtime/creature-attack.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreAbilitySkillCommandOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreAttackDamageDispositionOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-features.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreFeatureProfileSemanticsOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreHitPointDamageOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-movement.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreMovementGrappleOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-reactions.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreReactionContinuationConcentrationOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreShoveOutcomeOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-spells.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreSpellProcedureProfileOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreSpellProcedureProfileOwner; RuleCoreHitPointDamageOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "FCSF-03G-EXACT-DAMAGE-PROJECTION-FACTS",
+      "targetTaskId": "target-task-todo",
+      "status": "blocked",
+      "blockerId": "source-qnt-corpus-blocker"
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreStatBlockControlOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+      "lane": "handoff",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt",
+      "lane": "handoff",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "lane": "handoff",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "The finalized Character Session owns sheet/build facts before battle entry; BattleState owns generic battle subjects, action availability, target Hit Points, and ordinary spell-slot expenditure during battle; settlement writes only typed deltas back to the durable session.",
+      "ownerClassification": "durable-owner",
+      "sourceTaskId": "SDK-GAP-SHEET-DERIVED-BATTLE-ACTS",
+      "targetTaskId": "target-task-todo",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "lane": "handoff",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "lane": "handoff",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "lane": "handoff",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+      "lane": "creation",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "lane": "creation",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+      "lane": "creation",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+      "lane": "creation",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+      "lane": "creation",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "lane": "creation",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "lane": "creation",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "lane": "creation",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
+      "lane": "sheet",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
+      "lane": "sheet",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
+      "lane": "sheet",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+      "lane": "sheet",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt",
+      "lane": "sheet",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+      "lane": "sheet",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+      "lane": "sheet",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "lane": "sheet",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
+      "lane": "sheet",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "lane": "sheet",
+      "routeClass": "reducer-routed",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
+      "ownerClassification": "owner-todo",
+      "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "targetTaskId": "target-task-todo",
+      "status": "pending",
+      "blockerId": null
+    }
+  ]
 }
