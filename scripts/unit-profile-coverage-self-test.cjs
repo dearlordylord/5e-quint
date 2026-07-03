@@ -155,6 +155,7 @@ function assertLaterLevelOnlyScopeAccounting() {
       deferredMechanics: [
         {
           mechanic: "fixture level 5 scaling",
+          followUpTaskId: "SRDINV-FIXTURE",
           battleReadinessClosure: {
             kind: battleReadinessClosureKind.laterLevelOnly,
             owner: "fixture owner",
@@ -175,6 +176,19 @@ function assertLaterLevelOnlyScopeAccounting() {
   if (level5Status.status === "closed-later-level-only") {
     fail(
       `Self-test failed: expected level-5 scope not to close level-5 residual as later-level-only, got ${JSON.stringify(level5Status)}`,
+    );
+  }
+  if (level5Status.status !== "open-profile-accounting") {
+    fail(
+      `Self-test failed: expected level-5 scope to report an open level-5 residual, got ${JSON.stringify(level5Status)}`,
+    );
+  }
+  if (
+    !level5Status.reason.includes("within Character Levels 1-5") ||
+    !level5Status.reason.includes("SRDINV-FIXTURE")
+  ) {
+    fail(
+      `Self-test failed: expected level-5 open residual reason to name the in-scope report and follow-up task, got ${JSON.stringify(level5Status)}`,
     );
   }
 }
@@ -696,6 +710,25 @@ function runSelfTest(root) {
   ) {
     fail(
       `Self-test failed: expected character level 4 bands to include level-4 and spell-level-2 while excluding spell-level-3, got ${JSON.stringify(levelFourBands)}`,
+    );
+  }
+  const levelFiveBands = characterLevelBands(5);
+  if (
+    JSON.stringify(levelFiveBands) !==
+    JSON.stringify([
+      "level-1",
+      "level-2",
+      "level-3",
+      "level-4",
+      "level-5",
+      "spell-level-0",
+      "spell-level-1",
+      "spell-level-2",
+      "spell-level-3",
+    ])
+  ) {
+    fail(
+      `Self-test failed: expected character level 5 bands to include level-5 and spell-level-3, got ${JSON.stringify(levelFiveBands)}`,
     );
   }
   assertLaterLevelOnlyScopeAccounting();

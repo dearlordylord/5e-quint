@@ -5,6 +5,7 @@ const {
   battleReadinessClosureKind,
   selectedIdentityMbtEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
+const { countBattleReadiness } = require("./srd-unit-inventory.cjs");
 const {
   percent,
   selectedIdentityEvidenceStatus,
@@ -34,6 +35,7 @@ const strictLevelBands = characterLevelBands(1);
 const strictLevel12Bands = characterLevelBands(2);
 const strictLevel13Bands = characterLevelBands(3);
 const strictLevel14Bands = characterLevelBands(4);
+const strictLevel15Bands = characterLevelBands(5);
 const companionWorktreeExcludedUnitIds = ["find_familiar"];
 const srdAuthoredCharacterCreationOptionGroups = [
   {
@@ -57,7 +59,6 @@ const level1Scope = {
     "This strict view tracks executable SRD character-level-1, cantrip, and spell-level-1 pressure separately from the broader product readiness closure metric. Character level and spell level are separate axes.",
   levelBands: strictLevelBands,
   maxCharacterLevel: 1,
-  productReadinessMetric: "levelOneBattleReadiness",
 };
 const level12Scope = {
   title: "Character Levels 1-2",
@@ -66,7 +67,6 @@ const level12Scope = {
     "This strict view tracks executable SRD character-level-1 plus character-level-2 pressure, cantrips, and spell-level-1 pressure separately from the broader product readiness closure metric. It deliberately excludes spell-level-2 pressure, which first enters the character-level-3 frontier for full casters.",
   levelBands: strictLevel12Bands,
   maxCharacterLevel: 2,
-  productReadinessMetric: "levelOneTwoBattleReadiness",
 };
 const level13Scope = {
   title: "Character Levels 1-3",
@@ -75,7 +75,6 @@ const level13Scope = {
     "This strict view tracks executable SRD character-level-1 through character-level-3 pressure, cantrips, and spell-level-1 plus spell-level-2 pressure separately from the broader product readiness closure metric. It deliberately excludes spell-level-3 pressure, which belongs to the character-level-5 frontier for full casters.",
   levelBands: strictLevel13Bands,
   maxCharacterLevel: 3,
-  productReadinessMetric: "levelOneThreeBattleReadiness",
 };
 const level14Scope = {
   title: "Character Levels 1-4",
@@ -84,7 +83,14 @@ const level14Scope = {
     "This strict view tracks executable SRD character-level-1 through character-level-4 pressure, cantrips, and spell-level-1 plus spell-level-2 pressure separately from the broader product readiness closure metric. It adds level-4 class-feature pressure while deliberately excluding spell-level-3 pressure, which belongs to the character-level-5 frontier for full casters.",
   levelBands: strictLevel14Bands,
   maxCharacterLevel: 4,
-  productReadinessMetric: "levelOneFourBattleReadiness",
+};
+const level15Scope = {
+  title: "Character Levels 1-5",
+  outputTitle: "Character Levels 1-5 Full Support",
+  description:
+    "This strict view tracks executable SRD character-level-1 through character-level-5 pressure, cantrips, and spell-level-1 through spell-level-3 pressure separately from the broader product readiness closure metric. Spell-level-3 pressure enters at character level 5 for full casters and Warlock Pact Magic.",
+  levelBands: strictLevel15Bands,
+  maxCharacterLevel: 5,
 };
 const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
   "create_or_destroy_water",
@@ -672,12 +678,87 @@ function allClosuresMatch(claim) {
   });
 }
 
+function laterLevelFirstTriggerCharacterLevel(closure) {
+  if (
+    closure?.kind !== laterLevelOnlyClosureKind ||
+    !Number.isInteger(closure.firstTriggerCharacterLevel)
+  ) {
+    return undefined;
+  }
+  return closure.firstTriggerCharacterLevel;
+}
+
 function isLaterLevelClosureBeyondScope(closure, scope) {
+  const firstTriggerCharacterLevel =
+    laterLevelFirstTriggerCharacterLevel(closure);
   return (
-    closure?.kind === laterLevelOnlyClosureKind &&
-    Number.isInteger(closure.firstTriggerCharacterLevel) &&
-    closure.firstTriggerCharacterLevel > scope.maxCharacterLevel
+    firstTriggerCharacterLevel !== undefined &&
+    firstTriggerCharacterLevel > scope.maxCharacterLevel
   );
+}
+
+function isLaterLevelClosureInScope(closure, scope) {
+  const firstTriggerCharacterLevel =
+    laterLevelFirstTriggerCharacterLevel(closure);
+  return (
+    firstTriggerCharacterLevel !== undefined &&
+    firstTriggerCharacterLevel <= scope.maxCharacterLevel
+  );
+}
+
+function laterLevelResidualEntries(claim) {
+  if (
+    claim?.tag === "unsupported-profile" &&
+    claim.battleReadinessClosure?.kind === laterLevelOnlyClosureKind
+  ) {
+    return [
+      {
+        followUpTaskId: claim.followUpTaskId,
+        followUpTaskIds: claim.followUpTaskIds,
+        battleReadinessClosure: claim.battleReadinessClosure,
+      },
+    ];
+  }
+  if (claim?.tag === "profile-subset-supported") {
+    return claim.deferredMechanics.filter(
+      (entry) =>
+        entry.battleReadinessClosure?.kind === laterLevelOnlyClosureKind,
+    );
+  }
+  return [];
+}
+
+function inScopeLaterLevelOpenReason(claim, scope) {
+  const entries = laterLevelResidualEntries(claim).filter((entry) =>
+    isLaterLevelClosureInScope(entry.battleReadinessClosure, scope),
+  );
+  if (entries.length === 0) return "";
+
+  const levels = Array.from(
+    new Set(
+      entries.map(
+        (entry) =>
+          laterLevelFirstTriggerCharacterLevel(entry.battleReadinessClosure),
+      ),
+    ),
+  ).sort((left, right) => left - right);
+  const taskIds = Array.from(
+    new Set(
+      entries.flatMap((entry) => [
+        entry.followUpTaskId,
+        ...(entry.followUpTaskIds ?? []),
+      ]),
+    ),
+  )
+    .filter(Boolean)
+    .sort();
+  const levelLabel = levels.length === 1 ? "level" : "levels";
+  const taskLabel = taskIds.length === 1 ? "task" : "tasks";
+  const taskText =
+    taskIds.length > 0
+      ? ` Follow-up ${taskLabel}: ${taskIds.join(", ")}.`
+      : "";
+  return `Later-level residuals first trigger within ${scope.title} at character ${levelLabel} ${levels.join(", ")}, so they are open in this scope.${taskText}`;
 }
 
 function hasOnlyLaterLevelResiduals(claim, scope) {
@@ -884,6 +965,7 @@ function strictStatusForUnit(unit, scope) {
   return {
     status: "open-profile-accounting",
     reason:
+      inScopeLaterLevelOpenReason(claim, scope) ||
       closureReasonForClaim(claim) ||
       "The Unit has profile or closure accounting that is not strict-closed yet.",
   };
@@ -1175,11 +1257,10 @@ function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
     (group) => !strictTargetClosureStatuses.has(group.status),
   );
 
-  const productReadiness =
-    srdUnitInventory.metrics[scope.productReadinessMetric];
-  if (productReadiness === undefined) {
-    fail(`SRD Unit inventory lacks ${scope.productReadinessMetric}.`);
-  }
+  const productReadiness = countBattleReadiness(
+    srdUnitInventory.rows,
+    new Set(scope.levelBands),
+  );
   const srdAuthoredProductReadiness = buildSrdAuthoredProductReadiness(
     matrixUnitsById,
     scope,
@@ -1284,6 +1365,15 @@ function buildLevel14FullSupport(matrix, srdUnitInventory, options = {}) {
     matrix,
     srdUnitInventory,
     level14Scope,
+    options,
+  );
+}
+
+function buildLevel15FullSupport(matrix, srdUnitInventory, options = {}) {
+  return buildStrictFullSupport(
+    matrix,
+    srdUnitInventory,
+    level15Scope,
     options,
   );
 }
@@ -1621,12 +1711,17 @@ function renderLevel14FullSupport(report) {
   return renderStrictFullSupport(report, level14Scope);
 }
 
+function renderLevel15FullSupport(report) {
+  return renderStrictFullSupport(report, level15Scope);
+}
+
 module.exports = {
   characterLevelBands,
   buildLevel1FullSupport,
   buildLevel12FullSupport,
   buildLevel13FullSupport,
   buildLevel14FullSupport,
+  buildLevel15FullSupport,
   buildSrdAuthoredProductReadiness,
   buildSelectedIdentityReadiness,
   strictStatusForUnitForTest: (unit, maxCharacterLevel) =>
@@ -1638,4 +1733,5 @@ module.exports = {
   renderLevel12FullSupport,
   renderLevel13FullSupport,
   renderLevel14FullSupport,
+  renderLevel15FullSupport,
 };
