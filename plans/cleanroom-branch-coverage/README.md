@@ -19,6 +19,13 @@ It records two different facts:
   `mbt::actionTaken`;
 - `sampledInputs[]`: `nondet` picks Quint reports through `mbt::nondetPicks`.
 
+Sampled input `pickName` values are replay witness protocol only when they are
+copied into `targetReplayEvidence.runs[].sampledInputs[]` and listed in an
+adapter module's `quarantinedWitnessNames`. They are not global forbidden
+production vocabulary: ordinary domain words such as `roll`, `hit`, and
+`damage` remain valid in production modules unless they appear as QNT branch
+actions or harness field names.
+
 Do not add branch actions by hand to the generated inventory. Add or update the
 driver, then run:
 

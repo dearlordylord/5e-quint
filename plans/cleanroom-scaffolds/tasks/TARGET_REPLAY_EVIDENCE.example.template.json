@@ -19,7 +19,7 @@
       "traceId": "<seed or deterministic replay id>",
       "sampledInputs": [
         {
-          "pickName": "<only when source branch inventory lists sampled input>",
+          "pickName": "<exact pickName from source branch inventory sampledInputs[]>",
           "value": "<sampled target value>"
         }
       ],

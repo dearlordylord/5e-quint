@@ -15,6 +15,7 @@
       "path": "{{enginePath}}/qnt-adapters/<driver-adapter>",
       "quarantinedWitnessNames": [
         "<qnt branch action name>",
+        "<sampled input pickName copied into target replay evidence>",
         "mbt::actionTaken",
         "mbt::nondetPicks",
         "observedActionTaken",

@@ -2479,7 +2479,21 @@ function validFixture(rootPath) {
         qntFileSha256: qntSha,
         branchFamily: "step",
         branchAction: "doFillMagicMissileDamage",
-        pickName: "dartRollTotal",
+        pickName: "damage",
+      },
+      {
+        driverPath,
+        qntFileSha256: qntSha,
+        branchFamily: "step",
+        branchAction: "doFillMagicMissileDamage",
+        pickName: "hit",
+      },
+      {
+        driverPath,
+        qntFileSha256: qntSha,
+        branchFamily: "step",
+        branchAction: "doFillMagicMissileDamage",
+        pickName: "roll",
       },
     ],
   };
@@ -2618,7 +2632,13 @@ function validFixture(rootPath) {
       },
       result: { tag: "pass" },
       ...(obligation.branchAction === "doFillMagicMissileDamage"
-        ? { sampledInputs: [{ pickName: "dartRollTotal", value: 7 }] }
+        ? {
+            sampledInputs: [
+              { pickName: "damage", value: 7 },
+              { pickName: "hit", value: true },
+              { pickName: "roll", value: 14 },
+            ],
+          }
         : {}),
     })),
   });
@@ -2638,7 +2658,9 @@ function validFixture(rootPath) {
         quarantinedWitnessNames: [
           "doFillMagicMissileAllocation",
           "doFillMagicMissileDamage",
-          "dartRollTotal",
+          "damage",
+          "hit",
+          "roll",
           ...harnessWitnessProtocolNames,
         ],
         targetReplayEvidence: ["tasks/target-replay-evidence/mm.json"],
@@ -2720,7 +2742,11 @@ function validFixture(rootPath) {
   fs.mkdirSync(path.join(rootPath, "engine/rules"), { recursive: true });
   fs.writeFileSync(
     path.join(rootPath, "engine/rules/force_projectiles.aster"),
-    "fn resolveForceProjectileDamage(input) = input\n",
+    [
+      "fn resolveForceProjectileDamage(input) = input\n",
+      "fn resolveAttackHit(hit) = hit\n",
+      "fn resolveD20Roll(roll) = roll\n",
+    ].join(""),
   );
   fs.mkdirSync(path.join(rootPath, "engine/qnt-adapters"), { recursive: true });
   fs.writeFileSync(
@@ -2750,6 +2776,20 @@ function expectFailure(
     throw new Error(
       `${name}: expected issue containing ${JSON.stringify(expectedSubstring)}, got ${JSON.stringify(issues)}`,
     );
+  }
+}
+
+function expectSuccess(validRoot, profile, name, mutate) {
+  const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), `cleanroom-harness-${name}-`));
+  fs.cpSync(validRoot, goodRoot, { recursive: true });
+  mutate(goodRoot);
+  const issues = validateTaskArtifacts({
+    taskRoot: goodRoot,
+    profile,
+  });
+  fs.rmSync(goodRoot, { recursive: true, force: true });
+  if (issues.length > 0) {
+    throw new Error(`${name}: expected pass, got ${JSON.stringify(issues)}`);
   }
 }
 
@@ -2984,14 +3024,27 @@ function runSelfTest() {
     expectFailure(
       validRoot,
       profile,
-      "sampled-input-leak",
+      "sampled-input-missing-quarantine",
+      (rootPath) => {
+        updateFixtureLedgerArtifact(rootPath, "engineDepth", (manifest) => {
+          manifest.adapterModules[0].quarantinedWitnessNames =
+            manifest.adapterModules[0].quarantinedWitnessNames.filter(
+              (name) => name !== "roll",
+            );
+        });
+      },
+      "adapter quarantine is missing witness protocol name roll",
+    );
+    expectSuccess(
+      validRoot,
+      profile,
+      "sampled-input-domain-vocabulary",
       (rootPath) => {
         fs.appendFileSync(
           path.join(rootPath, "engine/rules/force_projectiles.aster"),
-          "fn leakedPick(dartRollTotal) = dartRollTotal\n",
+          "fn sampledWordsAreDomainVocabulary(roll, hit, damage) = damage\n",
         );
       },
-      "leaks witness protocol name dartRollTotal",
     );
     expectFailure(
       validRoot,

@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "CRP-03-WITNESS-NAME-QUARANTINE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Separate witness sampled-input names from domain vocabulary"
     },
     {
@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "CRP-07-DIAGNOSTIC-SEED-REPLAY",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Lock the active reducer diagnostic replay seed"
     },
     {
@@ -148,11 +148,11 @@ The expanded queue must account for these families:
 | --- | --- | --- | --- |
 | `CRP-01` | `done` | none | populated backlog denominator rows |
 | `CRP-02` | `done` | none | replay evidence provenance contract |
-| `CRP-03` | `ready-for-research` | `CRP-02` | witness/domain vocabulary split |
+| `CRP-03` | `done` | `CRP-02` | witness/domain vocabulary split |
 | `CRP-04` | `ready-for-research` | `CRP-01` | creation fill-batch implementation task rows |
 | `CRP-05` | `ready-for-research` | `CRP-01`, `CRP-02` | session battle entry implementation task rows |
 | `CRP-06` | `ready-for-research` | `CRP-01` | settlement/rest owner implementation task rows |
-| `CRP-07` | `blocked` | `CRP-02`, `CRP-03` | active diagnostic seed implementation tasks |
+| `CRP-07` | `ready-for-research` | `CRP-02`, `CRP-03` | active diagnostic seed implementation tasks |
 | `CRP-08` | `blocked` | `CRP-01`-`CRP-07` | locked task template/checker contract |
 | `CRP-09` | `blocked` | `CRP-08` | executable implementation queue |
 
@@ -301,7 +301,7 @@ on route-event provenance as an acceptance gate.
 
 ### Task 3 - CRP-03-WITNESS-NAME-QUARANTINE
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -507,11 +507,7 @@ evidence boundaries.
 
 ### Task 7 - CRP-07-DIAGNOSTIC-SEED-REPLAY
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `CRP-03` for sampled-input witness naming.
+Status: `ready-for-research`
 
 Goal:
 
@@ -541,8 +537,9 @@ Acceptance:
 - Magic Missile, save-gated spell ordering, Hit Point restoration ordering,
   Concentration teardown, and scalar-buff active effects have implementation
   tasks that require observed public route events.
-- Death saving throw is either unblocked by `CRP-03` or explicitly blocked by
-  a source-QNT sampled-input naming task.
+- Death saving throw implementation tasks may record sampled input names as
+  replay witness protocol without source-QNT renames when those names are tied
+  to target replay evidence and adapter quarantine.
 - Tasks state durable owner expectations for action economy, Spell Slot, Hit
   Point, death-save, Concentration, active-effect, movement, Temporary Hit
   Point, and hole-frontier ownership as applicable.
