@@ -64,6 +64,7 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
 const rollModifierBuffSpellIds = [
   "bless",
@@ -688,17 +689,6 @@ function skillChoiceFill(
 ): Extract<BattleFill, { readonly kind: "skillChoice" }> {
   return {
     kind: "skillChoice",
-    holeId: hole.holeId,
-    value,
-  };
-}
-
-function damageTypeChoiceFill(
-  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
-  value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
-): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
-  return {
-    kind: "damageTypeChoice",
     holeId: hole.holeId,
     value,
   };

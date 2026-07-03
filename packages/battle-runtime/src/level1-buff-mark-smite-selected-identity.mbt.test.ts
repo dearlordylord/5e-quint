@@ -97,6 +97,7 @@ import {
   quintVariantTag,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
 type Level1BuffMarkSmiteSelectedIdentityAction =
   | "doDivineFavorWeaponDamageRider"
@@ -2117,13 +2118,6 @@ function attackRollFill(
       naturalD20: DieRollResult(value.naturalD20),
     },
   };
-}
-
-function damageTypeChoiceFill(
-  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
-  value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
-): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
-  return { kind: "damageTypeChoice", holeId: hole.holeId, value };
 }
 
 function damageRollFillWithGroups(

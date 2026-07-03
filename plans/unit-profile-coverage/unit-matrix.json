@@ -108,8 +108,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 183,
-      "numerator": 178,
-      "percent": "97.3%"
+      "numerator": 181,
+      "percent": "98.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 282,
@@ -13554,7 +13554,7 @@
       "evidenceTag": "selected-identity-mbt"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 11,
+    "rowCount": 6,
     "rows": [
       {
         "catalogAdmissionStatus": "installed",
@@ -13658,95 +13658,6 @@
           "tag": "profile-subset-supported"
         },
         "unitId": "species_halfling_naturally_stealthy"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/glyph_of_warding.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-glyph-durable-occurrence",
-            "spell.invocation-glyph-explosive-rune-release",
-            "spell.invocation-glyph-stored-spell-release",
-            "spell.invocation-glyph-stored-concentration-full-duration",
-            "spell.invocation-glyph-stored-summon-object-placement"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "glyph_of_warding"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/haste.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-haste-positive"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "haste"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-chosen-damage-resistance"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "protection_from_energy"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/sleet_storm.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-sleet-storm-area-hazard"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "sleet_storm"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/slow.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-slow-active-penalties"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "slow"
       }
     ]
   },
@@ -17678,8 +17589,8 @@
         "profileSubsetSupportedUnits": 20,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 115,
-        "selectedIdentityReplayGapUnits": 5,
-        "selectedIdentityReplayWitnessUnits": 110,
+        "selectedIdentityReplayGapUnits": 0,
+        "selectedIdentityReplayWitnessUnits": 115,
         "supportedProfileUnits": 95,
         "unsupportedOrOtherUnits": 33
       },
@@ -32077,6 +31988,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L5-C18-HASTE-LETHARGY-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level3-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES"
         }
       ],
       "executableMechanics": true,
@@ -33637,6 +33553,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L5-B08-PROTECTION-FROM-ENERGY"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level3-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES"
         }
       ],
       "executableMechanics": true,
@@ -36958,6 +36879,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level3-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES"
         }
       ],
       "executableMechanics": true,
@@ -37050,6 +36976,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level3-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES"
         }
       ],
       "executableMechanics": true,
@@ -37371,6 +37302,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level3-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES"
         }
       ],
       "executableMechanics": true,

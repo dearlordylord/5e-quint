@@ -1,8 +1,8 @@
 {
   "claimGate": {
     "authoredReadinessBlockerCount": 0,
-    "selectedIdentityBlockerCount": 5,
-    "status": "blocked",
+    "selectedIdentityBlockerCount": 0,
+    "status": "pass",
     "strictTargetOpenCount": 0
   },
   "frontierRows": [
@@ -2214,8 +2214,8 @@
       "kind": "spell",
       "reason": "L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE: Promote stored spell-glyph releases whose stored invocation creates Hostile battle creatures, preserving close-as-possible placement, triggering-creature attack targeting where RAW requires it, companion/control or turn protocol, and stored-Concentration full-duration cleanup without Glyph-local summon state. Owner: future stored hostile creature summon lifecycle/control owner. Required output: Supported or profile-subset-supported stored Hostile creature summon release claim with focused runtime tests and QNT/runtime parity for each concrete summon procedure; no Glyph authored-identity dispatch, generic placement bypass, or duplicate summon occurrence state.; L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING: Promote stored spell-glyph releases for non-Spiritual-Weapon harmful object procedures once those procedures own stable object/proxy occurrence identity, close-as-possible placement, attack or routing facts against the triggering creature, object lifecycle, and duration cleanup. Owner: future non-Spiritual-Weapon harmful object occurrence and attack-routing owner. Required output: Supported or profile-subset-supported stored harmful-object release claim with focused runtime tests and QNT/runtime parity for each concrete object procedure; no Glyph-local object registry and no broader claim from the Spiritual Weapon subset.",
       "selectedIdentity": {
-        "reason": "The Unit has no selected-identity-mbt evidence.",
-        "status": "missing-witness"
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/glyph_of_warding.json",
       "sourceRows": [
@@ -3805,8 +3805,8 @@
       "kind": "spell",
       "reason": "The promoted Sleet Storm owner consumes explicit area identity, movement facts, and first-entry/start-turn area-membership trigger facts. It does not infer position, path crossing, or Cylinder membership from map geometry.; The current battle runtime has no represented exposed-flame object or environmental flame state to douse. Sleet Storm admission verifies the Surface exposed-flame operation but keeps execution detached until that owner exists.",
       "selectedIdentity": {
-        "reason": "The Unit has no selected-identity-mbt evidence.",
-        "status": "missing-witness"
+        "reason": "The Unit has selected-identity-mbt evidence.",
+        "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/sleet_storm.json",
       "sourceRows": [
@@ -12738,65 +12738,21 @@
     "title": "Character Levels 1-5"
   },
   "selectedIdentityReadiness": {
-    "blockingRows": [
-      {
-        "claimTag": "profile-subset-supported",
-        "reason": "The Unit has no selected-identity-mbt evidence.",
-        "selectedIdentityStatus": "missing-witness",
-        "sourceRecordPath": "packages/surface/content/glyph_of_warding.json",
-        "status": "blocked-follow-up-split",
-        "unitId": "glyph_of_warding"
-      },
-      {
-        "claimTag": "supported-profile",
-        "reason": "The Unit has no selected-identity-mbt evidence.",
-        "selectedIdentityStatus": "missing-witness",
-        "sourceRecordPath": "packages/surface/content/haste.json",
-        "status": "supported-profile",
-        "unitId": "haste"
-      },
-      {
-        "claimTag": "supported-profile",
-        "reason": "The Unit has no selected-identity-mbt evidence.",
-        "selectedIdentityStatus": "missing-witness",
-        "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
-        "status": "supported-profile",
-        "unitId": "protection_from_energy"
-      },
-      {
-        "claimTag": "profile-subset-supported",
-        "reason": "The Unit has no selected-identity-mbt evidence.",
-        "selectedIdentityStatus": "missing-witness",
-        "sourceRecordPath": "packages/surface/content/sleet_storm.json",
-        "status": "closed-outside-battle-runtime-boundary",
-        "unitId": "sleet_storm"
-      },
-      {
-        "claimTag": "supported-profile",
-        "reason": "The Unit has no selected-identity-mbt evidence.",
-        "selectedIdentityStatus": "missing-witness",
-        "sourceRecordPath": "packages/surface/content/slow.json",
-        "status": "supported-profile",
-        "unitId": "slow"
-      }
-    ],
-    "blockingRowsByStatus": {
-      "missing-witness": 5
-    },
+    "blockingRows": [],
+    "blockingRowsByStatus": {},
     "metrics": {
       "denominator": 191,
-      "numerator": 186,
-      "percent": "97.4%"
+      "numerator": 191,
+      "percent": "100%"
     },
     "readyRowsByStatus": {
       "not-applicable": 6,
-      "witness-present": 180
+      "witness-present": 185
     },
     "rowsByStatus": {
-      "missing-witness": 5,
       "not-applicable": 6,
       "not-required": 71,
-      "witness-present": 180
+      "witness-present": 185
     }
   },
   "sourceArtifacts": {

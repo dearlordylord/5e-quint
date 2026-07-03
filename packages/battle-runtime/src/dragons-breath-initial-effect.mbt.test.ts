@@ -45,7 +45,6 @@ import {
   resolveBattleSubject,
   spellSaveDcForCaster,
   type BattleActiveEffect,
-  type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -59,6 +58,7 @@ import { requireCombatant } from "./unit-profile-admission-creature-fixture-supp
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
+  damageTypeChoiceFill,
   knownWillingSpellTargetListFill,
   maybeBonusSpellAct,
 } from "./unit-profile-admission-spell-fill-support.ts";
@@ -397,17 +397,6 @@ function dragonsBreathExhaleActAvailable(state: BattleState): boolean {
       act.subject.tag === "runtimeCommand" &&
       act.subject.command === "dragonsBreathExhale",
   );
-}
-
-function damageTypeChoiceFill(
-  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
-  damageType: DamageType,
-): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
-  return {
-    kind: "damageTypeChoice",
-    holeId: hole.holeId,
-    value: damageType,
-  };
 }
 
 function requireHole<K extends BattleHole["kind"]>(

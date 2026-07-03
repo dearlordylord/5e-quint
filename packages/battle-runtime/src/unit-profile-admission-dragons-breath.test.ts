@@ -20,6 +20,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
+  damageTypeChoiceFill,
   knownWillingSpellTargetListFill,
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
@@ -811,17 +812,6 @@ function requireConcentrationHole(
     throw new Error(`Expected concentration hole for ${combatantId}.`);
   }
   return hole;
-}
-
-function damageTypeChoiceFill(
-  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
-  damageType: DamageType,
-) {
-  return {
-    kind: "damageTypeChoice" as const,
-    holeId: hole.holeId,
-    value: damageType,
-  };
 }
 
 function dragonsBreathSavingThrowOutcomeFill(

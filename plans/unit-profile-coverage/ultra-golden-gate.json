@@ -1025,29 +1025,24 @@
     },
     {
       "layerResult": {
-        "completeLayers": 2,
+        "completeLayers": 3,
         "totalLayers": 4
       },
       "layers": [
         {
-          "blockers": [
-            {
-              "count": 5,
-              "kind": "selected-identity-blocker"
-            }
-          ],
-          "blockingCount": 5,
+          "blockers": [],
+          "blockingCount": 0,
           "evidence": {
             "claimGate": {
               "authoredReadinessBlockerCount": 0,
-              "selectedIdentityBlockerCount": 5,
-              "status": "blocked",
+              "selectedIdentityBlockerCount": 0,
+              "status": "pass",
               "strictTargetOpenCount": 0
             },
             "selectedIdentityReadiness": {
               "denominator": 191,
-              "numerator": 186,
-              "percent": "97.4%"
+              "numerator": 191,
+              "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
               "denominator": 115,
@@ -1061,7 +1056,7 @@
             }
           },
           "id": "support-completeness",
-          "status": "blocked"
+          "status": "pass"
         },
         {
           "blockingCount": 0,
@@ -1342,19 +1337,19 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 162,
-            "numerator": 162
+            "denominator": 165,
+            "numerator": 165
           },
           "joinedEvidenceRows": {
-            "denominator": 162,
+            "denominator": 165,
             "numerator": 82
           },
           "missingJoinRows": {
-            "denominator": 162,
-            "numerator": 80
+            "denominator": 165,
+            "numerator": 83
           }
         },
-        "rowCount": 80,
+        "rowCount": 83,
         "rows": [
           {
             "collectionId": "srd-5.2.1",
@@ -2967,6 +2962,40 @@
           {
             "collectionId": "srd-5.2.1",
             "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level3-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-haste-positive"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 3,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/haste-lethargy-lifecycle.mbt.test.ts",
+                "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/haste.json",
+            "unitId": "haste"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
               "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
               "tag": "selected-identity-mbt",
               "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
@@ -3368,6 +3397,38 @@
             },
             "sourceRecordPath": "packages/surface/content/poison_spray.json",
             "unitId": "poison_spray"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level3-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-chosen-damage-resistance"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
+            "unitId": "protection_from_energy"
           },
           {
             "collectionId": "srd-5.2.1",
@@ -3809,6 +3870,39 @@
             },
             "sourceRecordPath": "packages/surface/content/sleep.json",
             "unitId": "sleep"
+          },
+          {
+            "collectionId": "srd-5.2.1",
+            "evidence": {
+              "ownerPath": "packages/battle-runtime/src/level3-spell-selected-identity.mbt.test.ts",
+              "tag": "selected-identity-mbt",
+              "taskId": "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES"
+            },
+            "kind": "spell",
+            "mcpScenarioJoin": {
+              "coveredFlowIds": [],
+              "missingFlowIds": [
+                "battle"
+              ],
+              "requiredFlowIds": [
+                "battle"
+              ],
+              "status": "missing-flow-evidence"
+            },
+            "profileIds": [
+              "spell.invocation-slow-active-penalties"
+            ],
+            "qntMbtJoin": {
+              "joinedRows": [],
+              "status": "unit-profile-joined-with-different-owner",
+              "unitProfileJoinRowCount": 1,
+              "unitProfileWitnessOwners": [
+                "packages/battle-runtime/src/slow-active-penalties.mbt.test.ts",
+                "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts"
+              ]
+            },
+            "sourceRecordPath": "packages/surface/content/slow.json",
+            "unitId": "slow"
           },
           {
             "collectionId": "srd-5.2.1",

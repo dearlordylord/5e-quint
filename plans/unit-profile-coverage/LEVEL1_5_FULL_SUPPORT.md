@@ -6,9 +6,9 @@ This strict view tracks executable SRD character-level-1 through character-level
 
 ## Claim Summary
 
-Full-support claim: **blocked**.
+Full-support claim: **pass**.
 
-Blockers: strict=0, selected-identity=5, SRD-authored-readiness=0.
+Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 ## Metrics
 
@@ -16,7 +16,7 @@ Blockers: strict=0, selected-identity=5, SRD-authored-readiness=0.
 | --- | ---: |
 | Strict runtime/profile support | 165/262 (63%) |
 | Strict target closure | 262/262 (100%) |
-| Selected identity readiness | 186/191 (97.4%) |
+| Selected identity readiness | 191/191 (100%) |
 | Diagnostic product readiness | 769/770 (99.9%) |
 | SRD authored product readiness | 115/115 (100%) |
 | Rules-kernel profile join | 109/109 (100%) |
@@ -25,7 +25,7 @@ Blockers: strict=0, selected-identity=5, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 769/770 (99.9%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 769/770 (99.9%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -43,27 +43,22 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 | Selected identity status | Rows |
 | --- | ---: |
-| missing-witness | 5 |
 | not-applicable | 6 |
 | not-required | 71 |
-| witness-present | 180 |
+| witness-present | 185 |
 
 ### Selected Identity Blockers
 
 | Unit | Strict status | Claim | Selected identity status | Reason |
 | --- | --- | --- | --- | --- |
-| `glyph_of_warding` | blocked-follow-up-split | profile-subset-supported | missing-witness | The Unit has no selected-identity-mbt evidence. |
-| `haste` | supported-profile | supported-profile | missing-witness | The Unit has no selected-identity-mbt evidence. |
-| `protection_from_energy` | supported-profile | supported-profile | missing-witness | The Unit has no selected-identity-mbt evidence. |
-| `sleet_storm` | closed-outside-battle-runtime-boundary | profile-subset-supported | missing-witness | The Unit has no selected-identity-mbt evidence. |
-| `slow` | supported-profile | supported-profile | missing-witness | The Unit has no selected-identity-mbt evidence. |
+| _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## Full-Support Claim Gate
 
 | Gate | Status | Result | Blocking issue |
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 262/262 (100%) | _none_ |
-| Selected identity readiness | blocked | 186/191 (97.4%) | 5 selected-identity blocker row(s) |
+| Selected identity readiness | pass | 191/191 (100%) | _none_ |
 | SRD authored product readiness | pass | 115/115 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
@@ -178,7 +173,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `fly` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | table-spatial-derivation | The promoted runtime consumes explicit not-aloft, can-stop-fall, and cannot-stop-fall witnesses; it does not derive whether a creature is aloft, has another means to stop the fall, or where/how the fall lands. |
 | `gaseous_form` | blocked-follow-up-split | unsupported-profile | not-required | installed | follow-up-split | L3-FOLLOWUP-GASEOUS-FORM-MIST-CLOUD-RUNTIME: Promote Gaseous Form's typed mist-cloud form as a spell effect with active form state, movement replacement in effective movement and Dash budgets, passive Resistance/Immunity/Saving Throw Advantage projections, attack/spellcasting/object/speech activity restrictions with Magic-action self-ending preserved, zero-Hit-Point and spell-end cleanup, and caller/table-spatial witnesses for creature-space occupancy, narrow-opening passage, and liquid-surface treatment. Owner: future battle-runtime mist-cloud form Spell Effect plus table/spatial witness owner. Required output: Supported-profile or profile-subset-supported Gaseous Form claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the typed mist-cloud form effect without dispatching on spell id, name, or provenance. |
 | `gentle_repose` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state. |
-| `glyph_of_warding` | blocked-follow-up-split | profile-subset-supported | missing-witness | installed | follow-up-split | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE: Promote stored spell-glyph releases whose stored invocation creates Hostile battle creatures, preserving close-as-possible placement, triggering-creature attack targeting where RAW requires it, companion/control or turn protocol, and stored-Concentration full-duration cleanup without Glyph-local summon state. Owner: future stored hostile creature summon lifecycle/control owner. Required output: Supported or profile-subset-supported stored Hostile creature summon release claim with focused runtime tests and QNT/runtime parity for each concrete summon procedure; no Glyph authored-identity dispatch, generic placement bypass, or duplicate summon occurrence state.; L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING: Promote stored spell-glyph releases for non-Spiritual-Weapon harmful object procedures once those procedures own stable object/proxy occurrence identity, close-as-possible placement, attack or routing facts against the triggering creature, object lifecycle, and duration cleanup. Owner: future non-Spiritual-Weapon harmful object occurrence and attack-routing owner. Required output: Supported or profile-subset-supported stored harmful-object release claim with focused runtime tests and QNT/runtime parity for each concrete object procedure; no Glyph-local object registry and no broader claim from the Spiritual Weapon subset. |
+| `glyph_of_warding` | blocked-follow-up-split | profile-subset-supported | witness-present | installed | follow-up-split | L3-FOLLOWUP-GLYPH-STORED-HOSTILE-CREATURE-SUMMON-LIFECYCLE: Promote stored spell-glyph releases whose stored invocation creates Hostile battle creatures, preserving close-as-possible placement, triggering-creature attack targeting where RAW requires it, companion/control or turn protocol, and stored-Concentration full-duration cleanup without Glyph-local summon state. Owner: future stored hostile creature summon lifecycle/control owner. Required output: Supported or profile-subset-supported stored Hostile creature summon release claim with focused runtime tests and QNT/runtime parity for each concrete summon procedure; no Glyph authored-identity dispatch, generic placement bypass, or duplicate summon occurrence state.; L3-FOLLOWUP-GLYPH-STORED-HARMFUL-OBJECT-OCCURRENCE-ROUTING: Promote stored spell-glyph releases for non-Spiritual-Weapon harmful object procedures once those procedures own stable object/proxy occurrence identity, close-as-possible placement, attack or routing facts against the triggering creature, object lifecycle, and duration cleanup. Owner: future non-Spiritual-Weapon harmful object occurrence and attack-routing owner. Required output: Supported or profile-subset-supported stored harmful-object release claim with focused runtime tests and QNT/runtime parity for each concrete object procedure; no Glyph-local object registry and no broader claim from the Spiritual Weapon subset. |
 | `gust_of_wind` | closed-runtime-detached-table-adjudication | profile-subset-supported | witness-present | installed | outside-runtime-presentation-exploration | Gust of Wind's Line records the authored strong-wind area fact, and promoted Fog Cloud owns strong-wind dispersal as a caller/table-supplied cleanup command. The Gust profile does not derive overlap with gas, vapor, fog, smoke, or other cloud effects; those gas/vapor area owners consume the same table-supplied strong-wind witness at their own effect boundary instead of adding spell-local gas state; Candle and lantern flame state, protected versus unprotected flame classification, wild flame presentation, and the 50 percent extinguishing chance are object/environment presentation facts with no promoted battle-runtime owner; Gust of Wind does not add duplicate flame, candle, lantern, or environmental wind state. |
 | `identify` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts. |
 | `knock` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Object access-prevention state, Arcane Lock suppression on a target object, open/close adjudication, and audible sound propagation are table/object facts outside promoted battle runtime. |
@@ -211,7 +206,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `sending` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | social-knowledge-effect | Sending supplies private mental message delivery, cross-plane failure chance, immediate response, and recipient block source facts, but promoted battle runtime does not own communication content, creature knowledge/description matching, planar location adjudication, message-delivery rolls, response contents, or persistent communication block state. |
 | `silence` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | installed | outside-runtime-presentation-exploration | Silence's audio boundary, entirely-inside area membership, Thunder-immunity projection, Deafened projection, and Verbal-component casting block require table-supplied area/membership facts; promoted battle runtime must not infer audio geometry automatically. |
 | `silent_image` | closed-runtime-detached-table-adjudication | unsupported-profile | not-required | not-in-unit-catalog | outside-runtime-presentation-exploration | Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication. |
-| `sleet_storm` | closed-outside-battle-runtime-boundary | profile-subset-supported | missing-witness | installed | outside-battle-runtime, table-spatial-derivation | The promoted Sleet Storm owner consumes explicit area identity, movement facts, and first-entry/start-turn area-membership trigger facts. It does not infer position, path crossing, or Cylinder membership from map geometry.; The current battle runtime has no represented exposed-flame object or environmental flame state to douse. Sleet Storm admission verifies the Surface exposed-flame operation but keeps execution detached until that owner exists. |
+| `sleet_storm` | closed-outside-battle-runtime-boundary | profile-subset-supported | witness-present | installed | outside-battle-runtime, table-spatial-derivation | The promoted Sleet Storm owner consumes explicit area identity, movement facts, and first-entry/start-turn area-membership trigger facts. It does not infer position, path crossing, or Cylinder membership from map geometry.; The current battle runtime has no represented exposed-flame object or environmental flame state to douse. Sleet Storm admission verifies the Surface exposed-flame operation but keeps execution detached until that owner exists. |
 | `sorcerer_ability_score_improvement_l4` | closed-selection-grant-container | unsupported-profile | not-required | installed | selection-grant-container | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | `sorcerer_font_of_magic` | closed-character-fact-and-runtime-detached-split | profile-subset-supported | witness-present | installed | character-fact-and-runtime-detached-split | RAW distinguishes the Bonus Action resource conversion from spell execution, and the existing Character Sheet boundary is the canonical owner of ordinary-vs-created Spell Slot source state. Character Battle intentionally carries only aggregate Spell Slot capacity and the shared Sorcery Point pool, rejects source-ambiguous handoff when both ordinary and created slots of the same level could have been spent, and does not introduce a second battle-local Spell Slot source pool or source ledger. |
 | `sorcerer_metamagic` | blocked-follow-up-split | profile-subset-supported | witness-present | installed | follow-up-split | L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS: Promote Quickened Spell beyond the current direct restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage subset only for standalone damage, control, ongoing-effect, and other action-casting Spell Invocation procedures whose owners add typed resource-threading and parity witnesses, using typed procedure support gates and the level-1-plus spell cast turn lock for slot, free-cast, and cantrip resource paths. Owner: battle-runtime Spell Invocation discovery and resolution profiles plus Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for any additional Quickened action-to-Bonus-Action rewrite procedure owner without option authored identity dispatch. |

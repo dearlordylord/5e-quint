@@ -43,7 +43,7 @@
     {
       "number": 40,
       "id": "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-1-5 selected-identity replay gaps"
     },
     {
@@ -371,7 +371,7 @@ Every Ralph task must run the task-base check before research or edits:
 |   4 | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-5 non-MCP ultra-golden layers | done | L5UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Split current non-MCP support blockers into concrete dependency-rewired follow-up tasks. |
 |  38 | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING - Resolve level-1-5 open spell-effect accounting rows | done | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Records concrete follow-up splits for the four table/spatial spell-effect rows and closes current strict accounting. |
 |  39 | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS - Resolve level-1-5 later-level residual accounting rows | done | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Records concrete follow-up splits for the two later-level residual rows and closes current strict accounting. |
-|  40 | L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES - Resolve level-1-5 selected-identity replay gaps | ready-for-research | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Adds or closes the five selected-identity replay blockers without using MCP scenario evidence as parity. |
+|  40 | L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES - Resolve level-1-5 selected-identity replay gaps | done | L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Adds or closes the five selected-identity replay blockers without using MCP scenario evidence as parity. |
 |  41 | L3-FOLLOWUP-BLINK-PLANAR-PHASE-LIFECYCLE - Promote Blink planar phase lifecycle | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for Blink's planar phase lifecycle and table/spatial plane-position witnesses. |
 |  42 | L3-FOLLOWUP-CONJURE-ANIMALS-PACK-EFFECT - Promote Conjure Animals pack effect | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for the spectral pack occurrence and table/spatial pack-position witnesses. |
 |  43 | L3-FOLLOWUP-MAGIC-CIRCLE-WARDED-AREA - Promote Magic Circle warded area | ready-for-research | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for the warded Cylinder and table/spatial crossing witnesses. |
@@ -1077,7 +1077,7 @@ Verification:
 
 ### Task 40 - L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L5UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`
 
@@ -1132,6 +1132,18 @@ Verification:
 - Focused selected-identity runtime tests or MBT as required by the evidence
   owner. If MBT is required, use the repo MBT scarcity and background/timing
   protocol.
+
+Plan Impact:
+
+- Applied. Added checker-visible selected-identity MBT evidence for
+  `glyph_of_warding`, `haste`, `protection_from_energy`, `sleet_storm`, and
+  `slow` through the focused level-3 spell selected-identity owner.
+- `level1-5-full-support.json` now reports zero selected-identity blockers for
+  those five Units, and the generated level-1-5 support-completeness gate
+  passes.
+- `ULTRA_GOLDEN_GATE.md` still keeps `level-1-5` blocked on MCP scenario
+  evidence, so Tasks 7 and 10 remain scoped to their existing MCP dependencies
+  rather than being completed by selected-identity evidence.
 
 ### Task 5 - L5UG-MCP-01-LEVEL5-VERTICAL-DECISION
 

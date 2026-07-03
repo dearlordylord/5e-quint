@@ -295,6 +295,13 @@ export function spellTargetFill(
   };
 }
 
+export function damageTypeChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
+  value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
+): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
+  return { kind: "damageTypeChoice", holeId: hole.holeId, value };
+}
+
 export function spiritualWeaponTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   spellId: string,

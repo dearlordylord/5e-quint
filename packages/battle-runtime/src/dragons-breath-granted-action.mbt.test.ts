@@ -43,6 +43,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
+  damageTypeChoiceFill,
   knownWillingSpellTargetListFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import {
@@ -718,17 +719,6 @@ function dragonsBreathSpell(): SpellRecord {
     throw new Error("Expected Dragon's Breath fixture to decode as a spell.");
   }
   return unit;
-}
-
-function damageTypeChoiceFill(
-  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
-  damageType: DamageType,
-): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
-  return {
-    kind: "damageTypeChoice",
-    holeId: hole.holeId,
-    value: damageType,
-  };
 }
 
 function dragonsBreathSavingThrowOutcomeFill(
