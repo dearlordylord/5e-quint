@@ -67,6 +67,7 @@ import {
   levelFiveClericBuild,
   levelFiveDruidWildShapeKnownFormStatBlockIds,
   levelFiveDruidBuild,
+  levelFiveLegalFighterBuild,
   levelFiveMartialBuild,
   levelFiveSorcererBuild,
   levelFiveWarlockBuild,
@@ -94,6 +95,9 @@ const fastMovementBarbarianId = combatantId(
 );
 const extraAttackFighterId = combatantId(
   "combatant:l5-tracer-extra-attack-fighter",
+);
+const legalExtraAttackFighterId = combatantId(
+  "combatant:l5-tracer-legal-extra-attack-fighter",
 );
 const extraAttackPaladinId = combatantId(
   "combatant:l5-tracer-extra-attack-paladin",
@@ -401,6 +405,19 @@ describe("level 5 SDK tracer bullets", () => {
         wis: 10,
         cha: 10,
       },
+    });
+  });
+
+  test("rule-legal Fighter 5 creation carries Extra Attack through sheet handoff and spends exactly one added attack slot", () => {
+    assertLevelFiveExtraAttackHandoff({
+      actorId: legalExtraAttackFighterId,
+      battleIdText: "battle:l5-tracer-legal-extra-attack-fighter",
+      characterIdText: "character:l5-tracer-legal-extra-attack-fighter",
+      classUnitId: "class_fighter",
+      build: levelFiveLegalFighterBuild(),
+      sourceUnitId: fighterExtraAttackUnitId,
+      weaponUnitId: "weapon_longsword",
+      attackName: "Longsword",
     });
   });
 
@@ -3585,6 +3602,7 @@ function assertLevelFiveExtraAttackHandoff(input: {
   readonly battleIdText: string;
   readonly characterIdText: string;
   readonly classUnitId: UnitRecord["id"];
+  readonly build?: CharacterBuild;
   readonly sourceUnitId: UnitRecord["id"];
   readonly weaponUnitId: UnitRecord["id"];
   readonly attackName: string;
@@ -3597,13 +3615,15 @@ function assertLevelFiveExtraAttackHandoff(input: {
     characters: [
       characterSheet({
         characterIdText: input.characterIdText,
-        build: levelFiveMartialBuild({
-          classUnitId: input.classUnitId,
-          weaponUnitId: input.weaponUnitId,
-          ...(input.abilityScores === undefined
-            ? {}
-            : { abilityScores: input.abilityScores }),
-        }),
+        build:
+          input.build ??
+          levelFiveMartialBuild({
+            classUnitId: input.classUnitId,
+            weaponUnitId: input.weaponUnitId,
+            ...(input.abilityScores === undefined
+              ? {}
+              : { abilityScores: input.abilityScores }),
+          }),
         combatantId: input.actorId,
         initiative: 20,
       }),

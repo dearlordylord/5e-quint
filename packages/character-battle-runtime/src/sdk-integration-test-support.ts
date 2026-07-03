@@ -235,6 +235,41 @@ export function levelFiveMartialBuild(input: {
   });
 }
 
+export function levelFiveLegalFighterBuild(): CharacterBuild {
+  let draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId("draft:l5-sdk-legal-fighter-extra-attack"),
+  });
+
+  for (let pass = 0; pass < 8; pass += 1) {
+    const holes = discoverCreationHoles({ draft, unitLibrary });
+    if (holes.length === 0) {
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+      if (result.tag !== "ready") {
+        throw new Error(
+          `Expected finalized level-5 Fighter build, received ${creationFinalizationResultSummary(result)}`,
+        );
+      }
+      return result.build;
+    }
+
+    draft = requireAcceptedCreationBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: holes.map(levelFiveFighterCreationFill),
+      }),
+    );
+  }
+
+  throw new Error(
+    `Level-5 Fighter SDK fixture still has creation holes after iterative fills: ${JSON.stringify(
+      discoverCreationHoles({ draft, unitLibrary }).map((hole) => hole.holeId),
+    )}`,
+  );
+}
+
 export function levelFiveWizardBuild(input: {
   readonly preparedSpells: readonly UnitRecord["id"][];
 }): CharacterBuild {
@@ -282,6 +317,13 @@ type LevelFiveWizardChoices = {
   readonly featureSpellbook: readonly UnitRecord["id"][];
   readonly preparedSpells: readonly UnitRecord["id"][];
 };
+
+type LevelFiveFighterChoicePreference =
+  | {
+      readonly kind: "specific";
+      readonly optionIds: readonly CreationChoiceOptionId[];
+    }
+  | { readonly kind: "any" };
 
 const levelFiveWizardCantrips = [
   "light",
@@ -384,6 +426,227 @@ function chooseDistinctOptions<T>(
   throw new Error(
     `Expected ${count} distinct Wizard fixture options, found ${selected.length}.`,
   );
+}
+
+function levelFiveFighterProgression(): CharacterProgression {
+  const fighterClassUnitId = classUnitId("class_fighter");
+  return {
+    startingClass: fighterClassUnitId,
+    advancements: Array.from({ length: 4 }, () => ({
+      classUnitId: fighterClassUnitId,
+      hitPointRule: { tag: "fixedHigherLevelGain" as const },
+    })),
+  };
+}
+
+function levelFiveFighterCreationFill(hole: CreationHole): CreationFill {
+  if (hole.kind === "abilityScores") {
+    return {
+      kind: "abilityScores",
+      holeId: hole.holeId,
+      method: "standardArray",
+      value: requireRight(
+        abilityScoreAssignment({
+          str: 15,
+          dex: 14,
+          con: 13,
+          int: 8,
+          wis: 10,
+          cha: 12,
+        }),
+      ),
+    };
+  }
+
+  const optionIds = hole.options.map((option) => option.optionId);
+  const preference = levelFiveFighterChoicePreference(hole);
+  if (preference === undefined) {
+    throw new Error(
+      `No level-5 Fighter fixture preference for hole ${hole.holeId}.`,
+    );
+  }
+  const preferredOptionIds =
+    preference.kind === "any" ? optionIds : preference.optionIds;
+  const holeOptionIds = new Set(optionIds);
+  const missingOptionIds = preferredOptionIds.filter(
+    (optionId) => !holeOptionIds.has(optionId),
+  );
+  if (missingOptionIds.length > 0) {
+    throw new Error(
+      `Level-5 Fighter fixture hole ${hole.holeId} is missing preferred options ${JSON.stringify(
+        missingOptionIds,
+      )}.`,
+    );
+  }
+
+  const maxChoices = choiceCardinalityBounds(hole.cardinality).max;
+  if (
+    preference.kind === "specific" &&
+    preferredOptionIds.length !== maxChoices
+  ) {
+    throw new Error(
+      `Level-5 Fighter fixture hole ${hole.holeId} expected ${maxChoices} preferred options, received ${preferredOptionIds.length}.`,
+    );
+  }
+  const selectedOptionIds = preferredOptionIds.slice(0, maxChoices);
+
+  if (selectedOptionIds.length !== maxChoices) {
+    throw new Error(
+      `Not enough options for level-5 Fighter fixture hole ${hole.holeId}.`,
+    );
+  }
+
+  return {
+    kind: "choice",
+    holeId: hole.holeId,
+    optionIds: selectedOptionIds,
+  };
+}
+
+function levelFiveFighterChoicePreference(
+  hole: Extract<CreationHole, { readonly kind: "choice" }>,
+): LevelFiveFighterChoicePreference | undefined {
+  const source = hole.source;
+  if (source.tag === "draft") {
+    if (source.path === "draft.progression.initial") {
+      return {
+        kind: "specific",
+        optionIds: [progressionOptionId(levelFiveFighterProgression())],
+      };
+    }
+    if (source.path === "draft.background") {
+      return {
+        kind: "specific",
+        optionIds: [creationChoiceOptionId("background_soldier")],
+      };
+    }
+    if (source.path === "draft.species") {
+      return {
+        kind: "specific",
+        optionIds: [creationChoiceOptionId("species_orc")],
+      };
+    }
+    if (source.path === "draft.languages") {
+      return {
+        kind: "specific",
+        optionIds: [
+          creationChoiceOptionId("Dwarvish"),
+          creationChoiceOptionId("Goblin"),
+        ],
+      };
+    }
+    if (source.path === "draft.alignment") {
+      return {
+        kind: "specific",
+        optionIds: [creationChoiceOptionId("lawful_good")],
+      };
+    }
+    return undefined;
+  }
+
+  if (source.tag === "loadout") {
+    if (
+      source.equipmentUnitId === "armor_chain_mail" &&
+      source.slot === "armor"
+    ) {
+      return {
+        kind: "specific",
+        optionIds: [creationChoiceOptionId("worn")],
+      };
+    }
+    if (
+      source.equipmentUnitId === "equipment_shield" &&
+      source.slot === "shield"
+    ) {
+      return {
+        kind: "specific",
+        optionIds: [creationChoiceOptionId("wielded")],
+      };
+    }
+    if (
+      source.equipmentUnitId === "weapon_longsword" &&
+      source.slot === "weapon"
+    ) {
+      return {
+        kind: "specific",
+        optionIds: [creationChoiceOptionId("wielded_one_handed")],
+      };
+    }
+    return undefined;
+  }
+
+  const optionIds = levelFiveFighterUnitChoicePreferredOptionIds(
+    source.unitId,
+    source.choiceKey,
+  )?.map(creationChoiceOptionId);
+  return optionIds === undefined ? undefined : { kind: "specific", optionIds };
+}
+
+function levelFiveFighterUnitChoicePreferredOptionIds(
+  unitId: UnitRecord["id"],
+  choiceKey: string,
+): readonly UnitRecord["id"][] | undefined {
+  if (unitId === "class_fighter") {
+    if (choiceKey === "class_skill_proficiency_choice") {
+      return ["perception", "survival"];
+    }
+    if (choiceKey === "class_subclass_choice") {
+      return ["subclass_fighter_champion"];
+    }
+    if (choiceKey === "class_equipment_choice") {
+      return ["option_c"];
+    }
+    if (choiceKey === "equipment_purchase") {
+      return ["armor_chain_mail", "weapon_longsword", "equipment_shield"];
+    }
+  }
+
+  if (
+    unitId === "fighter_fighting_style" &&
+    choiceKey === "class_feature_feat_choice"
+  ) {
+    return ["defense"];
+  }
+
+  if (
+    unitId === "fighter_weapon_mastery" &&
+    choiceKey === "weapon_mastery_options"
+  ) {
+    return [
+      "weapon_longsword",
+      "weapon_spear",
+      "weapon_flail",
+      "weapon_dagger",
+    ];
+  }
+
+  if (
+    unitId === "fighter_ability_score_improvement_l4" &&
+    choiceKey === "class_feature_feat_choice"
+  ) {
+    return ["feat_ability_score_improvement"];
+  }
+
+  if (
+    unitId === "fighter_ability_score_improvement_l4" &&
+    choiceKey === "class_feature_ability_score_increase_choice"
+  ) {
+    return ["ability_score:str:+2:max20"];
+  }
+
+  if (unitId === "background_soldier") {
+    if (choiceKey === "background_ability_score_increase") {
+      return ["two_and_one:str:con"];
+    }
+    if (choiceKey === "background_tool_choice") {
+      return ["tool_dice_set"];
+    }
+    if (choiceKey === "background_equipment_choice") {
+      return ["option_b"];
+    }
+  }
+
+  return undefined;
 }
 
 function levelFiveWizardProgression(): CharacterProgression {

@@ -844,6 +844,7 @@ describe("character creation hole discovery", () => {
           "13:class_fighter:level_1:maximum_hit_die",
           "13:class_fighter|13:class_fighter|13:class_fighter:level_3:fixed_hp_gain",
           "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
+          "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
           "13:class_fighter|15:class_barbarian:level_2:fixed_hp_gain",
           "13:class_fighter|10:class_bard:level_2:fixed_hp_gain",
           "13:class_fighter|12:class_cleric:level_2:fixed_hp_gain",
