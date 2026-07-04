@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "QAR-08-SHOVE-PROJECTION-UNION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Replace Shove flattened projection with a closed union"
     },
     {
@@ -180,7 +180,7 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 5 | QAR-05-SHARED-INVARIANT-PROOF-HARNESS - Bound shared-algebras inductive proof execution | done | QAR-03-SHARED-QNT-PROOF-HARNESS | Bounds shared inductive proofs. |
 | 6 | QAR-06-ACTION-COST-ADMISSION-RESULT - Make action and spell admission explicit in QNT | done | QAR-01-TEST-LANE-ISOLATION | Removes admission-by-state-equality. |
 | 7 | QAR-07-DAMAGE-PAIR-NONZERO - Encode nonzero damage-allocation preconditions | done | QAR-01-TEST-LANE-ISOLATION | Encodes the nonzero total precondition. |
-| 8 | QAR-08-SHOVE-PROJECTION-UNION - Replace Shove flattened projection with a closed union | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces impossible Shove projection combinations. |
+| 8 | QAR-08-SHOVE-PROJECTION-UNION - Replace Shove flattened projection with a closed union | done | QAR-01-TEST-LANE-ISOLATION | Replaces impossible Shove projection combinations. |
 | 9 | QAR-09-CUNNING-STRIKE-TYPED-QNT - Replace Cunning Strike string projections with typed QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces raw Cunning Strike strings. |
 | 10 | QAR-10-ACID-ARROW-TYPED-TIMING - Replace Acid Arrow string timing with typed QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces raw Acid Arrow timing strings. |
 | 11 | QAR-11-RUN-BLOCK-SEPARATION-GUARD - Separate QNT run blocks from owner modules | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING | Cleans owner modules after semantic edits land. |
