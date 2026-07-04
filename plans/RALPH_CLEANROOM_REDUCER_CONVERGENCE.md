@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "CRP-04-CREATION-FILL-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Task-shape character creation fill-batch acceptance"
     },
     {
@@ -355,7 +355,7 @@ unblocked or assigned to exact source-QNT rename follow-ups.
 
 ### Task 4 - CRP-04-CREATION-FILL-BATCH
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
