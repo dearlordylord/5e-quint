@@ -133,7 +133,7 @@
     {
       "number": 13,
       "id": "L6FULL-SEED-01-RANGER-ROVING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify existing Ranger Roving level-6 support evidence"
     },
     {
@@ -386,7 +386,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  10 | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-5 ultra-golden gate    | done | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Final generated refresh after scope, non-MCP support blockers, parity, and MCP evidence land. |
 |  11 | L6FULL-PRE-01-L5-QUEUES-CLOSED - Verify L5 full and L5 ultra-golden queues are closed | done | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH | L6 starts only after the L5 extension has landed. |
 |  12 | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY - Verify level-6 scope and inventory baseline | done | L6FULL-PRE-01-L5-QUEUES-CLOSED | Confirms the 25-row L6 baseline and excludes spell-level-4. |
-|  13 | L6FULL-SEED-01-RANGER-ROVING - Verify existing Ranger Roving level-6 support evidence | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/runtime evidence. |
+|  13 | L6FULL-SEED-01-RANGER-ROVING - Verify existing Ranger Roving level-6 support evidence | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Existing catalog/runtime evidence remains checker-readable. |
 |  14 | L6FULL-SEED-02-ROGUE-EXPERTISE - Verify existing Rogue Expertise level-6 support evidence | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/character-creation evidence. |
 |  15 | L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES - Explicitly close the twelve level-6 class-table summary rows | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Table/progression rows remain explicit non-runtime closures. |
 |  16 | L6FULL-ASI-01-FIGHTER-ASI-L6 - Admit or close Fighter level-6 Ability Score Improvement | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Special repeated ASI/catalog admission task. |
@@ -1655,7 +1655,7 @@ Plan Impact:
 
 ### Task 13 - L6FULL-SEED-01-RANGER-ROVING
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
 
@@ -1693,6 +1693,14 @@ Verification:
 - L6 shared verification.
 - Focused battle-runtime verification only if this task changes battle runtime
   or QNT parity behavior.
+
+Plan Impact:
+
+- Applied. The checked-in `ranger_roving` SRD catalog record remains installed,
+  the level-6 inventory row remains `catalog-installed-owner-evidence-present`,
+  and the deterministic plus selected-identity evidence rows still point at
+  existing battle-runtime owner tests.
+- No runtime, QNT, MBT, or evidence artifact changes were needed.
 
 ### Task 14 - L6FULL-SEED-02-ROGUE-EXPERTISE
 
