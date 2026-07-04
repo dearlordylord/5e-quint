@@ -514,6 +514,21 @@ export function resolveHeightenedBurningHands(state: BattleState): BattleState {
 export function resolveHeightenedHideousLaughter(
   state: BattleState,
 ): BattleState {
+  return resolveHeightenedHideousLaughterSubject(state).resolved.state;
+}
+
+export function observeHeightenedHideousLaughterRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const resolved = resolveHeightenedHideousLaughterSubject(state);
+  return [
+    battleReducerStartRouteEvent(resolved.initialState),
+    ...(resolved.awaitingSave.routeEvents ?? []),
+    ...(resolved.resolved.routeEvents ?? []),
+  ];
+}
+
+function resolveHeightenedHideousLaughterSubject(state: BattleState) {
   const act = heightenedHideousLaughterAct(state);
   const target = targetListFill(
     act.initialHoles,
@@ -535,7 +550,7 @@ export function resolveHeightenedHideousLaughter(
     );
   }
   const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
-  return requireResolved(
+  const resolved = requireResolved(
     resolveBattleSubject({
       state,
       subject: act.subject,
@@ -551,7 +566,8 @@ export function resolveHeightenedHideousLaughter(
         },
       ],
     }),
-  ).state;
+  );
+  return { initialState: state, act, awaitingSave, resolved };
 }
 
 export function resolveHeightenedGreaseEntrySave(state: BattleState): BattleState {

@@ -1777,3 +1777,67 @@ Verification results:
 - `git diff --check` passed.
 - RAW/ubiquitous-language review passed against Bane, Bless, Enhance Ability, Enthrall, Guidance, Pass without Trace, Thaumaturgy, and UBIQUITOUS_LANGUAGE.md D20 Rolls, Advantage and Disadvantage, Concentration, Spell Invocation, and Spell Effect.
 - Reviewer-loop convergence passed: round 1 added public reducer route projection for roll-modifier active effects and checked no duplicate durable state was introduced; round 2 removed an unjustified route-event cast; round 3 narrowed Task 35 roll-modifier resolution routing away from Quickened `bonusActionSpell` subjects so Task 31 `metamagicBonusActionCastingTime` routes remain authoritative. No remaining reasonable RAW/domain, architecture/connascence, or code-review findings.
+## CRPI-READY-015
+
+- Manifest source commit SHA: `10baec50712df61a7a45ac533f61d0536b6410dd`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The route replay for Heightened Spell saving-throw roll mode now observes the
+copied `qRoute` projection through public battle reducer entrypoints. The
+replay starts from `battleReducerStartRouteEvent`, uses `discoverBattleActs` to
+obtain the Heightened Hideous Laughter act, and then resolves the subject. After
+the Heightened target-choice fill opens the saving-throw hole frontier,
+`BattleResolutionResult.routeEvents` exposes `metamagicSavingThrowRollMode`
+discovery and roll-mode ownership. The saving-throw fill then exposes saving
+throw outcome ownership and the condition lifecycle owner for Hideous Laughter.
+
+BattleState remains the durable owner. Sorcery Point spend remains
+`CharacterBattlePointPoolResourceState.pointsRemaining`, target choice remains a
+fill, saving-throw Disadvantage remains the existing roll-mode projection on the
+saving-throw hole, and active Spell Effects remain
+`BattleCreatureState.activeEffects`. No selected-option identity dispatch or
+duplicate Heightened target state was added.
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-015.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=metamagicSavingThrowRollMode action=doResolveHeightenedHideousLaughter qRoute=metamagic-saving-throw-roll-mode-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-015/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 46.
+
+Verification results:
+
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts -t "Heightened Spell saving-throw roll-mode|Sorcerer Metamagic Heightened" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests; deterministic `stepRouteSavingThrowRollMode` executed copied `doRouteSavingThrowRollMode` `qRoute` and compared it to the public reducer route; final timed run `TOTAL: 8s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- RAW/ubiquitous-language review passed against Sorcerer Metamagic and Heightened Spell, Hideous Laughter, and `UBIQUITOUS_LANGUAGE.md` terms Magic Action, Spell Invocation, Saving Throw, Disadvantage, Pool, Spend, and Spell Effect.
+- Reviewer-loop convergence passed: round 1 added public `metamagicSavingThrowRollMode` route ownership and deterministic copied-route replay; round 2 verified no duplicate durable state, no authored-identity dispatch, and no remaining reasonable RAW/domain, architecture/connascence, or code-review findings.

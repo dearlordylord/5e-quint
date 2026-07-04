@@ -1,44 +1,34 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-014",
+  "taskId": "CRPI-READY-015",
   "durableFields": [
-    {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind and BattleSubject.actionSpell.invocation.procedure",
-        "boundary": "discoverBattleActs public reducer boundary"
-      }
-    },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject, BattleCreatureState.activeEffects, and BattleCreatureState.concentration",
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind, BattleFill targetChoice/savingThrowOutcome, and BattleResolutionResult hole frontier",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=metamagicSpellDurationProjection",
+      "fieldPath": "BattleReducerRouteEvent.subject=metamagicSavingThrowRollMode",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=duration_extension_and_concentration_save_advantage, creature-size spell procedure, active-effect state delta, and Concentration state",
-        "boundary": "battleReducerRouteEventsForDiscoveredAct and battleReducerRouteForResolution"
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=saving_throw_disadvantage, targetChoice fill, savingThrowOutcome hole/fill, and condition lifecycle resolution",
+        "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 45 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Task 46 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
     "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
-    "Extended duration ownership remains existing BattleCreatureState.activeEffects and BattleCreatureState.concentration.",
+    "Heightened selected target ownership remains the existing targetChoice fill and saving throw hole frontier; no duplicate selected-target ledger was added.",
     "Selected Metamagic option identity remains at catalog, selection, admission, and fixture boundaries.",
-    "Route events are public reducer boundary projections derived from typed Metamagic effect facts, spell procedure facts, active-effect state deltas, and Concentration state.",
-    "The Extended Spell route does not dispatch on Sorcerer authored feature identity or the Extended Spell option name; production routing is admitted by typed duration_extension_and_concentration_save_advantage facts on a promoted duration-bearing spell procedure."
+    "Route events are public reducer boundary projections derived from typed Metamagic effect facts, selected target fill, saving-throw hole/fill facts, and condition lifecycle resolution.",
+    "The Heightened Spell route does not dispatch on Sorcerer authored feature identity or the Heightened Spell option name; production routing is admitted by typed saving_throw_disadvantage facts on a promoted saving-throw spell procedure."
   ]
 }

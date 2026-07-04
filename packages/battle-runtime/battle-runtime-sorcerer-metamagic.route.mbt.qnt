@@ -543,6 +543,10 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     ),
   }
 
+  action stepRouteSavingThrowRollMode = any {
+    doRouteSavingThrowRollMode,
+  }
+
   action doRouteDamageTypeSubstitution = all {
     qStage == Init,
     recordStage(

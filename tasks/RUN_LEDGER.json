@@ -1398,6 +1398,78 @@
           "detail": "Round 1 added public metamagicSpellDurationProjection route ownership; round 2 verified route admission is typed by Extended Metamagic facts, promoted creature-size procedure shape, active-effect state delta, and Concentration state. No duplicate durable state or authored-identity dispatch was added."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-015",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "10baec50712df61a7a45ac533f61d0536b6410dd",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "4b93d4b872bd5d6855dc7e0a496e6709747331631967bf17bbb110137970b015"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "4af3b01ba812aa5cb6e5dcfc2e1b2dbe94938fbb6763d459c808ab58316927cb"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "7ab924bcb4ec1039c1d3347083834abeaae91fcbd826a6ff42cbbb0d7cc7e76b"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-015.json",
+          "sha256": "e352a0d6597943718c30361ae215e0be1f310a7342dbe235ee8eda9b888af169",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-015.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt#step:doResolveHeightenedHideousLaughter#trace:public-route=metamagicSavingThrowRollMode action=doResolveHeightenedHideousLaughter qRoute=metamagic-saving-throw-roll-mode-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 10baec50712df61a7a45ac533f61d0536b6410dd HEAD",
+          "status": "pass",
+          "detail": "Integration and HEAD were 10baec507; base SHA is an ancestor."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts -t \"Heightened Spell saving-throw roll-mode|Sorcerer Metamagic Heightened\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed; deterministic stepRouteSavingThrowRollMode executed copied doRouteSavingThrowRollMode qRoute and compared it to the public reducer route; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Classes/Sorcerer.md, .references/srd-5.2.1/Spells/Descriptions-E-L.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added public metamagicSavingThrowRollMode route ownership and deterministic copied-route replay; round 2 verified route admission is typed by Heightened Metamagic facts, target-choice/saving-throw fills, saving-throw roll-mode projection, and condition lifecycle resolution. No duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
     }
   ]
 }
