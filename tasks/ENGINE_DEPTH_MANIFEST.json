@@ -1,18 +1,20 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-008",
+  "taskId": "CRP07-DSR-02",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "public-reducer-route-observer",
       "domainApis": [
-        "BattleReducerRouteSubjectFamily.rollModifierEffect",
-        "BattleReducerRouteHole.skillChoice",
-        "BattleReducerRouteHole.abilityChoice",
-        "BattleReducerRouteHole.targetAbilityChoices",
-        "BattleReducerRouteFill.skillChoice",
-        "BattleReducerRouteFill.abilityChoice",
-        "BattleReducerRouteFill.targetAbilityChoices",
+        "BattleReducerRouteSubjectFamily.saveGatedSpell",
+        "BattleReducerRouteHole.savingThrowOutcome",
+        "BattleReducerRouteHole.rolledDice",
+        "BattleReducerRouteHole.spellTargetList",
+        "BattleReducerRouteHole.conditionChoice",
+        "BattleReducerRouteFill.savingThrowOutcome",
+        "BattleReducerRouteFill.rolledDice",
+        "BattleReducerRouteFill.spellTargetList",
+        "BattleReducerRouteFill.conditionChoice",
         "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution"
       ]
@@ -20,54 +22,54 @@
   ],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "RollModifierEffectRouteSubject",
-        "BattleActiveEffectOwner",
-        "BattleConcentrationOwner",
-        "BattleSpellSlotAndActionEconomyOwner"
+        "SaveGatedSpellRouteSubject",
+        "BattleSpellSlotAndActionEconomyOwner",
+        "BattleHoleFrontierOwner",
+        "BattleHitPointOwner"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-008.json"
+        "tasks/target-replay-evidence/CRP07-DSR-02.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+      "path": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "replays roll-modifier active-effect qRoute through public reducer entrypoints",
-        "createRollModifierRouteReplayDriver",
-        "rollModifierRouteStateCheck"
+        "routes save-gated spell ordering through the shared reducer surface",
+        "createSaveGatedSpellOrderingRouteDriver",
+        "reducerRoutedSaveGatedSpellOrderingStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-008.json"
+        "tasks/target-replay-evidence/CRP07-DSR-02.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Roll-modifier active-effect replay exposes copied qRoute discovery evidence through public act discovery."
+      "reason": "Save-gated spell replay exposes copied qRoute discovery evidence through public act discovery."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Roll-modifier active-effect replay exposes copied qRoute resolution and Concentration teardown evidence through public subject resolution."
+      "reason": "Save-gated spell replay exposes copied qRoute fill-ordering, condition, damage, and Hit Point resolution evidence through public subject resolution."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "rollModifierEffect route subject and roll-modifier choice fill projection"
+      "api": "saveGatedSpell route subject and save-gated damage frontier route events"
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "active-effect owner and Concentration teardown route sequencing"
+      "api": "saveGatedSpell route subject and condition save frontier route events"
     }
   ],
   "completion": {
     "tag": "public-reducer-route-replay",
-    "notes": "Task 35 routes roll-modifier active Spell Effects and Concentration teardown through public reducer route events. It introduces no parallel active-effect, Concentration, skill-choice, ability-choice, target-ability-choice, or Thaumaturgy one-minute-effect ledger."
+    "notes": "Task 38 routes save-gated spell ordering through public reducer route events. It introduces no parallel spell ordering, Saving Throw, condition, damage, Hit Point, Magic-action, or Spell Slot ledger."
   }
 }

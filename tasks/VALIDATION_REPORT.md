@@ -1,5 +1,95 @@
 # Validation Report
 
+## CRP07-DSR-02
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Save-gated spell ordering route replay now records accepted target evidence for
+the copied `qRoute` projection through public battle reducer route events. The
+existing public reducer route exposes area save damage discovery, target-list
+condition-choice discovery, Saving Throw fills, condition-choice fills,
+target-list fills, ordering rejections, damage dice resolution, condition
+application, and target Hit Point effects through `AvailableBattleAct.routeEvents`
+and `BattleResolutionResult.routeEvents`.
+
+The runtime does not add a parallel save-gated ordering ledger: Magic Action
+availability remains `BattleState.currentTurnResources`, Spell Slot spend
+remains character spellcasting resource state, target Hit Points remain
+`BattleCreatureState.hp`, condition effects remain `BattleCreatureState.conditions`,
+and ordering labels remain reducer result facts projected by the harness.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doDiscoverAreaSaveDamage` | `tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doDiscoverAreaSaveDamage#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDiscoverAreaSaveDamage` | `packages/battle-runtime/src/save-gated-spell-ordering.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes save-gated spell ordering through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doSubmitDamageBeforeSavingThrow` | `tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doSubmitDamageBeforeSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=5 action=doSubmitDamageBeforeSavingThrow` | `packages/battle-runtime/src/save-gated-spell-ordering.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes save-gated spell ordering through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillAreaSaveFailed` | `tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillAreaSaveFailed#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillAreaSaveFailed` | `packages/battle-runtime/src/save-gated-spell-ordering.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes save-gated spell ordering through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillAreaDamageDice` | `tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillAreaDamageDice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillAreaDamageDice` | `packages/battle-runtime/src/save-gated-spell-ordering.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes save-gated spell ordering through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doDiscoverTargetListConditionChoice` | `tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doDiscoverTargetListConditionChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDiscoverTargetListConditionChoice` | `packages/battle-runtime/src/save-gated-spell-ordering.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes save-gated spell ordering through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillTargetListBeforeConditionChoice` | `tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillTargetListBeforeConditionChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillTargetListBeforeConditionChoice` | `packages/battle-runtime/src/save-gated-spell-ordering.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes save-gated spell ordering through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillConditionChoiceAfterTargetList` | `tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillConditionChoiceAfterTargetList#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillConditionChoiceAfterTargetList` | `packages/battle-runtime/src/save-gated-spell-ordering.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes save-gated spell ordering through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillConditionChoiceBeforeTargetList` | `tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillConditionChoiceBeforeTargetList#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillConditionChoiceBeforeTargetList` | `packages/battle-runtime/src/save-gated-spell-ordering.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes save-gated spell ordering through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillTargetListAfterConditionChoice` | `tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillTargetListAfterConditionChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillTargetListAfterConditionChoice` | `packages/battle-runtime/src/save-gated-spell-ordering.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes save-gated spell ordering through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillConditionSavingThrow` | `tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillConditionSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillConditionSavingThrow` | `packages/battle-runtime/src/save-gated-spell-ordering.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes save-gated spell ordering through the shared reducer surface` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP07-DSR-02.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=5 action=<branchAction>`
+- Public route assertion:
+  - `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes save-gated spell ordering through the shared reducer surface`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP07-DSR-02/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 38.
+
+Verification results:
+
+- Base check passed: `ralph/crp07-dsr-02-save-gated-spell-ordering-route/integration`
+  and `HEAD` were both `4bca26bf0 Mark Task 35 roll modifier route replay done`,
+  and `git merge-base --is-ancestor 4bca26bf0bdfd18bc546d8d43f02b10ea06a6a5e HEAD`
+  exited 0.
+- RAW/ubiquitous-language review passed against Saving Throws, Saving Throws
+  and Damage, Spell Slots, spell Saving Throws, UBIQUITOUS_LANGUAGE.md terms
+  for Magic Action and Spell Slot, and reducer-spine subject/hole/fill route
+  guidance.
+- Before MBT, `ps aux | grep vitest | grep -v grep` and
+  `ps aux | grep quint_evaluator | grep -v grep` only matched the Ralph
+  monitor command text and no active runner or evaluator.
+- `cd packages/battle-runtime && START=$(date +%s); MBT_TRACES=1 MBT_STEPS=5 pnpm exec vitest run src/save-gated-spell-ordering.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "save-gated spell ordering|routes save-gated spell ordering" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 2 tests and 33 skipped; final timed run `TOTAL: 8s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs before artifact edits, then passed again after Task 38 artifacts were added.
+- `git diff --check` passed.
+- Reviewer-loop convergence passed: round 1 promoted existing public save-gated spell route evidence into Task 38 artifacts and confirmed ordering labels remain reducer result facts; round 2 found no remaining reasonable RAW/domain, architecture/connascence, or code-review findings.
+
 ## CRPI-READY-007
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

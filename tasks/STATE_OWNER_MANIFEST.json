@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-008",
+  "taskId": "CRP07-DSR-02",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -17,16 +17,17 @@
       "owner": "public-reducer-boundary-projection",
       "derivability": {
         "tag": "boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.invocation.procedure, BattleFill.kind, BattleFill.value, BattleHole.kind, BattleCreatureState.activeEffects, BattleCreatureState.concentration, and reducer route owner facts"
+        "sourceField": "BattleSubject.actionSpell.invocation.procedure, BattleFill.kind, BattleHole.kind, BattleCreatureState.hp, BattleCreatureState.conditions, character spellcasting resource state, and reducer route owner facts"
       }
     }
   ],
   "notes": [
-    "Task 35 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
-    "Roll-modifier Spell Effects remain existing BattleCreatureState.activeEffects entries.",
-    "Concentration remains BattleCreatureState.concentration plus concentration-scoped active-effect expiration.",
-    "Skill, ability, and per-target ability choices remain BattleFill boundary facts.",
-    "Thaumaturgy active one-minute-effect count remains a table-supplied boundary fill and is not stored as a target ledger.",
-    "Route events are public reducer boundary projections, not duplicated roll-modifier active-effect state."
+    "Task 38 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Magic Action availability remains existing BattleState.currentTurnResources.",
+    "Spell Slot expenditure remains existing character spellcasting resource state carried by the spell invocation route substrate.",
+    "Saving Throw outcomes, target lists, condition choices, and damage dice remain BattleFill boundary facts consumed by the shared subject frontier.",
+    "Target Hit Point effects remain BattleCreatureState.hp; condition effects remain BattleCreatureState.conditions.",
+    "Ordering labels are reducer result facts projected by the harness, not adapter-side durable state.",
+    "Route events are public reducer boundary projections, not duplicated save-gated spell state."
   ]
 }

@@ -853,6 +853,79 @@
           "detail": "Round 1 added public reducer qRoute projection for roll-modifier active effects and Concentration teardown; round 2 removed an unjustified route-event cast; round 3 narrowed Task 35 roll-modifier resolution routing away from Quickened bonusActionSpell subjects so Task 31 metamagicBonusActionCastingTime routes remain authoritative."
         }
       ]
+    },
+    {
+      "taskId": "CRP07-DSR-02",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "db1b7dc20007dc096ab0f68a7d9895395720b1c0b4e9c80ccdc7339c1cf894dc"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "4bab7b372027817f42339cfd8b2954b4d776bbc078a07674c2af70667e16e954"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "30e6decde6b6e9d1a2a22d2305238fa0bb374e2f3c7bcd7fac7abf075def246c"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP07-DSR-02.json",
+          "sha256": "0b0ad2d5c28192a5bc12e93201c9d67525866d253efc77767a8e50ca47245895",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doDiscoverAreaSaveDamage#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDiscoverAreaSaveDamage",
+            "tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doSubmitDamageBeforeSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=5 action=doSubmitDamageBeforeSavingThrow",
+            "tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillAreaSaveFailed#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillAreaSaveFailed",
+            "tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillAreaDamageDice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillAreaDamageDice",
+            "tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doDiscoverTargetListConditionChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDiscoverTargetListConditionChoice",
+            "tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillTargetListBeforeConditionChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillTargetListBeforeConditionChoice",
+            "tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillConditionChoiceAfterTargetList#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillConditionChoiceAfterTargetList",
+            "tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillConditionChoiceBeforeTargetList#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillConditionChoiceBeforeTargetList",
+            "tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillTargetListAfterConditionChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillTargetListAfterConditionChoice",
+            "tasks/target-replay-evidence/CRP07-DSR-02.json#driver:packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt#step:doFillConditionSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillConditionSavingThrow"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/crp07-dsr-02-save-gated-spell-ordering-route/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 4bca26bf0bdfd18bc546d8d43f02b10ea06a6a5e HEAD",
+          "status": "pass",
+          "detail": "Integration and HEAD were 4bca26bf0; base SHA is an ancestor."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Baseline before Task 38 artifact edits passed: 738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "cd packages/battle-runtime && START=$(date +%s); MBT_TRACES=1 MBT_STEPS=5 pnpm exec vitest run src/save-gated-spell-ordering.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"save-gated spell ordering|routes save-gated spell ordering\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "2 tests passed, 33 skipped; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Final Task 38 cleanroom branch coverage check passed."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 promoted existing public save-gated spell route evidence into Task 38 artifacts; round 2 found no remaining reasonable RAW/domain, architecture/connascence, or code-review findings."
+        }
+      ]
     }
   ]
 }
