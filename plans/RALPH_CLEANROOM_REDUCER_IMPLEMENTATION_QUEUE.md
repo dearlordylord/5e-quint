@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "CRPI-READY-001",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-ability-check-choice-search"
     },
     {
@@ -761,7 +761,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 
 ### Task 1 - CRPI-READY-001
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
