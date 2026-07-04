@@ -346,9 +346,9 @@
       "catalog-only/dead-for-now": 6
     },
     "levelSixClassRowsByDisposition": {
-      "catalog-only/dead-for-now": 3,
+      "catalog-only/dead-for-now": 4,
       "non-runtime": 12,
-      "level-5-7-follow-up-required": 8,
+      "level-5-7-follow-up-required": 7,
       "catalog-installed-owner-evidence-present": 2
     },
     "levelSevenClassRowsByDisposition": {
@@ -371,8 +371,8 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 501,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 214,
-      "level-5-7-follow-up-required": 19,
+      "catalog-only/dead-for-now": 215,
+      "level-5-7-follow-up-required": 18,
       "catalog-authored-review-required": 49,
       "missing-authored-record": 32,
       "catalog-installed-owner-evidence-required": 1
@@ -10408,9 +10408,16 @@
         "state": "not-installed",
         "unitId": "cleric_blessed_healer"
       },
-      "finalDisposition": "level-5-7-follow-up-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "future-owner-before-SDK battle-runtime spell healing rider owner plus selected Life Domain feature admission owner and existing spell Hit Point restoration profiles",
+        "reason": "SRD Blessed Healer triggers immediately after the Cleric casts a spell with a Spell Slot that restores Hit Points to one or more creatures other than the caster, then restores Hit Points to the caster equal to 2 plus that Spell Slot level. Existing spell.hit-point-restoration profiles own Spell Slot spend, target healing facts, and Hit Point restoration for Cure Wounds, Healing Word, Mass Cure Wounds, and Mass Healing Word, and the Disciple of Life spell-slot healing modifier owner adds 2 plus Spell Slot level to each healed target. They do not admit a selected-feature, post-cast self-heal once per qualifying spell cast. A future owner must consume typed Surface facts for the selected Life Domain feature, the existing Spell Slot invocation level, and the resolved healed-target set with at least one non-caster target, then apply caster Hit Point restoration through the shared healing transition without duplicating Spell Slot state, prepared Spell Access, healing target state, caster Hit Point state, subclass selection state, or dispatching on Cleric, Life Domain, Blessed Healer, or healing spell authored identity."
+      },
       "ownerEvidence": [],
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+      "nextAction": "SRD Blessed Healer triggers immediately after the Cleric casts a spell with a Spell Slot that restores Hit Points to one or more creatures other than the caster, then restores Hit Points to the caster equal to 2 plus that Spell Slot level. Existing spell.hit-point-restoration profiles own Spell Slot spend, target healing facts, and Hit Point restoration for Cure Wounds, Healing Word, Mass Cure Wounds, and Mass Healing Word, and the Disciple of Life spell-slot healing modifier owner adds 2 plus Spell Slot level to each healed target. They do not admit a selected-feature, post-cast self-heal once per qualifying spell cast. A future owner must consume typed Surface facts for the selected Life Domain feature, the existing Spell Slot invocation level, and the resolved healed-target set with at least one non-caster target, then apply caster Hit Point restoration through the shared healing transition without duplicating Spell Slot state, prepared Spell Access, healing target state, caster Hit Point state, subclass selection state, or dispatching on Cleric, Life Domain, Blessed Healer, or healing spell authored identity."
     },
     {
       "id": "srd521:classes/cleric:level-6:class-table-summary:cleric_level_6_feature_table_row",

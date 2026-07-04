@@ -101,6 +101,12 @@
       "title": "Promote Bard Magical Discoveries spell-access selection"
     },
     {
+      "number": 50,
+      "id": "L6-FOLLOWUP-CLERIC-BLESSED-HEALER-SPELL-HEALING-RIDER",
+      "status": "future-follow-up",
+      "title": "Promote Cleric Blessed Healer spell-healing rider"
+    },
+    {
       "number": 5,
       "id": "L5UG-MCP-01-LEVEL5-VERTICAL-DECISION",
       "status": "done",
@@ -187,7 +193,7 @@
     {
       "number": 19,
       "id": "L6FULL-OWN-03-CLERIC-BLESSED-HEALER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-6 owner evidence for Cleric Blessed Healer"
     },
     {
@@ -399,6 +405,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  47 | L6-FOLLOWUP-REPEATED-ASI-GRANT-OCCURRENCE - Promote repeated Ability Score Improvement grant occurrences | future-follow-up | L6FULL-ASI-01-FIGHTER-ASI-L6 | Future character-creation owner for repeated ASI grant occurrences such as Fighter level 6; parked outside this L6 full accounting pass. |
 |  48 | L6-FOLLOWUP-BARBARIAN-MINDLESS-RAGE-CONDITION-IMMUNITY - Promote Barbarian Mindless Rage condition immunity | future-follow-up | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE | Future battle-runtime owner for active Rage Charmed/Frightened immunity and enter-rage cleanup; parked outside this L6 full accounting pass. |
 |  49 | L6-FOLLOWUP-BARD-MAGICAL-DISCOVERIES-SPELL-ACCESS - Promote Bard Magical Discoveries spell-access selection | future-follow-up | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES | Future character-creation and character-sheet owner for Magical Discoveries cross-list always-prepared spell choices and Bard-level replacement; parked outside this L6 full accounting pass. |
+|  50 | L6-FOLLOWUP-CLERIC-BLESSED-HEALER-SPELL-HEALING-RIDER - Promote Cleric Blessed Healer spell-healing rider | future-follow-up | L6FULL-OWN-03-CLERIC-BLESSED-HEALER | Future battle-runtime owner for selected Life Domain post-cast self-healing after slot-cast healing of another creature; parked outside this L6 full accounting pass. |
 |   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | done               | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Selected the Wizard 5 Fireball MCP vertical and rejected future-owner alternatives.     |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | done | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds Wizard 5 Fireball creation/finalization/sheet proof before battle handoff.         |
 |   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | done | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff after Task 6 sheet coverage; non-MCP support dependencies are complete. |
@@ -413,7 +420,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  16 | L6FULL-ASI-01-FIGHTER-ASI-L6 - Admit or close Fighter level-6 Ability Score Improvement | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed repeated ASI grant occurrence with checker-owned unsupported-profile accounting. |
 |  17 | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE - Resolve level-6 owner evidence for Barbarian Mindless Rage | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed active Rage condition-immunity and enter-rage cleanup owner boundary. |
 |  18 | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES - Resolve level-6 owner evidence for Bard Magical Discoveries | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK spell-access selection boundary; future owner tracked by Task 49. |
-|  19 | L6FULL-OWN-03-CLERIC-BLESSED-HEALER - Resolve level-6 owner evidence for Cleric Blessed Healer | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  19 | L6FULL-OWN-03-CLERIC-BLESSED-HEALER - Resolve level-6 owner evidence for Cleric Blessed Healer | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK spell healing rider boundary; future owner tracked by Task 50. |
 |  20 | L6FULL-OWN-04-DRUID-NATURAL-RECOVERY - Resolve level-6 owner evidence for Druid Natural Recovery | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  21 | L6FULL-OWN-05-MONK-EMPOWERED-STRIKES - Resolve level-6 owner evidence for Monk Empowered Strikes | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  22 | L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY - Resolve level-6 owner evidence for Monk Wholeness of Body | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
@@ -1307,6 +1314,68 @@ Verification:
 - Focused character-creation and Character Sheet tests if creation,
   advancement, or sheet projection behavior changes.
 
+### Task 50 - L6-FOLLOWUP-CLERIC-BLESSED-HEALER-SPELL-HEALING-RIDER
+
+Status: `future-follow-up`
+
+Future Follow-up Reason: Task 19 closed the current Cleric Blessed Healer row
+by explicit non-admission, but the durable owner for selected Life Domain
+post-cast self-healing is still a separate Surface, battle-runtime, and parity
+modeling problem. This follow-up does not block Task 27 because the current L6
+row is checker-closed as `catalog-only/dead-for-now`.
+
+Depends on: `L6FULL-OWN-03-CLERIC-BLESSED-HEALER`
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `.references/srd-5.2.1/Classes/Cleric.md:334`
+- `packages/surface/content/subclass_cleric_life_domain.json`
+- `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-hit-point-restoration.ts`
+- `packages/battle-runtime/src/battle-reducer/damage-apply.ts`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Current state:
+
+- The Surface catalog has the Life Domain subclass record and installed
+  level-3 Life Domain feature rows, but no installed `cleric_blessed_healer`
+  feature record or selected level-6 feature grant.
+- Promoted `spell.hit-point-restoration` owners spend Spell Slots, select
+  healing targets, and restore Hit Points for Cure Wounds, Healing Word, Mass
+  Cure Wounds, and Mass Healing Word.
+- The promoted `unit-feature.spell-slot-healing-modifier` owner applies
+  Disciple of Life's 2 plus Spell Slot level bonus to each healed target. It
+  does not admit a selected-feature post-cast self-heal for the caster once a
+  qualifying spell restores Hit Points to at least one other creature.
+
+Output:
+
+- Promote a Surface and battle-runtime owner that consumes typed selected Life
+  Domain feature facts, the existing Spell Slot invocation level, and the
+  resolved healed-target set with at least one non-caster target.
+- Apply the caster's 2 plus Spell Slot level Hit Point restoration through the
+  shared healing transition immediately after the qualifying spell cast.
+- Preserve the existing Spell Slot, prepared Spell Access, healing target, Hit
+  Point, and subclass selection owners; do not add parallel state or dispatch
+  on authored Cleric, Life Domain, Blessed Healer, or healing spell identity.
+- Update focused QNT/runtime parity and owner evidence if the row is admitted.
+
+Completion / Success Criteria:
+
+- `cleric_blessed_healer` is either admitted with real catalog,
+  battle-runtime, and parity evidence or remains explicitly closed for a
+  narrower durable reason discovered by this follow-up.
+- The implementation makes the post-cast self-heal boundary executable without
+  overclaiming generic spell-healing rider support.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability.
+- `pnpm unit-profile-coverage:check`
+- Focused spell/healing runtime tests and focused MBT only if battle runtime or
+  QNT parity behavior changes.
+
 ### Task 40 - L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES
 
 Status: `done`
@@ -2132,7 +2201,7 @@ Plan Impact:
 
 ### Task 19 - L6FULL-OWN-03-CLERIC-BLESSED-HEALER
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
 
@@ -2157,6 +2226,17 @@ Verification:
 
 - L6 shared verification plus focused spell/healing runtime tests only if
   behavior changes.
+
+Accepted Closure:
+
+- `cleric_blessed_healer` is closed as a not-installed
+  future-owner-before-SDK spell healing rider boundary. Current promoted
+  `spell.hit-point-restoration` and `unit-feature.spell-slot-healing-modifier`
+  owners do not admit the selected Life Domain post-cast self-heal. Task 50
+  records the future Blessed Healer rider owner so the current L6 full
+  accounting can close without duplicating Spell Slot state, prepared Spell
+  Access, healing target state, caster Hit Point state, subclass selection
+  state, or authored-identity dispatch.
 
 ### Task 20 - L6FULL-OWN-04-DRUID-NATURAL-RECOVERY
 
