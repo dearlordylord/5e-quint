@@ -83,6 +83,12 @@
       "title": "Promote Wizard Evocation Savant new Spell Slot level grant"
     },
     {
+      "number": 47,
+      "id": "L6-FOLLOWUP-REPEATED-ASI-GRANT-OCCURRENCE",
+      "status": "future-follow-up",
+      "title": "Promote repeated Ability Score Improvement grant occurrences"
+    },
+    {
       "number": 5,
       "id": "L5UG-MCP-01-LEVEL5-VERTICAL-DECISION",
       "status": "done",
@@ -151,7 +157,7 @@
     {
       "number": 16,
       "id": "L6FULL-ASI-01-FIGHTER-ASI-L6",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Admit or close Fighter level-6 Ability Score Improvement"
     },
     {
@@ -378,6 +384,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  44 | L3-FOLLOWUP-MELD-INTO-STONE-MERGED-STATE - Promote Meld into Stone merged state | future-follow-up | L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING | Future Spell Effect owner for stone merged-state lifecycle and terrain/object occupancy witnesses; parked outside this L5/L6 completion pass. |
 |  45 | L12G-FOLLOWUP-RANGER-FAVORED-ENEMY-FREE-CAST-SCALING - Promote Ranger Favored Enemy free-cast scaling | future-follow-up | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future resource owner for Favored Enemy's Ranger-level free-cast count scaling; parked outside this L5/L6 completion pass. |
 |  46 | L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL - Promote Wizard Evocation Savant new Spell Slot level grant | future-follow-up | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future character-advancement owner for Evocation Savant's later new Spell Slot level grant; parked outside this L5/L6 completion pass. |
+|  47 | L6-FOLLOWUP-REPEATED-ASI-GRANT-OCCURRENCE - Promote repeated Ability Score Improvement grant occurrences | future-follow-up | L6FULL-ASI-01-FIGHTER-ASI-L6 | Future character-creation owner for repeated ASI grant occurrences such as Fighter level 6; parked outside this L6 full accounting pass. |
 |   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | done               | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Selected the Wizard 5 Fireball MCP vertical and rejected future-owner alternatives.     |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | done | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds Wizard 5 Fireball creation/finalization/sheet proof before battle handoff.         |
 |   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | done | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff after Task 6 sheet coverage; non-MCP support dependencies are complete. |
@@ -389,7 +396,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  13 | L6FULL-SEED-01-RANGER-ROVING - Verify existing Ranger Roving level-6 support evidence | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Existing catalog/runtime evidence remains checker-readable. |
 |  14 | L6FULL-SEED-02-ROGUE-EXPERTISE - Verify existing Rogue Expertise level-6 support evidence | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/character-creation evidence. |
 |  15 | L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES - Explicitly close the twelve level-6 class-table summary rows | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Table/progression rows remain explicit non-runtime closures. |
-|  16 | L6FULL-ASI-01-FIGHTER-ASI-L6 - Admit or close Fighter level-6 Ability Score Improvement | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Special repeated ASI/catalog admission task. |
+|  16 | L6FULL-ASI-01-FIGHTER-ASI-L6 - Admit or close Fighter level-6 Ability Score Improvement | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed repeated ASI grant occurrence with checker-owned unsupported-profile accounting. |
 |  17 | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE - Resolve level-6 owner evidence for Barbarian Mindless Rage | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  18 | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES - Resolve level-6 owner evidence for Bard Magical Discoveries | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  19 | L6FULL-OWN-03-CLERIC-BLESSED-HEALER - Resolve level-6 owner evidence for Cleric Blessed Healer | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
@@ -1105,6 +1112,65 @@ Verification:
 - Focused runtime/QNT tests and relevant MBT only if runtime or QNT parity
   behavior changes.
 
+### Task 47 - L6-FOLLOWUP-REPEATED-ASI-GRANT-OCCURRENCE
+
+Status: `future-follow-up`
+
+Future Follow-up Reason: Task 16 closed the current Fighter level-6 ASI row by
+explicit non-admission, but the durable owner for repeated ASI grant occurrences
+is still a separate character-creation/catalog modeling problem. This follow-up
+does not block Task 27 because the current L6 row is checker-closed as
+`catalog-only/dead-for-now`.
+
+Depends on: `L6FULL-ASI-01-FIGHTER-ASI-L6`
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `.references/srd-5.2.1/Classes/Fighter.md:36`
+- `.references/srd-5.2.1/Classes/Fighter.md:90`
+- `packages/surface/content/fighter_ability_score_improvement_l4.json`
+- `packages/surface/content/class_fighter.json`
+- `packages/character-creation-runtime/src/index.test.ts`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Current state:
+
+- The level-4 Fighter Ability Score Improvement feature record is installed and
+  closed as a selection-grant container whose selected feat Units own executable
+  behavior.
+- The Fighter level-6 ASI mined row is not installed and is checker-closed by
+  Task 16 as a repeated grant occurrence, because the current catalog boundary
+  cannot admit the second ASI without either duplicating level-4 ASI rule text
+  or installing incomplete Fighter level-6 progression.
+
+Output:
+
+- Promote a catalog-backed repeated ASI grant-occurrence model that can admit
+  Fighter level 6 and adjacent repeated ASI grants from existing SRD ASI source
+  facts without duplicating derived state or copied rule text.
+- Keep selected feat Units as the executable owners and keep ASI ability-score
+  mutation in character-creation or character-sheet state, not battle runtime.
+- Do not dispatch on authored class, feature, or level-4/level-6 synthetic row
+  identity in runtime semantics.
+
+Completion / Success Criteria:
+
+- Repeated ASI grant occurrences are represented by a domain-backed Surface and
+  character-creation model that makes level-4 versus level-6 ownership
+  unambiguous.
+- `fighter_ability_score_improvement_l6` is either admitted with real catalog
+  and character-creation evidence or remains explicitly closed for a narrower
+  durable reason discovered by this follow-up.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability.
+- `pnpm unit-profile-coverage:check`
+- Focused character-creation runtime tests if creation or advancement behavior
+  changes.
+
 ### Task 40 - L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES
 
 Status: `done`
@@ -1796,7 +1862,7 @@ Plan Impact:
 
 ### Task 16 - L6FULL-ASI-01-FIGHTER-ASI-L6
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
 
@@ -1840,6 +1906,16 @@ Verification:
 - Focused character-creation runtime tests if creation behavior changes.
 - `pnpm unit-profile-coverage:check --write`
 - L6 shared verification.
+
+Plan Impact:
+
+- Applied. `fighter_ability_score_improvement_l6` stays not-installed and is
+  checker-closed as `catalog-only/dead-for-now` with an `unsupported-profile`
+  selection-grant-container claim, rather than being counted as supported from
+  synthetic test pressure.
+- Task 47 records the future repeated ASI grant-occurrence owner so the current
+  L6 full accounting can close without duplicating the level-4 ASI rule text or
+  installing incomplete Fighter level-6 progression.
 
 ### Task 17 - L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE
 

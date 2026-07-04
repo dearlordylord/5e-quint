@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 501 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 211 |
-| level-5-7-follow-up-required | 22 |
+| catalog-only/dead-for-now | 212 |
+| level-5-7-follow-up-required | 21 |
 | missing-authored-record | 32 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 142 |
+| not-recorded | 141 |
 | profile-subset-supported | 59 |
 | supported-profile | 309 |
-| unsupported-profile | 390 |
+| unsupported-profile | 391 |
 
 ### Battle Readiness Snapshot
 
@@ -628,7 +628,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Fighter Extra Attack | level-5 | character-level | class feature | `fighter_extra_attack` | `.references/srd-5.2.1/Classes/Fighter.md:94` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Fighter Tactical Shift | level-5 | character-level | class feature | `fighter_tactical_shift` | `.references/srd-5.2.1/Classes/Fighter.md:98` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | resource-option-rider-boundary: future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners | SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity. |
 | Fighter level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:35` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Fighter Ability Score Improvement | level-6 | character-level | class feature | `fighter_ability_score_improvement_l6` | `.references/srd-5.2.1/Classes/Fighter.md:36` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Fighter Ability Score Improvement | level-6 | character-level | class feature | `fighter_ability_score_improvement_l6` | `.references/srd-5.2.1/Classes/Fighter.md:36` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | selection-grant-container: future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles | The SRD level-4 Fighter Ability Score Improvement rule text says the feature is gained again at Fighter level 6, and the Fighter level-6 table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this second ASI without installing an incomplete Fighter 6 progression while Tactical Shift remains missing or duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners. |
 | Fighter level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:36` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Fighter Additional Fighting Style | level-7 | character-level | class feature | `fighter_additional_fighting_style` | `.references/srd-5.2.1/Classes/Fighter.md:146` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Fighter level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:37` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
