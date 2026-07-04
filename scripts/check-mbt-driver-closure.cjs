@@ -34,10 +34,19 @@ const path = require("node:path");
 const ROOT = path.resolve(__dirname, "..");
 const BUDGET_FILES = 8;
 
-const PURE_VOCABULARY_LEAF_MODULES = new Set([
-  "packages/shared-algebras/proofs/rule-core/attack-roll-damage-dice-core.qnt",
-  "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt",
-  "packages/battle-runtime/rule-core-component-route.qnt",
+const PURE_VOCABULARY_LEAF_MODULES = new Map([
+  [
+    "packages/shared-algebras/proofs/rule-core/attack-roll-damage-dice-core.qnt",
+    "shared attack-damage dice vocabulary",
+  ],
+  [
+    "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt",
+    "shared creature-size ordering vocabulary",
+  ],
+  [
+    "packages/battle-runtime/rule-core-component-route.qnt",
+    "rule-core component route vocabulary",
+  ],
 ]);
 
 const forbiddenName = (...parts) => parts.join("");
@@ -169,9 +178,9 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "rule-core-component-route.qnt",
 ]);
 
-// Grandfathered heavy drivers (basename -> reason). These import a behavioural
-// module / the type model and pay its whole closure per trace. Do not add to this
-// list. Two kinds remain, by design:
+// Grandfathered heavy drivers. These import a behavioural module / the type
+// model and pay its whole closure per trace. Do not add to this list. Two kinds
+// remain, by design:
 //   - "computed oracle": the projection is computed from MUTABLE driver state via
 //     the rule reducer, so the reducer (the SRD formalization) is the oracle.
 //     Converting to literals would duplicate that rule logic into the witness and
@@ -180,27 +189,55 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
 //     self-contained literal witness (capture the reducer values via the Quint
 //     REPL, then assert them). adrenaline-rush / death-saving-throw / sleep-repeat-save
 //     / bardic-inspiration / monk-martial-arts were migrated this way; do the rest.
+const ALLOWLIST_CLASSIFICATIONS = new Set(["computed oracle", "convertible"]);
+
 const ALLOWLIST = {
-  "battle-runtime-direct-condition-lifecycle.mbt.qnt":
-    "computed oracle: condition source, duration, slot, and concentration projections depend on mutable lifecycle state",
-  "battle-runtime-flaming-sphere-hazard-ram.mbt.qnt":
-    "computed oracle: active sphere, bonus action, slot, ram movement, saving throw, and target vitals all mutate through the reducer",
-  "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt":
-    "computed oracle: attack-roll mode depends on mutable bypass/advantage state",
-  "battle-runtime-mirror-image-hit-interception.mbt.qnt":
-    "computed oracle: duplicate interception depends on mutable remaining-duplicate count and attack context",
-  "battle-runtime-moonbeam-movable-zone.mbt.qnt":
-    "computed oracle: zone lifecycle, saved-this-turn, reposition, vitals, and shapeshift projection depend on mutable reducer state",
-  "battle-runtime-warding-bond-damage-sharing.mbt.qnt":
-    "computed oracle: shared damage and cleanup outcomes depend on mutable source/ward hit points and bond presence",
-  "rule-core-stat-block-controls.mbt.qnt":
-    "computed oracle: dispatch resolution depends on mutable remaining-dispatch counts",
-  "battle-runtime-starry-wisp-object.mbt.qnt":
-    "convertible but projects complex ObjectDamageOutcome/LightEmitter records",
-  "rule-core-spells.mbt.qnt":
-    "convertible: ~33-action fixed-outcome rule-core spell tracer",
-  "rule-core-features.mbt.qnt":
-    "convertible: ~32-action rule-core feature tracer (partly state-dependent)",
+  "battle-runtime-direct-condition-lifecycle.mbt.qnt": {
+    classification: "computed oracle",
+    rationale:
+      "condition source, duration, slot, and concentration projections depend on mutable lifecycle state",
+  },
+  "battle-runtime-flaming-sphere-hazard-ram.mbt.qnt": {
+    classification: "computed oracle",
+    rationale:
+      "active sphere, bonus action, slot, ram movement, saving throw, and target vitals all mutate through the reducer",
+  },
+  "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt": {
+    classification: "computed oracle",
+    rationale:
+      "attack-roll mode depends on mutable bypass/advantage state",
+  },
+  "battle-runtime-mirror-image-hit-interception.mbt.qnt": {
+    classification: "computed oracle",
+    rationale:
+      "duplicate interception depends on mutable remaining-duplicate count and attack context",
+  },
+  "battle-runtime-moonbeam-movable-zone.mbt.qnt": {
+    classification: "computed oracle",
+    rationale:
+      "zone lifecycle, saved-this-turn, reposition, vitals, and shapeshift projection depend on mutable reducer state",
+  },
+  "battle-runtime-warding-bond-damage-sharing.mbt.qnt": {
+    classification: "computed oracle",
+    rationale:
+      "shared damage and cleanup outcomes depend on mutable source/ward hit points and bond presence",
+  },
+  "rule-core-stat-block-controls.mbt.qnt": {
+    classification: "computed oracle",
+    rationale: "dispatch resolution depends on mutable remaining-dispatch counts",
+  },
+  "battle-runtime-starry-wisp-object.mbt.qnt": {
+    classification: "convertible",
+    rationale: "projects complex ObjectDamageOutcome/LightEmitter records",
+  },
+  "rule-core-spells.mbt.qnt": {
+    classification: "convertible",
+    rationale: "~33-action fixed-outcome rule-core spell tracer",
+  },
+  "rule-core-features.mbt.qnt": {
+    classification: "convertible",
+    rationale: "~32-action rule-core feature tracer (partly state-dependent)",
+  },
 };
 
 const IMPORT_RE = /from "((?:\.\/|\.\.\/)[A-Za-z0-9/\-]+)"/g;
@@ -232,6 +269,87 @@ function depsOf(file) {
   return deps;
 }
 
+function repoPathToFile(root, rel) {
+  return path.join(root, ...rel.split("/"));
+}
+
+function validateNoRuntimeDeclarations(rel, text, label) {
+  const issues = [];
+  for (const [declaration, pattern] of [
+    ["var", /^\s*var\b/m],
+    ["action", /^\s*action\b/m],
+    ["run", /^\s*run\b/m],
+  ]) {
+    if (pattern.test(text)) {
+      issues.push(`${rel}: ${label} must not contain ${declaration} declarations.`);
+    }
+  }
+  return issues;
+}
+
+function validatePureImportClosure(root, file, label, visited = new Set()) {
+  const rel = toRepoPath(root, file);
+  if (visited.has(file)) return [];
+  visited.add(file);
+  if (!fs.existsSync(file)) {
+    return [`${rel}: ${label} dependency does not exist.`];
+  }
+  const text = fs.readFileSync(file, "utf8");
+  const issues = validateNoRuntimeDeclarations(rel, text, label);
+  const barrelReason = AGGREGATION_BARRELS[rel];
+  if (barrelReason) {
+    issues.push(`${rel}: ${label} must not import ${barrelReason}.`);
+  }
+  if (rel.endsWith(".mbt.qnt")) {
+    issues.push(`${rel}: ${label} must not import MBT drivers.`);
+  }
+  if (rel.startsWith("packages/battle-runtime/")) {
+    const base = path.basename(file);
+    if (!BATTLE_RUNTIME_LEAF_MODULES.has(base)) {
+      issues.push(
+        `${rel}: ${label} imports a battle-runtime module that is not in BATTLE_RUNTIME_LEAF_MODULES.`,
+      );
+    }
+  }
+  for (const dep of depsOf(file)) {
+    issues.push(...validatePureImportClosure(root, dep, label, visited));
+  }
+  return issues;
+}
+
+function validateConfiguredBattleRuntimeLeaves(root) {
+  const failures = [];
+  for (const base of BATTLE_RUNTIME_LEAF_MODULES) {
+    const rel = `packages/battle-runtime/${base}`;
+    const file = repoPathToFile(root, rel);
+    if (!fs.existsSync(file)) {
+      failures.push(`${rel}: configured battle-runtime leaf module does not exist.`);
+      continue;
+    }
+    failures.push(
+      ...validatePureImportClosure(root, file, "battle-runtime leaf module"),
+    );
+  }
+  return failures;
+}
+
+function validateAllowlistEntries() {
+  const failures = [];
+  for (const [base, entry] of Object.entries(ALLOWLIST)) {
+    if (!ALLOWLIST_CLASSIFICATIONS.has(entry.classification)) {
+      failures.push(
+        `${base}: ALLOWLIST entry must use one of ${Array.from(
+          ALLOWLIST_CLASSIFICATIONS,
+        ).join(", ")} classifications.`,
+      );
+    }
+    if (!entry.rationale || entry.rationale.trim().length === 0) {
+      failures.push(`${base}: ALLOWLIST entry must include a rationale.`);
+    }
+  }
+  return failures;
+}
+
 function forbiddenReason(root, file) {
   const rel = toRepoPath(root, file);
   if (rel in AGGREGATION_BARRELS) return AGGREGATION_BARRELS[rel];
@@ -242,11 +360,14 @@ function forbiddenReason(root, file) {
   return "battle-runtime behavioral rule module";
 }
 
-function validatePureVocabularyLeaf(root, rel) {
-  const file = path.join(root, ...rel.split("/"));
+function validatePureVocabularyLeaf(root, rel, rationale) {
+  const file = repoPathToFile(root, rel);
   const issues = [];
+  if (!rationale || rationale.trim().length === 0) {
+    issues.push(`${rel}: pure vocabulary leaf entry must include a rationale.`);
+  }
   if (!fs.existsSync(file)) {
-    return [`${rel}: configured pure vocabulary leaf does not exist.`];
+    return [...issues, `${rel}: configured pure vocabulary leaf does not exist.`];
   }
   const text = fs.readFileSync(file, "utf8");
   if (depsOf(file).length > 0) {
@@ -269,12 +390,12 @@ function validatePureVocabularyLeaf(root, rel) {
 function validPureVocabularyLeaves(root) {
   const valid = new Set();
   const failures = [];
-  for (const rel of PURE_VOCABULARY_LEAF_MODULES) {
-    const issues = validatePureVocabularyLeaf(root, rel);
+  for (const [rel, rationale] of PURE_VOCABULARY_LEAF_MODULES) {
+    const issues = validatePureVocabularyLeaf(root, rel, rationale);
     if (issues.length > 0) {
       failures.push(...issues);
     } else {
-      valid.add(path.resolve(root, ...rel.split("/")));
+      valid.add(repoPathToFile(root, rel));
     }
   }
   return { valid, failures };
@@ -341,7 +462,11 @@ function checkMbtDriverClosure(root) {
   const pkgs = path.join(root, "packages");
   const { valid: pureVocabularyLeaves, failures: pureVocabularyFailures } =
     validPureVocabularyLeaves(root);
-  const failures = [...pureVocabularyFailures];
+  const failures = [
+    ...validateAllowlistEntries(),
+    ...pureVocabularyFailures,
+    ...validateConfiguredBattleRuntimeLeaves(root),
+  ];
   const graduated = [];
   const seenAllowed = new Set();
   for (const driver of listDrivers(pkgs)) {
@@ -358,12 +483,12 @@ function checkMbtDriverClosure(root) {
     } else {
       if (stats.counted > BUDGET_FILES) {
         failures.push(
-          `${base}: imports ${formatImportStats(stats)} (counted budget ${BUDGET_FILES}). Compose over leaf modules, not barrels/behaviour. If unavoidable, add to ALLOWLIST with a reason.`,
+          `${base}: imports ${formatImportStats(stats)} (counted budget ${BUDGET_FILES}). Compose over leaf modules, not barrels/behaviour. If unavoidable, add to ALLOWLIST with a classification and rationale.`,
         );
       }
       for (const { chain, reason } of forbiddenPaths) {
         failures.push(
-          `${base}: forbidden ${reason} import path: ${formatImportPath(root, chain)}. Compose over leaf modules, not barrels/behaviour. If unavoidable, add to ALLOWLIST with a reason.`,
+          `${base}: forbidden ${reason} import path: ${formatImportPath(root, chain)}. Compose over leaf modules, not barrels/behaviour. If unavoidable, add to ALLOWLIST with a classification and rationale.`,
         );
       }
     }
@@ -427,8 +552,34 @@ function withFixtureRoot(fn) {
   }
 }
 
+function fixtureModuleName(rel) {
+  return path
+    .basename(rel, ".qnt")
+    .replace(/[^A-Za-z0-9]/g, "_");
+}
+
+function writeConfiguredLeafFixtures(root) {
+  const configuredLeaves = [
+    ...Array.from(PURE_VOCABULARY_LEAF_MODULES.keys()),
+    ...Array.from(
+      BATTLE_RUNTIME_LEAF_MODULES,
+      (base) => `packages/battle-runtime/${base}`,
+    ),
+  ];
+  for (const rel of configuredLeaves) {
+    const file = repoPathToFile(root, rel);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    if (fs.existsSync(file)) continue;
+    fs.writeFileSync(
+      file,
+      `module ${fixtureModuleName(rel)} { type FixtureLeaf = FixtureLeaf }\n`,
+    );
+  }
+}
+
 function runSelfTest() {
   withFixtureRoot((fixtureRoot) => {
+    writeConfiguredLeafFixtures(fixtureRoot);
     const runtimeDir = path.join(fixtureRoot, "packages/battle-runtime");
     const ruleCoreDir = path.join(
       fixtureRoot,
@@ -522,6 +673,7 @@ function runSelfTest() {
     }
   });
   withFixtureRoot((fixtureRoot) => {
+    writeConfiguredLeafFixtures(fixtureRoot);
     const runtimeDir = path.join(fixtureRoot, "packages/battle-runtime");
     const ruleCoreDir = path.join(
       fixtureRoot,
@@ -604,8 +756,39 @@ function runSelfTest() {
       );
     }
   });
+  withFixtureRoot((fixtureRoot) => {
+    writeConfiguredLeafFixtures(fixtureRoot);
+    const runtimeDir = path.join(fixtureRoot, "packages/battle-runtime");
+    fs.writeFileSync(
+      path.join(runtimeDir, "battle-runtime-fill-kinds.qnt"),
+      ["module battleRuntimeFillKinds {", "  action notLeaf = true", "}", ""].join(
+        "\n",
+      ),
+    );
+    fs.writeFileSync(
+      path.join(runtimeDir, "fixture-impure-battle-leaf.mbt.qnt"),
+      [
+        "module fixtureImpureBattleLeafMbt {",
+        '  import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"',
+        "}",
+        "",
+      ].join("\n"),
+    );
+    const impureBattleLeafResult = checkMbtDriverClosure(fixtureRoot);
+    if (
+      !impureBattleLeafResult.failures.some((failure) =>
+        failure.includes(
+          "packages/battle-runtime/battle-runtime-fill-kinds.qnt: battle-runtime leaf module must not contain action declarations",
+        ),
+      )
+    ) {
+      throw new Error(
+        `Self-test failed: expected invalid battle-runtime leaf to fail, got ${JSON.stringify(impureBattleLeafResult.failures)}`,
+      );
+    }
+  });
   console.log(
-    "MBT driver closure, pure vocabulary leaf, and forbidden witness storage self-test OK.",
+    "MBT driver closure, leaf whitelist purity, and forbidden witness storage self-test OK.",
   );
 }
 

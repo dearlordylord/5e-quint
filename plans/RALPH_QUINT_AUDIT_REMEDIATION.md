@@ -79,25 +79,25 @@
     {
       "number": 13,
       "id": "QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Harden MBT closure leaf whitelist checks"
     },
     {
       "number": 14,
       "id": "QAR-14-STARRY-WISP-WITNESS-CONVERSION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Convert Starry Wisp object driver to a literal witness"
     },
     {
       "number": 15,
       "id": "QAR-15-RULE-CORE-SPELLS-MBT-SPLIT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Split rule-core spells MBT by procedure family"
     },
     {
       "number": 16,
       "id": "QAR-16-RULE-CORE-FEATURES-MBT-SPLIT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Split rule-core features MBT by feature family"
     },
     {
@@ -185,10 +185,10 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 10 | QAR-10-ACID-ARROW-TYPED-TIMING - Replace Acid Arrow string timing with typed QNT | done | QAR-01-TEST-LANE-ISOLATION | Replaces raw Acid Arrow timing strings. |
 | 11 | QAR-11-RUN-BLOCK-SEPARATION-GUARD - Separate QNT run blocks from owner modules | done | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING | Cleans owner modules after semantic edits land. |
 | 12 | QAR-12-INDUCTIVE-WITNESS-SEEDS - Repair priority inductive specs and add reachability witnesses | ready-for-research | QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-11-RUN-BLOCK-SEPARATION-GUARD | Admits state-space repair modules and adds reachability witnesses after affected specs settle. |
-| 13 | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD - Harden MBT closure leaf whitelist checks | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Hardens closure checks before driver conversions. |
-| 14 | QAR-14-STARRY-WISP-WITNESS-CONVERSION - Convert Starry Wisp object driver to a literal witness | blocked | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Converts the clearest heavy driver to a literal witness. |
-| 15 | QAR-15-RULE-CORE-SPELLS-MBT-SPLIT - Split rule-core spells MBT by procedure family | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits spell MBT closure after admission semantics are explicit. |
-| 16 | QAR-16-RULE-CORE-FEATURES-MBT-SPLIT - Split rule-core features MBT by feature family | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits feature MBT closure after closure rules are hardened. |
+| 13 | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD - Harden MBT closure leaf whitelist checks | done | QAR-01-TEST-LANE-ISOLATION | Hardens closure checks before driver conversions. |
+| 14 | QAR-14-STARRY-WISP-WITNESS-CONVERSION - Convert Starry Wisp object driver to a literal witness | ready-for-research | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Converts the clearest heavy driver to a literal witness. |
+| 15 | QAR-15-RULE-CORE-SPELLS-MBT-SPLIT - Split rule-core spells MBT by procedure family | ready-for-research | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits spell MBT closure after admission semantics are explicit. |
+| 16 | QAR-16-RULE-CORE-FEATURES-MBT-SPLIT - Split rule-core features MBT by feature family | ready-for-research | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits feature MBT closure after closure rules are hardened. |
 | 17 | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION - Move Hunter's Prey execution to semantic support profiles | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Removes execution dispatch on selected authored option ids. |
 | 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
 | 19 | QAR-19-AUTHORED-ID-CHECKER-HARDENING - Harden authored-identity dispatch checking | blocked | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES | Tightens the checker after known migrations land. |
@@ -756,12 +756,7 @@ Plan Impact:
 
 ### Task 13 - QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD
 
-Status: `ready-for-research`
-
-Blocker Type: dependency
-
-Blocker Detail: QAR-01 must define the stable default/explicit MBT lane split
-before closure guard changes land.
+Status: `done`
 
 Depends on:
 
@@ -800,12 +795,7 @@ Plan Impact:
 
 ### Task 14 - QAR-14-STARRY-WISP-WITNESS-CONVERSION
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: QAR-13 must harden closure guard behavior before shrinking the
-heavy driver allowlist.
+Status: `ready-for-research`
 
 Depends on:
 
@@ -847,12 +837,7 @@ Plan Impact:
 
 ### Task 15 - QAR-15-RULE-CORE-SPELLS-MBT-SPLIT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: QAR-06 must settle admission result shape and QAR-13 must settle
-closure guard behavior before this split.
+Status: `ready-for-research`
 
 Depends on:
 
@@ -892,12 +877,7 @@ Plan Impact:
 
 ### Task 16 - QAR-16-RULE-CORE-FEATURES-MBT-SPLIT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: QAR-06 must settle admission result shape and QAR-13 must settle
-closure guard behavior before this split.
+Status: `ready-for-research`
 
 Depends on:
 
