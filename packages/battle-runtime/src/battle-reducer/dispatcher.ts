@@ -388,7 +388,6 @@ export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
   const result = resolveBattleSubjectInternal(input, {});
-  if (result.tag === "invalid") return result;
   const routeEvents = battleReducerRouteForResolution(input, result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
 }

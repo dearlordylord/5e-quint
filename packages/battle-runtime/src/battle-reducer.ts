@@ -6843,6 +6843,7 @@ export type BattleResolutionResult =
       readonly reason: BattleInvalidReasonCode;
       readonly message: string;
       readonly snapshot: BattleSnapshot;
+      readonly routeEvents?: BattleReducerRouteEvents;
     };
 export type BattleFeatherFallLandingResult =
   | {

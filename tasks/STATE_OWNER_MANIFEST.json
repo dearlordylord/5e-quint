@@ -1,9 +1,17 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-002",
+  "taskId": "CRPI-READY-003",
   "durableFields": [
     {
-      "fieldPath": "BattleState.currentTurnResources",
+      "fieldPath": "BattleCreatureState.activeEffects[kind=commandPending]",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.conditions",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "battle-state",
       "derivability": {
@@ -11,7 +19,7 @@
       }
     },
     {
-      "fieldPath": "BattleCreatureState.hitPoints",
+      "fieldPath": "BattleCreatureState.movementSpentFeet",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "battle-state",
       "derivability": {
@@ -19,28 +27,44 @@
       }
     },
     {
-      "fieldPath": "BattleSubject.actionSpell.invocation.procedure",
+      "fieldPath": "BattleState.currentTurnResources.commandHalt",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "typed-battle-subject",
+      "owner": "battle-state",
       "derivability": {
-        "tag": "boundary-projection",
-        "sourceField": "BattleState combatant spellcasting profile facts"
+        "tag": "canonical-source"
       }
     },
     {
-      "fieldPath": "BattleSubject.actionSpell.invocation.slotLevel",
+      "fieldPath": "BattleState.interruptStack",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "typed-battle-subject",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "AvailableBattleAct.routeEvent",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "public-reducer-boundary-projection",
       "derivability": {
         "tag": "boundary-projection",
-        "sourceField": "BattleState combatant spell-slot facts"
+        "sourceField": "BattleSubject, BattleHole, and reducer route owner facts"
+      }
+    },
+    {
+      "fieldPath": "BattleResolutionResult.routeEvents",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "public-reducer-boundary-projection",
+      "derivability": {
+        "tag": "boundary-projection",
+        "sourceField": "BattleSubject, BattleFill, BattleHole, and reducer route owner facts"
       }
     }
   ],
   "notes": [
-    "Task 5 introduced no duplicate chained-attack state.",
-    "Damage-type choice, per-step target history, Attack Roll fill ordering, Hit Point damage, and leap continuation flow through the typed spell procedure subject and BattleState reducer result.",
-    "AvailableBattleAct.routeEvent and BattleResolutionResult.routeEvents are public reducer boundary projections derived from existing subject, fill, hole, and result facts; they are not durable state.",
-    "Spell-target and leap-range eligibility remain caller/table fills."
+    "Task 7 introduced no new durable Command state fields.",
+    "Command option state remains the existing commandPending active effect on the target combatant.",
+    "Grovel Prone uses the existing condition lifecycle; Approach and Flee spend existing movement state; Flee Opportunity Attack windows use the existing interrupt stack.",
+    "Held-object inventory and Approach/Flee route geometry remain caller/table boundary fills and are not duplicated into a Command ledger."
   ]
 }

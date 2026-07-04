@@ -140,6 +140,87 @@
           "detail": "Round 2 moved Task 5 qRoute owner evidence from adapter-supplied metadata to public reducer route-event fields; no remaining reasonable Task 5 findings after RAW, ubiquitous-language/domain, architecture/connascence, and code-review passes."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-003",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "184d5fe08465feec4916a332a4aa292a5cab6e21d717b18def2e8ad707c9d369"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "9ccd24511c46446f1d9416f0e8a2c4c532f6c863a16b350fd66cd8002f3312eb"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "05c0a9102f299a11af6379789b16ddf76897617a8b8da2051e0e7b0b8688258a"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-003.json",
+          "sha256": "35d392b18e7e7006a351a93707d6468e7bc76f99be73d946480aa18447e3cc8f",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doApproachMovementContinues#trace:MBT_TRACES=1 MBT_STEPS=5 action=doApproachMovementContinues",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doApproachNoMovement#trace:MBT_TRACES=1 MBT_STEPS=5 action=doApproachNoMovement",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doDiscoverCommand#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDiscoverCommand",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doDropNeedsHeldObjectFacts#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDropNeedsHeldObjectFacts",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doFillApproachMovementContinues#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillApproachMovementContinues",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doFillApproachMovementWithinFive#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillApproachMovementWithinFive",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doFillDropHeldObjectFacts#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillDropHeldObjectFacts",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doFillFailedGrovelSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillFailedGrovelSavingThrow",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doFillFleeMovement#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillFleeMovement",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doFillGrovelOption#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillGrovelOption",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doFillTargetList#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillTargetList",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doFleeMovement#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFleeMovement",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doFleeNoMovement#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFleeNoMovement",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doFleeOpportunityAttack#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFleeOpportunityAttack",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doFollowGrovel#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFollowGrovel",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doHaltSuppresses#trace:MBT_TRACES=1 MBT_STEPS=5 action=doHaltSuppresses",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doRejectFleePartialMovement#trace:MBT_TRACES=1 MBT_STEPS=5 action=doRejectFleePartialMovement",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doSubmitOptionBeforeTargetList#trace:MBT_TRACES=1 MBT_STEPS=5 action=doSubmitOptionBeforeTargetList",
+            "tasks/target-replay-evidence/CRPI-READY-003.json#driver:packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt#step:doSubmitSavingThrowBeforeOption#trace:MBT_TRACES=1 MBT_STEPS=5 action=doSubmitSavingThrowBeforeOption"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/unit-profile-admission-command-control-options.test.ts",
+          "status": "pass",
+          "detail": "7 tests passed"
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "MBT_TRACES=1 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/command-ordering.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Command\"",
+          "status": "pass",
+          "detail": "3 tests passed; final timed run TOTAL: 9s"
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 2 gated invalid Command route evidence to fill-order invalids and added regression coverage for stale/wrong-actor Command subjects under Halt; no remaining reasonable Task 7 findings after RAW, ubiquitous-language/domain, architecture/connascence, and code-review passes."
+        }
+      ]
     }
   ]
 }

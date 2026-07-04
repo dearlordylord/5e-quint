@@ -10455,7 +10455,7 @@ function createCommandOrderingDriverWithRoute<
     let pendingCommandOption: CommandOrderingPendingOption = "none";
     let droppedObjectCount = 0;
     let route: readonly ReducerRouteEvent[] = [
-      reducerRouteStartBattle("battleActionEconomy"),
+      battleReducerStartRouteEvent(state),
     ];
 
     function reset(): void {
@@ -10468,58 +10468,7 @@ function createCommandOrderingDriverWithRoute<
       orderingError = "";
       pendingCommandOption = "none";
       droppedObjectCount = 0;
-      route = [reducerRouteStartBattle("battleActionEconomy")];
-    }
-
-    function routeHolesAfter(
-      result: BattleResolutionResult,
-    ): readonly BattleHole[] {
-      if (result.tag === "needsHoles") return result.holes;
-      if (result.tag === "resolved") return [];
-      return holes;
-    }
-
-    function recordRouteDiscover(owner: ReducerRouteOwnerGroup): void {
-      if (!includeRoute) return;
-      route = [
-        ...route,
-        reducerRouteDiscoverBattleActs({
-          subject: "commandEffect",
-          holes,
-          owner,
-        }),
-      ];
-    }
-
-    function recordRouteResolve(input: {
-      readonly result: BattleResolutionResult;
-      readonly fill: ReducerRouteFill;
-      readonly owner: ReducerRouteOwnerGroup;
-    }): void {
-      if (!includeRoute) return;
-      route = [
-        ...route,
-        reducerRouteResolveBattleSubject({
-          subject: "commandEffect",
-          fill: input.fill,
-          holes: routeHolesAfter(input.result),
-          owner: input.owner,
-        }),
-      ];
-    }
-
-    function recordRouteResolveWithoutFill(
-      owner: ReducerRouteOwnerGroup,
-    ): void {
-      if (!includeRoute) return;
-      route = [
-        ...route,
-        reducerRouteResolveBattleSubjectWithoutFill({
-          subject: "commandEffect",
-          holes: [],
-          owner,
-        }),
-      ];
+      route = [battleReducerStartRouteEvent(state)];
     }
 
     function recordAccepted(
@@ -10596,13 +10545,13 @@ function createCommandOrderingDriverWithRoute<
       orderingError = "";
       pendingCommandOption = "none";
       droppedObjectCount = 0;
-      recordRouteDiscover("battleSpellSlotAndActionEconomy");
+      appendCommandOrderingActRouteEvent(act);
     }
 
     function startRuntimeCommand(
       option: Exclude<CommandOrderingPendingOption, "none">,
       input: CommandTargetTurnInput = {},
-    ): void {
+    ): ReturnType<typeof commandRuntimeAct> {
       state = commandTargetTurn(option, input);
       const act = commandRuntimeAct(state, option);
       subject = act.subject;
@@ -10612,6 +10561,29 @@ function createCommandOrderingDriverWithRoute<
       orderingError = "";
       pendingCommandOption = commandPendingOption(state);
       droppedObjectCount = 0;
+      return act;
+    }
+
+    function appendCommandOrderingActRouteEvent(input: {
+      readonly routeEvent?: ReducerRouteEvent;
+    }): void {
+      if (!includeRoute) return;
+      if (input.routeEvent === undefined) {
+        throw new Error("Expected public reducer route event on Command act.");
+      }
+      route = [...route, input.routeEvent];
+    }
+
+    function appendCommandOrderingRouteEvents(
+      result: BattleResolutionResult,
+    ): void {
+      if (!includeRoute) return;
+      if (result.routeEvents === undefined || result.routeEvents.length === 0) {
+        throw new Error(
+          "Expected public reducer route events on Command resolution.",
+        );
+      }
+      route = [...route, ...result.routeEvents];
     }
 
     return {
@@ -10629,22 +10601,14 @@ function createCommandOrderingDriverWithRoute<
           "commandTargetListRequired",
           "targetList",
         );
-        recordRouteResolve({
-          result,
-          fill: "commandOptionChoice",
-          owner: "battleHoleFrontier",
-        });
+        appendCommandOrderingRouteEvents(result);
       },
       doFillTargetList: () => {
         const targetList = requireHole(holes, "spellTargetList");
         fills = [spellTargetListFill(targetList, "command", [skeletonId])];
         const result = resolveBattleSubject({ state, subject, fills });
         recordAccepted(result, "optionChoice");
-        recordRouteResolve({
-          result,
-          fill: "spellTargetList",
-          owner: "battleHoleFrontier",
-        });
+        appendCommandOrderingRouteEvents(result);
       },
       doSubmitSavingThrowBeforeOption: () => {
         const commandOption = requireHole(holes, "commandOptionChoice");
@@ -10673,22 +10637,14 @@ function createCommandOrderingDriverWithRoute<
           "commandOptionChoiceRequired",
           "optionChoice",
         );
-        recordRouteResolve({
-          result,
-          fill: "savingThrowOutcome",
-          owner: "battleHoleFrontier",
-        });
+        appendCommandOrderingRouteEvents(result);
       },
       doFillGrovelOption: () => {
         const commandOption = requireHole(holes, "commandOptionChoice");
         fills = [...fills, commandOptionFill(commandOption, "grovel")];
         const result = resolveBattleSubject({ state, subject, fills });
         recordAccepted(result, "savingThrowOutcome");
-        recordRouteResolve({
-          result,
-          fill: "commandOptionChoice",
-          owner: "battleHoleFrontier",
-        });
+        appendCommandOrderingRouteEvents(result);
       },
       doFillFailedGrovelSavingThrow: () => {
         const savingThrow = requireHole(holes, "savingThrowOutcome");
@@ -10700,11 +10656,7 @@ function createCommandOrderingDriverWithRoute<
         ];
         const result = resolveBattleSubject({ state, subject, fills });
         recordAccepted(result, "resolved");
-        recordRouteResolve({
-          result,
-          fill: "savingThrowOutcome",
-          owner: "battleActiveEffect",
-        });
+        appendCommandOrderingRouteEvents(result);
       },
       doFollowGrovel: () => {
         const targetTurn = requireResolved(
@@ -10721,13 +10673,13 @@ function createCommandOrderingDriverWithRoute<
           fills: [],
         });
         recordAccepted(result, "resolved");
-        recordRouteResolveWithoutFill("battleConditionLifecycle");
+        appendCommandOrderingRouteEvents(result);
       },
       doDropNeedsHeldObjectFacts: () => {
-        startRuntimeCommand("drop");
+        const act = startRuntimeCommand("drop");
         stage = "dropHeldObjectFacts";
         lastResult = "needsHoles";
-        recordRouteDiscover("battleActiveEffect");
+        appendCommandOrderingActRouteEvent(act);
       },
       doFillDropHeldObjectFacts: () => {
         const heldObjectFacts = requireHole(holes, "heldObjectFacts");
@@ -10745,7 +10697,7 @@ function createCommandOrderingDriverWithRoute<
         ];
         const result = resolveBattleSubject({ state, subject, fills });
         recordAccepted(result, "resolved");
-        recordRouteResolveWithoutFill("battleActiveEffect");
+        appendCommandOrderingRouteEvents(result);
       },
       doHaltSuppresses: () => {
         state = commandTargetTurn("halt");
@@ -10757,12 +10709,14 @@ function createCommandOrderingDriverWithRoute<
         orderingError = "";
         pendingCommandOption = commandPendingOption(state);
         droppedObjectCount = 0;
-        recordRouteResolveWithoutFill("battleActiveEffect");
+        appendCommandOrderingRouteEvents(
+          resolveBattleSubject({ state, subject, fills }),
+        );
       },
       doApproachMovementContinues: () => {
-        startRuntimeCommand("approach");
+        const act = startRuntimeCommand("approach");
         stage = "approachMovement";
-        recordRouteDiscover("battleActiveEffect");
+        appendCommandOrderingActRouteEvent(act);
       },
       doFillApproachMovementContinues: () => {
         const movement = requireHole(holes, "movement");
@@ -10774,11 +10728,7 @@ function createCommandOrderingDriverWithRoute<
         ];
         const result = resolveBattleSubject({ state, subject, fills });
         recordAccepted(result, "resolved");
-        recordRouteResolve({
-          result,
-          fill: "movement",
-          owner: "battleMovementResource",
-        });
+        appendCommandOrderingRouteEvents(result);
       },
       doFillApproachMovementWithinFive: () => {
         const movement = requireHole(holes, "movement");
@@ -10790,22 +10740,18 @@ function createCommandOrderingDriverWithRoute<
         ];
         const result = resolveBattleSubject({ state, subject, fills });
         recordAccepted(result, "resolved");
-        recordRouteResolve({
-          result,
-          fill: "movement",
-          owner: "battleMovementResource",
-        });
+        appendCommandOrderingRouteEvents(result);
       },
       doApproachNoMovement: () => {
         startRuntimeCommand("approach", { grappledByCaster: true });
         const result = resolveBattleSubject({ state, subject, fills: [] });
         recordAccepted(result, "resolved");
-        recordRouteResolveWithoutFill("battleMovementResource");
+        appendCommandOrderingRouteEvents(result);
       },
       doFleeMovement: () => {
-        startRuntimeCommand("flee");
+        const act = startRuntimeCommand("flee");
         stage = "fleeMovement";
-        recordRouteDiscover("battleActiveEffect");
+        appendCommandOrderingActRouteEvent(act);
       },
       doFillFleeMovement: () => {
         const movement = requireHole(holes, "movement");
@@ -10817,11 +10763,7 @@ function createCommandOrderingDriverWithRoute<
         ];
         const result = resolveBattleSubject({ state, subject, fills });
         recordAccepted(result, "resolved");
-        recordRouteResolve({
-          result,
-          fill: "movement",
-          owner: "battleMovementResource",
-        });
+        appendCommandOrderingRouteEvents(result);
       },
       doRejectFleePartialMovement: () => {
         const movement = requireHole(holes, "movement");
@@ -10836,17 +10778,13 @@ function createCommandOrderingDriverWithRoute<
           ],
         });
         recordInvalid(result, "commandMovementRequired");
-        recordRouteResolve({
-          result,
-          fill: "movement",
-          owner: "battleHoleFrontier",
-        });
+        appendCommandOrderingRouteEvents(result);
       },
       doFleeNoMovement: () => {
         startRuntimeCommand("flee", { grappledByCaster: true });
         const result = resolveBattleSubject({ state, subject, fills: [] });
         recordAccepted(result, "resolved");
-        recordRouteResolveWithoutFill("battleMovementResource");
+        appendCommandOrderingRouteEvents(result);
       },
       doFleeOpportunityAttack: () => {
         const movement = requireHole(holes, "movement");
@@ -10860,11 +10798,7 @@ function createCommandOrderingDriverWithRoute<
         ];
         const result = resolveBattleSubject({ state, subject, fills });
         recordAccepted(result, "resolved");
-        recordRouteResolve({
-          result,
-          fill: "movement",
-          owner: "battleInterruptStack",
-        });
+        appendCommandOrderingRouteEvents(result);
       },
       step: () => {},
       getState: (): IncludeRoute extends true
