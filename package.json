@@ -11,6 +11,7 @@
     "check:mbt-driver-closure": "node scripts/check-mbt-driver-closure.cjs",
     "check:test-lane-hygiene": "node scripts/check-mbt-test-lanes.cjs test-lane-hygiene",
     "check:mbt-script-inventory": "node scripts/check-mbt-test-lanes.cjs mbt-script-inventory",
+    "check:qnt-inventory": "node scripts/check-qnt-inventory.cjs",
     "check:qnt-run-block-separation": "node scripts/check-qnt-run-block-separation.cjs",
     "check:reducer-route-connectors": "node scripts/check-reducer-route-connectors.cjs",
     "raw-coverage:check": "node scripts/raw-coverage-check.cjs",
@@ -29,7 +30,7 @@
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
     "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
     "circular": "pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",
-    "quality": "pnpm check:authored-id-dispatch && pnpm check:character-sheet-runtime-split && pnpm check:surface-class-json-sync && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm check:test-lane-hygiene && pnpm check:mbt-script-inventory && pnpm check:qnt-run-block-separation && pnpm check:reducer-route-connectors && pnpm rules-kernel-coverage:check && pnpm cleanroom-branch-coverage:check && pnpm cleanroom-sync:check && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && pnpm sdk-raw-integration-inventory:check && pnpm lint && pnpm circular && pnpm typecheck",
+    "quality": "pnpm check:authored-id-dispatch && pnpm check:character-sheet-runtime-split && pnpm check:surface-class-json-sync && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm check:test-lane-hygiene && pnpm check:mbt-script-inventory && pnpm check:qnt-inventory && pnpm check:qnt-run-block-separation && pnpm check:reducer-route-connectors && pnpm rules-kernel-coverage:check && pnpm cleanroom-branch-coverage:check && pnpm cleanroom-sync:check && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && pnpm sdk-raw-integration-inventory:check && pnpm lint && pnpm circular && pnpm typecheck",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
   },
