@@ -536,7 +536,7 @@ function initialRouteRuntimeState(): RollModifierRouteRuntimeState {
   return {
     ...state,
     surface: "fresh",
-    route: [battleReducerStartRouteEvent(state.battle)],
+    route: [battleReducerStartRouteEvent()],
   };
 }
 

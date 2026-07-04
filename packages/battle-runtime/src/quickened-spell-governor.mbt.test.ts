@@ -384,7 +384,7 @@ describe("Quickened Spell governor MBT parity", () => {
       }),
     );
     const observedRoute = [
-      battleReducerStartRouteEvent(state),
+      battleReducerStartRouteEvent(),
       ...(act.routeEvents ?? []),
       ...(awaitingAttackRoll.routeEvents ?? []),
       ...(awaitingDamageRoll.routeEvents ?? []),
@@ -522,7 +522,7 @@ describe("Quickened Spell governor MBT parity", () => {
         subject: quickenedCureWoundsSubject(),
       }),
     ).toEqual([
-      battleReducerStartRouteEvent(priorLevelOnePlusState),
+      battleReducerStartRouteEvent(),
       {
         kind: "resolveBattleSubjectWithoutFill",
         subject: "metamagicBonusActionCastingTime",
@@ -910,7 +910,7 @@ function invalidQuickenedRoute(input: {
   });
   expect(result.tag).toBe("invalid");
   return [
-    battleReducerStartRouteEvent(input.state),
+    battleReducerStartRouteEvent(),
     ...(result.routeEvents ?? []),
   ];
 }
@@ -945,7 +945,7 @@ function observeQuickenedRestorationRoute(
     }),
   );
   return [
-    battleReducerStartRouteEvent(state),
+    battleReducerStartRouteEvent(),
     ...(act.routeEvents ?? []),
     ...(awaitingHealingRoll.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),
@@ -969,7 +969,7 @@ function observeQuickenedSaveGatedRoute(
     }),
   );
   return [
-    battleReducerStartRouteEvent(state),
+    battleReducerStartRouteEvent(),
     ...(act.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),
   ];
@@ -989,7 +989,7 @@ function observeQuickenedTargetListRoute(
     }),
   );
   return [
-    battleReducerStartRouteEvent(state),
+    battleReducerStartRouteEvent(),
     ...(act.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),
   ];

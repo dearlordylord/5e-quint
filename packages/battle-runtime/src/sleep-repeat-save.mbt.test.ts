@@ -242,7 +242,7 @@ function createSleepRepeatSavePublicRouteDriver() {
     let holes: readonly BattleHole[] = [];
     let surface: SleepRepeatSaveRouteSurface = "fresh";
     let route: readonly ReducerRouteEvent[] = [
-      battleReducerStartRouteEvent(state),
+      battleReducerStartRouteEvent(),
     ];
 
     function reset(): void {
@@ -250,7 +250,7 @@ function createSleepRepeatSavePublicRouteDriver() {
       subject = sleepSubject();
       holes = [];
       surface = "fresh";
-      route = [battleReducerStartRouteEvent(state)];
+      route = [battleReducerStartRouteEvent()];
     }
 
     function appendRouteEvents(

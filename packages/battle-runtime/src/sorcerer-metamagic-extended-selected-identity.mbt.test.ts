@@ -140,7 +140,7 @@ function resolveExtendedCreatureSizeIncrease(): BattleState {
 function observeExtendedCreatureSizeIncreaseRoute() {
   const resolved = resolveExtendedCreatureSizeIncreaseSubject();
   return [
-    battleReducerStartRouteEvent(resolved.initialState),
+    battleReducerStartRouteEvent(),
     ...(resolved.act.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),
   ];
@@ -171,8 +171,7 @@ function createExtendedMetamagicRouteReplayDriver() {
 }
 
 function observeExtendedCreatureSizeIncreaseInitialRoute() {
-  const resolved = resolveExtendedCreatureSizeIncreaseSubject();
-  return [battleReducerStartRouteEvent(resolved.initialState)];
+  return [battleReducerStartRouteEvent()];
 }
 
 function resolveExtendedCreatureSizeIncreaseSubject() {

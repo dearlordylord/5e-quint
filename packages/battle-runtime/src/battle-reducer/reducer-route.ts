@@ -166,9 +166,7 @@ export type BattleReducerRouteEvents = readonly [
   ...BattleReducerRouteEvent[],
 ];
 
-export function battleReducerStartRouteEvent(
-  _state: BattleState,
-): BattleReducerRouteEvent {
+export function battleReducerStartRouteEvent(): BattleReducerRouteEvent {
   return { kind: "startBattle", owner: "battleActionEconomy" };
 }
 

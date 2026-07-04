@@ -199,7 +199,7 @@ export function observeEmpoweredRayOfFrostRoute(
 ): readonly BattleReducerRouteEvent[] {
   const resolved = resolveEmpoweredRayOfFrostSubject(state);
   return [
-    battleReducerStartRouteEvent(resolved.initialState),
+    battleReducerStartRouteEvent(),
     ...(resolved.awaitingDamage.routeEvents ?? []),
     ...(resolved.resolved.routeEvents ?? []),
   ];
@@ -401,7 +401,7 @@ export function observeCarefulSavingThrowProtectionRoute(
   );
 
   return [
-    battleReducerStartRouteEvent(state),
+    battleReducerStartRouteEvent(),
     ...(act.routeEvents ?? []),
     ...(awaitingSave.routeEvents ?? []),
     ...(awaitingDamage.routeEvents ?? []),
@@ -449,7 +449,7 @@ export function observeCarefulCommandNoEffectRoute(
   );
 
   return [
-    battleReducerStartRouteEvent(state),
+    battleReducerStartRouteEvent(),
     ...(act.routeEvents ?? []),
     ...(awaitingSave.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),

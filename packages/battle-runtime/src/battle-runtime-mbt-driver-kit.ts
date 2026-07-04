@@ -9585,7 +9585,7 @@ export function createChainedAttackProcedureRouteDriver() {
       slotLevel = null;
       fills = [];
       holes = [];
-      route = [battleReducerStartRouteEvent(state)];
+      route = [battleReducerStartRouteEvent()];
     }
 
     function recordResolvedFill(input: {
@@ -9731,7 +9731,7 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
       fills = [];
       holes = act.initialHoles;
       route = [
-        battleReducerStartRouteEvent(replayBaseState),
+        battleReducerStartRouteEvent(),
         ...requireIndependentSpellAttackSequenceActRouteEvents(act),
       ];
     }
@@ -9879,8 +9879,7 @@ export function createInterruptStackResumeRouteDriver() {
     let route: readonly ReducerRouteEvent[] = [];
 
     function reset(): void {
-      const state = interruptShieldBattle();
-      route = [battleReducerStartRouteEvent(state)];
+      route = [battleReducerStartRouteEvent()];
     }
 
     function appendInterruptRouteEvents(result: BattleResolutionResult): void {
@@ -10026,7 +10025,7 @@ export function createInterruptStackResumeRouteDriver() {
       },
       doReplayRecordedProcedureFromRoot: () => {
         const continuation = publicReplayContinuationAfterAttackDeclines();
-        route = [battleReducerStartRouteEvent(continuation.state)];
+        route = [battleReducerStartRouteEvent()];
         const pendingDamage = resolveBattleSubject({
           state: continuation.state,
           subject: continuation.subject,
@@ -10346,7 +10345,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
       subject = healingWordSubject();
       fills = [];
       holes = [];
-      route = [battleReducerStartRouteEvent(state)];
+      route = [battleReducerStartRouteEvent()];
       stage = "actSelection";
       lastResult = "init";
       orderingError = "";
@@ -10596,7 +10595,7 @@ export function createDeathSavingThrowRouteDriver() {
       const state = deathSavingThrowBattle();
       recorder.reset(state);
       fills = [];
-      route = [battleReducerStartRouteEvent(state)];
+      route = [battleReducerStartRouteEvent()];
     }
 
     function recordDeathSavingThrowResolution(
@@ -10655,7 +10654,7 @@ export function createConcentrationBreakTeardownRouteDriver() {
 
     function reset(): void {
       state = initialConcentrationBreakTeardownState();
-      route = [battleReducerStartRouteEvent(state.battle)];
+      route = [battleReducerStartRouteEvent()];
     }
 
     function appendResolutionRouteEvents(
@@ -10789,7 +10788,7 @@ function createCommandOrderingDriverWithRoute<
     let pendingCommandOption: CommandOrderingPendingOption = "none";
     let droppedObjectCount = 0;
     let route: readonly ReducerRouteEvent[] = [
-      battleReducerStartRouteEvent(state),
+      battleReducerStartRouteEvent(),
     ];
 
     function reset(): void {
@@ -10802,7 +10801,7 @@ function createCommandOrderingDriverWithRoute<
       orderingError = "";
       pendingCommandOption = "none";
       droppedObjectCount = 0;
-      route = [battleReducerStartRouteEvent(state)];
+      route = [battleReducerStartRouteEvent()];
     }
 
     function recordAccepted(
@@ -11351,7 +11350,7 @@ export function createMagicMissileRouteDriver() {
       fills = [];
       holes = initialHoles;
       route = [
-        battleReducerStartRouteEvent(state),
+        battleReducerStartRouteEvent(),
         ...requireMagicMissileActRouteEvents(act),
       ];
       lastResult = "init";
@@ -11648,7 +11647,7 @@ function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
     let holes: readonly BattleHole[] = act.initialHoles;
     let lastResult: ScalarBuffMbtProjection["lastResult"] = "init";
     let lastInvalidReason: ScalarBuffMbtProjection["lastInvalidReason"] = "";
-    let route: readonly ReducerRouteEvent[] = initialScalarBuffRoute(state, act);
+    let route: readonly ReducerRouteEvent[] = initialScalarBuffRoute(act);
 
     function reset(): void {
       state = scalarBuffBattle();
@@ -11658,16 +11657,15 @@ function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
       holes = act.initialHoles;
       lastResult = "init";
       lastInvalidReason = "";
-      route = initialScalarBuffRoute(state, act);
+      route = initialScalarBuffRoute(act);
     }
 
     function initialScalarBuffRoute(
-      initialState: BattleState,
       initialAct: AvailableBattleAct,
     ): readonly ReducerRouteEvent[] {
       if (!includeRoute) return [];
       return [
-        battleReducerStartRouteEvent(initialState),
+        battleReducerStartRouteEvent(),
         ...requireScalarBuffActRouteEvents(initialAct),
       ];
     }

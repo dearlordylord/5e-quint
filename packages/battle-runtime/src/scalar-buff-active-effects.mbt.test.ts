@@ -341,10 +341,9 @@ function initialRuntimeState(): ScalarBuffRuntimeState {
 }
 
 function initialRouteRuntimeState(): ScalarBuffRouteRuntimeState {
-  const battle = spellBattle({});
   return {
     surface: "fresh",
-    route: [battleReducerStartRouteEvent(battle)],
+    route: [battleReducerStartRouteEvent()],
   };
 }
 

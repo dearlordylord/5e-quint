@@ -146,7 +146,7 @@ function resolveDistantObjectLight(): BattleState {
 function observeDistantObjectLightRoute() {
   const resolved = resolveDistantObjectLightSubject();
   return [
-    battleReducerStartRouteEvent(resolved.initialState),
+    battleReducerStartRouteEvent(),
     ...(resolved.act.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),
   ];
@@ -177,8 +177,7 @@ function createDistantMetamagicRouteReplayDriver() {
 }
 
 function observeDistantObjectLightInitialRoute() {
-  const resolved = resolveDistantObjectLightSubject();
-  return [battleReducerStartRouteEvent(resolved.initialState)];
+  return [battleReducerStartRouteEvent()];
 }
 
 function resolveDistantObjectLightSubject() {

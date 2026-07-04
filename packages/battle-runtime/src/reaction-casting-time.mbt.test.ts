@@ -448,7 +448,7 @@ function hellishRebukeAfterDamagePublicRoute(): readonly BattleReducerRouteEvent
     throw new Error("Expected Hellish Rebuke to resolve.");
   }
   return [
-    battleReducerStartRouteEvent(state),
+    battleReducerStartRouteEvent(),
     ...requireRouteEvents(
       awaitingReaction,
       "Hellish Rebuke after-damage Reaction window",

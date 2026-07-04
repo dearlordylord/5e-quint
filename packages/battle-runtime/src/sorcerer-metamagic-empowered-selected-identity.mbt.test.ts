@@ -153,6 +153,6 @@ function createEmpoweredMetamagicRouteReplayDriver() {
 
 function observeEmpoweredRayOfFrostInitialRoute() {
   return [
-    battleReducerStartRouteEvent(empoweredSorcererMetamagicBattle()),
+    battleReducerStartRouteEvent(),
   ] as const;
 }
