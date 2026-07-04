@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "CRP-05-SESSION-BATTLE-ENTRY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Task-shape character session to battle entry acceptance"
     },
     {
@@ -408,7 +408,7 @@ dependency-shaped, and measurable.
 
 ### Task 5 - CRP-05-SESSION-BATTLE-ENTRY
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
