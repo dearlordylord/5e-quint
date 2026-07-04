@@ -1,34 +1,24 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-006",
+  "taskId": "CRPI-READY-007",
   "durableFields": [
-    {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "public-reducer-boundary-projection",
-      "derivability": {
-        "tag": "boundary-projection",
-        "sourceField": "BattleSubject.bonusActionSpell.metamagic, BattleSubject.bonusActionSpell.invocation, BattleHole.kind, and reducer route owner facts"
-      }
-    },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "public-reducer-boundary-projection",
       "derivability": {
         "tag": "boundary-projection",
-        "sourceField": "BattleSubject.bonusActionSpell.metamagic, BattleFill.kind, BattleHole.kind, BattleState.currentTurnResources, character spellcasting resources, character point-pool resources, and reducer route owner facts"
+        "sourceField": "BattleState.interruptStack, BattleInterruptDecision.choice, BattleHole.kind, BattleFill.kind, character spellcasting resources, BattleCreatureState.reactionAvailable, BattleCreatureState.hp, and reducer route owner facts"
       }
     }
   ],
   "notes": [
-    "Task 31 introduced no new BattleState, BattleCreatureState, character spellcasting, or character point-pool durable field.",
-    "Action and Bonus Action availability remain BattleState.currentTurnResources.",
-    "The same-turn level-1-plus spell lock remains the existing turn resource fact; no duplicate Quickened lock was added.",
-    "Spell Slot spend remains character spellcasting resource state reached through the spell invocation.",
-    "Sorcery Point spend remains character point-pool resource state.",
-    "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; runtime route evidence reads typed metamagic effectKind facts rather than option names.",
-    "Spell target selection, spell Attack roll, and rolled damage progress remain the existing public BattleHole frontier.",
-    "AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents are public reducer boundary projections, not a duplicated Quickened Spell ledger."
+    "Task 32 introduced no new BattleState, BattleCreatureState, character spellcasting, or point-pool durable field.",
+    "Reaction availability remains BattleCreatureState.reactionAvailable.",
+    "Reaction Spell Slot spend remains character spellcasting slot state reached through the triggered Reaction spell invocation.",
+    "The after-damage Reaction window and clearing remain BattleState.interruptStack facts.",
+    "Hit Point effects remain BattleCreatureState.hp.",
+    "Table-trigger facts and the chosen Reaction decision remain boundary fills.",
+    "BattleResolutionResult.routeEvents is a public reducer boundary projection, not a duplicated Reaction casting-time ledger."
   ]
 }

@@ -1,5 +1,98 @@
 # Validation Report
 
+## CRPI-READY-007
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/branch-scope.jsonl`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Reaction casting-time route replay now observes the copied `qRoute` projection
+through public battle reducer route events for the in-scope Hellish Rebuke
+after-damage branch. The target route begins with `battleReducerStartRouteEvent`,
+opens the after-damage Reaction spell window through public
+`resolveBattleSubject` route events, and resolves the chosen triggered Reaction
+spell through public `resolveBattleInterrupt` route events. The interrupt route
+projection now uses the `reactionSpell` route subject for spell-cast and
+after-damage triggered Reaction spell windows, while retaining the existing
+interrupt-stack resume subject for unrelated interrupt-resume surfaces.
+
+The runtime does not add a parallel Reaction casting-time ledger: Reaction
+availability remains `BattleCreatureState.reactionAvailable`, Reaction Spell
+Slot spend remains character spellcasting slot state, the Reaction window and
+clearing remain `BattleState.interruptStack`, Hit Point effects remain
+`BattleCreatureState.hp`, and table-trigger facts plus chosen Reaction decisions
+remain boundary fills.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt#step:doHellishRebukeAfterDamage` | `tasks/target-replay-evidence/CRPI-READY-007.json#driver:packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt#step:doHellishRebukeAfterDamage#trace:MBT_TRACES=1 MBT_STEPS=1 action=doHellishRebukeAfterDamage qRoute=hellish-rebuke-after-damage-public-route` | `packages/battle-runtime/src/reaction-casting-time.mbt.test.ts#observes the copied Hellish Rebuke qRoute through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt#step:doCounterspellEndsSpellCast` | branch scope marks this level-3 spell branch out of scope | not run for Task 32 | `out-of-scope` |
+| `packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt#step:doCounterspellAllowsSpellCastResume` | branch scope marks this level-3 spell branch out of scope | not run for Task 32 | `out-of-scope` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-007.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=1 action=doHellishRebukeAfterDamage qRoute=hellish-rebuke-after-damage-public-route`
+- Public route assertion:
+  - `packages/battle-runtime/src/reaction-casting-time.mbt.test.ts#observes the copied Hellish Rebuke qRoute through public reducer entrypoints`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-007/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 32. Counterspell branches remain out of scope for this level-1/2 cleanroom run because `branch-scope.jsonl` marks them out of scope as level-3 spell branches.
+
+Verification results:
+
+- Base check passed: `ralph/crpi-ready-007-reaction-casting-time-route/integration`
+  and `HEAD` were both `1a2d6437b Mark Ralph task 31 done`, and
+  `git merge-base --is-ancestor 1a2d6437bd34258a16b60ff7558324aea282ed9b HEAD`
+  exited 0.
+- RAW/ubiquitous-language review passed against Casting Time, Reaction and
+  Bonus Action Triggers, Reactions, Rules Glossary Reaction, Hellish Rebuke,
+  Counterspell branch-scope rationale, and UBIQUITOUS_LANGUAGE.md terms for
+  Reaction, Spell Slot, Magic Action, Saving Throw, Damage Roll, Spell Effect,
+  Offer, Decline, and Advance.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/reaction-casting-time.mbt.test.ts -t "observes the copied Hellish Rebuke qRoute"` passed with 1 test and 2 skipped.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- Before MBT, `ps aux | grep vitest | grep -v grep` only matched a Ralph
+  monitor command containing the word `vitest`; a stricter process check found
+  no actual Vitest runner. `ps aux | grep quint_evaluator | grep -v grep` only
+  matched the same Ralph monitor command and no active evaluator.
+- `cd packages/battle-runtime && START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/reaction-casting-time.mbt.test.ts src/reaction-interrupt-routes.mbt.test.ts -t "Reaction casting time|Reaction casting route|Hellish Rebuke qRoute" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 5 tests and 4 skipped; final timed run `TOTAL: 6s`.
+- `pnpm cleanroom-branch-coverage:check` passed.
+- `git diff --check` passed.
+- Reviewer-loop convergence passed: round 1 found public route projection was too generic (`interruptStackResume`) for the copied Reaction casting-time connector; implementation moved the route subject and owner sequence into production public route events. Round 2 found no remaining reasonable RAW/domain, architecture/connascence, or code-review findings.
+
 ## CRPI-READY-006
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

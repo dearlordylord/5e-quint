@@ -5,6 +5,7 @@ import type {
   AvailableBattleAct,
   BattleActiveEffect,
   BattleFill,
+  BattleInterruptCheckpoint,
   BattleHole,
   BattleResolutionInput,
   BattleResolutionResult,
@@ -21,6 +22,7 @@ export type BattleReducerRouteSubjectFamily =
   | "interruptStackResume"
   | "metamagicBonusActionCastingTime"
   | "metamagicSpellGovernor"
+  | "reactionSpell"
   | "saveGatedSpell"
   | "slotSpell"
   | "spellAttackProcedure"
@@ -294,10 +296,20 @@ export function battleReducerRouteForResolution(
 
 export function battleReducerRouteForInterrupt(
   before: BattleState,
+  fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents {
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  const reactionSpellRoute = reactionSpellRouteForInterrupt({
+    before,
+    fill,
+    holes,
+    result,
+  });
+  if (reactionSpellRoute !== undefined) {
+    return reactionSpellRoute;
+  }
   const eventForOwner = (
     owner: BattleReducerRouteOwnerGroup,
   ): BattleReducerRouteEvent => ({
@@ -318,6 +330,50 @@ export function battleReducerRouteForInterrupt(
     ];
   }
   return [eventForOwner("battleInterruptStack")];
+}
+
+function reactionSpellRouteForInterrupt(input: {
+  readonly before: BattleState;
+  readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
+  readonly holes: readonly BattleReducerRouteHole[];
+  readonly result: BattleResolutionResult;
+}): BattleReducerRouteEvents | undefined {
+  if (input.fill.value.kind !== "resolve") {
+    return undefined;
+  }
+  if (input.fill.value.choice.kind !== "castTriggeredReactionSpell") {
+    return undefined;
+  }
+  const frame = currentInterruptCheckpoint(input.before);
+  if (frame === undefined || !isReactionSpellCastingTimeFrame(frame)) {
+    return undefined;
+  }
+
+  const eventForOwner = (
+    owner: BattleReducerRouteOwnerGroup,
+  ): BattleReducerRouteEvent => ({
+    kind: "resolveBattleInterrupt",
+    subject: "reactionSpell",
+    fill: "interruptDecision",
+    holes: input.holes,
+    owner,
+  });
+  if (frame.trigger === "afterDamage" && input.result.tag === "resolved") {
+    const route: BattleReducerRouteEvents = [
+      eventForOwner("battleInterruptStack"),
+      eventForOwner("battleSpellSlotAndActionEconomy"),
+    ];
+    return combatantHitPointsChanged(input.before, input.result.state)
+      ? [...route, eventForOwner("battleHitPoint")]
+      : route;
+  }
+  if (frame.trigger === "spellCast") {
+    return [
+      eventForOwner("battleInterruptStack"),
+      eventForOwner("battleSpellSlotAndActionEconomy"),
+    ];
+  }
+  return undefined;
 }
 
 function metamagicRouteForResolution(
@@ -894,12 +950,48 @@ function interruptStackResumeDiscoveryRouteForResolution(
     return undefined;
   }
 
+  const frame = currentInterruptCheckpoint(result.state);
+  const subject =
+    discoversInterruptDecision &&
+      frame !== undefined &&
+      isReactionSpellCastingTimeFrame(frame) &&
+      frame.choices.some(
+        (choice) => choice.kind === "castTriggeredReactionSpell",
+      )
+      ? "reactionSpell"
+      : "interruptStackResume";
   return {
     kind: "discoverBattleActs",
-    subject: "interruptStackResume",
+    subject,
     holes,
     owner: "battleInterruptStack",
   };
+}
+
+function currentInterruptCheckpoint(
+  state: BattleState,
+): BattleInterruptCheckpoint | undefined {
+  const frame = state.interruptStack.at(-1);
+  return frame?.kind === "interruptCheckpoint" ? frame.frame : undefined;
+}
+
+function isReactionSpellCastingTimeFrame(
+  frame: BattleInterruptCheckpoint,
+): frame is Extract<
+  BattleInterruptCheckpoint,
+  { readonly trigger: "afterDamage" | "spellCast" }
+> {
+  return frame.trigger === "afterDamage" || frame.trigger === "spellCast";
+}
+
+function combatantHitPointsChanged(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  return [...after.combatants.values()].some(
+    (combatant) =>
+      combatant.hp !== before.combatants.get(combatant.combatantId)?.hp,
+  );
 }
 
 function weaponAttackRouteForResolution(

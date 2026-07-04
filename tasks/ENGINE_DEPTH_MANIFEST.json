@@ -1,29 +1,19 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-006",
+  "taskId": "CRPI-READY-007",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "public-reducer-route-observer",
       "domainApis": [
+        "BattleReducerRouteSubjectFamily.reactionSpell",
         "BattleReducerRouteEvent.discoverBattleActs",
-        "BattleReducerRouteEvent.resolveBattleSubject",
-        "BattleReducerRouteEvent.resolveBattleSubjectWithoutFill",
-        "BattleReducerRouteSubjectFamily.metamagicBonusActionCastingTime",
-        "BattleReducerRouteFill.targetChoice",
-        "BattleReducerRouteFill.attackRoll",
-        "BattleReducerRouteFill.rolledDice",
-        "BattleReducerRouteHole.targetChoice",
-        "BattleReducerRouteHole.attackRoll",
-        "BattleReducerRouteHole.rolledDice",
-        "BattleReducerRouteOwnerGroup.battleFeatureResource",
-        "BattleReducerRouteOwnerGroup.battleActionEconomy",
+        "BattleReducerRouteEvent.resolveBattleInterrupt",
+        "BattleReducerRouteOwnerGroup.battleInterruptStack",
         "BattleReducerRouteOwnerGroup.battleSpellSlotAndActionEconomy",
-        "BattleReducerRouteOwnerGroup.battleTargetSelection",
-        "BattleReducerRouteOwnerGroup.battleSpellAttackProcedure",
-        "BattleReducerRouteOwnerGroup.battleTurnBoundary",
-        "battleReducerRouteEventsForDiscoveredAct",
-        "battleReducerRouteForResolution"
+        "BattleReducerRouteOwnerGroup.battleHitPoint",
+        "battleReducerRouteForResolution",
+        "battleReducerRouteForInterrupt"
       ]
     },
     {
@@ -31,6 +21,7 @@
       "role": "domain-engine",
       "domainApis": [
         "resolveBattleSubject",
+        "resolveBattleInterrupt",
         "BattleResolutionResult.routeEvents"
       ]
     },
@@ -38,124 +29,60 @@
       "path": "packages/battle-runtime/src/battle-reducer.ts",
       "role": "public-subject-and-result-vocabulary",
       "domainApis": [
-        "BattleSubject.bonusActionSpell",
-        "BattleSubject.bonusActionSpell.metamagic",
-        "AvailableBattleAct.routeEvents",
-        "BattleResolutionResult.routeEvents",
-        "BattleState.currentTurnResources"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
-      "role": "typed-metamagic-effect-vocabulary",
-      "domainApis": [
-        "QUICKENED_METAMAGIC_EFFECT_KIND",
-        "BattleMetamagicSelection.effectKind"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/metamagic.ts",
-      "role": "metamagic-resource-and-timing-governor",
-      "domainApis": [
-        "Sorcery Point spend",
-        "Quickened Spell Bonus Action casting time",
-        "same-turn level-1-plus spell lock",
-        "one Metamagic option per spell gate"
+        "BattleCreatureState.reactionAvailable",
+        "BattleState.interruptStack",
+        "CharacterBattleSpellSlotState.expended",
+        "BattleCreatureState.hp",
+        "BattleResolutionResult.routeEvents"
       ]
     }
   ],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "MetamagicSpellGovernorRouteSubject",
-        "MetamagicBonusActionCastingTimeRouteSubject",
-        "BattleFeatureResourceOwner",
-        "BattleActionEconomyOwner",
+        "ReactionSpellRouteSubject",
+        "BattleInterruptStackOwner",
         "BattleSpellSlotAndActionEconomyOwner",
-        "BattleSpellAttackProcedureOwner",
-        "BattleTargetSelectionOwner",
-        "BattleTurnBoundaryOwner"
+        "BattleHitPointOwner"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-006.json"
+        "tasks/target-replay-evidence/CRPI-READY-007.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "path": "packages/battle-runtime/src/reaction-casting-time.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "metamagicInitialRoute",
-        "createMetamagicRouteDriver",
-        "qRoute",
-        "route-event-list",
-        "expectedProjectionSha256",
-        "observedProjectionSha256"
+        "observes the copied Hellish Rebuke qRoute through public reducer entrypoints",
+        "hellishRebukeAfterDamagePublicRoute",
+        "doHellishRebukeAfterDamage"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-006.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "observes the copied quickened qRoute through public reducer entrypoints",
-        "Quickened Ray of Frost public route replay",
-        "doResolveQuickenedRestoration",
-        "doResolveQuickenedSaveGatedCondition",
-        "doResolveQuickenedSaveGatedConditionImmunity",
-        "doResolveQuickenedDirectCondition",
-        "doResolveQuickenedRollModifier",
-        "doResolveQuickenedAfterMagicActionSpent",
-        "doRejectUnaffordable",
-        "doRejectUnknownOption",
-        "doRejectUnsupportedSecondOption",
-        "doRejectOnePerSpell",
-        "doRejectPriorLevelOnePlusSpell"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-006.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "routes Metamagic governor through the shared reducer surface"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-006.json"
+        "tasks/target-replay-evidence/CRPI-READY-007.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Quickened Spell Bonus Action casting-time discovery exposes copied qRoute discovery evidence through public act discovery."
-    },
-    {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Quickened Spell target choice, spell Attack roll, rolled damage, resource-spend, same-turn lock, and turn-boundary route owners are projected through public subject resolution results."
+      "reason": "Reaction casting-time replay exposes copied qRoute evidence through public subject resolution and interrupt resolution results."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "metamagicBonusActionCastingTime route subject and typed metamagic effectKind projection"
+      "api": "reactionSpell route subject and triggered Reaction spell owner projection"
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "Quickened spell Attack target-choice, attack-roll, rolled-dice, and turn-boundary route projection"
-    },
-    {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "Quickened same-turn level-1-plus lock and spell procedure route suffix"
+      "api": "Reaction spell interrupt owner sequencing through public route events"
     }
   ],
   "completion": {
     "tag": "public-reducer-route-replay",
-    "notes": "Task 31 routes Quickened Spell governor evidence through public reducer route events for the typed bonus-action casting-time subject. It introduces no parallel Metamagic ledger: action and Bonus Action availability remain BattleState.currentTurnResources, Sorcery Point spend remains character point-pool resource state, spell slots remain character spellcasting resource state, selected Metamagic identity remains a catalog/selection/admission boundary, and spell target/Attack/damage progress remains the existing BattleHole frontier."
+    "notes": "Task 32 routes the in-scope Hellish Rebuke after-damage Reaction casting-time branch through public reducer route events. It introduces no parallel Reaction, Spell Slot, interrupt-stack, or Hit Point ledger: those facts remain BattleCreatureState.reactionAvailable, character spellcasting slot state, BattleState.interruptStack, and BattleCreatureState.hp."
   }
 }

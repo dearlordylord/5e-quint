@@ -2860,7 +2860,7 @@ export function resolveBattleInterrupt(input: {
     result: BattleResolutionResult,
   ): BattleResolutionResult => ({
     ...result,
-    routeEvents: battleReducerRouteForInterrupt(input.state, result),
+    routeEvents: battleReducerRouteForInterrupt(input.state, input.fill, result),
   });
   const frame = currentInterruptCheckpoint(input.state);
   if (frame === null) {

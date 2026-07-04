@@ -52,6 +52,7 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import {
   battleCombatantSide,
   battleId,
+  battleReducerStartRouteEvent,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -67,6 +68,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -225,6 +227,12 @@ describe("Reaction casting time MBT", () => {
 
     expect(replayedActions).toEqual(
       new Set(replaySequences.flatMap((sequence) => sequence.actions)),
+    );
+  });
+
+  it("observes the copied Hellish Rebuke qRoute through public reducer entrypoints", () => {
+    expect(hellishRebukeAfterDamagePublicRoute()).toEqual(
+      hellishRebukeAfterDamageExpectedRoute(),
     );
   });
 
@@ -404,6 +412,92 @@ function hellishRebukeAfterDamage(): ReactionCastingTimeRuntimeState {
     continuationKind: "afterDamageResolved",
     lastResult: "hellishRebukeAfterDamage",
   };
+}
+
+function hellishRebukeAfterDamagePublicRoute(): readonly BattleReducerRouteEvent[] {
+  const state = reactionCastingTimeBattle({
+    triggerCreaturePreparedSpells: [],
+    triggerCreatureSpellSlots: [],
+    reactorPreparedSpells: [srdSpellRecord(hellishRebukeUnitId)],
+    reactorClassName: "warlock",
+    reactorSpellSlots: [
+      { spellLevel: 1, count: 1 },
+      { spellLevel: hellishRebukeSlotLevel, count: 1 },
+    ],
+  });
+  const awaitingReaction = resolveUnarmedStrikeAgainstReactor(state);
+  if (awaitingReaction.tag !== "needsHoles") {
+    throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
+  }
+  const choice = requireHellishRebukeChoice(awaitingReaction);
+  const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+  const damage = requireHole(choice.initialHoles, "rolledDice");
+  const resolved = resolveBattleInterrupt({
+    state: awaitingReaction.state,
+    fill: interruptDecisionFill(
+      requireHole(awaitingReaction.holes, "interruptDecision"),
+      triggeredReactionSpellDecision(reactorId, choice, [
+        savingThrowOutcomeFill(save, [
+          { targetId: triggerCreatureId, succeeded: false },
+        ]),
+        damageRollFillWithGroups(damage, hellishRebukeDamageRoll),
+      ]),
+    ),
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Hellish Rebuke to resolve.");
+  }
+  return [
+    battleReducerStartRouteEvent(state),
+    ...requireRouteEvents(
+      awaitingReaction,
+      "Hellish Rebuke after-damage Reaction window",
+    ),
+    ...requireRouteEvents(resolved, "Hellish Rebuke Reaction resolution"),
+  ];
+}
+
+function hellishRebukeAfterDamageExpectedRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    { kind: "startBattle", owner: "battleActionEconomy" },
+    {
+      kind: "discoverBattleActs",
+      subject: "reactionSpell",
+      holes: ["interruptDecision"],
+      owner: "battleInterruptStack",
+    },
+    {
+      kind: "resolveBattleInterrupt",
+      subject: "reactionSpell",
+      fill: "interruptDecision",
+      holes: [],
+      owner: "battleInterruptStack",
+    },
+    {
+      kind: "resolveBattleInterrupt",
+      subject: "reactionSpell",
+      fill: "interruptDecision",
+      holes: [],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+    {
+      kind: "resolveBattleInterrupt",
+      subject: "reactionSpell",
+      fill: "interruptDecision",
+      holes: [],
+      owner: "battleHitPoint",
+    },
+  ] as const satisfies readonly BattleReducerRouteEvent[];
+}
+
+function requireRouteEvents(
+  result: BattleResolutionResult,
+  label: string,
+): readonly BattleReducerRouteEvent[] {
+  if (result.routeEvents === undefined || result.routeEvents.length === 0) {
+    throw new Error(`Expected public route events for ${label}.`);
+  }
+  return result.routeEvents;
 }
 
 type CharacterSpellcastingInit = NonNullable<
