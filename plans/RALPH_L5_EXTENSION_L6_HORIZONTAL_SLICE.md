@@ -313,13 +313,13 @@
     {
       "number": 32,
       "id": "L6UG-MCP-01-LEVEL6-VERTICAL-DECISION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Choose the level-6 MCP vertical scenario"
     },
     {
       "number": 33,
       "id": "L6UG-MCP-02-LEVEL6-SHEET-SCENARIO",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Implement level-6 MCP creation and sheet scenario coverage"
     },
     {
@@ -482,8 +482,8 @@ Every Ralph task must run the task-base check before research or edits:
 |  29 | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING - Add level-1-6 support report plumbing | done | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Adds checker-owned `level-1-6` report artifacts. |
 |  30 | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-6 into the ultra-golden aggregate | done | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING | Extends aggregate scope without weakening older scopes. |
 |  31 | L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-6 non-MCP ultra-golden layers | done | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Support, QNT/generator, and parity layers before MCP closeout. |
-|  32 | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION - Choose the level-6 MCP vertical scenario | ready-for-research | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Chooses the smallest honest SRD-only L6 vertical. |
-|  33 | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO - Implement level-6 MCP creation and sheet scenario coverage | blocked | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION | Proves creation/advancement and durable sheet state. |
+|  32 | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION - Choose the level-6 MCP vertical scenario | done | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Selected the Rogue 6 Expertise plus Steady Aim battle handoff vertical. |
+|  33 | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO - Implement level-6 MCP creation and sheet scenario coverage | ready-for-research | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION | Proves selected Rogue 6 Expertise creation/advancement and durable sheet state. |
 |  34 | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF - Extend the level-6 MCP scenario through battle handoff | blocked | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO, L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Battle handoff only after non-MCP blockers are known. |
 |  35 | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY - Register the level-6 MCP scenario in acceptance coverage | blocked | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF | Wires executable scenario into acceptance metadata. |
 |  36 | L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE - Admit level-1-6 MCP scenario evidence | blocked | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY | Updates checker-owned MCP evidence after executable coverage exists. |
@@ -3279,7 +3279,7 @@ Verification:
 
 ### Task 32 - L6UG-MCP-01-LEVEL6-VERTICAL-DECISION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6UG-PRE-01-L6-FULL-QUEUE-CLOSED`
 
@@ -3319,19 +3319,25 @@ Verification:
 - RAW/ubiquitous-language check for the selected anchors.
 - `git diff --check`
 
+Plan Impact:
+
+- Applied. Added
+  `plans/unit-profile-coverage/L6_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`,
+  selecting `create-level-six-rogue-expertise-and-steady-aim-battle-handoff` as
+  the SRD-only level-6 MCP vertical.
+- Task 33 is unblocked and narrowed to the Rogue 6 Expertise
+  creation/finalization/sheet acceptance target. The battle handoff remains in
+  Task 34.
+
 ### Task 33 - L6UG-MCP-02-LEVEL6-SHEET-SCENARIO
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6UG-MCP-01-LEVEL6-VERTICAL-DECISION`
 
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6UG-MCP-01-LEVEL6-VERTICAL-DECISION`.
-
 Inputs:
 
-- Future Task 32 output:
+- Task 32 output:
   `plans/unit-profile-coverage/L6_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
 - `packages/mcp/test-support/mcp-acceptance-scenarios.ts`
 - `packages/mcp/src/character-tools.ts`
@@ -3365,13 +3371,12 @@ Depends on: `L6UG-MCP-02-LEVEL6-SHEET-SCENARIO`,
 
 Blocker Type: dependency
 
-Blocker Detail: waiting for `L6UG-MCP-02-LEVEL6-SHEET-SCENARIO` and
-`L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`.
+Blocker Detail: waiting for `L6UG-MCP-02-LEVEL6-SHEET-SCENARIO`.
 
 Inputs:
 
 - The level-6 sheet scenario helper from Task 33.
-- Future Task 32 output:
+- Task 32 output:
   `plans/unit-profile-coverage/L6_ULTRA_GOLDEN_MCP_VERTICAL_DECISION.md`
 - Battle handoff and selected behavior owners named by Task 32.
 
