@@ -1,25 +1,33 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-005",
+  "taskId": "CRP07-DSR-01",
   "durableFields": [
+    {
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "public-reducer-boundary-projection",
+      "derivability": {
+        "tag": "boundary-projection",
+        "sourceField": "BattleSubject.actionSpell, BattleHole.kind, and reducer route owner facts"
+      }
+    },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "public-reducer-boundary-projection",
       "derivability": {
         "tag": "boundary-projection",
-        "sourceField": "BattleSubject, BattleFill, BattleHole, BattleState.interruptStack, active effects, spellcasting resources, and reducer route owner facts"
+        "sourceField": "BattleSubject.actionSpell, BattleFill.kind, BattleHole.kind, BattleCreatureState.hp, character spellcasting resources, and reducer route owner facts"
       }
     }
   ],
   "notes": [
-    "Task 22 introduced no new BattleState or BattleCreatureState durable field.",
-    "Interrupt push/resume frames and replay-continuation frames remain BattleState.interruptStack.",
-    "Reaction availability remains BattleCreatureState.reactionAvailable.",
-    "Shield-style Armor Class mutation remains BattleCreatureState.activeEffects plus existing Armor Class projection.",
-    "Spell slot spend remains character spellcasting resource state.",
-    "Hit Point mutation remains BattleCreatureState.hp.",
-    "Continuation holes remain the existing public BattleHole frontier projected from resolveBattleSubject and resolveBattleInterrupt results.",
-    "BattleResolutionResult.routeEvents is a public reducer boundary projection, not a duplicated rules ledger."
+    "Task 29 introduced no new BattleState, BattleCreatureState, or character spellcasting durable field.",
+    "Current actor and turn action availability remain BattleState-owned turn facts.",
+    "Magic action spending remains BattleState.currentTurnResources.",
+    "Spell Slot spend remains character spellcasting resource state reached through the spell-slot invocation.",
+    "Target Hit Points and zero-HP/death projection remain BattleCreatureState.hp and BattleCreatureState.zeroHpLifecycle.",
+    "Spell target allocation and damage progress remain the existing public BattleHole frontier.",
+    "AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents are public reducer boundary projections, not a duplicated Magic Missile ledger."
   ]
 }

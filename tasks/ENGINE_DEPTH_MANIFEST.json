@@ -1,21 +1,22 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-005",
+  "taskId": "CRP07-DSR-01",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "public-reducer-route-observer",
       "domainApis": [
-        "BattleReducerRouteEvent.resolveBattleInterrupt",
-        "BattleReducerRouteSubjectFamily.interruptStackResume",
-        "BattleReducerRouteSubjectFamily.saveGatedSpell",
-        "BattleReducerRouteSubjectFamily.weaponAttack",
-        "BattleReducerRouteFill.interruptDecision",
+        "BattleReducerRouteEvent.discoverBattleActs",
+        "BattleReducerRouteEvent.resolveBattleSubject",
+        "BattleReducerRouteSubjectFamily.slotSpell",
+        "BattleReducerRouteFill.spellTargetAllocation",
+        "BattleReducerRouteFill.rolledDice",
+        "BattleReducerRouteHole.spellTargetAllocation",
+        "BattleReducerRouteHole.rolledDice",
+        "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution",
-        "battleReducerRouteForInterrupt",
-        "battleInterruptStack route owner",
         "battleSpellSlotAndActionEconomy route owner",
-        "battleActiveEffect route owner",
+        "battleHoleFrontier route owner",
         "battleHitPoint route owner"
       ]
     },
@@ -24,20 +25,17 @@
       "role": "domain-engine",
       "domainApis": [
         "resolveBattleSubject",
-        "resolveBattleInterrupt",
-        "BattleState.interruptStack",
-        "BattleReplayContinuationFrame",
-        "BattleInterruptedProcedure"
+        "BattleResolutionResult.routeEvents"
       ]
     },
     {
       "path": "packages/battle-runtime/src/battle-reducer.ts",
       "role": "public-subject-and-result-vocabulary",
       "domainApis": [
+        "BattleSubject.actionSpell",
         "BattleResolutionResult.routeEvents",
-        "BattleInterruptProcedureChoice",
-        "BattleInterruptedProcedure",
-        "BattleReplayContinuationFrame"
+        "BattleCreatureState.hp",
+        "BattleCreatureState.zeroHpLifecycle"
       ]
     }
   ],
@@ -45,9 +43,9 @@
     {
       "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
       "quarantinedWitnessNames": [
-        "doNestedDeclineResumesOuterInterrupt",
-        "doShieldMutationResumesInterruptedAttack",
-        "doReplayRecordedProcedureFromRoot",
+        "doFillMagicMissileAllocation",
+        "doFillMagicMissileDamage",
+        "dartRollTotal",
         "mbt::actionTaken",
         "observedActionTaken",
         "traceId",
@@ -66,39 +64,52 @@
         "harnessTestPath"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-005.json"
+        "tasks/target-replay-evidence/CRP07-DSR-01.json"
       ]
     },
     {
       "path": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "routes interrupt stack resume through the shared reducer surface"
+        "routes Magic Missile through the shared reducer surface"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-005.json"
+        "tasks/target-replay-evidence/CRP07-DSR-01.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/magic-missile-allocation.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "replays target allocation against a Skeleton target"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRP07-DSR-01.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Interrupt-stack resume decisions expose copied qRoute events for resolveBattleInterrupt and replay-continuation resolution through public reducer results."
+      "reason": "Magic Missile slot-spell target allocation and damage fills expose copied qRoute events through public reducer results."
+    },
+    {
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "reason": "Magic Missile slot-spell discovery exposes the copied qRoute discovery event through public act discovery."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "resolveBattleInterrupt public route-event projection"
-    },
-    {
       "driver": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "saveGatedSpell public reducer route subject"
+      "api": "spell-slot action economy and damage route-event projection"
+    },
+    {
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "api": "slotSpell public reducer route subject for repeated damage allocation"
     }
   ],
   "completion": {
     "tag": "public-reducer-route-replay",
-    "notes": "Task 22 routes interrupt-stack push/resume decisions, readied save-gated continuation, Shield-style active-effect mutation, and replay-continuation weapon damage through public reducer route events. It introduces no parallel interrupt ledger: BattleState.interruptStack owns frames and continuation holes, BattleCreatureState owns reaction availability, active effects, and Hit Points, and character spellcasting state owns slot spend."
+    "notes": "Task 29 routes spell-slot repeated-damage allocation through public reducer route events for Magic Missile. It introduces no parallel Magic Missile ledger: current actor and turn action resources remain BattleState/currentTurnResources, spell-slot spend remains character spellcasting resource state, target Hit Points and zero-HP lifecycle remain BattleCreatureState fields, and spell target/damage progress remains the existing BattleHole frontier."
   }
 }

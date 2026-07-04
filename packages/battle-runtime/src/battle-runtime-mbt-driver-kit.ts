@@ -11225,56 +11225,33 @@ export function createMagicMissileRouteDriver() {
 
     function reset(): void {
       state = fighterVsSkeletonBattle();
-      const initialHoles = discoverMagicMissileHoles(state, subject);
+      const act = discoverMagicMissileAct(state, subject);
+      const initialHoles = act.initialHoles;
       fills = [];
       holes = initialHoles;
       route = [
-        reducerRouteStartBattle("battleActionEconomy"),
-        reducerRouteDiscoverBattleActs({
-          subject: "slotSpell",
-          holes: initialHoles,
-          owner: "battleSpellSlotAndActionEconomy",
-        }),
+        battleReducerStartRouteEvent(state),
+        ...requireMagicMissileActRouteEvents(act),
       ];
       lastResult = "init";
       lastInvalidReason = "";
     }
 
-    function submit(
-      fill: ReducerRouteFill,
-      owner: ReducerRouteOwnerGroup,
-      nextFills: readonly BattleFill[],
-    ): void {
+    function submit(nextFills: readonly BattleFill[]): void {
       fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
       const result = resolveBattleSubject({ state, subject, fills });
       lastResult = result.tag;
       if (result.tag === "resolved") {
         state = result.state;
         holes = [];
-        route = [
-          ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "slotSpell",
-            fill,
-            holes,
-            owner,
-          }),
-        ];
+        route = [...route, ...requireMagicMissileRouteEvents(result)];
         lastInvalidReason = "";
         return;
       }
       if (result.tag === "needsHoles") {
         state = result.state;
         holes = result.holes;
-        route = [
-          ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "slotSpell",
-            fill,
-            holes,
-            owner,
-          }),
-        ];
+        route = [...route, ...requireMagicMissileRouteEvents(result)];
         lastInvalidReason = "";
         return;
       }
@@ -11287,13 +11264,13 @@ export function createMagicMissileRouteDriver() {
       init: reset,
       doFillMagicMissileAllocation: () => {
         const allocation = requireHole(holes, "spellTargetAllocation");
-        submit("spellTargetAllocation", "battleHoleFrontier", [
+        submit([
           spellTargetAllocationFill(allocation, skeletonId, 3),
         ]);
       },
       doFillMagicMissileDamage: ({ dartRollTotal }) => {
         const damage = requireHole(holes, "rolledDice");
-        submit("rolledDice", "battleHitPoint", [
+        submit([
           ...fills,
           damageRollFillWithGroups(damage, [
             magicMissileDamageRollGroup(dartRollTotal),
@@ -15697,6 +15674,13 @@ function discoverMagicMissileHoles(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
 ): readonly BattleHole[] {
+  return discoverMagicMissileAct(state, subject).initialHoles;
+}
+
+function discoverMagicMissileAct(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+): AvailableBattleAct {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
@@ -15707,7 +15691,7 @@ function discoverMagicMissileHoles(
     throw new Error("Expected Magic Missile spell act.");
   }
 
-  return act.initialHoles;
+  return act;
 }
 
 function discoverSaveGatedSpellHoles(
@@ -16177,6 +16161,26 @@ function requireHitPointRestorationOrderingRouteEvents(
   }
   throw new Error(
     "Expected public reducer route events on Hit Point restoration resolution.",
+  );
+}
+
+function requireMagicMissileActRouteEvents(
+  act: AvailableBattleAct,
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error("Expected public reducer route events on Magic Missile act.");
+}
+
+function requireMagicMissileRouteEvents(
+  result: BattleResolutionResult,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on Magic Missile resolution.",
   );
 }
 

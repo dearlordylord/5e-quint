@@ -1,5 +1,81 @@
 # Validation Report
 
+## CRP07-DSR-01
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Magic Missile route replay now observes the copied `qRoute` projection through
+public battle reducer route events. Spell-slot repeated-damage allocation acts
+emit `slotSpell` discovery events from `AvailableBattleAct.routeEvents`; target
+allocation and rolled damage fills emit `slotSpell` resolution events from
+`BattleResolutionResult.routeEvents`. The runtime does not add a parallel
+Magic Missile ledger: action availability remains `BattleState.currentTurnResources`,
+Spell Slot spend remains character spellcasting resource state, target Hit
+Points and zero-HP lifecycle remain `BattleCreatureState` facts, and spell
+target/damage progress remains the existing hole frontier.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt#step:doFillMagicMissileAllocation` | `tasks/target-replay-evidence/CRP07-DSR-01.json#driver:packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt#step:doFillMagicMissileAllocation#trace:MBT_TRACES=1 MBT_STEPS=2 action=doFillMagicMissileAllocation` | `packages/battle-runtime/src/magic-missile-allocation.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Magic Missile through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt#step:doFillMagicMissileDamage` | `tasks/target-replay-evidence/CRP07-DSR-01.json#driver:packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt#step:doFillMagicMissileDamage#trace:MBT_TRACES=1 MBT_STEPS=2 action=doFillMagicMissileDamage dartRollTotal=3` | `packages/battle-runtime/src/magic-missile-allocation.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Magic Missile through the shared reducer surface` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP07-DSR-01.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=2 action=<branchAction>`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP07-DSR-01/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 29.
+
+Verification results:
+
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- Initial focused MBT was delayed because `ps aux | grep vitest | grep -v grep`
+  reported an existing `RUN_QNT_PROOFS=1 vitest run src/battle-runtime-qnt-proofs.test.ts`
+  process, and the repo requires one MBT/Vitest runner at a time.
+- After the actual Vitest process exited, `MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/magic-missile-allocation.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Magic Missile"` passed with 2 tests; final timed run `TOTAL: 7s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `pnpm cleanroom-branch-coverage:check -- --target-replay-evidence tasks/target-replay-evidence/CRP07-DSR-01.json` was not a Task 29-scoped validator: it failed because the direct evidence mode requires the full source inventory, so it reported unrelated missing target replay evidence across the corpus.
+- `git diff --check` passed.
+- RAW/ubiquitous-language review passed against Spell Slots, Hit Points,
+  Dropping to 0 Hit Points, Rules Glossary Hit Points, UBIQUITOUS_LANGUAGE.md
+  Action Lifecycle, Hit Points and Death, and Spell Slot terms.
+- Reviewer-loop convergence passed: round 1 found and fixed adapter-local
+  Magic Missile qRoute construction by moving discovery and resolution route
+  evidence to public reducer route events; round 2 found no remaining
+  reasonable RAW/domain, architecture/connascence, or code-review findings.
+
 ## CRPI-READY-005
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

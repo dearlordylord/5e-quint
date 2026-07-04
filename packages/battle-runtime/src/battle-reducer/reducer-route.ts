@@ -19,6 +19,7 @@ export type BattleReducerRouteSubjectFamily =
   | "hitPointRestoration"
   | "interruptStackResume"
   | "saveGatedSpell"
+  | "slotSpell"
   | "spellAttackProcedure"
   | "weaponAttack";
 
@@ -49,6 +50,7 @@ export type BattleReducerRouteHole =
   | "movement"
   | "rolledDice"
   | "savingThrowOutcome"
+  | "spellTargetAllocation"
   | "spellTargetList"
   | "targetChoice";
 
@@ -63,6 +65,7 @@ export type BattleReducerRouteFill =
   | "movement"
   | "rolledDice"
   | "savingThrowOutcome"
+  | "spellTargetAllocation"
   | "spellTargetList"
   | "targetChoice";
 
@@ -146,6 +149,14 @@ export function battleReducerRouteEventsForDiscoveredAct(
           : "battleActionEconomy",
     }];
   }
+  if (isSlotSpellDiscoverySubject(act.subject)) {
+    return [{
+      kind: "discoverBattleActs",
+      subject: "slotSpell",
+      holes: battleReducerRouteHoles(act.initialHoles),
+      owner: "battleSpellSlotAndActionEconomy",
+    }];
+  }
   if (!isSpellAttackProcedureSubject(act.subject)) {
     return undefined;
   }
@@ -203,6 +214,10 @@ export function battleReducerRouteForResolution(
   );
   if (hitPointRestorationRoute !== undefined) {
     return [hitPointRestorationRoute];
+  }
+  const slotSpellRoute = slotSpellRouteForResolution(input, result);
+  if (slotSpellRoute !== undefined) {
+    return [slotSpellRoute];
   }
   const saveGatedRoute = saveGatedSpellRouteForResolution(input, result);
   if (saveGatedRoute !== undefined) {
@@ -493,6 +508,43 @@ function hitPointRestorationRouteOwner(
   return "battleHoleFrontier";
 }
 
+function slotSpellRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvent | undefined {
+  if (!isSlotSpellResolutionSubject(input.subject)) {
+    return undefined;
+  }
+  if (result.tag === "invalid" && result.reason !== "invalidFill") {
+    return undefined;
+  }
+
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+
+  const routeFill = battleReducerRouteFill(fill);
+  if (
+    routeFill !== "spellTargetAllocation" &&
+    routeFill !== "rolledDice"
+  ) {
+    return undefined;
+  }
+
+  return {
+    kind: "resolveBattleSubject",
+    subject: "slotSpell",
+    fill: routeFill,
+    holes:
+      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    owner:
+      routeFill === "rolledDice" && result.tag === "resolved"
+        ? "battleHitPoint"
+        : "battleHoleFrontier",
+  };
+}
+
 function commandRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -737,6 +789,25 @@ function isSpellAttackProcedureSubject(
   );
 }
 
+function isSlotSpellDiscoverySubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  return isSlotSpellResolutionSubject(subject);
+}
+
+function isSlotSpellResolutionSubject(
+  subject: BattleResolutionInput["subject"],
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "actionSpell" }
+> {
+  return (
+    subject.tag === "actionSpell" &&
+    subject.invocation.tag === "spellSlot" &&
+    subject.invocation.procedure === "repeatedDamageAllocation"
+  );
+}
+
 function isSaveGatedSpellResolution(
   input: BattleResolutionInput,
 ): boolean {
@@ -903,6 +974,7 @@ function battleReducerRouteHole(
   if (family === "movement") return ["movement"];
   if (family === "rolledDice") return ["rolledDice"];
   if (family === "savingThrowOutcome") return ["savingThrowOutcome"];
+  if (family === "spellTargetAllocation") return ["spellTargetAllocation"];
   if (family === "spellTargetList") return ["spellTargetList"];
   if (family === "targetChoice") return ["targetChoice"];
   return [];
@@ -922,6 +994,7 @@ function battleReducerRouteFill(
   if (kind === "interruptDecision") return "interruptDecision";
   if (kind === "rolledDice") return "rolledDice";
   if (kind === "savingThrowOutcome") return "savingThrowOutcome";
+  if (kind === "spellTargetAllocation") return "spellTargetAllocation";
   if (kind === "spellTargetList") return "spellTargetList";
   if (kind === "targetChoice") return "targetChoice";
   return undefined;

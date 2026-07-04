@@ -566,6 +566,70 @@
           "detail": "Round 1 fixed release-readied save-gated route classification through existing BattleState.readiedSpells; round 2 tightened Shield-style active-effect route ownership to pre/post state comparison and kept saveGatedSpell routing to interrupt-opening results; revision round 2 fixed reviewer findings for savingThrowOutcome fill mapping, adapter-created replay continuation, and over-broad weapon route suffix before broad verification."
         }
       ]
+    },
+    {
+      "taskId": "CRP07-DSR-01",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "04e6e56a47a8d79a31d106c5dee08136935c159bda9b0587cd044f340e09d6dc"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "4b13522b7b9c408d7d4fb5efb6a35f0a8c46b5c8d9daf7f7065e67903b640058"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "10109915dbb9886dca3cbb747530a28fa6ae7610f239865d5c9e76285bbf3895"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP07-DSR-01.json",
+          "sha256": "00ee064e567745fa30a80703a1979f716eb644e863ca2d8ca03a73f092ab2287",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP07-DSR-01.json#driver:packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt#step:doFillMagicMissileAllocation#trace:MBT_TRACES=1 MBT_STEPS=2 action=doFillMagicMissileAllocation",
+            "tasks/target-replay-evidence/CRP07-DSR-01.json#driver:packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt#step:doFillMagicMissileDamage#trace:MBT_TRACES=1 MBT_STEPS=2 action=doFillMagicMissileDamage dartRollTotal=3"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/magic-missile-allocation.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Magic Missile\"",
+          "status": "pass",
+          "detail": "2 tests passed after the prior Vitest/QNT proof process exited; final timed run TOTAL: 7s"
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check -- --target-replay-evidence tasks/target-replay-evidence/CRP07-DSR-01.json",
+          "status": "fail",
+          "detail": "Diagnostic direct evidence check treats one evidence file as requiring the full source inventory and failed on unrelated missing target replay evidence across the corpus."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 moved Magic Missile qRoute construction from adapter-local expected events to public reducer route events for slotSpell discovery and resolution; round 2 found no remaining reasonable findings."
+        }
+      ]
     }
   ]
 }
