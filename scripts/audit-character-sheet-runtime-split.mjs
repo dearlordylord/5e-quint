@@ -140,6 +140,7 @@ const EXPECTED_EXPORTS = [
   "characterSheetHitPointMaximum",
   "characterSheetHitPoints",
   "characterSheetHitPointsCurrentHp",
+  "characterSheetNormalHitPointMaximum",
   "characterSheetId",
   "characterSheetIssue",
   "characterSheetJumpDistanceAbility",
@@ -171,6 +172,7 @@ const EXPECTED_EXPORTS = [
   "isCharacterSheetPointPoolResourceUnitId",
   "isCharacterSheetUseCountResourceUnitId",
   "parseCharacterSheet",
+  "replaceOrdinarySpellSlotExpenditure",
   "replaceCharacterSheetSpellSlotSourceState",
   "replaceCharacterSheetCompanion",
   "retainedCompanionProtocolFacts",
@@ -187,6 +189,18 @@ const EXPECTED_MOVED_FUNCTIONS = [
   {
     name: "timePassed",
     hash: "6aa391ed5b26d5bc",
+  },
+];
+const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
+  {
+    name: "characterSheetNormalHitPointMaximum",
+    reason:
+      "Character Sheet owns HP maximum projections from build facts and mutable maximum-reduction state; exposing the normal maximum keeps callers from storing derived capacity beside the sheet source facts.",
+  },
+  {
+    name: "replaceOrdinarySpellSlotExpenditure",
+    reason:
+      "Character Sheet owns ordinary Spell Slot expenditure state; battle handoff settlement reuses this canonical updater instead of duplicating the replacement/sort convention in character-battle-runtime.",
   },
 ];
 
@@ -334,6 +348,16 @@ function diffLists(expected, actual) {
   };
 }
 
+function invalidExportReconciliationReasons(reasons, expectedExports) {
+  const expectedSet = new Set(expectedExports);
+  return reasons.filter(
+    (entry) =>
+      !expectedSet.has(entry.name) ||
+      typeof entry.reason !== "string" ||
+      entry.reason.trim() === "",
+  );
+}
+
 function readBaseIndex(ref) {
   return execFileSync("git", ["show", `${ref}:${indexPath}`], {
     cwd: repoRoot,
@@ -365,6 +389,10 @@ const expectedExports =
   baseRef === null
     ? [...EXPECTED_EXPORTS].sort()
     : extractExportNames(readBaseIndex(baseRef), `${baseRef}:${indexPath}`);
+const invalidReconciliationReasons = invalidExportReconciliationReasons(
+  EXPECTED_EXPORT_RECONCILIATION_REASONS,
+  expectedExports,
+);
 const checkedInExpectedDiff =
   baseRef === null
     ? { missing: [], added: [] }
@@ -432,6 +460,8 @@ const report = {
   invalidStatements: currentBarrel.invalidStatements,
   duplicateCurrentExports,
   surfaceDiff: currentDiff,
+  reconciledExportOwnership: EXPECTED_EXPORT_RECONCILIATION_REASONS,
+  invalidReconciliationReasons,
   checkedInExpectedDiff,
   moduleResolution: {
     unresolvedModules,
@@ -451,6 +481,7 @@ const failed =
   duplicateCurrentExports.length > 0 ||
   currentDiff.missing.length > 0 ||
   currentDiff.added.length > 0 ||
+  invalidReconciliationReasons.length > 0 ||
   checkedInExpectedDiff.missing.length > 0 ||
   checkedInExpectedDiff.added.length > 0 ||
   unresolvedModules.length > 0 ||
