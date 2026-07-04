@@ -107,6 +107,12 @@
       "title": "Promote Cleric Blessed Healer spell-healing rider"
     },
     {
+      "number": 51,
+      "id": "L6-FOLLOWUP-DRUID-NATURAL-RECOVERY-REST-FEATURE",
+      "status": "future-follow-up",
+      "title": "Promote Druid Natural Recovery rest feature"
+    },
+    {
       "number": 5,
       "id": "L5UG-MCP-01-LEVEL5-VERTICAL-DECISION",
       "status": "done",
@@ -199,7 +205,7 @@
     {
       "number": 20,
       "id": "L6FULL-OWN-04-DRUID-NATURAL-RECOVERY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-6 owner evidence for Druid Natural Recovery"
     },
     {
@@ -406,6 +412,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  48 | L6-FOLLOWUP-BARBARIAN-MINDLESS-RAGE-CONDITION-IMMUNITY - Promote Barbarian Mindless Rage condition immunity | future-follow-up | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE | Future battle-runtime owner for active Rage Charmed/Frightened immunity and enter-rage cleanup; parked outside this L6 full accounting pass. |
 |  49 | L6-FOLLOWUP-BARD-MAGICAL-DISCOVERIES-SPELL-ACCESS - Promote Bard Magical Discoveries spell-access selection | future-follow-up | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES | Future character-creation and character-sheet owner for Magical Discoveries cross-list always-prepared spell choices and Bard-level replacement; parked outside this L6 full accounting pass. |
 |  50 | L6-FOLLOWUP-CLERIC-BLESSED-HEALER-SPELL-HEALING-RIDER - Promote Cleric Blessed Healer spell-healing rider | future-follow-up | L6FULL-OWN-03-CLERIC-BLESSED-HEALER | Future battle-runtime owner for selected Life Domain post-cast self-healing after slot-cast healing of another creature; parked outside this L6 full accounting pass. |
+|  51 | L6-FOLLOWUP-DRUID-NATURAL-RECOVERY-REST-FEATURE - Promote Druid Natural Recovery rest feature | future-follow-up | L6FULL-OWN-04-DRUID-NATURAL-RECOVERY | Future character-sheet owner for Natural Recovery's no-slot Circle Spell cast and Short Rest Spell Slot recovery budget; parked outside this L6 full accounting pass. |
 |   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | done               | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Selected the Wizard 5 Fireball MCP vertical and rejected future-owner alternatives.     |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | done | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds Wizard 5 Fireball creation/finalization/sheet proof before battle handoff.         |
 |   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | done | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff after Task 6 sheet coverage; non-MCP support dependencies are complete. |
@@ -421,7 +428,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  17 | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE - Resolve level-6 owner evidence for Barbarian Mindless Rage | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed active Rage condition-immunity and enter-rage cleanup owner boundary. |
 |  18 | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES - Resolve level-6 owner evidence for Bard Magical Discoveries | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK spell-access selection boundary; future owner tracked by Task 49. |
 |  19 | L6FULL-OWN-03-CLERIC-BLESSED-HEALER - Resolve level-6 owner evidence for Cleric Blessed Healer | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK spell healing rider boundary; future owner tracked by Task 50. |
-|  20 | L6FULL-OWN-04-DRUID-NATURAL-RECOVERY - Resolve level-6 owner evidence for Druid Natural Recovery | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  20 | L6FULL-OWN-04-DRUID-NATURAL-RECOVERY - Resolve level-6 owner evidence for Druid Natural Recovery | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK rest feature boundary; future owner tracked by Task 51. |
 |  21 | L6FULL-OWN-05-MONK-EMPOWERED-STRIKES - Resolve level-6 owner evidence for Monk Empowered Strikes | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  22 | L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY - Resolve level-6 owner evidence for Monk Wholeness of Body | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  23 | L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION - Resolve level-6 owner evidence for Paladin Aura of Protection | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
@@ -1376,6 +1383,74 @@ Verification:
 - Focused spell/healing runtime tests and focused MBT only if battle runtime or
   QNT parity behavior changes.
 
+### Task 51 - L6-FOLLOWUP-DRUID-NATURAL-RECOVERY-REST-FEATURE
+
+Status: `future-follow-up`
+
+Future Follow-up Reason: Task 20 closed the current Druid Natural Recovery row
+by explicit non-admission, but the durable owner for the selected Circle of the
+Land no-slot Circle Spell cast and Short Rest Spell Slot recovery budget is
+still a separate Surface and Character Sheet modeling problem. This follow-up
+does not block Task 27 because the current L6 row is checker-closed as
+`catalog-only/dead-for-now`.
+
+Depends on: `L6FULL-OWN-04-DRUID-NATURAL-RECOVERY`
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `.references/srd-5.2.1/Classes/Druid.md:412`
+- `packages/surface/content/subclass_druid_circle_of_the_land.json`
+- `packages/surface/content/druid_circle_of_the_land_spells.json`
+- `packages/character-sheet-runtime/src/healing-rest-benefit.ts`
+- `packages/character-sheet-runtime/src/druid-features.ts`
+- `packages/character-sheet-runtime/src/class-feature-spells.ts`
+- `packages/character-sheet-runtime/src/spell-slots.ts`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Current state:
+
+- The Surface catalog has the Circle of the Land subclass record and installed
+  level-3 Circle Spells feature, but no installed `druid_natural_recovery`
+  feature record or selected level-6 feature grant.
+- Promoted `character-sheet.short-rest-spell-slot-recovery` support covers the
+  shared Short Rest Spell Slot recovery shape and Long Rest-cleared use state,
+  and promoted `character-sheet.druid-circle-land-spell-access` support owns
+  selected-land prepared Spell Access from Circle Spells.
+- Current promoted owners do not admit a selected level-6 Circle of the Land
+  feature that combines the once-per-Long-Rest no-slot Circle Spell cast,
+  Druid-level Short Rest Spell Slot recovery budget, existing Circle Spells
+  prepared access, and canonical Spell Slot expenditure state.
+
+Output:
+
+- Promote a Surface and Character Sheet owner that consumes typed selected
+  Natural Recovery facts, existing Circle Spells prepared access, existing
+  Druid class level, and existing Spell Slot expenditure state.
+- Admit the once-per-Long-Rest no-slot cast of a prepared level 1+ Circle Spell
+  and the Short Rest recovery of expended Spell Slots with a combined level no
+  greater than half Druid level rounded up and no level 6+ recovered slot.
+- Update the canonical Character Sheet Spell Slot owner and rest-feature use
+  state without adding duplicate Spell Slot state, prepared Spell Access,
+  subclass selection state, or dispatching on authored Druid, Circle of the
+  Land, Natural Recovery, or spell identity.
+
+Completion / Success Criteria:
+
+- `druid_natural_recovery` is either admitted with real catalog, Character
+  Sheet, and evidence updates or remains explicitly closed for a narrower
+  durable reason discovered by this follow-up.
+- The implementation makes the no-slot cast and Short Rest slot recovery
+  boundary executable without overclaiming generic rest feature support.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability.
+- `pnpm unit-profile-coverage:check`
+- Focused Character Sheet rest, spell-slot, and Circle Spells tests if rest
+  feature behavior changes.
+
 ### Task 40 - L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES
 
 Status: `done`
@@ -2240,7 +2315,7 @@ Accepted Closure:
 
 ### Task 20 - L6FULL-OWN-04-DRUID-NATURAL-RECOVERY
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
 
@@ -2266,6 +2341,20 @@ Verification:
 
 - L6 shared verification plus focused resource/rest tests only if behavior
   changes.
+
+Accepted Closure:
+
+- `druid_natural_recovery` is closed as a not-installed
+  future-owner-before-SDK Natural Recovery rest feature boundary. Current
+  promoted `character-sheet.short-rest-spell-slot-recovery`,
+  `character-sheet.class-feature-long-rest-use-state`, and
+  `character-sheet.druid-circle-land-spell-access` owners do not admit the
+  selected level-6 Circle of the Land feature that combines a no-slot Circle
+  Spell cast, a Druid-level Short Rest Spell Slot recovery budget, Short Rest
+  trigger, and Long Rest reset. Task 51 records the future Natural Recovery
+  rest feature owner so the current L6 full accounting can close without
+  duplicating Spell Slot state, prepared Spell Access, subclass selection
+  state, or authored-identity dispatch.
 
 ### Task 21 - L6FULL-OWN-05-MONK-EMPOWERED-STRIKES
 

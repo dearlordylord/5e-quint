@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 501 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 215 |
-| level-5-7-follow-up-required | 18 |
+| catalog-only/dead-for-now | 216 |
+| level-5-7-follow-up-required | 17 |
 | missing-authored-record | 32 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 138 |
+| not-recorded | 137 |
 | profile-subset-supported | 59 |
 | supported-profile | 309 |
-| unsupported-profile | 394 |
+| unsupported-profile | 395 |
 
 ### Battle Readiness Snapshot
 
@@ -518,7 +518,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Druid level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_druid` | `.references/srd-5.2.1/Classes/Druid.md:35` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
 | Druid Wild Resurgence | level-5 | character-level | class feature | `druid_wild_resurgence` | `.references/srd-5.2.1/Classes/Druid.md:138` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future character-sheet-runtime Wild Resurgence resource-restoration owner plus existing Druid Wild Shape and Spell Slot state owners | SRD Wild Resurgence lets a Druid once on each turn expend a Spell Slot with no action to regain one Wild Shape use only when no Wild Shape uses remain, and separately lets the Druid expend one Wild Shape use with no action to gain one level 1 Spell Slot once per Long Rest. The future Character Sheet owner must consume the existing druid_wild_shape use-count resource, existing Spell Slot state, and a Long Rest-cleared Wild Resurgence use marker instead of adding a battle action, duplicate Wild Shape pool, duplicate Spell Slot pool, or authored-identity dispatch. |
 | Druid level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_druid` | `.references/srd-5.2.1/Classes/Druid.md:36` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Druid Natural Recovery | level-6 | character-level | class feature | `druid_natural_recovery` | `.references/srd-5.2.1/Classes/Druid.md:412` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Druid Natural Recovery | level-6 | character-level | class feature | `druid_natural_recovery` | `.references/srd-5.2.1/Classes/Druid.md:412` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future-owner-before-SDK character-sheet-runtime Natural Recovery rest feature owner plus existing Spell Slot and Circle Spells owners | SRD Natural Recovery grants a once-per-Long-Rest no-slot cast of a prepared level 1+ spell from Circle Spells, and separately lets the Druid recover expended Spell Slots when finishing a Short Rest with a combined slot-level budget of half Druid level rounded up and no recovered slot at level 6 or higher. Existing character-sheet.short-rest-spell-slot-recovery and character-sheet.class-feature-long-rest-use-state owners cover shared Spell Slot refund and Long Rest use-state patterns, while character-sheet.druid-circle-land-spell-access owns selected-land prepared Spell Access. They do not admit a selected level-6 Circle of the Land feature that combines the no-slot Circle Spell cast resource, Druid-level recovery budget, Short Rest trigger, and Long Rest reset. A future owner must consume typed Surface facts for the selected Natural Recovery feature, existing Circle Spells prepared access, existing Druid class level, and existing Spell Slot expenditure state, then update the canonical Character Sheet Spell Slot owner and rest-feature use state without adding duplicate Spell Slot state, prepared Spell Access, subclass selection state, or dispatching on Druid, Circle of the Land, Natural Recovery, or spell authored identity. |
 | Druid level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_druid` | `.references/srd-5.2.1/Classes/Druid.md:37` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Druid Elemental Fury | level-7 | character-level | class feature | `druid_elemental_fury` | `.references/srd-5.2.1/Classes/Druid.md:144` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Druid level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_druid` | `.references/srd-5.2.1/Classes/Druid.md:38` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
