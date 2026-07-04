@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "QAR-14-STARRY-WISP-WITNESS-CONVERSION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Convert Starry Wisp object driver to a literal witness"
     },
     {
@@ -186,7 +186,7 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 11 | QAR-11-RUN-BLOCK-SEPARATION-GUARD - Separate QNT run blocks from owner modules | done | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING | Cleans owner modules after semantic edits land. |
 | 12 | QAR-12-INDUCTIVE-WITNESS-SEEDS - Repair priority inductive specs and add reachability witnesses | ready-for-research | QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-11-RUN-BLOCK-SEPARATION-GUARD | Admits state-space repair modules and adds reachability witnesses after affected specs settle. |
 | 13 | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD - Harden MBT closure leaf whitelist checks | done | QAR-01-TEST-LANE-ISOLATION | Hardens closure checks before driver conversions. |
-| 14 | QAR-14-STARRY-WISP-WITNESS-CONVERSION - Convert Starry Wisp object driver to a literal witness | ready-for-research | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Converts the clearest heavy driver to a literal witness. |
+| 14 | QAR-14-STARRY-WISP-WITNESS-CONVERSION - Convert Starry Wisp object driver to a literal witness | done | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Converts the clearest heavy driver to a literal witness. |
 | 15 | QAR-15-RULE-CORE-SPELLS-MBT-SPLIT - Split rule-core spells MBT by procedure family | ready-for-research | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits spell MBT closure after admission semantics are explicit. |
 | 16 | QAR-16-RULE-CORE-FEATURES-MBT-SPLIT - Split rule-core features MBT by feature family | ready-for-research | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits feature MBT closure after closure rules are hardened. |
 | 17 | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION - Move Hunter's Prey execution to semantic support profiles | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Removes execution dispatch on selected authored option ids. |
@@ -795,7 +795,7 @@ Plan Impact:
 
 ### Task 14 - QAR-14-STARRY-WISP-WITNESS-CONVERSION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
