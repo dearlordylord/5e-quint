@@ -20,6 +20,7 @@ import {
   EXTENDED_METAMAGIC_EFFECT_KIND,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
+  SEEKING_METAMAGIC_EFFECT_KIND,
 } from "./metamagic-support.ts";
 import { isHeightenedSpellTargetChoiceHoleId } from "./spells-damage-fills.ts";
 
@@ -31,6 +32,7 @@ export type BattleReducerRouteSubjectFamily =
   | "interruptStackResume"
   | "metamagicBonusActionCastingTime"
   | "metamagicDamageDiceReroll"
+  | "metamagicMissedSpellAttackReroll"
   | "metamagicSavingThrowProtection"
   | "metamagicSavingThrowRollMode"
   | "metamagicSpellGovernor"
@@ -525,6 +527,11 @@ function metamagicRouteForResolution(
       metamagicSpellRangeProjectionRouteForResolution(input, result, fill) ??
       metamagicSavingThrowProtectionRouteForResolution(input, result, fill) ??
       metamagicSavingThrowRollModeRouteForResolution(input, result, fill) ??
+      metamagicMissedSpellAttackRerollRouteForResolution(
+        input,
+        result,
+        fill,
+      ) ??
       metamagicDamageDiceRerollRouteForResolution(input, result, fill)
     );
   }
@@ -890,6 +897,100 @@ function metamagicDamageDiceRerollRouteForResolution(
       owner: "battleHitPoint",
     },
   ];
+}
+
+function metamagicMissedSpellAttackRerollRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+  fill: BattleFill | undefined,
+): BattleReducerRouteEvents | undefined {
+  if (!isSpellAttackDamageSubject(input.subject)) {
+    return undefined;
+  }
+  if (fill === undefined || result.tag === "invalid") {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill !== "attackRoll") {
+    return metamagicMissedSpellAttackRerollCompletionRoute(input, result, fill);
+  }
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  if (
+    result.tag === "needsHoles" &&
+    hasSeekingSpellAttackRerollHole(result.holes)
+  ) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicMissedSpellAttackReroll",
+        holes,
+        owner: "battleFeatureResource",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicMissedSpellAttackReroll",
+        fill: routeFill,
+        holes,
+        owner: "battleAttackRoll",
+      },
+    ];
+  }
+  if (
+    fill.kind !== "attackRoll" ||
+    fill.value.spellAttackReroll?.effectKind !== SEEKING_METAMAGIC_EFFECT_KIND
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicMissedSpellAttackReroll",
+      fill: routeFill,
+      holes,
+      owner: "battleAttackRoll",
+    },
+  ];
+}
+
+function metamagicMissedSpellAttackRerollCompletionRoute(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+  fill: BattleFill,
+): BattleReducerRouteEvents | undefined {
+  if (
+    result.tag !== "resolved" ||
+    battleReducerRouteFill(fill) !== "rolledDice" ||
+    !input.fills.some(
+      (candidate) =>
+        candidate.kind === "attackRoll" &&
+        candidate.value.spellAttackReroll?.effectKind ===
+          SEEKING_METAMAGIC_EFFECT_KIND,
+    )
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicMissedSpellAttackReroll",
+      holes: [],
+      owner: "battleFeatureResource",
+    },
+  ];
+}
+
+function hasSeekingSpellAttackRerollHole(
+  holes: readonly BattleHole[],
+): boolean {
+  return holes.some(
+    (hole) =>
+      hole.kind === "attackRoll" &&
+      "spellAttackRerolls" in hole &&
+      hole.spellAttackRerolls?.some(
+        (option) => option.effectKind === SEEKING_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
 }
 
 function hasEmpoweredSpellDamageRerollHole(

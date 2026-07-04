@@ -1841,3 +1841,71 @@ Verification results:
 - `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
 - RAW/ubiquitous-language review passed against Sorcerer Metamagic and Heightened Spell, Hideous Laughter, and `UBIQUITOUS_LANGUAGE.md` terms Magic Action, Spell Invocation, Saving Throw, Disadvantage, Pool, Spend, and Spell Effect.
 - Reviewer-loop convergence passed: round 1 added public `metamagicSavingThrowRollMode` route ownership and deterministic copied-route replay; round 2 verified no duplicate durable state, no authored-identity dispatch, and no remaining reasonable RAW/domain, architecture/connascence, or code-review findings.
+
+## CRPI-READY-016
+
+- Manifest source commit SHA: `0da15bfe0871d5a45782c7ac355d622be8907d44`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Descriptions-Q-R.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The route replay for Seeking Spell missed spell Attack rerolls now observes the
+copied `qRoute` projection through public battle reducer entrypoints. The
+replay starts from `battleReducerStartRouteEvent`, uses `discoverBattleActs` to
+obtain the Ray of Frost spell Attack act, and then resolves the subject. After
+the first missed attack-roll fill opens the Seeking reroll hole frontier,
+`BattleResolutionResult.routeEvents` exposes `metamagicMissedSpellAttackReroll`
+discovery and original attack-roll ownership. The reroll attack-roll fill then
+exposes reroll attack-roll ownership, and damage completion exposes the
+feature-resource spend completion route.
+
+BattleState remains the durable owner. Sorcery Point spend remains
+`CharacterBattlePointPoolResourceState.pointsRemaining`, the pending reroll
+frontier remains the existing attack-roll hole option, the reroll decision
+remains the existing attack-roll fill payload, and target Hit Point and active
+Spell Effect changes remain in `BattleCreatureState`. No selected-option
+identity dispatch or duplicate pending-reroll state was added.
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-016.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=metamagicMissedSpellAttackReroll action=doResolveSeekingSpellAttackReroll qRoute=metamagic-missed-spell-attack-reroll-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-016/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 47.
+
+Verification results:
+
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- First focused replay attempt with `step: "doRouteMissedSpellAttackReroll"` failed because the copied connector branch did not expose a deterministic `stepRoute...` wrapper for the driver action protocol.
+- Second focused replay attempt still failed with the same initial-route implementation projection after adding only a generic `step` driver alias.
+- `START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts -t "Seeking Spell missed-attack reroll|Sorcerer Metamagic Seeking" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests after adding `stepRouteMissedSpellAttackReroll`; deterministic `stepRouteMissedSpellAttackReroll` executed copied `doRouteMissedSpellAttackReroll` `qRoute` and compared it to the public reducer route; final timed run `TOTAL: 8s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- RAW/ubiquitous-language review passed against Sorcerer Metamagic and Seeking Spell, Ray of Frost, and `UBIQUITOUS_LANGUAGE.md` terms Magic Action, Spell Invocation, Spell Attack, Attack Roll, Damage Roll, Pool, and Spend.
+- Reviewer-loop convergence passed: round 1 added public `metamagicMissedSpellAttackReroll` route ownership and deterministic copied-route replay; round 2 verified no duplicate durable state, no authored-identity dispatch, and no remaining reasonable RAW/domain, architecture/connascence, or code-review findings.

@@ -1470,6 +1470,88 @@
           "detail": "Round 1 added public metamagicSavingThrowRollMode route ownership and deterministic copied-route replay; round 2 verified route admission is typed by Heightened Metamagic facts, target-choice/saving-throw fills, saving-throw roll-mode projection, and condition lifecycle resolution. No duplicate durable state or authored-identity dispatch was added."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-016",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "0da15bfe0871d5a45782c7ac355d622be8907d44",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "77524e196d52f5de61c23ee88e0ccf721527a0e74a412e373b04ca4c5e6c549e"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "67852c01521ceca31918333d04a08665ba6dd487b6c53698be3e2607c46a2f11"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "27c7e9122de262b9741c3f984fed55c0f21a82df5dd90538a843043175e20359"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-016.json",
+          "sha256": "0c54499a810d35e96c1b4c683d6bd8ec8bc876bc0d2b8dc3345046bccd0694c7",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-016.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt#step:doResolveSeekingSpellAttackReroll#trace:public-route=metamagicMissedSpellAttackReroll action=doResolveSeekingSpellAttackReroll qRoute=metamagic-missed-spell-attack-reroll-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 0da15bfe0871d5a45782c7ac355d622be8907d44 HEAD",
+          "status": "pass",
+          "detail": "Integration and HEAD were 0da15bfe0; base SHA is an ancestor."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts -t \"Seeking Spell missed-attack reroll|Sorcerer Metamagic Seeking\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "fail",
+          "detail": "Initial direct doRouteMissedSpellAttackReroll step left the implementation projection at the initial route because the copied connector branch lacked the deterministic stepRoute wrapper used by adjacent metamagic route replays; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts -t \"Seeking Spell missed-attack reroll|Sorcerer Metamagic Seeking\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "fail",
+          "detail": "Generic step driver alias also left the implementation projection at the initial route; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts -t \"Seeking Spell missed-attack reroll|Sorcerer Metamagic Seeking\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed after adding stepRouteMissedSpellAttackReroll; deterministic stepRouteMissedSpellAttackReroll executed copied doRouteMissedSpellAttackReroll qRoute and compared it to the public reducer route; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Classes/Sorcerer.md, .references/srd-5.2.1/Spells/Descriptions-Q-R.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added public metamagicMissedSpellAttackReroll route ownership and deterministic copied-route replay; round 2 verified route admission is typed by Seeking Metamagic attack-roll hole/fill facts, spell Attack damage procedure shape, and damage completion. No duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
     }
   ]
 }

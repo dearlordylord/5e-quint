@@ -1,0 +1,73 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts Seeking Spell copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "0da15bfe0871d5a45782c7ac355d622be8907d44",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "fdfcc1fac31fb1deb499916fcc56c5ce4c91a1b30fef6cd3837260ca14827507",
+      "routeConnectorSha256": "ddcfd842b13fc21691dee6001aa9a5c5fea71b0c730b8b26c7e0609bb5a13ded",
+      "branchFamily": "step",
+      "branchAction": "doResolveSeekingSpellAttackReroll",
+      "observedActionTaken": "doResolveSeekingSpellAttackReroll",
+      "harnessTestPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts",
+      "traceId": "public-route=metamagicMissedSpellAttackReroll action=doResolveSeekingSpellAttackReroll qRoute=metamagic-missed-spell-attack-reroll-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "stepRouteMissedSpellAttackReroll",
+        "delegatedAction": "doRouteMissedSpellAttackReroll",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts#createSeekingMetamagicRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "82354fdaf68d8918921804176c3bd401d4d7280318483e41a5c3ee99c7c212d2",
+        "observedProjectionSha256": "82354fdaf68d8918921804176c3bd401d4d7280318483e41a5c3ee99c7c212d2",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "stepAction": "stepRouteMissedSpellAttackReroll",
+          "delegatedAction": "doRouteMissedSpellAttackReroll",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "public-reducer-route-events",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), discoverBattleActs(state) act selection, and BattleResolutionResult.routeEvents during Seeking Spell Ray of Frost missed spell Attack reroll resolution",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=metamagicMissedSpellAttackReroll",
+          "BattleReducerRouteEvent.owner=battleFeatureResource",
+          "BattleReducerRouteEvent.owner=battleAttackRoll",
+          "BattleAttackRollHole.spellAttackRerolls.effectKind=missed_spell_attack_reroll",
+          "BattleFill.attackRoll.value.spellAttackReroll.effectKind=missed_spell_attack_reroll",
+          "BattleSubject.actionSpell.invocation.procedure=spellAttackDamage",
+          "CharacterBattlePointPoolResourceState.pointsRemaining",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

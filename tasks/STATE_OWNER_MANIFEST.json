@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-015",
+  "taskId": "CRPI-READY-016",
   "durableFields": [
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
@@ -8,27 +8,27 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind, BattleFill targetChoice/savingThrowOutcome, and BattleResolutionResult hole frontier",
+        "sourceField": "BattleSubject.actionSpell invocation, BattleAttackRollHole.spellAttackRerolls, BattleFill attackRoll.value.spellAttackReroll, and BattleResolutionResult hole frontier",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=metamagicSavingThrowRollMode",
+      "fieldPath": "BattleReducerRouteEvent.subject=metamagicMissedSpellAttackReroll",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=saving_throw_disadvantage, targetChoice fill, savingThrowOutcome hole/fill, and condition lifecycle resolution",
+        "sourceField": "BattleSubject.actionSpell.invocation.procedure=spellAttackDamage, BattleAttackRollHole.spellAttackRerolls.effectKind=missed_spell_attack_reroll, BattleFill.attackRoll.value.spellAttackReroll.effectKind=missed_spell_attack_reroll, and rolledDice completion",
         "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 46 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Task 47 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
     "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
-    "Heightened selected target ownership remains the existing targetChoice fill and saving throw hole frontier; no duplicate selected-target ledger was added.",
+    "Seeking reroll ownership remains the existing attack-roll hole option and attack-roll fill decision; no duplicate pending reroll ledger was added.",
     "Selected Metamagic option identity remains at catalog, selection, admission, and fixture boundaries.",
-    "Route events are public reducer boundary projections derived from typed Metamagic effect facts, selected target fill, saving-throw hole/fill facts, and condition lifecycle resolution.",
-    "The Heightened Spell route does not dispatch on Sorcerer authored feature identity or the Heightened Spell option name; production routing is admitted by typed saving_throw_disadvantage facts on a promoted saving-throw spell procedure."
+    "Route events are public reducer boundary projections derived from typed Metamagic effect facts, attack-roll hole/fill facts, and spell attack damage completion.",
+    "The Seeking Spell route does not dispatch on Sorcerer authored feature identity or the Seeking Spell option name; production routing is admitted by typed missed_spell_attack_reroll facts on promoted spell Attack procedure holes and fills."
   ]
 }

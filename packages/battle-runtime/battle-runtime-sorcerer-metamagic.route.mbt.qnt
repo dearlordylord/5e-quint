@@ -742,6 +742,10 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     ),
   }
 
+  action stepRouteMissedSpellAttackReroll = any {
+    doRouteMissedSpellAttackReroll,
+  }
+
   action doRouteDamageDiceReroll = all {
     qStage == Init,
     recordStage(
