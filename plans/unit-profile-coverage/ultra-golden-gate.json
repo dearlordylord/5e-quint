@@ -602,8 +602,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 58,
-              "numerator": 58
+              "denominator": 59,
+              "numerator": 59
             },
             "qntCoveredObligations": {
               "denominator": 70,
@@ -831,8 +831,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 58,
-              "numerator": 58
+              "denominator": 59,
+              "numerator": 59
             },
             "qntCoveredObligations": {
               "denominator": 70,
