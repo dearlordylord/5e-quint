@@ -226,10 +226,6 @@ const ALLOWLIST = {
     classification: "computed oracle",
     rationale: "dispatch resolution depends on mutable remaining-dispatch counts",
   },
-  "battle-runtime-starry-wisp-object.mbt.qnt": {
-    classification: "convertible",
-    rationale: "projects complex ObjectDamageOutcome/LightEmitter records",
-  },
   "rule-core-spells.mbt.qnt": {
     classification: "convertible",
     rationale: "~33-action fixed-outcome rule-core spell tracer",
