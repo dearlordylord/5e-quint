@@ -3581,7 +3581,8 @@ function hasPassiveRangedAttackRollBonusMechanics(unit: UnitRecord): boolean {
   const [effect] = unit.mechanics.grants;
   return (
     effect?.kind === "modify_roll_numeric" &&
-    sameStringSet(effect.on, ["attack_roll"])
+    (sameStringSet(effect.on, ["attack_roll"]) ||
+      effect.weaponFilter !== undefined)
   );
 }
 

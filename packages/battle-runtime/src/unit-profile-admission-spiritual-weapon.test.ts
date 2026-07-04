@@ -347,7 +347,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     );
 
     expect(awaitingCounterspell.state.interruptStack.at(-1)).toMatchObject({
-      kind: "reaction",
+      kind: "interruptCheckpoint",
       frame: {
         trigger: "spellCast",
         castingResource: { kind: "bonusAction" },
