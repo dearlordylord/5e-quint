@@ -145,7 +145,7 @@
     {
       "number": 15,
       "id": "L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Explicitly close the twelve level-6 class-table summary rows"
     },
     {
@@ -388,7 +388,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  12 | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY - Verify level-6 scope and inventory baseline | done | L6FULL-PRE-01-L5-QUEUES-CLOSED | Confirms the 25-row L6 baseline and excludes spell-level-4. |
 |  13 | L6FULL-SEED-01-RANGER-ROVING - Verify existing Ranger Roving level-6 support evidence | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Existing catalog/runtime evidence remains checker-readable. |
 |  14 | L6FULL-SEED-02-ROGUE-EXPERTISE - Verify existing Rogue Expertise level-6 support evidence | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/character-creation evidence. |
-|  15 | L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES - Explicitly close the twelve level-6 class-table summary rows | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Table/progression rows remain explicit non-runtime closures. |
+|  15 | L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES - Explicitly close the twelve level-6 class-table summary rows | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Table/progression rows remain explicit non-runtime closures. |
 |  16 | L6FULL-ASI-01-FIGHTER-ASI-L6 - Admit or close Fighter level-6 Ability Score Improvement | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Special repeated ASI/catalog admission task. |
 |  17 | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE - Resolve level-6 owner evidence for Barbarian Mindless Rage | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  18 | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES - Resolve level-6 owner evidence for Bard Magical Discoveries | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
@@ -1752,7 +1752,7 @@ Plan Impact:
 
 ### Task 15 - L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
 
@@ -1784,6 +1784,15 @@ Verification:
 
 - `pnpm unit-profile-coverage:check --write`
 - L6 shared verification.
+
+Plan Impact:
+
+- Applied. `plans/unit-profile-coverage/L6_PROGRESSION_DELTA_AUDIT.md`
+  records the twelve level-6 class-table summary rows as non-runtime
+  table-summary closures and maps their executable level-derived facts to
+  existing generic owners or the narrower level-6 feature tasks.
+- Tasks 16-26 remain the executable owner-resolution surface for the narrower
+  feature rows; no runtime support is counted on a class-table summary row.
 
 ### Task 16 - L6FULL-ASI-01-FIGHTER-ASI-L6
 
