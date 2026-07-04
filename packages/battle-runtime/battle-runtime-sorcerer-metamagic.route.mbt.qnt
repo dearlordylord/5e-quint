@@ -772,6 +772,10 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     ),
   }
 
+  action stepRouteDamageDiceReroll = any {
+    doRouteDamageDiceReroll,
+  }
+
   action step = any {
     doRouteMetamagicResourceGovernor,
     doRejectMetamagicResourceGovernor,

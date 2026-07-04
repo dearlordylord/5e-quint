@@ -1,16 +1,15 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-012",
+  "taskId": "CRPI-READY-013",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "domain-api",
       "domainApis": [
-        "BattleReducerRouteEvent.subject=metamagicSpellRangeProjection",
+        "BattleReducerRouteEvent.subject=metamagicDamageDiceReroll",
         "BattleReducerRouteEvent.owner=battleFeatureResource",
-        "BattleReducerRouteEvent.owner=battleObjectTargetBoundary",
-        "BattleReducerRouteEvent.owner=battleTargetSelection",
-        "battleReducerRouteEventsForDiscoveredAct",
+        "BattleReducerRouteEvent.owner=battleDamageRoll",
+        "BattleReducerRouteEvent.owner=battleHitPoint",
         "battleReducerRouteForResolution"
       ]
     }
@@ -20,54 +19,61 @@
       "path": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "MetamagicSpellRangeProjectionRouteSubject",
-        "TargetChoiceHoleKind",
-        "TargetChoiceFillKind",
+        "MetamagicDamageDiceRerollRouteSubject",
+        "RolledDiceHoleKind",
+        "RolledDiceFillKind",
         "BattleFeatureResourceOwner",
-        "BattleObjectTargetBoundaryOwner",
-        "BattleTargetSelectionOwner",
-        "doRouteSpellRangeProjection"
+        "BattleDamageRollOwner",
+        "BattleHitPointOwner",
+        "doRouteDamageDiceReroll",
+        "stepRouteDamageDiceReroll"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-012.json"
+        "tasks/target-replay-evidence/CRPI-READY-013.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "doResolveDistantObjectLight",
-        "observes Distant Spell range-projection route through public reducer entrypoints",
-        "observeDistantObjectLightRoute"
+        "doResolveEmpoweredSpellDamageReroll",
+        "compares Empowered Spell damage-reroll public reducer route to copied qRoute",
+        "createEmpoweredMetamagicRouteReplayDriver"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-012.json"
+        "tasks/target-replay-evidence/CRPI-READY-013.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity-support.ts",
+      "quarantinedWitnessNames": [
+        "observeEmpoweredRayOfFrostRoute",
+        "resolveEmpoweredRayOfFrostSubject"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-READY-013.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Distant Spell diagnostics expose the public Metamagic spell-range projection discovery frontier."
-    },
-    {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Distant Spell diagnostics expose object-target boundary and target-selection owner evidence through public subject resolution."
+      "reason": "Empowered Spell diagnostics expose the public damage-roll reroll discovery frontier, damage-roll settlement, and Hit Point owner evidence through public subject resolution."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "Metamagic option route projection through typed effect facts"
+      "api": "Post-roll Metamagic option route projection through typed hole and fill facts"
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "Metamagic option route projection through typed effect facts"
+      "api": "Spell attack procedure route projection remains separate from damage-reroll route projection"
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 43 observes the copied Metamagic spell-range projection qRoute through public reducer route events for Distant Spell object-light resolution. No new BattleState field was introduced."
+    "notes": "Task 44 observes the copied Metamagic damage-dice reroll qRoute through public reducer route events for Empowered Spell Ray of Frost damage reroll resolution. No new BattleState field was introduced."
   }
 }

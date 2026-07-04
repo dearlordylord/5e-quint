@@ -1254,6 +1254,78 @@
           "detail": "Round 1 added public metamagicSpellRangeProjection route ownership; round 3 replaced the literal assertion/generic connector sampling evidence with deterministic copied doRouteSpellRangeProjection qRoute replay against the public reducer route. No duplicate durable state or authored-identity dispatch was added."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-013",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "a79cc63cd4e678573f13e3f33e85dfa65dcc347c867bcdcd914aad39c1f961cc"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "1d268a054a2d032b0ec0c89cb07f376058f99860e0b70836c5846eb5a0291ea7"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "c847d608ededf63368de828b4bbaa616c83c16d64ee7335c8a64e855d435024b"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-013.json",
+          "sha256": "fa5bc2dd0564dcecbfa6501d44494f08da47c00a5133880f7b2b336cbbd8788a",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-013.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt#step:doResolveEmpoweredSpellDamageReroll#trace:public-route=metamagicDamageDiceReroll action=doResolveEmpoweredSpellDamageReroll qRoute=metamagic-damage-dice-reroll-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/crpi-ready-013-empowered-route/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 5c06f6b8880a618c78f4dfa7949e7007e354b962 HEAD",
+          "status": "pass",
+          "detail": "Integration and HEAD were 5c06f6b88; base SHA is an ancestor."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed; deterministic stepRouteDamageDiceReroll executed copied doRouteDamageDiceReroll qRoute and compared it to the public reducer route; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Classes/Sorcerer.md, .references/srd-5.2.1/Spells/Descriptions-Q-R.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added public metamagicDamageDiceReroll route ownership; round 2 corrected route admission from cast-time Metamagic selection to typed damage-roll hole/fill facts; round 3 verified no duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
     }
   ]
 }

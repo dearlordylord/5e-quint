@@ -1,44 +1,34 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-012",
+  "taskId": "CRPI-READY-013",
   "durableFields": [
-    {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=spell_range_increase and public act initial holes",
-        "boundary": "discoverBattleActs public reducer boundary"
-      }
-    },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject, objectTargetChoice fill, and object-light resolution state delta",
+        "sourceField": "BattleSubject, BattleSpellDamageRollHole.spellDamageRerolls, BattleRolledDiceFill.spellDamageReroll, and resolved damage state delta",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=metamagicSpellRangeProjection",
+      "fieldPath": "BattleReducerRouteEvent.subject=metamagicDamageDiceReroll",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=spell_range_increase, action spell cast mode, objectLight procedure, public object target hole, and target-choice fill",
-        "boundary": "battleReducerRouteEventsForDiscoveredAct and battleReducerRouteForResolution"
+        "sourceField": "BattleSubject.actionSpell.invocation.procedure=spellAttackDamage, BattleSpellDamageRollHole.spellDamageRerolls.effectKind=damage_dice_reroll, and BattleRolledDiceFill.spellDamageReroll.effectKind=damage_dice_reroll",
+        "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 43 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Task 44 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
     "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
-    "Object-light projection remains existing BattleState.lightEmitters.",
+    "Target Hit Point and active effect ownership remain existing BattleCreatureState fields.",
     "Selected Metamagic option identity remains at catalog, selection, admission, and fixture boundaries.",
     "Route events are public reducer boundary projections derived from typed Metamagic effect facts, spell procedure facts, holes/fills, and executable state deltas.",
-    "The Distant Spell route does not dispatch on Sorcerer authored feature identity or the Distant Spell option name; production routing is admitted by effectKind=spell_range_increase, action-spell cast mode, objectLight procedure shape, object-target hole/fill state, and public reducer state changes."
+    "The Empowered Spell route does not dispatch on Sorcerer authored feature identity or the Empowered Spell option name; production routing is admitted by typed damage_dice_reroll facts on the damage-roll hole and rolled-dice fill."
   ]
 }

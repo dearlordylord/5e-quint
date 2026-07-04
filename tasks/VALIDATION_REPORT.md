@@ -1,5 +1,109 @@
 # Validation Report
 
+## CRPI-READY-013
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Descriptions-Q-R.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Empowered Spell selected-identity replay now compares the copied
+`MetamagicDamageDiceRerollRouteSubject` `qRoute` to public reducer route
+events. The MBT replay executes the connector's deterministic
+`stepRouteDamageDiceReroll` wrapper, which delegates to the copied
+`doRouteDamageDiceReroll` action and updates `qRoute`. The target driver derives
+its projection by calling public reducer entrypoints: the route begins with
+`battleReducerStartRouteEvent`, opens the typed damage-reroll frontier after the
+Ray of Frost attack roll through `resolveBattleSubject`, then resolves the
+Empowered rolled-dice fill through `resolveBattleSubject`. The emitted route
+records the feature-resource discovery frontier, damage-roll ownership for the
+original and replacement dice, and Hit Point ownership for final damage.
+
+The runtime does not add a parallel Empowered Spell ledger. Sorcery Point spend
+remains in `CharacterBattlePointPoolResourceState.pointsRemaining`, selected
+Metamagic identity remains a catalog/selection/admission boundary, target HP and
+active effect changes remain in `BattleCreatureState`, and route admission is
+derived from the typed `damage_dice_reroll` facts on the spell damage-roll hole
+and rolled-dice fill.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt#step:doResolveEmpoweredSpellDamageReroll` | `tasks/target-replay-evidence/CRPI-READY-013.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt#step:doResolveEmpoweredSpellDamageReroll#trace:public-route=metamagicDamageDiceReroll action=doResolveEmpoweredSpellDamageReroll qRoute=metamagic-damage-dice-reroll-public-route` | `packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts#compares Empowered Spell damage-reroll public reducer route to copied qRoute` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-013.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=metamagicDamageDiceReroll action=doResolveEmpoweredSpellDamageReroll qRoute=metamagic-damage-dice-reroll-public-route`
+- Copied connector replay assertion:
+  - `packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts#compares Empowered Spell damage-reroll public reducer route to copied qRoute`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-013/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 44.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 44 / `CRPI-READY-013`: `unblocked`; copied `qRoute` replay is accepted.
+  - Future metamagic route tasks: `left unchanged`.
+- Observations:
+  - Empowered Spell is not a cast-time `BattleSubject.metamagic` selection in
+    this route; the public route must be derived from the damage-roll hole's
+    reroll option and the rolled-dice fill's reroll decision.
+  - The route connector needed a deterministic `stepRouteDamageDiceReroll`
+    wrapper for target replay, delegating directly to the copied
+    `doRouteDamageDiceReroll` action without changing `qRoute` semantics.
+- Required plan edits: none.
+
+Verification results:
+
+- Base check passed: `ralph/crpi-ready-013-empowered-route/integration` and
+  `HEAD` were both `5c06f6b88 Mark Task 43 distant route replay done`, and
+  `git merge-base --is-ancestor 5c06f6b8880a618c78f4dfa7949e7007e354b962 HEAD`
+  exited 0.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests passed and `TOTAL: 8s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed. The app lint stage reported warnings only and exited 0.
+- RAW/ubiquitous-language review passed against Sorcerer Metamagic, Empowered
+  Spell, Sorcery Points, Ray of Frost, and UBIQUITOUS_LANGUAGE.md terms for
+  Magic Action, Spell Invocation, Damage Roll, Pool, Spend, Attack Roll, and
+  Spell Effect.
+- Reviewer-loop convergence passed: round 1 added public
+  `metamagicDamageDiceReroll` route ownership; round 2 corrected route
+  admission from cast-time Metamagic selection to typed damage-roll hole/fill
+  facts; round 3 verified no duplicate durable state or authored-identity
+  dispatch was added.
+
 ## CRPI-READY-012
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

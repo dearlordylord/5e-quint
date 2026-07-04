@@ -191,6 +191,21 @@ export function resolveSeekingRayOfFrost(state: BattleState): BattleState {
 }
 
 export function resolveEmpoweredRayOfFrost(state: BattleState): BattleState {
+  return resolveEmpoweredRayOfFrostSubject(state).resolved.state;
+}
+
+export function observeEmpoweredRayOfFrostRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const resolved = resolveEmpoweredRayOfFrostSubject(state);
+  return [
+    battleReducerStartRouteEvent(resolved.initialState),
+    ...(resolved.awaitingDamage.routeEvents ?? []),
+    ...(resolved.resolved.routeEvents ?? []),
+  ];
+}
+
+function resolveEmpoweredRayOfFrostSubject(state: BattleState) {
   const act = actionRayOfFrostAct(state);
   const targetHole = findHole(act.initialHoles, "targetChoice");
   const target = targetFill(targetHole, skeletonId);
@@ -220,7 +235,7 @@ export function resolveEmpoweredRayOfFrost(state: BattleState): BattleState {
   if (damageRoll.kind !== "rolledDice") {
     throw new Error("Expected Ray of Frost damage roll fill.");
   }
-  return requireResolved(
+  const resolved = requireResolved(
     resolveBattleSubject({
       state,
       subject: act.subject,
@@ -244,7 +259,8 @@ export function resolveEmpoweredRayOfFrost(state: BattleState): BattleState {
         },
       ],
     }),
-  ).state;
+  );
+  return { initialState: state, act, awaitingDamage, resolved };
 }
 
 export function resolveQuickenedEldritchBlast(state: BattleState): BattleState {

@@ -16,6 +16,7 @@ import { battleHoleFamilyKind } from "./hole-helpers.ts";
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   DISTANT_METAMAGIC_EFFECT_KIND,
+  EMPOWERED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
 } from "./metamagic-support.ts";
 
@@ -26,6 +27,7 @@ export type BattleReducerRouteSubjectFamily =
   | "hitPointRestoration"
   | "interruptStackResume"
   | "metamagicBonusActionCastingTime"
+  | "metamagicDamageDiceReroll"
   | "metamagicSavingThrowProtection"
   | "metamagicSpellGovernor"
   | "metamagicSpellRangeProjection"
@@ -49,6 +51,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleSavingThrowOutcome"
   | "battleHitPointAndZeroHpLifecycle"
   | "battleHitPoint"
+  | "battleDamageRoll"
   | "battleConcentration"
   | "battleActiveEffect"
   | "battleConditionLifecycle"
@@ -499,7 +502,8 @@ function metamagicRouteForResolution(
   if (!isQuickenedBonusActionCastingTimeSubject(input.subject)) {
     return (
       metamagicSpellRangeProjectionRouteForResolution(input, result, fill) ??
-      metamagicSavingThrowProtectionRouteForResolution(input, result, fill)
+      metamagicSavingThrowProtectionRouteForResolution(input, result, fill) ??
+      metamagicDamageDiceRerollRouteForResolution(input, result, fill)
     );
   }
 
@@ -704,6 +708,77 @@ function metamagicSpellRangeProjectionRouteForResolution(
   ];
 }
 
+function metamagicDamageDiceRerollRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+  fill: BattleFill | undefined,
+): BattleReducerRouteEvents | undefined {
+  if (!isSpellAttackDamageSubject(input.subject)) {
+    return undefined;
+  }
+  if (fill === undefined || result.tag === "invalid") {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (
+    routeFill === "attackRoll" &&
+    result.tag === "needsHoles" &&
+    hasEmpoweredSpellDamageRerollHole(result.holes)
+  ) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicDamageDiceReroll",
+        holes: battleReducerRouteHoles(result.holes),
+        owner: "battleFeatureResource",
+      },
+    ];
+  }
+  if (
+    routeFill !== "rolledDice" ||
+    fill.kind !== "rolledDice" ||
+    fill.spellDamageReroll?.effectKind !== EMPOWERED_METAMAGIC_EFFECT_KIND ||
+    result.tag !== "resolved"
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicDamageDiceReroll",
+      fill: routeFill,
+      holes: ["rolledDice"],
+      owner: "battleDamageRoll",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicDamageDiceReroll",
+      fill: routeFill,
+      holes: [],
+      owner: "battleDamageRoll",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicDamageDiceReroll",
+      holes: [],
+      owner: "battleHitPoint",
+    },
+  ];
+}
+
+function hasEmpoweredSpellDamageRerollHole(
+  holes: readonly BattleHole[],
+): boolean {
+  return holes.some(
+    (hole) =>
+      hole.kind === "rolledDice" &&
+      "spellDamageRerolls" in hole &&
+      hole.spellDamageRerolls?.some(
+        (option) => option.effectKind === EMPOWERED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+}
+
 function metamagicBonusActionTimingRoutes(
   holes: readonly BattleReducerRouteHole[],
 ): readonly [BattleReducerRouteEvent, BattleReducerRouteEvent] {
@@ -788,6 +863,15 @@ function isDistantSpellRangeProjectionSubject(
     subject.metamagic?.some(
       (selection) => selection.effectKind === DISTANT_METAMAGIC_EFFECT_KIND,
     ) === true
+  );
+}
+
+function isSpellAttackDamageSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  return (
+    subject.tag === "actionSpell" &&
+    subject.invocation.procedure === "spellAttackDamage"
   );
 }
 
