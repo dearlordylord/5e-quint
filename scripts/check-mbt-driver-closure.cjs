@@ -138,6 +138,7 @@ const AGGREGATION_BARRELS = {
 const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-fill-kinds.qnt",
   "battle-runtime-hole-kinds.qnt",
+  "battle-runtime-acid-arrow.qnt",
   "battle-runtime-command-ordering.qnt",
   "battle-runtime-hit-point-restoration-ordering.qnt",
   "battle-runtime-magic-missile-facts.qnt",

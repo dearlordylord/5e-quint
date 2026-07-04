@@ -3,6 +3,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 
 module battleRuntimeAcidArrowTimingMbt {
+  import battleRuntimeAcidArrow.* from "./battle-runtime-acid-arrow"
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   type AcidArrowScenario = | HitScenario | HitComplete | MissScenario | MissComplete
@@ -10,34 +11,31 @@ module battleRuntimeAcidArrowTimingMbt {
 
   type AcidArrowTimingWitnessState = {
     qScenario: AcidArrowScenario,
-    qCurrentTurnRole: str,
+    qCurrentTurnRole: AcidArrowTurnRole,
     qTargetHp: int,
     qActionAvailable: bool,
     qSpellAvailable: bool,
-    qDelayedDamageActive: bool,
+    qDelayedDamageTiming: AcidArrowDelayedDamageTiming,
     protocol: WitnessProtocol[AcidArrowHole],
   }
 
   var qState: AcidArrowTimingWitnessState
 
   pure def qScenario: AcidArrowScenario = qState.qScenario
-  pure def qCurrentTurnRole: str = qState.qCurrentTurnRole
+  pure def qCurrentTurnRole: AcidArrowTurnRole = qState.qCurrentTurnRole
   pure def qTargetHp: int = qState.qTargetHp
   pure def qActionAvailable: bool = qState.qActionAvailable
   pure def qSpellAvailable: bool = qState.qSpellAvailable
-  pure def qDelayedDamageActive: bool = qState.qDelayedDamageActive
+  pure def qDelayedDamageTiming: AcidArrowDelayedDamageTiming = qState.qDelayedDamageTiming
   pure def openHoles: Set[AcidArrowHole] = qState.protocol.holes
 
-  pure val casterTurnRole: str = "caster"
-  pure val targetTurnRole: str = "target"
+  pure val casterTurnRole: AcidArrowTurnRole = AcidArrowCasterTurn
+  pure val targetTurnRole: AcidArrowTurnRole = AcidArrowTargetTurn
   pure val targetInitialHp: int = 30
   pure val noHoles: Set[AcidArrowHole] = Set()
 
   pure def damageAfter(hp: int, damage: int): int =
     if (hp - damage < 0) 0 else hp - damage
-
-  pure def acidArrowMissDamage(initialDamageRoll: int): int =
-    initialDamageRoll / 2
 
   pure def protocolFor(
     holes: Set[AcidArrowHole],
@@ -49,11 +47,11 @@ module battleRuntimeAcidArrowTimingMbt {
 
   action recordAcidArrowState(
     scenario: AcidArrowScenario,
-    currentTurnRole: str,
+    currentTurnRole: AcidArrowTurnRole,
     targetHp: int,
     actionAvailable: bool,
     spellAvailable: bool,
-    delayedDamageActive: bool,
+    delayedDamageTiming: AcidArrowDelayedDamageTiming,
     holes: Set[AcidArrowHole],
     result: WitnessResult,
   ): bool = all {
@@ -63,7 +61,7 @@ module battleRuntimeAcidArrowTimingMbt {
       qTargetHp: targetHp,
       qActionAvailable: actionAvailable,
       qSpellAvailable: spellAvailable,
-      qDelayedDamageActive: delayedDamageActive,
+      qDelayedDamageTiming: delayedDamageTiming,
       protocol: protocolFor(holes, result),
     },
   }
@@ -75,7 +73,7 @@ module battleRuntimeAcidArrowTimingMbt {
       targetInitialHp,
       true,
       true,
-      false,
+      NoAcidArrowDelayedDamage,
       noHoles,
       WResolved,
     )
@@ -86,7 +84,7 @@ module battleRuntimeAcidArrowTimingMbt {
     targetInitialHp,
     true,
     true,
-    false,
+    NoAcidArrowDelayedDamage,
     noHoles,
     WInit,
   )
@@ -103,7 +101,7 @@ module battleRuntimeAcidArrowTimingMbt {
       qTargetHp,
       true,
       true,
-      false,
+      NoAcidArrowDelayedDamage,
       Set(TargetChoice),
       WNeedsHoles,
     ),
@@ -119,7 +117,7 @@ module battleRuntimeAcidArrowTimingMbt {
       qTargetHp,
       true,
       true,
-      false,
+      NoAcidArrowDelayedDamage,
       Set(AttackRoll),
       WNeedsHoles,
     ),
@@ -135,7 +133,7 @@ module battleRuntimeAcidArrowTimingMbt {
       qTargetHp,
       true,
       true,
-      false,
+      NoAcidArrowDelayedDamage,
       Set(InitialDamageRoll),
       WNeedsHoles,
     ),
@@ -151,7 +149,7 @@ module battleRuntimeAcidArrowTimingMbt {
       qTargetHp,
       true,
       true,
-      false,
+      NoAcidArrowDelayedDamage,
       Set(InitialDamageRoll),
       WNeedsHoles,
     ),
@@ -169,7 +167,7 @@ module battleRuntimeAcidArrowTimingMbt {
         damageAfter(qTargetHp, initialDiePip * 4),
         false,
         false,
-        true,
+        acidArrowDelayedDamageTiming(true),
         noHoles,
         WResolved,
       ),
@@ -188,7 +186,7 @@ module battleRuntimeAcidArrowTimingMbt {
         damageAfter(qTargetHp, acidArrowMissDamage(initialDiePip * 4)),
         false,
         false,
-        false,
+        NoAcidArrowDelayedDamage,
         noHoles,
         WResolved,
       ),
@@ -207,7 +205,7 @@ module battleRuntimeAcidArrowTimingMbt {
       qTargetHp,
       true,
       false,
-      qDelayedDamageActive,
+      qDelayedDamageTiming,
       noHoles,
       WResolved,
     ),
@@ -216,7 +214,7 @@ module battleRuntimeAcidArrowTimingMbt {
   action doDiscoverLaterDamage = all {
     qScenario == HitScenario,
     qCurrentTurnRole == targetTurnRole,
-    qDelayedDamageActive,
+    acidArrowDelayedDamageIsActive(qDelayedDamageTiming),
     openHoles == noHoles,
     recordAcidArrowState(
       HitScenario,
@@ -224,7 +222,7 @@ module battleRuntimeAcidArrowTimingMbt {
       qTargetHp,
       true,
       false,
-      true,
+      qDelayedDamageTiming,
       Set(LaterDamageRoll),
       WNeedsHoles,
     ),
@@ -235,7 +233,7 @@ module battleRuntimeAcidArrowTimingMbt {
     all {
       qScenario == HitScenario,
       qCurrentTurnRole == targetTurnRole,
-      qDelayedDamageActive,
+      acidArrowDelayedDamageIsActive(qDelayedDamageTiming),
       openHoles == Set(LaterDamageRoll),
       recordAcidArrowState(
         HitComplete,
@@ -243,7 +241,7 @@ module battleRuntimeAcidArrowTimingMbt {
         damageAfter(qTargetHp, laterDiePip * 2),
         true,
         false,
-        false,
+        NoAcidArrowDelayedDamage,
         noHoles,
         WResolved,
       ),
@@ -260,14 +258,14 @@ module battleRuntimeAcidArrowTimingMbt {
     qScenario == MissScenario,
     qCurrentTurnRole == targetTurnRole,
     openHoles == noHoles,
-    not(qDelayedDamageActive),
+    not(acidArrowDelayedDamageIsActive(qDelayedDamageTiming)),
     recordAcidArrowState(
       MissComplete,
       casterTurnRole,
       qTargetHp,
       true,
       false,
-      false,
+      NoAcidArrowDelayedDamage,
       noHoles,
       WResolved,
     ),
