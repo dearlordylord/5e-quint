@@ -187,7 +187,7 @@
     {
       "number": 31,
       "id": "CRPI-READY-006",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-quickened-spell-governor"
     },
     {
@@ -2464,7 +2464,7 @@ Plan Impact:
 
 ### Task 31 - CRPI-READY-006
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
