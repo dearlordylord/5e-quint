@@ -56,8 +56,8 @@
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 501,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 220,
-      "level-5-7-follow-up-required": 13,
+      "catalog-only/dead-for-now": 221,
+      "level-5-7-follow-up-required": 12,
       "missing-authored-record": 32,
       "non-runtime": 84
     },
@@ -89,10 +89,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 133,
+      "not-recorded": 132,
       "profile-subset-supported": 59,
       "supported-profile": 309,
-      "unsupported-profile": 399
+      "unsupported-profile": 400
     }
   },
   "rows": [
@@ -31094,7 +31094,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:level-6:class-feature-grant:warlock_dark_ones_own_luck",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Dark One's Own Luck lets the Warlock add 1d10 to the Warlock's own Ability Check or Saving Throw after seeing the roll but before any effects occur, with uses equal to Charisma modifier minimum one, no more than one use per roll, and Long Rest recovery. Existing Fighter Tactical Mind support is limited to failed Ability Checks that spend Second Wind and may refund the spend, Bardic Inspiration support is a granted held die spent after an already failed D20 Test, spell roll-modifier support is active Spell Effect state, and reaction roll-reduction support spends a Reaction. None admits this selected-feature, reactionless Ability Check and Saving Throw modifier window or its own rest resource. A future owner must consume typed Surface facts for the selected Dark One's Own Luck feature, existing Charisma ability state, existing Ability Check and Saving Throw roll/result boundaries, and canonical Long Rest resource state, then apply exactly one optional 1d10 modifier per eligible roll without duplicating D20 roll state, Ability Check state, Saving Throw state, character ability state, rest use-count state, subclass selection state, or dispatching on Warlock, Fiend Patron, or Dark One's Own Luck authored identity.",
       "rowId": "srd521:classes/warlock:level-6:class-feature-grant:warlock_dark_ones_own_luck",
       "rowKind": "class-feature-grant",
       "source": {
@@ -31110,15 +31110,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future-owner-before-SDK character-sheet-runtime Dark One's Own Luck Long Rest resource owner plus battle-runtime and Character Sheet reactionless Ability Check and Saving Throw d10 modifier owners",
+          "reason": "SRD Dark One's Own Luck lets the Warlock add 1d10 to the Warlock's own Ability Check or Saving Throw after seeing the roll but before any effects occur, with uses equal to Charisma modifier minimum one, no more than one use per roll, and Long Rest recovery. Existing Fighter Tactical Mind support is limited to failed Ability Checks that spend Second Wind and may refund the spend, Bardic Inspiration support is a granted held die spent after an already failed D20 Test, spell roll-modifier support is active Spell Effect state, and reaction roll-reduction support spends a Reaction. None admits this selected-feature, reactionless Ability Check and Saving Throw modifier window or its own rest resource. A future owner must consume typed Surface facts for the selected Dark One's Own Luck feature, existing Charisma ability state, existing Ability Check and Saving Throw roll/result boundaries, and canonical Long Rest resource state, then apply exactly one optional 1d10 modifier per eligible roll without duplicating D20 roll state, Ability Check state, Saving Throw state, character ability state, rest use-count state, subclass selection state, or dispatching on Warlock, Fiend Patron, or Dark One's Own Luck authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "warlock_dark_ones_own_luck"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 501 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 220 |
-| level-5-7-follow-up-required | 13 |
+| catalog-only/dead-for-now | 221 |
+| level-5-7-follow-up-required | 12 |
 | missing-authored-record | 32 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 133 |
+| not-recorded | 132 |
 | profile-subset-supported | 59 |
 | supported-profile | 309 |
-| unsupported-profile | 399 |
+| unsupported-profile | 400 |
 
 ### Battle Readiness Snapshot
 
@@ -950,7 +950,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Warlock Ability Score Improvement | level-4 | character-level | class feature | `warlock_ability_score_improvement_l4` | `.references/srd-5.2.1/Classes/Warlock.md:100` | present | installed | unsupported-profile | catalog-only/dead-for-now | accepted-no-battle-effect | selection-grant-container: character-creation-runtime ability-score projection and selected feat Unit profiles | The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim. |
 | Warlock level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_warlock` | `.references/srd-5.2.1/Classes/Warlock.md:38` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
 | Warlock level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_warlock` | `.references/srd-5.2.1/Classes/Warlock.md:39` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Warlock Dark One's Own Luck | level-6 | character-level | class feature | `warlock_dark_ones_own_luck` | `.references/srd-5.2.1/Classes/Warlock.md:477` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Warlock Dark One's Own Luck | level-6 | character-level | class feature | `warlock_dark_ones_own_luck` | `.references/srd-5.2.1/Classes/Warlock.md:477` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future-owner-before-SDK character-sheet-runtime Dark One's Own Luck Long Rest resource owner plus battle-runtime and Character Sheet reactionless Ability Check and Saving Throw d10 modifier owners | SRD Dark One's Own Luck lets the Warlock add 1d10 to the Warlock's own Ability Check or Saving Throw after seeing the roll but before any effects occur, with uses equal to Charisma modifier minimum one, no more than one use per roll, and Long Rest recovery. Existing Fighter Tactical Mind support is limited to failed Ability Checks that spend Second Wind and may refund the spend, Bardic Inspiration support is a granted held die spent after an already failed D20 Test, spell roll-modifier support is active Spell Effect state, and reaction roll-reduction support spends a Reaction. None admits this selected-feature, reactionless Ability Check and Saving Throw modifier window or its own rest resource. A future owner must consume typed Surface facts for the selected Dark One's Own Luck feature, existing Charisma ability state, existing Ability Check and Saving Throw roll/result boundaries, and canonical Long Rest resource state, then apply exactly one optional 1d10 modifier per eligible roll without duplicating D20 roll state, Ability Check state, Saving Throw state, character ability state, rest use-count state, subclass selection state, or dispatching on Warlock, Fiend Patron, or Dark One's Own Luck authored identity. |
 | Warlock level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_warlock` | `.references/srd-5.2.1/Classes/Warlock.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Warlock level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_warlock` | `.references/srd-5.2.1/Classes/Warlock.md:41` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Warlock spell list Chill Touch | spell-level-0 | spell-level | spell Unit pressure | `chill_touch` | `.references/srd-5.2.1/Classes/Warlock.md:336` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
