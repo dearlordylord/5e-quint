@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "QAR-11-RUN-BLOCK-SEPARATION-GUARD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Separate QNT run blocks from owner modules"
     },
     {
@@ -183,7 +183,7 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 8 | QAR-08-SHOVE-PROJECTION-UNION - Replace Shove flattened projection with a closed union | done | QAR-01-TEST-LANE-ISOLATION | Replaces impossible Shove projection combinations. |
 | 9 | QAR-09-CUNNING-STRIKE-TYPED-QNT - Replace Cunning Strike string projections with typed QNT | done | QAR-01-TEST-LANE-ISOLATION | Replaces raw Cunning Strike strings. |
 | 10 | QAR-10-ACID-ARROW-TYPED-TIMING - Replace Acid Arrow string timing with typed QNT | done | QAR-01-TEST-LANE-ISOLATION | Replaces raw Acid Arrow timing strings. |
-| 11 | QAR-11-RUN-BLOCK-SEPARATION-GUARD - Separate QNT run blocks from owner modules | ready-for-research | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING | Cleans owner modules after semantic edits land. |
+| 11 | QAR-11-RUN-BLOCK-SEPARATION-GUARD - Separate QNT run blocks from owner modules | done | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING | Cleans owner modules after semantic edits land. |
 | 12 | QAR-12-INDUCTIVE-WITNESS-SEEDS - Repair priority inductive specs and add reachability witnesses | blocked | QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-11-RUN-BLOCK-SEPARATION-GUARD | Admits state-space repair modules and adds reachability witnesses after affected specs settle. |
 | 13 | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD - Harden MBT closure leaf whitelist checks | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Hardens closure checks before driver conversions. |
 | 14 | QAR-14-STARRY-WISP-WITNESS-CONVERSION - Convert Starry Wisp object driver to a literal witness | blocked | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Converts the clearest heavy driver to a literal witness. |
@@ -660,7 +660,7 @@ Plan Impact:
 
 ### Task 11 - QAR-11-RUN-BLOCK-SEPARATION-GUARD
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: dependency
 
