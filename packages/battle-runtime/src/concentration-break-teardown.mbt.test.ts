@@ -231,21 +231,25 @@ describe("Concentration break teardown MBT parity", () => {
 
   it("exposes Concentration teardown discovery from public discovered acts", () => {
     const castAct = concentrationSpellCastAct(initialRuntimeState().battle);
-    expect(castAct.routeEvent).toEqual({
-      kind: "discoverBattleActs",
-      subject: "concentrationTeardown",
-      holes: [],
-      owner: "battleSpellSlotAndActionEconomy",
-    });
+    expect(castAct.routeEvents).toEqual([
+      {
+        kind: "discoverBattleActs",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleSpellSlotAndActionEconomy",
+      },
+    ]);
 
     const cast = stateAfterBlurCast(initialRuntimeState());
     const endAct = endConcentrationAct(cast.battle);
-    expect(endAct.routeEvent).toEqual({
-      kind: "discoverBattleActs",
-      subject: "concentrationTeardown",
-      holes: [],
-      owner: "battleConcentration",
-    });
+    expect(endAct.routeEvents).toEqual([
+      {
+        kind: "discoverBattleActs",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleConcentration",
+      },
+    ]);
   });
 
   it("rejects stale and filled End Concentration subjects", () => {

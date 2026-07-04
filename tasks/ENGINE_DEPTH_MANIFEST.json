@@ -1,26 +1,23 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP07-DSR-05",
+  "taskId": "CRPI-READY-004",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "public-reducer-route-observer",
       "domainApis": [
         "BattleReducerRouteEvent",
-        "battleReducerRouteForDiscoveredAct",
+        "BattleReducerRouteOwnerGroup.battleObjectTargetBoundary",
+        "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution",
-        "concentrationTeardown route subject",
-        "battleConcentration route owner",
-        "battleActiveEffect route owner"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "resolveBattleSubject",
-        "runtimeCommand:endConcentration staleSubject rejection",
-        "runtimeCommand:endConcentration invalidFill rejection"
+        "spellAttackProcedure route subject",
+        "battleActionEconomy route owner",
+        "battleObjectTargetBoundary route owner",
+        "battleTargetSelection route owner",
+        "battleAttackRoll route owner",
+        "battleHitPoint route owner",
+        "battleSpellAttackProcedure route owner",
+        "battleHoleFrontier route owner"
       ]
     },
     {
@@ -28,14 +25,15 @@
       "role": "domain-engine",
       "domainApis": [
         "discoverBattleActs",
-        "runtimeCommand:endConcentration"
+        "AvailableBattleAct.routeEvents"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/battle-subjects.ts",
-      "role": "public-subject-vocabulary",
+      "path": "packages/battle-runtime/src/battle-reducer.ts",
+      "role": "public-subject-and-result-vocabulary",
       "domainApis": [
-        "BattleSubject.runtimeCommand:endConcentration"
+        "AvailableBattleAct.routeEvents",
+        "BattleResolutionResult.routeEvents"
       ]
     }
   ],
@@ -43,11 +41,14 @@
     {
       "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
       "quarantinedWitnessNames": [
-        "doCastConcentrationSpell",
-        "doDamageRequestsConcentrationSave",
-        "doFailConcentrationSave",
-        "doVoluntaryEndConcentration",
-        "doCastReplacementConcentrationSpell",
+        "doFillTwoCreatureTargets",
+        "doFillFirstAttackMiss",
+        "doFillFirstAttackHit",
+        "doFillFirstDamageLow",
+        "doFillSecondAttackMiss",
+        "doFillSecondAttackHit",
+        "doFillSecondDamageLow",
+        "doRejectStaleAfterResolved",
         "mbt::actionTaken",
         "observedActionTaken",
         "traceId",
@@ -66,25 +67,30 @@
         "harnessTestPath"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP07-DSR-05.json"
+        "tasks/target-replay-evidence/CRPI-READY-004.json"
       ]
     }
   ],
-  "accumulatorGrowth": [],
+  "accumulatorGrowth": [
+    {
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "reason": "Eldritch Blast discovery exposes both the action-economy subject route and the object-target boundary route for one public discovered act."
+    }
+  ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "battleConcentration and battleActiveEffect public route owners"
+      "api": "spellAttackSequence public reducer route owner projection"
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-spell-base-armor-class-effect.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-mixed-target-outcome.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "spellEffect active-effect route owner projection"
+      "api": "BattleObjectTargetBoundaryOwner route evidence"
     }
   ],
   "completion": {
     "tag": "public-reducer-route-replay",
-    "notes": "Task 8 routes Concentration break teardown through public battle reducer subjects and route events. It introduces no adapter-local Concentration or active-effect ledger; BattleState owns the concentrating source and active Spell Effect instances, and qRoute evidence is emitted from startBattle, AvailableBattleAct.routeEvent on discoverBattleActs results, and BattleResolutionResult.routeEvents."
+    "notes": "Task 15 routes independent spell Attack sequences through public battle reducer subjects and route events. It introduces no adapter-local spell-attack sequence ledger; BattleState already owns Hit Points and turn action resources, the typed action-spell subject owns procedure shape and sequence fills, and object target identity, Armor Class, range, and Hit Point facts remain table-supplied object-target boundary fills. qRoute evidence is emitted from startBattle, AvailableBattleAct.routeEvents on discoverBattleActs results, and BattleResolutionResult.routeEvents."
   }
 }

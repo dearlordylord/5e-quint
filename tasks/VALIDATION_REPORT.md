@@ -90,7 +90,7 @@ The route replay for chained spell-attack sequencing observes the copied
 `startBattle`, `discoverBattleActs`, and `resolveBattleSubject`. The driver no
 longer supplies expected owner groups for Task 5: the start event is derived by
 `battleReducerStartRouteEvent(startBattle result)`, discovery reads
-`AvailableBattleAct.routeEvent`, and each fill reads
+`AvailableBattleAct.routeEvents`, and each fill reads
 `BattleResolutionResult.routeEvents`. The runtime already owns the generic
 chained spell-attack procedure through the typed action-spell subject and
 BattleState reducer result: damage-type choice, per-step target history, Attack
@@ -216,6 +216,81 @@ Verification results:
 - RAW/ubiquitous-language review passed against Command, Movement and Position, Prone, Reaction, Opportunity Attacks, and the project glossary terms for Spell Invocation, Spell Effect, Movement, Reaction, Condition, and Boundary Crossing.
 - Reviewer-loop convergence passed: round 2 gated invalid Command route evidence to fill-order invalids and added regression coverage for stale/wrong-actor Command subjects under Halt; no remaining reasonable Task 7 findings after RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks.
 
+## CRPI-READY-004
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The route replay for independent spell Attack sequences now observes the copied
+`qRoute` projection through public reducer route events produced from
+`startBattle`, `discoverBattleActs`, and `resolveBattleSubject`. Eldritch Blast
+target admission, per-beam Attack Roll resolution, Hit Point damage, sequence
+continuation, and stale-subject rejection route through the shared reducer
+surface. The runtime does not add a parallel beam ledger: sequence progress
+remains the typed action-spell subject plus ordered fills and reducer hole
+frontier, creature Hit Points remain `BattleCreatureState.hp`, and object target
+identity, Armor Class, range, and Hit Point facts remain table-supplied
+object-target boundary fills. Discovery now exposes `AvailableBattleAct.routeEvents`
+so a single public act can report both action-economy and object-target-boundary
+route events without adapter-local route construction.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillFirstAttackHit` | `tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillFirstAttackHit#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillFirstAttackHit` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes independent spell Attack sequences through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillFirstAttackMiss` | `tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillFirstAttackMiss#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillFirstAttackMiss` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes independent spell Attack sequences through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillFirstDamageLow` | `tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillFirstDamageLow#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillFirstDamageLow` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes independent spell Attack sequences through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillSecondAttackHit` | `tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillSecondAttackHit#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSecondAttackHit` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes independent spell Attack sequences through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillSecondAttackMiss` | `tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillSecondAttackMiss#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSecondAttackMiss` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes independent spell Attack sequences through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillSecondDamageLow` | `tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillSecondDamageLow#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSecondDamageLow` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes independent spell Attack sequences through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillTwoCreatureTargets` | `tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillTwoCreatureTargets#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillTwoCreatureTargets` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes independent spell Attack sequences through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doRejectStaleAfterResolved` | `tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doRejectStaleAfterResolved#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectStaleAfterResolved` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes independent spell Attack sequences through the shared reducer surface` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-004.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=4 action=<branchAction>`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-004/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 15.
+
+Verification results:
+
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t "independent spell Attack"` passed in 7s.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- RAW/ubiquitous-language review passed against Eldritch Blast, Attack Rolls, Making an Attack, Damage Rolls, Breaking Objects, Target, and the project glossary terms for Spell Invocation, Spell Attack, Table Decision, Attack Roll, Damage, Resolve, Apply, and Advance.
+- Reviewer-loop convergence passed: round 2 moved Eldritch Blast qRoute discovery to public `AvailableBattleAct.routeEvents`, kept object target facts at the table boundary, and found no remaining reasonable Task 15 findings after RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks.
+
 ## CRP07-DSR-05
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
@@ -235,7 +310,7 @@ Allowed inputs used:
 
 Behavior implemented:
 
-The route replay for Concentration break teardown now observes the copied `qRoute` projection through public battle reducer routes. Concentration spell cast discovery and voluntary End Concentration discovery are emitted from `AvailableBattleAct.routeEvent`; cleanup and save-resolution owner events are emitted from `BattleResolutionResult.routeEvents`. The runtime does not add a parallel Concentration or active-effect ledger: the concentrating source remains `BattleCreatureState.concentration`, Spell Effect instances remain `BattleCreatureState.activeEffects`, and malformed or stale `endConcentration` subjects are rejected.
+The route replay for Concentration break teardown now observes the copied `qRoute` projection through public battle reducer routes. Concentration spell cast discovery and voluntary End Concentration discovery are emitted from `AvailableBattleAct.routeEvents`; cleanup and save-resolution owner events are emitted from `BattleResolutionResult.routeEvents`. The runtime does not add a parallel Concentration or active-effect ledger: the concentrating source remains `BattleCreatureState.concentration`, Spell Effect instances remain `BattleCreatureState.activeEffects`, and malformed or stale `endConcentration` subjects are rejected.
 
 Generated branch coverage:
 
@@ -275,7 +350,7 @@ Verification results:
 - `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
 - `git diff --check` passed.
 - RAW/ubiquitous-language review passed against Rules Glossary Concentration and UBIQUITOUS_LANGUAGE.md Spellcasting terms.
-- Reviewer-loop convergence round 2 addressed review findings by moving discovery qRoute evidence to `AvailableBattleAct.routeEvent`, rejecting stale/filled End Concentration subjects, adding focused regression tests, and rerunning RAW/domain, architecture/connascence, code-review, and focused MBT checks.
+- Reviewer-loop convergence round 2 addressed review findings by moving discovery qRoute evidence to `AvailableBattleAct.routeEvents`, rejecting stale/filled End Concentration subjects, adding focused regression tests, and rerunning RAW/domain, architecture/connascence, code-review, and focused MBT checks.
 
 ## CRP07-DSR-04
 

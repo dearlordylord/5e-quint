@@ -189,7 +189,6 @@ import type {
   InitiativeScore,
 } from "./identity.ts";
 import type {
-  BattleReducerRouteEvent,
   BattleReducerRouteEvents,
 } from "./battle-reducer/reducer-route.ts";
 import {
@@ -4478,7 +4477,7 @@ export type AvailableBattleAct = {
   readonly label: string;
   readonly summary: string;
   readonly initialHoles: readonly BattleHole[];
-  readonly routeEvent?: BattleReducerRouteEvent;
+  readonly routeEvents?: BattleReducerRouteEvents;
 };
 
 export type BattleHoleId = HoleId;

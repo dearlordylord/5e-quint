@@ -198,7 +198,7 @@ import {
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
   discoverLegendaryActionActs,
 } from "../battle-reducer.ts";
-import { battleReducerRouteForDiscoveredAct } from "./reducer-route.ts";
+import { battleReducerRouteEventsForDiscoveredAct } from "./reducer-route.ts";
 
 export function discoverBattleActs(
   state: BattleState,
@@ -674,8 +674,8 @@ function withReducerRouteEvents(
   acts: readonly AvailableBattleAct[],
 ): readonly AvailableBattleAct[] {
   return acts.map((act) => {
-    const routeEvent = battleReducerRouteForDiscoveredAct(act);
-    return routeEvent === undefined ? act : { ...act, routeEvent };
+    const routeEvents = battleReducerRouteEventsForDiscoveredAct(act);
+    return routeEvents === undefined ? act : { ...act, routeEvents };
   });
 }
 

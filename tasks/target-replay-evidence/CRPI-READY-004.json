@@ -1,0 +1,356 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts independent spell attack sequence public reducer route-event replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt",
+      "qntFileSha256": "0c8873356d5858900f7e993e028f11352ed28e92c9e91abf366defb45c4ce476",
+      "routeConnectorSha256": "b8c6780c705d5036cb79070e6da5d0f0667e800ac0446eabe41bb6c932243207",
+      "branchFamily": "step",
+      "branchAction": "doFillFirstAttackHit",
+      "observedActionTaken": "doFillFirstAttackHit",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doFillFirstAttackHit",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "b60b75f7acd3367c5c64e512a446336a1d4bcba775e31a0868439d0f0c7c1023",
+        "observedProjectionSha256": "b60b75f7acd3367c5c64e512a446336a1d4bcba775e31a0868439d0f0c7c1023",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.actionSpell.invocation.spellId",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt",
+      "qntFileSha256": "0c8873356d5858900f7e993e028f11352ed28e92c9e91abf366defb45c4ce476",
+      "routeConnectorSha256": "b8c6780c705d5036cb79070e6da5d0f0667e800ac0446eabe41bb6c932243207",
+      "branchFamily": "step",
+      "branchAction": "doFillFirstAttackMiss",
+      "observedActionTaken": "doFillFirstAttackMiss",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doFillFirstAttackMiss",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "8331cf57ebe03f5276e14707bc8809a91388d4c7e6bbc310dd6d42e71f813649",
+        "observedProjectionSha256": "8331cf57ebe03f5276e14707bc8809a91388d4c7e6bbc310dd6d42e71f813649",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.actionSpell.invocation.spellId",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt",
+      "qntFileSha256": "0c8873356d5858900f7e993e028f11352ed28e92c9e91abf366defb45c4ce476",
+      "routeConnectorSha256": "b8c6780c705d5036cb79070e6da5d0f0667e800ac0446eabe41bb6c932243207",
+      "branchFamily": "step",
+      "branchAction": "doFillFirstDamageLow",
+      "observedActionTaken": "doFillFirstDamageLow",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doFillFirstDamageLow",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "180b12b13e256cdabb7f50eb8e9bd0bce586cd77daea406f1c78608b31c38d33",
+        "observedProjectionSha256": "180b12b13e256cdabb7f50eb8e9bd0bce586cd77daea406f1c78608b31c38d33",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleCreatureState.hitPoints",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt",
+      "qntFileSha256": "0c8873356d5858900f7e993e028f11352ed28e92c9e91abf366defb45c4ce476",
+      "routeConnectorSha256": "b8c6780c705d5036cb79070e6da5d0f0667e800ac0446eabe41bb6c932243207",
+      "branchFamily": "step",
+      "branchAction": "doFillSecondAttackHit",
+      "observedActionTaken": "doFillSecondAttackHit",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doFillSecondAttackHit",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "86a2e654f6c0fa98ff159edf0dc1369abbd0f54a449ad68ddcd4ba0eaa4e7250",
+        "observedProjectionSha256": "86a2e654f6c0fa98ff159edf0dc1369abbd0f54a449ad68ddcd4ba0eaa4e7250",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleHole.kind",
+          "BattleFill.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt",
+      "qntFileSha256": "0c8873356d5858900f7e993e028f11352ed28e92c9e91abf366defb45c4ce476",
+      "routeConnectorSha256": "b8c6780c705d5036cb79070e6da5d0f0667e800ac0446eabe41bb6c932243207",
+      "branchFamily": "step",
+      "branchAction": "doFillSecondAttackMiss",
+      "observedActionTaken": "doFillSecondAttackMiss",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doFillSecondAttackMiss",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "73e1aaa953d3acafb9073fe0828a6fc322d8b007f682e89c993118d5e6122e78",
+        "observedProjectionSha256": "73e1aaa953d3acafb9073fe0828a6fc322d8b007f682e89c993118d5e6122e78",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleHole.kind",
+          "BattleFill.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt",
+      "qntFileSha256": "0c8873356d5858900f7e993e028f11352ed28e92c9e91abf366defb45c4ce476",
+      "routeConnectorSha256": "b8c6780c705d5036cb79070e6da5d0f0667e800ac0446eabe41bb6c932243207",
+      "branchFamily": "step",
+      "branchAction": "doFillSecondDamageLow",
+      "observedActionTaken": "doFillSecondDamageLow",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doFillSecondDamageLow",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "be14014f70e7ac985b10b0588739ea4597e9a092a5c0df45ffc471a9dd70463b",
+        "observedProjectionSha256": "be14014f70e7ac985b10b0588739ea4597e9a092a5c0df45ffc471a9dd70463b",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleCreatureState.hitPoints",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt",
+      "qntFileSha256": "0c8873356d5858900f7e993e028f11352ed28e92c9e91abf366defb45c4ce476",
+      "routeConnectorSha256": "b8c6780c705d5036cb79070e6da5d0f0667e800ac0446eabe41bb6c932243207",
+      "branchFamily": "step",
+      "branchAction": "doFillTwoCreatureTargets",
+      "observedActionTaken": "doFillTwoCreatureTargets",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doFillTwoCreatureTargets",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "7852141977755bfb7f6785a9d4a6c912f7ac0f029b0b90f96043e3cd7b3ca9cc",
+        "observedProjectionSha256": "7852141977755bfb7f6785a9d4a6c912f7ac0f029b0b90f96043e3cd7b3ca9cc",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleHole.kind",
+          "BattleFill.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt",
+      "qntFileSha256": "0c8873356d5858900f7e993e028f11352ed28e92c9e91abf366defb45c4ce476",
+      "routeConnectorSha256": "b8c6780c705d5036cb79070e6da5d0f0667e800ac0446eabe41bb6c932243207",
+      "branchFamily": "step",
+      "branchAction": "doRejectStaleAfterResolved",
+      "observedActionTaken": "doRejectStaleAfterResolved",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doRejectStaleAfterResolved",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "dd1adb117dcfb5ed30e0dbf2c6a67ffae618921aa5bb71dc1556a0f8b65e0e9b",
+        "observedProjectionSha256": "dd1adb117dcfb5ed30e0dbf2c6a67ffae618921aa5bb71dc1556a0f8b65e0e9b",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleInvalidReasonCode.staleSubject",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

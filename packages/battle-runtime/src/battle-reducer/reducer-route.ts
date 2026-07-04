@@ -22,6 +22,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleSpellSlotAndActionEconomy"
   | "battleHoleFrontier"
   | "battleTargetSelection"
+  | "battleObjectTargetBoundary"
   | "battleAttackRoll"
   | "battleSpellAttackProcedure"
   | "battleHitPointAndZeroHpLifecycle"
@@ -93,11 +94,11 @@ export function battleReducerStartRouteEvent(
   return { kind: "startBattle", owner: "battleActionEconomy" };
 }
 
-export function battleReducerRouteForDiscoveredAct(
+export function battleReducerRouteEventsForDiscoveredAct(
   act: AvailableBattleAct,
-): BattleReducerRouteEvent | undefined {
+): BattleReducerRouteEvents | undefined {
   if (isConcentrationTeardownDiscoverySubject(act.subject)) {
-    return {
+    return [{
       kind: "discoverBattleActs",
       subject: "concentrationTeardown",
       holes: battleReducerRouteHoles(act.initialHoles),
@@ -105,10 +106,10 @@ export function battleReducerRouteForDiscoveredAct(
         act.subject.tag === "actionSpell"
           ? "battleSpellSlotAndActionEconomy"
           : "battleConcentration",
-    };
+    }];
   }
   if (isCommandEffectDiscoverySubject(act.subject)) {
-    return {
+    return [{
       kind: "discoverBattleActs",
       subject: "commandEffect",
       holes: battleReducerRouteHoles(act.initialHoles),
@@ -116,17 +117,38 @@ export function battleReducerRouteForDiscoveredAct(
         act.subject.tag === "actionSpell"
           ? "battleSpellSlotAndActionEconomy"
           : "battleActiveEffect",
-    };
+    }];
   }
-  if (!isChainedSpellAttackProcedureSubject(act.subject)) {
+  if (!isSpellAttackProcedureSubject(act.subject)) {
     return undefined;
   }
-  return {
+  const actionOwner =
+    act.subject.invocation.tag === "spellSlot"
+      ? "battleSpellSlotAndActionEconomy"
+      : "battleActionEconomy";
+  const actionEconomyEvent: BattleReducerRouteEvent = {
     kind: "discoverBattleActs",
     subject: "spellAttackProcedure",
     holes: battleReducerRouteHoles(act.initialHoles),
-    owner: "battleSpellSlotAndActionEconomy",
+    owner: actionOwner,
   };
+  const hasObjectTargetBoundary = act.initialHoles.some(
+    (hole) => hole.kind === "objectTargetChoice",
+  );
+  if (!hasObjectTargetBoundary) {
+    return [actionEconomyEvent];
+  }
+  return [
+    actionEconomyEvent,
+    {
+      kind: "discoverBattleActs",
+      subject: "spellAttackProcedure",
+      holes: battleReducerRouteHoles(
+        act.initialHoles.filter((hole) => hole.kind === "objectTargetChoice"),
+      ),
+      owner: "battleObjectTargetBoundary",
+    },
+  ];
 }
 
 export function battleReducerRouteForResolution(
@@ -148,10 +170,20 @@ export function battleReducerRouteForResolution(
   if (commandRoute !== undefined) {
     return [commandRoute];
   }
-  if (!isChainedSpellAttackProcedureSubject(input.subject)) {
+  if (!isSpellAttackProcedureSubject(input.subject)) {
     return undefined;
   }
   if (result.tag === "invalid") {
+    if (result.reason === "staleSubject") {
+      return [
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "spellAttackProcedure",
+          holes: [],
+          owner: "battleHoleFrontier",
+        },
+      ];
+    }
     return undefined;
   }
   const fill = input.fills.at(-1);
@@ -165,7 +197,7 @@ export function battleReducerRouteForResolution(
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
   const [firstOwner, ...remainingOwners] =
-    chainedSpellAttackProcedureRouteOwners(fill);
+    spellAttackProcedureRouteOwners(input.subject, fill);
   if (firstOwner === undefined) {
     return undefined;
   }
@@ -476,12 +508,16 @@ function commandRouteFill(
   return undefined;
 }
 
-function isChainedSpellAttackProcedureSubject(
+function isSpellAttackProcedureSubject(
   subject: BattleResolutionInput["subject"],
-): boolean {
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "actionSpell" }
+> {
   return (
     subject.tag === "actionSpell" &&
-    subject.invocation.procedure === "chainedSpellAttackDamage"
+    (subject.invocation.procedure === "chainedSpellAttackDamage" ||
+      subject.invocation.procedure === "spellAttackSequence")
   );
 }
 
@@ -595,11 +631,17 @@ function battleReducerRouteFill(
   return undefined;
 }
 
-function chainedSpellAttackProcedureRouteOwners(
+function spellAttackProcedureRouteOwners(
+  subject: BattleResolutionInput["subject"],
   fill: BattleFill,
 ): readonly BattleReducerRouteOwnerGroup[] {
   const kind = battleFillKind(fill);
-  if (kind === "attackRoll") return ["battleAttackRoll"];
+  if (kind === "attackRoll") {
+    return subject.tag === "actionSpell" &&
+      subject.invocation.procedure === "spellAttackSequence"
+      ? ["battleAttackRoll", "battleSpellAttackProcedure"]
+      : ["battleAttackRoll"];
+  }
   if (kind === "damageTypeChoice") return ["battleSpellAttackProcedure"];
   if (kind === "rolledDice") {
     return ["battleHitPoint", "battleSpellAttackProcedure"];

@@ -9416,8 +9416,6 @@ const CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_SLOT2_FACES = [
 ] as const;
 const CHAINED_ATTACK_PROCEDURE_STEP1_SLOT1_LIMIT_FACES = [1, 1, 1] as const;
 const CHAINED_ATTACK_PROCEDURE_STEP1_SLOT2_LEAP_FACES = [1, 1, 1, 1] as const;
-const INDEPENDENT_SPELL_ATTACK_SEQUENCE_ROUTE_SUBJECT =
-  "spellAttackProcedure" satisfies ReducerRouteSubjectFamily;
 const INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID = "eldritch_blast";
 const INDEPENDENT_SPELL_ATTACK_SEQUENCE_INITIAL_TARGET_HP = 13;
 const INDEPENDENT_SPELL_ATTACK_SEQUENCE_LOW_DAMAGE = 4;
@@ -9477,7 +9475,7 @@ export function createChainedAttackProcedureRouteDriver() {
         subject = act.subject;
         fills = [];
         holes = act.initialHoles;
-        route = [...route, requireChainedAttackProcedureActRouteEvent(act)];
+        route = [...route, ...requireChainedAttackProcedureActRouteEvents(act)];
       },
       doChooseDamageType: () => {
         recordResolvedFill({
@@ -9583,25 +9581,14 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
       fills = [];
       holes = act.initialHoles;
       route = [
-        reducerRouteStartBattle("battleActionEconomy"),
-        reducerRouteDiscoverBattleActs({
-          subject: INDEPENDENT_SPELL_ATTACK_SEQUENCE_ROUTE_SUBJECT,
-          holes,
-          owner: "battleActionEconomy",
-        }),
-        reducerRouteDiscoverBattleActs({
-          subject: INDEPENDENT_SPELL_ATTACK_SEQUENCE_ROUTE_SUBJECT,
-          holes: holes.filter((hole) => hole.kind === "objectTargetChoice"),
-          owner: "battleObjectTargetBoundary",
-        }),
+        battleReducerStartRouteEvent(replayBaseState),
+        ...requireIndependentSpellAttackSequenceActRouteEvents(act),
       ];
     }
 
     function recordResolvedFill(input: {
       readonly nextFills: readonly BattleFill[];
       readonly expectedTag: "needsHoles" | "resolved";
-      readonly routeFill: ReducerRouteFill;
-      readonly owners: readonly ReducerRouteOwnerGroup[];
     }): void {
       fills = fillsWithMbtSpellCastReactionFacts(holes, input.nextFills);
       const result = resolveBattleSubject({
@@ -9616,7 +9603,7 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
           }: ${"message" in result ? result.message : ""}`,
         );
       }
-      if (input.routeFill === "rolledDice") {
+      if (input.nextFills.at(-1)?.kind === "rolledDice") {
         assertIndependentSpellAttackSequenceTargetHp(
           result.state,
           independentSpellAttackSequenceExpectedTargetHp(fills),
@@ -9628,14 +9615,7 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
       holes = result.tag === "needsHoles" ? result.holes : [];
       route = [
         ...route,
-        ...input.owners.map((owner) =>
-          reducerRouteResolveBattleSubject({
-            subject: INDEPENDENT_SPELL_ATTACK_SEQUENCE_ROUTE_SUBJECT,
-            fill: input.routeFill,
-            holes,
-            owner,
-          }),
-        ),
+        ...requireIndependentSpellAttackSequenceRouteEvents(result),
       ];
     }
 
@@ -9652,8 +9632,6 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
             independentSpellAttackSequenceTargetFill(secondTarget),
           ],
           expectedTag: "needsHoles",
-          routeFill: "targetChoice",
-          owners: ["battleTargetSelection", "battleSpellAttackProcedure"],
         });
       },
       doFillFirstAttackMiss: () => {
@@ -9666,8 +9644,6 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
             }),
           ],
           expectedTag: "needsHoles",
-          routeFill: "attackRoll",
-          owners: ["battleAttackRoll", "battleSpellAttackProcedure"],
         });
       },
       doFillFirstAttackHit: () => {
@@ -9680,8 +9656,6 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
             }),
           ],
           expectedTag: "needsHoles",
-          routeFill: "attackRoll",
-          owners: ["battleAttackRoll", "battleSpellAttackProcedure"],
         });
       },
       doFillFirstDamageLow: () => {
@@ -9693,8 +9667,6 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
             ]),
           ],
           expectedTag: "needsHoles",
-          routeFill: "rolledDice",
-          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
         });
       },
       doFillSecondAttackMiss: () => {
@@ -9707,8 +9679,6 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
             }),
           ],
           expectedTag: "resolved",
-          routeFill: "attackRoll",
-          owners: ["battleAttackRoll", "battleSpellAttackProcedure"],
         });
       },
       doFillSecondAttackHit: () => {
@@ -9721,8 +9691,6 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
             }),
           ],
           expectedTag: "needsHoles",
-          routeFill: "attackRoll",
-          owners: ["battleAttackRoll", "battleSpellAttackProcedure"],
         });
       },
       doFillSecondDamageLow: () => {
@@ -9734,8 +9702,6 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
             ]),
           ],
           expectedTag: "resolved",
-          routeFill: "rolledDice",
-          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
         });
       },
       doRejectStaleAfterResolved: () => {
@@ -9749,11 +9715,7 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
         }
         route = [
           ...route,
-          reducerRouteResolveBattleSubjectWithoutFill({
-            subject: INDEPENDENT_SPELL_ATTACK_SEQUENCE_ROUTE_SUBJECT,
-            holes: [],
-            owner: "battleHoleFrontier",
-          }),
+          ...requireIndependentSpellAttackSequenceRouteEvents(result),
         ];
       },
       step: () => {},
@@ -10332,22 +10294,22 @@ export function createConcentrationBreakTeardownRouteDriver() {
       route = [...route, ...result.routeEvents];
     }
 
-    function appendDiscoveredActRouteEvent(input: {
-      readonly routeEvent?: ReducerRouteEvent;
+    function appendDiscoveredActRouteEvents(input: {
+      readonly routeEvents?: readonly ReducerRouteEvent[];
     }): void {
-      if (input.routeEvent === undefined) {
+      if (input.routeEvents === undefined || input.routeEvents.length === 0) {
         throw new Error(
-          "Expected public reducer route event on Concentration act discovery.",
+          "Expected public reducer route events on Concentration act discovery.",
         );
       }
-      route = [...route, input.routeEvent];
+      route = [...route, ...input.routeEvents];
     }
 
     function recordConcentrationCast(
       input: ConcentrationBreakTeardownRuntimeState,
     ): ConcentrationBreakTeardownRuntimeState {
       const act = concentrationBreakTeardownCastAct(input.battle);
-      appendDiscoveredActRouteEvent(act);
+      appendDiscoveredActRouteEvents(act);
       const result = resolveBattleSubject({
         state: input.battle,
         subject: act.subject,
@@ -10387,7 +10349,7 @@ export function createConcentrationBreakTeardownRouteDriver() {
           initialConcentrationBreakTeardownState(),
         );
         const act = endConcentrationAct(cast.battle);
-        appendDiscoveredActRouteEvent(act);
+        appendDiscoveredActRouteEvents(act);
         const result = resolveBattleSubject({
           state: cast.battle,
           subject: act.subject,
@@ -10542,7 +10504,7 @@ function createCommandOrderingDriverWithRoute<
       orderingError = "";
       pendingCommandOption = "none";
       droppedObjectCount = 0;
-      appendCommandOrderingActRouteEvent(act);
+      appendCommandOrderingActRouteEvents(act);
     }
 
     function startRuntimeCommand(
@@ -10561,14 +10523,14 @@ function createCommandOrderingDriverWithRoute<
       return act;
     }
 
-    function appendCommandOrderingActRouteEvent(input: {
-      readonly routeEvent?: ReducerRouteEvent;
+    function appendCommandOrderingActRouteEvents(input: {
+      readonly routeEvents?: readonly ReducerRouteEvent[];
     }): void {
       if (!includeRoute) return;
-      if (input.routeEvent === undefined) {
-        throw new Error("Expected public reducer route event on Command act.");
+      if (input.routeEvents === undefined || input.routeEvents.length === 0) {
+        throw new Error("Expected public reducer route events on Command act.");
       }
-      route = [...route, input.routeEvent];
+      route = [...route, ...input.routeEvents];
     }
 
     function appendCommandOrderingRouteEvents(
@@ -10676,7 +10638,7 @@ function createCommandOrderingDriverWithRoute<
         const act = startRuntimeCommand("drop");
         stage = "dropHeldObjectFacts";
         lastResult = "needsHoles";
-        appendCommandOrderingActRouteEvent(act);
+        appendCommandOrderingActRouteEvents(act);
       },
       doFillDropHeldObjectFacts: () => {
         const heldObjectFacts = requireHole(holes, "heldObjectFacts");
@@ -10713,7 +10675,7 @@ function createCommandOrderingDriverWithRoute<
       doApproachMovementContinues: () => {
         const act = startRuntimeCommand("approach");
         stage = "approachMovement";
-        appendCommandOrderingActRouteEvent(act);
+        appendCommandOrderingActRouteEvents(act);
       },
       doFillApproachMovementContinues: () => {
         const movement = requireHole(holes, "movement");
@@ -10748,7 +10710,7 @@ function createCommandOrderingDriverWithRoute<
       doFleeMovement: () => {
         const act = startRuntimeCommand("flee");
         stage = "fleeMovement";
-        appendCommandOrderingActRouteEvent(act);
+        appendCommandOrderingActRouteEvents(act);
       },
       doFillFleeMovement: () => {
         const movement = requireHole(holes, "movement");
@@ -15810,12 +15772,14 @@ function requireChainedAttackProcedureSubject(
   throw new Error("Expected chained attack procedure subject.");
 }
 
-function requireChainedAttackProcedureActRouteEvent(
+function requireChainedAttackProcedureActRouteEvents(
   act: ChainedAttackProcedureAct,
-): ReducerRouteEvent {
-  if (act.routeEvent !== undefined) return act.routeEvent;
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
   throw new Error(
-    "Expected public reducer route event on chained attack procedure act.",
+    "Expected public reducer route events on chained attack procedure act.",
   );
 }
 
@@ -15830,6 +15794,28 @@ function requireChainedAttackProcedureRouteEvents(
   }
   throw new Error(
     "Expected public reducer route events on chained attack procedure resolution.",
+  );
+}
+
+function requireIndependentSpellAttackSequenceActRouteEvents(
+  act: IndependentSpellAttackSequenceAct,
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on independent spell attack sequence act.",
+  );
+}
+
+function requireIndependentSpellAttackSequenceRouteEvents(
+  result: BattleResolutionResult,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on independent spell attack sequence resolution.",
   );
 }
 

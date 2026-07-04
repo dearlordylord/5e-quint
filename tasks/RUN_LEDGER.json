@@ -360,6 +360,71 @@
           "detail": "Round 2 tightened the replay adapter so the End Turn subject comes from public discoverBattleActs; no remaining reasonable Task 12 findings after RAW/domain, architecture/connascence, code-review, typecheck, and cleanroom checks."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-004",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "b57b2edde2153635ba1ff07047ada7d329b795b8f9a9bf71126739b49df7f37d"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "3804224c5bb6c2e429099c53bb02d0737f34b645bbfb23325682c6750568e25d"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "6e4cce926085dc8b3af02efe9ba7411774b061c3ac125d6b0b17a23d72df2331"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-004.json",
+          "sha256": "080c63d6a82888c847b5523087a02a439cb976f1ebde6efaae5d395ecb0a87d2",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillFirstAttackHit#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillFirstAttackHit",
+            "tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillFirstAttackMiss#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillFirstAttackMiss",
+            "tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillFirstDamageLow#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillFirstDamageLow",
+            "tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillSecondAttackHit#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSecondAttackHit",
+            "tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillSecondAttackMiss#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSecondAttackMiss",
+            "tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillSecondDamageLow#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSecondDamageLow",
+            "tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doFillTwoCreatureTargets#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillTwoCreatureTargets",
+            "tasks/target-replay-evidence/CRPI-READY-004.json#driver:packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt#step:doRejectStaleAfterResolved#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectStaleAfterResolved"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t \"independent spell Attack\"",
+          "status": "pass",
+          "detail": "1 test passed; final timed run TOTAL: 7s"
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 2 moved Eldritch Blast discovery qRoute evidence to public AvailableBattleAct.routeEvents and kept object target facts at the table boundary; no remaining reasonable Task 15 findings after RAW/domain, architecture/connascence, code-review, typecheck, focused MBT, cleanroom check, and diff check."
+        }
+      ]
     }
   ]
 }

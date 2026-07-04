@@ -1,25 +1,9 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP07-DSR-05",
+  "taskId": "CRPI-READY-004",
   "durableFields": [
     {
-      "fieldPath": "BattleCreatureState.concentration",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "battle-state",
-      "derivability": {
-        "tag": "canonical-source"
-      }
-    },
-    {
-      "fieldPath": "BattleCreatureState.activeEffects[kind=spellEffect]",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "battle-state",
-      "derivability": {
-        "tag": "canonical-source"
-      }
-    },
-    {
-      "fieldPath": "AvailableBattleAct.routeEvent",
+      "fieldPath": "AvailableBattleAct.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "public-reducer-boundary-projection",
       "derivability": {
@@ -33,14 +17,15 @@
       "owner": "public-reducer-boundary-projection",
       "derivability": {
         "tag": "boundary-projection",
-        "sourceField": "BattleSubject, BattleFill, BattleHole, Concentration state, and active Spell Effect facts"
+        "sourceField": "BattleSubject, BattleFill, BattleHole, BattleInvalidReasonCode, Hit Point state, and reducer route owner facts"
       }
     }
   ],
   "notes": [
-    "Task 8 introduced no new durable Concentration or active-effect state fields.",
-    "Concentration remains the existing BattleCreatureState.concentration value.",
-    "Spell Effect cleanup remains the existing BattleCreatureState.activeEffects collection.",
-    "The endConcentration runtime command is a public reducer subject for resolving voluntary cleanup, not a stored ledger; stale subjects and unexpected fills are rejected."
+    "Task 15 introduced no new BattleState or BattleCreatureState durable spell-attack sequence field.",
+    "Independent beam sequence progress remains represented by the typed action-spell subject, ordered fills, and public reducer hole frontier.",
+    "Creature Hit Points remain BattleCreatureState.hp.",
+    "Object target identity, Armor Class, range, and Hit Point facts remain table-supplied object-target boundary fills.",
+    "AvailableBattleAct.routeEvents is a public reducer boundary projection for acts that expose multiple route-owner events; it is not a duplicated rules ledger."
   ]
 }
