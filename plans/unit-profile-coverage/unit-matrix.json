@@ -5577,7 +5577,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -22759,7 +22759,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike-tests.qnt"
             },
             {
               "kind": "runtime-test",
