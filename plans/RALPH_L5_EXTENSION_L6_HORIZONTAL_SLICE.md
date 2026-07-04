@@ -289,13 +289,13 @@
     {
       "number": 28,
       "id": "L6UG-PRE-01-L6-FULL-QUEUE-CLOSED",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify the L6 full SRD queue is closed"
     },
     {
       "number": 29,
       "id": "L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Add level-1-6 support report plumbing"
     },
     {
@@ -313,7 +313,7 @@
     {
       "number": 32,
       "id": "L6UG-MCP-01-LEVEL6-VERTICAL-DECISION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Choose the level-6 MCP vertical scenario"
     },
     {
@@ -478,11 +478,11 @@ Every Ralph task must run the task-base check before research or edits:
 |  25 | L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK - Resolve level-6 owner evidence for Warlock Dark One's Own Luck | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK Ability Check and Saving Throw modifier boundary; future owner tracked by Task 56. |
 |  26 | L6FULL-OWN-10-WIZARD-SCULPT-SPELLS - Resolve level-6 owner evidence for Wizard Sculpt Spells | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK selected area spell save-damage exemption boundary; future owner tracked by Task 57. |
 |  27 | L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH - Refresh and verify level-6 full SRD accounting | done | L6FULL-SEED-01-RANGER-ROVING, L6FULL-SEED-02-ROGUE-EXPERTISE, L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES, L6FULL-ASI-01-FIGHTER-ASI-L6, L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE, L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES, L6FULL-OWN-03-CLERIC-BLESSED-HEALER, L6FULL-OWN-04-DRUID-NATURAL-RECOVERY, L6FULL-OWN-05-MONK-EMPOWERED-STRIKES, L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY, L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION, L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY, L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK, L6FULL-OWN-10-WIZARD-SCULPT-SPELLS | Final generated refresh after all L6 rows are supported or explicitly closed. |
-|  28 | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED - Verify the L6 full SRD queue is closed | ready-for-research | L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH | Ultra-golden L6 starts only after L6 full closure. |
-|  29 | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING - Add level-1-6 support report plumbing | blocked | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Adds checker-owned `level-1-6` report artifacts. |
+|  28 | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED - Verify the L6 full SRD queue is closed | done | L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH | L6 full closure is verified; ultra-golden L6 prerequisite is satisfied. |
+|  29 | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING - Add level-1-6 support report plumbing | ready-for-research | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Adds checker-owned `level-1-6` report artifacts. |
 |  30 | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-6 into the ultra-golden aggregate | blocked | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING | Extends aggregate scope without weakening older scopes. |
 |  31 | L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-6 non-MCP ultra-golden layers | blocked | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Support, QNT/generator, and parity layers before MCP closeout. |
-|  32 | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION - Choose the level-6 MCP vertical scenario | blocked | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Chooses the smallest honest SRD-only L6 vertical. |
+|  32 | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION - Choose the level-6 MCP vertical scenario | ready-for-research | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Chooses the smallest honest SRD-only L6 vertical. |
 |  33 | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO - Implement level-6 MCP creation and sheet scenario coverage | blocked | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION | Proves creation/advancement and durable sheet state. |
 |  34 | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF - Extend the level-6 MCP scenario through battle handoff | blocked | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO, L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Battle handoff only after non-MCP blockers are known. |
 |  35 | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY - Register the level-6 MCP scenario in acceptance coverage | blocked | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF | Wires executable scenario into acceptance metadata. |
@@ -3138,7 +3138,7 @@ Verification:
 
 ### Task 28 - L6UG-PRE-01-L6-FULL-QUEUE-CLOSED
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH`
 
@@ -3163,15 +3163,19 @@ Verification:
 
 - L6 shared verification commands relevant to a read-only prerequisite check.
 
+Plan Impact:
+
+- Applied. Current generated L6 inventory/accounting artifacts report 25
+  level-6 class rows: 12 `non-runtime`, 11 `catalog-only/dead-for-now`, and 2
+  `catalog-installed-owner-evidence-present`, with no unfinished L6 full task
+  row remaining.
+- Tasks 29 and 32 are unblocked for research.
+
 ### Task 29 - L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6UG-PRE-01-L6-FULL-QUEUE-CLOSED`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6UG-PRE-01-L6-FULL-QUEUE-CLOSED`.
 
 Inputs:
 
@@ -3272,13 +3276,9 @@ Verification:
 
 ### Task 32 - L6UG-MCP-01-LEVEL6-VERTICAL-DECISION
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6UG-PRE-01-L6-FULL-QUEUE-CLOSED`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6UG-PRE-01-L6-FULL-QUEUE-CLOSED`.
 
 Inputs:
 
