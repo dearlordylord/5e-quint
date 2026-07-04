@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "CRPI-READY-004",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-eldritch-blast"
     },
     {
@@ -1550,7 +1550,7 @@ Plan Impact:
 
 ### Task 15 - CRPI-READY-004
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
