@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "CRP07-DSR-03",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hit Point restoration ordering and zero-HP cleanup through public battle reducer route"
     },
     {
@@ -1880,7 +1880,7 @@ Plan Impact:
 
 ### Task 21 - CRP07-DSR-03
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
