@@ -229,7 +229,7 @@
     {
       "number": 38,
       "id": "CRP07-DSR-02",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Save-gated spell ordering through public battle reducer route"
     },
     {
@@ -2850,7 +2850,7 @@ Plan Impact:
 
 ### Task 38 - CRP07-DSR-02
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
