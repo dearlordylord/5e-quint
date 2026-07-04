@@ -307,7 +307,7 @@
     {
       "number": 31,
       "id": "L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile level-1-6 non-MCP ultra-golden layers"
     },
     {
@@ -481,7 +481,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  28 | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED - Verify the L6 full SRD queue is closed | done | L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH | L6 full closure is verified; ultra-golden L6 prerequisite is satisfied. |
 |  29 | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING - Add level-1-6 support report plumbing | done | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Adds checker-owned `level-1-6` report artifacts. |
 |  30 | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-6 into the ultra-golden aggregate | done | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING | Extends aggregate scope without weakening older scopes. |
-|  31 | L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-6 non-MCP ultra-golden layers | ready-for-research | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Support, QNT/generator, and parity layers before MCP closeout. |
+|  31 | L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-6 non-MCP ultra-golden layers | done | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Support, QNT/generator, and parity layers before MCP closeout. |
 |  32 | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION - Choose the level-6 MCP vertical scenario | ready-for-research | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Chooses the smallest honest SRD-only L6 vertical. |
 |  33 | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO - Implement level-6 MCP creation and sheet scenario coverage | blocked | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION | Proves creation/advancement and durable sheet state. |
 |  34 | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF - Extend the level-6 MCP scenario through battle handoff | blocked | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO, L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Battle handoff only after non-MCP blockers are known. |
@@ -3245,7 +3245,7 @@ Plan Impact:
 
 ### Task 31 - L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE`
 
