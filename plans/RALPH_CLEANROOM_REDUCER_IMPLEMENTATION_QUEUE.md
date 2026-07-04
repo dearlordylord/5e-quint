@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "CRP07-DSR-04",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Death Saving Throw lifecycle through public battle reducer route"
     },
     {
@@ -1377,7 +1377,7 @@ Plan Impact:
 
 ### Task 12 - CRP07-DSR-04
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
