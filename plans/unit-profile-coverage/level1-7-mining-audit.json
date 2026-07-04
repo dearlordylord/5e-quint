@@ -56,8 +56,8 @@
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 501,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 218,
-      "level-5-7-follow-up-required": 15,
+      "catalog-only/dead-for-now": 219,
+      "level-5-7-follow-up-required": 14,
       "missing-authored-record": 32,
       "non-runtime": 84
     },
@@ -89,10 +89,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 135,
+      "not-recorded": 134,
       "profile-subset-supported": 59,
       "supported-profile": 309,
-      "unsupported-profile": 397
+      "unsupported-profile": 398
     }
   },
   "rows": [
@@ -19403,7 +19403,7 @@
         "sourceInventoryRowId": "srd521:classes/paladin:level-6:class-feature-grant:paladin_aura_of_protection",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Aura of Protection creates a 10-foot Emanation from the Paladin, inactive while the Paladin has the Incapacitated condition, and grants the Paladin and allies in the aura a Saving Throw bonus equal to the Paladin's Charisma modifier with a minimum of +1, while overlapping Paladin auras require the affected creature to choose one. Existing character facts own Paladin level and Charisma ability state, existing condition state owns Incapacitated, existing save procedure owners resolve Saving Throws, and spell aura support consumes caller/table-supplied area membership for spell-specific occurrences. The current promoted owners do not admit a selected passive class-feature aura with ally membership, source Charisma bonus projection, inactive gating, or overlapping-aura choice. A future owner must consume typed Surface facts for the selected Aura of Protection feature, existing character and condition state, explicit aura membership/choice witnesses, and the shared Saving Throw roll modifier boundary without duplicating Character Sheet ability state, condition state, table position state, Saving Throw result state, aura membership state, or dispatching on Paladin or Aura of Protection authored identity.",
       "rowId": "srd521:classes/paladin:level-6:class-feature-grant:paladin_aura_of_protection",
       "rowKind": "class-feature-grant",
       "source": {
@@ -19419,15 +19419,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "future-owner-before-SDK battle-runtime passive class-feature aura and Saving Throw modifier owner plus table/spatial aura-membership witness owner",
+          "reason": "SRD Aura of Protection creates a 10-foot Emanation from the Paladin, inactive while the Paladin has the Incapacitated condition, and grants the Paladin and allies in the aura a Saving Throw bonus equal to the Paladin's Charisma modifier with a minimum of +1, while overlapping Paladin auras require the affected creature to choose one. Existing character facts own Paladin level and Charisma ability state, existing condition state owns Incapacitated, existing save procedure owners resolve Saving Throws, and spell aura support consumes caller/table-supplied area membership for spell-specific occurrences. The current promoted owners do not admit a selected passive class-feature aura with ally membership, source Charisma bonus projection, inactive gating, or overlapping-aura choice. A future owner must consume typed Surface facts for the selected Aura of Protection feature, existing character and condition state, explicit aura membership/choice witnesses, and the shared Saving Throw roll modifier boundary without duplicating Character Sheet ability state, condition state, table position state, Saving Throw result state, aura membership state, or dispatching on Paladin or Aura of Protection authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "paladin_aura_of_protection"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

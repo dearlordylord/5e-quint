@@ -346,10 +346,10 @@
       "catalog-only/dead-for-now": 6
     },
     "levelSixClassRowsByDisposition": {
-      "catalog-only/dead-for-now": 7,
+      "catalog-only/dead-for-now": 8,
       "non-runtime": 12,
-      "level-5-7-follow-up-required": 4,
-      "catalog-installed-owner-evidence-present": 2
+      "catalog-installed-owner-evidence-present": 2,
+      "level-5-7-follow-up-required": 3
     },
     "levelSevenClassRowsByDisposition": {
       "level-5-7-follow-up-required": 11,
@@ -371,8 +371,8 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 501,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 218,
-      "level-5-7-follow-up-required": 15,
+      "catalog-only/dead-for-now": 219,
+      "level-5-7-follow-up-required": 14,
       "catalog-authored-review-required": 49,
       "missing-authored-record": 32,
       "catalog-installed-owner-evidence-required": 1
@@ -21714,9 +21714,16 @@
         "state": "not-installed",
         "unitId": "paladin_aura_of_protection"
       },
-      "finalDisposition": "level-5-7-follow-up-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "future-owner-before-SDK battle-runtime passive class-feature aura and Saving Throw modifier owner plus table/spatial aura-membership witness owner",
+        "reason": "SRD Aura of Protection creates a 10-foot Emanation from the Paladin, inactive while the Paladin has the Incapacitated condition, and grants the Paladin and allies in the aura a Saving Throw bonus equal to the Paladin's Charisma modifier with a minimum of +1, while overlapping Paladin auras require the affected creature to choose one. Existing character facts own Paladin level and Charisma ability state, existing condition state owns Incapacitated, existing save procedure owners resolve Saving Throws, and spell aura support consumes caller/table-supplied area membership for spell-specific occurrences. The current promoted owners do not admit a selected passive class-feature aura with ally membership, source Charisma bonus projection, inactive gating, or overlapping-aura choice. A future owner must consume typed Surface facts for the selected Aura of Protection feature, existing character and condition state, explicit aura membership/choice witnesses, and the shared Saving Throw roll modifier boundary without duplicating Character Sheet ability state, condition state, table position state, Saving Throw result state, aura membership state, or dispatching on Paladin or Aura of Protection authored identity."
+      },
       "ownerEvidence": [],
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+      "nextAction": "SRD Aura of Protection creates a 10-foot Emanation from the Paladin, inactive while the Paladin has the Incapacitated condition, and grants the Paladin and allies in the aura a Saving Throw bonus equal to the Paladin's Charisma modifier with a minimum of +1, while overlapping Paladin auras require the affected creature to choose one. Existing character facts own Paladin level and Charisma ability state, existing condition state owns Incapacitated, existing save procedure owners resolve Saving Throws, and spell aura support consumes caller/table-supplied area membership for spell-specific occurrences. The current promoted owners do not admit a selected passive class-feature aura with ally membership, source Charisma bonus projection, inactive gating, or overlapping-aura choice. A future owner must consume typed Surface facts for the selected Aura of Protection feature, existing character and condition state, explicit aura membership/choice witnesses, and the shared Saving Throw roll modifier boundary without duplicating Character Sheet ability state, condition state, table position state, Saving Throw result state, aura membership state, or dispatching on Paladin or Aura of Protection authored identity."
     },
     {
       "id": "srd521:classes/paladin:level-6:class-table-summary:paladin_level_6_feature_table_row",
