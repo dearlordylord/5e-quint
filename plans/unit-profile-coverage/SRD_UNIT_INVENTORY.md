@@ -146,8 +146,8 @@ This metric is a separate seed for spell-level-4 pressure only. It belongs to th
 ### Level-6 Class/Subclass Mining Rows by Disposition
 
 - catalog-installed-owner-evidence-present: 2
-- catalog-only/dead-for-now: 1
-- level-5-7-follow-up-required: 10
+- catalog-only/dead-for-now: 2
+- level-5-7-follow-up-required: 9
 - non-runtime: 12
 
 ### Level-7 Class/Subclass Mining Rows by Disposition
@@ -627,7 +627,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 
 | Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-|Barbarian Mindless Rage|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-5-7-follow-up-required||||Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.|.references/srd-5.2.1/Classes/Barbarian.md:182|
+|Barbarian Mindless Rage|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed|unsupported-profile|catalog-only/dead-for-now||outside-battle-runtime: future battle-runtime active Rage condition-immunity and enter-rage cleanup owner plus subclass feature admission owner||The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch.|.references/srd-5.2.1/Classes/Barbarian.md:182|
 |Barbarian level 6 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime||||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Barbarian.md:40|
 |Bard Magical Discoveries|class feature|current-surface-can-express-source-facts|missing-authored-record|not-installed||level-5-7-follow-up-required||||Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.|.references/srd-5.2.1/Classes/Bard.md:336|
 |Bard level 6 feature table row|character-creation or progression mechanic|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime||||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Bard.md:41|

@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 501 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 212 |
-| level-5-7-follow-up-required | 21 |
+| catalog-only/dead-for-now | 213 |
+| level-5-7-follow-up-required | 20 |
 | missing-authored-record | 32 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 141 |
+| not-recorded | 140 |
 | profile-subset-supported | 59 |
 | supported-profile | 309 |
-| unsupported-profile | 391 |
+| unsupported-profile | 392 |
 
 ### Battle Readiness Snapshot
 
@@ -284,7 +284,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Barbarian Extra Attack | level-5 | character-level | class feature | `barbarian_extra_attack` | `.references/srd-5.2.1/Classes/Barbarian.md:112` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Barbarian Fast Movement | level-5 | character-level | class feature | `barbarian_fast_movement` | `.references/srd-5.2.1/Classes/Barbarian.md:116` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Barbarian level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_barbarian` | `.references/srd-5.2.1/Classes/Barbarian.md:39` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Barbarian Mindless Rage | level-6 | character-level | class feature | `barbarian_mindless_rage` | `.references/srd-5.2.1/Classes/Barbarian.md:182` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Barbarian Mindless Rage | level-6 | character-level | class feature | `barbarian_mindless_rage` | `.references/srd-5.2.1/Classes/Barbarian.md:182` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future battle-runtime active Rage condition-immunity and enter-rage cleanup owner plus subclass feature admission owner | The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch. |
 | Barbarian level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_barbarian` | `.references/srd-5.2.1/Classes/Barbarian.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Barbarian Feral Instinct | level-7 | character-level | class feature | `barbarian_feral_instinct` | `.references/srd-5.2.1/Classes/Barbarian.md:120` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Barbarian Instinctive Pounce | level-7 | character-level | class feature | `barbarian_instinctive_pounce` | `.references/srd-5.2.1/Classes/Barbarian.md:124` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |

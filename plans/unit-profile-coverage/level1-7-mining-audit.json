@@ -56,8 +56,8 @@
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 501,
       "catalog-installed-owner-evidence-required": 1,
-      "catalog-only/dead-for-now": 212,
-      "level-5-7-follow-up-required": 21,
+      "catalog-only/dead-for-now": 213,
+      "level-5-7-follow-up-required": 20,
       "missing-authored-record": 32,
       "non-runtime": 84
     },
@@ -89,10 +89,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 141,
+      "not-recorded": 140,
       "profile-subset-supported": 59,
       "supported-profile": 309,
-      "unsupported-profile": 391
+      "unsupported-profile": 392
     }
   },
   "rows": [
@@ -1213,7 +1213,7 @@
         "sourceInventoryRowId": "srd521:classes/barbarian:level-6:class-feature-grant:barbarian_mindless_rage",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch.",
       "rowId": "srd521:classes/barbarian:level-6:class-feature-grant:barbarian_mindless_rage",
       "rowKind": "class-feature-grant",
       "source": {
@@ -1229,15 +1229,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future battle-runtime active Rage condition-immunity and enter-rage cleanup owner plus subclass feature admission owner",
+          "reason": "The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "barbarian_mindless_rage"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
