@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "CRP07-DSR-05",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Concentration break teardown through public battle reducer route"
     },
     {
@@ -660,7 +660,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-READY-002` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-004` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-READY-003` | `done` | none | target replay evidence and owner implementation |
-| `CRP07-DSR-05` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRP07-DSR-05` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-005` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-BLOCK-006` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-BLOCK-007` | `blocked` | blocked by task body | blocker resolution before implementation |
@@ -1150,7 +1150,7 @@ Plan Impact:
 
 ### Task 8 - CRP07-DSR-05
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

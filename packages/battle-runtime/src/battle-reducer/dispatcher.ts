@@ -1056,6 +1056,32 @@ export function resolveBattleSubjectInternal(
 
   const result = (() => {
     const subject = input.subject;
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "endConcentration"
+    ) {
+      const actor = input.state.combatants.get(subject.actorId);
+      if (input.fills.length > 0) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "End Concentration does not accept fills.",
+        );
+      }
+      if (actor === undefined || actor.concentration === null) {
+        return invalidResult(
+          input.state,
+          "staleSubject",
+          "End Concentration is no longer available.",
+        );
+      }
+      const nextState = breakBattleConcentration(input.state, subject.actorId);
+      return {
+        tag: "resolved" as const,
+        state: nextState,
+        snapshot: snapshotBattle(nextState),
+      };
+    }
     if (subject.tag === "action" && subject.action === "attack") {
       return resolveAttack({
         ...input,

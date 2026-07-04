@@ -44,7 +44,6 @@ import {
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   breakBattleConcentration,
@@ -229,6 +228,65 @@ describe("Concentration break teardown MBT parity", () => {
     },
     MBT_TEST_TIMEOUT_MS,
   );
+
+  it("exposes Concentration teardown discovery from public discovered acts", () => {
+    const castAct = concentrationSpellCastAct(initialRuntimeState().battle);
+    expect(castAct.routeEvent).toEqual({
+      kind: "discoverBattleActs",
+      subject: "concentrationTeardown",
+      holes: [],
+      owner: "battleSpellSlotAndActionEconomy",
+    });
+
+    const cast = stateAfterBlurCast(initialRuntimeState());
+    const endAct = endConcentrationAct(cast.battle);
+    expect(endAct.routeEvent).toEqual({
+      kind: "discoverBattleActs",
+      subject: "concentrationTeardown",
+      holes: [],
+      owner: "battleConcentration",
+    });
+  });
+
+  it("rejects stale and filled End Concentration subjects", () => {
+    const cast = stateAfterBlurCast(initialRuntimeState());
+    const act = endConcentrationAct(cast.battle);
+    const ended = requireResolved(
+      resolveBattleSubject({
+        state: cast.battle,
+        subject: act.subject,
+        fills: [],
+      }),
+    );
+
+    const stale = resolveBattleSubject({
+      state: ended.state,
+      subject: act.subject,
+      fills: [],
+    });
+    expect(stale).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(stale).not.toHaveProperty("routeEvents");
+
+    const damaged = damageRequestsConcentrationSave(
+      { ...cast, scenario: "concentrationSpellCast" },
+      4,
+    );
+    if (damaged.pendingConcentrationSave === null) {
+      throw new Error("Expected pending Concentration save.");
+    }
+    const filled = resolveBattleSubject({
+      state: cast.battle,
+      subject: act.subject,
+      fills: [
+        concentrationSavingThrowFill(
+          damaged.pendingConcentrationSave.hole,
+          false,
+        ),
+      ],
+    });
+    expect(filled).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(filled).not.toHaveProperty("routeEvents");
+  });
 });
 
 function createConcentrationBreakTeardownDriver() {
@@ -291,11 +349,7 @@ function initialRuntimeState(): ConcentrationBreakTeardownRuntimeState {
 function stateAfterBlurCast(
   state: ConcentrationBreakTeardownRuntimeState,
 ): ConcentrationBreakTeardownRuntimeState {
-  const act = spellAct({
-    state: state.battle,
-    spellId: blurUnitId,
-    slotLevel: 2,
-  });
+  const act = concentrationSpellCastAct(state.battle);
   expect(act.initialHoles).toEqual([]);
   const resolved = requireResolved(
     resolveBattleSubject({
@@ -309,6 +363,52 @@ function stateAfterBlurCast(
     battle: resolved.state,
     pendingConcentrationSave: null,
   };
+}
+
+function concentrationSpellCastAct(
+  state: BattleState,
+): ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+    } =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "blurAttackRollDefense",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Concentration spell cast act.");
+  }
+  return act;
+}
+
+function endConcentrationAct(
+  state: BattleState,
+): ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "endConcentration",
+  );
+  if (act === undefined) {
+    throw new Error("Expected End Concentration act.");
+  }
+  return act;
 }
 
 function damageRequestsConcentrationSave(

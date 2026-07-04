@@ -662,6 +662,7 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
   acts.push(...webAreaRemovalActs(state, actorId));
   acts.push(...wardingBondSeparationActs(state, actorId));
+  acts.push(...endConcentrationActs(state, actorId));
   acts.push(endTurnAct(actorId));
   acts.push(...readiedSpellReleaseActs(state, actorId));
   acts.push(...discoverLegendaryActionActs(state));
@@ -1037,6 +1038,24 @@ function endTurnAct(actorId: CombatantId): AvailableBattleAct {
     summary: "End the current combatant's turn.",
     initialHoles: [],
   };
+}
+
+function endConcentrationActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined || actor.concentration === null) {
+    return [];
+  }
+  return [
+    {
+      subject: { tag: "runtimeCommand", actorId, command: "endConcentration" },
+      label: "End Concentration",
+      summary: "End Concentration without spending an action.",
+      initialHoles: [],
+    },
+  ];
 }
 
 function readiedSpellReleaseActs(

@@ -12,6 +12,7 @@ import type {
 import { battleHoleFamilyKind } from "./hole-helpers.ts";
 
 export type BattleReducerRouteSubjectFamily =
+  | "concentrationTeardown"
   | "commandEffect"
   | "spellAttackProcedure";
 
@@ -23,6 +24,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleAttackRoll"
   | "battleSpellAttackProcedure"
   | "battleHitPoint"
+  | "battleConcentration"
   | "battleActiveEffect"
   | "battleConditionLifecycle"
   | "battleMovementResource"
@@ -33,6 +35,7 @@ export type BattleReducerRouteHole =
   | "commandOptionChoice"
   | "damageTypeChoice"
   | "interruptDecision"
+  | "concentrationSavingThrow"
   | "movement"
   | "rolledDice"
   | "savingThrowOutcome"
@@ -42,6 +45,7 @@ export type BattleReducerRouteHole =
 export type BattleReducerRouteFill =
   | "attackRoll"
   | "commandOptionChoice"
+  | "concentrationSavingThrow"
   | "damageTypeChoice"
   | "movement"
   | "rolledDice"
@@ -88,6 +92,17 @@ export function battleReducerStartRouteEvent(
 export function battleReducerRouteForDiscoveredAct(
   act: AvailableBattleAct,
 ): BattleReducerRouteEvent | undefined {
+  if (isConcentrationTeardownDiscoverySubject(act.subject)) {
+    return {
+      kind: "discoverBattleActs",
+      subject: "concentrationTeardown",
+      holes: battleReducerRouteHoles(act.initialHoles),
+      owner:
+        act.subject.tag === "actionSpell"
+          ? "battleSpellSlotAndActionEconomy"
+          : "battleConcentration",
+    };
+  }
   if (isCommandEffectDiscoverySubject(act.subject)) {
     return {
       kind: "discoverBattleActs",
@@ -114,6 +129,10 @@ export function battleReducerRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
+  const concentrationRoute = concentrationRouteForResolution(input, result);
+  if (concentrationRoute !== undefined) {
+    return concentrationRoute;
+  }
   const commandRoute = commandRouteForResolution(input, result);
   if (commandRoute !== undefined) {
     return [commandRoute];
@@ -149,6 +168,122 @@ export function battleReducerRouteForResolution(
     owner,
   });
   return [eventForOwner(firstOwner), ...remainingOwners.map(eventForOwner)];
+}
+
+function concentrationRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (!isConcentrationTeardownSubject(input.subject)) {
+    return undefined;
+  }
+  if (result.tag === "invalid") {
+    return undefined;
+  }
+
+  const fill = input.fills.at(-1);
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  if (fill === undefined) {
+    if (input.subject.tag === "actionSpell") {
+      const priorConcentration =
+        input.state.combatants.get(input.subject.actorId)?.concentration ??
+        null;
+      const castRoute: BattleReducerRouteEvents = [
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "concentrationTeardown",
+          holes,
+          owner: "battleActiveEffect",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "concentrationTeardown",
+          holes,
+          owner: "battleConcentration",
+        },
+      ];
+      if (priorConcentration === null) {
+        return castRoute;
+      }
+      return [
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "concentrationTeardown",
+          holes,
+          owner: "battleConcentration",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "concentrationTeardown",
+          holes,
+          owner: "battleActiveEffect",
+        },
+        ...castRoute,
+      ];
+    }
+    if (
+      input.subject.tag === "runtimeCommand" &&
+      input.subject.command === "endConcentration"
+    ) {
+      return [
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "concentrationTeardown",
+          holes,
+          owner: "battleConcentration",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "concentrationTeardown",
+          holes,
+          owner: "battleActiveEffect",
+        },
+      ];
+    }
+    return undefined;
+  }
+
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === undefined) {
+    return undefined;
+  }
+  if (routeFill === "concentrationSavingThrow") {
+    const concentrationEvent: BattleReducerRouteEvent = {
+      kind: "resolveBattleSubject",
+      subject: "concentrationTeardown",
+      fill: routeFill,
+      holes,
+      owner: "battleConcentration",
+    };
+    return result.tag === "resolved"
+      ? [
+          concentrationEvent,
+          {
+            kind: "resolveBattleSubjectWithoutFill",
+            subject: "concentrationTeardown",
+            holes: [],
+            owner: "battleActiveEffect",
+          },
+        ]
+      : [concentrationEvent];
+  }
+  if (
+    routeFill === "rolledDice" &&
+    battleReducerRouteHoles(result.tag === "needsHoles" ? result.holes : [])
+      .includes("concentrationSavingThrow")
+  ) {
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "concentrationTeardown",
+        fill: routeFill,
+        holes,
+        owner: "battleConcentration",
+      },
+    ];
+  }
+  return undefined;
 }
 
 function commandRouteForResolution(
@@ -307,6 +442,31 @@ function isCommandEffectSubject(
   );
 }
 
+function isConcentrationTeardownSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  if (subject.tag === "actionSpell") {
+    return subject.invocation.procedure === "blurAttackRollDefense";
+  }
+  if (subject.tag === "action" && subject.action === "attack") {
+    return true;
+  }
+  return (
+    subject.tag === "runtimeCommand" && subject.command === "endConcentration"
+  );
+}
+
+function isConcentrationTeardownDiscoverySubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  if (subject.tag === "actionSpell") {
+    return subject.invocation.procedure === "blurAttackRollDefense";
+  }
+  return (
+    subject.tag === "runtimeCommand" && subject.command === "endConcentration"
+  );
+}
+
 function isCommandEffectDiscoverySubject(
   subject: BattleResolutionInput["subject"],
 ): boolean {
@@ -345,6 +505,9 @@ function battleReducerRouteHole(
   const family = battleHoleFamilyKind(hole);
   if (family === "attackRoll") return ["attackRoll"];
   if (family === "commandOptionChoice") return ["commandOptionChoice"];
+  if (family === "concentrationSavingThrow") {
+    return ["concentrationSavingThrow"];
+  }
   if (family === "damageTypeChoice") return ["damageTypeChoice"];
   if (family === "interruptDecision") return ["interruptDecision"];
   if (family === "movement") return ["movement"];
@@ -360,6 +523,7 @@ function battleReducerRouteFill(
 ): BattleReducerRouteFill | undefined {
   const kind = battleFillKind(fill);
   if (kind === "attackRoll") return "attackRoll";
+  if (kind === "concentrationSavingThrow") return "concentrationSavingThrow";
   if (kind === "damageTypeChoice") return "damageTypeChoice";
   if (kind === "rolledDice") return "rolledDice";
   if (kind === "targetChoice") return "targetChoice";

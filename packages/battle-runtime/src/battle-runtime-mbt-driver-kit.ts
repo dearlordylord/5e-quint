@@ -75,7 +75,6 @@ import {
   battleId,
   battleCombatantSide,
   battleReducerStartRouteEvent,
-  breakBattleConcentration,
   cantripSpellInvocationRef,
   characterBattleResourceUsage,
   characterId,
@@ -819,6 +818,7 @@ type ConcentrationBreakTeardownRuntimeState = {
   readonly teardownBeforeNextCommand: boolean;
   readonly replacementStartedAfterTeardown: boolean;
   readonly pendingConcentrationSave: PendingConcentrationSave | null;
+  readonly lastRouteEvents: readonly ReducerRouteEvent[];
 };
 type BattleCombatantState =
   BattleState["combatants"] extends ReadonlyMap<CombatantId, infer Combatant>
@@ -10328,44 +10328,48 @@ export function createConcentrationBreakTeardownRouteDriver() {
 
     function reset(): void {
       state = initialConcentrationBreakTeardownState();
-      route = [reducerRouteStartBattle("battleActionEconomy")];
+      route = [battleReducerStartRouteEvent(state.battle)];
     }
 
-    function appendConcentrationCastRoute(): void {
-      route = [
-        ...route,
-        reducerRouteDiscoverBattleActs({
-          subject: "concentrationTeardown",
-          holes: [],
-          owner: "battleSpellSlotAndActionEconomy",
-        }),
-        reducerRouteResolveBattleSubjectWithoutFill({
-          subject: "concentrationTeardown",
-          holes: [],
-          owner: "battleActiveEffect",
-        }),
-        reducerRouteResolveBattleSubjectWithoutFill({
-          subject: "concentrationTeardown",
-          holes: [],
-          owner: "battleConcentration",
-        }),
-      ];
+    function appendResolutionRouteEvents(
+      result: BattleResolutionResult,
+    ): void {
+      if (result.routeEvents === undefined || result.routeEvents.length === 0) {
+        throw new Error(
+          "Expected public reducer route events on Concentration resolution.",
+        );
+      }
+      route = [...route, ...result.routeEvents];
     }
 
-    function appendConcentrationBreakCleanupRoute(): void {
-      route = [
-        ...route,
-        reducerRouteResolveBattleSubjectWithoutFill({
-          subject: "concentrationTeardown",
-          holes: [],
-          owner: "battleConcentration",
-        }),
-        reducerRouteResolveBattleSubjectWithoutFill({
-          subject: "concentrationTeardown",
-          holes: [],
-          owner: "battleActiveEffect",
-        }),
-      ];
+    function appendDiscoveredActRouteEvent(input: {
+      readonly routeEvent?: ReducerRouteEvent;
+    }): void {
+      if (input.routeEvent === undefined) {
+        throw new Error(
+          "Expected public reducer route event on Concentration act discovery.",
+        );
+      }
+      route = [...route, input.routeEvent];
+    }
+
+    function recordConcentrationCast(
+      input: ConcentrationBreakTeardownRuntimeState,
+    ): ConcentrationBreakTeardownRuntimeState {
+      const act = concentrationBreakTeardownCastAct(input.battle);
+      appendDiscoveredActRouteEvent(act);
+      const result = resolveBattleSubject({
+        state: input.battle,
+        subject: act.subject,
+        fills: [],
+      });
+      appendResolutionRouteEvents(result);
+      return {
+        ...input,
+        battle: requireResolved(result).state,
+        pendingConcentrationSave: null,
+        lastRouteEvents: result.routeEvents ?? [],
+      };
     }
 
     reset();
@@ -10374,55 +10378,58 @@ export function createConcentrationBreakTeardownRouteDriver() {
       init: reset,
       doCastConcentrationSpell: () => {
         state = {
-          ...stateAfterBlurCast(initialConcentrationBreakTeardownState()),
+          ...recordConcentrationCast(initialConcentrationBreakTeardownState()),
           scenario: "concentrationSpellCast",
         };
-        appendConcentrationCastRoute();
       },
       doDamageRequestsConcentrationSave: (input: {
         readonly damageDiePip: number;
       }) => {
         state = damageRequestsConcentrationSave(state, input.damageDiePip);
-        route = [
-          ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "concentrationTeardown",
-            fill: "rolledDice",
-            holes: state.pendingConcentrationSave?.holes ?? [],
-            owner: "battleConcentration",
-          }),
-        ];
+        route = [...route, ...state.lastRouteEvents];
       },
       doFailConcentrationSave: (input: { readonly saveRollTotal: number }) => {
         state = failConcentrationSave(state, input.saveRollTotal);
-        route = [
-          ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "concentrationTeardown",
-            fill: "concentrationSavingThrow",
-            holes: [],
-            owner: "battleConcentration",
-          }),
-          reducerRouteResolveBattleSubjectWithoutFill({
-            subject: "concentrationTeardown",
-            holes: [],
-            owner: "battleActiveEffect",
-          }),
-        ];
+        route = [...route, ...state.lastRouteEvents];
       },
       doVoluntaryEndConcentration: () => {
-        state = voluntarilyEndConcentration(
+        const cast = recordConcentrationCast(
           initialConcentrationBreakTeardownState(),
         );
-        appendConcentrationCastRoute();
-        appendConcentrationBreakCleanupRoute();
+        const act = endConcentrationAct(cast.battle);
+        appendDiscoveredActRouteEvent(act);
+        const result = resolveBattleSubject({
+          state: cast.battle,
+          subject: act.subject,
+          fills: [],
+        });
+        appendResolutionRouteEvents(result);
+        state = {
+          ...cast,
+          battle: requireResolved(result).state,
+          scenario: "voluntaryEndTeardown",
+          teardownBeforeNextCommand:
+            concentrationTeardownIsVisibleBeforeNextCommand(
+              requireResolved(result).state,
+            ),
+          lastRouteEvents: result.routeEvents ?? [],
+        };
       },
       doCastReplacementConcentrationSpell: () => {
-        state = castReplacementConcentrationSpell(
-          initialConcentrationBreakTeardownState(),
+        const initial = initialConcentrationBreakTeardownState();
+        const beforeReplacement = stateWithPreexistingBlurConcentration(
+          initial.battle,
         );
-        appendConcentrationBreakCleanupRoute();
-        appendConcentrationCastRoute();
+        const replaced = recordConcentrationCast({
+          ...initial,
+          battle: beforeReplacement,
+        });
+        state = {
+          ...replaced,
+          scenario: "replacementTeardownBeforeNewEffect",
+          replacementStartedAfterTeardown:
+            blurredEffectCount(replaced.battle) === 1,
+        };
       },
       step: () => {},
       getState: () => ({
@@ -15048,23 +15055,7 @@ function initialConcentrationBreakTeardownState(): ConcentrationBreakTeardownRun
     teardownBeforeNextCommand: false,
     replacementStartedAfterTeardown: false,
     pendingConcentrationSave: null,
-  };
-}
-
-function stateAfterBlurCast(
-  state: ConcentrationBreakTeardownRuntimeState,
-): ConcentrationBreakTeardownRuntimeState {
-  const resolved = requireResolved(
-    resolveBattleSubject({
-      state: state.battle,
-      subject: blurSubject(),
-      fills: [],
-    }),
-  );
-  return {
-    ...state,
-    battle: resolved.state,
-    pendingConcentrationSave: null,
+    lastRouteEvents: [],
   };
 }
 
@@ -15147,6 +15138,7 @@ function damageRequestsConcentrationSave(
       fills,
       holes: [concentration],
     },
+    lastRouteEvents: pending.routeEvents ?? [],
   };
 }
 
@@ -15185,36 +15177,54 @@ function failConcentrationSave(
       resolved.state,
     ),
     pendingConcentrationSave: null,
+    lastRouteEvents: resolved.routeEvents ?? [],
   };
 }
 
-function voluntarilyEndConcentration(
-  state: ConcentrationBreakTeardownRuntimeState,
-): ConcentrationBreakTeardownRuntimeState {
-  const cast = stateAfterBlurCast(state);
-  const broken = breakBattleConcentration(cast.battle, fighterId);
-  return {
-    ...cast,
-    battle: broken,
-    scenario: "voluntaryEndTeardown",
-    teardownBeforeNextCommand:
-      concentrationTeardownIsVisibleBeforeNextCommand(broken),
-  };
+function concentrationBreakTeardownCastAct(
+  state: BattleState,
+): ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+    } =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.procedure === "blurAttackRollDefense",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Concentration spell cast act.");
+  }
+  return act;
 }
 
-function castReplacementConcentrationSpell(
-  state: ConcentrationBreakTeardownRuntimeState,
-): ConcentrationBreakTeardownRuntimeState {
-  const beforeReplacement = stateWithPreexistingBlurConcentration(state.battle);
-  const replaced = stateAfterBlurCast({
-    ...state,
-    battle: beforeReplacement,
-  });
-  return {
-    ...replaced,
-    scenario: "replacementTeardownBeforeNewEffect",
-    replacementStartedAfterTeardown: blurredEffectCount(replaced.battle) === 1,
-  };
+function endConcentrationAct(
+  state: BattleState,
+): ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "endConcentration",
+  );
+  if (act === undefined) {
+    throw new Error("Expected End Concentration act.");
+  }
+  return act;
 }
 
 function stateWithPreexistingBlurConcentration(
@@ -15665,18 +15675,6 @@ function longstriderSubject(): Extract<
     tag: "actionSpell",
     actorId: fighterId,
     invocation: spellSlotInvocationRef("longstrider", 1, "scalarBuff"),
-    mode: { tag: "cast" },
-  };
-}
-
-function blurSubject(): Extract<
-  BattleSubject,
-  { readonly tag: "actionSpell" }
-> {
-  return {
-    tag: "actionSpell",
-    actorId: fighterId,
-    invocation: spellSlotInvocationRef("blur", 2, "blurAttackRollDefense"),
     mode: { tag: "cast" },
   };
 }

@@ -1,17 +1,9 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-003",
+  "taskId": "CRP07-DSR-05",
   "durableFields": [
     {
-      "fieldPath": "BattleCreatureState.activeEffects[kind=commandPending]",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
-      "owner": "battle-state",
-      "derivability": {
-        "tag": "canonical-source"
-      }
-    },
-    {
-      "fieldPath": "BattleCreatureState.conditions",
+      "fieldPath": "BattleCreatureState.concentration",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "battle-state",
       "derivability": {
@@ -19,23 +11,7 @@
       }
     },
     {
-      "fieldPath": "BattleCreatureState.movementSpentFeet",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "battle-state",
-      "derivability": {
-        "tag": "canonical-source"
-      }
-    },
-    {
-      "fieldPath": "BattleState.currentTurnResources.commandHalt",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "battle-state",
-      "derivability": {
-        "tag": "canonical-source"
-      }
-    },
-    {
-      "fieldPath": "BattleState.interruptStack",
+      "fieldPath": "BattleCreatureState.activeEffects[kind=spellEffect]",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "battle-state",
       "derivability": {
@@ -57,14 +33,14 @@
       "owner": "public-reducer-boundary-projection",
       "derivability": {
         "tag": "boundary-projection",
-        "sourceField": "BattleSubject, BattleFill, BattleHole, and reducer route owner facts"
+        "sourceField": "BattleSubject, BattleFill, BattleHole, Concentration state, and active Spell Effect facts"
       }
     }
   ],
   "notes": [
-    "Task 7 introduced no new durable Command state fields.",
-    "Command option state remains the existing commandPending active effect on the target combatant.",
-    "Grovel Prone uses the existing condition lifecycle; Approach and Flee spend existing movement state; Flee Opportunity Attack windows use the existing interrupt stack.",
-    "Held-object inventory and Approach/Flee route geometry remain caller/table boundary fills and are not duplicated into a Command ledger."
+    "Task 8 introduced no new durable Concentration or active-effect state fields.",
+    "Concentration remains the existing BattleCreatureState.concentration value.",
+    "Spell Effect cleanup remains the existing BattleCreatureState.activeEffects collection.",
+    "The endConcentration runtime command is a public reducer subject for resolving voluntary cleanup, not a stored ledger; stale subjects and unexpected fills are rejected."
   ]
 }

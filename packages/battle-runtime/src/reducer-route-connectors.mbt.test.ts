@@ -634,6 +634,138 @@ describe("battle reducer route connector MBT", () => {
     MBT_TEST_TIMEOUT_MS,
   );
 
+  it("routes Concentration cleanup ordering deterministically", () => {
+    const failedSaveDriver = createConcentrationBreakTeardownRouteDriver()();
+    failedSaveDriver.actions.init.handler({});
+    failedSaveDriver.actions.doCastConcentrationSpell.handler({});
+    failedSaveDriver.actions.doDamageRequestsConcentrationSave.handler({
+      damageDiePip: 4,
+    });
+    failedSaveDriver.actions.doFailConcentrationSave.handler({
+      saveRollTotal: 9,
+    });
+
+    if (failedSaveDriver.getState === undefined) {
+      throw new Error("Expected Concentration route driver state projection.");
+    }
+    expect(failedSaveDriver.getState().route[1]).toEqual({
+      kind: "discoverBattleActs",
+      subject: "concentrationTeardown",
+      holes: [],
+      owner: "battleSpellSlotAndActionEconomy",
+    });
+    expect(failedSaveDriver.getState().route).toEqual([
+      { kind: "startBattle", owner: "battleActionEconomy" },
+      {
+        kind: "discoverBattleActs",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleSpellSlotAndActionEconomy",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "concentrationTeardown",
+        fill: "rolledDice",
+        holes: ["concentrationSavingThrow"],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "concentrationTeardown",
+        fill: "concentrationSavingThrow",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+    ]);
+
+    const voluntaryDriver = createConcentrationBreakTeardownRouteDriver()();
+    voluntaryDriver.actions.init.handler({});
+    voluntaryDriver.actions.doVoluntaryEndConcentration.handler({});
+
+    if (voluntaryDriver.getState === undefined) {
+      throw new Error("Expected Concentration route driver state projection.");
+    }
+    expect(voluntaryDriver.getState().route.slice(-3)).toEqual([
+      {
+        kind: "discoverBattleActs",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+    ]);
+
+    const replacementDriver = createConcentrationBreakTeardownRouteDriver()();
+    replacementDriver.actions.init.handler({});
+    replacementDriver.actions.doCastReplacementConcentrationSpell.handler({});
+
+    if (replacementDriver.getState === undefined) {
+      throw new Error("Expected Concentration route driver state projection.");
+    }
+    expect(replacementDriver.getState().route).toEqual([
+      { kind: "startBattle", owner: "battleActionEconomy" },
+      {
+        kind: "discoverBattleActs",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleSpellSlotAndActionEconomy",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleConcentration",
+      },
+    ]);
+  });
+
   it(
     "routes Command effect ordering through the shared reducer surface",
     async () => {

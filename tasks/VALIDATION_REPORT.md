@@ -215,3 +215,64 @@ Verification results:
 - `git diff --check` passed.
 - RAW/ubiquitous-language review passed against Command, Movement and Position, Prone, Reaction, Opportunity Attacks, and the project glossary terms for Spell Invocation, Spell Effect, Movement, Reaction, Condition, and Boundary Crossing.
 - Reviewer-loop convergence passed: round 2 gated invalid Command route evidence to fill-order invalids and added regression coverage for stale/wrong-actor Command subjects under Halt; no remaining reasonable Task 7 findings after RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks.
+
+## CRP07-DSR-05
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The route replay for Concentration break teardown now observes the copied `qRoute` projection through public battle reducer routes. Concentration spell cast discovery and voluntary End Concentration discovery are emitted from `AvailableBattleAct.routeEvent`; cleanup and save-resolution owner events are emitted from `BattleResolutionResult.routeEvents`. The runtime does not add a parallel Concentration or active-effect ledger: the concentrating source remains `BattleCreatureState.concentration`, Spell Effect instances remain `BattleCreatureState.activeEffects`, and malformed or stale `endConcentration` subjects are rejected.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doCastConcentrationSpell` | `tasks/target-replay-evidence/CRP07-DSR-05.json#driver:packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doCastConcentrationSpell#trace:MBT_TRACES=1 MBT_STEPS=3 action=doCastConcentrationSpell` | `packages/battle-runtime/src/concentration-break-teardown.mbt.test.ts#public discovered acts/stale filled subjects`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Concentration cleanup ordering deterministically` | `covered` |
+| `packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doDamageRequestsConcentrationSave` | `tasks/target-replay-evidence/CRP07-DSR-05.json#driver:packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doDamageRequestsConcentrationSave#trace:MBT_TRACES=1 MBT_STEPS=3 action=doDamageRequestsConcentrationSave damageDiePip=4` | `packages/battle-runtime/src/concentration-break-teardown.mbt.test.ts#public discovered acts/stale filled subjects`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Concentration cleanup ordering deterministically` | `covered` |
+| `packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doFailConcentrationSave` | `tasks/target-replay-evidence/CRP07-DSR-05.json#driver:packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doFailConcentrationSave#trace:MBT_TRACES=1 MBT_STEPS=3 action=doFailConcentrationSave damageDiePip=4 saveRollTotal=9` | `packages/battle-runtime/src/concentration-break-teardown.mbt.test.ts#public discovered acts/stale filled subjects`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Concentration cleanup ordering deterministically` | `covered` |
+| `packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doVoluntaryEndConcentration` | `tasks/target-replay-evidence/CRP07-DSR-05.json#driver:packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doVoluntaryEndConcentration#trace:MBT_TRACES=1 MBT_STEPS=3 action=doVoluntaryEndConcentration` | `packages/battle-runtime/src/concentration-break-teardown.mbt.test.ts#public discovered acts/stale filled subjects`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Concentration cleanup ordering deterministically` | `covered` |
+| `packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doCastReplacementConcentrationSpell` | `tasks/target-replay-evidence/CRP07-DSR-05.json#driver:packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doCastReplacementConcentrationSpell#trace:MBT_TRACES=1 MBT_STEPS=3 action=doCastReplacementConcentrationSpell` | `packages/battle-runtime/src/concentration-break-teardown.mbt.test.ts#public discovered acts/stale filled subjects`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Concentration cleanup ordering deterministically` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP07-DSR-05.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=3 action=<branchAction>`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP07-DSR-05/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 8.
+
+Verification results:
+
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/concentration-break-teardown.mbt.test.ts -t "public discovered acts|stale and filled"` passed with 2 tests.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t "routes Concentration cleanup ordering deterministically"` passed with 1 test.
+- `pnpm --filter @dnd/battle-runtime exec quint typecheck battle-runtime-concentration-break-teardown.route.mbt.qnt` passed.
+- `MBT_TRACES=1 MBT_STEPS=3 pnpm --filter @dnd/battle-runtime exec vitest run src/concentration-break-teardown.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Concentration"` passed in 13s.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- RAW/ubiquitous-language review passed against Rules Glossary Concentration and UBIQUITOUS_LANGUAGE.md Spellcasting terms.
+- Reviewer-loop convergence round 2 addressed review findings by moving discovery qRoute evidence to `AvailableBattleAct.routeEvent`, rejecting stale/filled End Concentration subjects, adding focused regression tests, and rerunning RAW/domain, architecture/connascence, code-review, and focused MBT checks.

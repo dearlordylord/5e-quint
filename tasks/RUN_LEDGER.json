@@ -221,6 +221,82 @@
           "detail": "Round 2 gated invalid Command route evidence to fill-order invalids and added regression coverage for stale/wrong-actor Command subjects under Halt; no remaining reasonable Task 7 findings after RAW, ubiquitous-language/domain, architecture/connascence, and code-review passes."
         }
       ]
+    },
+    {
+      "taskId": "CRP07-DSR-05",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "6858b3e5e68ccdd9b2336204cf9a097d450fdb6e17ae3149934e67ba28657d7a"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "c013e4ac9b82cd4d2a9334b069399eaa67ad95ee8b9a56df85229fd0e06741cd"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "9bfb3d87fd707d1a0e97208cadf91aff3c34641ca7dd7b47b6b88e5de916fad6"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP07-DSR-05.json",
+          "sha256": "eecc8e07c52174a4630d83db23232f583336cf14837896c2c04aaf1a4b816274",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP07-DSR-05.json#driver:packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doCastConcentrationSpell#trace:MBT_TRACES=1 MBT_STEPS=3 action=doCastConcentrationSpell",
+            "tasks/target-replay-evidence/CRP07-DSR-05.json#driver:packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doDamageRequestsConcentrationSave#trace:MBT_TRACES=1 MBT_STEPS=3 action=doDamageRequestsConcentrationSave damageDiePip=4",
+            "tasks/target-replay-evidence/CRP07-DSR-05.json#driver:packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doFailConcentrationSave#trace:MBT_TRACES=1 MBT_STEPS=3 action=doFailConcentrationSave damageDiePip=4 saveRollTotal=9",
+            "tasks/target-replay-evidence/CRP07-DSR-05.json#driver:packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doVoluntaryEndConcentration#trace:MBT_TRACES=1 MBT_STEPS=3 action=doVoluntaryEndConcentration",
+            "tasks/target-replay-evidence/CRP07-DSR-05.json#driver:packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt#step:doCastReplacementConcentrationSpell#trace:MBT_TRACES=1 MBT_STEPS=3 action=doCastReplacementConcentrationSpell"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/concentration-break-teardown.mbt.test.ts -t \"public discovered acts|stale and filled\"",
+          "status": "pass",
+          "detail": "2 tests passed"
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t \"routes Concentration cleanup ordering deterministically\"",
+          "status": "pass",
+          "detail": "1 test passed"
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec quint typecheck battle-runtime-concentration-break-teardown.route.mbt.qnt",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "MBT_TRACES=1 MBT_STEPS=3 pnpm --filter @dnd/battle-runtime exec vitest run src/concentration-break-teardown.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Concentration\"",
+          "status": "pass",
+          "detail": "6 tests passed; final timed run TOTAL: 13s"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 2 fixed public discovery route evidence and stale/filled End Concentration handling; no remaining reasonable Task 8 findings after RAW/domain, architecture/connascence, code-review, and focused MBT checks."
+        }
+      ]
     }
   ]
 }

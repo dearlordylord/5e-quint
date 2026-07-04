@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-003",
+  "taskId": "CRP07-DSR-05",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
@@ -9,40 +9,33 @@
         "BattleReducerRouteEvent",
         "battleReducerRouteForDiscoveredAct",
         "battleReducerRouteForResolution",
-        "commandEffect route subject"
+        "concentrationTeardown route subject",
+        "battleConcentration route owner",
+        "battleActiveEffect route owner"
       ]
     },
     {
       "path": "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
       "role": "domain-engine",
       "domainApis": [
-        "resolveBattleSubject"
+        "resolveBattleSubject",
+        "runtimeCommand:endConcentration staleSubject rejection",
+        "runtimeCommand:endConcentration invalidFill rejection"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer.ts",
+      "path": "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
       "role": "domain-engine",
       "domainApis": [
-        "BattleResolutionResult.routeEvents",
-        "BattleState",
-        "BattleCreatureState"
+        "discoverBattleActs",
+        "runtimeCommand:endConcentration"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
-      "role": "domain-engine",
+      "path": "packages/battle-runtime/src/battle-subjects.ts",
+      "role": "public-subject-vocabulary",
       "domainApis": [
-        "resolveCommandGrovelCommand",
-        "resolveCommandDropCommand",
-        "resolveCommandApproachCommand",
-        "resolveCommandFleeCommand"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "resolveCommandSpellAct"
+        "BattleSubject.runtimeCommand:endConcentration"
       ]
     }
   ],
@@ -50,29 +43,16 @@
     {
       "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
       "quarantinedWitnessNames": [
-        "doApproachMovementContinues",
-        "doApproachNoMovement",
-        "doDiscoverCommand",
-        "doDropNeedsHeldObjectFacts",
-        "doFillApproachMovementContinues",
-        "doFillApproachMovementWithinFive",
-        "doFillDropHeldObjectFacts",
-        "doFillFailedGrovelSavingThrow",
-        "doFillFleeMovement",
-        "doFillGrovelOption",
-        "doFillTargetList",
-        "doFleeMovement",
-        "doFleeNoMovement",
-        "doFleeOpportunityAttack",
-        "doFollowGrovel",
-        "doHaltSuppresses",
-        "doRejectFleePartialMovement",
-        "doSubmitOptionBeforeTargetList",
-        "doSubmitSavingThrowBeforeOption",
+        "doCastConcentrationSpell",
+        "doDamageRequestsConcentrationSave",
+        "doFailConcentrationSave",
+        "doVoluntaryEndConcentration",
+        "doCastReplacementConcentrationSpell",
         "mbt::actionTaken",
         "observedActionTaken",
         "traceId",
         "qntFileSha256",
+        "routeConnectorSha256",
         "sourceBranchInventorySha256",
         "cleanroomManifestSourceCommitSha",
         "targetProfile",
@@ -86,25 +66,25 @@
         "harnessTestPath"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-003.json"
+        "tasks/target-replay-evidence/CRP07-DSR-05.json"
       ]
     }
   ],
   "accumulatorGrowth": [],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "commandEffect public route events"
+      "api": "battleConcentration and battleActiveEffect public route owners"
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer.ts",
-      "api": "BattleState.interruptStack"
+      "driver": "packages/battle-runtime/battle-runtime-spell-base-armor-class-effect.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "api": "spellEffect active-effect route owner projection"
     }
   ],
   "completion": {
     "tag": "public-reducer-route-replay",
-    "notes": "Task 7 adds Command route observation to the public reducer route surface. It introduces no duplicate Command ledger; qRoute evidence is emitted from startBattle, discoverBattleActs, and resolveBattleSubject results while existing BattleState-owned active effects, conditions, movement, Halt suppression, and interrupt stack carry durable state."
+    "notes": "Task 8 routes Concentration break teardown through public battle reducer subjects and route events. It introduces no adapter-local Concentration or active-effect ledger; BattleState owns the concentrating source and active Spell Effect instances, and qRoute evidence is emitted from startBattle, AvailableBattleAct.routeEvent on discoverBattleActs results, and BattleResolutionResult.routeEvents."
   }
 }
