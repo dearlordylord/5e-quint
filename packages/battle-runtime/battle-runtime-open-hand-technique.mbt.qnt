@@ -8,7 +8,17 @@ module battleRuntimeOpenHandTechniqueMbt {
 
   type WitnessHole = | WitnessProtocolHole
 
-  type OpenHandTechniqueScenarioOutcome = | Init | Addle | PushSaveSucceeded | PushSaveFailed | ToppleSaveSucceeded | ToppleSaveFailed | RejectNonFlurry | RejectPushTooFar | RejectTopplePushDisposition
+  type OpenHandTechniqueScenarioOutcome =
+    | Init
+    | Decline
+    | DenyOpportunityAttacks
+    | PushAwaySaveSucceeded
+    | PushAwaySaveFailed
+    | ApplyProneSaveSucceeded
+    | ApplyProneSaveFailed
+    | RejectNonFlurry
+    | RejectPushTooFar
+    | RejectApplyPronePushDisposition
 
 
   type OpenHandTechniqueWitnessState = {
@@ -31,7 +41,7 @@ module battleRuntimeOpenHandTechniqueMbt {
     scenarioOutcome: OpenHandTechniqueScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
     if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
-    else if (scenarioOutcome.in(Set(RejectNonFlurry, RejectPushTooFar, RejectTopplePushDisposition))) witnessInvalid(WitnessProtocolHole, WInvalidFill)
+    else if (scenarioOutcome.in(Set(RejectNonFlurry, RejectPushTooFar, RejectApplyPronePushDisposition))) witnessInvalid(WitnessProtocolHole, WInvalidFill)
     else if (holes != Set()) witnessNeedsHoles(holes)
     else witnessResolved(WitnessProtocolHole)
 
@@ -51,29 +61,34 @@ module battleRuntimeOpenHandTechniqueMbt {
   }
   action init = recordProjection(false, false, 0, Init)
 
-  action doAddle = all {
+  action doDecline = all {
     scenarioOutcome == Init,
-    recordProjection(true, false, 0, Addle),
+    recordProjection(false, false, 0, Decline),
   }
 
-  action doPushSaveSucceeded = all {
+  action doDenyOpportunityAttacks = all {
     scenarioOutcome == Init,
-    recordProjection(false, false, 0, PushSaveSucceeded),
+    recordProjection(true, false, 0, DenyOpportunityAttacks),
   }
 
-  action doPushSaveFailed = all {
+  action doPushAwaySaveSucceeded = all {
     scenarioOutcome == Init,
-    recordProjection(false, false, 10, PushSaveFailed),
+    recordProjection(false, false, 0, PushAwaySaveSucceeded),
   }
 
-  action doToppleSaveSucceeded = all {
+  action doPushAwaySaveFailed = all {
     scenarioOutcome == Init,
-    recordProjection(false, false, 0, ToppleSaveSucceeded),
+    recordProjection(false, false, 10, PushAwaySaveFailed),
   }
 
-  action doToppleSaveFailed = all {
+  action doApplyProneSaveSucceeded = all {
     scenarioOutcome == Init,
-    recordProjection(false, true, 0, ToppleSaveFailed),
+    recordProjection(false, false, 0, ApplyProneSaveSucceeded),
+  }
+
+  action doApplyProneSaveFailed = all {
+    scenarioOutcome == Init,
+    recordProjection(false, true, 0, ApplyProneSaveFailed),
   }
 
   action doRejectNonFlurry = all {
@@ -86,19 +101,20 @@ module battleRuntimeOpenHandTechniqueMbt {
     recordProjection(false, false, 0, RejectPushTooFar),
   }
 
-  action doRejectTopplePushDisposition = all {
+  action doRejectApplyPronePushDisposition = all {
     scenarioOutcome == Init,
-    recordProjection(false, false, 0, RejectTopplePushDisposition),
+    recordProjection(false, false, 0, RejectApplyPronePushDisposition),
   }
 
   action step = any {
-    doAddle,
-    doPushSaveSucceeded,
-    doPushSaveFailed,
-    doToppleSaveSucceeded,
-    doToppleSaveFailed,
+    doDecline,
+    doDenyOpportunityAttacks,
+    doPushAwaySaveSucceeded,
+    doPushAwaySaveFailed,
+    doApplyProneSaveSucceeded,
+    doApplyProneSaveFailed,
     doRejectNonFlurry,
     doRejectPushTooFar,
-    doRejectTopplePushDisposition,
+    doRejectApplyPronePushDisposition,
   }
 }

@@ -4,7 +4,44 @@ This worktree adds proof-oriented invariants to the isolated algebra QNT specs.
 The goal is to separate small algebra facts that can be checked inductively from
 the larger randomized MBT replay story.
 
-## Apalache-checked Inductive Invariants
+## Bounded Inductive Proof Lane
+
+`pnpm --filter @dnd/shared-algebras proof:inductive` runs the active
+`*-inductive.qnt` modules through the package-local bounded harness. The lane is
+not part of default `pnpm test`; default tests keep a fast reminder and a
+classification guard so a new inductive module cannot be added without entering
+the active lane or the state-space repair list.
+
+Each module runs as a separate `quint verify` command with:
+
+- `--inductive-invariant invariant`;
+- `--invariant invariant`;
+- `--max-steps 1`;
+- the shared proof module timeout from `scripts/qnt-proof-harness.ts`.
+
+The active inductive modules are classified as:
+
+- legacy root algebra proof machines:
+  - `action-economy-algebra-inductive.qnt`;
+  - `conditions-algebra-inductive.qnt`;
+  - `death-saves-algebra-inductive.qnt`.
+- rule-core owned proof machines:
+  - `rule-core/action-turn-procedures-inductive.qnt`;
+  - `rule-core/attack-damage-composition-inductive.qnt`;
+  - `rule-core/damage-component-adjustments-inductive.qnt`;
+  - `rule-core/hit-point-damage-inductive.qnt`;
+  - `rule-core/hit-point-recovery-inductive.qnt`;
+  - `rule-core/movement-spatial-grapple-inductive.qnt`;
+  - `rule-core/reactions-continuations-concentration-inductive.qnt`;
+  - `rule-core/spell-procedure-profiles-inductive.qnt`;
+  - `rule-core/stat-block-controls-inductive.qnt`;
+  - `rule-core/unit-feature-procedure-profiles-inductive.qnt`;
+  - `rule-core/zero-hit-point-lifecycle-inductive.qnt`.
+
+No modules are currently classified as requiring state-space repair before they
+can enter the active bounded lane.
+
+## Root Algebra Inductive Invariants
 
 These modules now have invariants shaped for `quint verify --inductive-invariant`
 with explicit state-variable domain constraints before derived facts:
@@ -27,13 +64,10 @@ with explicit state-variable domain constraints before derived facts:
   - Dead states have three failures.
   - Stable and HP-regained states reset the death-save counters.
 
-Verification commands:
+Verification command:
 
 ```sh
-export PATH="$HOME/.local/java/jdk-17.0.18+8-jre/bin:$PATH"
-pnpm exec quint verify packages/shared-algebras/proofs/action-economy-algebra-inductive.qnt --inductive-invariant invariant --invariant invariant --max-steps 1 --verbosity 1
-pnpm exec quint verify packages/shared-algebras/proofs/conditions-algebra-inductive.qnt --inductive-invariant invariant --invariant invariant --max-steps 1 --verbosity 1
-pnpm exec quint verify packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt --inductive-invariant invariant --invariant invariant --max-steps 1 --verbosity 1
+pnpm --filter @dnd/shared-algebras proof:inductive
 ```
 
 ## Simulation-checked Invariants

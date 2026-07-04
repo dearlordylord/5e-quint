@@ -7,7 +7,11 @@ module battleRuntimeOpenHandTechnique {
   // - Classes/Monk.md Level 3: Open Hand Technique.
   // - UBIQUITOUS_LANGUAGE.md: Opportunity Attack, Saving Throw, Prone.
 
-  type OpenHandTechniqueChoice = OpenHandAddle | OpenHandPush | OpenHandTopple | OpenHandDecline
+  type OpenHandTechniqueEffect =
+    | OpenHandDenyOpportunityAttacks
+    | OpenHandPushAwayOnFailedStrengthSave
+    | OpenHandApplyProneOnFailedDexteritySave
+    | OpenHandDecline
   type OpenHandTechniqueSave = OpenHandSaveSucceeded | OpenHandSaveFailed
 
   type OpenHandTechniqueState = {
@@ -35,20 +39,20 @@ module battleRuntimeOpenHandTechnique {
 
   pure def openHandTechniqueAfterHit(
     state: OpenHandTechniqueState,
-    choice: OpenHandTechniqueChoice,
+    effect: OpenHandTechniqueEffect,
     save: OpenHandTechniqueSave,
     requestedPushDistanceFeet: int,
   ): OpenHandTechniqueState =
     if (not(canUseOpenHandTechnique(state)))
       { ...state, rejected: true }
     else
-      match choice {
+      match effect {
         | OpenHandDecline => state
-        | OpenHandAddle => {
+        | OpenHandDenyOpportunityAttacks => {
             ...state,
             targetOpportunityAttackDenied: true,
           }
-        | OpenHandPush =>
+        | OpenHandPushAwayOnFailedStrengthSave =>
             if (save == OpenHandSaveFailed)
               if (0 <= requestedPushDistanceFeet and requestedPushDistanceFeet <= 15)
                 { ...state, pushDistanceFeet: requestedPushDistanceFeet }
@@ -56,7 +60,7 @@ module battleRuntimeOpenHandTechnique {
                 { ...state, rejected: true }
             else
               state
-        | OpenHandTopple =>
+        | OpenHandApplyProneOnFailedDexteritySave =>
             if (save == OpenHandSaveFailed)
               { ...state, targetProne: true }
             else

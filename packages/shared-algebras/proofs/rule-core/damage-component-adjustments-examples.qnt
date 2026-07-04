@@ -79,6 +79,28 @@ module damageComponentAdjustmentsExamples {
     }
   }
 
+  run test_scalar_reduction_zero_total_has_no_allocation = {
+    val pair = {
+      firstType: SlashingDamage,
+      firstAmount: 0,
+      secondType: PoisonDamage,
+      secondAmount: 0,
+    }
+    val allocation = damagePairScalarReductionAllocation(pair.firstAmount, pair.secondAmount, 3)
+    val result = damagePairAfterScalarReduction(pair, 3)
+    val noAllocation =
+      match allocation {
+        | DamagePairNoDamage => true
+        | DamagePairReductionApplied(_) => false
+      }
+    all {
+      assert(noAllocation),
+      assert(result.firstAmount == 0),
+      assert(result.secondAmount == 0),
+      assert(pairTotal(result) == 0),
+    }
+  }
+
   run test_adjusted_damage_total_feeds_positive_hit_point_damage = {
     val facts = noDamageAdjustmentFacts.with("vulnerabilities", Set(SlashingDamage))
     val damage = totalDamageAfterTargetAdjustments(emptyDamageByType.set(SlashingDamage, 4), facts)

@@ -55,10 +55,6 @@ const ALLOWLIST_PATH_RULES = [
     pattern:
       /^packages\/battle-runtime\/src\/unit-profile-admission-spell-fill-support\.ts$/,
   },
-  {
-    reason: "battle-runtime-unit-feature-support-profile-boundary",
-    pattern: /^packages\/battle-runtime\/src\/unit-feature-support\.ts$/,
-  },
 ];
 
 const INLINE_ALLOWLIST_PATH_RULES = [
@@ -66,10 +62,19 @@ const INLINE_ALLOWLIST_PATH_RULES = [
     reason: "battle-runtime-mbt-fixture-boundary",
     pattern: /^packages\/battle-runtime\/src\/battle-runtime-mbt-driver-kit\.ts$/,
   },
+  {
+    reason: "battle-runtime-unit-feature-support-profile-boundary",
+    pattern: /^packages\/battle-runtime\/src\/unit-feature-support\.ts$/,
+  },
+  {
+    reason: "character-creation-selected-choice-runtime-projection-boundary",
+    pattern: /^packages\/character-creation-runtime\/src\/finalization\.ts$/,
+  },
 ];
 
 const INLINE_ALLOWLIST_COMMENT =
   /\bauthored-id-dispatch-allow:\s*([a-z0-9-]+)/;
+const IDENTIFIER_EXPRESSION_PATTERN = String.raw`[A-Za-z_$][\w$]*(?:(?:\.|\?\.)[A-Za-z_$][\w$]*)*`;
 
 function escapeForRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -135,16 +140,66 @@ function hasAuthoredIdentitySelector(text) {
   return (
     /\b(?:id|[A-Za-z_$][\w$]*Id|name|[A-Za-z_$][\w$]*Name|section|[A-Za-z_$][\w$]*Section)\b/.test(
       text,
-    ) || isAuthoredIdentityFieldExpression(text)
+    ) ||
+    isAuthoredIdentityFieldExpression(text) ||
+    isGenericSelectedAuthoredIdentityExpression(text)
   );
 }
 
 function isAuthoredIdentityFieldExpression(text) {
-  const expression = text.trim();
+  const expression = expressionWithoutOptionalChaining(text);
   return (
     /(?:^|\.)(?:spell|unit)\.name$/.test(expression) ||
     /(?:^|\.)(?:spell|unit)\.provenance\.section$/.test(expression)
   );
+}
+
+function isGenericSelectedAuthoredIdentityExpression(text) {
+  const expression = expressionWithoutOptionalChaining(text);
+  return (
+    /(?:^|\.)(?:fill|choiceFill|decision)\.value$/.test(expression) ||
+    /(?:^|\.)(?:selected|selectedChoice|selectedOption|choice|option)\.value$/.test(
+      expression,
+    )
+  );
+}
+
+function expressionWithoutOptionalChaining(text) {
+  return text.trim().replace(/\?\./g, ".");
+}
+
+function transformedIdentityLiteralsFor(literal) {
+  const transformed = new Set();
+  const words = literal
+    .split(/[^A-Za-z0-9]+/)
+    .filter((word) => word.length > 0);
+
+  if (words.length > 1) {
+    const [head, ...tail] = words;
+    transformed.add(
+      `${head.toLowerCase()}${tail
+        .map((word) => `${word[0].toUpperCase()}${word.slice(1)}`)
+        .join("")}`,
+    );
+    transformed.add(
+      words
+        .map((word) => `${word[0].toUpperCase()}${word.slice(1)}`)
+        .join(""),
+    );
+  }
+
+  return transformed;
+}
+
+function addAuthoredIdentityLiteral(identityLiterals, literal) {
+  if (typeof literal !== "string" || literal.length === 0) {
+    return;
+  }
+
+  identityLiterals.add(literal);
+  for (const transformed of transformedIdentityLiteralsFor(literal)) {
+    identityLiterals.add(transformed);
+  }
 }
 
 function lineNumberForIndex(content, index) {
@@ -222,14 +277,15 @@ function collectAuthoredIdentityLiterals() {
     }
 
     for (const [key, nestedValue] of Object.entries(value)) {
-      const isAuthoredReferenceId = key.endsWith("Id") && key !== "holeId";
+      const isAuthoredReferenceId =
+        (key === "id" || key.endsWith("Id")) && key !== "holeId";
 
       if (
         isAuthoredReferenceId &&
         typeof nestedValue === "string" &&
         nestedValue.length > 0
       ) {
-        identityLiterals.add(nestedValue);
+        addAuthoredIdentityLiteral(identityLiterals, nestedValue);
       }
 
       collectReferenceIdsFromValue(nestedValue);
@@ -246,23 +302,21 @@ function collectAuthoredIdentityLiterals() {
       const parsed = JSON.parse(content);
       if (parsed != null && typeof parsed === "object") {
         if (typeof parsed.id === "string" && parsed.id.length > 0) {
-          identityLiterals.add(parsed.id);
+          addAuthoredIdentityLiteral(identityLiterals, parsed.id);
+        }
+        if (typeof parsed.name === "string" && parsed.name.length > 0) {
+          addAuthoredIdentityLiteral(identityLiterals, parsed.name);
         }
         if (
-          parsed.kind === "spell" &&
-          typeof parsed.name === "string" &&
-          parsed.name.length > 0
-        ) {
-          identityLiterals.add(parsed.name);
-        }
-        if (
-          parsed.kind === "spell" &&
           parsed.provenance != null &&
           typeof parsed.provenance === "object" &&
           typeof parsed.provenance.section === "string" &&
           parsed.provenance.section.length > 0
         ) {
-          identityLiterals.add(parsed.provenance.section);
+          addAuthoredIdentityLiteral(
+            identityLiterals,
+            parsed.provenance.section,
+          );
         }
       }
       collectReferenceIdsFromValue(parsed);
@@ -606,7 +660,7 @@ function collectComparisonViolations(
   const violations = [];
 
   const authoredOnRight = new RegExp(
-    `\\b([A-Za-z_$][\\w$.]*)\\s*(===|==|!==|!=)\\s*(["'\\x60])(${authoredAlternation})\\3`,
+    `\\b(${IDENTIFIER_EXPRESSION_PATTERN})\\s*(===|==|!==|!=)\\s*(["'\\x60])(${authoredAlternation})\\3`,
     "g",
   );
   for (;;) {
@@ -633,7 +687,7 @@ function collectComparisonViolations(
   }
 
   const authoredOnLeft = new RegExp(
-    `(["'\\x60])(${authoredAlternation})\\1\\s*(===|==|!==|!=)\\s*([A-Za-z_$][\\w$.]*)`,
+    `(["'\\x60])(${authoredAlternation})\\1\\s*(===|==|!==|!=)\\s*(${IDENTIFIER_EXPRESSION_PATTERN})`,
     "g",
   );
   for (;;) {
@@ -659,8 +713,10 @@ function collectComparisonViolations(
     });
   }
 
-  const aliasOnRight =
-    /\b([A-Za-z_$][\w$.]*)\s*(===|==|!==|!=)\s*([A-Za-z_$][\w$]*)\b/g;
+  const aliasOnRight = new RegExp(
+    `\\b(${IDENTIFIER_EXPRESSION_PATTERN})\\s*(===|==|!==|!=)\\s*([A-Za-z_$][\\w$]*)\\b`,
+    "g",
+  );
   for (;;) {
     const match = aliasOnRight.exec(content);
     if (match == null) {
@@ -685,8 +741,10 @@ function collectComparisonViolations(
     });
   }
 
-  const aliasOnLeft =
-    /\b([A-Za-z_$][\w$]*)\s*(===|==|!==|!=)\s*([A-Za-z_$][\w$.]*)\b/g;
+  const aliasOnLeft = new RegExp(
+    `\\b([A-Za-z_$][\\w$]*)\\s*(===|==|!==|!=)\\s*(${IDENTIFIER_EXPRESSION_PATTERN})\\b`,
+    "g",
+  );
   for (;;) {
     const match = aliasOnLeft.exec(content);
     if (match == null) {
@@ -720,7 +778,7 @@ function collectAuthoredIdentityFieldComparisonViolations(
 ) {
   const violations = [];
   const lines = content.split("\n");
-  const identifierExpression = String.raw`[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*`;
+  const identifierExpression = IDENTIFIER_EXPRESSION_PATTERN;
   const stringLiteral = String.raw`(?:"[^"\n]*"|'[^'\n]*'|\x60[^\x60\n]*\x60)`;
   const comparableExpression = String.raw`(?:${identifierExpression}|${stringLiteral})`;
   const comparison = new RegExp(
@@ -1206,13 +1264,21 @@ function buildAuthoredAlternation(identityLiterals) {
 }
 
 function runSelfTest() {
-  const authoredAlternation = buildAuthoredAlternation(
-    new Set([
-      "magic_missile",
-      "Magic Missile",
-      "Spells/Descriptions-M-P#Magic Missile",
-    ]),
-  );
+  const selfTestLiterals = new Set();
+  for (const literal of [
+    "magic_missile",
+    "Magic Missile",
+    "Spells/Descriptions-M-P#Magic Missile",
+    "Hunter's Prey",
+    "Classes/Ranger.md:243-249",
+    "colossus_slayer",
+    "addle",
+    "push",
+    "topple",
+  ]) {
+    addAuthoredIdentityLiteral(selfTestLiterals, literal);
+  }
+  const authoredAlternation = buildAuthoredAlternation(selfTestLiterals);
 
   const productionBranch = [
     "export function productionSpellDispatch(invocation) {",
@@ -1257,6 +1323,158 @@ function runSelfTest() {
   assert(
     productionKinds.has("effect-match-identity-branch"),
     `Self-test failed: effect/Match spell.name branch was not caught. Got ${JSON.stringify(productionViolations)}`,
+  );
+
+  const nonSpellUnitIdentityBranch = [
+    'const unitNames = ["Hunter\'s Prey"];',
+    "export function nonSpellUnitDispatch(unit) {",
+    "  switch (unit.name) {",
+    '    case "Hunter\'s Prey": return "unit-name-switch";',
+    "  }",
+    '  if (unitNames.includes(unit.name)) return "unit-name-container";',
+    "  return Match.value(unit.provenance.section).pipe(",
+    '    Match.when("Classes/Ranger.md:243-249", () => "unit-section-match"),',
+    "    Match.exhaustive,",
+    "  );",
+    "}",
+  ].join("\n");
+  const nonSpellUnitViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/non-spell-unit-dispatch.ts",
+    nonSpellUnitIdentityBranch,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert(
+    nonSpellUnitViolations.some(
+      (violation) =>
+        violation.literal === "Hunter's Prey" &&
+        violation.context.kind === "switch-id-branch",
+    ),
+    `Self-test failed: non-spell unit.name switch branch was not caught. Got ${JSON.stringify(nonSpellUnitViolations)}`,
+  );
+  assert(
+    nonSpellUnitViolations.some(
+      (violation) =>
+        violation.literal === "Hunter's Prey" &&
+        violation.context.kind === "dispatch-container",
+    ),
+    `Self-test failed: non-spell unit.name container dispatch was not caught. Got ${JSON.stringify(nonSpellUnitViolations)}`,
+  );
+  assert(
+    nonSpellUnitViolations.some(
+      (violation) =>
+        violation.literal === "Classes/Ranger.md:243-249" &&
+        violation.context.kind === "effect-match-identity-branch",
+    ),
+    `Self-test failed: non-spell unit provenance section Match branch was not caught. Got ${JSON.stringify(nonSpellUnitViolations)}`,
+  );
+
+  const transformedSelectedOptionBranch = [
+    "export function selectedOptionDispatch(selectedOption) {",
+    "  return Match.value(selectedOption.optionId).pipe(",
+    '    Match.when("colossusSlayer", () => "old-runtime-id-branch"),',
+    "    Match.exhaustive,",
+    "  );",
+    "}",
+  ].join("\n");
+  const transformedSelectedOptionViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/selected-option-dispatch.ts",
+    transformedSelectedOptionBranch,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert(
+    transformedSelectedOptionViolations.some(
+      (violation) =>
+        violation.literal === "colossusSlayer" &&
+        violation.context.kind === "effect-match-identity-branch",
+    ),
+    `Self-test failed: transformed selected option authored ID branch was not caught. Got ${JSON.stringify(transformedSelectedOptionViolations)}`,
+  );
+
+  const selectedFillValueBranch = [
+    "export function selectedFillValueDispatch(fill) {",
+    '  if (fill.value === "push") return "old-runtime-fill-branch";',
+    "  return null;",
+    "}",
+  ].join("\n");
+  const selectedFillValueViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/selected-fill-value-dispatch.ts",
+    selectedFillValueBranch,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert(
+    selectedFillValueViolations.some(
+      (violation) =>
+        violation.literal === "push" &&
+        violation.context.kind === "id-comparison",
+    ),
+    `Self-test failed: generic fill.value authored ID branch was not caught. Got ${JSON.stringify(selectedFillValueViolations)}`,
+  );
+
+  const optionalSelectedValueBranch = [
+    "export function optionalSelectedValueDispatch(input, fill) {",
+    '  if (fill?.value === "push") return "old-optional-fill-branch";',
+    "  return Match.value(input.decision?.value).pipe(",
+    '    Match.when("push", () => "old-optional-decision-branch"),',
+    "    Match.exhaustive,",
+    "  );",
+    "}",
+  ].join("\n");
+  const optionalSelectedValueViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/optional-selected-value-dispatch.ts",
+    optionalSelectedValueBranch,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert(
+    optionalSelectedValueViolations.some(
+      (violation) =>
+        violation.literal === "push" &&
+        violation.context.kind === "id-comparison",
+    ),
+    `Self-test failed: optional fill?.value authored ID branch was not caught. Got ${JSON.stringify(optionalSelectedValueViolations)}`,
+  );
+  assert(
+    optionalSelectedValueViolations.some(
+      (violation) =>
+        violation.literal === "push" &&
+        violation.context.kind === "effect-match-identity-branch",
+    ),
+    `Self-test failed: optional decision?.value authored ID branch was not caught. Got ${JSON.stringify(optionalSelectedValueViolations)}`,
+  );
+
+  const openHandDecisionBranch = [
+    "export function openHandDecisionDispatch(input) {",
+    "  return Match.value(input.decision.value).pipe(",
+    '    Match.when("addle", () => "old-addle-branch"),',
+    '    Match.when("push", () => "old-push-branch"),',
+    '    Match.when("topple", () => "old-topple-branch"),',
+    "    Match.exhaustive,",
+    "  );",
+    "}",
+  ].join("\n");
+  const openHandDecisionViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/open-hand-technique.ts",
+    openHandDecisionBranch,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert(
+    ["addle", "push", "topple"].every((literal) =>
+      openHandDecisionViolations.some(
+        (violation) =>
+          violation.literal === literal &&
+          violation.context.kind === "effect-match-identity-branch",
+      ),
+    ),
+    `Self-test failed: Open Hand decision.value authored choice branch was not caught. Got ${JSON.stringify(openHandDecisionViolations)}`,
   );
 
   const selectedIdentityProjection = [
@@ -1321,6 +1539,13 @@ function runSelfTest() {
       ALLOWLIST_PATH_RULES,
     ),
     "battle-runtime-unit-profile-admission-test-support-boundary",
+  );
+  assert.equal(
+    classifyPath(
+      "packages/battle-runtime/src/unit-feature-support.ts",
+      ALLOWLIST_PATH_RULES,
+    ),
+    null,
   );
   assert.equal(
     classifyPath(

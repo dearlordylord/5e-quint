@@ -4,15 +4,12 @@ module ruleCoreShoveOutcomeMbt {
   import ruleCoreComponentRoute.* from "./rule-core-component-route"
   import shoveOutcome.* from "../shared-algebras/proofs/rule-core/shove-outcome"
 
+  type ShoveOutcomeReplayProjection =
+    | ShoveOutcomeReplayInit
+    | ShoveOutcomeReplayRecorded(ShoveOutcomeProjection)
+
   var qLastScenario: str
-  var qAccepted: bool
-  var qTargetProne: bool
-  var qPushEmitted: bool
-  var qPushDispositionKind: str
-  var qPushBlockedReason: str
-  var qPushDistanceFeet: int
-  var qPushProvokesOpportunityAttacks: bool
-  var qActionAvailable: bool
+  var qOutcome: ShoveOutcomeReplayProjection
   var qReplayIndex: int
   var qComponentRoute: List[RuleCoreComponentRouteEvent]
 
@@ -30,14 +27,7 @@ module ruleCoreShoveOutcomeMbt {
     val projection = projectShoveOutcomeResult(result)
     all {
       qLastScenario' = scenario,
-      qAccepted' = projection.accepted,
-      qTargetProne' = projection.targetProne,
-      qPushEmitted' = projection.pushEmitted,
-      qPushDispositionKind' = projection.pushDispositionKind,
-      qPushBlockedReason' = projection.pushBlockedReason,
-      qPushDistanceFeet' = projection.pushDistanceFeet,
-      qPushProvokesOpportunityAttacks' = projection.pushProvokesOpportunityAttacks,
-      qActionAvailable' = projection.actionAvailable,
+      qOutcome' = ShoveOutcomeReplayRecorded(projection),
       qReplayIndex' = nextReplayIndex,
       qComponentRoute' = componentRouteEvidence,
     }
@@ -45,14 +35,7 @@ module ruleCoreShoveOutcomeMbt {
 
   action init = all {
     qLastScenario' = "init",
-    qAccepted' = true,
-    qTargetProne' = false,
-    qPushEmitted' = false,
-    qPushDispositionKind' = "none",
-    qPushBlockedReason' = "none",
-    qPushDistanceFeet' = 0,
-    qPushProvokesOpportunityAttacks' = false,
-    qActionAvailable' = true,
+    qOutcome' = ShoveOutcomeReplayInit,
     qReplayIndex' = 0,
     qComponentRoute' = componentRouteEvidence,
   }

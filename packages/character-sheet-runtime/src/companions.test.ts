@@ -91,7 +91,7 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:no-companion"),
         build,
-        currentHp: Hp(12),
+        currentHp: Hp(11),
         tempHp: Hp(0),
         unitLibrary,
       }),
@@ -109,7 +109,7 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:retained-companion"),
         build,
-        currentHp: Hp(12),
+        currentHp: Hp(11),
         tempHp: Hp(0),
         unitLibrary,
         companion: retainedCompanionInput(),
@@ -207,7 +207,7 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:bad-companion-hp"),
         build,
-        currentHp: Hp(12),
+        currentHp: Hp(11),
         tempHp: Hp(0),
         unitLibrary,
         companion: retainedCompanionInput({ currentHp: Hp(0) }),
@@ -246,7 +246,7 @@ describe("Character Sheet runtime / companions", () => {
         createFreshCharacterSheet({
           characterId: characterSheetId("character:bad-companion-protocol"),
           build,
-          currentHp: Hp(12),
+          currentHp: Hp(11),
           tempHp: Hp(0),
           unitLibrary,
           companion,
@@ -263,7 +263,7 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:unknown-companion-protocol"),
         build,
-        currentHp: Hp(12),
+        currentHp: Hp(11),
         tempHp: Hp(0),
         unitLibrary,
         companion: retainedCompanionInput({
@@ -297,7 +297,7 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:wild-companion"),
         build,
-        currentHp: Hp(12),
+        currentHp: Hp(11),
         tempHp: Hp(0),
         unitLibrary,
         companion: retainedCompanionInput({
@@ -316,7 +316,7 @@ describe("Character Sheet runtime / companions", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:familiar-rest-temp-hp"),
         build,
-        currentHp: Hp(12),
+        currentHp: Hp(11),
         tempHp: Hp(0),
         unitLibrary,
         // 1/2 HP with 1 Temporary Hit Point distinguishes no-participation

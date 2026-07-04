@@ -17,6 +17,11 @@ module battleRuntimeMovement {
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
 
+  type FighterSpellActionCostSpendResult = {
+    state: BattleState,
+    admitted: bool,
+  }
+
   pure def dashFighter(state: BattleState): BattleState =
     dashFighterWithSpeedKind(state, WalkSpeedKind)
 
@@ -597,15 +602,18 @@ module battleRuntimeMovement {
     else
       applyFighterMovementWithSpeedKind(state, speedKind, movementCost)
 
-  pure def spendFighterSpellActionCost(state: BattleState, actionCost: SpellActionCost): BattleState =
-    stateWithFighterMovementStep(
-      state,
+  pure def spendFighterSpellActionCost(state: BattleState, actionCost: SpellActionCost): FighterSpellActionCostSpendResult = {
+    val spend =
       if (actionCost == SpellBonusAction)
         battleRuntimeSpendBonusAction(movementProjectionForFighter(state, WalkSpeedKind))
       else
-        battleRuntimeSpendMagicAction(movementProjectionForFighter(state, WalkSpeedKind)),
-    )
+        battleRuntimeSpendMagicAction(movementProjectionForFighter(state, WalkSpeedKind))
+    {
+      state: stateWithFighterMovementStep(state, spend.step),
+      admitted: spend.admitted,
+    }
+  }
 
   pure def canSpendFighterSpellActionCost(state: BattleState, actionCost: SpellActionCost): bool =
-    spendFighterSpellActionCost(state, actionCost) != state
+    spendFighterSpellActionCost(state, actionCost).admitted
 }

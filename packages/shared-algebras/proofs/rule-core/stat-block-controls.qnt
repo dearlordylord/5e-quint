@@ -256,17 +256,17 @@ module statBlockControls {
     state: StatBlockControlState,
     profile: StatBlockMultiattackProfile
   ): StatBlockControlState = {
-    val spentTurn = spendActionCost(statBlockActorTurn(state), StandardActionCost(AttackAction))
+    val actionSpend = spendActionCost(statBlockActorTurn(state), StandardActionCost(AttackAction))
     if (
       not(legalStatBlockMultiattackProfile(profile))
         or statBlockMultiattackContinuationOpen(state)
-        or spentTurn == statBlockActorTurn(state)
+        or not(actionSpend.admitted)
     ) {
       state
     } else {
       withStatBlockActorTurn(
         state.with("multiattack", multiattackDispatchesAfterFirstAttack(profile)),
-        spentTurn
+        actionSpend.turn
       )
     }
   }
@@ -274,11 +274,11 @@ module statBlockControls {
   pure def resolveStatBlockActionAttack(
     state: StatBlockControlState
   ): StatBlockControlState = {
-    val spentTurn = spendActionCost(statBlockActorTurn(state), StandardActionCost(AttackAction))
-    if (statBlockMultiattackContinuationOpen(state) or spentTurn == statBlockActorTurn(state)) {
+    val actionSpend = spendActionCost(statBlockActorTurn(state), StandardActionCost(AttackAction))
+    if (statBlockMultiattackContinuationOpen(state) or not(actionSpend.admitted)) {
       state
     } else {
-      withStatBlockActorTurn(state, spentTurn)
+      withStatBlockActorTurn(state, actionSpend.turn)
     }
   }
 
@@ -298,11 +298,11 @@ module statBlockControls {
   pure def resolveStatBlockBonusActionOption(
     state: StatBlockControlState
   ): StatBlockControlState = {
-    val spentTurn = spendActionCost(statBlockActorTurn(state), BonusActionCost)
-    if (statBlockMultiattackContinuationOpen(state) or spentTurn == statBlockActorTurn(state)) {
+    val bonusActionSpend = spendActionCost(statBlockActorTurn(state), BonusActionCost)
+    if (statBlockMultiattackContinuationOpen(state) or not(bonusActionSpend.admitted)) {
       state
     } else {
-      withStatBlockActorTurn(state, spentTurn)
+      withStatBlockActorTurn(state, bonusActionSpend.turn)
     }
   }
 

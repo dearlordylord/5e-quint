@@ -30,16 +30,14 @@ module battleRuntimeWeaponAttacks {
     if (hasAttackActionAdditionalAttacks(attacker.extraAttackSlotsRemaining))
       stateWithActorCombatant(state, Fighter, { ...attacker, extraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterExtraAttack(attacker.extraAttackSlotsRemaining) })
     else {
-      val spent = stateWithFighterMovementStep(
-        state,
-        battleRuntimeSpendAttackAction(movementProjectionForFighter(state, WalkSpeedKind)),
-      )
-      if (spent != state)
+      val actionSpend = battleRuntimeSpendAttackAction(movementProjectionForFighter(state, WalkSpeedKind))
+      if (actionSpend.admitted) {
+        val spent = stateWithFighterMovementStep(state, actionSpend.step)
         stateWithActorCombatant(spent, Fighter, { ...combatantForActor(spent, Fighter), extraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterAttackAction(
           state.actionAvailable,
           attacker.extraAttackAdditionalAttacks,
         ) })
-      else
+      } else
         state
     }
   }

@@ -395,12 +395,12 @@ Focused lanes currently include:
 - `rule-core-reactions.mbt.qnt` / `src/rule-core-reactions.mbt.test.ts` for
   QCORE8 Reaction offer/decline/spend, continuation resume, Readied Movement
   release, and Concentration damage-save break/hold.
-- `rule-core-features.mbt.qnt` / `src/rule-core-features.mbt.test.ts` for
-  QCORE9 Action Surge, Second Wind, Cunning Action, Improved Critical,
-  Rage/Reckless, Sneak Attack, Savage Attacker, Evasion, Cutting Words, and
-  Uncanny Dodge projections.
-- `rule-core-spells.mbt.qnt` / `src/rule-core-spells.mbt.test.ts` for QCORE10
-  spell invocation, supported reaction spell, and readied spell projections.
+- `rule-core-feature-*.mbt.qnt` / `src/rule-core-features.mbt.test.ts` for
+  QCORE9 action economy, attack rider, save/reaction, passive defense, and
+  zero-Hit-Point feature projections.
+- `rule-core-spell-*.mbt.qnt` / `src/rule-core-spells.mbt.test.ts` for QCORE10
+  spell damage, hit point restoration, defensive effect, and readied spell
+  response projections.
 - `rule-core-stat-block-controls.mbt.qnt` /
   `src/rule-core-stat-block-controls.mbt.test.ts` for QCORE11 stat-block
   Multiattack dispatch projections.
@@ -1306,9 +1306,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `src/adrenaline-rush.mbt.test.ts` - focused Orc Adrenaline Rush fixture.
 - `src/scalar-buff.mbt.test.ts` - focused Longstrider scalar-buff fixture.
 - `src/rule-core-features.mbt.test.ts` - focused QCORE9 Feature Procedure MBT
-  bridge for Action Surge, Second Wind, Cunning Action, Improved Critical,
-  Rage/Reckless, Sneak Attack, Savage Attacker, Evasion, Cutting Words, and
-  Uncanny Dodge projections through public battle-runtime reducer APIs.
+  bridge for action economy, attack rider, save/reaction, passive defense, and
+  zero-Hit-Point feature projections through public battle-runtime reducer APIs.
 - `battle-runtime-model.qnt` - shared battle-runtime QNT vocabulary and state
   model used by focused QNT verification lanes.
 - `battle-runtime-find-familiar.qnt` - Find Familiar lifecycle and permission
@@ -1418,6 +1417,6 @@ Useful checks:
 pnpm --filter @dnd/battle-runtime typecheck
 pnpm --filter @dnd/battle-runtime test
 pnpm --filter @dnd/battle-runtime test:qnt-proofs  # opt-in QNT proof lane; not run by `test` (see CLAUDE.md "QNT proof lane")
-MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-features.mbt.test.ts
+MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime test:mbt:rule-core-features
 MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/weapon-attack-skeleton.mbt.test.ts src/magic-missile-allocation.mbt.test.ts src/extra-attack-count.mbt.test.ts src/adrenaline-rush.mbt.test.ts src/scalar-buff.mbt.test.ts
 ```

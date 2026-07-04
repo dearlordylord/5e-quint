@@ -41,7 +41,7 @@ describe("battle runtime: Open Hand Technique", () => {
         subject: window.subject,
         fills: [
           ...window.hitFills,
-          unitFeatureDecisionFill(window.decision, "addle"),
+          unitFeatureDecisionFill(window.decision, "denyOpportunityAttacks"),
         ],
       }),
     );
@@ -59,12 +59,46 @@ describe("battle runtime: Open Hand Technique", () => {
     );
   });
 
+  test("decline leaves an eligible Flurry hit without an Open Hand rider", () => {
+    const window = openHandTechniqueHitWindow();
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: window.state,
+        subject: window.subject,
+        fills: [
+          ...window.hitFills,
+          unitFeatureDecisionFill(window.decision, "decline"),
+        ],
+      }),
+    );
+    const target = resolved.state.combatants.get(goblinId);
+    if (target === undefined) {
+      throw new Error("Expected Open Hand target.");
+    }
+
+    expect(resolved.shovePushes).toBeUndefined();
+    expect(hasCondition(target.conditions, "prone")).toBe(false);
+    expect(target.activeEffects).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "opportunityAttackDenied",
+          sourceUnitId: "monk_open_hand_technique",
+          sourceCombatantId: fighterId,
+        }),
+      ]),
+    );
+  });
+
   test("Push validates the Strength save and caller-supplied forced movement", () => {
-    const success = resolveOpenHandSave("push", true);
+    const success = resolveOpenHandSave("pushAwayOnFailedSave", true);
     expect(success.resolved.shovePushes).toBeUndefined();
 
     const shorterLegalPush = openHandPush(10);
-    const failure = resolveOpenHandSave("push", false, shorterLegalPush);
+    const failure = resolveOpenHandSave(
+      "pushAwayOnFailedSave",
+      false,
+      shorterLegalPush,
+    );
     expect(failure.resolved.shovePushes).toEqual([shorterLegalPush]);
     expect(hasCondition(failure.target.conditions, "prone")).toBe(false);
   });
@@ -79,7 +113,7 @@ describe("battle runtime: Open Hand Technique", () => {
         subject: window.subject,
         fills: [
           ...window.hitFills,
-          unitFeatureDecisionFill(window.decision, "push"),
+          unitFeatureDecisionFill(window.decision, "pushAwayOnFailedSave"),
         ],
       }),
       "savingThrowOutcome",
@@ -91,7 +125,7 @@ describe("battle runtime: Open Hand Technique", () => {
         subject: window.subject,
         fills: [
           ...window.hitFills,
-          unitFeatureDecisionFill(window.decision, "push"),
+          unitFeatureDecisionFill(window.decision, "pushAwayOnFailedSave"),
           openHandSavingThrowFill(save, false, push),
         ],
       }),
@@ -103,7 +137,7 @@ describe("battle runtime: Open Hand Technique", () => {
         subject: window.subject,
         fills: [
           ...window.hitFills,
-          unitFeatureDecisionFill(window.decision, "push"),
+          unitFeatureDecisionFill(window.decision, "pushAwayOnFailedSave"),
           openHandSavingThrowFill(save, false, push),
           damageRollFill(damage, 4),
         ],
@@ -114,10 +148,10 @@ describe("battle runtime: Open Hand Technique", () => {
   });
 
   test("Topple validates the Dexterity save and applies Prone only on failure", () => {
-    const success = resolveOpenHandSave("topple", true);
+    const success = resolveOpenHandSave("applyConditionOnFailedSave", true);
     expect(hasCondition(success.target.conditions, "prone")).toBe(false);
 
-    const failure = resolveOpenHandSave("topple", false);
+    const failure = resolveOpenHandSave("applyConditionOnFailedSave", false);
     expect(hasCondition(failure.target.conditions, "prone")).toBe(true);
     expect(failure.resolved.shovePushes).toBeUndefined();
   });
@@ -130,7 +164,10 @@ describe("battle runtime: Open Hand Technique", () => {
         subject: window.subject,
         fills: [
           ...window.hitFills,
-          unitFeatureDecisionFill(window.decision, "topple"),
+          unitFeatureDecisionFill(
+            window.decision,
+            "applyConditionOnFailedSave",
+          ),
         ],
       }),
       "savingThrowOutcome",
@@ -141,7 +178,7 @@ describe("battle runtime: Open Hand Technique", () => {
       subject: window.subject,
       fills: [
         ...window.hitFills,
-        unitFeatureDecisionFill(window.decision, "topple"),
+        unitFeatureDecisionFill(window.decision, "applyConditionOnFailedSave"),
         openHandSavingThrowFill(save, false, openHandPush(10)),
       ],
     });
@@ -185,7 +222,7 @@ describe("battle runtime: Open Hand Technique", () => {
       fills: [
         targetFill(genericTarget, goblinId),
         attackRollFill(genericRoll, { total: 20, naturalD20: 15 }),
-        unitFeatureDecisionFill(flurry.decision, "addle"),
+        unitFeatureDecisionFill(flurry.decision, "denyOpportunityAttacks"),
       ],
     });
 
@@ -215,7 +252,7 @@ describe("battle runtime: Open Hand Technique", () => {
         subject: window.subject,
         fills: [
           ...window.hitFills,
-          unitFeatureDecisionFill(window.decision, "push"),
+          unitFeatureDecisionFill(window.decision, "pushAwayOnFailedSave"),
         ],
       }),
       "savingThrowOutcome",
@@ -226,7 +263,7 @@ describe("battle runtime: Open Hand Technique", () => {
       subject: window.subject,
       fills: [
         ...window.hitFills,
-        unitFeatureDecisionFill(window.decision, "push"),
+        unitFeatureDecisionFill(window.decision, "pushAwayOnFailedSave"),
         openHandSavingThrowFill(save, false, {
           ...openHandPush(),
           disposition: {
@@ -249,7 +286,7 @@ describe("battle runtime: Open Hand Technique", () => {
 });
 
 function resolveOpenHandSave(
-  choice: "push" | "topple",
+  choice: "pushAwayOnFailedSave" | "applyConditionOnFailedSave",
   succeeded: boolean,
   push?: NonNullable<
     BattleShovePushOutcome

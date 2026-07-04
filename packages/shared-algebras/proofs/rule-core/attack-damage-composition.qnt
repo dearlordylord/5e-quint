@@ -110,9 +110,11 @@ module attackDamageComposition {
 
   pure def damageAmountBeforeHitPoints(facts: AttackDamageProcedureFacts): int = {
     val adjustedRoll = adjustedDamageRollAmount(facts.rolledDamage, facts.damageModifier)
-    val damageByType =
-      addDamageAmountForType(emptyDamageByType, facts.damageType, adjustedRoll)
-    totalDamageAfterTargetAdjustments(damageByType, facts.targetAdjustments)
+    damageAmountAfterTargetAdjustments(
+      adjustedRoll,
+      facts.damageType,
+      facts.targetAdjustments
+    )
   }
 
   pure def attackDamageDispositionIsLegal(

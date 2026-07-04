@@ -259,14 +259,12 @@ function uniqueBattleUnitRefs(
     }
 
     const existing = uniqueRefs[existingIndex];
-    const selectedOption = mergedBattleUnitRefSelectedOption(existing, ref);
     uniqueRefs[existingIndex] = {
       unitId: existing.unitId,
       supportProfiles: uniqueBattleSupportProfiles([
         ...existing.supportProfiles,
         ...ref.supportProfiles,
       ]),
-      ...(selectedOption === undefined ? {} : { selectedOption }),
     };
     return uniqueRefs;
   }, []);
@@ -292,13 +290,6 @@ function uniqueBattleSupportProfiles(
         battleSupportProfileKey(candidate) === battleSupportProfileKey(profile),
       ) === index,
   );
-}
-
-function mergedBattleUnitRefSelectedOption(
-  existing: BattleUnitRef,
-  ref: BattleUnitRef,
-): BattleUnitRef["selectedOption"] {
-  return existing.selectedOption ?? ref.selectedOption;
 }
 
 function battleSupportProfileKey(

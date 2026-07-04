@@ -4,9 +4,9 @@
   "generatedBy": "CRP-01-DENOMINATOR-BACKLOG",
   "denominator": {
     "tag": "source-derived-driver-denominator",
-    "totalDrivers": 101,
+    "totalDrivers": 107,
     "battleLaneDrivers": 67,
-    "ruleCoreComponentDrivers": 10,
+    "ruleCoreComponentDrivers": 16,
     "totalBranchObligations": 721,
     "battleLaneBranchObligations": 412,
     "ruleCoreComponentBranchObligations": 144,
@@ -15,7 +15,7 @@
       "sheet": 10,
       "handoff": 6,
       "battle": 67,
-      "rules-core": 10
+      "rules-core": 16
     },
     "laneBranchObligations": {
       "creation": 55,
@@ -28,14 +28,14 @@
     "diagnosticReducerRoutedDrivers": 6,
     "routeClassCounts": {
       "reducer-routed": 75,
+      "component-first": 16,
       "catalog-after-substrate": 15,
-      "replay-refresh-only": 1,
-      "component-first": 10
+      "replay-refresh-only": 1
     },
     "sourceCitations": [
       {
         "artifactPath": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
-        "fact": "levelDenominators[0].driverRouteAssignments has 101 rows: 75 reducer-routed, 15 catalog-after-substrate, 10 component-first, and 1 replay-refresh-only; lanes are classified by package prefix as 67 battle, 8 creation, 6 handoff, 10 rules-core, and 10 sheet."
+        "fact": "levelDenominators[0].driverRouteAssignments has 107 rows: 75 reducer-routed, 15 catalog-after-substrate, 16 component-first, and 1 replay-refresh-only; lanes are classified by package prefix as 67 battle, 8 creation, 6 handoff, 16 rules-core, and 10 sheet."
       },
       {
         "artifactPath": "plans/cleanroom-branch-coverage/source-branch-inventory.json",
@@ -1470,17 +1470,62 @@
       "blockerId": null
     },
     {
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
       "lane": "rules-core",
       "routeClass": "component-first",
       "connectorPaths": [
-        "packages/battle-runtime/rule-core-features.mbt.qnt"
+        "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "RuleCoreFeatureProfileSemanticsOwner",
+      "durableOwner": "RuleCoreFeatureActionEconomyOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "targetTaskId": "CRPI-READY-028",
+      "targetTaskId": "CRPI-READY-028A",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreFeatureAttackRiderOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "CRPI-READY-028B",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreFeatureSaveReactionOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "CRPI-READY-028D",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreFeaturePassiveZeroHitPointOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "CRPI-READY-028C",
       "status": "ready",
       "blockerId": null
     },
@@ -1545,17 +1590,62 @@
       "blockerId": null
     },
     {
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
       "lane": "rules-core",
       "routeClass": "component-first",
       "connectorPaths": [
-        "packages/battle-runtime/rule-core-spells.mbt.qnt"
+        "packages/battle-runtime/rule-core-spell-damage.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "RuleCoreSpellProcedureProfileOwner",
+      "durableOwner": "RuleCoreSpellDamageOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "targetTaskId": "CRPI-READY-033",
+      "targetTaskId": "CRPI-READY-033A",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreSpellRestorationOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "CRPI-READY-033D",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreSpellDefensiveEffectOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "CRPI-READY-033B",
+      "status": "ready",
+      "blockerId": null
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "lane": "rules-core",
+      "routeClass": "component-first",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt"
+      ],
+      "connectorBlockerId": null,
+      "durableOwner": "RuleCoreSpellReadiedResponseOwner",
+      "ownerClassification": "component-owner",
+      "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "targetTaskId": "CRPI-READY-033C",
       "status": "ready",
       "blockerId": null
     },

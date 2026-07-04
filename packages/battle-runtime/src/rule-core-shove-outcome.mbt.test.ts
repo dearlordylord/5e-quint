@@ -7,6 +7,8 @@ import {
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintVariantTag,
+  quintVariantValue,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -33,6 +35,7 @@ import type {
   BattleFill,
   BattleSubject,
 } from "./battle-runtime-test-support.ts";
+import type { BattleShovePushOutcome } from "./battle-reducer.ts";
 
 const shoveOutcomeScenarios = [
   "init",
@@ -47,27 +50,45 @@ type ShoveOutcomeScenario = (typeof shoveOutcomeScenarios)[number];
 type ShoveOutcomeReplayScenario = Exclude<ShoveOutcomeScenario, "init">;
 const shoveOutcomeReplayStepCount = shoveOutcomeScenarios.length - 1;
 
-const shovePushDispositionKinds = ["none", "pushed", "blocked"] as const;
-type ShovePushDispositionKind = (typeof shovePushDispositionKinds)[number];
-const shovePushBlockedReasons = [
-  "none",
-  "blocked",
-  "noLegalDestination",
-] as const;
-type ShovePushBlockedReason = (typeof shovePushBlockedReasons)[number];
+const shovePushBlockedReasonByQntTag = {
+  ShovePushBlocked: "blocked",
+  ShovePushNoLegalDestination: "noLegalDestination",
+} as const;
+type ShovePushBlockedReason =
+  (typeof shovePushBlockedReasonByQntTag)[keyof typeof shovePushBlockedReasonByQntTag];
 
 type ShoveOutcomeProjection = RuleCoreComponentRoutedProjection & {
   readonly lastScenario: ShoveOutcomeScenario;
-  readonly accepted: boolean;
-  readonly targetProne: boolean;
-  readonly pushEmitted: boolean;
-  readonly pushDispositionKind: ShovePushDispositionKind;
-  readonly pushBlockedReason: ShovePushBlockedReason;
-  readonly pushDistanceFeet: number;
-  readonly pushProvokesOpportunityAttacks: boolean;
-  readonly actionAvailable: boolean;
+  readonly outcome: ShoveOutcomeReplayProjection;
   readonly replayIndex: number;
 };
+
+type ShoveOutcomeReplayProjection =
+  | { readonly tag: "init" }
+  | ShoveOutcomeRecordedProjection;
+
+type ShoveOutcomeRecordedProjection =
+  | {
+      readonly tag: "rejected";
+      readonly targetProne: boolean;
+    }
+  | {
+      readonly tag: "acceptedWithoutEffect";
+      readonly targetProne: boolean;
+    }
+  | { readonly tag: "acceptedTopple" }
+  | {
+      readonly tag: "acceptedPush";
+      readonly targetProne: boolean;
+      readonly push: ShovePushProjection;
+    };
+
+type ShovePushProjection =
+  | { readonly tag: "pushed" }
+  | {
+      readonly tag: "blocked";
+      readonly reason: ShovePushBlockedReason;
+    };
 
 type ShoveOutcomeValue = Extract<
   BattleFill,
@@ -79,16 +100,9 @@ const componentOwner = "RuleCoreShoveOutcomeOwner";
 const initialProjection: ShoveOutcomeProjection = withRuleCoreComponentRoute(
   componentOwner,
   {
-  lastScenario: "init",
-  accepted: true,
-  targetProne: false,
-  pushEmitted: false,
-  pushDispositionKind: "none",
-  pushBlockedReason: "none",
-  pushDistanceFeet: 0,
-  pushProvokesOpportunityAttacks: false,
-  actionAvailable: true,
-  replayIndex: 0,
+    lastScenario: "init",
+    outcome: { tag: "init" },
+    replayIndex: 0,
   },
 );
 
@@ -227,6 +241,7 @@ describe("rule-core Shove outcome deterministic QNT replay", () => {
 function applyScenario(
   scenario: ShoveOutcomeReplayScenario,
 ): ShoveOutcomeProjection {
+  const outcomeValue = shoveOutcomeValues[scenario]();
   const state = fighterVsGoblinBattle();
   const target = requireHole(
     resolveBattleSubject({ state, subject: shoveSubject, fills: [] }),
@@ -245,10 +260,14 @@ function applyScenario(
     subject: shoveSubject,
     fills: [
       targetFill(target, goblinId),
-      shoveOutcomeFill(outcome, shoveOutcomeValues[scenario]()),
+      shoveOutcomeFill(outcome, outcomeValue),
     ],
   });
   if (result.tag === "invalid") {
+    assertRejectedActionAvailability(
+      result.snapshot.turn.actionResources.length > 0,
+      scenario,
+    );
     const targetAfter = result.snapshot.combatants.find(
       (combatant) => combatant.combatantId === goblinId,
     );
@@ -258,37 +277,114 @@ function applyScenario(
     return {
       ...initialProjection,
       lastScenario: scenario,
-      accepted: false,
-      targetProne: targetAfter.conditions.includes("prone"),
-      actionAvailable: result.snapshot.turn.actionResources.length > 0,
+      outcome: {
+        tag: "rejected",
+        targetProne: targetAfter.conditions.includes("prone"),
+      },
       replayIndex: replayIndexForScenario(scenario),
     };
   }
   if (result.tag !== "resolved") {
     throw new Error(`Expected Shove resolution, got ${result.tag}.`);
   }
+  assertAcceptedActionAvailability(
+    result.snapshot.turn.actionResources.length > 0,
+    scenario,
+  );
   const pushed = result.shovePushes?.[0];
   const targetAfter = result.state.combatants.get(goblinId);
   if (targetAfter === undefined) {
     throw new Error("Missing Shove target after resolution.");
   }
+  const targetProne = hasCondition(targetAfter.conditions, "prone");
   return withRuleCoreComponentRoute(componentOwner, {
     lastScenario: scenario,
-    accepted: true,
-    targetProne: hasCondition(targetAfter.conditions, "prone"),
-    pushEmitted: pushed !== undefined,
-    pushDispositionKind: pushed?.disposition.kind ?? "none",
-    pushBlockedReason:
-      pushed?.disposition.kind === "blocked"
-        ? pushed.disposition.reason
-        : "none",
-    pushDistanceFeet:
-      pushed === undefined ? 0 : Number(pushed.disposition.distanceFeet),
-    pushProvokesOpportunityAttacks:
-      pushed?.disposition.provokesOpportunityAttacks ?? false,
-    actionAvailable: result.snapshot.turn.actionResources.length > 0,
+    outcome: projectResolvedShoveOutcome(outcomeValue, pushed, targetProne),
     replayIndex: replayIndexForScenario(scenario),
   });
+}
+
+function assertRejectedActionAvailability(
+  actionAvailable: boolean,
+  scenario: ShoveOutcomeReplayScenario,
+): void {
+  if (!actionAvailable) {
+    throw new Error(`Rejected Shove consumed the attack in ${scenario}.`);
+  }
+}
+
+function assertAcceptedActionAvailability(
+  actionAvailable: boolean,
+  scenario: ShoveOutcomeReplayScenario,
+): void {
+  if (actionAvailable) {
+    throw new Error(`Accepted Shove left the attack available in ${scenario}.`);
+  }
+}
+
+function projectResolvedShoveOutcome(
+  outcomeValue: ShoveOutcomeValue,
+  pushed: BattleShovePushOutcome | undefined,
+  targetProne: boolean,
+): ShoveOutcomeRecordedProjection {
+  if (outcomeValue.succeeded) {
+    assertNoShovePush(pushed, "successful Shove save");
+    return { tag: "acceptedWithoutEffect", targetProne };
+  }
+
+  if (outcomeValue.failedEffect.kind === "prone") {
+    assertNoShovePush(pushed, "Shove topple");
+    if (!targetProne) {
+      throw new Error("Shove topple resolved without the Prone condition.");
+    }
+    return { tag: "acceptedTopple" };
+  }
+
+  if (pushed === undefined) {
+    throw new Error("Accepted Shove push resolved without a push outcome.");
+  }
+
+  return {
+    tag: "acceptedPush",
+    targetProne,
+    push: projectShovePush(pushed),
+  };
+}
+
+function assertNoShovePush(
+  pushed: BattleShovePushOutcome | undefined,
+  label: string,
+): void {
+  if (pushed !== undefined) {
+    throw new Error(`${label} unexpectedly emitted a push outcome.`);
+  }
+}
+
+function projectShovePush(push: BattleShovePushOutcome): ShovePushProjection {
+  const disposition = push.disposition;
+  assertShovePushDispositionConstants(push);
+  if (disposition.kind === "pushed") {
+    return { tag: "pushed" };
+  }
+
+  return {
+    tag: "blocked",
+    reason: disposition.reason,
+  };
+}
+
+function assertShovePushDispositionConstants(
+  push: BattleShovePushOutcome,
+): void {
+  const disposition = push.disposition;
+  if (Number(disposition.distanceFeet) !== 5) {
+    throw new Error(
+      "Accepted Shove push projected a distance other than 5 feet.",
+    );
+  }
+  if (disposition.provokesOpportunityAttacks) {
+    throw new Error("Accepted Shove push projected opportunity attacks.");
+  }
 }
 
 function normalizeShoveOutcomeQuintState(raw: unknown): ShoveOutcomeProjection {
@@ -301,25 +397,7 @@ function normalizeShoveOutcomeQuintState(raw: unknown): ShoveOutcomeProjection {
   return {
     componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
     lastScenario: scenarioField(state["qLastScenario"]),
-    accepted: booleanField(state["qAccepted"], "qAccepted"),
-    targetProne: booleanField(state["qTargetProne"], "qTargetProne"),
-    pushEmitted: booleanField(state["qPushEmitted"], "qPushEmitted"),
-    pushDispositionKind: shovePushDispositionKindField(
-      state["qPushDispositionKind"],
-    ),
-    pushBlockedReason: shovePushBlockedReasonField(state["qPushBlockedReason"]),
-    pushDistanceFeet: numberFromQuintInt(
-      state["qPushDistanceFeet"],
-      "qPushDistanceFeet",
-    ),
-    pushProvokesOpportunityAttacks: booleanField(
-      state["qPushProvokesOpportunityAttacks"],
-      "qPushProvokesOpportunityAttacks",
-    ),
-    actionAvailable: booleanField(
-      state["qActionAvailable"],
-      "qActionAvailable",
-    ),
+    outcome: decodeShoveOutcomeReplayProjection(state["qOutcome"]),
     replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
   };
 }
@@ -350,28 +428,102 @@ function isShoveOutcomeScenario(raw: string): raw is ShoveOutcomeScenario {
   return shoveOutcomeScenarios.some((scenario) => scenario === raw);
 }
 
-function shovePushDispositionKindField(raw: unknown): ShovePushDispositionKind {
-  if (typeof raw === "string" && isShovePushDispositionKind(raw)) {
-    return raw;
+function decodeShoveOutcomeReplayProjection(
+  raw: unknown,
+): ShoveOutcomeReplayProjection {
+  const tag = quintVariantTag(raw, "qOutcome");
+  if (tag === "ShoveOutcomeReplayInit") {
+    return { tag: "init" };
   }
-  throw new Error(`Unknown Shove push disposition kind ${String(raw)}.`);
+  if (tag === "ShoveOutcomeReplayRecorded") {
+    return decodeShoveOutcomeRecordedProjection(
+      quintVariantValue(raw, tag, "qOutcome"),
+    );
+  }
+
+  throw new Error(`Unknown Shove outcome replay projection tag: ${tag}.`);
 }
 
-function isShovePushDispositionKind(
-  raw: string,
-): raw is ShovePushDispositionKind {
-  return shovePushDispositionKinds.some((kind) => kind === raw);
+function decodeShoveOutcomeRecordedProjection(
+  raw: unknown,
+): ShoveOutcomeRecordedProjection {
+  const tag = quintVariantTag(raw, "qOutcome.value");
+  if (tag === "ShoveOutcomeRejectedProjection") {
+    const payload = quintVariantRecordValue(raw, tag, "qOutcome.value");
+    return {
+      tag: "rejected",
+      targetProne: booleanField(payload["targetProne"], "targetProne"),
+    };
+  }
+  if (tag === "ShoveOutcomeAcceptedWithoutEffectProjection") {
+    const payload = quintVariantRecordValue(raw, tag, "qOutcome.value");
+    return {
+      tag: "acceptedWithoutEffect",
+      targetProne: booleanField(payload["targetProne"], "targetProne"),
+    };
+  }
+  if (tag === "ShoveOutcomeAcceptedToppleProjection") {
+    return { tag: "acceptedTopple" };
+  }
+  if (tag === "ShoveOutcomeAcceptedPushProjection") {
+    const payload = quintVariantRecordValue(raw, tag, "qOutcome.value");
+    return {
+      tag: "acceptedPush",
+      targetProne: booleanField(payload["targetProne"], "targetProne"),
+      push: decodeShovePushProjection(payload["push"]),
+    };
+  }
+
+  throw new Error(`Unknown Shove outcome projection tag: ${tag}.`);
+}
+
+function decodeShovePushProjection(raw: unknown): ShovePushProjection {
+  const tag = quintVariantTag(raw, "push");
+  if (tag === "ShovePushCompletedProjection") {
+    return { tag: "pushed" };
+  }
+  if (tag === "ShovePushBlockedProjection") {
+    const payload = quintVariantRecordValue(raw, tag, "push");
+    return {
+      tag: "blocked",
+      reason: shovePushBlockedReasonField(payload["reason"]),
+    };
+  }
+
+  throw new Error(`Unknown Shove push projection tag: ${tag}.`);
+}
+
+function quintVariantRecordValue(
+  raw: unknown,
+  tag: string,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, field);
+  if (isReadonlyRecord(value)) {
+    return value;
+  }
+  throw new Error(`Expected Quint ${tag} record payload at ${field}.`);
+}
+
+function isReadonlyRecord(
+  value: unknown,
+): value is Readonly<Record<string, unknown>> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function shovePushBlockedReasonField(raw: unknown): ShovePushBlockedReason {
-  if (typeof raw === "string" && isShovePushBlockedReason(raw)) {
-    return raw;
+  const tag = quintVariantTag(raw, "push.reason");
+  if (isShovePushBlockedReasonQntTag(tag)) {
+    return shovePushBlockedReasonByQntTag[tag];
   }
-  throw new Error(`Unknown Shove push blocked reason ${String(raw)}.`);
+
+  throw new Error(`Unknown Shove push blocked reason tag: ${tag}.`);
 }
 
-function isShovePushBlockedReason(raw: string): raw is ShovePushBlockedReason {
-  return shovePushBlockedReasons.some((reason) => reason === raw);
+function isShovePushBlockedReasonQntTag(
+  tag: string,
+): tag is keyof typeof shovePushBlockedReasonByQntTag {
+  return Object.hasOwn(shovePushBlockedReasonByQntTag, tag);
 }
 
 function replayIndexForScenario(scenario: ShoveOutcomeReplayScenario): number {

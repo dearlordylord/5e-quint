@@ -9,6 +9,7 @@ import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import type { BattleUnitRef } from "./index.ts";
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  battleUnitRefWithSupportProfiles,
 } from "./unit-feature-support.ts";
 import {
   attackDamageHoleAfterHit,
@@ -20,6 +21,7 @@ import {
   battleId,
   characterSeed,
   damageRollFillWithGroups,
+  Either,
   fighterAttackSubject,
   fighterId,
   goblinId,
@@ -332,27 +334,14 @@ function projectHordeBreakerAfterPrimaryMiss(): HuntersPreyProjection {
 }
 
 function projectRejectMissingSelection(): HuntersPreyProjection {
-  const state = startBattleRight({
-    battleId: battleId("battle-hunters-prey-mbt-missing-selection"),
-    combatants: [
-      characterSeed({
-        initiative: 20,
-        characterUnitRefs: [huntersPreyUnitRef()],
-        attack: testLongswordAttack(),
-      }),
-      statBlockCreatureInit({ initiative: 10 }),
-    ],
-  });
-  const subject = fighterAttackSubject("Longsword");
-  const target = attackInitialTargetHole(state, subject);
-  const result = resolveBattleSubject({
-    state,
-    subject,
-    fills: [targetFill(target, goblinId)],
+  const unit = unitLibrary.requireUnit("ranger_hunters_prey");
+  const admitted = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
   });
   return expectedProjection({
     lastResult: "rejectMissingSelection",
-    lastInvalidReason: result.tag === "invalid" ? result.reason : "notInvalid",
+    lastInvalidReason: Either.isLeft(admitted) ? "invalidFill" : "notInvalid",
   });
 }
 
@@ -569,48 +558,43 @@ function hordeBreakerWasUsed(
   );
 }
 
-function huntersPreyUnitRef(optionId?: HuntersPreyOptionId): BattleUnitRef {
+function huntersPreyUnitRef(optionId: HuntersPreyOptionId): BattleUnitRef {
   const unit = unitLibrary.requireUnit("ranger_hunters_prey");
+  const huntersPrey =
+    optionId === "colossusSlayer"
+      ? {
+          kind: "woundedTargetWeaponDamage" as const,
+          trigger: "hitCreatureWithWeapon" as const,
+          targetPredicate: "missingAnyHitPoints" as const,
+          usageLimit: "oncePerTurn" as const,
+          damage: {
+            kind: "addAttackDamageDice" as const,
+            dice: { dice: 1 as const, dieSize: 8 as const },
+            damageType: "sameAsAttack" as const,
+          },
+        }
+      : {
+          kind: "nearbyDifferentTargetSameWeaponAttack" as const,
+          trigger: "makeWeaponAttack" as const,
+          usageLimit: "oncePerTurn" as const,
+          extraAttack: {
+            weapon: "sameWeapon" as const,
+            target: {
+              kind: "differentCreatureNearOriginalTarget" as const,
+              withinFeetOfOriginalTarget: movementFeet(5),
+              withinWeaponRange: true as const,
+              notAttackedThisTurn: true as const,
+            },
+          },
+        };
   return {
     unitId: unit.id,
     supportProfiles: [
       {
         kind: "huntersPrey",
-        huntersPrey: {
-          choice: { kind: "chooseOne", replaceOn: "shortOrLongRest" },
-          options: [
-            {
-              id: "colossusSlayer",
-              trigger: "hitCreatureWithWeapon",
-              targetPredicate: "missingAnyHitPoints",
-              usageLimit: "oncePerTurn",
-              damage: {
-                kind: "addAttackDamageDice",
-                dice: { dice: 1, dieSize: 8 },
-                damageType: "sameAsAttack",
-              },
-            },
-            {
-              id: "hordeBreaker",
-              trigger: "makeWeaponAttack",
-              usageLimit: "oncePerTurn",
-              extraAttack: {
-                weapon: "sameWeapon",
-                target: {
-                  kind: "differentCreatureNearOriginalTarget",
-                  withinFeetOfOriginalTarget: movementFeet(5),
-                  withinWeaponRange: true,
-                  notAttackedThisTurn: true,
-                },
-              },
-            },
-          ],
-        },
+        huntersPrey,
       },
     ],
-    ...(optionId === undefined
-      ? {}
-      : { selectedOption: { kind: "huntersPrey", optionId } }),
   };
 }
 

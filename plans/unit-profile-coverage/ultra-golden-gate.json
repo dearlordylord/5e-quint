@@ -95,7 +95,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 5,
-              "focused-mbt": 49,
+              "focused-mbt": 55,
               "runtime-test": 14
             }
           },
@@ -358,7 +358,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 8,
-              "focused-mbt": 49,
+              "focused-mbt": 55,
               "runtime-test": 14
             }
           },
@@ -602,8 +602,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 58,
-              "numerator": 58
+              "denominator": 59,
+              "numerator": 59
             },
             "qntCoveredObligations": {
               "denominator": 70,
@@ -624,7 +624,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 68,
+              "focused-mbt": 74,
               "runtime-test": 22
             }
           },
@@ -831,8 +831,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 58,
-              "numerator": 58
+              "denominator": 59,
+              "numerator": 59
             },
             "qntCoveredObligations": {
               "denominator": 70,
@@ -853,7 +853,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 68,
+              "focused-mbt": 74,
               "runtime-test": 22
             }
           },

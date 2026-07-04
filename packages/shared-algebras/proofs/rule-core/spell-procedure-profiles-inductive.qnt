@@ -376,6 +376,26 @@ module spellProcedureProfilesInductive {
     qSlotLevel.in(1.to(9)),
     qSlotsRemaining.in(0.to(6)),
     qSlotSpellCastThisTurn.in(Set(true, false)),
+    qLastMageArmorEffect.in(Set(
+      NoMageArmorDefensiveEffect,
+      MageArmorActiveDefensiveEffect({ baseArmorClass: 15 })
+    )),
+    qLastReadiedSpellRelease.in(Set(
+      NoReadiedSpellRelease,
+      ReleasedReadiedSpell({ profile: RayOfFrostSpellProfile }),
+      ReleasedReadiedSpell({ profile: AcidSplashSpellProfile }),
+      ReleasedReadiedSpell({ profile: CureWoundsSpellProfile }),
+      ReleasedReadiedSpell({ profile: MassCureWoundsSpellProfile }),
+      ReleasedReadiedSpell({ profile: MageArmorSpellProfile })
+    )),
+    qReadiedHeldEffect.in(Set(
+      NoReadiedSpellHeldEffect,
+      HeldReadiedSpellEffect({ profile: RayOfFrostSpellProfile }),
+      HeldReadiedSpellEffect({ profile: AcidSplashSpellProfile }),
+      HeldReadiedSpellEffect({ profile: CureWoundsSpellProfile }),
+      HeldReadiedSpellEffect({ profile: MassCureWoundsSpellProfile }),
+      HeldReadiedSpellEffect({ profile: MageArmorSpellProfile })
+    )),
     legalReactionWindowState(qReactionWindow),
     qInterruptedConcentration.in(Set(NoConcentration, Concentrating)),
     qReactorConcentration.in(Set(NoConcentration, Concentrating)),

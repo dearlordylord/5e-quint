@@ -225,7 +225,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -324,7 +342,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -375,7 +411,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -2670,7 +2706,19 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -2703,13 +2751,13 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -2777,7 +2825,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -8982,11 +9030,17 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-acid-arrow.qnt is focused proof evidence for Acid Arrow's SRD-specific immediate damage, miss-half-initial-only damage, target-end delayed damage, and slot-scaling facts; it is not a reusable generator semantic core while the proof is profile-local.",
+      "evidence": "packages/battle-runtime/battle-runtime-acid-arrow.qnt carries Acid Arrow's typed SRD-specific damage dice, miss-half-initial-only damage, target-end delayed damage timing, and caster/target turn-role facts as a leaf QNT owner. The profile-local run-block proof evidence lives in packages/battle-runtime/battle-runtime-acid-arrow-tests.qnt.",
       "obligationIds": [
         "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-acid-arrow.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-acid-arrow-tests.qnt carries run-block proof evidence for Acid Arrow's base damage dice, upcast scaling, miss-half-initial-only damage, typed target-end delayed damage timing, and delayed-damage active predicate. The executable semantic facts live in packages/battle-runtime/battle-runtime-acid-arrow.qnt.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-acid-arrow-tests.qnt",
       "role": "proof-only"
     },
     {
@@ -10020,7 +10074,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-acid-arrow.qnt",
-      "role": "proof-only"
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -13909,6 +13963,26 @@
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "arithmetic",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-acid-arrow-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-acid-arrow.qnt"
       ],
       "status": "generation-subset-clean"
     },

@@ -222,7 +222,9 @@ function evidenceRowsForProfile({
       obligationTitle: obligation?.title ?? obligationRef.title,
       runtime: obligation?.runtime ?? obligationRef.runtime,
       qntOwners,
-      qntMbtWitnesses,
+      ...(ownerEvidence === "profile"
+        ? { obligationQntMbtWitnesses: qntMbtWitnesses }
+        : { qntMbtWitnesses }),
       parityWitnesses,
       gaps,
       joinStatus: profile.joinStatus,
@@ -364,10 +366,16 @@ function renderOwners(qntOwners) {
     .join("<br>");
 }
 
-function renderWitnesses(parityWitnesses) {
+function renderWitnesses(parityWitnesses, { includeQntSpecPath = false } = {}) {
   if (parityWitnesses.length === 0) return "_none_";
   return parityWitnesses
-    .map((witness) => `${md(witness.kind)}: ${code(witness.ownerPath)}`)
+    .map((witness) => {
+      const qntSpec =
+        !includeQntSpecPath || witness.qntSpecPath === undefined
+          ? ""
+          : ` -> ${code(witness.qntSpecPath)}`;
+      return `${md(witness.kind)}: ${code(witness.ownerPath)}${qntSpec}`;
+    })
     .join("<br>");
 }
 
@@ -397,12 +405,16 @@ function renderOpenGapRow(scope, row) {
   return `| ${scope.scopeId} | ${code(row.unitId)} | ${code(row.profileId)} | ${obligation} | ${renderFollowUpTaskIds(row.followUpTaskIds)} | ${md(row.gapReason ?? "_none_")} | ${renderGaps(row.gaps)} |`;
 }
 
-function renderEvidenceRow(scope, row) {
+function renderEvidenceRow(scope, row, { includeQntSpecPath = false } = {}) {
   const parityWitnesses = row.parityWitnesses ?? [];
   const obligation = code(row.obligationId ?? "_profile_");
-  const qntMbtWitnesses = renderWitnesses(row.qntMbtWitnesses ?? []);
+  const qntMbtWitnesses = renderWitnesses(
+    row.qntMbtWitnesses ?? row.obligationQntMbtWitnesses ?? [],
+    { includeQntSpecPath },
+  );
   const otherParityWitnesses = renderWitnesses(
     otherParityWitnessRows(parityWitnesses),
+    { includeQntSpecPath },
   );
   return `| ${scope.scopeId} | ${code(row.unitId)} | ${code(row.profileId)} | ${obligation} | ${md(row.evidenceStatus)} | ${renderOwners(row.qntOwners ?? [])} | ${qntMbtWitnesses} | ${otherParityWitnesses} | ${renderGaps(row.gaps)} |`;
 }
@@ -422,10 +434,12 @@ function renderProcedureMbtEvidenceGate({
   description,
   gate,
   heading,
+  includeQntSpecPath = false,
   metricNames,
   statusLineLabel,
   summaryProfileColumn,
   summaryUnitColumn,
+  witnessColumnLabel = "QNT/MBT witnesses",
 }) {
   const openGapRows = gate.scopes.flatMap((scope) =>
     scope.openGapRows.map((row) => renderOpenGapRow(scope, row)),
@@ -464,10 +478,12 @@ function renderProcedureMbtEvidenceGate({
     "",
     "## Evidence Rows",
     "",
-    "| Scope | Unit | Profile | Obligation | Evidence status | QNT owners | QNT/MBT witnesses | Other parity witnesses | Gaps |",
+    `| Scope | Unit | Profile | Obligation | Evidence status | QNT owners | ${witnessColumnLabel} | Other parity witnesses | Gaps |`,
     "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ...gate.scopes.flatMap((scope) =>
-      scope.rows.map((row) => renderEvidenceRow(scope, row)),
+      scope.rows.map((row) =>
+        renderEvidenceRow(scope, row, { includeQntSpecPath }),
+      ),
     ),
     "",
   ].join("\n")}`;

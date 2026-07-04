@@ -1290,12 +1290,7 @@ function forbiddenWitnessNamesForSelection(selected) {
 }
 
 function productionSourceScanWitnessNamesForSelection(selected) {
-  return Array.from(
-    new Set([
-      ...protocolNamesForObligations(selected),
-      ...harnessWitnessProtocolNames,
-    ]),
-  ).sort();
+  return forbiddenWitnessNamesForSelection(selected);
 }
 
 function validateManifestPath({

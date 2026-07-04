@@ -1291,7 +1291,7 @@ describe("Character Sheet battle handoff", () => {
     );
   });
 
-  test("projects retained Hunter's Prey selected option into battle Unit refs", () => {
+  test("projects retained Hunter's Prey selected option into semantic battle support", () => {
     const refs = expectRight(
       characterUnitRefsWithBattleSupportProfiles(
         hunterRangerHordeBreakerBuild(),
@@ -1305,13 +1305,20 @@ describe("Character Sheet battle handoff", () => {
       expect.arrayContaining([
         expect.objectContaining({
           unitId: "ranger_hunters_prey",
-          selectedOption: { kind: "huntersPrey", optionId: "hordeBreaker" },
           supportProfiles: expect.arrayContaining([
-            expect.objectContaining({ kind: "huntersPrey" }),
+            expect.objectContaining({
+              kind: "huntersPrey",
+              huntersPrey: expect.objectContaining({
+                kind: "nearbyDifferentTargetSameWeaponAttack",
+              }),
+            }),
           ]),
         }),
       ]),
     );
+    expect(
+      refs.find((ref) => ref.unitId === "ranger_hunters_prey"),
+    ).not.toHaveProperty("selectedOption");
   });
 
   test("rejects Dragonborn Breath Weapon support without selected Draconic Ancestry", () => {
@@ -5195,7 +5202,10 @@ function hunterRangerHordeBreakerBuild(): CharacterBuild {
         kind: "selectedClassChoice",
         selectedFromUnitId: "ranger_hunters_prey",
         unitId: "ranger_hunters_prey",
-        selectedOption: { kind: "huntersPrey", optionId: "hordeBreaker" },
+        selectedOption: {
+          kind: "huntersPrey",
+          selection: "nearbyDifferentTargetSameWeaponAttack",
+        },
       },
     ],
   };

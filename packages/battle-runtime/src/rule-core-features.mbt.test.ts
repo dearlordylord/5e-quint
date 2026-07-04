@@ -1569,10 +1569,76 @@ describe("rule-core Feature focused MBT", () => {
   });
 
   it(
-    "replays QCORE9 feature procedure parity through battle-runtime reducers",
+    "replays QCORE9 action economy feature family through battle-runtime reducers",
     async () => {
       await run({
-        spec: mbtSpecPath(import.meta.dirname, "rule-core-features.mbt.qnt"),
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-feature-action-economy.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreFeatureDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreFeatureDefaultMbtSteps),
+        stateCheck: featureStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "replays QCORE9 attack rider feature family through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-feature-attack-riders.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreFeatureDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreFeatureDefaultMbtSteps),
+        stateCheck: featureStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "replays QCORE9 save and reaction feature family through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-feature-save-reactions.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreFeatureDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreFeatureDefaultMbtSteps),
+        stateCheck: featureStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "replays QCORE9 passive and zero-Hit-Point feature family through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-feature-passive-zero-hp.mbt.qnt",
+        ),
         init: "init",
         step: "step",
         driver: createRuleCoreFeatureDriver(),

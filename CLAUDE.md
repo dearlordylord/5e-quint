@@ -189,6 +189,10 @@ to surface it instead:
   (`src/battle-runtime-qnt-proofs.ts`). A runaway proof fails that one module
   rather than hanging the suite, so a "fast → forever" regression is caught and
   named, not silently absorbed into a week of work.
+- **Observable progress.** The shared proof harness emits `QNT_PROOF_EVENT`
+  JSON lines on stderr for every module start, heartbeat, pass, fail, and
+  timeout. Use those events as the authoritative progress signal for long proof
+  lanes; do not infer task state from disappearing `ps` entries alone.
 - **Self-discovering.** The corpus is globbed by `run`-block presence, never a
   hand-maintained import list, so a new proof slice cannot drift into being
   unrun (the retired `battle-runtime-self-tests.qnt` aggregator had).

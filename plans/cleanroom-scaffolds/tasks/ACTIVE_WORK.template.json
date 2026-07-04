@@ -120,12 +120,18 @@
             "cleanroom-input/qnt/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
-            "cleanroom-input/qnt/battle-runtime/rule-core-features.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt",
-            "cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-spell-damage.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt"
           ]
         }
@@ -270,12 +276,18 @@
             "cleanroom-input/qnt/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
-            "cleanroom-input/qnt/battle-runtime/rule-core-features.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt",
-            "cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-spell-damage.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+            "cleanroom-input/qnt/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
             "cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt"
           ]
         }

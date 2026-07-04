@@ -14,6 +14,11 @@ module battleRuntimeRestorationAndBuffs {
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
 
+  type ScalarBuffSpellResolutionResult = {
+    state: BattleState,
+    admitted: bool,
+  }
+
   pure def battleRuntimeDirectRestorationProfile(
     invocation: DirectHitPointRestorationSpell
   ): BattleRuntimeDirectHitPointRestorationProfile =
@@ -62,7 +67,7 @@ module battleRuntimeRestorationAndBuffs {
         directHitPointRestorationHealing(healingRoll, spellcastingAbilityModifier)
       )
       commitActorSpellSlotUse({
-        ...spendFighterSpellActionCost(state, actionCost),
+        ...spendFighterSpellActionCost(state, actionCost).state,
         fighter: healed,
       }, Fighter)
     } else {
@@ -289,7 +294,7 @@ module battleRuntimeRestorationAndBuffs {
       knownWillingTargets,
       slotLevel,
       rolledDice,
-    )
+    ).state
   }
 
   pure def resolveScalarBuffSpellWithActionCost(
@@ -300,21 +305,22 @@ module battleRuntimeRestorationAndBuffs {
     knownWillingTargets: Set[Actor],
     slotLevel: int,
     rolledDice: int,
-  ): BattleState = {
+  ): ScalarBuffSpellResolutionResult = {
     val targetCount = targets.size()
     val validTargetCount = targetCount >= 1 and targetCount <= scalarBuffMaximumTargets(invocation, slotLevel)
     val validTargetDisposition = scalarBuffTargetDispositionIsSatisfied(invocation, targets, knownWillingTargets)
     val canSpendActionCost = canSpendFighterSpellActionCost(state, actionCost)
-    if (
-      currentActor(state) == Fighter and
-      validTargetCount and
-      validTargetDisposition and
-      canSpendActionCost and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    ) {
+    val admitted = all {
+      currentActor(state) == Fighter,
+      validTargetCount,
+      validTargetDisposition,
+      canSpendActionCost,
+      canExpendSpellSlotThisTurn(state),
+      not(state.fighter.unconscious),
+      not(state.fighter.incapacitated),
+      not(fighterHasRage(state)),
+    }
+    if (admitted) {
       val concentrationBase =
         if (battleRuntimeScalarBuffRequiresConcentration(battleRuntimeScalarBuffProfileForInvocation(invocation)))
           if (invocation == FlyScalarBuff)
@@ -328,13 +334,17 @@ module battleRuntimeRestorationAndBuffs {
         else
           state
       val effected = scalarBuffTargetedState(concentrationBase, invocation, targets, slotLevel, rolledDice)
-      val spent = spendFighterSpellActionCost(effected, actionCost)
-      commitActorSpellSlotUse({
-        ...spent,
-        fighter: { ...spent.fighter, concentrating: if (battleRuntimeScalarBuffRequiresConcentration(battleRuntimeScalarBuffProfileForInvocation(invocation))) true else spent.fighter.concentrating },
-      }, Fighter)
+      val spent = spendFighterSpellActionCost(effected, actionCost).state
+      {
+        state: commitActorSpellSlotUse({
+          ...spent,
+          fighter: { ...spent.fighter, concentrating: if (battleRuntimeScalarBuffRequiresConcentration(battleRuntimeScalarBuffProfileForInvocation(invocation))) true else spent.fighter.concentrating },
+        }, Fighter),
+        admitted: true,
+      }
     } else {
-      state
+      state: state,
+      admitted: false,
     }
   }
 
@@ -364,7 +374,7 @@ module battleRuntimeRestorationAndBuffs {
       }
       val heroismEffects = battleRuntimeScalarBuffEffects(BattleRuntimeHeroismScalarBuff, spellcastingAbilityModifier, slotLevel)
         .map(scalarBuffActiveEffect)
-      val spent = spendFighterSpellActionCost(concentrationBase, SpellMagicAction)
+      val spent = spendFighterSpellActionCost(concentrationBase, SpellMagicAction).state
       commitActorSpellSlotUse({
         ...spent,
         fighter: if (targets.contains(Fighter)) { ...spent.fighter, concentrating: true, activeEffects: spent.fighter.activeEffects.union(heroismEffects) } else { ...spent.fighter, concentrating: true },

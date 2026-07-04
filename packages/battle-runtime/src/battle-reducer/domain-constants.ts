@@ -114,6 +114,14 @@ export const OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID = holeId(
 export const OPEN_HAND_TECHNIQUE_DECISION_HOLE_INSTANCE = holeInstanceKey(
   "battle:unit-feature:open-hand-technique:decision",
 );
+export const OPEN_HAND_TECHNIQUE_DECISION_CHOICES = [
+  "denyOpportunityAttacks",
+  "pushAwayOnFailedSave",
+  "applyConditionOnFailedSave",
+  "decline",
+] as const;
+export type OpenHandTechniqueDecisionChoice =
+  (typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES)[number];
 export const OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID = holeId(
   "battle:unit-feature:open-hand-technique:save",
 );

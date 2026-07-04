@@ -27,25 +27,30 @@ module shoveOutcome {
 
   type ShoveOutcomeResult =
     | ShoveOutcomeRejected({ targetProne: bool })
-    | ShoveOutcomeAcceptedNoPush({ targetProne: bool })
+    | ShoveOutcomeAcceptedWithoutEffect({ targetProne: bool })
+    | ShoveOutcomeAcceptedTopple
     | ShoveOutcomeAcceptedPush({
       targetProne: bool,
       disposition: ShovePushDisposition,
     })
 
-  type ShoveOutcomeProjection = {
-    accepted: bool,
-    targetProne: bool,
-    pushEmitted: bool,
-    pushDispositionKind: str,
-    pushBlockedReason: str,
-    pushDistanceFeet: int,
-    pushProvokesOpportunityAttacks: bool,
-    actionAvailable: bool,
-  }
+  type ShovePushProjection =
+    | ShovePushCompletedProjection
+    | ShovePushBlockedProjection({
+      reason: ShovePushBlockedReason,
+    })
+
+  type ShoveOutcomeProjection =
+    | ShoveOutcomeRejectedProjection({ targetProne: bool })
+    | ShoveOutcomeAcceptedWithoutEffectProjection({ targetProne: bool })
+    | ShoveOutcomeAcceptedToppleProjection
+    | ShoveOutcomeAcceptedPushProjection({
+      targetProne: bool,
+      push: ShovePushProjection,
+    })
 
   pure def noShovePush(targetProne: bool): ShoveOutcomeResult =
-    ShoveOutcomeAcceptedNoPush({ targetProne: targetProne })
+    ShoveOutcomeAcceptedWithoutEffect({ targetProne: targetProne })
 
   pure def invalidShovePush(targetProne: bool): ShoveOutcomeResult =
     ShoveOutcomeRejected({ targetProne: targetProne })
@@ -56,20 +61,12 @@ module shoveOutcome {
       | ShoveBlocked(data) => data.distanceFeet
     }
 
-  pure def shovePushDispositionKind(disposition: ShovePushDisposition): str =
+  pure def shovePushProjection(disposition: ShovePushDisposition): ShovePushProjection =
     match disposition {
-      | ShovePushed(_) => "pushed"
-      | ShoveBlocked(_) => "blocked"
-    }
-
-  pure def shovePushBlockedReason(disposition: ShovePushDisposition): str =
-    match disposition {
-      | ShovePushed(_) => "none"
-      | ShoveBlocked(data) =>
-        match data.reason {
-          | ShovePushBlocked => "blocked"
-          | ShovePushNoLegalDestination => "noLegalDestination"
-        }
+      | ShovePushed(_) => ShovePushCompletedProjection
+      | ShoveBlocked(data) => ShovePushBlockedProjection({
+        reason: data.reason,
+      })
     }
 
   pure def legalShovePushDisposition(disposition: ShovePushDisposition): bool =
@@ -80,7 +77,7 @@ module shoveOutcome {
       | ShoveSaveSucceeded => noShovePush(targetProne)
       | ShoveSaveFailed(data) =>
         match data.failedEffect {
-          | ShoveProne => ShoveOutcomeAcceptedNoPush({ targetProne: true })
+          | ShoveProne => ShoveOutcomeAcceptedTopple
           | ShovePushAway(disposition) =>
             if (legalShovePushDisposition(disposition)) {
               ShoveOutcomeAcceptedPush({
@@ -93,35 +90,16 @@ module shoveOutcome {
 
   pure def projectShoveOutcomeResult(result: ShoveOutcomeResult): ShoveOutcomeProjection =
     match result {
-      | ShoveOutcomeRejected(data) => {
-        accepted: false,
-        targetProne: data.targetProne,
-        pushEmitted: false,
-        pushDispositionKind: "none",
-        pushBlockedReason: "none",
-        pushDistanceFeet: 0,
-        pushProvokesOpportunityAttacks: false,
-        actionAvailable: true,
-      }
-      | ShoveOutcomeAcceptedNoPush(data) => {
-        accepted: true,
-        targetProne: data.targetProne,
-        pushEmitted: false,
-        pushDispositionKind: "none",
-        pushBlockedReason: "none",
-        pushDistanceFeet: 0,
-        pushProvokesOpportunityAttacks: false,
-        actionAvailable: false,
-      }
-      | ShoveOutcomeAcceptedPush(data) => {
-        accepted: true,
-        targetProne: data.targetProne,
-        pushEmitted: true,
-        pushDispositionKind: shovePushDispositionKind(data.disposition),
-        pushBlockedReason: shovePushBlockedReason(data.disposition),
-        pushDistanceFeet: shovePushDistanceFeet(data.disposition),
-        pushProvokesOpportunityAttacks: false,
-        actionAvailable: false,
-      }
+      | ShoveOutcomeRejected(data) =>
+        ShoveOutcomeRejectedProjection({ targetProne: data.targetProne })
+      | ShoveOutcomeAcceptedWithoutEffect(data) =>
+        ShoveOutcomeAcceptedWithoutEffectProjection({ targetProne: data.targetProne })
+      | ShoveOutcomeAcceptedTopple =>
+        ShoveOutcomeAcceptedToppleProjection
+      | ShoveOutcomeAcceptedPush(data) =>
+        ShoveOutcomeAcceptedPushProjection({
+          targetProne: data.targetProne,
+          push: shovePushProjection(data.disposition),
+        })
     }
 }

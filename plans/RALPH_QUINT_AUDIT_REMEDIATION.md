@@ -7,122 +7,146 @@
     {
       "number": 1,
       "id": "QAR-01-TEST-LANE-ISOLATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Isolate default test lanes from MBT discovery"
     },
     {
       "number": 2,
       "id": "QAR-02-MBT-LANE-INVENTORY-GATE",
-      "status": "blocked",
+      "status": "done",
       "title": "Add static test-lane and MBT inventory gates"
     },
     {
       "number": 3,
       "id": "QAR-03-SHARED-QNT-PROOF-HARNESS",
-      "status": "blocked",
+      "status": "done",
       "title": "Consolidate bounded QNT proof harness behavior"
     },
     {
       "number": 4,
       "id": "QAR-04-CHARACTER-CREATION-QNT-PROOFS",
-      "status": "blocked",
+      "status": "done",
       "title": "Add character-creation QNT proof lane"
     },
     {
       "number": 5,
       "id": "QAR-05-SHARED-INVARIANT-PROOF-HARNESS",
-      "status": "blocked",
+      "status": "done",
       "title": "Bound shared-algebras inductive proof execution"
     },
     {
       "number": 6,
       "id": "QAR-06-ACTION-COST-ADMISSION-RESULT",
-      "status": "blocked",
+      "status": "done",
       "title": "Make action and spell admission explicit in QNT"
     },
     {
       "number": 7,
       "id": "QAR-07-DAMAGE-PAIR-NONZERO",
-      "status": "blocked",
+      "status": "done",
       "title": "Encode nonzero damage-allocation preconditions"
     },
     {
       "number": 8,
       "id": "QAR-08-SHOVE-PROJECTION-UNION",
-      "status": "blocked",
+      "status": "done",
       "title": "Replace Shove flattened projection with a closed union"
     },
     {
       "number": 9,
       "id": "QAR-09-CUNNING-STRIKE-TYPED-QNT",
-      "status": "blocked",
+      "status": "done",
       "title": "Replace Cunning Strike string projections with typed QNT"
     },
     {
       "number": 10,
       "id": "QAR-10-ACID-ARROW-TYPED-TIMING",
-      "status": "blocked",
+      "status": "done",
       "title": "Replace Acid Arrow string timing with typed QNT"
     },
     {
       "number": 11,
       "id": "QAR-11-RUN-BLOCK-SEPARATION-GUARD",
-      "status": "blocked",
+      "status": "done",
       "title": "Separate QNT run blocks from owner modules"
     },
     {
       "number": 12,
       "id": "QAR-12-INDUCTIVE-WITNESS-SEEDS",
-      "status": "blocked",
-      "title": "Add reachability witnesses for priority inductive specs"
+      "status": "done",
+      "title": "Repair priority inductive specs and add reachability witnesses"
     },
     {
       "number": 13,
       "id": "QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD",
-      "status": "blocked",
+      "status": "done",
       "title": "Harden MBT closure leaf whitelist checks"
     },
     {
       "number": 14,
       "id": "QAR-14-STARRY-WISP-WITNESS-CONVERSION",
-      "status": "blocked",
+      "status": "done",
       "title": "Convert Starry Wisp object driver to a literal witness"
     },
     {
       "number": 15,
       "id": "QAR-15-RULE-CORE-SPELLS-MBT-SPLIT",
-      "status": "blocked",
+      "status": "done",
       "title": "Split rule-core spells MBT by procedure family"
     },
     {
       "number": 16,
       "id": "QAR-16-RULE-CORE-FEATURES-MBT-SPLIT",
-      "status": "blocked",
+      "status": "done",
       "title": "Split rule-core features MBT by feature family"
     },
     {
       "number": 17,
       "id": "QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION",
-      "status": "blocked",
+      "status": "done",
       "title": "Move Hunter's Prey execution to semantic support profiles"
     },
     {
       "number": 18,
       "id": "QAR-18-OPEN-HAND-SEMANTIC-CHOICES",
-      "status": "blocked",
+      "status": "done",
       "title": "Move Open Hand execution to semantic effect variants"
     },
     {
       "number": 19,
       "id": "QAR-19-AUTHORED-ID-CHECKER-HARDENING",
-      "status": "blocked",
+      "status": "done",
       "title": "Harden authored-identity dispatch checking"
     },
     {
       "number": 20,
       "id": "QAR-20-FINAL-CONVERGENCE-AUDIT",
-      "status": "blocked",
+      "status": "done",
       "title": "Run final Quint and architecture convergence audit"
+    },
+    {
+      "number": 21,
+      "id": "QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION",
+      "status": "done",
+      "title": "Reconcile character-sheet runtime split export gate"
+    },
+    {
+      "number": 22,
+      "id": "QAR-22-DEFAULT-TEST-BASELINE-REPAIRS",
+      "status": "done",
+      "title": "Repair default test baseline failures found by final audit"
+    },
+    {
+      "number": 23,
+      "id": "QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR",
+      "status": "done",
+      "title": "Repair cleanroom harness sampled-input self-test"
+    },
+    {
+      "number": 24,
+      "id": "QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS",
+      "status": "done",
+      "title": "Repair battle-runtime default test baseline failures exposed after QAR-22"
     }
   ]
 }
@@ -173,26 +197,30 @@ mismatch. The Ralph runner or decider owns branch repair.
 
 |   # | Task | Status | Depends on | Notes |
 | --: | ---- | ------ | ---------- | ----- |
-| 1 | QAR-01-TEST-LANE-ISOLATION - Isolate default test lanes from MBT discovery | ready-for-research | none | First runnable task; makes default tests non-MBT. |
-| 2 | QAR-02-MBT-LANE-INVENTORY-GATE - Add static test-lane and MBT inventory gates | blocked | QAR-01-TEST-LANE-ISOLATION | Adds static guards after default lane shape is decided. |
-| 3 | QAR-03-SHARED-QNT-PROOF-HARNESS - Consolidate bounded QNT proof harness behavior | blocked | QAR-01-TEST-LANE-ISOLATION | Consolidates bounded proof execution before new proof lanes. |
-| 4 | QAR-04-CHARACTER-CREATION-QNT-PROOFS - Add character-creation QNT proof lane | blocked | QAR-03-SHARED-QNT-PROOF-HARNESS | Adds the missing character-creation proof lane. |
-| 5 | QAR-05-SHARED-INVARIANT-PROOF-HARNESS - Bound shared-algebras inductive proof execution | blocked | QAR-03-SHARED-QNT-PROOF-HARNESS | Bounds shared inductive proofs. |
-| 6 | QAR-06-ACTION-COST-ADMISSION-RESULT - Make action and spell admission explicit in QNT | blocked | QAR-01-TEST-LANE-ISOLATION | Removes admission-by-state-equality. |
-| 7 | QAR-07-DAMAGE-PAIR-NONZERO - Encode nonzero damage-allocation preconditions | blocked | QAR-01-TEST-LANE-ISOLATION | Encodes the nonzero total precondition. |
-| 8 | QAR-08-SHOVE-PROJECTION-UNION - Replace Shove flattened projection with a closed union | blocked | QAR-01-TEST-LANE-ISOLATION | Replaces impossible Shove projection combinations. |
-| 9 | QAR-09-CUNNING-STRIKE-TYPED-QNT - Replace Cunning Strike string projections with typed QNT | blocked | QAR-01-TEST-LANE-ISOLATION | Replaces raw Cunning Strike strings. |
-| 10 | QAR-10-ACID-ARROW-TYPED-TIMING - Replace Acid Arrow string timing with typed QNT | blocked | QAR-01-TEST-LANE-ISOLATION | Replaces raw Acid Arrow timing strings. |
-| 11 | QAR-11-RUN-BLOCK-SEPARATION-GUARD - Separate QNT run blocks from owner modules | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING | Cleans owner modules after semantic edits land. |
-| 12 | QAR-12-INDUCTIVE-WITNESS-SEEDS - Add reachability witnesses for priority inductive specs | blocked | QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-11-RUN-BLOCK-SEPARATION-GUARD | Adds reachability witnesses after affected specs settle. |
-| 13 | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD - Harden MBT closure leaf whitelist checks | blocked | QAR-01-TEST-LANE-ISOLATION | Hardens closure checks before driver conversions. |
-| 14 | QAR-14-STARRY-WISP-WITNESS-CONVERSION - Convert Starry Wisp object driver to a literal witness | blocked | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Converts the clearest heavy driver to a literal witness. |
-| 15 | QAR-15-RULE-CORE-SPELLS-MBT-SPLIT - Split rule-core spells MBT by procedure family | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits spell MBT closure after admission semantics are explicit. |
-| 16 | QAR-16-RULE-CORE-FEATURES-MBT-SPLIT - Split rule-core features MBT by feature family | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits feature MBT closure after closure rules are hardened. |
-| 17 | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION - Move Hunter's Prey execution to semantic support profiles | blocked | QAR-01-TEST-LANE-ISOLATION | Removes execution dispatch on selected authored option ids. |
-| 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | blocked | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
-| 19 | QAR-19-AUTHORED-ID-CHECKER-HARDENING - Harden authored-identity dispatch checking | blocked | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES | Tightens the checker after known migrations land. |
-| 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | blocked | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING | Final repeated review loop and whole-plan verification. |
+| 1 | QAR-01-TEST-LANE-ISOLATION - Isolate default test lanes from MBT discovery | done | none | First runnable task; makes default tests non-MBT. |
+| 2 | QAR-02-MBT-LANE-INVENTORY-GATE - Add static test-lane and MBT inventory gates | done | QAR-01-TEST-LANE-ISOLATION | Adds static guards after default lane shape is decided. |
+| 3 | QAR-03-SHARED-QNT-PROOF-HARNESS - Consolidate bounded QNT proof harness behavior | done | QAR-01-TEST-LANE-ISOLATION | Consolidates bounded proof execution before new proof lanes. |
+| 4 | QAR-04-CHARACTER-CREATION-QNT-PROOFS - Add character-creation QNT proof lane | done | QAR-03-SHARED-QNT-PROOF-HARNESS | Adds the missing character-creation proof lane. |
+| 5 | QAR-05-SHARED-INVARIANT-PROOF-HARNESS - Bound shared-algebras inductive proof execution | done | QAR-03-SHARED-QNT-PROOF-HARNESS | Bounds shared inductive proofs. |
+| 6 | QAR-06-ACTION-COST-ADMISSION-RESULT - Make action and spell admission explicit in QNT | done | QAR-01-TEST-LANE-ISOLATION | Removes admission-by-state-equality. |
+| 7 | QAR-07-DAMAGE-PAIR-NONZERO - Encode nonzero damage-allocation preconditions | done | QAR-01-TEST-LANE-ISOLATION | Encodes the nonzero total precondition. |
+| 8 | QAR-08-SHOVE-PROJECTION-UNION - Replace Shove flattened projection with a closed union | done | QAR-01-TEST-LANE-ISOLATION | Replaces impossible Shove projection combinations. |
+| 9 | QAR-09-CUNNING-STRIKE-TYPED-QNT - Replace Cunning Strike string projections with typed QNT | done | QAR-01-TEST-LANE-ISOLATION | Replaces raw Cunning Strike strings. |
+| 10 | QAR-10-ACID-ARROW-TYPED-TIMING - Replace Acid Arrow string timing with typed QNT | done | QAR-01-TEST-LANE-ISOLATION | Replaces raw Acid Arrow timing strings. |
+| 11 | QAR-11-RUN-BLOCK-SEPARATION-GUARD - Separate QNT run blocks from owner modules | done | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING | Cleans owner modules after semantic edits land. |
+| 12 | QAR-12-INDUCTIVE-WITNESS-SEEDS - Repair priority inductive specs and add reachability witnesses | done | QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-11-RUN-BLOCK-SEPARATION-GUARD | Admits state-space repair modules and adds reachability witnesses after affected specs settle. |
+| 13 | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD - Harden MBT closure leaf whitelist checks | done | QAR-01-TEST-LANE-ISOLATION | Hardens closure checks before driver conversions. |
+| 14 | QAR-14-STARRY-WISP-WITNESS-CONVERSION - Convert Starry Wisp object driver to a literal witness | done | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Converts the clearest heavy driver to a literal witness. |
+| 15 | QAR-15-RULE-CORE-SPELLS-MBT-SPLIT - Split rule-core spells MBT by procedure family | done | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits spell MBT closure after admission semantics are explicit. |
+| 16 | QAR-16-RULE-CORE-FEATURES-MBT-SPLIT - Split rule-core features MBT by feature family | done | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits feature MBT closure after closure rules are hardened. |
+| 17 | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION - Move Hunter's Prey execution to semantic support profiles | done | QAR-01-TEST-LANE-ISOLATION | Removes execution dispatch on selected authored option ids. |
+| 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | done | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
+| 19 | QAR-19-AUTHORED-ID-CHECKER-HARDENING - Harden authored-identity dispatch checking | done | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES | Tightens the checker after known migrations land. |
+| 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | done | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING, QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION, QAR-22-DEFAULT-TEST-BASELINE-REPAIRS, QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR, QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS | Final convergence audit passed after repairing the shared-algebras damage-component inductive proof state space and rerunning final verification. |
+| 21 | QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION - Reconcile character-sheet runtime split export gate | done | none | Fix the `pnpm quality` blocker in the character-sheet split export gate. |
+| 22 | QAR-22-DEFAULT-TEST-BASELINE-REPAIRS - Repair default test baseline failures found by final audit | done | none | Fixed unrelated character-sheet and character-creation default `pnpm test` baseline failures found during final audit. |
+| 23 | QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR - Repair cleanroom harness sampled-input self-test | done | none | Fix the cleanroom harness checker self-test blocker found during final audit. |
+| 24 | QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS - Repair battle-runtime default test baseline failures exposed after QAR-22 | done | QAR-22-DEFAULT-TEST-BASELINE-REPAIRS | Fixed battle-runtime default `pnpm test` baseline failures exposed after QAR-22. |
 
 ## Shared Verification
 
@@ -238,7 +266,7 @@ a follow-up task.
 
 ### Task 1 - QAR-01-TEST-LANE-ISOLATION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -274,7 +302,7 @@ Plan Impact:
 
 ### Task 2 - QAR-02-MBT-LANE-INVENTORY-GATE
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -315,7 +343,7 @@ Plan Impact:
 
 ### Task 3 - QAR-03-SHARED-QNT-PROOF-HARNESS
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -355,7 +383,7 @@ Plan Impact:
 
 ### Task 4 - QAR-04-CHARACTER-CREATION-QNT-PROOFS
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -391,7 +419,7 @@ Plan Impact:
 
 ### Task 5 - QAR-05-SHARED-INVARIANT-PROOF-HARNESS
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -429,7 +457,7 @@ Plan Impact:
 
 ### Task 6 - QAR-06-ACTION-COST-ADMISSION-RESULT
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -484,7 +512,7 @@ Plan Impact:
 
 ### Task 7 - QAR-07-DAMAGE-PAIR-NONZERO
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -524,7 +552,7 @@ Plan Impact:
 
 ### Task 8 - QAR-08-SHOVE-PROJECTION-UNION
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -571,7 +599,7 @@ Plan Impact:
 
 ### Task 9 - QAR-09-CUNNING-STRIKE-TYPED-QNT
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -614,7 +642,7 @@ Plan Impact:
 
 ### Task 10 - QAR-10-ACID-ARROW-TYPED-TIMING
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -660,7 +688,7 @@ Plan Impact:
 
 ### Task 11 - QAR-11-RUN-BLOCK-SEPARATION-GUARD
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -706,7 +734,7 @@ Plan Impact:
 
 ### Task 12 - QAR-12-INDUCTIVE-WITNESS-SEEDS
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -723,9 +751,14 @@ Depends on:
 
 Output:
 
+- Repair and admit the QAR-05 state-space repair inductive modules into the
+  active bounded lane:
+  `attack-damage-composition-inductive.qnt`,
+  `damage-component-adjustments-inductive.qnt`, and
+  `spell-procedure-profiles-inductive.qnt`.
 - Add meaningful reachability witnesses for priority inductive specs:
-  action-turn procedures, damage component adjustments, and movement spatial
-  grapple.
+  action-turn procedures, attack damage composition, damage component
+  adjustments, movement spatial grapple, and spell procedure profiles.
 - Witnesses must prove important actions or cases are reachable, not merely
   restate type bounds.
 - Keep witnesses in test/proof modules according to the QAR-11 convention.
@@ -734,6 +767,8 @@ Acceptance:
 
 - Each priority inductive family has at least one witness that reaches a
   nontrivial state under sampled `quint run` / proof-lane execution.
+- The QAR-05 state-space repair modules are removed from the repair list by
+  entering the active bounded inductive proof lane.
 - Dead or unreachable modeled cases are fixed or split into follow-up tasks.
 
 Verification:
@@ -749,12 +784,7 @@ Plan Impact:
 
 ### Task 13 - QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: QAR-01 must define the stable default/explicit MBT lane split
-before closure guard changes land.
+Status: `done`
 
 Depends on:
 
@@ -793,12 +823,7 @@ Plan Impact:
 
 ### Task 14 - QAR-14-STARRY-WISP-WITNESS-CONVERSION
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: QAR-13 must harden closure guard behavior before shrinking the
-heavy driver allowlist.
+Status: `done`
 
 Depends on:
 
@@ -840,12 +865,7 @@ Plan Impact:
 
 ### Task 15 - QAR-15-RULE-CORE-SPELLS-MBT-SPLIT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: QAR-06 must settle admission result shape and QAR-13 must settle
-closure guard behavior before this split.
+Status: `done`
 
 Depends on:
 
@@ -854,8 +874,8 @@ Depends on:
 
 Relevant files:
 
-- `packages/battle-runtime/rule-core-spells.mbt.qnt`
-- Matching TypeScript MBT test/bridge.
+- `packages/battle-runtime/rule-core-spell-*.mbt.qnt`
+- `packages/battle-runtime/src/rule-core-spells.mbt.test.ts`
 
 Output:
 
@@ -885,12 +905,7 @@ Plan Impact:
 
 ### Task 16 - QAR-16-RULE-CORE-FEATURES-MBT-SPLIT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: QAR-06 must settle admission result shape and QAR-13 must settle
-closure guard behavior before this split.
+Status: `done`
 
 Depends on:
 
@@ -929,7 +944,7 @@ Plan Impact:
 
 ### Task 17 - QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -984,7 +999,7 @@ Plan Impact:
 
 ### Task 18 - QAR-18-OPEN-HAND-SEMANTIC-CHOICES
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -1034,7 +1049,7 @@ Plan Impact:
 
 ### Task 19 - QAR-19-AUTHORED-ID-CHECKER-HARDENING
 
-Status: `blocked`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -1081,11 +1096,20 @@ Plan Impact:
 
 ### Task 20 - QAR-20-FINAL-CONVERGENCE-AUDIT
 
-Status: `blocked`
+Status: `done`
 
-Blocker Type: dependency
+QAR-21 through QAR-24 repaired the concrete baseline blockers that prevented
+the previous final audit pass from converging. Rerun the final convergence audit
+against the current integration branch.
 
-Blocker Detail: This audit runs only after QAR-02 through QAR-19 are done.
+Second-Story Work owner evidence reconciliation: the task context packet's
+remaining `rogue_second_story_work` row is stale. Existing
+`plans/unit-profile-coverage/` artifacts record L13UG-A15 owner evidence for
+`character-sheet.linked-speed-grant-projection` and
+`character-sheet.jump-distance-ability-substitution`, backed by
+`packages/character-sheet-runtime/src/ability-checks.test.ts`; `pnpm
+unit-profile-coverage:check` passes. No additional Second-Story Work follow-up
+task is required.
 
 Depends on:
 
@@ -1107,6 +1131,10 @@ Depends on:
 - QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION
 - QAR-18-OPEN-HAND-SEMANTIC-CHOICES
 - QAR-19-AUTHORED-ID-CHECKER-HARDENING
+- QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION
+- QAR-22-DEFAULT-TEST-BASELINE-REPAIRS
+- QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR
+- QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS
 
 Output:
 
@@ -1139,5 +1167,149 @@ Verification:
 
 Plan Impact:
 
-- Applied when final statuses are reconciled and any real follow-up work is
-  represented as executable Ralph tasks rather than prose.
+- Applied: QAR-21 through QAR-24 cleared the concrete baseline blockers, so
+  QAR-20 reran the final convergence audit. The audit found one real
+  shared-algebras proof-lane scalability issue:
+  `damage-component-adjustments-inductive.qnt` imported the behavioral damage
+  reducer to compute fixed witness values and exhausted Apalache heap in the
+  shared inductive proof lane. The repair keeps literal fixture totals in the
+  inductive proof machine and checks those literals against the reducer in
+  companion run-block tests, so the inductive state space is small while the
+  coupling remains executable. Final verification passed: static lane checks,
+  affected QNT proof lanes, the shared-algebras inductive proof lane,
+  `pnpm test`, and `pnpm quality`.
+- Applied: the stale `rogue_second_story_work` owner-evidence row is recorded
+  as resolved by existing unit-profile coverage evidence rather than promoted
+  into unnecessary follow-up work. No additional Second-Story Work follow-up
+  task is required.
+
+### Task 21 - QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION
+
+Status: `done`
+
+Depends on: none
+
+Output:
+
+- Reconcile `scripts/audit-character-sheet-runtime-split.mjs` and the
+  character-sheet runtime split boundary so current package exports are either
+  intentionally owned by the split surface or intentionally excluded by the
+  checker.
+- Do not hide the failure by weakening the checker; preserve an executable
+  ownership boundary for the character-sheet runtime package split.
+
+Acceptance:
+
+- The character-sheet split export gate passes.
+- Any added or removed export expectation has a concrete package-ownership
+  reason.
+
+Verification:
+
+- Shared verification.
+- `pnpm check:character-sheet-runtime-split`.
+- `pnpm quality` until the next unrelated blocker or full success.
+
+Plan Impact:
+
+- Update-required if this work discovers additional package split ownership
+  blockers that need separate tasks.
+
+### Task 22 - QAR-22-DEFAULT-TEST-BASELINE-REPAIRS
+
+Status: `done`
+
+Depends on: none
+
+Output:
+
+- Repair the default `pnpm test` baseline failures found during QAR-20:
+  character-sheet fixture validation with current HP greater than max HP,
+  character-creation Bard/Rogue Draconic Ancestry support-profile expectations,
+  and the Wizard duplicate Evocation Savant invalid-selection expectation.
+- Keep fixes in the owning package and avoid changing test expectations without
+  confirming the modeled rule or fixture invariant.
+
+Acceptance:
+
+- The focused failing package tests pass.
+- `pnpm test` passes or stops only at a newly discovered unrelated blocker that
+  is recorded as executable follow-up work.
+
+Verification:
+
+- Shared verification.
+- Focused tests for each repaired package failure.
+- `pnpm test`.
+
+Plan Impact:
+
+- Applied: QAR-24 records the unrelated `@dnd/battle-runtime` default-test
+  baseline failures exposed after this task repaired the named
+  character-sheet and character-creation failures.
+
+### Task 23 - QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR
+
+Status: `done`
+
+Depends on: none
+
+Output:
+
+- Repair the `pnpm cleanroom-harness:check` self-test failure for
+  `sampled-input-leak`.
+- Preserve the harness check's ability to catch sampled-input leakage rather
+  than accepting stale or under-specified self-test expectations.
+
+Acceptance:
+
+- `pnpm cleanroom-harness:check` passes.
+- The self-test still fails on an actual sampled-input leakage fixture.
+
+Verification:
+
+- Shared verification.
+- `pnpm cleanroom-harness:check`.
+- `pnpm quality` until the next unrelated blocker or full success.
+
+Plan Impact:
+
+- Update-required if harness repair reveals additional cleanroom scaffold
+  checker blockers.
+
+### Task 24 - QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS
+
+Status: `done`
+
+Depends on:
+
+- QAR-22-DEFAULT-TEST-BASELINE-REPAIRS
+
+Output:
+
+- Repair the unrelated `@dnd/battle-runtime` default `pnpm test` baseline
+  failures exposed after QAR-22: Rage stale subject expectation, Archery
+  adjacent passive bonus gate, Spike Growth movement-hazard admission, and
+  Spiritual Weapon counterspell frame.
+- Keep fixes in the battle-runtime owning modules and tests. For behavior
+  changes, check the active QNT owner and run the focused MBT lane only after
+  code changes are complete, following the repository MBT protocol.
+
+Acceptance:
+
+- Focused tests for each repaired battle-runtime failure pass.
+- `pnpm test` passes or stops only at a newly discovered unrelated blocker that
+  is recorded as executable follow-up work.
+
+Verification:
+
+- Shared verification.
+- Focused `@dnd/battle-runtime` tests for each repaired failure.
+- Any focused battle-runtime MBT lane required by behavior changes, using the
+  repository MBT protocol.
+- `pnpm test`.
+
+Plan Impact:
+
+- Update-required if default test repair exposes additional baseline failures
+  that require separate ownership tasks.

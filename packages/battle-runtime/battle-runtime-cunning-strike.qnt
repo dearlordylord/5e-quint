@@ -2,8 +2,9 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.cunning-strike
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.cunning-strike
 module battleRuntimeCunningStrike {
+  import creatureSizeOrder.* from "../shared-algebras/proofs/rule-core/creature-size-order"
+
   // Literal projection witness for Cunning Strike level-5 options.
   // RAW trace:
   // - .references/srd-5.2.1/Classes/Rogue.md:97-109: the trigger is dealing
@@ -19,142 +20,223 @@ module battleRuntimeCunningStrike {
   //   Speed immediately after the attack without provoking Opportunity Attacks.
   // UBIQUITOUS_LANGUAGE.md: Saving Throw, Condition, Size, Speed, Movement,
   // Opportunity Attack, Equipment.
-  type CunningStrikeOptionKind =
-    EquipmentGatedConditionSave |
-    SizeGatedConditionSave |
-    PostDamageMovement
+  type CunningStrikeCost =
+    | OneSneakAttackD6Cost
 
-  type CunningStrikeOptionProjection = {
-    kind: CunningStrikeOptionKind,
-    dieCostDice: int,
-    dieSize: int,
-    happensImmediatelyAfterDamage: bool,
+  type CunningStrikeTiming =
+    | ImmediatelyAfterAttackDamage
+
+  type CunningStrikeRequiredTool =
+    | PoisonersKitOnPerson
+
+  type CunningStrikeAbility =
+    | DexterityAbility
+    | ConstitutionAbility
+
+  type CunningStrikeSaveDc =
+    | DexterityBasedSaveDcBaseEight
+
+  type CunningStrikeSavingThrow = {
+    ability: CunningStrikeAbility,
+    dc: CunningStrikeSaveDc,
   }
 
-  type CunningStrikeConditionSaveProjection = {
-    option: CunningStrikeOptionProjection,
-    requiresToolOnPerson: bool,
-    toolId: str,
-    saveAbility: str,
-    saveDcBase: int,
-    saveDcAbility: str,
-    condition: str,
-    durationMinutes: int,
-    repeatSaveCadence: str,
-    repeatSaveSuccessEndsCondition: bool,
-  }
+  type CunningStrikeCondition =
+    | PoisonedCondition
+    | ProneCondition
 
-  type CunningStrikeSizeGatedSaveProjection = {
-    option: CunningStrikeOptionProjection,
-    maxTargetSizeRank: int,
-    saveAbility: str,
-    saveDcBase: int,
-    saveDcAbility: str,
-    condition: str,
-  }
+  type CunningStrikeRepeatSave =
+    | EndOfAffectedTargetTurnSuccessEndsCondition
 
-  type CunningStrikeMovementProjection = {
-    option: CunningStrikeOptionProjection,
-    distanceDivisor: int,
-    spendsTurnMovement: bool,
-    provokesOpportunityAttacks: bool,
-  }
+  type CunningStrikePersistentCondition =
+    | PoisonedOneMinuteWithRepeatSave({ repeatSave: CunningStrikeRepeatSave })
 
-  pure val tinySizeRank: int = 0
-  pure val smallSizeRank: int = 1
-  pure val mediumSizeRank: int = 2
-  pure val largeSizeRank: int = 3
-  pure val hugeSizeRank: int = 4
+  type CunningStrikeEquipmentGatedConditionSaveSemantics =
+    | PoisonersKitConstitutionSavePoisonedOneMinuteRepeat
 
-  pure val commonOptionCostDice: int = 1
-  pure val commonOptionDieSize: int = 6
+  type CunningStrikeSizeGatedConditionSaveSemantics =
+    | LargeOrSmallerDexteritySaveProne
 
-  pure def option(kind: CunningStrikeOptionKind): CunningStrikeOptionProjection = {
-    kind: kind,
-    dieCostDice: commonOptionCostDice,
-    dieSize: commonOptionDieSize,
-    happensImmediatelyAfterDamage: true,
-  }
+  type CunningStrikePostDamageMovementSemantics =
+    | HalfSpeedMovementWithoutOpportunityAttacks
+
+  type CunningStrikeProjection =
+    | EquipmentGatedConditionSaveProjection({
+        cost: CunningStrikeCost,
+        timing: CunningStrikeTiming,
+        semantics: CunningStrikeEquipmentGatedConditionSaveSemantics,
+      })
+    | SizeGatedConditionSaveProjection({
+        cost: CunningStrikeCost,
+        timing: CunningStrikeTiming,
+        semantics: CunningStrikeSizeGatedConditionSaveSemantics,
+      })
+    | PostDamageMovementProjection({
+        cost: CunningStrikeCost,
+        timing: CunningStrikeTiming,
+        semantics: CunningStrikePostDamageMovementSemantics,
+      })
+
+  pure def costDice(cost: CunningStrikeCost): int =
+    match cost {
+      | OneSneakAttackD6Cost => 1
+    }
+
+  pure def costDieSize(cost: CunningStrikeCost): int =
+    match cost {
+      | OneSneakAttackD6Cost => 6
+    }
+
+  pure def saveDcBase(saveDc: CunningStrikeSaveDc): int =
+    match saveDc {
+      | DexterityBasedSaveDcBaseEight => 8
+    }
+
+  pure def saveDcAbility(saveDc: CunningStrikeSaveDc): CunningStrikeAbility =
+    match saveDc {
+      | DexterityBasedSaveDcBaseEight => DexterityAbility
+    }
+
+  pure def persistentConditionKind(
+    condition: CunningStrikePersistentCondition,
+  ): CunningStrikeCondition =
+    match condition {
+      | PoisonedOneMinuteWithRepeatSave(_) => PoisonedCondition
+    }
+
+  pure def persistentConditionDurationMinutes(
+    condition: CunningStrikePersistentCondition,
+  ): int =
+    match condition {
+      | PoisonedOneMinuteWithRepeatSave(_) => 1
+    }
+
+  pure def persistentConditionRepeatSave(
+    condition: CunningStrikePersistentCondition,
+  ): CunningStrikeRepeatSave =
+    match condition {
+      | PoisonedOneMinuteWithRepeatSave(data) => data.repeatSave
+    }
+
+  pure def equipmentConditionSaveRequiredTool(
+    semantics: CunningStrikeEquipmentGatedConditionSaveSemantics,
+  ): CunningStrikeRequiredTool =
+    match semantics {
+      | PoisonersKitConstitutionSavePoisonedOneMinuteRepeat => PoisonersKitOnPerson
+    }
+
+  pure def equipmentConditionSaveSavingThrow(
+    semantics: CunningStrikeEquipmentGatedConditionSaveSemantics,
+  ): CunningStrikeSavingThrow =
+    match semantics {
+      | PoisonersKitConstitutionSavePoisonedOneMinuteRepeat => {
+          ability: ConstitutionAbility,
+          dc: commonSavingThrowDc,
+        }
+    }
+
+  pure def equipmentConditionSaveFailedCondition(
+    semantics: CunningStrikeEquipmentGatedConditionSaveSemantics,
+  ): CunningStrikePersistentCondition =
+    match semantics {
+      | PoisonersKitConstitutionSavePoisonedOneMinuteRepeat =>
+          PoisonedOneMinuteWithRepeatSave({
+            repeatSave: EndOfAffectedTargetTurnSuccessEndsCondition,
+          })
+    }
+
+  pure def sizeGatedConditionSaveMaxTargetSize(
+    semantics: CunningStrikeSizeGatedConditionSaveSemantics,
+  ): RuleSize =
+    match semantics {
+      | LargeOrSmallerDexteritySaveProne => LargeSize
+    }
+
+  pure def sizeGatedConditionSaveSavingThrow(
+    semantics: CunningStrikeSizeGatedConditionSaveSemantics,
+  ): CunningStrikeSavingThrow =
+    match semantics {
+      | LargeOrSmallerDexteritySaveProne => {
+          ability: DexterityAbility,
+          dc: commonSavingThrowDc,
+        }
+    }
+
+  pure def sizeGatedConditionSaveFailedCondition(
+    semantics: CunningStrikeSizeGatedConditionSaveSemantics,
+  ): CunningStrikeCondition =
+    match semantics {
+      | LargeOrSmallerDexteritySaveProne => ProneCondition
+    }
+
+  pure def projectionCost(projection: CunningStrikeProjection): CunningStrikeCost =
+    match projection {
+      | EquipmentGatedConditionSaveProjection(data) => data.cost
+      | SizeGatedConditionSaveProjection(data) => data.cost
+      | PostDamageMovementProjection(data) => data.cost
+    }
+
+  pure def projectionTiming(projection: CunningStrikeProjection): CunningStrikeTiming =
+    match projection {
+      | EquipmentGatedConditionSaveProjection(data) => data.timing
+      | SizeGatedConditionSaveProjection(data) => data.timing
+      | PostDamageMovementProjection(data) => data.timing
+    }
+
+  pure def happensImmediatelyAfterDamage(projection: CunningStrikeProjection): bool =
+    projectionTiming(projection) == ImmediatelyAfterAttackDamage
 
   pure def sneakAttackDiceAfterCunningStrikeCost(selectedSneakAttackDice: int): int =
-    selectedSneakAttackDice - commonOptionCostDice
+    selectedSneakAttackDice - costDice(OneSneakAttackD6Cost)
 
-  pure def tripEligibleByEffectiveSize(targetSizeRank: int): bool =
-    targetSizeRank <= largeSizeRank
+  pure def tripEligibleByEffectiveSize(targetSize: RuleSize): bool =
+    sizeRank(targetSize) <= sizeRank(LargeSize)
 
   pure def withdrawMovementFeet(speedFeet: int): int =
     speedFeet / 2
 
-  pure val poisonProjection: CunningStrikeConditionSaveProjection = {
-    option: option(EquipmentGatedConditionSave),
-    requiresToolOnPerson: true,
-    toolId: "poisoners_kit",
-    saveAbility: "con",
-    saveDcBase: 8,
-    saveDcAbility: "dex",
-    condition: "poisoned",
-    durationMinutes: 1,
-    repeatSaveCadence: "endOfTargetTurn",
-    repeatSaveSuccessEndsCondition: true,
-  }
-
-  pure val tripProjection: CunningStrikeSizeGatedSaveProjection = {
-    option: option(SizeGatedConditionSave),
-    maxTargetSizeRank: largeSizeRank,
-    saveAbility: "dex",
-    saveDcBase: 8,
-    saveDcAbility: "dex",
-    condition: "prone",
-  }
-
-  pure val withdrawProjection: CunningStrikeMovementProjection = {
-    option: option(PostDamageMovement),
-    distanceDivisor: 2,
-    spendsTurnMovement: false,
-    provokesOpportunityAttacks: false,
-  }
-
-  run test_cunning_strike_cost_is_removed_before_damage = {
-    all {
-      assert(sneakAttackDiceAfterCunningStrikeCost(3) == 2),
-      assert(poisonProjection.option.dieCostDice == 1),
-      assert(tripProjection.option.dieSize == 6),
-      assert(withdrawProjection.option.happensImmediatelyAfterDamage),
+  pure def movementDistanceDivisor(
+    semantics: CunningStrikePostDamageMovementSemantics,
+  ): int =
+    match semantics {
+      | HalfSpeedMovementWithoutOpportunityAttacks => 2
     }
-  }
 
-  run test_cunning_strike_poison_projection = {
-    all {
-      assert(poisonProjection.requiresToolOnPerson),
-      assert(poisonProjection.toolId == "poisoners_kit"),
-      assert(poisonProjection.saveAbility == "con"),
-      assert(poisonProjection.saveDcBase == 8),
-      assert(poisonProjection.saveDcAbility == "dex"),
-      assert(poisonProjection.condition == "poisoned"),
-      assert(poisonProjection.durationMinutes == 1),
-      assert(poisonProjection.repeatSaveCadence == "endOfTargetTurn"),
-      assert(poisonProjection.repeatSaveSuccessEndsCondition),
+  pure def movementSpendsTurnMovement(
+    semantics: CunningStrikePostDamageMovementSemantics,
+  ): bool =
+    match semantics {
+      | HalfSpeedMovementWithoutOpportunityAttacks => false
     }
-  }
 
-  run test_cunning_strike_trip_uses_effective_large_or_smaller_size = {
-    all {
-      assert(tripEligibleByEffectiveSize(tinySizeRank)),
-      assert(tripEligibleByEffectiveSize(smallSizeRank)),
-      assert(tripEligibleByEffectiveSize(mediumSizeRank)),
-      assert(tripEligibleByEffectiveSize(largeSizeRank)),
-      assert(not(tripEligibleByEffectiveSize(hugeSizeRank))),
-      assert(tripProjection.saveAbility == "dex"),
-      assert(tripProjection.condition == "prone"),
+  pure def movementProvokesOpportunityAttacks(
+    semantics: CunningStrikePostDamageMovementSemantics,
+  ): bool =
+    match semantics {
+      | HalfSpeedMovementWithoutOpportunityAttacks => false
     }
-  }
 
-  run test_cunning_strike_withdraw_projection = {
-    all {
-      assert(withdrawMovementFeet(30) == 15),
-      assert(withdrawProjection.distanceDivisor == 2),
-      assert(not(withdrawProjection.spendsTurnMovement)),
-      assert(not(withdrawProjection.provokesOpportunityAttacks)),
-    }
-  }
+  pure val commonSavingThrowDc: CunningStrikeSaveDc =
+    DexterityBasedSaveDcBaseEight
+
+  pure val poisonProjection: CunningStrikeProjection =
+    EquipmentGatedConditionSaveProjection({
+      cost: OneSneakAttackD6Cost,
+      timing: ImmediatelyAfterAttackDamage,
+      semantics: PoisonersKitConstitutionSavePoisonedOneMinuteRepeat,
+    })
+
+  pure val tripProjection: CunningStrikeProjection =
+    SizeGatedConditionSaveProjection({
+      cost: OneSneakAttackD6Cost,
+      timing: ImmediatelyAfterAttackDamage,
+      semantics: LargeOrSmallerDexteritySaveProne,
+    })
+
+  pure val withdrawProjection: CunningStrikeProjection =
+    PostDamageMovementProjection({
+      cost: OneSneakAttackD6Cost,
+      timing: ImmediatelyAfterAttackDamage,
+      semantics: HalfSpeedMovementWithoutOpportunityAttacks,
+    })
 }

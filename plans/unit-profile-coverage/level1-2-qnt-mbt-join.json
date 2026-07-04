@@ -44,16 +44,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -80,10 +81,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -194,6 +214,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -220,10 +241,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -334,6 +374,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.creature-type-protection-and-charm",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -368,6 +409,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-roll-modifier",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -394,7 +436,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -440,6 +500,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.passive-saving-throw-roll-mode",
       "profileKind": "passive",
       "qntOwners": [
@@ -462,7 +523,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -508,6 +587,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.bonus-action-ongoing-rage",
       "profileKind": "persistent-effect",
       "qntOwners": [
@@ -530,7 +610,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -576,6 +674,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.first-attack-roll-reckless-advantage",
       "profileKind": "persistent-effect",
       "qntOwners": [
@@ -603,6 +702,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.armor-class-base-formula",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -633,6 +733,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.weapon-mastery-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -659,6 +760,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.weapon-mastery-level-gain",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -685,6 +787,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.weapon-mastery-class-level-reselection",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -707,7 +810,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -753,6 +874,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
       "profileKind": "resource",
       "qntOwners": [
@@ -775,7 +897,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -821,6 +961,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.bardic-inspiration-grant",
       "profileKind": "bonus-action",
       "qntOwners": [
@@ -847,6 +988,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.skill-expertise-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -874,6 +1016,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.ability-check-proficiency-bonus",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -912,6 +1055,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-roll-modifier",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -938,16 +1082,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -974,10 +1119,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1088,6 +1252,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1114,10 +1279,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1224,16 +1408,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1260,10 +1445,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1374,6 +1578,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1400,10 +1605,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1518,6 +1742,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-chained-attack-damage",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1552,6 +1777,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1578,10 +1804,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1693,6 +1938,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.class-feature-resource-projection",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -1719,6 +1965,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.class-feature-option-projection",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -1745,6 +1992,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-condition-save",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1779,6 +2027,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-command-approach-route",
       "profileKind": "table-caller",
       "qntOwners": [
@@ -1809,6 +2058,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-command-drop-held-object",
       "profileKind": "table-caller",
       "qntOwners": [
@@ -1839,6 +2089,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-command-flee-route",
       "profileKind": "table-caller",
       "qntOwners": [
@@ -1869,6 +2120,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-command-halt-grovel",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1895,10 +2147,11 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.hit-point-restoration",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1925,6 +2178,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-dancing-lights-movable-dim-light",
       "profileKind": "table-caller",
       "qntOwners": [
@@ -1947,16 +2201,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1983,10 +2238,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2097,6 +2371,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-forced-reaction-movement",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2127,6 +2402,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-forced-reaction-movement",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2157,6 +2433,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-forced-reaction-movement",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2191,6 +2468,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-weapon-damage-rider",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2241,6 +2519,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-after-hit-damage",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2275,6 +2554,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.class-feature-option-projection",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -2309,6 +2589,7 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-independent-attack-sequence",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2351,6 +2632,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2385,6 +2667,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-condition-save",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2419,6 +2702,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-expeditious-retreat-dash",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2449,6 +2733,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-expeditious-retreat-dash",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2479,6 +2764,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-attack-roll-advantage-save",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2513,6 +2799,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.scalar-buff",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2547,6 +2834,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-feather-fall-mitigation",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2577,6 +2865,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-feather-fall-mitigation",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2599,7 +2888,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -2645,6 +2952,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.action-surge-resource",
       "profileKind": "resource",
       "qntOwners": [
@@ -2671,6 +2979,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.class-feature-feat-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -2697,6 +3006,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.fighter-fighting-style-advancement-replacement",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -2719,7 +3029,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -2765,6 +3093,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.self-bonus-action-healing",
       "profileKind": "bonus-action",
       "qntOwners": [
@@ -2787,7 +3116,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -2833,6 +3180,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.failed-ability-check-resource-boost",
       "profileKind": "resource",
       "qntOwners": [
@@ -2859,6 +3207,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.weapon-mastery-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -2885,6 +3234,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.weapon-mastery-level-gain",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -2911,6 +3261,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.weapon-mastery-class-level-reselection",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -2933,16 +3284,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2969,10 +3321,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3083,6 +3454,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-fog-cloud-obscurement",
       "profileKind": "table-caller",
       "qntOwners": [
@@ -3109,6 +3481,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-grease-ground-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3139,6 +3512,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-grease-ground-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3177,6 +3551,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-roll-modifier",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3203,16 +3578,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3239,10 +3615,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3353,6 +3748,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3379,10 +3775,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3489,10 +3904,11 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.hit-point-restoration",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3515,16 +3931,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3551,10 +3968,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3665,6 +4101,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.reaction-hellish-rebuke",
       "profileKind": "reaction",
       "qntOwners": [
@@ -3703,6 +4140,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.reaction-hellish-rebuke",
       "profileKind": "reaction",
       "qntOwners": [
@@ -3733,6 +4171,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3771,6 +4210,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-marked-damage-rider",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3805,6 +4245,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3843,6 +4284,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-marked-damage-rider",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3873,16 +4315,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -3909,10 +4352,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4019,16 +4481,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4055,10 +4518,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4169,6 +4651,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4195,10 +4678,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4309,6 +4811,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-jump-movement-replacement",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4339,6 +4842,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-jump-movement-replacement",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4365,6 +4869,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-object-light",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4395,6 +4900,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.scalar-buff",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4425,16 +4931,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4461,10 +4968,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4575,6 +5101,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4601,10 +5128,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4711,16 +5257,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4747,10 +5294,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4861,6 +5427,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4887,10 +5454,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4997,7 +5583,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -5043,6 +5647,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.martial-arts-attack-projection",
       "profileKind": "passive",
       "qntOwners": [
@@ -5070,6 +5675,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.armor-class-base-formula",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -5096,7 +5702,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -5142,6 +5766,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.passive-speed-bonus",
       "profileKind": "passive",
       "qntOwners": [
@@ -5169,6 +5794,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.class-feature-source-fact-projection",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -5196,6 +5822,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.class-feature-long-rest-use-state",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -5243,6 +5870,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -5289,6 +5917,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.class-feature-feat-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -5315,6 +5944,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.class-feature-option-projection",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -5342,6 +5972,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.healing-resource-action",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -5400,6 +6031,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-after-hit-damage",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -5434,6 +6066,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.weapon-mastery-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -5461,6 +6094,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.weapon-mastery-reselection",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -5487,16 +6121,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -5523,10 +6158,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -5637,6 +6291,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -5663,10 +6318,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -5773,16 +6447,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -5809,10 +6484,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -5923,6 +6617,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-held-light-emitter",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -5949,6 +6644,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.creature-type-protection-and-charm",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -5975,6 +6671,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.skill-expertise-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -6001,6 +6698,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.class-feature-feat-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -6027,6 +6725,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.class-feature-option-projection",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -6053,6 +6752,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.weapon-mastery-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -6080,6 +6780,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.weapon-mastery-reselection",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -6106,16 +6807,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -6142,10 +6844,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -6256,6 +6977,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -6282,10 +7004,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -6392,16 +7133,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -6428,10 +7170,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -6542,6 +7303,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -6568,10 +7330,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -6682,6 +7463,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-reduction",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -6712,7 +7494,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -6758,6 +7558,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.alternate-action-cost",
       "profileKind": "bonus-action",
       "qntOwners": [
@@ -6784,6 +7585,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.skill-expertise-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -6806,7 +7608,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -6852,6 +7672,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.attack-damage-rider",
       "profileKind": "persistent-effect",
       "qntOwners": [
@@ -6882,6 +7703,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.weapon-mastery-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -6909,6 +7731,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.weapon-mastery-reselection",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -6935,16 +7758,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -6971,10 +7795,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7085,6 +7928,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7111,10 +7955,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7225,6 +8088,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-sanctuary-targeting-interdiction",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7271,6 +8135,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-after-hit-timed-damage-save",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7305,6 +8170,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.reaction-shield",
       "profileKind": "reaction",
       "qntOwners": [
@@ -7331,10 +8197,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.reaction-shield",
       "profileKind": "reaction",
       "qntOwners": [
@@ -7449,6 +8334,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.scalar-buff",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7491,6 +8377,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-weapon-attack-override",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7525,16 +8412,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7561,10 +8449,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7675,6 +8582,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7701,10 +8609,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7815,6 +8742,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7841,6 +8769,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-sleep-target-admission",
       "profileKind": "table-caller",
       "qntOwners": [
@@ -7863,7 +8792,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -7909,6 +8856,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "unit-feature.innate-sorcery-activation",
       "profileKind": "persistent-effect",
       "qntOwners": [
@@ -7931,16 +8879,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -7967,10 +8916,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -8081,6 +9049,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-make-stable",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -8103,16 +9072,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -8139,10 +9109,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -8249,16 +9238,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -8285,10 +9275,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -8407,6 +9416,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-spell-hosted-weapon-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -8441,16 +9451,17 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -8477,10 +9488,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -8591,6 +9621,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -8617,10 +9648,29 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "spell.readied-action-time-spell",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -8731,6 +9781,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.eldritch-invocation-choice",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -8757,6 +9808,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.warlock-pact-magic-advancement",
       "profileKind": "character-creation",
       "qntOwners": [
@@ -8784,6 +9836,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.pact-slot-recovery",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -8815,6 +9868,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.short-rest-spell-slot-recovery",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -8846,6 +9900,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-sheet.spellbook-ritual-invocation",
       "profileKind": "character-sheet",
       "qntOwners": [
@@ -8876,6 +9931,7 @@
           "stepAction": "step"
         }
       ],
+      "parityWitnessScope": "rules-kernel-obligation",
       "profileId": "character-creation.skill-expertise-choice",
       "profileKind": "character-creation",
       "qntOwners": [
