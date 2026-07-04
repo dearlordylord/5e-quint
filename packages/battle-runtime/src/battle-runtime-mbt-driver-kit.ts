@@ -2062,6 +2062,12 @@ const metamagicRouteDriverSchema = {
   doRejectMetamagicResourceGovernor: {},
   doRouteBonusActionCastingTime: {},
   doRejectPriorLevelOnePlusSpell: {},
+  doResolveQuickenedRestoration: {},
+  doResolveQuickenedSaveGatedCondition: {},
+  doResolveQuickenedSaveGatedConditionImmunity: {},
+  doResolveQuickenedDirectCondition: {},
+  doResolveQuickenedRollModifier: {},
+  doResolveQuickenedAfterMagicActionSpent: {},
   doRouteSavingThrowProtection: {},
   doRouteSavingThrowRollMode: {},
   doRouteDamageTypeSubstitution: {},
@@ -4213,17 +4219,12 @@ function metamagicResolveWithoutFillRoute(input: {
 }
 
 function metamagicInitialRoute(): readonly ReducerRouteEvent[] {
-  return [reducerRouteStartBattle("battleSpellSlotAndActionEconomy")];
+  return [reducerRouteStartBattle("battleActionEconomy")];
 }
 
 function metamagicResourceGovernorRoute(): readonly ReducerRouteEvent[] {
   return [
     ...metamagicInitialRoute(),
-    metamagicDiscoverRoute({
-      subject: METAMAGIC_SPELL_GOVERNOR_ROUTE_SUBJECT,
-      holes: NO_METAMAGIC_ROUTE_HOLES,
-      owner: "battleFeatureResource",
-    }),
     metamagicResolveWithoutFillRoute({
       subject: METAMAGIC_SPELL_GOVERNOR_ROUTE_SUBJECT,
       holes: NO_METAMAGIC_ROUTE_HOLES,
@@ -4273,15 +4274,114 @@ function metamagicBonusActionCastingTimeRoute(): readonly ReducerRouteEvent[] {
 function metamagicPriorLevelOnePlusSpellRejectionRoute(): readonly ReducerRouteEvent[] {
   return [
     ...metamagicInitialRoute(),
-    metamagicDiscoverRoute({
+    metamagicResolveWithoutFillRoute({
       subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
       holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+  ];
+}
+
+function metamagicQuickenedRestorationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
       owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleHitPointAndZeroHpLifecycle",
     }),
     metamagicResolveWithoutFillRoute({
       subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
       holes: NO_METAMAGIC_ROUTE_HOLES,
       owner: "battleTurnBoundary",
+    }),
+  ];
+}
+
+function metamagicQuickenedSaveGatedConditionRoute(
+  finalOwner: "battleConditionLifecycle" | "battleActiveEffect",
+): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: finalOwner,
+    }),
+  ];
+}
+
+function metamagicQuickenedTargetListActiveEffectRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "spellTargetList",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleActiveEffect",
     }),
   ];
 }
@@ -4528,6 +4628,24 @@ export function createMetamagicRouteDriver() {
       },
       doRejectPriorLevelOnePlusSpell: () => {
         route = metamagicPriorLevelOnePlusSpellRejectionRoute();
+      },
+      doResolveQuickenedRestoration: () => {
+        route = metamagicQuickenedRestorationRoute();
+      },
+      doResolveQuickenedSaveGatedCondition: () => {
+        route = metamagicQuickenedSaveGatedConditionRoute("battleActiveEffect");
+      },
+      doResolveQuickenedSaveGatedConditionImmunity: () => {
+        route = metamagicQuickenedSaveGatedConditionRoute("battleActiveEffect");
+      },
+      doResolveQuickenedDirectCondition: () => {
+        route = metamagicQuickenedTargetListActiveEffectRoute();
+      },
+      doResolveQuickenedRollModifier: () => {
+        route = metamagicQuickenedTargetListActiveEffectRoute();
+      },
+      doResolveQuickenedAfterMagicActionSpent: () => {
+        route = metamagicQuickenedRestorationRoute();
       },
       doRouteSavingThrowProtection: () => {
         route = metamagicSavingThrowProtectionRoute();

@@ -47,16 +47,19 @@ import {
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
   type CharacterBattleMetamagicOptionFact,
   type CombatantId,
+  battleReducerStartRouteEvent,
   characterBattleResourceIsPointPool,
   discoverBattleActs,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./index.ts";
 import {
+  attackRollFill,
   battleId,
   characterSeed,
   damageRollFillWithGroups,
@@ -340,6 +343,193 @@ describe("Quickened Spell governor MBT parity", () => {
       spellSlotCommitted: true,
       quickenedLevelOnePlusCastThisTurn: true,
     });
+  });
+
+  it("observes the copied quickened qRoute through public reducer entrypoints", () => {
+    const state = initialRuntimeState().battle;
+    const act = quickenedRayOfFrostAct(state);
+    const targetHole = findHole(act.initialHoles, "targetChoice");
+    const target = targetFill(targetHole, skeletonId);
+    const awaitingAttackRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target],
+    });
+    const attackRollHole = findHole(
+      awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+      "attackRoll",
+    );
+    const attackRoll = attackRollFill(attackRollHole, {
+      total: 15,
+      naturalD20: 10,
+    });
+    const awaitingDamageRoll = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target, attackRoll],
+    });
+    const damageRollHole = findHole(
+      awaitingDamageRoll.tag === "needsHoles" ? awaitingDamageRoll.holes : [],
+      "rolledDice",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          target,
+          attackRoll,
+          damageRollFillWithGroups(damageRollHole, [[4, 3]]),
+        ],
+      }),
+    );
+    const observedRoute = [
+      battleReducerStartRouteEvent(state),
+      ...(act.routeEvents ?? []),
+      ...(awaitingAttackRoll.routeEvents ?? []),
+      ...(awaitingDamageRoll.routeEvents ?? []),
+      ...(resolved.routeEvents ?? []),
+    ];
+
+    expect(observedRoute).toEqual([
+      { kind: "startBattle", owner: "battleActionEconomy" },
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicBonusActionCastingTime",
+        holes: ["targetChoice"],
+        owner: "battleFeatureResource",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicBonusActionCastingTime",
+        holes: ["targetChoice"],
+        owner: "battleActionEconomy",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicBonusActionCastingTime",
+        holes: ["targetChoice"],
+        owner: "battleSpellSlotAndActionEconomy",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicBonusActionCastingTime",
+        fill: "targetChoice",
+        holes: ["attackRoll"],
+        owner: "battleTargetSelection",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicBonusActionCastingTime",
+        fill: "attackRoll",
+        holes: ["rolledDice"],
+        owner: "battleSpellAttackProcedure",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicBonusActionCastingTime",
+        holes: [],
+        owner: "battleTurnBoundary",
+      },
+    ]);
+  });
+
+  it("observes copied quickened successful branch qRoutes through public reducer entrypoints", () => {
+    const base = initialRuntimeState().battle;
+
+    expect(observeQuickenedRestorationRoute(base)).toEqual(
+      quickenedRestorationPublicRoute(),
+    );
+    expect(observeQuickenedRestorationRoute(magicActionSpent(base))).toEqual(
+      quickenedRestorationPublicRoute(),
+    );
+    expect(observeQuickenedSaveGatedRoute("color_spray", skeletonId)).toEqual(
+      quickenedSaveGatedPublicRoute("battleActiveEffect"),
+    );
+    expect(observeQuickenedSaveGatedRoute("calm_emotions", fighterId)).toEqual(
+      quickenedSaveGatedPublicRoute("battleActiveEffect"),
+    );
+    expect(observeQuickenedTargetListRoute("invisibility")).toEqual(
+      quickenedTargetListActiveEffectPublicRoute(),
+    );
+    expect(observeQuickenedTargetListRoute("bless")).toEqual(
+      quickenedTargetListActiveEffectPublicRoute(),
+    );
+  });
+
+  it("observes copied quickened rejection qRoutes through public reducer entrypoints", () => {
+    expect(
+      invalidQuickenedRoute({
+        state: initialRuntimeState({
+          sorceryPoints: UNAFFORDABLE_SORCERY_POINTS,
+        }).battle,
+        subject: quickenedCureWoundsSubject(),
+      }),
+    ).toEqual(quickenedResourceGovernorRoute());
+    expect(
+      invalidQuickenedRoute({
+        state: initialRuntimeState({
+          knownOptions: [quickenedMetamagicOption()],
+        }).battle,
+        subject: {
+          ...quickenedCureWoundsSubject(),
+          metamagic: [{ effectKind: "saving_throw_disadvantage" }],
+        },
+      }),
+    ).toEqual(quickenedResourceGovernorRoute());
+    expect(
+      invalidQuickenedRoute({
+        state: initialRuntimeState({
+          sorceryPoints: HIGH_SORCERY_POINTS,
+          knownOptions: [quickenedMetamagicOption(), empoweredMetamagicOption()],
+        }).battle,
+        subject: {
+          ...quickenedCureWoundsSubject(),
+          metamagic: [
+            { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
+            { effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND },
+          ],
+        },
+      }),
+    ).toEqual(quickenedResourceGovernorRoute());
+    expect(
+      invalidQuickenedRoute({
+        state: initialRuntimeState({
+          sorceryPoints: HIGH_SORCERY_POINTS,
+          knownOptions: [quickenedMetamagicOption(), heightenedMetamagicOption()],
+        }).battle,
+        subject: {
+          ...quickenedCureWoundsSubject(),
+          metamagic: [
+            { effectKind: QUICKENED_METAMAGIC_EFFECT_KIND },
+            { effectKind: "saving_throw_disadvantage" },
+          ],
+        },
+      }),
+    ).toEqual(quickenedResourceGovernorRoute());
+
+    const priorLevelOnePlusBase = initialRuntimeState().battle;
+    const priorLevelOnePlusState = {
+      ...priorLevelOnePlusBase,
+      currentTurnResources: {
+        ...priorLevelOnePlusBase.currentTurnResources,
+        levelOnePlusSpellCastsThisTurn: [wizardId],
+      },
+    };
+    expect(
+      invalidQuickenedRoute({
+        state: priorLevelOnePlusState,
+        subject: quickenedCureWoundsSubject(),
+      }),
+    ).toEqual([
+      battleReducerStartRouteEvent(priorLevelOnePlusState),
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicBonusActionCastingTime",
+        holes: [],
+        owner: "battleTurnBoundary",
+      },
+    ]);
   });
 
   it("rejects unknown, unaffordable, unsupported, and same-turn level 1+ Quickened casts", () => {
@@ -709,6 +899,234 @@ function quickenedSpellGovernorProjection(
   };
 }
 
+function invalidQuickenedRoute(input: {
+  readonly state: BattleState;
+  readonly subject: QuickenedBonusActionSpellAct["subject"];
+}) {
+  const result = resolveBattleSubject({
+    state: input.state,
+    subject: input.subject,
+    fills: [],
+  });
+  expect(result.tag).toBe("invalid");
+  return [
+    battleReducerStartRouteEvent(input.state),
+    ...(result.routeEvents ?? []),
+  ];
+}
+
+function observeQuickenedRestorationRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const act = quickenedCureWoundsAct(state);
+  const targetHole = findHole(act.initialHoles, "targetChoice");
+  const target = targetFill(targetHole, fighterId, [
+    {
+      kind: "spellTarget",
+      casterId: wizardId,
+      targetId: fighterId,
+      spellId: "cure_wounds",
+    },
+  ]);
+  const awaitingHealingRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target],
+  });
+  const healingRoll = findHole(
+    awaitingHealingRoll.tag === "needsHoles" ? awaitingHealingRoll.holes : [],
+    "rolledDice",
+  );
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [target, damageRollFillWithGroups(healingRoll, [[4, 3]])],
+    }),
+  );
+  return [
+    battleReducerStartRouteEvent(state),
+    ...(act.routeEvents ?? []),
+    ...(awaitingHealingRoll.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
+function observeQuickenedSaveGatedRoute(
+  spellId: Extract<QuickenedSpellId, "calm_emotions" | "color_spray">,
+  targetId: CombatantId,
+): readonly BattleReducerRouteEvent[] {
+  const state = initialRuntimeState().battle;
+  const act = quickenedSpellAct(state, spellId);
+  const saveHole = findHole(act.initialHoles, "savingThrowOutcome");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(saveHole, [{ targetId, succeeded: false }]),
+      ],
+    }),
+  );
+  return [
+    battleReducerStartRouteEvent(state),
+    ...(act.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
+function observeQuickenedTargetListRoute(
+  spellId: Extract<QuickenedSpellId, "bless" | "invisibility">,
+): readonly BattleReducerRouteEvent[] {
+  const state = initialRuntimeState().battle;
+  const act = quickenedSpellAct(state, spellId);
+  const targetHole = findSpellTargetListHole(act.initialHoles);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [spellTargetListFill(targetHole, spellId, [fighterId])],
+    }),
+  );
+  return [
+    battleReducerStartRouteEvent(state),
+    ...(act.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
+function quickenedResourceGovernorRoute() {
+  return [
+    { kind: "startBattle", owner: "battleActionEconomy" },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicSpellGovernor",
+      holes: [],
+      owner: "battleFeatureResource",
+    },
+  ];
+}
+
+function quickenedRestorationPublicRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    { kind: "startBattle", owner: "battleActionEconomy" },
+    {
+      kind: "discoverBattleActs",
+      subject: "metamagicBonusActionCastingTime",
+      holes: ["targetChoice"],
+      owner: "battleFeatureResource",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes: ["targetChoice"],
+      owner: "battleActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes: ["targetChoice"],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicBonusActionCastingTime",
+      fill: "targetChoice",
+      holes: ["rolledDice"],
+      owner: "battleTargetSelection",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicBonusActionCastingTime",
+      fill: "rolledDice",
+      holes: [],
+      owner: "battleHitPointAndZeroHpLifecycle",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes: [],
+      owner: "battleTurnBoundary",
+    },
+  ];
+}
+
+function quickenedSaveGatedPublicRoute(
+  finalOwner: "battleConditionLifecycle" | "battleActiveEffect",
+): readonly BattleReducerRouteEvent[] {
+  return [
+    { kind: "startBattle", owner: "battleActionEconomy" },
+    {
+      kind: "discoverBattleActs",
+      subject: "metamagicBonusActionCastingTime",
+      holes: ["savingThrowOutcome"],
+      owner: "battleFeatureResource",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes: ["savingThrowOutcome"],
+      owner: "battleActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes: ["savingThrowOutcome"],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicBonusActionCastingTime",
+      fill: "savingThrowOutcome",
+      holes: [],
+      owner: "battleSavingThrowOutcome",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes: [],
+      owner: finalOwner,
+    },
+  ];
+}
+
+function quickenedTargetListActiveEffectPublicRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    { kind: "startBattle", owner: "battleActionEconomy" },
+    {
+      kind: "discoverBattleActs",
+      subject: "metamagicBonusActionCastingTime",
+      holes: ["spellTargetList"],
+      owner: "battleFeatureResource",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes: ["spellTargetList"],
+      owner: "battleActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes: ["spellTargetList"],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicBonusActionCastingTime",
+      fill: "spellTargetList",
+      holes: [],
+      owner: "battleTargetSelection",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+  ];
+}
+
 function metamagicBattle(input?: {
   readonly sorceryPoints?: number;
   readonly knownOptions?: readonly MetamagicOptionFixture[];
@@ -747,6 +1165,7 @@ function metamagicBattle(input?: {
               spellRecord("calm_emotions"),
               spellRecord("invisibility"),
               spellRecord("bless"),
+              spellRecord("ray_of_frost"),
             ],
             spellSlots: [
               { spellLevel: 1, count: 2 },
@@ -859,6 +1278,25 @@ type QuickenedSpellId =
   | "calm_emotions"
   | "color_spray"
   | "invisibility";
+
+function quickenedRayOfFrostAct(
+  state: BattleState,
+): QuickenedBonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is QuickenedBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === "ray_of_frost" &&
+      candidate.subject.invocation.procedure === "spellAttackDamage" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error("Expected Quickened Ray of Frost act.");
+  }
+  return act;
+}
 
 function quickenedSpellAct(
   state: BattleState,

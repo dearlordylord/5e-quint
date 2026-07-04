@@ -630,6 +630,88 @@
           "detail": "Round 1 moved Magic Missile qRoute construction from adapter-local expected events to public reducer route events for slotSpell discovery and resolution; round 2 found no remaining reasonable findings."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-006",
+      "assignmentId": "quickened-spell-governor-route",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "5bff83be7a403babad567df116bbc6d0761e435067ba78db905b4b6349ecae05"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "5c2880310b082a4bc8dfbd7e16e5b914f877adc5af7e97cccc5c88be3875d241"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "6dc296f78fe205f522a35edacd745ca835a8fb343c99fa2aa369e3e1ae68db70"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-006.json",
+          "sha256": "26c18c44e81826917d127dc6d4241704ee97a3169e5d154718000edfd73c8cfe",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedRestoration#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedRestoration qRoute=quickened-restoration-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedSaveGatedCondition#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedSaveGatedCondition qRoute=quickened-save-gated-active-effect-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedSaveGatedConditionImmunity#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedSaveGatedConditionImmunity qRoute=quickened-save-gated-active-effect-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedDirectCondition#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedDirectCondition qRoute=quickened-target-list-active-effect-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedRollModifier#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedRollModifier qRoute=quickened-target-list-active-effect-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedAfterMagicActionSpent#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedAfterMagicActionSpent qRoute=quickened-restoration-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectUnaffordable#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectUnaffordable qRoute=quickened-resource-governor-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectUnknownOption#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectUnknownOption qRoute=quickened-resource-governor-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectUnsupportedSecondOption#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectUnsupportedSecondOption qRoute=quickened-resource-governor-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectOnePerSpell#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectOnePerSpell qRoute=quickened-resource-governor-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectPriorLevelOnePlusSpell#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectPriorLevelOnePlusSpell qRoute=quickened-prior-level-one-plus-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/crpi-ready-006-quickened-spell-route/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor c1f46103da66de824e19e6991f876c6e4e160d13 HEAD",
+          "status": "pass",
+          "detail": "Integration and HEAD were c1f46103d; base SHA is an ancestor."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/quickened-spell-governor.mbt.test.ts -t \"observes.*quickened\"",
+          "status": "pass",
+          "detail": "3 tests passed, 5 skipped."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "cd packages/battle-runtime && START=$(date +%s); MBT_TRACES=1 MBT_STEPS=4 pnpm exec vitest run src/quickened-spell-governor.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Quickened Spell governor|quickened qRoute|Metamagic governor\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "9 tests passed, 33 skipped; final timed run TOTAL: 7s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check -- --target-replay-evidence tasks/target-replay-evidence/CRPI-READY-006.json",
+          "status": "fail",
+          "detail": "Diagnostic direct evidence mode requires the full source inventory; filtered output showed no CRPI-READY-006 / Quickened missing-evidence diagnostics, while the command still exited nonzero on unrelated corpus-wide missing target replay evidence."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Revision round 3 added source-branch public qRoute evidence for all six successful Quickened obligations, retained branch-specific rejection route ownership, and found no remaining reasonable RAW/domain, architecture/connascence, or code-review findings."
+        }
+      ]
     }
   ]
 }

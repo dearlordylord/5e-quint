@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP07-DSR-01",
+  "taskId": "CRPI-READY-006",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -8,7 +8,7 @@
       "owner": "public-reducer-boundary-projection",
       "derivability": {
         "tag": "boundary-projection",
-        "sourceField": "BattleSubject.actionSpell, BattleHole.kind, and reducer route owner facts"
+        "sourceField": "BattleSubject.bonusActionSpell.metamagic, BattleSubject.bonusActionSpell.invocation, BattleHole.kind, and reducer route owner facts"
       }
     },
     {
@@ -17,17 +17,18 @@
       "owner": "public-reducer-boundary-projection",
       "derivability": {
         "tag": "boundary-projection",
-        "sourceField": "BattleSubject.actionSpell, BattleFill.kind, BattleHole.kind, BattleCreatureState.hp, character spellcasting resources, and reducer route owner facts"
+        "sourceField": "BattleSubject.bonusActionSpell.metamagic, BattleFill.kind, BattleHole.kind, BattleState.currentTurnResources, character spellcasting resources, character point-pool resources, and reducer route owner facts"
       }
     }
   ],
   "notes": [
-    "Task 29 introduced no new BattleState, BattleCreatureState, or character spellcasting durable field.",
-    "Current actor and turn action availability remain BattleState-owned turn facts.",
-    "Magic action spending remains BattleState.currentTurnResources.",
-    "Spell Slot spend remains character spellcasting resource state reached through the spell-slot invocation.",
-    "Target Hit Points and zero-HP/death projection remain BattleCreatureState.hp and BattleCreatureState.zeroHpLifecycle.",
-    "Spell target allocation and damage progress remain the existing public BattleHole frontier.",
-    "AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents are public reducer boundary projections, not a duplicated Magic Missile ledger."
+    "Task 31 introduced no new BattleState, BattleCreatureState, character spellcasting, or character point-pool durable field.",
+    "Action and Bonus Action availability remain BattleState.currentTurnResources.",
+    "The same-turn level-1-plus spell lock remains the existing turn resource fact; no duplicate Quickened lock was added.",
+    "Spell Slot spend remains character spellcasting resource state reached through the spell invocation.",
+    "Sorcery Point spend remains character point-pool resource state.",
+    "Selected Metamagic option identity remains a catalog, selection, admission, and SRD fixture boundary; runtime route evidence reads typed metamagic effectKind facts rather than option names.",
+    "Spell target selection, spell Attack roll, and rolled damage progress remain the existing public BattleHole frontier.",
+    "AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents are public reducer boundary projections, not a duplicated Quickened Spell ledger."
   ]
 }

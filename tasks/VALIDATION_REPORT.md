@@ -1,5 +1,110 @@
 # Validation Report
 
+## CRPI-READY-006
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Quickened Spell route replay now observes the copied `qRoute` projection
+through public battle reducer route events for all eleven in-scope source branch
+obligations. Successful restoration, save-gated, direct-condition,
+roll-modifier, and after-Magic-action-spent branches collect route events from
+`battleReducerStartRouteEvent`, `AvailableBattleAct.routeEvents`, and
+`BattleResolutionResult.routeEvents`. Resource, known-option,
+unsupported-second-option, and one-option-per-spell failures emit
+`metamagicSpellGovernor` route events from invalid `resolveBattleSubject`
+results. The prior level-1-plus spell lock emits
+`metamagicBonusActionCastingTime` with `battleTurnBoundary` ownership from the
+same public reducer surface. The synthetic Quickened Ray of Frost route
+assertion remains diagnostic only because it is not a source branch in the
+Quickened governor QNT driver.
+
+The runtime does not add a parallel Quickened Spell ledger: action and Bonus
+Action availability remain `BattleState.currentTurnResources`, Sorcery Point
+spend remains character point-pool resource state, Spell Slot spend remains
+character spellcasting resource state, selected Metamagic identity remains a
+catalog/selection/admission boundary, and spell target/Attack/damage progress
+remains the existing hole frontier.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedRestoration` | `tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedRestoration#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedRestoration qRoute=quickened-restoration-public-route` | `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened successful branch qRoutes through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedSaveGatedCondition` | `tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedSaveGatedCondition#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedSaveGatedCondition qRoute=quickened-save-gated-active-effect-public-route` | `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened successful branch qRoutes through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedSaveGatedConditionImmunity` | `tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedSaveGatedConditionImmunity#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedSaveGatedConditionImmunity qRoute=quickened-save-gated-active-effect-public-route` | `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened successful branch qRoutes through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedDirectCondition` | `tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedDirectCondition#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedDirectCondition qRoute=quickened-target-list-active-effect-public-route` | `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened successful branch qRoutes through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedRollModifier` | `tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedRollModifier#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedRollModifier qRoute=quickened-target-list-active-effect-public-route` | `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened successful branch qRoutes through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedAfterMagicActionSpent` | `tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doResolveQuickenedAfterMagicActionSpent#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedAfterMagicActionSpent qRoute=quickened-restoration-public-route` | `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened successful branch qRoutes through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectUnaffordable` | `tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectUnaffordable#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectUnaffordable qRoute=quickened-resource-governor-public-route` | `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened rejection qRoutes through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectUnknownOption` | `tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectUnknownOption#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectUnknownOption qRoute=quickened-resource-governor-public-route` | `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened rejection qRoutes through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectUnsupportedSecondOption` | `tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectUnsupportedSecondOption#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectUnsupportedSecondOption qRoute=quickened-resource-governor-public-route` | `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened rejection qRoutes through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectOnePerSpell` | `tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectOnePerSpell#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectOnePerSpell qRoute=quickened-resource-governor-public-route` | `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened rejection qRoutes through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectPriorLevelOnePlusSpell` | `tasks/target-replay-evidence/CRPI-READY-006.json#driver:packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt#step:doRejectPriorLevelOnePlusSpell#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectPriorLevelOnePlusSpell qRoute=quickened-prior-level-one-plus-public-route` | `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened rejection qRoutes through public reducer entrypoints` | `covered` |
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-006.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=4 action=<branchAction> qRoute=<public-route>`
+- Public route assertions:
+  - `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened successful branch qRoutes through public reducer entrypoints`
+  - `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes copied quickened rejection qRoutes through public reducer entrypoints`
+  - `packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts#observes the copied quickened qRoute through public reducer entrypoints`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-006/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 31.
+
+Verification results:
+
+- Base check passed: `ralph/crpi-ready-006-quickened-spell-route/integration`
+  and `HEAD` were both `c1f46103d Mark Ralph task 29 done`, and
+  `git merge-base --is-ancestor c1f46103da66de824e19e6991f876c6e4e160d13 HEAD`
+  exited 0.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/quickened-spell-governor.mbt.test.ts -t "observes.*quickened"` passed.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- Before MBT, `ps aux | grep vitest | grep -v grep` and
+  `ps aux | grep quint_evaluator | grep -v grep` found no active runner or
+  evaluator process.
+- `cd packages/battle-runtime && START=$(date +%s); MBT_TRACES=1 MBT_STEPS=4 pnpm exec vitest run src/quickened-spell-governor.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Quickened Spell governor|quickened qRoute|Metamagic governor" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 9 tests and 33 skipped; final timed run `TOTAL: 7s`.
+- `pnpm cleanroom-branch-coverage:check -- --target-replay-evidence tasks/target-replay-evidence/CRPI-READY-006.json` was not a Task 31-scoped validator: direct evidence mode requires the full source inventory, so it exited nonzero on unrelated missing target replay evidence across the corpus; filtered output showed no CRPI-READY-006 / Quickened missing-evidence diagnostics.
+- `pnpm cleanroom-branch-coverage:check` passed.
+- `git diff --check` passed.
+- RAW/ubiquitous-language review passed against Sorcerer Metamagic and
+  Quickened Spell, Sorcery Points, Spell Slots, Casting Time, the one Spell
+  Slot per turn rule, and UBIQUITOUS_LANGUAGE.md terms for Magic Action, Bonus
+  Action, Spell Slot, Pool, Spend, Lock, Spell Invocation, and Spell Effect.
+- Reviewer-loop convergence passed: round 1 fixed public start-route
+  observation and rejection branch route ownership; round 2 removed overclaimed
+  target replay evidence; round 3 added successful branch public qRoute
+  evidence for all remaining Quickened obligations and found no remaining
+  reasonable RAW/domain, architecture/connascence, or code-review findings.
+
 ## CRP07-DSR-01
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

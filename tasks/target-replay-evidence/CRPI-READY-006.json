@@ -1,0 +1,465 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts quickened metamagic public reducer qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "857729ab403fcbcaf4867e7f647b3782d937afb6492e64c3b6779c2d4b74de21",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doResolveQuickenedRestoration",
+      "observedActionTaken": "doResolveQuickenedRestoration",
+      "harnessTestPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedRestoration qRoute=quickened-restoration-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "4536f569b1497790629759cedc9223c0c71e4c3382a6d783720dd40a9e7b7ea4",
+        "observedProjectionSha256": "4536f569b1497790629759cedc9223c0c71e4c3382a6d783720dd40a9e7b7ea4",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.bonusActionSpell.metamagic",
+          "BattleState.currentTurnResources",
+          "CharacterBattlePointPoolResourceState.pointsRemaining",
+          "BattleCreatureState.hp"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "857729ab403fcbcaf4867e7f647b3782d937afb6492e64c3b6779c2d4b74de21",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doResolveQuickenedSaveGatedCondition",
+      "observedActionTaken": "doResolveQuickenedSaveGatedCondition",
+      "harnessTestPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedSaveGatedCondition qRoute=quickened-save-gated-active-effect-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "11f7e689861067eff0cc575366c1656f36cb211e7c95805f68fd0a58da6884f5",
+        "observedProjectionSha256": "11f7e689861067eff0cc575366c1656f36cb211e7c95805f68fd0a58da6884f5",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.bonusActionSpell.metamagic",
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "857729ab403fcbcaf4867e7f647b3782d937afb6492e64c3b6779c2d4b74de21",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doResolveQuickenedSaveGatedConditionImmunity",
+      "observedActionTaken": "doResolveQuickenedSaveGatedConditionImmunity",
+      "harnessTestPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedSaveGatedConditionImmunity qRoute=quickened-save-gated-active-effect-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "11f7e689861067eff0cc575366c1656f36cb211e7c95805f68fd0a58da6884f5",
+        "observedProjectionSha256": "11f7e689861067eff0cc575366c1656f36cb211e7c95805f68fd0a58da6884f5",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.bonusActionSpell.metamagic",
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "857729ab403fcbcaf4867e7f647b3782d937afb6492e64c3b6779c2d4b74de21",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doResolveQuickenedDirectCondition",
+      "observedActionTaken": "doResolveQuickenedDirectCondition",
+      "harnessTestPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedDirectCondition qRoute=quickened-target-list-active-effect-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "90baec241e1eb893993d58703eed6c856a6aa925b975f118183fd10f0c158ee3",
+        "observedProjectionSha256": "90baec241e1eb893993d58703eed6c856a6aa925b975f118183fd10f0c158ee3",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.bonusActionSpell.metamagic",
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "857729ab403fcbcaf4867e7f647b3782d937afb6492e64c3b6779c2d4b74de21",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doResolveQuickenedRollModifier",
+      "observedActionTaken": "doResolveQuickenedRollModifier",
+      "harnessTestPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedRollModifier qRoute=quickened-target-list-active-effect-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "90baec241e1eb893993d58703eed6c856a6aa925b975f118183fd10f0c158ee3",
+        "observedProjectionSha256": "90baec241e1eb893993d58703eed6c856a6aa925b975f118183fd10f0c158ee3",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.bonusActionSpell.metamagic",
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "857729ab403fcbcaf4867e7f647b3782d937afb6492e64c3b6779c2d4b74de21",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doResolveQuickenedAfterMagicActionSpent",
+      "observedActionTaken": "doResolveQuickenedAfterMagicActionSpent",
+      "harnessTestPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doResolveQuickenedAfterMagicActionSpent qRoute=quickened-restoration-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "4536f569b1497790629759cedc9223c0c71e4c3382a6d783720dd40a9e7b7ea4",
+        "observedProjectionSha256": "4536f569b1497790629759cedc9223c0c71e4c3382a6d783720dd40a9e7b7ea4",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.bonusActionSpell.metamagic",
+          "BattleState.currentTurnResources.currentAction",
+          "CharacterBattlePointPoolResourceState.pointsRemaining",
+          "BattleCreatureState.hp"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "857729ab403fcbcaf4867e7f647b3782d937afb6492e64c3b6779c2d4b74de21",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doRejectUnaffordable",
+      "observedActionTaken": "doRejectUnaffordable",
+      "harnessTestPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doRejectUnaffordable qRoute=quickened-resource-governor-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "a23bddf06bcc66a35da130473ad0e57c9b7eea74090ba880dac30fe1f02de6d6",
+        "observedProjectionSha256": "a23bddf06bcc66a35da130473ad0e57c9b7eea74090ba880dac30fe1f02de6d6",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state) and BattleResolutionResult.routeEvents from invalid resolveBattleSubject",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.bonusActionSpell.metamagic",
+          "CharacterBattlePointPoolResourceState.pointsRemaining"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "857729ab403fcbcaf4867e7f647b3782d937afb6492e64c3b6779c2d4b74de21",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doRejectUnknownOption",
+      "observedActionTaken": "doRejectUnknownOption",
+      "harnessTestPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doRejectUnknownOption qRoute=quickened-resource-governor-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "a23bddf06bcc66a35da130473ad0e57c9b7eea74090ba880dac30fe1f02de6d6",
+        "observedProjectionSha256": "a23bddf06bcc66a35da130473ad0e57c9b7eea74090ba880dac30fe1f02de6d6",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state) and BattleResolutionResult.routeEvents from invalid resolveBattleSubject",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.bonusActionSpell.metamagic"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "857729ab403fcbcaf4867e7f647b3782d937afb6492e64c3b6779c2d4b74de21",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doRejectUnsupportedSecondOption",
+      "observedActionTaken": "doRejectUnsupportedSecondOption",
+      "harnessTestPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doRejectUnsupportedSecondOption qRoute=quickened-resource-governor-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "a23bddf06bcc66a35da130473ad0e57c9b7eea74090ba880dac30fe1f02de6d6",
+        "observedProjectionSha256": "a23bddf06bcc66a35da130473ad0e57c9b7eea74090ba880dac30fe1f02de6d6",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state) and BattleResolutionResult.routeEvents from invalid resolveBattleSubject",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.bonusActionSpell.metamagic"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "857729ab403fcbcaf4867e7f647b3782d937afb6492e64c3b6779c2d4b74de21",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doRejectOnePerSpell",
+      "observedActionTaken": "doRejectOnePerSpell",
+      "harnessTestPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doRejectOnePerSpell qRoute=quickened-resource-governor-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "a23bddf06bcc66a35da130473ad0e57c9b7eea74090ba880dac30fe1f02de6d6",
+        "observedProjectionSha256": "a23bddf06bcc66a35da130473ad0e57c9b7eea74090ba880dac30fe1f02de6d6",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state) and BattleResolutionResult.routeEvents from invalid resolveBattleSubject",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.bonusActionSpell.metamagic"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "857729ab403fcbcaf4867e7f647b3782d937afb6492e64c3b6779c2d4b74de21",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doRejectPriorLevelOnePlusSpell",
+      "observedActionTaken": "doRejectPriorLevelOnePlusSpell",
+      "harnessTestPath": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doRejectPriorLevelOnePlusSpell qRoute=quickened-prior-level-one-plus-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "66d8e34338c298aea0dcdfec9adeda1b263893def638f9b69131253bac617e0b",
+        "observedProjectionSha256": "66d8e34338c298aea0dcdfec9adeda1b263893def638f9b69131253bac617e0b",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state) and BattleResolutionResult.routeEvents from invalid resolveBattleSubject",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.bonusActionSpell.metamagic",
+          "BattleState.currentTurnResources.levelOnePlusSpellCastsThisTurn"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

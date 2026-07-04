@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP07-DSR-01",
+  "taskId": "CRPI-READY-006",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
@@ -8,16 +8,22 @@
       "domainApis": [
         "BattleReducerRouteEvent.discoverBattleActs",
         "BattleReducerRouteEvent.resolveBattleSubject",
-        "BattleReducerRouteSubjectFamily.slotSpell",
-        "BattleReducerRouteFill.spellTargetAllocation",
+        "BattleReducerRouteEvent.resolveBattleSubjectWithoutFill",
+        "BattleReducerRouteSubjectFamily.metamagicBonusActionCastingTime",
+        "BattleReducerRouteFill.targetChoice",
+        "BattleReducerRouteFill.attackRoll",
         "BattleReducerRouteFill.rolledDice",
-        "BattleReducerRouteHole.spellTargetAllocation",
+        "BattleReducerRouteHole.targetChoice",
+        "BattleReducerRouteHole.attackRoll",
         "BattleReducerRouteHole.rolledDice",
+        "BattleReducerRouteOwnerGroup.battleFeatureResource",
+        "BattleReducerRouteOwnerGroup.battleActionEconomy",
+        "BattleReducerRouteOwnerGroup.battleSpellSlotAndActionEconomy",
+        "BattleReducerRouteOwnerGroup.battleTargetSelection",
+        "BattleReducerRouteOwnerGroup.battleSpellAttackProcedure",
+        "BattleReducerRouteOwnerGroup.battleTurnBoundary",
         "battleReducerRouteEventsForDiscoveredAct",
-        "battleReducerRouteForResolution",
-        "battleSpellSlotAndActionEconomy route owner",
-        "battleHoleFrontier route owner",
-        "battleHitPoint route owner"
+        "battleReducerRouteForResolution"
       ]
     },
     {
@@ -32,84 +38,124 @@
       "path": "packages/battle-runtime/src/battle-reducer.ts",
       "role": "public-subject-and-result-vocabulary",
       "domainApis": [
-        "BattleSubject.actionSpell",
+        "BattleSubject.bonusActionSpell",
+        "BattleSubject.bonusActionSpell.metamagic",
+        "AvailableBattleAct.routeEvents",
         "BattleResolutionResult.routeEvents",
-        "BattleCreatureState.hp",
-        "BattleCreatureState.zeroHpLifecycle"
+        "BattleState.currentTurnResources"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
+      "role": "typed-metamagic-effect-vocabulary",
+      "domainApis": [
+        "QUICKENED_METAMAGIC_EFFECT_KIND",
+        "BattleMetamagicSelection.effectKind"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+      "role": "metamagic-resource-and-timing-governor",
+      "domainApis": [
+        "Sorcery Point spend",
+        "Quickened Spell Bonus Action casting time",
+        "same-turn level-1-plus spell lock",
+        "one Metamagic option per spell gate"
       ]
     }
   ],
   "adapterModules": [
     {
+      "path": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qRoute",
+        "MetamagicSpellGovernorRouteSubject",
+        "MetamagicBonusActionCastingTimeRouteSubject",
+        "BattleFeatureResourceOwner",
+        "BattleActionEconomyOwner",
+        "BattleSpellSlotAndActionEconomyOwner",
+        "BattleSpellAttackProcedureOwner",
+        "BattleTargetSelectionOwner",
+        "BattleTurnBoundaryOwner"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-READY-006.json"
+      ]
+    },
+    {
       "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
       "quarantinedWitnessNames": [
-        "doFillMagicMissileAllocation",
-        "doFillMagicMissileDamage",
-        "dartRollTotal",
-        "mbt::actionTaken",
-        "observedActionTaken",
-        "traceId",
-        "qntFileSha256",
-        "routeConnectorSha256",
-        "sourceBranchInventorySha256",
-        "cleanroomManifestSourceCommitSha",
-        "targetProfile",
-        "targetProfileSha256",
-        "stateCheck",
+        "metamagicInitialRoute",
+        "createMetamagicRouteDriver",
         "qRoute",
         "route-event-list",
         "expectedProjectionSha256",
-        "observedProjectionSha256",
-        "checkedTargetStateFields",
-        "harnessTestPath"
+        "observedProjectionSha256"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP07-DSR-01.json"
+        "tasks/target-replay-evidence/CRPI-READY-006.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/quickened-spell-governor.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "observes the copied quickened qRoute through public reducer entrypoints",
+        "Quickened Ray of Frost public route replay",
+        "doResolveQuickenedRestoration",
+        "doResolveQuickenedSaveGatedCondition",
+        "doResolveQuickenedSaveGatedConditionImmunity",
+        "doResolveQuickenedDirectCondition",
+        "doResolveQuickenedRollModifier",
+        "doResolveQuickenedAfterMagicActionSpent",
+        "doRejectUnaffordable",
+        "doRejectUnknownOption",
+        "doRejectUnsupportedSecondOption",
+        "doRejectOnePerSpell",
+        "doRejectPriorLevelOnePlusSpell"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-READY-006.json"
       ]
     },
     {
       "path": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "routes Magic Missile through the shared reducer surface"
+        "routes Metamagic governor through the shared reducer surface"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP07-DSR-01.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/magic-missile-allocation.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "replays target allocation against a Skeleton target"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP07-DSR-01.json"
+        "tasks/target-replay-evidence/CRPI-READY-006.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
-      "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Magic Missile slot-spell target allocation and damage fills expose copied qRoute events through public reducer results."
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "reason": "Quickened Spell Bonus Action casting-time discovery exposes copied qRoute discovery evidence through public act discovery."
     },
     {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Magic Missile slot-spell discovery exposes the copied qRoute discovery event through public act discovery."
+      "fieldPath": "BattleResolutionResult.routeEvents",
+      "reason": "Quickened Spell target choice, spell Attack roll, rolled damage, resource-spend, same-turn lock, and turn-boundary route owners are projected through public subject resolution results."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "spell-slot action economy and damage route-event projection"
+      "api": "metamagicBonusActionCastingTime route subject and typed metamagic effectKind projection"
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "slotSpell public reducer route subject for repeated damage allocation"
+      "api": "Quickened spell Attack target-choice, attack-roll, rolled-dice, and turn-boundary route projection"
+    },
+    {
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "api": "Quickened same-turn level-1-plus lock and spell procedure route suffix"
     }
   ],
   "completion": {
     "tag": "public-reducer-route-replay",
-    "notes": "Task 29 routes spell-slot repeated-damage allocation through public reducer route events for Magic Missile. It introduces no parallel Magic Missile ledger: current actor and turn action resources remain BattleState/currentTurnResources, spell-slot spend remains character spellcasting resource state, target Hit Points and zero-HP lifecycle remain BattleCreatureState fields, and spell target/damage progress remains the existing BattleHole frontier."
+    "notes": "Task 31 routes Quickened Spell governor evidence through public reducer route events for the typed bonus-action casting-time subject. It introduces no parallel Metamagic ledger: action and Bonus Action availability remain BattleState.currentTurnResources, Sorcery Point spend remains character point-pool resource state, spell slots remain character spellcasting resource state, selected Metamagic identity remains a catalog/selection/admission boundary, and spell target/Attack/damage progress remains the existing BattleHole frontier."
   }
 }

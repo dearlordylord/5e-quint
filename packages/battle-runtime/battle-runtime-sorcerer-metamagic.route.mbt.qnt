@@ -26,6 +26,12 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     | ResourceGovernorRejected
     | BonusActionCastingTimeRouted
     | PriorLevelOnePlusSpellRejected
+    | QuickenedRestorationRouted
+    | QuickenedSaveGatedConditionRouted
+    | QuickenedSaveGatedConditionImmunityRouted
+    | QuickenedDirectConditionRouted
+    | QuickenedRollModifierRouted
+    | QuickenedAfterMagicActionSpentRouted
     | SavingThrowProtectionRouted
     | SavingThrowRollModeRouted
     | DamageTypeSubstitutionRouted
@@ -74,7 +80,7 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     routeResolveBattleSubjectWithoutFill(subject, holes, owner)
 
   pure def initialRoute: List[ReducerRouteEvent] =
-    List(routeStartBattle(BattleSpellSlotAndActionEconomyOwner))
+    List(routeStartBattle(BattleActionEconomyOwner))
 
   action recordStage(
     stage: MetamagicRouteStage,
@@ -92,13 +98,6 @@ module battleRuntimeSorcererMetamagicRouteMbt {
       ResourceGovernorRouted,
       initialRoute
         .append(
-          discoverRoute(
-            MetamagicSpellGovernorRouteSubject,
-            noHoles,
-            BattleFeatureResourceOwner,
-          )
-        )
-        .append(
           resolveRouteWithoutFill(
             MetamagicSpellGovernorRouteSubject,
             noHoles,
@@ -113,13 +112,6 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     recordStage(
       ResourceGovernorRejected,
       initialRoute
-        .append(
-          discoverRoute(
-            MetamagicSpellGovernorRouteSubject,
-            noHoles,
-            BattleFeatureResourceOwner,
-          )
-        )
         .append(
           resolveRouteWithoutFill(
             MetamagicSpellGovernorRouteSubject,
@@ -188,10 +180,283 @@ module battleRuntimeSorcererMetamagicRouteMbt {
       PriorLevelOnePlusSpellRejected,
       initialRoute
         .append(
-          discoverRoute(
+          resolveRouteWithoutFill(
             MetamagicBonusActionCastingTimeRouteSubject,
             noHoles,
+            BattleTurnBoundaryOwner,
+          )
+        ),
+    ),
+  }
+
+  action doResolveQuickenedRestoration = all {
+    qStage == Init,
+    recordStage(
+      QuickenedRestorationRouted,
+      initialRoute
+        .append(
+          discoverRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetChoiceHoles,
             BattleFeatureResourceOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetChoiceHoles,
+            BattleActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetChoiceHoles,
+            BattleSpellSlotAndActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            TargetChoiceFillKind,
+            damageRollHoles,
+            BattleTargetSelectionOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            RolledDiceFillKind,
+            noHoles,
+            BattleHitPointAndZeroHpLifecycleOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            noHoles,
+            BattleTurnBoundaryOwner,
+          )
+        ),
+    ),
+  }
+
+  action doResolveQuickenedSaveGatedCondition = all {
+    qStage == Init,
+    recordStage(
+      QuickenedSaveGatedConditionRouted,
+      initialRoute
+        .append(
+          discoverRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            savingThrowHoles,
+            BattleFeatureResourceOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            savingThrowHoles,
+            BattleActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            savingThrowHoles,
+            BattleSpellSlotAndActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            SavingThrowOutcomeFillKind,
+            noHoles,
+            BattleSavingThrowOutcomeOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            noHoles,
+            BattleActiveEffectOwner,
+          )
+        ),
+    ),
+  }
+
+  action doResolveQuickenedSaveGatedConditionImmunity = all {
+    qStage == Init,
+    recordStage(
+      QuickenedSaveGatedConditionImmunityRouted,
+      initialRoute
+        .append(
+          discoverRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            savingThrowHoles,
+            BattleFeatureResourceOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            savingThrowHoles,
+            BattleActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            savingThrowHoles,
+            BattleSpellSlotAndActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            SavingThrowOutcomeFillKind,
+            noHoles,
+            BattleSavingThrowOutcomeOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            noHoles,
+            BattleActiveEffectOwner,
+          )
+        ),
+    ),
+  }
+
+  action doResolveQuickenedDirectCondition = all {
+    qStage == Init,
+    recordStage(
+      QuickenedDirectConditionRouted,
+      initialRoute
+        .append(
+          discoverRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetListHoles,
+            BattleFeatureResourceOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetListHoles,
+            BattleActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetListHoles,
+            BattleSpellSlotAndActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            SpellTargetListFillKind,
+            noHoles,
+            BattleTargetSelectionOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            noHoles,
+            BattleActiveEffectOwner,
+          )
+        ),
+    ),
+  }
+
+  action doResolveQuickenedRollModifier = all {
+    qStage == Init,
+    recordStage(
+      QuickenedRollModifierRouted,
+      initialRoute
+        .append(
+          discoverRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetListHoles,
+            BattleFeatureResourceOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetListHoles,
+            BattleActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetListHoles,
+            BattleSpellSlotAndActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            SpellTargetListFillKind,
+            noHoles,
+            BattleTargetSelectionOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            noHoles,
+            BattleActiveEffectOwner,
+          )
+        ),
+    ),
+  }
+
+  action doResolveQuickenedAfterMagicActionSpent = all {
+    qStage == Init,
+    recordStage(
+      QuickenedAfterMagicActionSpentRouted,
+      initialRoute
+        .append(
+          discoverRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetChoiceHoles,
+            BattleFeatureResourceOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetChoiceHoles,
+            BattleActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            targetChoiceHoles,
+            BattleSpellSlotAndActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            TargetChoiceFillKind,
+            damageRollHoles,
+            BattleTargetSelectionOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            RolledDiceFillKind,
+            noHoles,
+            BattleHitPointAndZeroHpLifecycleOwner,
           )
         )
         .append(
@@ -508,6 +773,12 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     doRejectMetamagicResourceGovernor,
     doRouteBonusActionCastingTime,
     doRejectPriorLevelOnePlusSpell,
+    doResolveQuickenedRestoration,
+    doResolveQuickenedSaveGatedCondition,
+    doResolveQuickenedSaveGatedConditionImmunity,
+    doResolveQuickenedDirectCondition,
+    doResolveQuickenedRollModifier,
+    doResolveQuickenedAfterMagicActionSpent,
     doRouteSavingThrowProtection,
     doRouteSavingThrowRollMode,
     doRouteDamageTypeSubstitution,

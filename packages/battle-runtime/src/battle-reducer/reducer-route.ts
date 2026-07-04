@@ -11,6 +11,7 @@ import type {
   BattleState,
 } from "../battle-reducer.ts";
 import { battleHoleFamilyKind } from "./hole-helpers.ts";
+import { QUICKENED_METAMAGIC_EFFECT_KIND } from "./metamagic-support.ts";
 
 export type BattleReducerRouteSubjectFamily =
   | "concentrationTeardown"
@@ -18,6 +19,8 @@ export type BattleReducerRouteSubjectFamily =
   | "deathSavingThrow"
   | "hitPointRestoration"
   | "interruptStackResume"
+  | "metamagicBonusActionCastingTime"
+  | "metamagicSpellGovernor"
   | "saveGatedSpell"
   | "slotSpell"
   | "spellAttackProcedure"
@@ -31,13 +34,16 @@ export type BattleReducerRouteOwnerGroup =
   | "battleObjectTargetBoundary"
   | "battleAttackRoll"
   | "battleSpellAttackProcedure"
+  | "battleSavingThrowOutcome"
   | "battleHitPointAndZeroHpLifecycle"
   | "battleHitPoint"
   | "battleConcentration"
   | "battleActiveEffect"
   | "battleConditionLifecycle"
+  | "battleFeatureResource"
   | "battleMovementResource"
-  | "battleInterruptStack";
+  | "battleInterruptStack"
+  | "battleTurnBoundary";
 
 export type BattleReducerRouteHole =
   | "attackRoll"
@@ -137,16 +143,20 @@ export function battleReducerRouteEventsForDiscoveredAct(
           : "battleActiveEffect",
     }];
   }
+  if (isQuickenedBonusActionCastingTimeSubject(act.subject)) {
+    return [{
+      kind: "discoverBattleActs",
+      subject: "metamagicBonusActionCastingTime",
+      holes: battleReducerRouteHoles(act.initialHoles),
+      owner: "battleFeatureResource",
+    }];
+  }
   if (isHitPointRestorationDiscoverySubject(act)) {
     return [{
       kind: "discoverBattleActs",
       subject: "hitPointRestoration",
       holes: battleReducerRouteHoles(act.initialHoles),
-      owner:
-        act.subject.tag === "actionSpell" ||
-        act.subject.tag === "bonusActionSpell"
-          ? "battleSpellSlotAndActionEconomy"
-          : "battleActionEconomy",
+      owner: hitPointRestorationDiscoveryOwner(act.subject),
     }];
   }
   if (isSlotSpellDiscoverySubject(act.subject)) {
@@ -207,6 +217,13 @@ export function battleReducerRouteForResolution(
   const commandRoute = commandRouteForResolution(input, result);
   if (commandRoute !== undefined) {
     return [commandRoute];
+  }
+  const metamagicRoute = metamagicRouteForResolution(
+    input,
+    result,
+  );
+  if (metamagicRoute !== undefined) {
+    return metamagicRoute;
   }
   const hitPointRestorationRoute = hitPointRestorationRouteForResolution(
     input,
@@ -301,6 +318,185 @@ export function battleReducerRouteForInterrupt(
     ];
   }
   return [eventForOwner("battleInterruptStack")];
+}
+
+function metamagicRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  const fill = input.fills.at(-1);
+  if (
+    fill === undefined &&
+    result.tag === "invalid" &&
+    isBonusActionSpellWithMetamagicSubject(input.subject)
+  ) {
+    return [metamagicGovernorInvalidRoute(input)];
+  }
+  if (!isQuickenedBonusActionCastingTimeSubject(input.subject)) {
+    return undefined;
+  }
+
+  if (fill === undefined) {
+    return undefined;
+  }
+
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === undefined) {
+    return undefined;
+  }
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  if (routeFill === "targetChoice") {
+    return [
+      ...metamagicBonusActionTimingRoutes(["targetChoice"]),
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicBonusActionCastingTime",
+        fill: routeFill,
+        holes,
+        owner: "battleTargetSelection",
+      },
+    ];
+  }
+  if (routeFill === "attackRoll") {
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicBonusActionCastingTime",
+        fill: routeFill,
+        holes,
+        owner: "battleSpellAttackProcedure",
+      },
+    ];
+  }
+  if (routeFill === "spellTargetList" && result.tag === "resolved") {
+    return [
+      ...metamagicBonusActionTimingRoutes(["spellTargetList"]),
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicBonusActionCastingTime",
+        fill: routeFill,
+        holes,
+        owner: "battleTargetSelection",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicBonusActionCastingTime",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+    ];
+  }
+  if (routeFill === "savingThrowOutcome" && result.tag === "resolved") {
+    return [
+      ...metamagicBonusActionTimingRoutes(["savingThrowOutcome"]),
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicBonusActionCastingTime",
+        fill: routeFill,
+        holes,
+        owner: "battleSavingThrowOutcome",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicBonusActionCastingTime",
+        holes: [],
+        owner: metamagicSaveGatedFinalOwner(input.state, result.state),
+      },
+    ];
+  }
+  if (routeFill === "rolledDice" && result.tag === "resolved") {
+    if (input.subject.invocation.procedure === "directHitPointRestoration") {
+      return [
+        {
+          kind: "resolveBattleSubject",
+          subject: "metamagicBonusActionCastingTime",
+          fill: routeFill,
+          holes,
+          owner: "battleHitPointAndZeroHpLifecycle",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "metamagicBonusActionCastingTime",
+          holes: [],
+          owner: "battleTurnBoundary",
+        },
+      ];
+    }
+    return [
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicBonusActionCastingTime",
+        holes: [],
+        owner: "battleTurnBoundary",
+      },
+    ];
+  }
+  return undefined;
+}
+
+function metamagicBonusActionTimingRoutes(
+  holes: readonly BattleReducerRouteHole[],
+): readonly [BattleReducerRouteEvent, BattleReducerRouteEvent] {
+  return [
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes,
+      owner: "battleActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes,
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+  ];
+}
+
+function metamagicSaveGatedFinalOwner(
+  before: BattleState,
+  after: BattleState,
+): BattleReducerRouteOwnerGroup {
+  return combatantsGainedActiveEffect(before, after)
+    ? "battleActiveEffect"
+    : "battleConditionLifecycle";
+}
+
+function combatantsGainedActiveEffect(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  return [...after.combatants.values()].some(
+    (combatant) =>
+      combatant.activeEffects.length >
+        (before.combatants.get(combatant.combatantId)?.activeEffects.length ??
+          0),
+  );
+}
+
+function metamagicGovernorInvalidRoute(
+  input: BattleResolutionInput,
+): BattleReducerRouteEvent {
+  if (
+    isQuickenedBonusActionCastingTimeSubject(input.subject) &&
+    input.state.currentTurnResources.levelOnePlusSpellCastsThisTurn.includes(
+      input.subject.actorId,
+    )
+  ) {
+    return {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicBonusActionCastingTime",
+      holes: [],
+      owner: "battleTurnBoundary",
+    };
+  }
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "metamagicSpellGovernor",
+    holes: [],
+    owner: "battleFeatureResource",
+  };
 }
 
 function deathSavingThrowRouteForResolution(
@@ -789,6 +985,29 @@ function isSpellAttackProcedureSubject(
   );
 }
 
+function isQuickenedBonusActionCastingTimeSubject(
+  subject: BattleResolutionInput["subject"],
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "bonusActionSpell" }
+> {
+  return (
+    subject.tag === "bonusActionSpell" &&
+    subject.metamagic?.some(
+      (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+    ) === true
+  );
+}
+
+function isBonusActionSpellWithMetamagicSubject(
+  subject: BattleResolutionInput["subject"],
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "bonusActionSpell" }
+> {
+  return subject.tag === "bonusActionSpell" && subject.metamagic !== undefined;
+}
+
 function isSlotSpellDiscoverySubject(
   subject: BattleResolutionInput["subject"],
 ): boolean {
@@ -934,6 +1153,14 @@ function isHitPointRestorationDiscoverySubject(
       battleReducerRouteHole(hole).includes("hitPointHealingDistribution"),
     )
   );
+}
+
+function hitPointRestorationDiscoveryOwner(
+  subject: BattleResolutionInput["subject"],
+): BattleReducerRouteOwnerGroup {
+  return subject.tag === "actionSpell" || subject.tag === "bonusActionSpell"
+    ? "battleSpellSlotAndActionEconomy"
+    : "battleActionEconomy";
 }
 
 function isCommandPendingRuntimeSubject(
