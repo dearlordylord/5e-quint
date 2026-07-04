@@ -1,24 +1,32 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-007",
+  "taskId": "CRPI-READY-008",
   "durableFields": [
+    {
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "public-reducer-boundary-projection",
+      "derivability": {
+        "tag": "boundary-projection",
+        "sourceField": "BattleSubject.actionSpell.invocation.procedure, BattleHole.kind, and reducer route owner facts"
+      }
+    },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "public-reducer-boundary-projection",
       "derivability": {
         "tag": "boundary-projection",
-        "sourceField": "BattleState.interruptStack, BattleInterruptDecision.choice, BattleHole.kind, BattleFill.kind, character spellcasting resources, BattleCreatureState.reactionAvailable, BattleCreatureState.hp, and reducer route owner facts"
+        "sourceField": "BattleSubject.actionSpell.invocation.procedure, BattleFill.kind, BattleFill.value, BattleHole.kind, BattleCreatureState.activeEffects, BattleCreatureState.concentration, and reducer route owner facts"
       }
     }
   ],
   "notes": [
-    "Task 32 introduced no new BattleState, BattleCreatureState, character spellcasting, or point-pool durable field.",
-    "Reaction availability remains BattleCreatureState.reactionAvailable.",
-    "Reaction Spell Slot spend remains character spellcasting slot state reached through the triggered Reaction spell invocation.",
-    "The after-damage Reaction window and clearing remain BattleState.interruptStack facts.",
-    "Hit Point effects remain BattleCreatureState.hp.",
-    "Table-trigger facts and the chosen Reaction decision remain boundary fills.",
-    "BattleResolutionResult.routeEvents is a public reducer boundary projection, not a duplicated Reaction casting-time ledger."
+    "Task 35 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Roll-modifier Spell Effects remain existing BattleCreatureState.activeEffects entries.",
+    "Concentration remains BattleCreatureState.concentration plus concentration-scoped active-effect expiration.",
+    "Skill, ability, and per-target ability choices remain BattleFill boundary facts.",
+    "Thaumaturgy active one-minute-effect count remains a table-supplied boundary fill and is not stored as a target ledger.",
+    "Route events are public reducer boundary projections, not duplicated roll-modifier active-effect state."
   ]
 }

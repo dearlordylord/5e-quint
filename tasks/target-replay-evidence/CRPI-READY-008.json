@@ -1,0 +1,57 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts public reducer qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+      "qntFileSha256": "3b68a40e5fc8fa3a960e10222073a763f180cbe06e87769b00df8a338a0783a9",
+      "routeConnectorSha256": "b7d16f07f634e1a21f9be0d40a8136bb6706e9f236117c68d79cdaf14b39ee43",
+      "branchFamily": "step",
+      "branchAction": "step",
+      "observedActionTaken": "bounded-random-route-replay",
+      "harnessTestPath": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=16 qRoute=roll-modifier-active-effects-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "44da043d7cdf8245b50680888cc98c3425256fba42837018d97fee79352d96dc",
+        "observedProjectionSha256": "44da043d7cdf8245b50680888cc98c3425256fba42837018d97fee79352d96dc",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents from resolveBattleSubject, including runtimeCommand endConcentration for roll-modifier Concentration teardown",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleHole.kind",
+          "BattleFill.kind",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.concentration"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

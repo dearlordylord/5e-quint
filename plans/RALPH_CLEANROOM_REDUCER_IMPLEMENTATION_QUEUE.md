@@ -211,7 +211,7 @@
     {
       "number": 35,
       "id": "CRPI-READY-008",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-roll-modifier-active-effects"
     },
     {
@@ -687,7 +687,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-READY-007` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-022` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-BLOCK-023` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRPI-READY-008` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-008` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-024` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-BLOCK-025` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRP07-DSR-02` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -2683,7 +2683,7 @@ Plan Impact:
 
 ### Task 35 - CRPI-READY-008
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

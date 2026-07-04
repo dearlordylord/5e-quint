@@ -32,17 +32,20 @@ import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintRecordField,
   quintStateRecord,
   quintVariantMappedValue,
   run,
   stateCheck,
+  type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   passivePerceptionModifierDelta,
@@ -76,12 +79,16 @@ import {
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   breakBattleConcentration,
+  battleReducerStartRouteEvent,
   combatantId,
+  discoverBattleActs,
   resolveBattleSubject,
   thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
+  type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
   type CombatantId,
@@ -179,6 +186,39 @@ type RollModifierActiveEffectsRuntimeState = {
   readonly lastResult: LastResult;
 };
 
+const ROLL_MODIFIER_ROUTE_SURFACE_BY_TAG = {
+  FreshRouteSurface: "fresh",
+  BaneSaveFrontierRouteSurface: "baneSaveFrontier",
+  BaneFailedActiveEffectRouteSurface: "baneFailedActiveEffect",
+  DirectConcentrationRollModifierRouteSurface:
+    "directConcentrationRollModifier",
+  SkillChoiceFrontierRouteSurface: "skillChoiceFrontier",
+  GuidanceActiveEffectRouteSurface: "guidanceActiveEffect",
+  PassWithoutTraceActiveEffectRouteSurface: "passWithoutTraceActiveEffect",
+  AbilityChoiceFrontierRouteSurface: "abilityChoiceFrontier",
+  EnhanceAbilityActiveEffectRouteSurface: "enhanceAbilityActiveEffect",
+  TargetAbilityChoicesFrontierRouteSurface: "targetAbilityChoicesFrontier",
+  EnhancePerTargetActiveEffectRouteSurface: "enhancePerTargetActiveEffect",
+  EnthrallActiveEffectRouteSurface: "enthrallActiveEffect",
+  ActiveOneMinuteEffectCountFrontierRouteSurface:
+    "activeOneMinuteEffectCountFrontier",
+  ThaumaturgyActiveEffectRouteSurface: "thaumaturgyActiveEffect",
+  ThaumaturgyCancelledRouteSurface: "thaumaturgyCancelled",
+  ConcentrationBreakCleanupRouteSurface: "concentrationBreakCleanup",
+} as const satisfies Readonly<Record<string, string>>;
+type RollModifierRouteSurface =
+  (typeof ROLL_MODIFIER_ROUTE_SURFACE_BY_TAG)[keyof typeof ROLL_MODIFIER_ROUTE_SURFACE_BY_TAG];
+
+type RollModifierRouteRuntimeState = RollModifierActiveEffectsRuntimeState & {
+  readonly surface: RollModifierRouteSurface;
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+type RollModifierRouteProjection = {
+  readonly surface: RollModifierRouteSurface;
+  readonly route: readonly ReducerRouteEvent[];
+};
+
 const driverSchema = {
   init: {},
   doDiscoverBaneSave: {},
@@ -259,9 +299,73 @@ function createRollModifierActiveEffectsDriver() {
   });
 }
 
+function createRollModifierRouteReplayDriver() {
+  return defineDriver(driverSchema, () => {
+    let state = initialRouteRuntimeState();
+    return {
+      init: () => {
+        state = initialRouteRuntimeState();
+      },
+      doDiscoverBaneSave: () => {
+        state = routeDiscoverBaneSave(state);
+      },
+      doCastBaneFailed: () => {
+        state = routeCastBaneFailed(state);
+      },
+      doCastBless: () => {
+        state = routeCastBless(state);
+      },
+      doDiscoverGuidanceSkillChoice: () => {
+        state = routeDiscoverGuidanceSkillChoice(state);
+      },
+      doCastGuidanceStealth: () => {
+        state = routeCastGuidanceStealth(state);
+      },
+      doCastPassWithoutTrace: () => {
+        state = routeCastPassWithoutTrace(state);
+      },
+      doDiscoverEnhanceAbilityChoice: () => {
+        state = routeDiscoverEnhanceAbilityChoice(state);
+      },
+      doCastEnhanceDex: () => {
+        state = routeCastEnhanceDex(state);
+      },
+      doDiscoverEnhanceTargetAbilityChoices: () => {
+        state = routeDiscoverEnhanceTargetAbilityChoices(state);
+      },
+      doCastEnhancePerTarget: () => {
+        state = routeCastEnhancePerTarget(state);
+      },
+      doCastEnthrall: () => {
+        state = routeCastEnthrall(state);
+      },
+      doDiscoverThaumaturgyCount: () => {
+        state = routeDiscoverThaumaturgyCount(state);
+      },
+      doCastThaumaturgyBoomingVoice: () => {
+        state = routeCastThaumaturgyBoomingVoice(state, false);
+      },
+      doCastThaumaturgyCancelled: () => {
+        state = routeCastThaumaturgyBoomingVoice(state, true);
+      },
+      doBreakConcentration: () => {
+        state = routeBreakConcentration(state);
+      },
+      doStutter: () => {},
+      step: () => {},
+      getState: () => rollModifierRouteProjection(state),
+    };
+  });
+}
+
 const rollModifierActiveEffectsStateCheck = stateCheck(
   normalizeRollModifierActiveEffectsQuintState,
   compareRollModifierActiveEffectsStates,
+);
+
+const rollModifierRouteStateCheck = stateCheck(
+  normalizeRollModifierRouteQuintState,
+  compareRollModifierRouteStates,
 );
 
 describe("roll-modifier active effects MBT parity", () => {
@@ -382,6 +486,26 @@ describe("roll-modifier active effects MBT parity", () => {
     },
     MBT_TEST_TIMEOUT_MS,
   );
+
+  it(
+    "replays roll-modifier active-effect qRoute through public reducer entrypoints",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRollModifierRouteReplayDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(16),
+        stateCheck: rollModifierRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): RollModifierActiveEffectsRuntimeState {
@@ -405,6 +529,448 @@ function initialRuntimeState(): RollModifierActiveEffectsRuntimeState {
     holes: [],
     lastResult: "init",
   };
+}
+
+function initialRouteRuntimeState(): RollModifierRouteRuntimeState {
+  const state = initialRuntimeState();
+  return {
+    ...state,
+    surface: "fresh",
+    route: [battleReducerStartRouteEvent(state.battle)],
+  };
+}
+
+function routeDiscoverBaneSave(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, baneUnitId, 1);
+  const targetList = requireHole(act.initialHoles, "spellTargetList");
+  const result = resolveBattleSubject({
+    state: state.battle,
+    subject: act.subject,
+    fills: [
+      spellTargetListFill(targetList, spellCasterId, baneUnitId, [
+        spellTargetId,
+        secondTargetId,
+      ]),
+    ],
+  });
+  expect(result).toMatchObject({ tag: "needsHoles" });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected Bane Saving Throw route frontier.");
+  }
+  return routeState({
+    state,
+    battle: result.state,
+    holes: result.holes,
+    lastResult: "needsBaneSave",
+    surface: "baneSaveFrontier",
+    routeEvents: result.routeEvents,
+  });
+}
+
+function routeCastBaneFailed(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, baneUnitId, 1);
+  const targetList = requireHole(act.initialHoles, "spellTargetList");
+  const save = requireHole(state.holes, "savingThrowOutcome");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetList, spellCasterId, baneUnitId, [
+          spellTargetId,
+          secondTargetId,
+        ]),
+        savingThrowOutcomeFill(save, [
+          { targetId: spellTargetId, succeeded: false },
+          { targetId: secondTargetId, succeeded: true },
+        ]),
+      ],
+    }),
+    "Expected Bane failed target route to resolve.",
+  );
+  return routeState({
+    state,
+    battle: resolved.state,
+    holes: [],
+    lastResult: "baneFailedTarget",
+    surface: "baneFailedActiveEffect",
+    routeEvents: resolved.routeEvents,
+  });
+}
+
+function routeCastBless(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, blessUnitId, 1);
+  const targetList = requireHole(act.initialHoles, "spellTargetList");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetList, spellCasterId, blessUnitId, [
+          spellTargetId,
+        ]),
+      ],
+    }),
+    "Expected Bless route to resolve.",
+  );
+  return routeState({
+    state,
+    battle: resolved.state,
+    holes: [],
+    lastResult: "blessTarget",
+    surface: "directConcentrationRollModifier",
+    routeEvents: [...(act.routeEvents ?? []), ...(resolved.routeEvents ?? [])],
+  });
+}
+
+function routeDiscoverGuidanceSkillChoice(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, guidanceUnitId);
+  return routeState({
+    state,
+    holes: [requireHole(act.initialHoles, "skillChoice")],
+    lastResult: "needsGuidanceSkill",
+    surface: "skillChoiceFrontier",
+    routeEvents: act.routeEvents,
+  });
+}
+
+function routeCastGuidanceStealth(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, guidanceUnitId);
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const skill = requireHole(act.initialHoles, "skillChoice");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(target, guidanceUnitId, spellCasterId, spellCasterId),
+        skillChoiceFill(skill, "stealth"),
+      ],
+    }),
+    "Expected Guidance Stealth route to resolve.",
+  );
+  return routeState({
+    state,
+    battle: resolved.state,
+    holes: [],
+    lastResult: "guidanceStealth",
+    surface: "guidanceActiveEffect",
+    routeEvents: [
+      ...(state.surface === "fresh" ? (act.routeEvents ?? []) : []),
+      ...(resolved.routeEvents ?? []),
+    ],
+  });
+}
+
+function routeCastPassWithoutTrace(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, passWithoutTraceUnitId, 2);
+  const targetList = requireHole(act.initialHoles, "spellTargetList");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetList, spellCasterId, passWithoutTraceUnitId, [
+          spellCasterId,
+          spellTargetId,
+        ]),
+      ],
+    }),
+    "Expected Pass without Trace route to resolve.",
+  );
+  return routeState({
+    state,
+    battle: resolved.state,
+    holes: [],
+    lastResult: "passWithoutTraceStealth",
+    surface: "passWithoutTraceActiveEffect",
+    routeEvents: [...(act.routeEvents ?? []), ...(resolved.routeEvents ?? [])],
+  });
+}
+
+function routeDiscoverEnhanceAbilityChoice(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, enhanceAbilityUnitId, 2);
+  return routeState({
+    state,
+    holes: [requireHole(act.initialHoles, "abilityChoice")],
+    lastResult: "needsEnhanceAbility",
+    surface: "abilityChoiceFrontier",
+    routeEvents: act.routeEvents,
+  });
+}
+
+function routeCastEnhanceDex(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, enhanceAbilityUnitId, 2);
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const ability = requireHole(act.initialHoles, "abilityChoice");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          target,
+          enhanceAbilityUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        abilityChoiceFill(ability, "dex"),
+      ],
+    }),
+    "Expected Enhance Ability Dexterity route to resolve.",
+  );
+  return routeState({
+    state,
+    battle: resolved.state,
+    holes: [],
+    lastResult: "enhanceDex",
+    surface: "enhanceAbilityActiveEffect",
+    routeEvents: [
+      ...(state.surface === "fresh" ? (act.routeEvents ?? []) : []),
+      ...(resolved.routeEvents ?? []),
+    ],
+  });
+}
+
+function routeDiscoverEnhanceTargetAbilityChoices(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, enhanceAbilityUnitId, 3);
+  return routeState({
+    state,
+    holes: [requireHole(act.initialHoles, "targetAbilityChoices")],
+    lastResult: "needsEnhanceTargetAbilities",
+    surface: "targetAbilityChoicesFrontier",
+    routeEvents: act.routeEvents,
+  });
+}
+
+function routeCastEnhancePerTarget(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, enhanceAbilityUnitId, 3);
+  const targetList = requireHole(act.initialHoles, "spellTargetList");
+  const abilityByTarget = requireHole(act.initialHoles, "targetAbilityChoices");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetList, spellCasterId, enhanceAbilityUnitId, [
+          spellTargetId,
+          secondTargetId,
+        ]),
+        targetAbilityChoicesFill(abilityByTarget, [
+          { targetId: spellTargetId, ability: "dex" },
+          { targetId: secondTargetId, ability: "wis" },
+        ]),
+      ],
+    }),
+    "Expected upcast Enhance Ability route to resolve.",
+  );
+  return routeState({
+    state,
+    battle: resolved.state,
+    holes: [],
+    lastResult: "enhancePerTarget",
+    surface: "enhancePerTargetActiveEffect",
+    routeEvents: [
+      ...(state.surface === "fresh" ? (act.routeEvents ?? []) : []),
+      ...(resolved.routeEvents ?? []),
+    ],
+  });
+}
+
+function routeCastEnthrall(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, enthrallUnitId, 2);
+  const targetList = requireHole(act.initialHoles, "spellTargetList");
+  const targetFill = spellTargetListFill(
+    targetList,
+    spellCasterId,
+    enthrallUnitId,
+    [spellTargetId, secondTargetId],
+  );
+  const saveResult = resolveBattleSubject({
+    state: state.battle,
+    subject: act.subject,
+    fills: [targetFill],
+  });
+  const save = requireResultHole(saveResult, "savingThrowOutcome");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(save, [
+          { targetId: spellTargetId, succeeded: false },
+          { targetId: secondTargetId, succeeded: true },
+        ]),
+      ],
+    }),
+    "Expected Enthrall route to resolve.",
+  );
+  return routeState({
+    state,
+    battle: resolved.state,
+    holes: [],
+    lastResult: "enthrallPerception",
+    surface: "enthrallActiveEffect",
+    routeEvents: [
+      ...(saveResult.routeEvents ?? []),
+      ...(resolved.routeEvents ?? []),
+    ],
+  });
+}
+
+function routeDiscoverThaumaturgyCount(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, thaumaturgyUnitId);
+  return routeState({
+    state,
+    holes: [findThaumaturgyCountHole(act.initialHoles)],
+    lastResult: "needsThaumaturgyCount",
+    surface: "activeOneMinuteEffectCountFrontier",
+    routeEvents: act.routeEvents,
+  });
+}
+
+function routeCastThaumaturgyBoomingVoice(
+  state: RollModifierRouteRuntimeState,
+  cancelWithDisadvantage: boolean,
+): RollModifierRouteRuntimeState {
+  const act = publicSpellActInState(state.battle, thaumaturgyUnitId);
+  const count = findThaumaturgyCountHole(act.initialHoles);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: cancelWithDisadvantage
+        ? withCharismaDisadvantageAgainstCaster(state.battle)
+        : state.battle,
+      subject: act.subject,
+      fills: [thaumaturgyCountFill(count, 0)],
+    }),
+    "Expected Thaumaturgy route to resolve.",
+  );
+  return routeState({
+    state,
+    battle: resolved.state,
+    holes: [],
+    lastResult: cancelWithDisadvantage
+      ? "thaumaturgyCancelled"
+      : "thaumaturgyBoomingVoice",
+    surface: cancelWithDisadvantage
+      ? "thaumaturgyCancelled"
+      : "thaumaturgyActiveEffect",
+    routeEvents: [
+      ...(state.surface === "fresh" ? (act.routeEvents ?? []) : []),
+      ...(resolved.routeEvents ?? []),
+    ],
+  });
+}
+
+function routeBreakConcentration(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteRuntimeState {
+  const act = endConcentrationAct(state.battle);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [],
+    }),
+    "Expected roll-modifier Concentration break route to resolve.",
+  );
+  return routeState({
+    state,
+    battle: resolved.state,
+    holes: [],
+    lastResult: "concentrationBroken",
+    surface: "concentrationBreakCleanup",
+    routeEvents: resolved.routeEvents,
+  });
+}
+
+function routeState(input: {
+  readonly state: RollModifierRouteRuntimeState;
+  readonly battle?: BattleState;
+  readonly holes: readonly BattleHole[];
+  readonly lastResult: LastResult;
+  readonly surface: RollModifierRouteSurface;
+  readonly routeEvents: readonly BattleReducerRouteEvent[] | undefined;
+}): RollModifierRouteRuntimeState {
+  return {
+    battle: input.battle ?? input.state.battle,
+    holes: input.holes,
+    lastResult: input.lastResult,
+    surface: input.surface,
+    route: appendRouteEvents(input.state.route, input.routeEvents),
+  };
+}
+
+function appendRouteEvents(
+  route: readonly ReducerRouteEvent[],
+  events: readonly BattleReducerRouteEvent[] | undefined,
+): readonly ReducerRouteEvent[] {
+  return events === undefined ? route : [...route, ...events];
+}
+
+function rollModifierRouteProjection(
+  state: RollModifierRouteRuntimeState,
+): RollModifierRouteProjection {
+  return { surface: state.surface, route: state.route };
+}
+
+function publicSpellActInState(
+  state: BattleState,
+  spellId: string,
+  slotLevel?: number,
+): AvailableBattleAct {
+  const act = discoverBattleActs(state).find((candidate) => {
+    if (candidate.subject.tag !== "actionSpell") return false;
+    const invocation = candidate.subject.invocation;
+    if (invocation.spellId !== spellId) return false;
+    return (
+      slotLevel === undefined ||
+      (invocation.tag === "spellSlot" && invocation.slotLevel === slotLevel)
+    );
+  });
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(`Expected public ${spellId} spell act.`);
+  }
+  return act;
+}
+
+function endConcentrationAct(state: BattleState): AvailableBattleAct {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "endConcentration",
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error("Expected public End Concentration act.");
+  }
+  return act;
 }
 
 function discoverBaneSave(
@@ -948,6 +1514,38 @@ function withCharismaDisadvantageAgainstCaster(
       activeEffects: [...source.activeEffects, hexEffect],
     }),
   };
+}
+
+function normalizeRollModifierRouteQuintState(
+  raw: unknown,
+): RollModifierRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    surface: quintVariantMappedValue(
+      quintField(state, "qSurface"),
+      "qSurface",
+      ROLL_MODIFIER_ROUTE_SURFACE_BY_TAG,
+      "roll-modifier route surface",
+    ),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function compareRollModifierRouteStates(
+  spec: RollModifierRouteProjection,
+  impl: RollModifierRouteProjection,
+): boolean {
+  try {
+    expect(impl).toEqual(spec);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(
+        `${error.message}\nspec=${JSON.stringify(spec)}\nimpl=${JSON.stringify(impl)}`,
+      );
+    }
+    throw error;
+  }
+  return true;
 }
 
 function normalizeRollModifierActiveEffectsQuintState(

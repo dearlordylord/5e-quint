@@ -837,3 +837,69 @@ Verification results:
 - `git diff --check` passed.
 - RAW/ubiquitous-language review passed against Playing the Game Healing and Dropping to 0 Hit Points, Rules Glossary Hit Points and Healing, and UBIQUITOUS_LANGUAGE.md Hit Points and Death.
 - Reviewer-loop convergence passed: round 1 found and fixed the adapter-local qRoute shortcut by adding Hit Point restoration to the public reducer route vocabulary; round 2 found no remaining reasonable RAW/domain, architecture/connascence, or code-review findings.
+
+## CRPI-READY-008
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md`
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The route replay for roll-modifier active effects now observes the copied
+`qRoute` projection through public battle reducer route events. Roll-modifier
+spell discovery projects `rollModifierEffect` route events from public
+`AvailableBattleAct.routeEvents`; skill choice, ability choice, fixed two-target
+ability choice, Saving Throw outcome, active-effect application, Thaumaturgy
+Booming Voice, and roll-modifier Concentration teardown project from public
+`BattleResolutionResult.routeEvents`.
+
+BattleState remains the durable owner. Active Spell Effects remain
+`BattleCreatureState.activeEffects`, Concentration remains
+`BattleCreatureState.concentration`, and table-supplied choice/count frontiers
+remain fills. Thaumaturgy's one-minute-effect count stays boundary evidence
+instead of becoming a duplicate ledger.
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-008.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=16 qRoute=roll-modifier-active-effects-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-008/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 35.
+
+Verification results:
+
+- `pnpm --filter @dnd/battle-runtime exec tsc --noEmit` passed.
+- `MBT_TRACES=1 MBT_STEPS=16 pnpm exec vitest run src/roll-modifier-active-effects.mbt.test.ts` passed with 5 tests; final timed run `TOTAL: 17s`.
+- Round 3 affected-route regression passed: `pnpm --filter @dnd/battle-runtime exec vitest run src/quickened-spell-governor.mbt.test.ts -t "observes copied quickened successful branch qRoutes"` passed with 1 test and 7 skipped; final timed run `TOTAL: 4s`.
+- Round 3 focused target replay passed: `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=16 pnpm exec vitest run src/roll-modifier-active-effects.mbt.test.ts -t "replays roll-modifier active-effect qRoute"` passed with 1 test and 4 skipped; final timed run `TOTAL: 13s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- RAW/ubiquitous-language review passed against Bane, Bless, Enhance Ability, Enthrall, Guidance, Pass without Trace, Thaumaturgy, and UBIQUITOUS_LANGUAGE.md D20 Rolls, Advantage and Disadvantage, Concentration, Spell Invocation, and Spell Effect.
+- Reviewer-loop convergence passed: round 1 added public reducer route projection for roll-modifier active effects and checked no duplicate durable state was introduced; round 2 removed an unjustified route-event cast; round 3 narrowed Task 35 roll-modifier resolution routing away from Quickened `bonusActionSpell` subjects so Task 31 `metamagicBonusActionCastingTime` routes remain authoritative. No remaining reasonable RAW/domain, architecture/connascence, or code-review findings.

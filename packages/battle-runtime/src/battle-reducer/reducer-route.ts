@@ -11,6 +11,7 @@ import type {
   BattleResolutionResult,
   BattleState,
 } from "../battle-reducer.ts";
+import type { CombatantId } from "../identity.ts";
 import { battleHoleFamilyKind } from "./hole-helpers.ts";
 import { QUICKENED_METAMAGIC_EFFECT_KIND } from "./metamagic-support.ts";
 
@@ -23,6 +24,7 @@ export type BattleReducerRouteSubjectFamily =
   | "metamagicBonusActionCastingTime"
   | "metamagicSpellGovernor"
   | "reactionSpell"
+  | "rollModifierEffect"
   | "saveGatedSpell"
   | "slotSpell"
   | "spellAttackProcedure"
@@ -48,6 +50,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleTurnBoundary";
 
 export type BattleReducerRouteHole =
+  | "abilityChoice"
   | "attackRoll"
   | "commandOptionChoice"
   | "damageTypeChoice"
@@ -58,11 +61,14 @@ export type BattleReducerRouteHole =
   | "movement"
   | "rolledDice"
   | "savingThrowOutcome"
+  | "skillChoice"
   | "spellTargetAllocation"
   | "spellTargetList"
+  | "targetAbilityChoices"
   | "targetChoice";
 
-export type BattleReducerRouteFill =
+export type BattleReducerRouteFillKind =
+  | "abilityChoice"
   | "attackRoll"
   | "commandOptionChoice"
   | "concentrationSavingThrow"
@@ -73,9 +79,40 @@ export type BattleReducerRouteFill =
   | "movement"
   | "rolledDice"
   | "savingThrowOutcome"
+  | "skillChoice"
   | "spellTargetAllocation"
   | "spellTargetList"
+  | "targetAbilityChoices"
   | "targetChoice";
+export type BattleReducerRouteFill =
+  | BattleReducerRouteFillKind
+  | {
+      readonly kind: "skillChoice";
+      readonly skill: Extract<
+        BattleFill,
+        { readonly kind: "skillChoice" }
+      >["value"];
+    }
+  | {
+      readonly kind: "abilityChoice";
+      readonly ability: Extract<
+        BattleFill,
+        { readonly kind: "abilityChoice" }
+      >["value"];
+    }
+  | {
+      readonly kind: "targetAbilityChoices";
+      readonly choices: {
+        readonly primary: Extract<
+          BattleFill,
+          { readonly kind: "abilityChoice" }
+        >["value"];
+        readonly secondary: Extract<
+          BattleFill,
+          { readonly kind: "abilityChoice" }
+        >["value"];
+      };
+    };
 
 export type BattleReducerRouteEvent =
   | {
@@ -123,51 +160,65 @@ export function battleReducerStartRouteEvent(
 export function battleReducerRouteEventsForDiscoveredAct(
   act: AvailableBattleAct,
 ): BattleReducerRouteEvents | undefined {
+  const rollModifierRoute = rollModifierRouteForDiscoveredAct(act);
+  if (rollModifierRoute !== undefined) {
+    return [rollModifierRoute];
+  }
   if (isConcentrationTeardownDiscoverySubject(act.subject)) {
-    return [{
-      kind: "discoverBattleActs",
-      subject: "concentrationTeardown",
-      holes: battleReducerRouteHoles(act.initialHoles),
-      owner:
-        act.subject.tag === "actionSpell"
-          ? "battleSpellSlotAndActionEconomy"
-          : "battleConcentration",
-    }];
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "concentrationTeardown",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner:
+          act.subject.tag === "actionSpell"
+            ? "battleSpellSlotAndActionEconomy"
+            : "battleConcentration",
+      },
+    ];
   }
   if (isCommandEffectDiscoverySubject(act.subject)) {
-    return [{
-      kind: "discoverBattleActs",
-      subject: "commandEffect",
-      holes: battleReducerRouteHoles(act.initialHoles),
-      owner:
-        act.subject.tag === "actionSpell"
-          ? "battleSpellSlotAndActionEconomy"
-          : "battleActiveEffect",
-    }];
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "commandEffect",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner:
+          act.subject.tag === "actionSpell"
+            ? "battleSpellSlotAndActionEconomy"
+            : "battleActiveEffect",
+      },
+    ];
   }
   if (isQuickenedBonusActionCastingTimeSubject(act.subject)) {
-    return [{
-      kind: "discoverBattleActs",
-      subject: "metamagicBonusActionCastingTime",
-      holes: battleReducerRouteHoles(act.initialHoles),
-      owner: "battleFeatureResource",
-    }];
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicBonusActionCastingTime",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner: "battleFeatureResource",
+      },
+    ];
   }
   if (isHitPointRestorationDiscoverySubject(act)) {
-    return [{
-      kind: "discoverBattleActs",
-      subject: "hitPointRestoration",
-      holes: battleReducerRouteHoles(act.initialHoles),
-      owner: hitPointRestorationDiscoveryOwner(act.subject),
-    }];
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "hitPointRestoration",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner: hitPointRestorationDiscoveryOwner(act.subject),
+      },
+    ];
   }
   if (isSlotSpellDiscoverySubject(act.subject)) {
-    return [{
-      kind: "discoverBattleActs",
-      subject: "slotSpell",
-      holes: battleReducerRouteHoles(act.initialHoles),
-      owner: "battleSpellSlotAndActionEconomy",
-    }];
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "slotSpell",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner: "battleSpellSlotAndActionEconomy",
+      },
+    ];
   }
   if (!isSpellAttackProcedureSubject(act.subject)) {
     return undefined;
@@ -205,6 +256,15 @@ export function battleReducerRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
+  const rollModifierRoute = rollModifierRouteForResolution(input, result);
+  if (rollModifierRoute !== undefined) {
+    return rollModifierRoute;
+  }
+  const rollModifierConcentrationRoute =
+    rollModifierConcentrationBreakRouteForResolution(input, result);
+  if (rollModifierConcentrationRoute !== undefined) {
+    return rollModifierConcentrationRoute;
+  }
   const deathSavingThrowRoute = deathSavingThrowRouteForResolution(
     input,
     result,
@@ -220,10 +280,7 @@ export function battleReducerRouteForResolution(
   if (commandRoute !== undefined) {
     return [commandRoute];
   }
-  const metamagicRoute = metamagicRouteForResolution(
-    input,
-    result,
-  );
+  const metamagicRoute = metamagicRouteForResolution(input, result);
   if (metamagicRoute !== undefined) {
     return metamagicRoute;
   }
@@ -277,8 +334,10 @@ export function battleReducerRouteForResolution(
   }
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
-  const [firstOwner, ...remainingOwners] =
-    spellAttackProcedureRouteOwners(input.subject, fill);
+  const [firstOwner, ...remainingOwners] = spellAttackProcedureRouteOwners(
+    input.subject,
+    fill,
+  );
   if (firstOwner === undefined) {
     return undefined;
   }
@@ -526,8 +585,7 @@ function combatantsGainedActiveEffect(
   return [...after.combatants.values()].some(
     (combatant) =>
       combatant.activeEffects.length >
-        (before.combatants.get(combatant.combatantId)?.activeEffects.length ??
-          0),
+      (before.combatants.get(combatant.combatantId)?.activeEffects.length ?? 0),
   );
 }
 
@@ -701,8 +759,9 @@ function concentrationRouteForResolution(
   }
   if (
     routeFill === "rolledDice" &&
-    battleReducerRouteHoles(result.tag === "needsHoles" ? result.holes : [])
-      .includes("concentrationSavingThrow")
+    battleReducerRouteHoles(
+      result.tag === "needsHoles" ? result.holes : [],
+    ).includes("concentrationSavingThrow")
   ) {
     return [
       {
@@ -777,10 +836,7 @@ function slotSpellRouteForResolution(
   }
 
   const routeFill = battleReducerRouteFill(fill);
-  if (
-    routeFill !== "spellTargetAllocation" &&
-    routeFill !== "rolledDice"
-  ) {
+  if (routeFill !== "spellTargetAllocation" && routeFill !== "rolledDice") {
     return undefined;
   }
 
@@ -953,11 +1009,9 @@ function interruptStackResumeDiscoveryRouteForResolution(
   const frame = currentInterruptCheckpoint(result.state);
   const subject =
     discoversInterruptDecision &&
-      frame !== undefined &&
-      isReactionSpellCastingTimeFrame(frame) &&
-      frame.choices.some(
-        (choice) => choice.kind === "castTriggeredReactionSpell",
-      )
+    frame !== undefined &&
+    isReactionSpellCastingTimeFrame(frame) &&
+    frame.choices.some((choice) => choice.kind === "castTriggeredReactionSpell")
       ? "reactionSpell"
       : "interruptStackResume";
   return {
@@ -992,6 +1046,185 @@ function combatantHitPointsChanged(
     (combatant) =>
       combatant.hp !== before.combatants.get(combatant.combatantId)?.hp,
   );
+}
+
+function rollModifierRouteForDiscoveredAct(
+  act: AvailableBattleAct,
+): BattleReducerRouteEvent | undefined {
+  if (!isRollModifierEffectDiscoverySubject(act.subject)) {
+    return undefined;
+  }
+  return {
+    kind: "discoverBattleActs",
+    subject: "rollModifierEffect",
+    holes: rollModifierRouteHoles(act.initialHoles),
+    owner:
+      act.subject.invocation.procedure === "thaumaturgyBoomingVoice"
+        ? "battleActiveEffect"
+        : "battleSpellSlotAndActionEconomy",
+  };
+}
+
+function rollModifierRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (!isRollModifierEffectResolutionSubject(input.subject)) {
+    return undefined;
+  }
+  if (result.tag === "invalid") {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  if (input.subject.invocation.procedure === "thaumaturgyBoomingVoice") {
+    if (
+      fill.kind === "thaumaturgyActiveOneMinuteEffectCount" &&
+      result.tag === "resolved"
+    ) {
+      return [rollModifierResolveWithoutFill([], "battleActiveEffect")];
+    }
+    return undefined;
+  }
+
+  const holes =
+    result.tag === "needsHoles" ? rollModifierRouteHoles(result.holes) : [];
+  if (
+    (fill.kind === "targetChoice" || fill.kind === "spellTargetList") &&
+    result.tag === "needsHoles" &&
+    holes.includes("savingThrowOutcome")
+  ) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "rollModifierEffect",
+        holes,
+        owner: "battleSpellSlotAndActionEconomy",
+      },
+    ];
+  }
+  if (result.tag !== "resolved") {
+    return undefined;
+  }
+
+  const routeFill = rollModifierRouteFill(fill);
+  if (routeFill === undefined) {
+    if (fill.kind !== "targetChoice" && fill.kind !== "spellTargetList") {
+      return undefined;
+    }
+    return [
+      rollModifierResolveWithoutFill([], "battleActiveEffect"),
+      rollModifierResolveWithoutFill([], "battleConcentration"),
+    ];
+  }
+  return [
+    {
+      kind: "resolveBattleSubject",
+      subject: "rollModifierEffect",
+      fill: routeFill,
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+    rollModifierResolveWithoutFill([], "battleConcentration"),
+  ];
+}
+
+function rollModifierConcentrationBreakRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (result.tag !== "resolved") {
+    return undefined;
+  }
+  if (
+    input.subject.tag !== "runtimeCommand" ||
+    input.subject.command !== "endConcentration"
+  ) {
+    return undefined;
+  }
+  if (!hasConcentratingRollModifierEffect(input.state, input.subject.actorId)) {
+    return undefined;
+  }
+  return [
+    rollModifierResolveWithoutFill([], "battleConcentration"),
+    rollModifierResolveWithoutFill([], "battleActiveEffect"),
+  ];
+}
+
+function rollModifierResolveWithoutFill(
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "rollModifierEffect",
+    holes,
+    owner,
+  };
+}
+
+function hasConcentratingRollModifierEffect(
+  state: BattleState,
+  combatantId: CombatantId,
+): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) =>
+        (effect.kind === "d20RollModifier" ||
+          effect.kind === "abilityCheckRollMode") &&
+        effect.expiresAt.kind === "concentration" &&
+        effect.expiresAt.combatantId === combatantId,
+    ),
+  );
+}
+
+function rollModifierRouteHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return [...new Set(holes.flatMap(rollModifierRouteHole))].sort();
+}
+
+function rollModifierRouteHole(
+  hole: BattleHole,
+): readonly BattleReducerRouteHole[] {
+  const family = battleHoleFamilyKind(hole);
+  if (family === "abilityChoice") return ["abilityChoice"];
+  if (family === "savingThrowOutcome") return ["savingThrowOutcome"];
+  if (family === "skillChoice") return ["skillChoice"];
+  if (family === "targetAbilityChoices") return ["targetAbilityChoices"];
+  return [];
+}
+
+function rollModifierRouteFill(
+  fill: BattleFill,
+): BattleReducerRouteFill | undefined {
+  if (fill.kind === "savingThrowOutcome") return "savingThrowOutcome";
+  if (fill.kind === "skillChoice") {
+    return { kind: "skillChoice", skill: fill.value };
+  }
+  if (fill.kind === "abilityChoice") {
+    return { kind: "abilityChoice", ability: fill.value };
+  }
+  if (fill.kind === "targetAbilityChoices") {
+    const [primary, secondary, third] = fill.value.choices;
+    if (
+      primary === undefined ||
+      secondary === undefined ||
+      third !== undefined
+    ) {
+      return undefined;
+    }
+    return {
+      kind: "targetAbilityChoices",
+      choices: {
+        primary: primary.ability,
+        secondary: secondary.ability,
+      },
+    };
+  }
+  return undefined;
 }
 
 function weaponAttackRouteForResolution(
@@ -1119,9 +1352,7 @@ function isSlotSpellResolutionSubject(
   );
 }
 
-function isSaveGatedSpellResolution(
-  input: BattleResolutionInput,
-): boolean {
+function isSaveGatedSpellResolution(input: BattleResolutionInput): boolean {
   if (input.subject.tag === "actionSpell") {
     return isSaveGatedSpellProcedure(input.subject.invocation.procedure);
   }
@@ -1144,6 +1375,32 @@ function isSaveGatedSpellProcedure(procedure: string): boolean {
   return procedure === "saveGatedDamage" || procedure === "saveGatedCondition";
 }
 
+function isRollModifierEffectDiscoverySubject(
+  subject: AvailableBattleAct["subject"],
+): subject is Extract<
+  AvailableBattleAct["subject"],
+  { readonly tag: "actionSpell" }
+> {
+  return (
+    subject.tag === "actionSpell" &&
+    (subject.invocation.procedure === "rollModifier" ||
+      subject.invocation.procedure === "thaumaturgyBoomingVoice")
+  );
+}
+
+function isRollModifierEffectResolutionSubject(
+  subject: BattleResolutionInput["subject"],
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "actionSpell" }
+> {
+  return (
+    subject.tag === "actionSpell" &&
+    (subject.invocation.procedure === "rollModifier" ||
+      subject.invocation.procedure === "thaumaturgyBoomingVoice")
+  );
+}
+
 function isWeaponAttackSubject(
   subject: BattleResolutionInput["subject"],
 ): boolean {
@@ -1164,9 +1421,7 @@ function isCommandEffectSubject(
   );
 }
 
-function isEndTurnSubject(
-  subject: BattleResolutionInput["subject"],
-): boolean {
+function isEndTurnSubject(subject: BattleResolutionInput["subject"]): boolean {
   return subject.tag === "runtimeCommand" && subject.command === "endTurn";
 }
 
@@ -1224,8 +1479,7 @@ function isHitPointRestorationResolution(
     return true;
   }
   return (
-    subject.tag === "unitFeature" &&
-    fill.kind === "hitPointHealingDistribution"
+    subject.tag === "unitFeature" && fill.kind === "hitPointHealingDistribution"
   );
 }
 
@@ -1344,8 +1598,9 @@ function interruptResolutionAddedArmorClassEffect(
   before: BattleState,
   result: Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
 ): boolean {
-  return [...result.state.combatants.values()].some((combatant) =>
-    armorClassEffectCount(combatant.activeEffects) >
+  return [...result.state.combatants.values()].some(
+    (combatant) =>
+      armorClassEffectCount(combatant.activeEffects) >
       armorClassEffectCount(
         before.combatants.get(combatant.combatantId)?.activeEffects ?? [],
       ),

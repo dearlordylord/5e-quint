@@ -780,6 +780,79 @@
           "detail": "Round 1 fixed generic interrupt-stack route projection for triggered Reaction spell casting-time windows; round 2 found no remaining reasonable findings."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-008",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "28efff6e0ffd08d008023494a607d31fb71e3e721b5df37b51b1512dc6668663"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "6e367905ad77e6c658c4e3a910c6b6a4b9ed283f0237751c201b0995d1f2929c"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "ddc2605c185fa65c876836e9d3d94d190cc37fba8208f64b03656e07771c290a"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-008.json",
+          "sha256": "3241636896f4b3ad200e2f4278848fc5fad167a3d3d558a5b4337e1a21a741fa",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-008.json#driver:packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt#step:step#trace:MBT_TRACES=1 MBT_STEPS=16 qRoute=roll-modifier-active-effects-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/crpi-ready-008-roll-modifier-active-effects-route/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor a174729c491181551ae6484366c8f6505e5b1f5a HEAD",
+          "status": "pass",
+          "detail": "Integration and HEAD were a174729c4; base SHA is an ancestor."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit",
+          "status": "pass"
+        },
+        {
+          "command": "cd packages/battle-runtime && START=$(date +%s); MBT_TRACES=1 MBT_STEPS=16 pnpm exec vitest run src/roll-modifier-active-effects.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "5 tests passed; public qRoute replay included; final timed run TOTAL: 17s."
+        },
+        {
+          "command": "START=$(date +%s); pnpm --filter @dnd/battle-runtime exec vitest run src/quickened-spell-governor.mbt.test.ts -t \"observes copied quickened successful branch qRoutes\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "Round 3 adjacent route regression passed with 1 test and 7 skipped; final timed run TOTAL: 4s."
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=16 pnpm exec vitest run src/roll-modifier-active-effects.mbt.test.ts -t \"replays roll-modifier active-effect qRoute\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "Round 3 focused target replay passed with 1 test and 4 skipped; final timed run TOTAL: 13s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added public reducer qRoute projection for roll-modifier active effects and Concentration teardown; round 2 removed an unjustified route-event cast; round 3 narrowed Task 35 roll-modifier resolution routing away from Quickened bonusActionSpell subjects so Task 31 metamagicBonusActionCastingTime routes remain authoritative."
+        }
+      ]
     }
   ]
 }
