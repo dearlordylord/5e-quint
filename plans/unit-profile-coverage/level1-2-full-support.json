@@ -1217,6 +1217,36 @@
     "noMatrixSrdPressure": [
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Cleric spell list Create or Destroy Water",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Creation/destruction of water, rain extinguishing exposed flames, and fog removal are exploration/environment effects outside the current promoted character-creation and battle-runtime owners.",
+            "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Create or Destroy Water",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Creation/destruction of water, rain extinguishing exposed flames, and fog removal are exploration/environment effects outside the current promoted character-creation and battle-runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1248,6 +1278,50 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/disguise_self.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Disguise Self",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Disguise Self",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Disguise Self",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1291,6 +1365,22 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/druidcraft.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Druidcraft",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Weather signs, harmless sensory effects, plant blossoming, and candle/torch/campfire narration are noncombat environmental effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1310,6 +1400,50 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/elementalism.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Elementalism",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Elementalism",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Elementalism",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1353,6 +1487,22 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/floating_disk.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Floating Disk",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created carrying disk, load capacity, terrain-following, and distance-based end behavior are object/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1372,6 +1522,36 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/goodberry.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Goodberry",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Ranger spell list Goodberry",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners.",
+            "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1403,6 +1583,50 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/illusory_script.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Illusory Script",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_illusory_script",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Warlock spell list Illusory Script",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Illusory Script",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_illusory_script",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1446,6 +1670,64 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mage_hand.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Warlock spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1501,6 +1783,78 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mending.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Cleric spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1568,6 +1922,64 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/message.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1623,6 +2035,64 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/prestidigitation.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Warlock spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1678,6 +2148,50 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Cleric spell list Purify Food and Drink",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners.",
+            "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Purify Food and Drink",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Paladin spell list Purify Food and Drink",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners.",
+            "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -1721,6 +2235,50 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/unseen_servant.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Unseen Servant",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Warlock spell list Unseen Servant",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_unseen_servant",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Unseen Servant",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {

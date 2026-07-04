@@ -26,11 +26,13 @@ const {
   buildLevel13FullSupport,
   buildLevel14FullSupport,
   buildLevel15FullSupport,
+  buildLevel16FullSupport,
   renderLevel1FullSupport,
   renderLevel12FullSupport,
   renderLevel13FullSupport,
   renderLevel14FullSupport,
   renderLevel15FullSupport,
+  renderLevel16FullSupport,
 } = require("./level1-full-support-report.cjs");
 const {
   buildSrdUnitInventory,
@@ -248,6 +250,9 @@ function main() {
   const level15FullSupport = buildLevel15FullSupport(matrix, srdUnitInventory, {
     root,
   });
+  const level16FullSupport = buildLevel16FullSupport(matrix, srdUnitInventory, {
+    root,
+  });
   const levelOneSevenMiningAudit =
     buildLevelOneSevenMiningAudit(srdUnitInventory);
   const ultraGoldenGate = buildUltraGoldenGate({
@@ -403,6 +408,16 @@ function main() {
     { root, write },
     paths.level15FullSupportReport,
     renderLevel15FullSupport(level15FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level16FullSupport,
+    `${JSON.stringify(level16FullSupport, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level16FullSupportReport,
+    renderLevel16FullSupport(level16FullSupport),
   );
   writeOrCompare(
     { root, write },

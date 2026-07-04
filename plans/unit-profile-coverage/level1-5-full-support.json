@@ -5255,6 +5255,26 @@
     ],
     "noMatrixSrdPressure": [
       {
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "kind": "character-fact-and-runtime-detached-split",
+              "owner": "future character-sheet-runtime Bardic Inspiration resource-recovery owner plus existing battle-runtime Bardic Inspiration grant/use profiles",
+              "reason": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state.",
+              "source": "unit-claim",
+              "state": "recorded"
+            },
+            "battleReadinessStatus": "not-applicable",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard Font of Inspiration",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "level-5",
+            "nextAction": "SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state.",
+            "rowId": "srd521:classes/bard:level-5:class-feature-grant:bard_font_of_inspiration",
+            "rowKind": "class-feature-grant",
+            "unitProfileDisposition": "unsupported-profile"
+          }
+        ],
         "reason": "The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
@@ -5273,6 +5293,26 @@
         "unitId": "bard_font_of_inspiration"
       },
       {
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "kind": "resource-option-rider-boundary",
+              "owner": "future Turn Undead Channel Divinity option execution owner",
+              "reason": "SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule.",
+              "source": "unit-claim",
+              "state": "recorded"
+            },
+            "battleReadinessStatus": "not-applicable",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Cleric Sear Undead",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "level-5",
+            "nextAction": "SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule.",
+            "rowId": "srd521:classes/cleric:level-5:class-feature-grant:cleric_sear_undead",
+            "rowKind": "class-feature-grant",
+            "unitProfileDisposition": "unsupported-profile"
+          }
+        ],
         "reason": "The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
@@ -5292,6 +5332,36 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Cleric spell list Create or Destroy Water",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Creation/destruction of water, rain extinguishing exposed flames, and fog removal are exploration/environment effects outside the current promoted character-creation and battle-runtime owners.",
+            "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Create or Destroy Water",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Creation/destruction of water, rain extinguishing exposed flames, and fog removal are exploration/environment effects outside the current promoted character-creation and battle-runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5323,6 +5393,50 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/disguise_self.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Disguise Self",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Disguise Self",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Disguise Self",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5365,6 +5479,26 @@
         "unitId": "disguise_self"
       },
       {
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "kind": "character-fact-and-runtime-detached-split",
+              "owner": "future character-sheet-runtime Wild Resurgence resource-restoration owner plus existing Druid Wild Shape and Spell Slot state owners",
+              "reason": "SRD Wild Resurgence lets a Druid once on each turn expend a Spell Slot with no action to regain one Wild Shape use only when no Wild Shape uses remain, and separately lets the Druid expend one Wild Shape use with no action to gain one level 1 Spell Slot once per Long Rest. The future Character Sheet owner must consume the existing druid_wild_shape use-count resource, existing Spell Slot state, and a Long Rest-cleared Wild Resurgence use marker instead of adding a battle action, duplicate Wild Shape pool, duplicate Spell Slot pool, or authored-identity dispatch.",
+              "source": "unit-claim",
+              "state": "recorded"
+            },
+            "battleReadinessStatus": "not-applicable",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid Wild Resurgence",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "level-5",
+            "nextAction": "SRD Wild Resurgence lets a Druid once on each turn expend a Spell Slot with no action to regain one Wild Shape use only when no Wild Shape uses remain, and separately lets the Druid expend one Wild Shape use with no action to gain one level 1 Spell Slot once per Long Rest. The future Character Sheet owner must consume the existing druid_wild_shape use-count resource, existing Spell Slot state, and a Long Rest-cleared Wild Resurgence use marker instead of adding a battle action, duplicate Wild Shape pool, duplicate Spell Slot pool, or authored-identity dispatch.",
+            "rowId": "srd521:classes/druid:level-5:class-feature-grant:druid_wild_resurgence",
+            "rowKind": "class-feature-grant",
+            "unitProfileDisposition": "unsupported-profile"
+          }
+        ],
         "reason": "The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
@@ -5384,6 +5518,22 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/druidcraft.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Druidcraft",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Weather signs, harmless sensory effects, plant blossoming, and candle/torch/campfire narration are noncombat environmental effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5403,6 +5553,50 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/elementalism.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Elementalism",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Elementalism",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Elementalism",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5445,6 +5639,26 @@
         "unitId": "elementalism"
       },
       {
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "kind": "resource-option-rider-boundary",
+              "owner": "future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners",
+              "reason": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
+              "source": "unit-claim",
+              "state": "recorded"
+            },
+            "battleReadinessStatus": "not-applicable",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Fighter Tactical Shift",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "level-5",
+            "nextAction": "SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity.",
+            "rowId": "srd521:classes/fighter:level-5:class-feature-grant:fighter_tactical_shift",
+            "rowKind": "class-feature-grant",
+            "unitProfileDisposition": "unsupported-profile"
+          }
+        ],
         "reason": "The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
@@ -5464,6 +5678,22 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/floating_disk.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Floating Disk",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created carrying disk, load capacity, terrain-following, and distance-based end behavior are object/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5483,6 +5713,36 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/goodberry.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Goodberry",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Ranger spell list Goodberry",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners.",
+            "rowId": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5514,6 +5774,50 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/illusory_script.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Illusory Script",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_illusory_script",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Warlock spell list Illusory Script",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Illusory Script",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_illusory_script",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5557,6 +5861,64 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mage_hand.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Warlock spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5612,6 +5974,78 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mending.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Cleric spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5679,6 +6113,64 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/message.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5733,6 +6225,26 @@
         "unitId": "message"
       },
       {
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "kind": "character-fact-and-runtime-detached-split",
+              "owner": "future character-sheet-runtime Paladin Faithful Steed prepared Spell Access and once-per-Long-Rest casting owner plus existing Find Steed companion-control boundary",
+              "reason": "SRD Faithful Steed grants a Paladin Find Steed as always prepared and one casting without expending a Spell Slot, recovered on a Long Rest. A future Character Sheet owner should derive the prepared Spell Access and Long Rest-cleared casting marker from the Paladin level-5 feature and existing Spell Slot and rest state, while the existing find_steed Unit remains closed at the companion-control boundary for summoned steed lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop handling. Paladin class state must not copy steed identity, companion lifecycle, or mount execution state, and generic runtime code must not dispatch on Paladin or Faithful Steed authored identity.",
+              "source": "unit-claim",
+              "state": "recorded"
+            },
+            "battleReadinessStatus": "not-applicable",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Paladin Faithful Steed",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "level-5",
+            "nextAction": "SRD Faithful Steed grants a Paladin Find Steed as always prepared and one casting without expending a Spell Slot, recovered on a Long Rest. A future Character Sheet owner should derive the prepared Spell Access and Long Rest-cleared casting marker from the Paladin level-5 feature and existing Spell Slot and rest state, while the existing find_steed Unit remains closed at the companion-control boundary for summoned steed lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop handling. Paladin class state must not copy steed identity, companion lifecycle, or mount execution state, and generic runtime code must not dispatch on Paladin or Faithful Steed authored identity.",
+            "rowId": "srd521:classes/paladin:level-5:class-feature-grant:paladin_faithful_steed",
+            "rowKind": "class-feature-grant",
+            "unitProfileDisposition": "unsupported-profile"
+          }
+        ],
         "reason": "The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
@@ -5752,6 +6264,64 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/prestidigitation.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Sorcerer spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Warlock spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5807,6 +6377,50 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Cleric spell list Purify Food and Drink",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners.",
+            "rowId": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Druid spell list Purify Food and Drink",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners.",
+            "rowId": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Paladin spell list Purify Food and Drink",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners.",
+            "rowId": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5849,6 +6463,22 @@
         "unitId": "purify_food_and_drink"
       },
       {
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Ranger Hunter's Lore",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "level-3",
+            "nextAction": "Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state.",
+            "rowId": "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_lore",
+            "rowKind": "class-feature-grant",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
@@ -5868,6 +6498,50 @@
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/unseen_servant.md",
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Bard spell list Unseen Servant",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Warlock spell list Unseen Servant",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_unseen_servant",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          },
+          {
+            "battleReadinessClosure": {
+              "state": "not-recorded"
+            },
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard spell list Unseen Servant",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "spell-level-1",
+            "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners.",
+            "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant",
+            "rowKind": "spell-unit-pressure",
+            "unitProfileDisposition": "not-recorded"
+          }
+        ],
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
@@ -5910,6 +6584,26 @@
         "unitId": "unseen_servant"
       },
       {
+        "inventoryAccounting": [
+          {
+            "battleReadinessClosure": {
+              "kind": "character-fact-and-runtime-detached-split",
+              "owner": "future character-sheet-runtime Wizard prepared Spell Access Short Rest replacement owner plus existing class_wizard Spell Access/progression facts and spell invocation profiles",
+              "reason": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
+              "source": "unit-claim",
+              "state": "recorded"
+            },
+            "battleReadinessStatus": "not-applicable",
+            "catalogAdmissionState": "not-installed",
+            "concept": "Wizard Memorize Spell",
+            "finalDisposition": "catalog-only/dead-for-now",
+            "levelBand": "level-5",
+            "nextAction": "SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
+            "rowId": "srd521:classes/wizard:level-5:class-feature-grant:wizard_memorize_spell",
+            "rowKind": "class-feature-grant",
+            "unitProfileDisposition": "unsupported-profile"
+          }
+        ],
         "reason": "The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {

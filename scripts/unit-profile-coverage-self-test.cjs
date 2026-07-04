@@ -18,9 +18,11 @@ const {
   hasVariantMagicMechanics,
 } = require("./unit-profile-coverage-discovery.cjs");
 const {
+  buildLevel16FullSupport,
   buildSelectedIdentityReadiness,
   characterLevelBands,
   buildSrdAuthoredProductReadiness,
+  renderLevel16FullSupport,
   strictStatusForUnitForTest,
 } = require("./level1-full-support-report.cjs");
 const {
@@ -720,6 +722,110 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
   }
 }
 
+function assertNoMatrixRowsPreserveInventoryAccounting(root) {
+  const adoptedDecisionRows = fs
+    .readdirSync(path.join(root, "plans/unit-profile-coverage/frontier-decisions"))
+    .filter((filename) => filename.endsWith(".md") && filename !== "README.md")
+    .map((filename) => {
+      const unitId = path.basename(filename, ".md");
+      return {
+        id: `fixture:spell-level-0:spell-unit-pressure:${unitId}`,
+        source: {
+          path: ".references/srd-5.2.1/Spells/Fixture.md",
+          lineStart: 1,
+          lineEnd: 1,
+        },
+        className: "Fixture",
+        levelBand: "spell-level-0",
+        rowKind: "spell-unit-pressure",
+        category: "spell Unit pressure",
+        concept: `Fixture adopted decision ${unitId}`,
+        detail: "Adopted no-matrix decision fixture row.",
+        candidateUnitId: unitId,
+        catalogAdmission: {
+          state: "not-installed",
+          unitId,
+        },
+        unitProfileDisposition: "unsupported-profile",
+        finalDisposition: "catalog-only/dead-for-now",
+        nextAction: "Fixture adopted no-matrix decision row.",
+      };
+    });
+  const fixtureClosure = {
+    source: "unit-claim",
+    kind: battleReadinessClosureKind.outsideBattleRuntime,
+    owner: "fixture level-6 closure owner",
+    reason: "Fixture no-matrix closure is retained from inventory accounting.",
+  };
+  const report = buildLevel16FullSupport(
+    {
+      units: [],
+      rulesKernelProfileJoin: { profiles: [] },
+    },
+    {
+      rows: [
+        ...adoptedDecisionRows,
+        {
+          id: "fixture:level-6:class-feature-grant:fixture_level6_closure",
+          source: {
+            path: ".references/srd-5.2.1/Classes/Fixture.md",
+            lineStart: 1,
+            lineEnd: 1,
+          },
+          className: "Fixture",
+          levelBand: "level-6",
+          rowKind: "class-feature-grant",
+          category: "class feature",
+          concept: "Fixture Level 6 Closure",
+          detail: "Level 6 class feature.",
+          candidateUnitId: "fixture_level6_closure",
+          catalogAdmission: {
+            state: "not-installed",
+            unitId: "fixture_level6_closure",
+          },
+          unitProfileDisposition: "unsupported-profile",
+          finalDisposition: "catalog-only/dead-for-now",
+          battleReadinessStatus: "closed-by-owner",
+          battleReadinessClosure: fixtureClosure,
+          nextAction: "Fixture next action from generated inventory.",
+        },
+      ],
+    },
+  );
+  const row = report.outsideDenominator.noMatrixSrdPressure.find(
+    (candidate) => candidate.unitId === "fixture_level6_closure",
+  );
+  if (row === undefined) {
+    fail(
+      `Self-test failed: expected no-matrix row for fixture_level6_closure, got ${JSON.stringify(report.outsideDenominator.noMatrixSrdPressure)}`,
+    );
+  }
+  const accounting = row.inventoryAccounting?.[0];
+  if (
+    accounting?.finalDisposition !== "catalog-only/dead-for-now" ||
+    accounting.battleReadinessClosure?.kind !==
+      battleReadinessClosureKind.outsideBattleRuntime ||
+    accounting.battleReadinessClosure?.owner !== fixtureClosure.owner ||
+    accounting.nextAction !== "Fixture next action from generated inventory."
+  ) {
+    fail(
+      `Self-test failed: expected no-matrix row to preserve generated inventory accounting, got ${JSON.stringify(row)}`,
+    );
+  }
+  const rendered = renderLevel16FullSupport(report);
+  for (const expectedText of [
+    "catalog-only/dead-for-now",
+    `${fixtureClosure.kind}: ${fixtureClosure.owner}`,
+    "Fixture next action from generated inventory.",
+  ]) {
+    if (!rendered.includes(expectedText)) {
+      fail(
+        `Self-test failed: expected no-matrix report to include ${JSON.stringify(expectedText)}, got ${JSON.stringify(rendered)}`,
+      );
+    }
+  }
+}
+
 function runSelfTest(root) {
   const levelTwoBands = characterLevelBands(2);
   if (
@@ -782,11 +888,32 @@ function runSelfTest(root) {
       `Self-test failed: expected character level 5 bands to include level-5 and spell-level-3, got ${JSON.stringify(levelFiveBands)}`,
     );
   }
+  const levelSixBands = characterLevelBands(6);
+  if (
+    JSON.stringify(levelSixBands) !==
+    JSON.stringify([
+      "level-1",
+      "level-2",
+      "level-3",
+      "level-4",
+      "level-5",
+      "level-6",
+      "spell-level-0",
+      "spell-level-1",
+      "spell-level-2",
+      "spell-level-3",
+    ])
+  ) {
+    fail(
+      `Self-test failed: expected character level 6 bands to include level-6 and still exclude spell-level-4, got ${JSON.stringify(levelSixBands)}`,
+    );
+  }
   assertLaterLevelOnlyScopeAccounting();
   assertSelectionGrantContainerScopeAccounting();
   assertMindSpikeDeferredSelectedIdentityGate();
   assertSelectedIdentityMetricExcludesWholeClaimNotApplicable();
   assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport();
+  assertNoMatrixRowsPreserveInventoryAccounting(root);
 
   const tempDir = fs.mkdtempSync(
     path.join(os.tmpdir(), "unit-profile-coverage-self-test-"),

@@ -36,6 +36,7 @@ const strictLevel12Bands = characterLevelBands(2);
 const strictLevel13Bands = characterLevelBands(3);
 const strictLevel14Bands = characterLevelBands(4);
 const strictLevel15Bands = characterLevelBands(5);
+const strictLevel16Bands = characterLevelBands(6);
 const companionWorktreeExcludedUnitIds = ["find_familiar"];
 const srdAuthoredCharacterCreationOptionGroups = [
   {
@@ -91,6 +92,14 @@ const level15Scope = {
     "This strict view tracks executable SRD character-level-1 through character-level-5 pressure, cantrips, and spell-level-1 through spell-level-3 pressure separately from the broader product readiness closure metric. Spell-level-3 pressure enters at character level 5 for full casters and Warlock Pact Magic.",
   levelBands: strictLevel15Bands,
   maxCharacterLevel: 5,
+};
+const level16Scope = {
+  title: "Character Levels 1-6",
+  outputTitle: "Character Levels 1-6 Full Support",
+  description:
+    "This strict view tracks executable SRD character-level-1 through character-level-6 pressure, cantrips, and spell-level-1 through spell-level-3 pressure separately from the broader product readiness closure metric. Spell-level-4 pressure first enters the character-level-7 frontier for full casters and Warlock Pact Magic.",
+  levelBands: strictLevel16Bands,
+  maxCharacterLevel: 6,
 };
 const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
   "create_or_destroy_water",
@@ -1131,11 +1140,48 @@ function noMatrixPressureSourceDescription(sourceRows) {
   return `${levelBandLabel} SRD pressure`;
 }
 
+function inventoryClosureSnapshot(battleReadinessClosure) {
+  return battleReadinessClosure === undefined
+    ? { state: "not-recorded" }
+    : stable({
+        state: "recorded",
+        ...(typeof battleReadinessClosure.source === "string"
+          ? { source: battleReadinessClosure.source }
+          : {}),
+        ...(typeof battleReadinessClosure.classificationKind === "string"
+          ? { classificationKind: battleReadinessClosure.classificationKind }
+          : {}),
+        kind: battleReadinessClosure.kind,
+        owner: battleReadinessClosure.owner,
+        reason: battleReadinessClosure.reason,
+      });
+}
+
+function inventoryAccountingRow(row) {
+  return stable({
+    rowId: row.id,
+    concept: row.concept,
+    levelBand: row.levelBand,
+    rowKind: row.rowKind,
+    catalogAdmissionState: row.catalogAdmission?.state ?? "not-recorded",
+    unitProfileDisposition: row.unitProfileDisposition ?? "not-recorded",
+    finalDisposition: row.finalDisposition ?? "not-recorded",
+    battleReadinessStatus: row.battleReadinessStatus ?? "not-applicable",
+    battleReadinessClosure: inventoryClosureSnapshot(
+      row.battleReadinessClosure,
+    ),
+    nextAction: row.nextAction ?? "not-recorded",
+  });
+}
+
 function noMatrixSrdPressureRow(unitId, sourceRows, root) {
   const decisionArtifact = noMatrixDecisionArtifactPath(unitId, root);
   const pressureSource = noMatrixPressureSourceDescription(sourceRows);
   return outsideRow(unitId, sourceRows, {
     ...(decisionArtifact === undefined ? {} : { decisionArtifact }),
+    inventoryAccounting: sourceRows
+      .map(inventoryAccountingRow)
+      .sort((left, right) => left.rowId.localeCompare(right.rowId)),
     reason:
       decisionArtifact === undefined
         ? `The SRD row has ${pressureSource}, but no Unit matrix row exists yet.`
@@ -1392,6 +1438,15 @@ function buildLevel15FullSupport(matrix, srdUnitInventory, options = {}) {
   );
 }
 
+function buildLevel16FullSupport(matrix, srdUnitInventory, options = {}) {
+  return buildStrictFullSupport(
+    matrix,
+    srdUnitInventory,
+    level16Scope,
+    options,
+  );
+}
+
 function md(value) {
   return String(value ?? "")
     .replace(/\n/g, " ")
@@ -1434,19 +1489,43 @@ function renderOutsideRows(rows) {
       });
 }
 
+function uniqueSortedLabels(values) {
+  const labels = values.filter(Boolean);
+  if (labels.length === 0) return "_none_";
+  return Array.from(new Set(labels)).sort().join("; ");
+}
+
+function inventoryClosureLabel(battleReadinessClosure) {
+  return battleReadinessClosure.state === "recorded"
+    ? `${battleReadinessClosure.kind}: ${battleReadinessClosure.owner}`
+    : battleReadinessClosure.state;
+}
+
 function renderNoMatrixRows(rows) {
   return rows.length === 0
-    ? ["| _none_ | 0 | _none_ | _none_ | _none_ |"]
+    ? ["| _none_ | 0 | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |"]
     : rows.map((row) => {
         const concepts = row.sourceRows
           .map((sourceRow) => sourceRow.concept)
           .filter(Boolean)
           .join("; ");
+        const accounting = row.inventoryAccounting ?? [];
+        const finalDispositions = uniqueSortedLabels(
+          accounting.map((entry) => entry.finalDisposition),
+        );
+        const readinessClosures = uniqueSortedLabels(
+          accounting.map((entry) =>
+            inventoryClosureLabel(entry.battleReadinessClosure),
+          ),
+        );
+        const nextActions = uniqueSortedLabels(
+          accounting.map((entry) => entry.nextAction),
+        );
         const decisionArtifact =
           row.decisionArtifact === undefined
             ? "_none_"
             : `\`${row.decisionArtifact}\``;
-        return `| \`${row.unitId}\` | ${row.sourceRows.length} | ${md(row.reason)} | ${decisionArtifact} | ${md(concepts)} |`;
+        return `| \`${row.unitId}\` | ${row.sourceRows.length} | ${md(row.reason)} | ${md(finalDispositions)} | ${md(readinessClosures)} | ${md(nextActions)} | ${decisionArtifact} | ${md(concepts)} |`;
       });
 }
 
@@ -1702,8 +1781,8 @@ function renderStrictFullSupport(report, scope) {
     "",
     "### No Matrix SRD Pressure",
     "",
-    "| Unit | Source rows | Reason | Adopted decision artifact | Concepts |",
-    "| --- | ---: | --- | --- | --- |",
+    "| Unit | Source rows | Reason | Final dispositions | Readiness closures | Next actions | Adopted decision artifact | Concepts |",
+    "| --- | ---: | --- | --- | --- | --- | --- | --- |",
     ...renderNoMatrixRows(report.outsideDenominator.noMatrixSrdPressure),
     "",
   ].join("\n")}`;
@@ -1729,6 +1808,10 @@ function renderLevel15FullSupport(report) {
   return renderStrictFullSupport(report, level15Scope);
 }
 
+function renderLevel16FullSupport(report) {
+  return renderStrictFullSupport(report, level16Scope);
+}
+
 module.exports = {
   characterLevelBands,
   buildLevel1FullSupport,
@@ -1736,6 +1819,7 @@ module.exports = {
   buildLevel13FullSupport,
   buildLevel14FullSupport,
   buildLevel15FullSupport,
+  buildLevel16FullSupport,
   buildSrdAuthoredProductReadiness,
   buildSelectedIdentityReadiness,
   strictStatusForUnitForTest: (unit, maxCharacterLevel) =>
@@ -1748,4 +1832,5 @@ module.exports = {
   renderLevel13FullSupport,
   renderLevel14FullSupport,
   renderLevel15FullSupport,
+  renderLevel16FullSupport,
 };
