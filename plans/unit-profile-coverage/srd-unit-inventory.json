@@ -346,9 +346,9 @@
       "catalog-only/dead-for-now": 6
     },
     "levelSixClassRowsByDisposition": {
-      "catalog-only/dead-for-now": 5,
+      "catalog-only/dead-for-now": 6,
       "non-runtime": 12,
-      "level-5-7-follow-up-required": 6,
+      "level-5-7-follow-up-required": 5,
       "catalog-installed-owner-evidence-present": 2
     },
     "levelSevenClassRowsByDisposition": {
@@ -371,8 +371,8 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 501,
       "non-runtime": 84,
-      "catalog-only/dead-for-now": 216,
-      "level-5-7-follow-up-required": 17,
+      "catalog-only/dead-for-now": 217,
+      "level-5-7-follow-up-required": 16,
       "catalog-authored-review-required": 49,
       "missing-authored-record": 32,
       "catalog-installed-owner-evidence-required": 1
@@ -20388,9 +20388,16 @@
         "state": "not-installed",
         "unitId": "monk_empowered_strikes"
       },
-      "finalDisposition": "level-5-7-follow-up-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "future-owner-before-SDK battle-runtime Unarmed Strike damage-type-choice owner plus selected Monk class-feature admission owner",
+        "reason": "SRD Empowered Strikes applies whenever the Monk deals damage with an Unarmed Strike, allowing a choice between Force damage and the strike's normal damage type. Existing Martial Arts support owns Unarmed Strike damage die replacement, Dexterity attack and damage projection, Grapple/Shove DC projection, and Bonus Action Unarmed Strike discovery, while existing spell and weapon-imbue damage-type-choice holes are scoped to their own host profiles. A future owner must consume typed Surface facts for the selected Empowered Strikes feature and the existing Unarmed Strike damage profile, then offer and validate the Force-or-normal damage type choice at attack damage resolution without adding duplicate Unarmed Strike state, Martial Arts state, class progression state, or authored-identity dispatch."
+      },
       "ownerEvidence": [],
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+      "nextAction": "SRD Empowered Strikes applies whenever the Monk deals damage with an Unarmed Strike, allowing a choice between Force damage and the strike's normal damage type. Existing Martial Arts support owns Unarmed Strike damage die replacement, Dexterity attack and damage projection, Grapple/Shove DC projection, and Bonus Action Unarmed Strike discovery, while existing spell and weapon-imbue damage-type-choice holes are scoped to their own host profiles. A future owner must consume typed Surface facts for the selected Empowered Strikes feature and the existing Unarmed Strike damage profile, then offer and validate the Force-or-normal damage type choice at attack damage resolution without adding duplicate Unarmed Strike state, Martial Arts state, class progression state, or authored-identity dispatch."
     },
     {
       "id": "srd521:classes/monk:level-6:class-feature-grant:monk_wholeness_of_body",

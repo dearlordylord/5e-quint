@@ -113,6 +113,12 @@
       "title": "Promote Druid Natural Recovery rest feature"
     },
     {
+      "number": 52,
+      "id": "L6-FOLLOWUP-MONK-EMPOWERED-STRIKES-DAMAGE-TYPE",
+      "status": "future-follow-up",
+      "title": "Promote Monk Empowered Strikes damage-type choice"
+    },
+    {
       "number": 5,
       "id": "L5UG-MCP-01-LEVEL5-VERTICAL-DECISION",
       "status": "done",
@@ -211,7 +217,7 @@
     {
       "number": 21,
       "id": "L6FULL-OWN-05-MONK-EMPOWERED-STRIKES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-6 owner evidence for Monk Empowered Strikes"
     },
     {
@@ -413,6 +419,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  49 | L6-FOLLOWUP-BARD-MAGICAL-DISCOVERIES-SPELL-ACCESS - Promote Bard Magical Discoveries spell-access selection | future-follow-up | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES | Future character-creation and character-sheet owner for Magical Discoveries cross-list always-prepared spell choices and Bard-level replacement; parked outside this L6 full accounting pass. |
 |  50 | L6-FOLLOWUP-CLERIC-BLESSED-HEALER-SPELL-HEALING-RIDER - Promote Cleric Blessed Healer spell-healing rider | future-follow-up | L6FULL-OWN-03-CLERIC-BLESSED-HEALER | Future battle-runtime owner for selected Life Domain post-cast self-healing after slot-cast healing of another creature; parked outside this L6 full accounting pass. |
 |  51 | L6-FOLLOWUP-DRUID-NATURAL-RECOVERY-REST-FEATURE - Promote Druid Natural Recovery rest feature | future-follow-up | L6FULL-OWN-04-DRUID-NATURAL-RECOVERY | Future character-sheet owner for Natural Recovery's no-slot Circle Spell cast and Short Rest Spell Slot recovery budget; parked outside this L6 full accounting pass. |
+|  52 | L6-FOLLOWUP-MONK-EMPOWERED-STRIKES-DAMAGE-TYPE - Promote Monk Empowered Strikes damage-type choice | future-follow-up | L6FULL-OWN-05-MONK-EMPOWERED-STRIKES | Future battle-runtime owner for selected Monk Empowered Strikes Unarmed Strike Force-or-normal damage-type choice; parked outside this L6 full accounting pass. |
 |   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | done               | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Selected the Wizard 5 Fireball MCP vertical and rejected future-owner alternatives.     |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | done | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds Wizard 5 Fireball creation/finalization/sheet proof before battle handoff.         |
 |   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | done | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff after Task 6 sheet coverage; non-MCP support dependencies are complete. |
@@ -429,7 +436,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  18 | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES - Resolve level-6 owner evidence for Bard Magical Discoveries | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK spell-access selection boundary; future owner tracked by Task 49. |
 |  19 | L6FULL-OWN-03-CLERIC-BLESSED-HEALER - Resolve level-6 owner evidence for Cleric Blessed Healer | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK spell healing rider boundary; future owner tracked by Task 50. |
 |  20 | L6FULL-OWN-04-DRUID-NATURAL-RECOVERY - Resolve level-6 owner evidence for Druid Natural Recovery | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK rest feature boundary; future owner tracked by Task 51. |
-|  21 | L6FULL-OWN-05-MONK-EMPOWERED-STRIKES - Resolve level-6 owner evidence for Monk Empowered Strikes | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  21 | L6FULL-OWN-05-MONK-EMPOWERED-STRIKES - Resolve level-6 owner evidence for Monk Empowered Strikes | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK Unarmed Strike damage-type-choice boundary; future owner tracked by Task 52. |
 |  22 | L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY - Resolve level-6 owner evidence for Monk Wholeness of Body | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  23 | L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION - Resolve level-6 owner evidence for Paladin Aura of Protection | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  24 | L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY - Resolve level-6 owner evidence for Sorcerer Elemental Affinity | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
@@ -1451,6 +1458,67 @@ Verification:
 - Focused Character Sheet rest, spell-slot, and Circle Spells tests if rest
   feature behavior changes.
 
+### Task 52 - L6-FOLLOWUP-MONK-EMPOWERED-STRIKES-DAMAGE-TYPE
+
+Status: `future-follow-up`
+
+Future Follow-up Reason: Task 21 closed the current Monk Empowered Strikes row
+by explicit non-admission, but the durable owner for selected Monk Unarmed
+Strike Force-or-normal damage-type choice is still a separate Surface and
+battle-runtime modeling problem. This follow-up does not block Task 27 because
+the current L6 row is checker-closed as `catalog-only/dead-for-now`.
+
+Depends on: `L6FULL-OWN-05-MONK-EMPOWERED-STRIKES`
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `.references/srd-5.2.1/Classes/Monk.md:128`
+- `packages/surface/content/monk_martial_arts.json`
+- `packages/surface/content/class_monk.json`
+- `packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts`
+- `packages/battle-runtime/src/unit-feature-support.ts`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Current state:
+
+- The Surface catalog has `monk_martial_arts` installed, and promoted Martial
+  Arts support owns Unarmed Strike damage die replacement, Dexterity attack and
+  damage projection, Grapple/Shove DC projection, and Bonus Action Unarmed
+  Strike discovery.
+- The Surface catalog has no installed `monk_empowered_strikes` feature record
+  or selected level-6 Monk feature grant.
+- Current promoted battle-runtime owners do not admit a selected class-feature
+  damage-type choice for Unarmed Strike damage. Existing spell and
+  weapon-imbue damage-type-choice holes are scoped to their host profiles.
+
+Output:
+
+- Promote a Surface and battle-runtime owner that consumes typed selected
+  Empowered Strikes facts and the existing Unarmed Strike damage profile, then
+  offers and validates the SRD Force-or-normal damage-type choice at attack
+  damage resolution.
+- Preserve existing Unarmed Strike, Martial Arts, class progression, and damage
+  resolution owners; do not duplicate their state or dispatch on authored Monk,
+  Martial Arts, Empowered Strikes, or class-feature identity.
+- Update focused QNT/runtime parity and owner evidence if the row is admitted.
+
+Completion / Success Criteria:
+
+- `monk_empowered_strikes` is either admitted with real catalog,
+  battle-runtime, and parity evidence or remains explicitly closed for a
+  narrower durable reason discovered by this follow-up.
+- The implementation makes the per-damage Unarmed Strike damage-type choice
+  executable without overclaiming generic attack damage-type substitution.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability.
+- `pnpm unit-profile-coverage:check`
+- Focused battle-runtime tests and focused MBT only if battle runtime or QNT
+  parity behavior changes.
+
 ### Task 40 - L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES
 
 Status: `done`
@@ -2358,7 +2426,7 @@ Accepted Closure:
 
 ### Task 21 - L6FULL-OWN-05-MONK-EMPOWERED-STRIKES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
 
@@ -2383,6 +2451,20 @@ Verification:
 
 - L6 shared verification plus focused battle-runtime/MBT only if attack or QNT
   parity behavior changes.
+
+Accepted Closure:
+
+- `monk_empowered_strikes` is closed as a not-installed
+  future-owner-before-SDK Unarmed Strike damage-type-choice boundary. SRD
+  Empowered Strikes applies whenever the Monk deals damage with an Unarmed
+  Strike, allowing the Monk to choose Force damage or the strike's normal
+  damage type. Current promoted Martial Arts support owns Unarmed Strike damage
+  die replacement, Dexterity attack and damage projection, Grapple/Shove DC
+  projection, and Bonus Action Unarmed Strike discovery, but it does not admit
+  selected class-feature damage-type choice. Task 52 records the future
+  Empowered Strikes damage-type owner so the current L6 full accounting can
+  close without duplicating Unarmed Strike state, Martial Arts state, class
+  progression state, damage resolution state, or authored-identity dispatch.
 
 ### Task 22 - L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY
 
