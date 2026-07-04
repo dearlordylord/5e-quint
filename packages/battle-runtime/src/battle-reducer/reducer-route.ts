@@ -14,6 +14,7 @@ import { battleHoleFamilyKind } from "./hole-helpers.ts";
 export type BattleReducerRouteSubjectFamily =
   | "concentrationTeardown"
   | "commandEffect"
+  | "deathSavingThrow"
   | "spellAttackProcedure";
 
 export type BattleReducerRouteOwnerGroup =
@@ -23,6 +24,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleTargetSelection"
   | "battleAttackRoll"
   | "battleSpellAttackProcedure"
+  | "battleHitPointAndZeroHpLifecycle"
   | "battleHitPoint"
   | "battleConcentration"
   | "battleActiveEffect"
@@ -36,6 +38,7 @@ export type BattleReducerRouteHole =
   | "damageTypeChoice"
   | "interruptDecision"
   | "concentrationSavingThrow"
+  | "deathSavingThrow"
   | "movement"
   | "rolledDice"
   | "savingThrowOutcome"
@@ -46,6 +49,7 @@ export type BattleReducerRouteFill =
   | "attackRoll"
   | "commandOptionChoice"
   | "concentrationSavingThrow"
+  | "deathSavingThrow"
   | "damageTypeChoice"
   | "movement"
   | "rolledDice"
@@ -129,6 +133,13 @@ export function battleReducerRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
+  const deathSavingThrowRoute = deathSavingThrowRouteForResolution(
+    input,
+    result,
+  );
+  if (deathSavingThrowRoute !== undefined) {
+    return deathSavingThrowRoute;
+  }
   const concentrationRoute = concentrationRouteForResolution(input, result);
   if (concentrationRoute !== undefined) {
     return concentrationRoute;
@@ -168,6 +179,52 @@ export function battleReducerRouteForResolution(
     owner,
   });
   return [eventForOwner(firstOwner), ...remainingOwners.map(eventForOwner)];
+}
+
+function deathSavingThrowRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (!isEndTurnSubject(input.subject)) {
+    return undefined;
+  }
+
+  const deathSavingThrowFill = input.fills.find(
+    (fill) => fill.kind === "deathSavingThrow",
+  );
+  if (deathSavingThrowFill !== undefined) {
+    if (result.tag === "invalid" && result.reason !== "wrongActor") {
+      return undefined;
+    }
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "deathSavingThrow",
+        fill: "deathSavingThrow",
+        holes:
+          result.tag === "needsHoles"
+            ? battleReducerRouteHoles(result.holes)
+            : [],
+        owner: "battleHitPointAndZeroHpLifecycle",
+      },
+    ];
+  }
+
+  if (
+    result.tag !== "needsHoles" ||
+    !battleReducerRouteHoles(result.holes).includes("deathSavingThrow")
+  ) {
+    return undefined;
+  }
+
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject: "deathSavingThrow",
+      holes: battleReducerRouteHoles(result.holes),
+      owner: "battleHitPointAndZeroHpLifecycle",
+    },
+  ];
 }
 
 function concentrationRouteForResolution(
@@ -442,6 +499,12 @@ function isCommandEffectSubject(
   );
 }
 
+function isEndTurnSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  return subject.tag === "runtimeCommand" && subject.command === "endTurn";
+}
+
 function isConcentrationTeardownSubject(
   subject: BattleResolutionInput["subject"],
 ): boolean {
@@ -509,6 +572,7 @@ function battleReducerRouteHole(
     return ["concentrationSavingThrow"];
   }
   if (family === "damageTypeChoice") return ["damageTypeChoice"];
+  if (family === "deathSavingThrow") return ["deathSavingThrow"];
   if (family === "interruptDecision") return ["interruptDecision"];
   if (family === "movement") return ["movement"];
   if (family === "rolledDice") return ["rolledDice"];
@@ -525,6 +589,7 @@ function battleReducerRouteFill(
   if (kind === "attackRoll") return "attackRoll";
   if (kind === "concentrationSavingThrow") return "concentrationSavingThrow";
   if (kind === "damageTypeChoice") return "damageTypeChoice";
+  if (kind === "deathSavingThrow") return "deathSavingThrow";
   if (kind === "rolledDice") return "rolledDice";
   if (kind === "targetChoice") return "targetChoice";
   return undefined;

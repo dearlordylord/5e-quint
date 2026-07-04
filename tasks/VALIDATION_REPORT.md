@@ -276,3 +276,64 @@ Verification results:
 - `git diff --check` passed.
 - RAW/ubiquitous-language review passed against Rules Glossary Concentration and UBIQUITOUS_LANGUAGE.md Spellcasting terms.
 - Reviewer-loop convergence round 2 addressed review findings by moving discovery qRoute evidence to `AvailableBattleAct.routeEvent`, rejecting stale/filled End Concentration subjects, adding focused regression tests, and rerunning RAW/domain, architecture/connascence, code-review, and focused MBT checks.
+
+## CRP07-DSR-04
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-hit-points.qnt`
+- `packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt`
+- `/workspace/typescript/dnd-cleanroom-jul2/tasks/BLOCKERS.md#T036`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Death Saving Throw route replay now observes the copied `qRoute` projection through public battle reducer route events. The route driver records start-battle evidence from `battleReducerStartRouteEvent(startBattle result)` and death-save discovery, fill, and wrong-actor rejection evidence from `BattleResolutionResult.routeEvents` on the public `resolveBattleSubject` End Turn path. The runtime does not add adapter-owned death-save state: Hit Points, Unconscious, Stable, Dead, death-save counters, current actor, and turn advancement remain owned by `BattleState`/`BattleCreatureState`; the adapter records only the copied sampled `roll` witness in target replay evidence.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doDiscoverEndTurnDeathSavingThrow` | `tasks/target-replay-evidence/CRP07-DSR-04.json#driver:packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doDiscoverEndTurnDeathSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=3 action=doDiscoverEndTurnDeathSavingThrow` | `packages/battle-runtime/src/death-saving-throw.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Death Saving Throw through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doFillDeathSavingThrow` | `tasks/target-replay-evidence/CRP07-DSR-04.json#driver:packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doFillDeathSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=3 action=doFillDeathSavingThrow roll=1`; `roll=5`; `roll=10`; `roll=20` | `packages/battle-runtime/src/death-saving-throw.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Death Saving Throw through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doRejectWrongActorEndTurnAfterResolved` | `tasks/target-replay-evidence/CRP07-DSR-04.json#driver:packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doRejectWrongActorEndTurnAfterResolved#trace:MBT_TRACES=1 MBT_STEPS=3 action=doRejectWrongActorEndTurnAfterResolved roll=20` | `packages/battle-runtime/src/death-saving-throw.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Death Saving Throw through the shared reducer surface` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP07-DSR-04.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=3 action=<branchAction>`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP07-DSR-04/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 12.
+
+Verification results:
+
+- `pnpm --filter @dnd/battle-runtime typecheck` passed before and after the adapter-boundary follow-up.
+- `MBT_TRACES=1 MBT_STEPS=3 pnpm --filter @dnd/battle-runtime exec vitest run src/death-saving-throw.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Death Saving Throw"` passed in 7s after the adapter-boundary follow-up.
+- `pnpm cleanroom-branch-coverage:check` passed after the adapter-boundary follow-up with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed after the adapter-boundary follow-up.
+- RAW/ubiquitous-language review passed against Rules Glossary Death Saving Throw, Playing the Game Death Saving Throws and Dropping to 0 Hit Points, and UBIQUITOUS_LANGUAGE.md Hit Points and Death.
+- Reviewer-loop convergence passed: round 2 tightened the replay adapter so the End Turn subject comes from public `discoverBattleActs`; architecture/connascence review found death-save route subject/fill/hole/owner string coupling localized in the reducer route vocabulary and mapper, while production death-save state remains the existing BattleState-owned lifecycle.

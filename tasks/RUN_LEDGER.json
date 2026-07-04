@@ -297,6 +297,69 @@
           "detail": "Round 2 fixed public discovery route evidence and stale/filled End Concentration handling; no remaining reasonable Task 8 findings after RAW/domain, architecture/connascence, code-review, and focused MBT checks."
         }
       ]
+    },
+    {
+      "taskId": "CRP07-DSR-04",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "6858b3e5e68ccdd9b2336204cf9a097d450fdb6e17ae3149934e67ba28657d7a"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "c013e4ac9b82cd4d2a9334b069399eaa67ad95ee8b9a56df85229fd0e06741cd"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "e0fbf3e5c67247d277905637b81168077f2ac4b85757110027d64f08104e8a92"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP07-DSR-04.json",
+          "sha256": "dc4e174aea4f7c823ba7c74767bb807ffd392696fcc8836d8b19e29c76459452",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP07-DSR-04.json#driver:packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doDiscoverEndTurnDeathSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=3 action=doDiscoverEndTurnDeathSavingThrow",
+            "tasks/target-replay-evidence/CRP07-DSR-04.json#driver:packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doFillDeathSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=3 action=doFillDeathSavingThrow roll=1",
+            "tasks/target-replay-evidence/CRP07-DSR-04.json#driver:packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doFillDeathSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=3 action=doFillDeathSavingThrow roll=5",
+            "tasks/target-replay-evidence/CRP07-DSR-04.json#driver:packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doFillDeathSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=3 action=doFillDeathSavingThrow roll=10",
+            "tasks/target-replay-evidence/CRP07-DSR-04.json#driver:packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doFillDeathSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=3 action=doFillDeathSavingThrow roll=20",
+            "tasks/target-replay-evidence/CRP07-DSR-04.json#driver:packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt#step:doRejectWrongActorEndTurnAfterResolved#trace:MBT_TRACES=1 MBT_STEPS=3 action=doRejectWrongActorEndTurnAfterResolved roll=20"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "MBT_TRACES=1 MBT_STEPS=3 pnpm --filter @dnd/battle-runtime exec vitest run src/death-saving-throw.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Death Saving Throw\"",
+          "status": "pass",
+          "detail": "2 tests passed; final timed run TOTAL: 7s after the adapter-boundary follow-up"
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 2 tightened the replay adapter so the End Turn subject comes from public discoverBattleActs; no remaining reasonable Task 12 findings after RAW/domain, architecture/connascence, code-review, typecheck, and cleanroom checks."
+        }
+      ]
     }
   ]
 }

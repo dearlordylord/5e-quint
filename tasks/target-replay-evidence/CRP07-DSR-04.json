@@ -1,0 +1,302 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts Death Saving Throw public reducer route-event replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt",
+      "qntFileSha256": "0d21761fe794347b45990f88719540e3a7ab740484d77de11715e3e3625a08cf",
+      "routeConnectorSha256": "e6aa6b9f5b07c8836ef80d3f3d21ef9a28be505ff69e6ce3e7c2fbc465b374ce",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverEndTurnDeathSavingThrow",
+      "observedActionTaken": "doDiscoverEndTurnDeathSavingThrow",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=3 action=doDiscoverEndTurnDeathSavingThrow",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "62bd88c7acbe7212f053960db38cdb77db3cb08910d552ba0cd3e1609bd0d760",
+        "observedProjectionSha256": "62bd88c7acbe7212f053960db38cdb77db3cb08910d552ba0cd3e1609bd0d760",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result) and BattleResolutionResult.routeEvents on End Turn death-save discovery",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentActorId",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.zeroHpLifecycle.policy",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleHole.kind=deathSavingThrow",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt",
+      "qntFileSha256": "0d21761fe794347b45990f88719540e3a7ab740484d77de11715e3e3625a08cf",
+      "routeConnectorSha256": "e6aa6b9f5b07c8836ef80d3f3d21ef9a28be505ff69e6ce3e7c2fbc465b374ce",
+      "branchFamily": "step",
+      "branchAction": "doFillDeathSavingThrow",
+      "observedActionTaken": "doFillDeathSavingThrow",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=3 action=doFillDeathSavingThrow roll=1",
+      "sampledInputs": [
+        {
+          "pickName": "roll",
+          "value": 1
+        }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "1469a22f86b410675c7397a4434f49dbcfd69793e6dc7efe43522505fcb26af5",
+        "observedProjectionSha256": "1469a22f86b410675c7397a4434f49dbcfd69793e6dc7efe43522505fcb26af5",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result) and BattleResolutionResult.routeEvents on End Turn Death Saving Throw fill",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentActorId",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.zeroHpLifecycle.policy",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleFill.kind=deathSavingThrow",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt",
+      "qntFileSha256": "0d21761fe794347b45990f88719540e3a7ab740484d77de11715e3e3625a08cf",
+      "routeConnectorSha256": "e6aa6b9f5b07c8836ef80d3f3d21ef9a28be505ff69e6ce3e7c2fbc465b374ce",
+      "branchFamily": "step",
+      "branchAction": "doFillDeathSavingThrow",
+      "observedActionTaken": "doFillDeathSavingThrow",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=3 action=doFillDeathSavingThrow roll=5",
+      "sampledInputs": [
+        {
+          "pickName": "roll",
+          "value": 5
+        }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "1469a22f86b410675c7397a4434f49dbcfd69793e6dc7efe43522505fcb26af5",
+        "observedProjectionSha256": "1469a22f86b410675c7397a4434f49dbcfd69793e6dc7efe43522505fcb26af5",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result) and BattleResolutionResult.routeEvents on End Turn Death Saving Throw fill",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentActorId",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.zeroHpLifecycle.policy",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleFill.kind=deathSavingThrow",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt",
+      "qntFileSha256": "0d21761fe794347b45990f88719540e3a7ab740484d77de11715e3e3625a08cf",
+      "routeConnectorSha256": "e6aa6b9f5b07c8836ef80d3f3d21ef9a28be505ff69e6ce3e7c2fbc465b374ce",
+      "branchFamily": "step",
+      "branchAction": "doFillDeathSavingThrow",
+      "observedActionTaken": "doFillDeathSavingThrow",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=3 action=doFillDeathSavingThrow roll=10",
+      "sampledInputs": [
+        {
+          "pickName": "roll",
+          "value": 10
+        }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "1469a22f86b410675c7397a4434f49dbcfd69793e6dc7efe43522505fcb26af5",
+        "observedProjectionSha256": "1469a22f86b410675c7397a4434f49dbcfd69793e6dc7efe43522505fcb26af5",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result) and BattleResolutionResult.routeEvents on End Turn Death Saving Throw fill",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentActorId",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.zeroHpLifecycle.policy",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleFill.kind=deathSavingThrow",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt",
+      "qntFileSha256": "0d21761fe794347b45990f88719540e3a7ab740484d77de11715e3e3625a08cf",
+      "routeConnectorSha256": "e6aa6b9f5b07c8836ef80d3f3d21ef9a28be505ff69e6ce3e7c2fbc465b374ce",
+      "branchFamily": "step",
+      "branchAction": "doFillDeathSavingThrow",
+      "observedActionTaken": "doFillDeathSavingThrow",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=3 action=doFillDeathSavingThrow roll=20",
+      "sampledInputs": [
+        {
+          "pickName": "roll",
+          "value": 20
+        }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "1469a22f86b410675c7397a4434f49dbcfd69793e6dc7efe43522505fcb26af5",
+        "observedProjectionSha256": "1469a22f86b410675c7397a4434f49dbcfd69793e6dc7efe43522505fcb26af5",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result) and BattleResolutionResult.routeEvents on End Turn Death Saving Throw fill",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentActorId",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.zeroHpLifecycle.policy",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleFill.kind=deathSavingThrow",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt",
+      "qntFileSha256": "0d21761fe794347b45990f88719540e3a7ab740484d77de11715e3e3625a08cf",
+      "routeConnectorSha256": "e6aa6b9f5b07c8836ef80d3f3d21ef9a28be505ff69e6ce3e7c2fbc465b374ce",
+      "branchFamily": "step",
+      "branchAction": "doRejectWrongActorEndTurnAfterResolved",
+      "observedActionTaken": "doRejectWrongActorEndTurnAfterResolved",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=3 action=doRejectWrongActorEndTurnAfterResolved roll=20",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "92ee583e08554a5e5ca79eec94df62a97f11ce8f74d3432117374a0e87faeed3",
+        "observedProjectionSha256": "92ee583e08554a5e5ca79eec94df62a97f11ce8f74d3432117374a0e87faeed3",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result) and BattleResolutionResult.routeEvents on End Turn wrong-actor rejection",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentActorId",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.zeroHpLifecycle.policy",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleFill.kind=deathSavingThrow",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

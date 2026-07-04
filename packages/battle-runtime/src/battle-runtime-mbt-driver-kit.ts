@@ -10256,9 +10256,28 @@ export function createDeathSavingThrowRouteDriver() {
     let route: readonly ReducerRouteEvent[] = [];
 
     function reset(): void {
-      recorder.reset(deathSavingThrowBattle());
+      const state = deathSavingThrowBattle();
+      recorder.reset(state);
       fills = [];
-      route = [reducerRouteStartBattle("battleActionEconomy")];
+      route = [battleReducerStartRouteEvent(state)];
+    }
+
+    function recordDeathSavingThrowResolution(
+      nextFills: readonly BattleFill[],
+    ): void {
+      const snapshot = recorder.snapshot();
+      const result = resolveBattleSubject({
+        state: snapshot.state,
+        subject,
+        fills: nextFills,
+      });
+      if (result.routeEvents === undefined || result.routeEvents.length === 0) {
+        throw new Error(
+          "Expected public reducer route events on Death Saving Throw resolution.",
+        );
+      }
+      route = [...route, ...result.routeEvents];
+      recorder.record(result);
     }
 
     function fillDeathSavingThrow(roll: number): void {
@@ -10267,16 +10286,7 @@ export function createDeathSavingThrowRouteDriver() {
         "deathSavingThrow",
       );
       fills = [deathSavingThrowFill(deathSavingThrow, roll)];
-      recorder.submit(fills);
-      route = [
-        ...route,
-        reducerRouteResolveBattleSubject({
-          subject: "deathSavingThrow",
-          fill: "deathSavingThrow",
-          holes: recorder.snapshot().holes,
-          owner: "battleHitPointAndZeroHpLifecycle",
-        }),
-      ];
+      recordDeathSavingThrowResolution(fills);
     }
 
     reset();
@@ -10284,33 +10294,13 @@ export function createDeathSavingThrowRouteDriver() {
     return {
       init: reset,
       doDiscoverEndTurnDeathSavingThrow: () => {
-        recorder.submit([]);
-        route = [
-          ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: "deathSavingThrow",
-            holes: recorder.snapshot().holes,
-            owner: "battleHitPointAndZeroHpLifecycle",
-          }),
-        ];
+        recordDeathSavingThrowResolution([]);
       },
       doFillDeathSavingThrow: ({ roll }) => {
         fillDeathSavingThrow(roll);
       },
       doRejectWrongActorEndTurnAfterResolved: () => {
-        const snapshot = recorder.snapshot();
-        recorder.record(
-          resolveBattleSubject({ state: snapshot.state, subject, fills }),
-        );
-        route = [
-          ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "deathSavingThrow",
-            fill: "deathSavingThrow",
-            holes: recorder.snapshot().holes,
-            owner: "battleHitPointAndZeroHpLifecycle",
-          }),
-        ];
+        recordDeathSavingThrowResolution(fills);
       },
       step: () => {},
       getState: () => ({
@@ -16228,7 +16218,19 @@ function deathSavingThrowEndTurnSubject(): Extract<
   BattleSubject,
   { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
 > {
-  return { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" };
+  const act = discoverBattleActs(deathSavingThrowBattle()).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.actorId === fighterId &&
+      candidate.subject.command === "endTurn",
+  );
+  if (
+    act?.subject.tag === "runtimeCommand" &&
+    act.subject.command === "endTurn"
+  ) {
+    return act.subject;
+  }
+  throw new Error("Expected Death Saving Throw End Turn act discovery.");
 }
 
 function commandOrderingCastSubject(): Extract<
