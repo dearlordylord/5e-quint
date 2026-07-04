@@ -403,7 +403,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           unitId: unit.id,
           selectedOption: {
             kind: "huntersPrey",
-            optionId: "colossusSlayer",
+            selection: "woundedTargetWeaponDamage",
           },
         },
         unit,
@@ -420,7 +420,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           unitId: unit.id,
           selectedOption: {
             kind: "huntersPrey",
-            optionId: "hordeBreaker",
+            selection: "nearbyDifferentTargetSameWeaponAttack",
           },
         },
         unit,
@@ -449,7 +449,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     expect(
       battleHuntersPreySupportForUnit(unit, {
         kind: "huntersPrey",
-        optionId: "hordeBreaker",
+        selection: "nearbyDifferentTargetSameWeaponAttack",
       }),
     ).toEqual(huntersPreyNearbyDifferentTargetSameWeaponAttackSupport);
     expect(

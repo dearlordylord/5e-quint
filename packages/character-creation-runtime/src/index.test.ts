@@ -4927,7 +4927,10 @@ describe("character creation finalization", () => {
     ).toEqual(["horde_breaker"]);
     expect(characterBuildUnitRefs(result.build, unitLibrary)).toContainEqual({
       unitId: "ranger_hunters_prey",
-      selectedOption: { kind: "huntersPrey", optionId: "hordeBreaker" },
+      selectedOption: {
+        kind: "huntersPrey",
+        selection: "nearbyDifferentTargetSameWeaponAttack",
+      },
     });
   });
 

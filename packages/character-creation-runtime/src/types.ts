@@ -802,7 +802,9 @@ export type UnitRef = {
 
 export type UnitRefSelectedOption = {
   readonly kind: "huntersPrey";
-  readonly optionId: "colossusSlayer" | "hordeBreaker";
+  readonly selection:
+    | "woundedTargetWeaponDamage"
+    | "nearbyDifferentTargetSameWeaponAttack";
 };
 
 export type AbilityScoreGenerationSelection = {

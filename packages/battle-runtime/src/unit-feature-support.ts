@@ -850,7 +850,7 @@ export type BattleHuntersPreySupportProfile = {
 };
 export type BattleUnitSupportProfileSelectedOption = {
   readonly kind: "huntersPrey";
-  readonly optionId: "colossusSlayer" | "hordeBreaker";
+  readonly selection: HuntersPreyProfile["kind"];
 };
 type HuntersPreyAdmittedMechanicsProfile = {
   readonly woundedTargetWeaponDamage: HuntersPreyWoundedTargetWeaponDamageProfile;
@@ -3461,13 +3461,13 @@ function selectedHuntersPreySupportProfile(
 ): BattleHuntersPreySupportProfile {
   return {
     kind: HUNTERS_PREY_SUPPORT_PROFILE,
-    huntersPrey: Match.value(selectedOption.optionId).pipe(
+    huntersPrey: Match.value(selectedOption.selection).pipe(
       Match.when(
-        "colossusSlayer",
+        "woundedTargetWeaponDamage",
         () => admitted.woundedTargetWeaponDamage,
       ),
       Match.when(
-        "hordeBreaker",
+        "nearbyDifferentTargetSameWeaponAttack",
         () => admitted.nearbyDifferentTargetSameWeaponAttack,
       ),
       Match.exhaustive,
@@ -3952,6 +3952,7 @@ export function magicActionHealingPoolProfileForUnit(
   if (
     mechanics.activationCost.kind !== "standard_action" ||
     mechanics.activationCost.action !== "magic" ||
+    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
     mechanics.spends.resourceUnitId !==
       CLERIC_CHANNEL_DIVINITY_RESOURCE_UNIT_ID ||
     mechanics.spends.amount !== 1 ||
@@ -4006,6 +4007,7 @@ export function magicActionAreaSaveDamageHealingProfileForUnit(
   if (
     mechanics.activationCost.kind !== "standard_action" ||
     mechanics.activationCost.action !== "magic" ||
+    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
     mechanics.spends.resourceUnitId !== DRUID_WILD_SHAPE_RESOURCE_UNIT_ID ||
     mechanics.spends.amount !== 1 ||
     mechanics.area.origin.kind !== "point_within_range" ||
@@ -5490,7 +5492,9 @@ function openHandTechniqueProfileForUnit(
   const mechanics = unit.mechanics;
   if (
     mechanics.trigger.kind !== "hit_with_attack_granted_by" ||
+    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
     mechanics.trigger.resourceOptionUnitId !== MONK_FOCUS_RESOURCE_UNIT_ID ||
+    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
     mechanics.trigger.optionId !== MONK_FLURRY_OF_BLOWS_OPTION_ID ||
     mechanics.optional !== true ||
     mechanics.effectSaveDc.kind !== "class_feature_ability_save_dc" ||
@@ -5581,6 +5585,7 @@ function stunningStrikeProfileForUnit(
       "hit_creature_with_monk_weapon_or_unarmed_strike" ||
     mechanics.trigger.usageLimit !== "once_per_turn" ||
     mechanics.optional !== true ||
+    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
     mechanics.spends.resourceUnitId !== MONK_FOCUS_RESOURCE_UNIT_ID ||
     mechanics.spends.amount !== 1 ||
     mechanics.savingThrow.ability !== "con" ||
@@ -5645,6 +5650,7 @@ function cunningStrikeEffectForSurfaceOption(
     if (
       option.requires.kind !== "equipment_on_person" ||
       option.requires.equipment.kind !== "tool" ||
+      // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
       option.requires.equipment.toolId !== "poisoners_kit" ||
       option.save.ability !== "con" ||
       option.onFail.kind !== "apply_condition" ||
@@ -5813,6 +5819,7 @@ function paladinSacredWeaponProfileForUnit(
   if (
     mechanics.activationCost.kind !== "standard_action" ||
     mechanics.activationCost.action !== "attack" ||
+    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
     mechanics.spends.resourceUnitId !==
       PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID ||
     mechanics.spends.amount !== 1 ||
@@ -5876,28 +5883,36 @@ function huntersPreyAdmittedMechanicsProfileForUnit(
     return null;
   }
   const mechanics = unit.mechanics;
-  const [colossusSlayer, hordeBreaker] = mechanics.options;
+  const woundedTargetWeaponDamage = mechanics.options.find(
+    (option) =>
+      "targetPredicate" in option &&
+      "damage" in option &&
+      option.trigger.kind === "hit_creature_with_weapon" &&
+      option.targetPredicate === "missing_any_hit_points" &&
+      option.usageLimit.kind === "once_per_turn" &&
+      option.damage.kind === "add_attack_damage_dice" &&
+      option.damage.dice.dice === 1 &&
+      option.damage.dice.dieSize === 8 &&
+      option.damage.damageType === "same_as_attack",
+  );
+  const nearbyDifferentTargetSameWeaponAttack = mechanics.options.find(
+    (option) =>
+      "extraAttack" in option &&
+      option.trigger.kind === "make_weapon_attack" &&
+      option.usageLimit.kind === "once_per_turn" &&
+      option.extraAttack.weapon === "same_weapon" &&
+      option.extraAttack.target.kind ===
+        "different_creature_near_original_target" &&
+      option.extraAttack.target.withinFeetOfOriginalTarget === 5 &&
+      option.extraAttack.target.withinWeaponRange === true &&
+      option.extraAttack.target.notAttackedThisTurn === true,
+  );
   if (
     mechanics.choice.kind !== "choose_one" ||
     mechanics.choice.replaceOn !== "short_or_long_rest" ||
     mechanics.options.length !== 2 ||
-    colossusSlayer?.id !== "colossus_slayer" ||
-    colossusSlayer.trigger.kind !== "hit_creature_with_weapon" ||
-    colossusSlayer.targetPredicate !== "missing_any_hit_points" ||
-    colossusSlayer.usageLimit.kind !== "once_per_turn" ||
-    colossusSlayer.damage.kind !== "add_attack_damage_dice" ||
-    colossusSlayer.damage.dice.dice !== 1 ||
-    colossusSlayer.damage.dice.dieSize !== 8 ||
-    colossusSlayer.damage.damageType !== "same_as_attack" ||
-    hordeBreaker?.id !== "horde_breaker" ||
-    hordeBreaker.trigger.kind !== "make_weapon_attack" ||
-    hordeBreaker.usageLimit.kind !== "once_per_turn" ||
-    hordeBreaker.extraAttack.weapon !== "same_weapon" ||
-    hordeBreaker.extraAttack.target.kind !==
-      "different_creature_near_original_target" ||
-    hordeBreaker.extraAttack.target.withinFeetOfOriginalTarget !== 5 ||
-    hordeBreaker.extraAttack.target.withinWeaponRange !== true ||
-    hordeBreaker.extraAttack.target.notAttackedThisTurn !== true
+    woundedTargetWeaponDamage === undefined ||
+    nearbyDifferentTargetSameWeaponAttack === undefined
   ) {
     return null;
   }
@@ -6118,13 +6133,17 @@ export function battleDruidWildCompanionSpellCastSupportForUnit(
   ) {
     return null;
   }
-  return unit.mechanics.spellId === "find_familiar" &&
+  return (
+    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
+    unit.mechanics.spellId === "find_familiar" &&
     unit.mechanics.activationCost.kind === "standard_action" &&
     unit.mechanics.activationCost.action === "magic" &&
     unit.mechanics.componentOverride.material === "not_required" &&
     unit.mechanics.spellModeOverride.kind ===
       "fixed_creature_type_mode_option" &&
+    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
     unit.mechanics.spellModeOverride.optionId === "fey"
+  )
     ? DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE
     : "unsupported";
 }

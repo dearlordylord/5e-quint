@@ -5202,7 +5202,10 @@ function hunterRangerHordeBreakerBuild(): CharacterBuild {
         kind: "selectedClassChoice",
         selectedFromUnitId: "ranger_hunters_prey",
         unitId: "ranger_hunters_prey",
-        selectedOption: { kind: "huntersPrey", optionId: "hordeBreaker" },
+        selectedOption: {
+          kind: "huntersPrey",
+          selection: "nearbyDifferentTargetSameWeaponAttack",
+        },
       },
     ],
   };
