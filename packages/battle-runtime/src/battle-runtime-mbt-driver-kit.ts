@@ -11636,73 +11636,62 @@ function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
 ) {
   return defineDriver(scalarBuffDriverSchema, () => {
     let state = scalarBuffBattle();
-    let subject: BattleSubject = longstriderSubject();
+    let act: AvailableBattleAct = discoverLongstriderAct(
+      state,
+      longstriderSubject(),
+    );
+    let subject: BattleSubject = act.subject;
     let fills: readonly BattleFill[] = [];
-    let holes: readonly BattleHole[] = discoverLongstriderHoles(state, subject);
+    let holes: readonly BattleHole[] = act.initialHoles;
     let lastResult: ScalarBuffMbtProjection["lastResult"] = "init";
     let lastInvalidReason: ScalarBuffMbtProjection["lastInvalidReason"] = "";
-    let route: readonly ReducerRouteEvent[] = initialScalarBuffRoute(holes);
+    let route: readonly ReducerRouteEvent[] = initialScalarBuffRoute(state, act);
 
     function reset(): void {
       state = scalarBuffBattle();
-      subject = longstriderSubject();
+      act = discoverLongstriderAct(state, longstriderSubject());
+      subject = act.subject;
       fills = [];
-      holes = discoverLongstriderHoles(state, subject);
+      holes = act.initialHoles;
       lastResult = "init";
       lastInvalidReason = "";
-      route = initialScalarBuffRoute(holes);
+      route = initialScalarBuffRoute(state, act);
     }
 
     function initialScalarBuffRoute(
-      initialHoles: readonly BattleHole[],
+      initialState: BattleState,
+      initialAct: AvailableBattleAct,
     ): readonly ReducerRouteEvent[] {
+      if (!includeRoute) return [];
       return [
-        reducerRouteStartBattle("battleActionEconomy"),
-        reducerRouteDiscoverBattleActs({
-          subject: "scalarBuffEffect",
-          holes: initialHoles,
-          owner: "battleSpellSlotAndActionEconomy",
-        }),
+        battleReducerStartRouteEvent(initialState),
+        ...requireScalarBuffActRouteEvents(initialAct),
       ];
     }
 
-    function recordResult(
-      result: BattleResolutionResult,
-      owner: ReducerRouteOwnerGroup,
-    ): void {
+    function recordResult(result: BattleResolutionResult): void {
       lastResult = result.tag;
       if (result.tag === "resolved") {
         state = result.state;
         holes = [];
         lastInvalidReason = "";
-        recordRoute(result, owner);
+        recordRoute(result);
         return;
       }
       if (result.tag === "needsHoles") {
         state = result.state;
         holes = result.holes;
         lastInvalidReason = "";
-        recordRoute(result, owner);
+        recordRoute(result);
         return;
       }
       lastInvalidReason = mbtInvalidReason(result.reason);
-      recordRoute(result, owner);
+      recordRoute(result);
     }
 
-    function recordRoute(
-      result: BattleResolutionResult,
-      owner: ReducerRouteOwnerGroup,
-    ): void {
+    function recordRoute(result: BattleResolutionResult): void {
       if (!includeRoute) return;
-      route = [
-        ...route,
-        reducerRouteResolveBattleSubject({
-          subject: "scalarBuffEffect",
-          fill: "targetChoice",
-          holes: result.tag === "needsHoles" ? result.holes : [],
-          owner,
-        }),
-      ];
+      route = [...route, ...requireScalarBuffRouteEvents(result)];
     }
 
     return {
@@ -11710,16 +11699,10 @@ function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
       doFillLongstriderTarget: () => {
         const target = requireHole(holes, "targetChoice");
         fills = [spellTargetChoiceFill(target, skeletonId, "longstrider")];
-        recordResult(
-          resolveBattleSubject({ state, subject, fills }),
-          "battleActiveEffect",
-        );
+        recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doRejectStaleAfterResolved: () => {
-        recordResult(
-          resolveBattleSubject({ state, subject, fills }),
-          "battleHoleFrontier",
-        );
+        recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       step: () => {},
       getState: (): IncludeRoute extends true
@@ -15771,10 +15754,10 @@ function discoverAttackHoles(
   return act.initialHoles;
 }
 
-function discoverLongstriderHoles(
+function discoverLongstriderAct(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
-): readonly BattleHole[] {
+): AvailableBattleAct {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
@@ -15785,7 +15768,7 @@ function discoverLongstriderHoles(
     throw new Error("Expected Longstrider spell act.");
   }
 
-  return act.initialHoles;
+  return act;
 }
 
 function discoverMagicMissileHoles(
@@ -16299,6 +16282,28 @@ function requireMagicMissileRouteEvents(
   }
   throw new Error(
     "Expected public reducer route events on Magic Missile resolution.",
+  );
+}
+
+function requireScalarBuffActRouteEvents(
+  act: AvailableBattleAct,
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on scalar-buff act.",
+  );
+}
+
+function requireScalarBuffRouteEvents(
+  result: BattleResolutionResult,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on scalar-buff resolution.",
   );
 }
 

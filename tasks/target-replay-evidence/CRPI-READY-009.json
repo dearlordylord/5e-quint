@@ -1,0 +1,109 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/scalar-buff.mbt.test.ts scalar buff public reducer qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-scalar-buff.route.mbt.qnt",
+      "qntFileSha256": "3f0684da760de7561a3e5a8fa1074786e8919336564a1959ee908169bc67ba03",
+      "routeConnectorSha256": "a8ace54ed7ed86890f853e93d62dd6a39f96fe6a2b7e8ef025869cf5cfecf63b",
+      "branchFamily": "step",
+      "branchAction": "doFillLongstriderTarget",
+      "observedActionTaken": "doFillLongstriderTarget",
+      "harnessTestPath": "packages/battle-runtime/src/scalar-buff.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=2 action=doFillLongstriderTarget qRoute=scalar-buff-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "c2cc348f41bb5312508b3bb750485b812b48ae05239de72cfd52b6784ca5121a",
+        "observedProjectionSha256": "c2cc348f41bb5312508b3bb750485b812b48ae05239de72cfd52b6784ca5121a",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents from resolveBattleSubject",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=scalarBuffEffect",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleMovementResource",
+          "BattleCreatureState.activeEffects[kind=speedDelta]",
+          "BattleSubject.actionSpell.invocation.procedure=scalarBuff"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-scalar-buff.route.mbt.qnt",
+      "qntFileSha256": "3f0684da760de7561a3e5a8fa1074786e8919336564a1959ee908169bc67ba03",
+      "routeConnectorSha256": "a8ace54ed7ed86890f853e93d62dd6a39f96fe6a2b7e8ef025869cf5cfecf63b",
+      "branchFamily": "step",
+      "branchAction": "doRejectStaleAfterResolved",
+      "observedActionTaken": "doRejectStaleAfterResolved",
+      "harnessTestPath": "packages/battle-runtime/src/scalar-buff.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=2 action=doRejectStaleAfterResolved qRoute=scalar-buff-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "4b1ccfaded76737792d7783e2a4cbf8e325d9e7e7d78ecd19d0421fa5d96b16b",
+        "observedProjectionSha256": "4b1ccfaded76737792d7783e2a4cbf8e325d9e7e7d78ecd19d0421fa5d96b16b",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events retained from the resolved Longstrider subject, followed by the public stale-subject BattleResolutionResult.routeEvents from resolveBattleSubject",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=scalarBuffEffect",
+          "BattleReducerRouteEvent.fill=targetChoice",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleMovementResource",
+          "BattleReducerRouteEvent.owner=battleHoleFrontier",
+          "BattleCreatureState.activeEffects[kind=speedDelta]",
+          "BattleSubject.actionSpell.invocation.procedure=scalarBuff"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

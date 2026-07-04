@@ -1,5 +1,90 @@
 # Validation Report
 
+## CRPI-READY-009
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-scalar-buff.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-scalar-buff.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Scalar-buff target replay now observes the copied `qRoute` projection through
+public battle reducer route events. The route starts with
+`battleReducerStartRouteEvent`, discovers the scalar-buff spell act through
+`AvailableBattleAct.routeEvents`, resolves the selected scalar-buff
+subject through `BattleResolutionResult.routeEvents`, and records stale-subject
+hole-frontier ownership through the same public resolution boundary.
+
+The runtime does not add a parallel scalar-buff ledger. Magic Action
+availability remains `BattleState.currentTurnResources`, Spell Slot spend
+remains character spellcasting resource state, the Longstrider Speed increase
+remains `BattleCreatureState.activeEffects[kind=speedDelta]`, and Speed remains
+projected by movement readers from the existing active Spell Effect.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt#step:doFillLongstriderTarget` | `tasks/target-replay-evidence/CRPI-READY-009.json#driver:packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt#step:doFillLongstriderTarget#trace:MBT_TRACES=1 MBT_STEPS=2 action=doFillLongstriderTarget qRoute=scalar-buff-public-route` | `packages/battle-runtime/src/scalar-buff.mbt.test.ts#observes Longstrider qRoute through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt#step:doRejectStaleAfterResolved` | `tasks/target-replay-evidence/CRPI-READY-009.json#driver:packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt#step:doRejectStaleAfterResolved#trace:MBT_TRACES=1 MBT_STEPS=2 action=doRejectStaleAfterResolved qRoute=scalar-buff-public-route` | `packages/battle-runtime/src/scalar-buff.mbt.test.ts#observes Longstrider qRoute through public reducer entrypoints` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-009.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=2 action=<branchAction> qRoute=scalar-buff-public-route`
+- Public route assertion:
+  - `packages/battle-runtime/src/scalar-buff.mbt.test.ts#observes Longstrider qRoute through public reducer entrypoints`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-009/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 40.
+
+Verification results:
+
+- Base check passed: `ralph/crpi-ready-009-scalar-buff-route/integration`
+  and `HEAD` were both `db6cc382f Mark Ralph task 39 done`, and
+  `git merge-base --is-ancestor db6cc382f9d48585e71045145cc7059b63c4ad05 HEAD`
+  exited 0.
+- RAW/ubiquitous-language review passed against Longstrider, Speed, and
+  UBIQUITOUS_LANGUAGE.md terms for Speed, Movement, Spell Invocation, and Spell
+  Effect.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- Before MBT, `ps aux | grep vitest | grep -v grep` and
+  `ps aux | grep quint_evaluator | grep -v grep` found no active runner or
+  evaluator.
+- First focused MBT run exposed stale adapter-local route expectations; final
+  run `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/scalar-buff.mbt.test.ts src/scalar-buff-active-effects.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 5 tests; final timed run `TOTAL: 10s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24
+  sampled inputs.
+- `git diff --check` passed.
+- Reviewer-loop convergence passed: round 1 moved scalar-buff route replay onto
+  public reducer route events; round 2 aligned the copied route connector with
+  public active-effect and movement-resource owner evidence and found no
+  remaining reasonable findings.
+
 ## CRP07-DSR-06
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

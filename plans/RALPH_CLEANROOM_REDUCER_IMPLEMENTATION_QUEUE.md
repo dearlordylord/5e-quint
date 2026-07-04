@@ -241,7 +241,7 @@
     {
       "number": 40,
       "id": "CRPI-READY-009",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-scalar-buff"
     },
     {
@@ -692,7 +692,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-025` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRP07-DSR-02` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-06` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-009` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-009` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-010` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-011` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-012` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -2973,7 +2973,7 @@ Plan Impact:
 
 ### Task 40 - CRPI-READY-009
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

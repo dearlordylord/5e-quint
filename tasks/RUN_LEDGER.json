@@ -995,6 +995,70 @@
           "detail": "Round 1 promoted scalar-buff active-effect qRoute replay into public reducer route events and artifacts; round 2 found no remaining reasonable findings."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-009",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "cf017f7572abb584fb81022d8459267af32db0e63eb79c28648a3a2ec2a1e9d8"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "fed29da7578bf412537337eca5d7244b4072da15422879fd760547f7d1f2ffbe"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "63cf2a4761e7299c8d87c5224b74f2441527fe5ae3a282c8adb6eeda1dce77b7"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-009.json",
+          "sha256": "04ede58ce995c7e628f11f87fd4f88721687d1ed969d4605a2b426cb58585d75",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-009.json#driver:packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt#step:doFillLongstriderTarget#trace:MBT_TRACES=1 MBT_STEPS=2 action=doFillLongstriderTarget qRoute=scalar-buff-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-009.json#driver:packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt#step:doRejectStaleAfterResolved#trace:MBT_TRACES=1 MBT_STEPS=2 action=doRejectStaleAfterResolved qRoute=scalar-buff-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/crpi-ready-009-scalar-buff-route/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor db6cc382f9d48585e71045145cc7059b63c4ad05 HEAD",
+          "status": "pass",
+          "detail": "Integration and HEAD were db6cc382f; base SHA is an ancestor."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/scalar-buff.mbt.test.ts src/scalar-buff-active-effects.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "5 tests passed; public qRoute replay included; final timed run TOTAL: 10s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 moved scalar-buff qRoute replay onto public reducer route events; round 2 aligned the route connector with public active-effect and movement-resource owner evidence and found no remaining reasonable findings."
+        }
+      ]
     }
   ]
 }

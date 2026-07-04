@@ -11,7 +11,6 @@
 // - UBIQUITOUS_LANGUAGE.md: Speed, Spell Invocation, and Spell Effect.
 module battleRuntimeScalarBuffRouteMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
-  import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
   import battleRuntimeReducerRoute.* from "./battle-runtime-reducer-route"
 
@@ -40,7 +39,7 @@ module battleRuntimeScalarBuffRouteMbt {
         routeStartBattle(BattleActionEconomyOwner),
         routeDiscoverBattleActs(
           ScalarBuffEffectRouteSubject,
-          Set(TargetChoiceHoleKind),
+          Set(),
           BattleSpellSlotAndActionEconomyOwner,
         ),
       ),
@@ -55,14 +54,17 @@ module battleRuntimeScalarBuffRouteMbt {
       targetSpeed: 40,
       actionAvailable: false,
       protocol: witnessResolved(TargetChoice),
-      qRoute: qRoute.append(
-        routeResolveBattleSubject(
+      qRoute: qRoute
+        .append(routeResolveBattleSubjectWithoutFill(
           ScalarBuffEffectRouteSubject,
-          TargetChoiceFillKind,
           Set(),
           BattleActiveEffectOwner,
-        )
-      ),
+        ))
+        .append(routeResolveBattleSubjectWithoutFill(
+          ScalarBuffEffectRouteSubject,
+          Set(),
+          BattleMovementResourceOwner,
+        )),
     },
   }
 

@@ -1196,20 +1196,29 @@ function scalarBuffRouteForResolution(
   if (!isScalarBuffEffectSubject(input.subject)) {
     return undefined;
   }
-  if (result.tag !== "resolved") {
-    return undefined;
-  }
-
   const fill = input.fills.at(-1);
   if (fill === undefined) {
     return undefined;
   }
-  const routeFill = battleReducerRouteFill(fill);
-  if (
-    routeFill !== "targetChoice" &&
-    routeFill !== "spellTargetList" &&
-    routeFill !== "rolledDice"
-  ) {
+  const routeFill = scalarBuffRouteFill(fill);
+  if (routeFill === undefined) {
+    return undefined;
+  }
+
+  if (result.tag === "invalid") {
+    return result.reason === "staleSubject"
+      ? [
+          {
+            kind: "resolveBattleSubject",
+            subject: "scalarBuffEffect",
+            fill: routeFill,
+            holes: [],
+            owner: "battleHoleFrontier",
+          },
+        ]
+      : undefined;
+  }
+  if (result.tag !== "resolved") {
     return undefined;
   }
 
@@ -1218,6 +1227,23 @@ function scalarBuffRouteForResolution(
       (owner) => scalarBuffResolveWithoutFill([], owner),
     ),
   );
+}
+
+function scalarBuffRouteFill(
+  fill: BattleFill,
+): Extract<
+  BattleReducerRouteFill,
+  "targetChoice" | "spellTargetList" | "rolledDice"
+> | undefined {
+  const routeFill = battleReducerRouteFill(fill);
+  if (
+    routeFill === "targetChoice" ||
+    routeFill === "spellTargetList" ||
+    routeFill === "rolledDice"
+  ) {
+    return routeFill;
+  }
+  return undefined;
 }
 
 function scalarBuffResolveOwners(
