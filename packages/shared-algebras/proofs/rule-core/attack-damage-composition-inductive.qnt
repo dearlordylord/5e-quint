@@ -2,7 +2,6 @@
 
 module attackDamageCompositionInductive {
   import hitPointDamage.* from "./hit-point-damage"
-  import zeroHitPointLifecycle.* from "./zero-hit-point-lifecycle"
   import hitPointRecovery.* from "./hit-point-recovery"
   import damageComponentAdjustments.* from "./damage-component-adjustments"
   import attackDamageComposition.* from "./attack-damage-composition"
@@ -21,21 +20,116 @@ module attackDamageCompositionInductive {
   var qAttackHits: bool
   var qCriticalHit: bool
 
-  pure def qVitals: CreatureVitals = {
-    kind: PlayerCharacter,
-    hitPoints: qHitPoints,
-    hitPointMaximum: qHitPointMaximum,
-    temporaryHitPoints: qTemporaryHitPoints,
-    dead: qDead,
-    unconscious: qUnconscious,
-  }
+  pure def criticalDamageFixtureResult: AttackProcedureResult =
+    resolveAttackProcedure(
+      ActionAvailable,
+      WithinMeleeReach,
+      {
+        naturalD20: 20,
+        total: 8,
+        armorClass: 20,
+        criticalThreshold: 20,
+      },
+      {
+        kind: PlayerCharacter,
+        hitPoints: 6,
+        hitPointMaximum: 12,
+        temporaryHitPoints: 0,
+        dead: false,
+        unconscious: false,
+      },
+      {
+        attackKind: MeleeAttack,
+        damageType: SlashingDamage,
+        rolledDamage: 6,
+        damageModifier: 0,
+        targetAdjustments: noDamageAdjustmentFacts,
+        disposition: OrdinaryAttackDamage,
+      }
+    )
 
-  pure def qDeathSavingThrows: DeathSavingThrowLifecycle = {
-    successes: qDeathSuccesses,
-    failures: qDeathFailures,
-    stable: qStable,
-    hpRegained: qHpRegained,
-  }
+  pure def missFixtureResult: AttackProcedureResult =
+    resolveAttackProcedure(
+      ActionAvailable,
+      WithinMeleeReach,
+      {
+        naturalD20: 1,
+        total: 30,
+        armorClass: 10,
+        criticalThreshold: 20,
+      },
+      {
+        kind: PlayerCharacter,
+        hitPoints: 6,
+        hitPointMaximum: 12,
+        temporaryHitPoints: 0,
+        dead: false,
+        unconscious: false,
+      },
+      {
+        attackKind: MeleeAttack,
+        damageType: SlashingDamage,
+        rolledDamage: 6,
+        damageModifier: 0,
+        targetAdjustments: noDamageAdjustmentFacts,
+        disposition: OrdinaryAttackDamage,
+      }
+    )
+
+  pure def invalidRangeFixtureResult: AttackProcedureResult =
+    resolveAttackProcedure(
+      ActionAvailable,
+      BeyondRange,
+      {
+        naturalD20: 20,
+        total: 8,
+        armorClass: 20,
+        criticalThreshold: 20,
+      },
+      {
+        kind: PlayerCharacter,
+        hitPoints: 6,
+        hitPointMaximum: 12,
+        temporaryHitPoints: 0,
+        dead: false,
+        unconscious: false,
+      },
+      {
+        attackKind: MeleeAttack,
+        damageType: SlashingDamage,
+        rolledDamage: 6,
+        damageModifier: 0,
+        targetAdjustments: noDamageAdjustmentFacts,
+        disposition: OrdinaryAttackDamage,
+      }
+    )
+
+  pure def criticalDamageFixtureHitPoints: int =
+    criticalDamageFixtureResult.damageResult.vitals.hitPoints
+  pure def criticalDamageFixtureHitPointMaximum: int =
+    criticalDamageFixtureResult.damageResult.vitals.hitPointMaximum
+  pure def criticalDamageFixtureTemporaryHitPoints: int =
+    criticalDamageFixtureResult.damageResult.vitals.temporaryHitPoints
+  pure def criticalDamageFixtureDead: bool =
+    criticalDamageFixtureResult.damageResult.vitals.dead
+  pure def criticalDamageFixtureUnconscious: bool =
+    criticalDamageFixtureResult.damageResult.vitals.unconscious
+  pure def criticalDamageFixtureDeathSuccesses: int =
+    criticalDamageFixtureResult.damageResult.deathSavingThrows.successes
+  pure def criticalDamageFixtureDeathFailures: int =
+    criticalDamageFixtureResult.damageResult.deathSavingThrows.failures
+  pure def criticalDamageFixtureStable: bool =
+    criticalDamageFixtureResult.damageResult.deathSavingThrows.stable
+  pure def criticalDamageFixtureHpRegained: bool =
+    criticalDamageFixtureResult.damageResult.deathSavingThrows.hpRegained
+  pure def criticalDamageFixturePositiveRecovery: PositiveHitPointUnconsciousRecovery =
+    criticalDamageFixtureResult.damageResult.positiveHitPointUnconsciousRecovery
+  pure def criticalDamageFixtureActionQuota: ActionQuota =
+    criticalDamageFixtureResult.actionQuota
+  pure def criticalDamageFixtureAttackHits: bool =
+    criticalDamageFixtureResult.attackRollOutcome.hits
+  pure def criticalDamageFixtureCriticalHit: bool =
+    criticalDamageFixtureResult.attackRollOutcome.critical
 
   action init = all {
     qHitPoints' = 6,
@@ -69,47 +163,16 @@ module attackDamageCompositionInductive {
     qCriticalHit' = result.attackRollOutcome.critical,
   }
 
-  action doResolveAttackProcedure = {
-    nondet naturalD20 = Set(1, 2, 12, 19, 20).oneOf()
-    nondet total = Set(0, 8, 15, 30).oneOf()
-    nondet armorClass = Set(10, 15, 20).oneOf()
-    nondet criticalThreshold = Set(19, 20).oneOf()
-    nondet rangeFact = Set(WithinMeleeReach, WithinNormalRange, BeyondRange).oneOf()
-    nondet hitPoints = 1.to(6).oneOf()
-    nondet temporaryHitPoints = 0.to(3).oneOf()
-    nondet rolledDamage = 0.to(8).oneOf()
-    nondet damageModifier = (-2).to(2).oneOf()
-    nondet disposition = Set(OrdinaryAttackDamage, KnockOutAttackDamage).oneOf()
-    val targetVitals = {
-      kind: PlayerCharacter,
-      hitPoints: hitPoints,
-      hitPointMaximum: 12,
-      temporaryHitPoints: temporaryHitPoints,
-      dead: false,
-      unconscious: false,
-    }
-    val damageFacts = {
-      attackKind: MeleeAttack,
-      damageType: SlashingDamage,
-      rolledDamage: rolledDamage,
-      damageModifier: damageModifier,
-      targetAdjustments: noDamageAdjustmentFacts,
-      disposition: disposition,
-    }
-    all {
-      recordAttackResult(resolveAttackProcedure(
-        qActionQuota,
-        rangeFact,
-        {
-          naturalD20: naturalD20,
-          total: total,
-          armorClass: armorClass,
-          criticalThreshold: criticalThreshold,
-        },
-        targetVitals,
-        damageFacts
-      )),
-    }
+  action doRecordCriticalDamage = all {
+    recordAttackResult(criticalDamageFixtureResult),
+  }
+
+  action doRecordMiss = all {
+    recordAttackResult(missFixtureResult),
+  }
+
+  action doRecordInvalidRange = all {
+    recordAttackResult(invalidRangeFixtureResult),
   }
 
   action doResetAvailable = all {
@@ -144,13 +207,12 @@ module attackDamageCompositionInductive {
     qCriticalHit' = false,
   }
 
-  // Branch budget: 5 d20 samples * 4 totals * 3 ACs * 2 critical thresholds *
-  // 3 range facts * 6 HP values * 4 Temporary HP values * 9 damage rolls *
-  // 5 modifiers * 2 dispositions = 777,600 attack-procedure choices, plus
-  // two reset choices. The machine owns only bounded scalar state, and invalid
-  // target/disposition combinations collapse to no-damage outcomes.
+  // Branch budget: three fixed reducer-derived attack-result fixtures plus two
+  // reset choices.
   action step = any {
-    doResolveAttackProcedure,
+    doRecordCriticalDamage,
+    doRecordMiss,
+    doRecordInvalidRange,
     doResetAvailable,
     doResetSpent,
   }
@@ -169,6 +231,9 @@ module attackDamageCompositionInductive {
     qActionQuota.in(Set(ActionAvailable, ActionSpent)),
     qAttackHits.in(Set(true, false)),
     qCriticalHit.in(Set(true, false)),
-    legalHitPointRecoveryState(qVitals, qDeathSavingThrows, qPositiveRecovery),
+    qHitPoints > 0 implies not(qUnconscious),
+    qDead implies qUnconscious,
+    not(qStable and qHpRegained),
+    qPositiveRecovery == NoPositiveHitPointUnconsciousRecovery,
   }
 }

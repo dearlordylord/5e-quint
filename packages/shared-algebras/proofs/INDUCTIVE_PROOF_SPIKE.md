@@ -27,21 +27,19 @@ The active inductive modules are classified as:
   - `death-saves-algebra-inductive.qnt`.
 - rule-core owned proof machines:
   - `rule-core/action-turn-procedures-inductive.qnt`;
+  - `rule-core/attack-damage-composition-inductive.qnt`;
+  - `rule-core/damage-component-adjustments-inductive.qnt`;
   - `rule-core/hit-point-damage-inductive.qnt`;
   - `rule-core/hit-point-recovery-inductive.qnt`;
   - `rule-core/movement-spatial-grapple-inductive.qnt`;
   - `rule-core/reactions-continuations-concentration-inductive.qnt`;
+  - `rule-core/spell-procedure-profiles-inductive.qnt`;
   - `rule-core/stat-block-controls-inductive.qnt`;
   - `rule-core/unit-feature-procedure-profiles-inductive.qnt`;
   - `rule-core/zero-hit-point-lifecycle-inductive.qnt`.
 
-The following modules are classified as requiring state-space repair before
-they can enter the active bounded lane. A 2026-07-03 full-lane attempt surfaced
-Apalache heap/state-space failures for these files:
-
-- `rule-core/attack-damage-composition-inductive.qnt`;
-- `rule-core/damage-component-adjustments-inductive.qnt`;
-- `rule-core/spell-procedure-profiles-inductive.qnt`.
+No modules are currently classified as requiring state-space repair before they
+can enter the active bounded lane.
 
 ## Root Algebra Inductive Invariants
 

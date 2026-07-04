@@ -36,4 +36,21 @@ module movementSpatialGrappleInductiveTests {
     }))),
   }
 
+  run grapple_attempt_reaches_active_grapple_state = {
+    val grapple = applyGrappleAttempt(NoGrapple, {
+      grapplerSize: MediumSize,
+      targetSize: MediumSize,
+      hasFreeHand: true,
+      targetSaveTotal: 8,
+      escapeDc: 13,
+    })
+    val movementState = initialMovementGrappleState.with("grapple", grapple)
+    all {
+      assert(activeGrapple(grapple)),
+      assert(grappleEscapeDc(grapple) == 13),
+      assert(effectiveSpeedFeet(movementState) == 0),
+      assert(legalMovementGrappleState(movementState)),
+    }
+  }
+
 }

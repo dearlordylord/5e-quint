@@ -19,20 +19,19 @@ const rootAlgebraInductiveProofModules = [
 
 const ruleCoreInductiveProofModules = [
   "proofs/rule-core/action-turn-procedures-inductive.qnt",
+  "proofs/rule-core/attack-damage-composition-inductive.qnt",
+  "proofs/rule-core/damage-component-adjustments-inductive.qnt",
   "proofs/rule-core/hit-point-damage-inductive.qnt",
   "proofs/rule-core/hit-point-recovery-inductive.qnt",
   "proofs/rule-core/movement-spatial-grapple-inductive.qnt",
   "proofs/rule-core/reactions-continuations-concentration-inductive.qnt",
+  "proofs/rule-core/spell-procedure-profiles-inductive.qnt",
   "proofs/rule-core/stat-block-controls-inductive.qnt",
   "proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt",
   "proofs/rule-core/zero-hit-point-lifecycle-inductive.qnt",
 ] as const;
 
-export const stateSpaceRepairInductiveModulePaths = [
-  "proofs/rule-core/attack-damage-composition-inductive.qnt",
-  "proofs/rule-core/damage-component-adjustments-inductive.qnt",
-  "proofs/rule-core/spell-procedure-profiles-inductive.qnt",
-] as const;
+export const stateSpaceRepairInductiveModulePaths = [] as const;
 
 const inductiveProofModulePaths = [
   ...rootAlgebraInductiveProofModules,
