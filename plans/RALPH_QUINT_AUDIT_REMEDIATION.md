@@ -524,7 +524,7 @@ Plan Impact:
 
 ### Task 8 - QAR-08-SHOVE-PROJECTION-UNION
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: dependency
 
