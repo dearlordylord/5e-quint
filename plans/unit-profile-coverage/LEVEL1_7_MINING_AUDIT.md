@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 501 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 221 |
-| level-5-7-follow-up-required | 12 |
+| catalog-only/dead-for-now | 222 |
+| level-5-7-follow-up-required | 11 |
 | missing-authored-record | 32 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 132 |
+| not-recorded | 131 |
 | profile-subset-supported | 59 |
 | supported-profile | 309 |
-| unsupported-profile | 400 |
+| unsupported-profile | 401 |
 
 ### Battle Readiness Snapshot
 
@@ -1021,7 +1021,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Wizard level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_wizard` | `.references/srd-5.2.1/Classes/Wizard.md:38` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
 | Wizard Memorize Spell | level-5 | character-level | class feature | `wizard_memorize_spell` | `.references/srd-5.2.1/Classes/Wizard.md:116` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future character-sheet-runtime Wizard prepared Spell Access Short Rest replacement owner plus existing class_wizard Spell Access/progression facts and spell invocation profiles | SRD Memorize Spell lets a Wizard who finishes a Short Rest study the spellbook and replace one prepared level 1+ Wizard spell with another level 1+ spell from that book. The existing class_wizard spellcasting record is the canonical owner for Wizard spellbook Spell Access, prepared-from-spellbook options, and level-5 spellbook/prepared-spell/Spell Slot progression; a future Character Sheet owner must consume those facts and Short Rest completion to rewrite the existing prepared Spell Access selection instead of adding a memorize-spell list, duplicate prepared-spell state, or authored-identity dispatch. Individual Spell Definition invocation behavior remains owned by spell invocation profiles. |
 | Wizard level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_wizard` | `.references/srd-5.2.1/Classes/Wizard.md:39` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Wizard Sculpt Spells | level-6 | character-level | class feature | `wizard_sculpt_spells` | `.references/srd-5.2.1/Classes/Wizard.md:421` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Wizard Sculpt Spells | level-6 | character-level | class feature | `wizard_sculpt_spells` | `.references/srd-5.2.1/Classes/Wizard.md:421` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | table-spatial-derivation: future-owner-before-SDK battle-runtime selected area spell save-damage exemption owner plus table/sight affected-creature witness owner | SRD Sculpt Spells lets the caster choose up to 1 plus the spell's level creatures the caster can see among the other creatures affected by an Evocation spell the caster casts. The chosen creatures automatically succeed on their Saving Throws against that spell and take no damage if they would normally take half damage on a successful save. Existing spell invocation owners can represent spell School of Magic, effective spell level for a casting, affected-creature or area witnesses, Saving Throw outcomes, half-damage success branches, and damage application, but they do not admit a selected class-feature pre-save exemption choice over visible affected creatures. A future owner must consume typed Surface facts for the selected Sculpt Spells feature, the existing Spell Definition school fact, the spell invocation's effective spell level for that casting, the existing spell affected-creature or area membership witnesses, caster sight witnesses, and the shared Saving Throw/save-damage boundary without duplicating spell identity, effective spell level, area membership, line-of-sight, target selection, Saving Throw result, damage state, subclass selection state, or dispatching on Wizard, Evoker, Sculpt Spells, or selected spell authored identity. |
 | Wizard level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_wizard` | `.references/srd-5.2.1/Classes/Wizard.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Wizard level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_wizard` | `.references/srd-5.2.1/Classes/Wizard.md:41` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Wizard spell list Acid Splash | spell-level-0 | spell-level | spell Unit pressure | `acid_splash` | `.references/srd-5.2.1/Classes/Wizard.md:142` | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
