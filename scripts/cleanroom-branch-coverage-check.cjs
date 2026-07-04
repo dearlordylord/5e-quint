@@ -68,6 +68,16 @@ const characterCreationFullVerticalSemanticOwnerPath =
   "packages/character-creation-runtime/character-creation-runtime-slice.qnt";
 const characterCreationFullVerticalRouteConnectorPath =
   "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt";
+const characterBattleInitProjectionDriverPath =
+  "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt";
+const characterBattleInitProjectionRouteConnectorPath =
+  "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt";
+const characterBattleEncounterCompositionRouteConnectorPath =
+  "packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt";
+const characterSessionSheetDerivedBattleActsDriverPath =
+  "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt";
+const characterSessionSheetDerivedBattleActsRouteConnectorPath =
+  "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt";
 const characterCreationFullVerticalQntAcceptanceRequired = [
   {
     tag: "qnt-semantic",
@@ -166,6 +176,57 @@ const characterCreationFillBatchTaskKeys = [
   "targetStateOwnerNotes",
   "forbiddenShortcuts",
   "verification",
+];
+const sessionBattleEntryTaskKeys = [
+  "taskId",
+  "title",
+  "status",
+  "sourcePaths",
+  "semanticEvidence",
+  "routeEvidence",
+  "branchActions",
+  "acceptance",
+  "targetStateOwnerNotes",
+  "forbiddenShortcuts",
+  "verification",
+];
+const sessionBattleEntrySemanticComparatorsByDriverPath = new Map([
+  [characterBattleInitProjectionDriverPath, "battle-init-projection-state"],
+  [
+    characterSessionSheetDerivedBattleActsDriverPath,
+    "sheet-derived-battle-act-state",
+  ],
+]);
+const sessionBattleEntryAllowedRouteConnectorsByDriverPath = new Map([
+  [
+    characterBattleInitProjectionDriverPath,
+    new Set([
+      characterBattleInitProjectionRouteConnectorPath,
+      characterBattleEncounterCompositionRouteConnectorPath,
+    ]),
+  ],
+  [
+    characterSessionSheetDerivedBattleActsDriverPath,
+    new Set([characterSessionSheetDerivedBattleActsRouteConnectorPath]),
+  ],
+]);
+const sessionBattleEntryRequiredRouteConnectorsByDriverPath = new Map([
+  [
+    characterBattleInitProjectionDriverPath,
+    new Set([
+      characterBattleInitProjectionRouteConnectorPath,
+      characterBattleEncounterCompositionRouteConnectorPath,
+    ]),
+  ],
+  [
+    characterSessionSheetDerivedBattleActsDriverPath,
+    new Set([characterSessionSheetDerivedBattleActsRouteConnectorPath]),
+  ],
+]);
+const sessionBattleEntryRequiredVerificationItems = [
+  "Run pnpm cleanroom-branch-coverage:check.",
+  "Run git diff --check.",
+  "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain.",
 ];
 const reducerConvergenceCitationPaths = [
   "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
@@ -2130,6 +2191,7 @@ function collectReducerConvergenceDenominatorFacts({
       routeAssignments: [],
       routeAssignmentByDriverPath: new Map(),
       branchActionsByDriverPath: new Map(),
+      branchObligationByDriverPathAndAction: new Map(),
       laneDriverPathsByLane: new Map(
         scaffoldLaneOrder.map((lane) => [lane, new Set()]),
       ),
@@ -2152,6 +2214,7 @@ function collectReducerConvergenceDenominatorFacts({
     inventory.branchObligations.map((obligation) => obligation.driverPath),
   );
   const branchActionsByDriverPath = new Map();
+  const branchObligationByDriverPathAndAction = new Map();
   for (const obligation of inventory.branchObligations) {
     if (!nonEmptyString(obligation.driverPath)) continue;
     if (!branchActionsByDriverPath.has(obligation.driverPath)) {
@@ -2161,6 +2224,10 @@ function collectReducerConvergenceDenominatorFacts({
       branchActionsByDriverPath
         .get(obligation.driverPath)
         .add(obligation.branchAction);
+      branchObligationByDriverPathAndAction.set(
+        `${obligation.driverPath}\0${obligation.branchAction}`,
+        obligation,
+      );
     }
   }
   const routeAssignmentByDriverPath = new Map();
@@ -2256,6 +2323,7 @@ function collectReducerConvergenceDenominatorFacts({
     routeAssignments,
     routeAssignmentByDriverPath,
     branchActionsByDriverPath,
+    branchObligationByDriverPathAndAction,
     diagnosticRouteConnectorByDriverPath,
     laneDriverPathsByLane,
     laneCounts: Object.fromEntries(
@@ -2358,6 +2426,24 @@ function validateReducerConvergenceBacklogSchema(schema, context) {
       if (!childTaskSchema.required.includes(key)) {
         issues.push(
           `${context}: $defs.characterCreationFillBatchTask.required is missing ${key}.`,
+        );
+      }
+    }
+  }
+  const sessionTaskSchema = schema.$defs?.sessionBattleEntryTask;
+  if (!isRecord(sessionTaskSchema)) {
+    issues.push(
+      `${context}: $defs.sessionBattleEntryTask must be an object.`,
+    );
+  } else if (!Array.isArray(sessionTaskSchema.required)) {
+    issues.push(
+      `${context}: $defs.sessionBattleEntryTask.required must be an array.`,
+    );
+  } else {
+    for (const key of sessionBattleEntryTaskKeys) {
+      if (!sessionTaskSchema.required.includes(key)) {
+        issues.push(
+          `${context}: $defs.sessionBattleEntryTask.required is missing ${key}.`,
         );
       }
     }
@@ -2544,6 +2630,180 @@ function validateCharacterCreationFillBatchTasks(
   }
 }
 
+function validateSessionBattleEntryTasks(
+  row,
+  facts,
+  rowContext,
+  issues,
+) {
+  if (row.sessionBattleEntryTasks === undefined) return;
+  if (!sessionBattleEntrySemanticComparatorsByDriverPath.has(row.driverPath)) {
+    issues.push(
+      `${rowContext}: sessionBattleEntryTasks is only valid for ${Array.from(sessionBattleEntrySemanticComparatorsByDriverPath.keys()).join(" or ")}.`,
+    );
+  }
+  if (!Array.isArray(row.sessionBattleEntryTasks)) {
+    issues.push(
+      `${rowContext}: sessionBattleEntryTasks must be an array when present.`,
+    );
+    return;
+  }
+  const expectedComparator =
+    sessionBattleEntrySemanticComparatorsByDriverPath.get(row.driverPath);
+  const allowedRouteConnectors =
+    sessionBattleEntryAllowedRouteConnectorsByDriverPath.get(row.driverPath) ??
+    new Set();
+  const requiredRouteConnectors =
+    sessionBattleEntryRequiredRouteConnectorsByDriverPath.get(row.driverPath) ??
+    new Set();
+  const seenTaskIds = new Set();
+  const sourceBranchActions = facts.branchActionsByDriverPath.get(row.driverPath);
+  for (const [taskIndex, task] of row.sessionBattleEntryTasks.entries()) {
+    const taskContext = `${rowContext}: sessionBattleEntryTasks[${taskIndex}]`;
+    if (!isRecord(task)) {
+      issues.push(`${taskContext}: task must be an object.`);
+      continue;
+    }
+    for (const key of sessionBattleEntryTaskKeys) {
+      if (!Object.prototype.hasOwnProperty.call(task, key)) {
+        issues.push(`${taskContext}: missing stable key ${key}.`);
+      }
+    }
+    if (!nonEmptyString(task.taskId)) {
+      issues.push(`${taskContext}: taskId must be a non-empty string.`);
+    } else if (seenTaskIds.has(task.taskId)) {
+      issues.push(`${taskContext}: duplicate taskId ${task.taskId}.`);
+    } else {
+      seenTaskIds.add(task.taskId);
+    }
+    if (!nonEmptyString(task.title)) {
+      issues.push(`${taskContext}: title must be a non-empty string.`);
+    }
+    if (!reducerConvergenceStatuses.has(task.status)) {
+      issues.push(
+        `${taskContext}: status must be one of ${Array.from(reducerConvergenceStatuses).join(", ")}.`,
+      );
+    }
+    validateStringArray(task.sourcePaths, `${taskContext}: sourcePaths`, issues, {
+      minItems: 1,
+    });
+    validateReducerConvergenceEvidence(
+      task.semanticEvidence,
+      `${taskContext}: semanticEvidence`,
+      issues,
+      {
+        pathFields: ["driverPath", "ownerPath"],
+        projection: "qState",
+        comparator: undefined,
+      },
+    );
+    if (isRecord(task.semanticEvidence)) {
+      if (task.semanticEvidence.driverPath !== row.driverPath) {
+        issues.push(`${taskContext}: semanticEvidence.driverPath must match parent driverPath.`);
+      }
+      if (task.semanticEvidence.ownerPath !== row.driverPath) {
+        issues.push(`${taskContext}: semanticEvidence.ownerPath must match parent driverPath.`);
+      }
+      if (
+        expectedComparator !== undefined &&
+        task.semanticEvidence.comparator !== expectedComparator
+      ) {
+        issues.push(
+          `${taskContext}: semanticEvidence.comparator must be ${expectedComparator}.`,
+        );
+      }
+    }
+    const observedRouteConnectors = new Set();
+    if (!Array.isArray(task.routeEvidence) || task.routeEvidence.length === 0) {
+      issues.push(`${taskContext}: routeEvidence must be a non-empty array.`);
+    } else {
+      for (const [routeIndex, routeEvidence] of task.routeEvidence.entries()) {
+        const routeContext = `${taskContext}: routeEvidence[${routeIndex}]`;
+        validateReducerConvergenceEvidence(
+          routeEvidence,
+          routeContext,
+          issues,
+          {
+            pathFields: ["connectorPath"],
+            projection: qntRouteProjection,
+            comparator: qntRouteComparator,
+          },
+        );
+        if (
+          isRecord(routeEvidence) &&
+          !allowedRouteConnectors.has(routeEvidence.connectorPath)
+        ) {
+          issues.push(
+            `${routeContext}: connectorPath must be one of ${Array.from(allowedRouteConnectors).join(", ")}.`,
+          );
+        }
+        if (isRecord(routeEvidence) && nonEmptyString(routeEvidence.connectorPath)) {
+          observedRouteConnectors.add(routeEvidence.connectorPath);
+        }
+      }
+      for (const requiredConnectorPath of requiredRouteConnectors) {
+        if (!observedRouteConnectors.has(requiredConnectorPath)) {
+          issues.push(
+            `${taskContext}: routeEvidence must include required connectorPath ${requiredConnectorPath}.`,
+          );
+        }
+      }
+    }
+    validateStringArray(task.branchActions, `${taskContext}: branchActions`, issues, {
+      minItems: 1,
+    });
+    if (Array.isArray(task.branchActions) && sourceBranchActions !== undefined) {
+      for (const branchAction of task.branchActions) {
+        if (nonEmptyString(branchAction) && !sourceBranchActions.has(branchAction)) {
+          issues.push(
+            `${taskContext}: branchActions contains unknown session battle branch ${branchAction}.`,
+          );
+          continue;
+        }
+        const obligation = facts.branchObligationByDriverPathAndAction?.get(
+          `${row.driverPath}\0${branchAction}`,
+        );
+        if (
+          isRecord(obligation) &&
+          (obligation.scope?.tag !== "in-scope" ||
+            obligation.replay?.tag === "transit-only")
+        ) {
+          issues.push(
+            `${taskContext}: branchActions contains non-implementation branch ${branchAction} with scope ${obligation.scope?.tag ?? "unknown"} and replay ${obligation.replay?.tag ?? "unknown"}.`,
+          );
+        }
+      }
+    }
+    validateStringArray(task.acceptance, `${taskContext}: acceptance`, issues, {
+      minItems: 1,
+    });
+    validateStringArray(
+      task.targetStateOwnerNotes,
+      `${taskContext}: targetStateOwnerNotes`,
+      issues,
+      { minItems: 1 },
+    );
+    validateStringArray(
+      task.forbiddenShortcuts,
+      `${taskContext}: forbiddenShortcuts`,
+      issues,
+      { minItems: 1 },
+    );
+    validateStringArray(task.verification, `${taskContext}: verification`, issues, {
+      minItems: 1,
+    });
+    if (Array.isArray(task.verification)) {
+      for (const requiredItem of sessionBattleEntryRequiredVerificationItems) {
+        if (!task.verification.includes(requiredItem)) {
+          issues.push(
+            `${taskContext}: verification must include "${requiredItem}".`,
+          );
+        }
+      }
+    }
+  }
+}
+
 function validateReducerConvergenceBacklogRows(backlog, facts, context, issues) {
   if (!Array.isArray(backlog.rows)) {
     issues.push(`${context}: rows must be an array.`);
@@ -2681,6 +2941,12 @@ function validateReducerConvergenceBacklogRows(backlog, facts, context, issues) 
       issues.push(`${rowContext}: non-blocked rows must use blockerId null.`);
     }
     validateCharacterCreationFillBatchTasks(
+      row,
+      facts,
+      rowContext,
+      issues,
+    );
+    validateSessionBattleEntryTasks(
       row,
       facts,
       rowContext,

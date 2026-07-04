@@ -1248,12 +1248,79 @@
         "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "Character Sheet and Character Build own source character facts before battle entry. CharacterBattleInitProjectionOwner owns the typed sheet-to-battle projection; CharacterBattleEncounterSetupOwner owns participant membership and Encounter Side facts; CharacterBattleSubjectProfileOwner owns subject-profile availability; CharacterBattleInitiativeOwner owns Initiative counts, stable Initiative order, and the initial current actor; CharacterBattleRuntimeOwner owns runtime entry.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRP05-SBE-01",
+      "status": "ready",
+      "blockerId": null,
+      "sessionBattleEntryTasks": [
+        {
+          "taskId": "CRP05-SBE-01",
+          "title": "Character sheet projection and composed battle runtime entry",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+            "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt",
+            "packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt",
+            "packages/character-battle-runtime/character-battle-reducer-route.qnt",
+            "plans/cleanroom-guidance/reducer-spine.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Playing-the-Game.md",
+            ".references/srd-5.2.1/Rules-Glossary.md",
+            ".references/srd-5.2.1/Spells/Gaining-and-Casting.md"
+          ],
+          "semanticEvidence": {
+            "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+            "ownerPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+            "projection": "qState",
+            "comparator": "battle-init-projection-state"
+          },
+          "routeEvidence": [
+            {
+              "connectorPath": "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            },
+            {
+              "connectorPath": "packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            }
+          ],
+          "branchActions": [
+            "doProjectSheetHitPointsArmorClassConditionsAndProfiles",
+            "doProjectPurePactMagicSlot",
+            "doRejectMixedSpellAndPactSlotInit",
+            "doRejectBuildMaximumAboveBuildMaximum",
+            "doRejectStableRecoveryProgressDuringInit"
+          ],
+          "acceptance": [
+            "Target replay observes semantic qState for sheet Hit Points, Armor Class, conditions, passive profiles, pure Pact Slot projection, mixed Spell Slot/Pact Slot init rejection, build-maximum rejection, and Stable recovery-progress rejection.",
+            "Target replay observes qRoute from public handoff or reducer entrypoints for sheet/build projection, in-scope source-exact Pact Slot/resource facts, init rejection holes, and RouteEnterBattleRuntime through CharacterBattleInitProjectionOwner.",
+            "The target must expose one composed battle setup or an equivalent typed pre-entry operation followed immediately by runtime entry; observed qRoute must include participant membership, non-sheet participant membership, Encounter Side relationship ownership, subject-profile availability ownership, Initiative count ownership, stable Initiative order ownership, current actor ownership, and runtime entry.",
+            "The first current actor is derived from Initiative order inside CharacterBattleInitiativeOwner, not from a driver-local current-actor cache."
+          ],
+          "targetStateOwnerNotes": [
+            "Participant membership, Encounter Side, subject-profile availability, Initiative counts, stable Initiative order, and current actor are setup-owned battle facts once entry begins.",
+            "Character Sheet and Character Build remain the source for pre-entry character facts; battle init consumes their projection and does not store duplicate sheet/build ledgers.",
+            "Pact Slot source facts and init resource conflict facts are projected as typed resource facts so mixed or ambiguous resource states stay rejectable without claiming ordinary spell-slot capacity projection in this task."
+          ],
+          "forbiddenShortcuts": [
+            "Do not satisfy encounter entry with separate driver-local opponent, subject-profile, Initiative, or current-actor caches.",
+            "Do not infer participant membership, Encounter Side, subject profiles, Initiative, or current actor from class, species, spell, monster, fixture, or catalog identity.",
+            "Do not treat matching semantic qState alone as route acceptance; qRoute must be observed from the public entry path."
+          ],
+          "verification": [
+            "Run target replay for packages/character-battle-runtime/character-battle-init-projection.mbt.qnt and require semantic qState comparator battle-init-projection-state.",
+            "Run target replay for packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt and packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt and require qRoute comparator route-event-list from public handoff or reducer entrypoints.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Playing-the-Game.md#The Order of Combat, #Initiative, .references/srd-5.2.1/Rules-Glossary.md#Initiative, .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots, UBIQUITOUS_LANGUAGE.md, and plans/cleanroom-guidance/reducer-spine.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt",
@@ -1281,9 +1348,77 @@
       "durableOwner": "The finalized Character Session owns sheet/build facts before battle entry; BattleState owns generic battle subjects, action availability, target Hit Points, and ordinary spell-slot expenditure during battle; settlement writes only typed deltas back to the durable session.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "SDK-GAP-SHEET-DERIVED-BATTLE-ACTS",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRP05-SBE-02",
       "status": "ready",
-      "blockerId": null
+      "blockerId": null,
+      "sessionBattleEntryTasks": [
+        {
+          "taskId": "CRP05-SBE-02",
+          "title": "Sheet-derived battle acts and source-exact spell-slot settlement",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+            "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt",
+            "packages/character-battle-runtime/character-battle-reducer-route.qnt",
+            "packages/character-battle-runtime/README.md",
+            "plans/cleanroom-guidance/reducer-spine.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Equipment.md",
+            ".references/srd-5.2.1/Playing-the-Game.md",
+            ".references/srd-5.2.1/Rules-Glossary.md",
+            ".references/srd-5.2.1/Spells/Gaining-and-Casting.md"
+          ],
+          "semanticEvidence": {
+            "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+            "ownerPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+            "projection": "qState",
+            "comparator": "sheet-derived-battle-act-state"
+          },
+          "routeEvidence": [
+            {
+              "connectorPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            }
+          ],
+          "branchActions": [
+            "doProjectWeaponAttackCapability",
+            "doRejectMissingWieldedWeaponCapability",
+            "doRejectMissingSelectedSpellAttackCapability",
+            "doProjectResourceBackedSpellAttackCapability",
+            "doRejectEarlySpellFillWithoutSpend",
+            "doAcceptSpellInvocationAndSpendOneSlot",
+            "doRejectStaleOpenActionAfterInvocation",
+            "doRejectStaleSpellFillWithoutSecondSpend",
+            "doSettleSpellSlotExpenditure",
+            "doRejectExhaustedSlotRediscovery"
+          ],
+          "acceptance": [
+            "Target replay observes semantic qState for sheet-derived weapon attack capability, resource-backed spell attack capability, missing wielded-weapon rejection, missing selected-spell rejection, early spell fill rejection without spend, accepted spell invocation with one spent slot, stale open-action rejection, stale spell-fill rejection without second spend, spell-slot expenditure settlement, and exhausted slot rediscovery rejection.",
+            "Target replay observes qRoute for sheet projection, participant membership, Encounter Side, subject-profile availability, Initiative/current actor setup, RouteEnterBattleRuntime, battle-to-sheet Hit Point settlement, resource-delta settlement, and HandoffSourceExactSpellSlotDeltaFact.",
+            "The accepted spell invocation spends exactly one ordinary level-1-or-higher Spell Slot from the source-owned slot pool, reduces availability before stale rediscovery, and settles only the typed source-exact delta back to the durable Character Session.",
+            "Weapon and spell subjects are derived from the finalized session's wielded weapon, prepared spell access, action availability, and Spell Slot availability; no manual SubjectProfile handoff is accepted."
+          ],
+          "targetStateOwnerNotes": [
+            "The finalized Character Session owns sheet/build facts before battle entry; BattleState owns action availability, target Hit Points, spell invocation state, and committed Spell Slot expenditure during battle.",
+            "Settlement writes typed Hit Point and source-exact Spell Slot deltas back to the Character Session; it does not create a third resource ledger.",
+            "Exhausted slot rediscovery is derived from battle-owned resource expenditure plus source slot availability rather than from an adapter-local spell availability cache."
+          ],
+          "forbiddenShortcuts": [
+            "Do not satisfy spell-act projection with driver-local subject-profile, opponent, Initiative, current-actor, or slot-availability caches.",
+            "Do not spend a slot on early or stale spell fills, and do not hide missing prerequisite rejection behind a generic invalid-action result.",
+            "Do not settle by copying the whole battle resource record back to the sheet; settlement evidence must carry source-exact Spell Slot delta facts."
+          ],
+          "verification": [
+            "Run target replay for packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt and require semantic qState comparator sheet-derived-battle-act-state.",
+            "Run target replay for packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt and require qRoute comparator route-event-list from public handoff or reducer entrypoints.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Equipment.md#Weapons, .references/srd-5.2.1/Playing-the-Game.md#The Order of Combat, #Initiative, .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots, UBIQUITOUS_LANGUAGE.md, packages/character-battle-runtime/README.md#Battle handoff settlement, and plans/cleanroom-guidance/reducer-spine.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
