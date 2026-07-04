@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "CRPI-READY-002",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-chained-attack-sequence"
     },
     {
@@ -985,7 +985,7 @@ Plan Impact:
 
 ### Task 5 - CRPI-READY-002
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
