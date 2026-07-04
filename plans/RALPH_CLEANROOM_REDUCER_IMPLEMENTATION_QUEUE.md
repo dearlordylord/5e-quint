@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "CRPI-READY-005",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-interrupt-stack-resume"
     },
     {
@@ -1941,7 +1941,7 @@ Plan Impact:
 
 ### Task 22 - CRPI-READY-005
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
