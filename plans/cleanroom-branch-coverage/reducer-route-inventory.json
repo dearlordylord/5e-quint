@@ -275,15 +275,15 @@
       "excludedCharacterLevels": [6, 7],
       "excludedSpellLevels": [4, 5],
       "sourceBranchInventory": {
-        "driverFiles": 104,
+        "driverFiles": 107,
         "branchObligations": 738,
         "currentInScopeBranchObligations": 677,
         "currentOutOfScopeBranchObligations": 61,
         "sampledInputs": 24,
         "baselineWitnessDriverFiles": 1,
         "alreadyReducerRoutedDriverFiles": 3,
-        "currentNonBaselineRemainingDriverFiles": 100,
-        "currentDriverFilesWithoutRouteOrComponentConnector": 87,
+        "currentNonBaselineRemainingDriverFiles": 103,
+        "currentDriverFilesWithoutRouteOrComponentConnector": 95,
         "currentOutOfScopeBranchDecisionsInLevelDenominator": 43,
         "currentOutOfScopeBranchDecisionsOutsideLevelDenominator": 17,
         "currentOutOfScopeBranchDecisionSourceBlockers": 1
@@ -385,7 +385,7 @@
           "durableStateOwner": "BattleState owns Search action resources, target admission progress, hidden-target reveal state, roll-modifier active effects, and Concentration; hidden candidate discovery, vicinity, target admission facts, and roll totals remain table/caller boundary fills.",
           "acceptanceCondition": "Target replay evidence routes Search target choice and Ability Check fills through ability/search owners, and routes Guidance/Enhance Ability skill and ability choices through roll-modifier active-effect and Concentration owners without spell or fixture identity dispatch.",
           "branchObligations": 12,
-          "currentOutOfScopeBranchObligations": 3,
+          "currentOutOfScopeBranchObligations": 6,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s).",
@@ -2161,6 +2161,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+          "componentBridgePath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
           "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
           "dependentRouteTaskIds": [
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
@@ -2186,6 +2187,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "componentBridgePath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
           "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
           "dependentRouteTaskIds": [
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
@@ -2211,6 +2213,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "componentBridgePath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
           "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
           "dependentRouteTaskIds": [
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
@@ -2236,6 +2239,7 @@
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
           "componentConnectorPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+          "componentBridgePath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
           "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
           "dependentRouteTaskIds": [
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
@@ -2354,25 +2358,101 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-          "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "componentBridgePath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
           "componentOwners": ["RuleCoreSpellProcedureProfileOwner"],
           "dependentRouteTaskIds": [
             "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
             "L15-RR12-LEVEL5-SCOPE-PROMOTION"
           ],
           "subjectFamily": "rule-core reusable component",
-          "branchObligations": 30,
-          "currentOutOfScopeBranchObligations": 6,
+          "branchObligations": 12,
+          "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-spells.mbt.qnt is present in source-branch-inventory.json with 30 branch obligation(s).",
-              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
+              "packages/battle-runtime/rule-core-spell-damage.mbt.qnt is present in the split rule-core spell MBT corpus with 12 branch obligation(s).",
+              "packages/battle-runtime/rule-core-spell-damage.mbt.qnt exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
             ],
             "rawDomainFacts": [
-              "Local SRD Magic action, Spell Slot, spell attack, saving throw, healing, and Ready-spell rules define reusable spell procedure facts before battle spell/effect routes consume them."
+              "Local SRD Magic action, spell attack, saving throw, and damage rules define reusable spell damage procedure facts before battle spell/effect routes consume them."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "componentBridgePath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "componentOwners": ["RuleCoreSpellProcedureProfileOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+            "L15-RR12-LEVEL5-SCOPE-PROMOTION"
+          ],
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 13,
+          "currentOutOfScopeBranchObligations": 3,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt is present in the split rule-core spell MBT corpus with 13 branch obligation(s).",
+              "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
+            ],
+            "rawDomainFacts": [
+              "Local SRD Magic action, Spell Slot, healing, target-list, and zero-Hit-Point stabilization rules define reusable spell restoration procedure facts before battle spell/effect routes consume them."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "componentBridgePath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "componentOwners": ["RuleCoreSpellProcedureProfileOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+            "L15-RR12-LEVEL5-SCOPE-PROMOTION"
+          ],
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt is present in the split rule-core spell MBT corpus with 2 branch obligation(s).",
+              "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
+            ],
+            "rawDomainFacts": [
+              "Local SRD Magic action, Spell Slot, and defensive spell effect rules define reusable defensive-effect procedure facts before battle spell/effect routes consume them."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+          "componentBridgePath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "componentOwners": ["RuleCoreSpellProcedureProfileOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+            "L15-RR12-LEVEL5-SCOPE-PROMOTION"
+          ],
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 3,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt is present in the split rule-core spell MBT corpus with 3 branch obligation(s).",
+              "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
+            ],
+            "rawDomainFacts": [
+              "Local SRD Ready action and Reaction spell-release rules define reusable readied-response spell procedure facts before battle spell/effect routes consume them."
             ],
             "blockers": []
           }
@@ -3660,7 +3740,7 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doMassCureWoundsNeedsHealingRoll",
           "currentScopeReason": "Mass Cure Wounds is a level-5 spell.",
@@ -3670,7 +3750,7 @@
           "routeTaskId": "out-of-level-1-5-denominator",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassCureWoundsNeedsHealingRoll under branch family step."
+              "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt exposes doMassCureWoundsNeedsHealingRoll under branch family step."
             ],
             "rawDomainFacts": [
               "Mass Cure Wounds is a level-5 spell.",
@@ -3682,7 +3762,7 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doMassCureWoundsNeedsTargetList",
           "currentScopeReason": "Mass Cure Wounds is a level-5 spell.",
@@ -3692,7 +3772,7 @@
           "routeTaskId": "out-of-level-1-5-denominator",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassCureWoundsNeedsTargetList under branch family step."
+              "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt exposes doMassCureWoundsNeedsTargetList under branch family step."
             ],
             "rawDomainFacts": [
               "Mass Cure Wounds is a level-5 spell.",
@@ -3704,7 +3784,7 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doMassCureWoundsWounded",
           "currentScopeReason": "Mass Cure Wounds is a level-5 spell.",
@@ -3714,7 +3794,7 @@
           "routeTaskId": "out-of-level-1-5-denominator",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassCureWoundsWounded under branch family step."
+              "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt exposes doMassCureWoundsWounded under branch family step."
             ],
             "rawDomainFacts": [
               "Mass Cure Wounds is a level-5 spell.",
@@ -3726,7 +3806,7 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doMassHealingWordNeedsHealingRoll",
           "currentScopeReason": "Mass Healing Word is a level-3 spell.",
@@ -3734,11 +3814,11 @@
           "levelDenominatorScope": "in-denominator",
           "route": "component-first",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
-          "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordNeedsHealingRoll under branch family step.",
-              "packages/battle-runtime/rule-core-spells.mbt.qnt imports spell procedure profile and Hit Point restoration rule-core facts and exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
+              "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt exposes doMassHealingWordNeedsHealingRoll under branch family step.",
+              "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt imports spell procedure profile and Hit Point restoration rule-core facts and exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
             ],
             "rawDomainFacts": [
               "Mass Healing Word is a level-3 spell.",
@@ -3749,7 +3829,7 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doMassHealingWordNeedsTargetList",
           "currentScopeReason": "Mass Healing Word is a level-3 spell.",
@@ -3757,11 +3837,11 @@
           "levelDenominatorScope": "in-denominator",
           "route": "component-first",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
-          "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordNeedsTargetList under branch family step.",
-              "packages/battle-runtime/rule-core-spells.mbt.qnt imports spell procedure profile and target-list rule-core facts and exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
+              "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt exposes doMassHealingWordNeedsTargetList under branch family step.",
+              "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt imports spell procedure profile and target-list rule-core facts and exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
             ],
             "rawDomainFacts": [
               "Mass Healing Word is a level-3 spell.",
@@ -3772,7 +3852,7 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doMassHealingWordWounded",
           "currentScopeReason": "Mass Healing Word is a level-3 spell.",
@@ -3780,11 +3860,11 @@
           "levelDenominatorScope": "in-denominator",
           "route": "component-first",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
-          "componentConnectorPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-spells.mbt.qnt exposes doMassHealingWordWounded under branch family step.",
-              "packages/battle-runtime/rule-core-spells.mbt.qnt imports spell procedure profile and Hit Point restoration rule-core facts and exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
+              "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt exposes doMassHealingWordWounded under branch family step.",
+              "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt imports spell procedure profile and Hit Point restoration rule-core facts and exposes qComponentRoute through RuleCoreSpellProcedureProfileOwner."
             ],
             "rawDomainFacts": [
               "Mass Healing Word is a level-3 spell.",
@@ -3977,22 +4057,358 @@
             "blockers": []
           }
         },
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverCalmEmotionsConditionImmunity","currentScopeReason":"This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverCalmEmotionsConditionImmunity under branch family step."],"rawDomainFacts":["This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverCharmPersonSaveGatedCondition","currentScopeReason":"This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverCharmPersonSaveGatedCondition under branch family step."],"rawDomainFacts":["This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverDarknessPointOrigin","currentScopeReason":"This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverDarknessPointOrigin under branch family step."],"rawDomainFacts":["This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverEnthrallPerceptionPenalty","currentScopeReason":"This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverEnthrallPerceptionPenalty under branch family step."],"rawDomainFacts":["This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverGustOfWindLine","currentScopeReason":"This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverGustOfWindLine under branch family step."],"rawDomainFacts":["This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverInvisibilityDirectCondition","currentScopeReason":"This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverInvisibilityDirectCondition under branch family step."],"rawDomainFacts":["This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverLevitateCreature","currentScopeReason":"This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverLevitateCreature under branch family step."],"rawDomainFacts":["This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverSeeInvisibilityObserverSight","currentScopeReason":"This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverSeeInvisibilityObserverSight under branch family step."],"rawDomainFacts":["This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverAcidArrowAttackTiming","currentScopeReason":"This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverAcidArrowAttackTiming under branch family step."],"rawDomainFacts":["This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverDragonsBreathInitial","currentScopeReason":"This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverDragonsBreathInitial under branch family step."],"rawDomainFacts":["This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverFlameBladeHeldObject","currentScopeReason":"This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverFlameBladeHeldObject under branch family step."],"rawDomainFacts":["This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverHeatMetalObjectContact","currentScopeReason":"This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverHeatMetalObjectContact under branch family step."],"rawDomainFacts":["This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverRayOfEnfeeblementSaveGate","currentScopeReason":"This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverRayOfEnfeeblementSaveGate under branch family step."],"rawDomainFacts":["This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverScorchingRayAttackSequence","currentScopeReason":"This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverScorchingRayAttackSequence under branch family step."],"rawDomainFacts":["This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverShatterSaveGatedDamage","currentScopeReason":"This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverShatterSaveGatedDamage under branch family step."],"rawDomainFacts":["This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}},
-        {"driverPath":"packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt","branchFamily":"step","branchAction":"doDiscoverSpiritualWeaponAttackProxy","currentScopeReason":"This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","currentReplay":"observable-from-step","levelDenominatorScope":"in-denominator","route":"catalog-after-substrate","routeTaskId":"outside-source-sqnt07a-concentration-hazard-selected-route-witness","derivability":{"qntFacts":["packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverSpiritualWeaponAttackProxy under branch family step."],"rawDomainFacts":["This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.","UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."],"blockers":["Outside this selected concentration-backed hazard route witness lane."]}}
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverCalmEmotionsConditionImmunity",
+          "currentScopeReason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverCalmEmotionsConditionImmunity under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverCharmPersonSaveGatedCondition",
+          "currentScopeReason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverCharmPersonSaveGatedCondition under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverDarknessPointOrigin",
+          "currentScopeReason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverDarknessPointOrigin under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverEnthrallPerceptionPenalty",
+          "currentScopeReason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverEnthrallPerceptionPenalty under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverGustOfWindLine",
+          "currentScopeReason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverGustOfWindLine under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverInvisibilityDirectCondition",
+          "currentScopeReason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverInvisibilityDirectCondition under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverLevitateCreature",
+          "currentScopeReason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverLevitateCreature under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverSeeInvisibilityObserverSight",
+          "currentScopeReason": "This selected level-2 control spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt exposes doDiscoverSeeInvisibilityObserverSight under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected control spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverAcidArrowAttackTiming",
+          "currentScopeReason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverAcidArrowAttackTiming under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverDragonsBreathInitial",
+          "currentScopeReason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverDragonsBreathInitial under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverFlameBladeHeldObject",
+          "currentScopeReason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverFlameBladeHeldObject under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverHeatMetalObjectContact",
+          "currentScopeReason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverHeatMetalObjectContact under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverRayOfEnfeeblementSaveGate",
+          "currentScopeReason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverRayOfEnfeeblementSaveGate under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverScorchingRayAttackSequence",
+          "currentScopeReason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverScorchingRayAttackSequence under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverShatterSaveGatedDamage",
+          "currentScopeReason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverShatterSaveGatedDamage under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+          "branchFamily": "step",
+          "branchAction": "doDiscoverSpiritualWeaponAttackProxy",
+          "currentScopeReason": "This selected level-2 damage spell identity driver contains non-hazard rows outside SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+          "currentReplay": "observable-from-step",
+          "levelDenominatorScope": "in-denominator",
+          "route": "catalog-after-substrate",
+          "routeTaskId": "outside-source-sqnt07a-concentration-hazard-selected-route-witness",
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt exposes doDiscoverSpiritualWeaponAttackProxy under branch family step."
+            ],
+            "rawDomainFacts": [
+              "This branch is a level-2 selected damage spell row, but it is not a concentration-backed area hazard row for SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS.",
+              "UBIQUITOUS_LANGUAGE.md keeps selected identity at catalog, fixture, and evidence boundaries."
+            ],
+            "blockers": [
+              "Outside this selected concentration-backed hazard route witness lane."
+            ]
+          }
+        }
       ],
       "rawTraceabilitySources": [
         ".references/srd-5.2.1/Character-Creation.md",

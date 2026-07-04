@@ -121,8 +121,26 @@
     {
       "number": 20,
       "id": "QAR-20-FINAL-CONVERGENCE-AUDIT",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Run final Quint and architecture convergence audit"
+    },
+    {
+      "number": 21,
+      "id": "QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION",
+      "status": "ready-for-research",
+      "title": "Reconcile character-sheet runtime split export gate"
+    },
+    {
+      "number": 22,
+      "id": "QAR-22-DEFAULT-TEST-BASELINE-REPAIRS",
+      "status": "ready-for-research",
+      "title": "Repair default test baseline failures found by final audit"
+    },
+    {
+      "number": 23,
+      "id": "QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR",
+      "status": "ready-for-research",
+      "title": "Repair cleanroom harness sampled-input self-test"
     }
   ]
 }
@@ -192,7 +210,10 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 17 | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION - Move Hunter's Prey execution to semantic support profiles | done | QAR-01-TEST-LANE-ISOLATION | Removes execution dispatch on selected authored option ids. |
 | 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | done | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
 | 19 | QAR-19-AUTHORED-ID-CHECKER-HARDENING - Harden authored-identity dispatch checking | done | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES | Tightens the checker after known migrations land. |
-| 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | ready-for-research | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING | Final repeated review loop and whole-plan verification. |
+| 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | blocked | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING, QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION, QAR-22-DEFAULT-TEST-BASELINE-REPAIRS, QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR | Final repeated review loop found concrete follow-up blockers; rerun after QAR-21 through QAR-23. |
+| 21 | QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION - Reconcile character-sheet runtime split export gate | ready-for-research | none | Fix the `pnpm quality` blocker in the character-sheet split export gate. |
+| 22 | QAR-22-DEFAULT-TEST-BASELINE-REPAIRS - Repair default test baseline failures found by final audit | ready-for-research | none | Fix unrelated default `pnpm test` baseline failures found during final audit. |
+| 23 | QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR - Repair cleanroom harness sampled-input self-test | ready-for-research | none | Fix the cleanroom harness checker self-test blocker found during final audit. |
 
 ## Shared Verification
 
@@ -1068,11 +1089,32 @@ Plan Impact:
 
 ### Task 20 - QAR-20-FINAL-CONVERGENCE-AUDIT
 
-Status: `ready-for-research`
+Status: `blocked`
 
 Blocker Type: dependency
 
-Blocker Detail: This audit runs only after QAR-02 through QAR-19 are done.
+Blocker Detail: QAR-02 through QAR-19 are done and Task 20 completed the
+final audit pass, but broad final verification cannot converge until QAR-21,
+QAR-22, and QAR-23 repair these concrete baseline failures:
+
+- `pnpm quality` stops at `pnpm check:character-sheet-runtime-split`; the split
+  expected export snapshot is missing current package exports including
+  `characterSheetNormalHitPointMaximum` and
+  `replaceOrdinarySpellSlotExpenditure`.
+- `pnpm test` fails in unrelated character-sheet fixture validation where
+  current HP exceeds max HP, character-creation Bard/Rogue tests expecting
+  missing Draconic Ancestry support-profile options, and a Wizard duplicate
+  Evocation Savant expectation.
+- `pnpm cleanroom-harness:check` fails its `sampled-input-leak` self-test.
+
+Second-Story Work owner evidence reconciliation: the task context packet's
+remaining `rogue_second_story_work` row is stale. Existing
+`plans/unit-profile-coverage/` artifacts record L13UG-A15 owner evidence for
+`character-sheet.linked-speed-grant-projection` and
+`character-sheet.jump-distance-ability-substitution`, backed by
+`packages/character-sheet-runtime/src/ability-checks.test.ts`; `pnpm
+unit-profile-coverage:check` passes. No additional Second-Story Work follow-up
+task is required.
 
 Depends on:
 
@@ -1094,6 +1136,9 @@ Depends on:
 - QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION
 - QAR-18-OPEN-HAND-SEMANTIC-CHOICES
 - QAR-19-AUTHORED-ID-CHECKER-HARDENING
+- QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION
+- QAR-22-DEFAULT-TEST-BASELINE-REPAIRS
+- QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR
 
 Output:
 
@@ -1126,5 +1171,100 @@ Verification:
 
 Plan Impact:
 
-- Applied when final statuses are reconciled and any real follow-up work is
-  represented as executable Ralph tasks rather than prose.
+- Applied: QAR-20 is blocked on executable follow-up tasks QAR-21, QAR-22, and
+  QAR-23. The stale `rogue_second_story_work` owner-evidence row is recorded as
+  resolved by existing unit-profile coverage evidence rather than promoted into
+  unnecessary follow-up work.
+
+### Task 21 - QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION
+
+Status: `ready-for-research`
+
+Depends on: none
+
+Output:
+
+- Reconcile `scripts/audit-character-sheet-runtime-split.mjs` and the
+  character-sheet runtime split boundary so current package exports are either
+  intentionally owned by the split surface or intentionally excluded by the
+  checker.
+- Do not hide the failure by weakening the checker; preserve an executable
+  ownership boundary for the character-sheet runtime package split.
+
+Acceptance:
+
+- The character-sheet split export gate passes.
+- Any added or removed export expectation has a concrete package-ownership
+  reason.
+
+Verification:
+
+- Shared verification.
+- `pnpm check:character-sheet-runtime-split`.
+- `pnpm quality` until the next unrelated blocker or full success.
+
+Plan Impact:
+
+- Update-required if this work discovers additional package split ownership
+  blockers that need separate tasks.
+
+### Task 22 - QAR-22-DEFAULT-TEST-BASELINE-REPAIRS
+
+Status: `ready-for-research`
+
+Depends on: none
+
+Output:
+
+- Repair the default `pnpm test` baseline failures found during QAR-20:
+  character-sheet fixture validation with current HP greater than max HP,
+  character-creation Bard/Rogue Draconic Ancestry support-profile expectations,
+  and the Wizard duplicate Evocation Savant invalid-selection expectation.
+- Keep fixes in the owning package and avoid changing test expectations without
+  confirming the modeled rule or fixture invariant.
+
+Acceptance:
+
+- The focused failing package tests pass.
+- `pnpm test` passes or stops only at a newly discovered unrelated blocker that
+  is recorded as executable follow-up work.
+
+Verification:
+
+- Shared verification.
+- Focused tests for each repaired package failure.
+- `pnpm test`.
+
+Plan Impact:
+
+- Update-required if default test repair exposes additional baseline failures
+  that require separate ownership tasks.
+
+### Task 23 - QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR
+
+Status: `ready-for-research`
+
+Depends on: none
+
+Output:
+
+- Repair the `pnpm cleanroom-harness:check` self-test failure for
+  `sampled-input-leak`.
+- Preserve the harness check's ability to catch sampled-input leakage rather
+  than accepting stale or under-specified self-test expectations.
+
+Acceptance:
+
+- `pnpm cleanroom-harness:check` passes.
+- The self-test still fails on an actual sampled-input leakage fixture.
+
+Verification:
+
+- Shared verification.
+- `pnpm cleanroom-harness:check`.
+- `pnpm quality` until the next unrelated blocker or full success.
+
+Plan Impact:
+
+- Update-required if harness repair reveals additional cleanroom scaffold
+  checker blockers.

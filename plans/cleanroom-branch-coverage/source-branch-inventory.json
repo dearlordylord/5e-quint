@@ -6665,7 +6665,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectAttackRollHit",
-      "qntFileSha256": "ea75a8a180b337e60ba0095bba6def3afe39ca690fe232984dfa5da3e9bfe34a",
+      "qntFileSha256": "801a835c7149d08610e95a3d2ac8ccf56a02335b6adc4ac48eeaa50e00e1ce7f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -6684,7 +6684,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectAttackRollMiss",
-      "qntFileSha256": "ea75a8a180b337e60ba0095bba6def3afe39ca690fe232984dfa5da3e9bfe34a",
+      "qntFileSha256": "801a835c7149d08610e95a3d2ac8ccf56a02335b6adc4ac48eeaa50e00e1ce7f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -6703,7 +6703,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectDamageHigh",
-      "qntFileSha256": "ea75a8a180b337e60ba0095bba6def3afe39ca690fe232984dfa5da3e9bfe34a",
+      "qntFileSha256": "801a835c7149d08610e95a3d2ac8ccf56a02335b6adc4ac48eeaa50e00e1ce7f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -6722,7 +6722,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectDamageLow",
-      "qntFileSha256": "ea75a8a180b337e60ba0095bba6def3afe39ca690fe232984dfa5da3e9bfe34a",
+      "qntFileSha256": "801a835c7149d08610e95a3d2ac8ccf56a02335b6adc4ac48eeaa50e00e1ce7f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -6741,7 +6741,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectTarget",
-      "qntFileSha256": "ea75a8a180b337e60ba0095bba6def3afe39ca690fe232984dfa5da3e9bfe34a",
+      "qntFileSha256": "801a835c7149d08610e95a3d2ac8ccf56a02335b6adc4ac48eeaa50e00e1ce7f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -6760,7 +6760,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doRejectObjectWithoutFact",
-      "qntFileSha256": "ea75a8a180b337e60ba0095bba6def3afe39ca690fe232984dfa5da3e9bfe34a",
+      "qntFileSha256": "801a835c7149d08610e95a3d2ac8ccf56a02335b6adc4ac48eeaa50e00e1ce7f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -6779,7 +6779,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doRejectStaleAfterResolved",
-      "qntFileSha256": "ea75a8a180b337e60ba0095bba6def3afe39ca690fe232984dfa5da3e9bfe34a",
+      "qntFileSha256": "801a835c7149d08610e95a3d2ac8ccf56a02335b6adc4ac48eeaa50e00e1ce7f",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10090,7 +10090,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doInvalidPushDistance",
-      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10109,7 +10109,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsProne",
-      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10128,7 +10128,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPush",
-      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10147,7 +10147,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPushBlocked",
-      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10166,7 +10166,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPushNoLegalDestination",
-      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10185,7 +10185,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
       "obligationId": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveSucceeds",
-      "qntFileSha256": "e004f45672823419e675a8da3a60c9cea02beac5770a49856a9889037de97414",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10202,9 +10202,9 @@
         "doAcidSplashAllSuccess"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashAllSuccess",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashAllSuccess",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10221,9 +10221,9 @@
         "doAcidSplashNeedsDamageRoll"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashNeedsDamageRoll",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashNeedsDamageRoll",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10240,9 +10240,9 @@
         "doAcidSplashNeedsSavingThrow"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashNeedsSavingThrow",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashNeedsSavingThrow",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10259,180 +10259,9 @@
         "doAcidSplashOneFail"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doAcidSplashOneFail",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doCureWoundsNeedsHealingRoll",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doCureWoundsNeedsHealingRoll"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doCureWoundsNeedsHealingRoll",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doCureWoundsNeedsTarget",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doCureWoundsNeedsTarget"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doCureWoundsNeedsTarget",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doCureWoundsWounded",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doCureWoundsWounded"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doCureWoundsWounded",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doHealingWordNeedsHealingRoll",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doHealingWordNeedsHealingRoll"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordNeedsHealingRoll",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doHealingWordNeedsTarget",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doHealingWordNeedsTarget"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordNeedsTarget",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doHealingWordWounded",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doHealingWordWounded"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordWounded",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doHealingWordZeroHp",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doHealingWordZeroHp"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doHealingWordZeroHp",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doMageArmor",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doMageArmor"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMageArmor",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doMageArmorNeedsTarget",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doMageArmorNeedsTarget"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMageArmorNeedsTarget",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashOneFail",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10449,9 +10278,9 @@
         "doMagicMissileLow"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMagicMissileLow",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doMagicMissileLow",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10468,9 +10297,351 @@
         "doMagicMissileNeedsAllocation"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMagicMissileNeedsAllocation",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doMagicMissileNeedsAllocation",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostCritical",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostCritical"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostCritical",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostHit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostHit"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostHit",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostMiss",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostMiss"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostMiss",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostNeedsAttackRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostNeedsAttackRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsAttackRoll",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostNeedsDamageRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostNeedsDamageRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsDamageRoll",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRayOfFrostNeedsTarget",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRayOfFrostNeedsTarget"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsTarget",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMageArmor",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMageArmor"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt#step:doMageArmor",
+      "qntFileSha256": "35e513c1e3c15b21e7e1622a195ba1c17688e6ac2724ac22d0bc3cc869654ae4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMageArmorNeedsTarget",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMageArmorNeedsTarget"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt#step:doMageArmorNeedsTarget",
+      "qntFileSha256": "35e513c1e3c15b21e7e1622a195ba1c17688e6ac2724ac22d0bc3cc869654ae4",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doReadySpellHold",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doReadySpellHold"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doReadySpellHold",
+      "qntFileSha256": "0d6f773b5c2ea557eda92c9f3257d36c46b7f1db8506238d8029f6a729d0a8ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRejectSecondSlotSpell",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRejectSecondSlotSpell"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doRejectSecondSlotSpell",
+      "qntFileSha256": "0d6f773b5c2ea557eda92c9f3257d36c46b7f1db8506238d8029f6a729d0a8ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doReleaseReadiedSpell",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doReleaseReadiedSpell"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doReleaseReadiedSpell",
+      "qntFileSha256": "0d6f773b5c2ea557eda92c9f3257d36c46b7f1db8506238d8029f6a729d0a8ff",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCureWoundsNeedsHealingRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCureWoundsNeedsHealingRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsNeedsHealingRoll",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCureWoundsNeedsTarget",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCureWoundsNeedsTarget"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsNeedsTarget",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCureWoundsWounded",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCureWoundsWounded"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsWounded",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doHealingWordNeedsHealingRoll",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doHealingWordNeedsHealingRoll"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordNeedsHealingRoll",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doHealingWordNeedsTarget",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doHealingWordNeedsTarget"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordNeedsTarget",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doHealingWordWounded",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doHealingWordWounded"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordWounded",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doHealingWordZeroHp",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doHealingWordZeroHp"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordZeroHp",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10487,9 +10658,9 @@
         "doMassCureWoundsNeedsHealingRoll"
       ],
       "decisionSource": "branch-decision",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassCureWoundsNeedsHealingRoll",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassCureWoundsNeedsHealingRoll",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10508,9 +10679,9 @@
         "doMassCureWoundsNeedsTargetList"
       ],
       "decisionSource": "branch-decision",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassCureWoundsNeedsTargetList",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassCureWoundsNeedsTargetList",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10529,9 +10700,9 @@
         "doMassCureWoundsWounded"
       ],
       "decisionSource": "branch-decision",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassCureWoundsWounded",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassCureWoundsWounded",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10550,9 +10721,9 @@
         "doMassHealingWordNeedsHealingRoll"
       ],
       "decisionSource": "branch-decision",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassHealingWordNeedsHealingRoll",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordNeedsHealingRoll",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10571,9 +10742,9 @@
         "doMassHealingWordNeedsTargetList"
       ],
       "decisionSource": "branch-decision",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassHealingWordNeedsTargetList",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordNeedsTargetList",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10592,9 +10763,9 @@
         "doMassHealingWordWounded"
       ],
       "decisionSource": "branch-decision",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doMassHealingWordWounded",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordWounded",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -10603,177 +10774,6 @@
         "reason": "Mass Healing Word is a level-3 spell.",
         "reviewedBy": "codex-2026-06-17",
         "tag": "out-of-scope"
-      }
-    },
-    {
-      "branchAction": "doRayOfFrostCritical",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doRayOfFrostCritical"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostCritical",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doRayOfFrostHit",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doRayOfFrostHit"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostHit",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doRayOfFrostMiss",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doRayOfFrostMiss"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostMiss",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doRayOfFrostNeedsAttackRoll",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doRayOfFrostNeedsAttackRoll"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostNeedsAttackRoll",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doRayOfFrostNeedsDamageRoll",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doRayOfFrostNeedsDamageRoll"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostNeedsDamageRoll",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doRayOfFrostNeedsTarget",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doRayOfFrostNeedsTarget"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRayOfFrostNeedsTarget",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doReadySpellHold",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doReadySpellHold"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doReadySpellHold",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doRejectSecondSlotSpell",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doRejectSecondSlotSpell"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doRejectSecondSlotSpell",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doReleaseReadiedSpell",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doReleaseReadiedSpell"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-spells.mbt.qnt#step:doReleaseReadiedSpell",
-      "qntFileSha256": "8e6cf9fefd04b61a913f56e7a9aa5d9aa714efbb71eed99f06c3d6b1c9b5a269",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
       }
     },
     {

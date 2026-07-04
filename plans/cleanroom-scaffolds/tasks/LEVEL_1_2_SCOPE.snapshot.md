@@ -144,8 +144,11 @@ This queue is generated from `plans/cleanroom-branch-coverage/branch-scope.jsonl
 99. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
 100. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
 101. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
-102. `cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt`
-103. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+102. `cleanroom-input/qnt/battle-runtime/rule-core-spell-damage.mbt.qnt`
+103. `cleanroom-input/qnt/battle-runtime/rule-core-spell-restoration.mbt.qnt`
+104. `cleanroom-input/qnt/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt`
+105. `cleanroom-input/qnt/battle-runtime/rule-core-spell-readied-response.mbt.qnt`
+106. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
 
 ## Reducer-Spine Diagnostic Queue
 
@@ -305,8 +308,11 @@ Drivers are ordered by dependency lane, then by branch-scope row order.
 9. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
 10. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
 11. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
-12. `cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt`
-13. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+12. `cleanroom-input/qnt/battle-runtime/rule-core-spell-damage.mbt.qnt`
+13. `cleanroom-input/qnt/battle-runtime/rule-core-spell-restoration.mbt.qnt`
+14. `cleanroom-input/qnt/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt`
+15. `cleanroom-input/qnt/battle-runtime/rule-core-spell-readied-response.mbt.qnt`
+16. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
 
 ## Full Driver Decisions
 
