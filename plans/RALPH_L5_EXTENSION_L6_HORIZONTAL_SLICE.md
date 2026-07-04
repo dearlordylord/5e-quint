@@ -95,6 +95,12 @@
       "title": "Promote Barbarian Mindless Rage condition immunity"
     },
     {
+      "number": 49,
+      "id": "L6-FOLLOWUP-BARD-MAGICAL-DISCOVERIES-SPELL-ACCESS",
+      "status": "future-follow-up",
+      "title": "Promote Bard Magical Discoveries spell-access selection"
+    },
+    {
       "number": 5,
       "id": "L5UG-MCP-01-LEVEL5-VERTICAL-DECISION",
       "status": "done",
@@ -175,7 +181,7 @@
     {
       "number": 18,
       "id": "L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Resolve level-6 owner evidence for Bard Magical Discoveries"
     },
     {
@@ -392,6 +398,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  46 | L12G-FOLLOWUP-WIZARD-EVOCATION-SAVANT-NEW-SLOT-LEVEL - Promote Wizard Evocation Savant new Spell Slot level grant | future-follow-up | L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS | Future character-advancement owner for Evocation Savant's later new Spell Slot level grant; parked outside this L5/L6 completion pass. |
 |  47 | L6-FOLLOWUP-REPEATED-ASI-GRANT-OCCURRENCE - Promote repeated Ability Score Improvement grant occurrences | future-follow-up | L6FULL-ASI-01-FIGHTER-ASI-L6 | Future character-creation owner for repeated ASI grant occurrences such as Fighter level 6; parked outside this L6 full accounting pass. |
 |  48 | L6-FOLLOWUP-BARBARIAN-MINDLESS-RAGE-CONDITION-IMMUNITY - Promote Barbarian Mindless Rage condition immunity | future-follow-up | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE | Future battle-runtime owner for active Rage Charmed/Frightened immunity and enter-rage cleanup; parked outside this L6 full accounting pass. |
+|  49 | L6-FOLLOWUP-BARD-MAGICAL-DISCOVERIES-SPELL-ACCESS - Promote Bard Magical Discoveries spell-access selection | future-follow-up | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES | Future character-creation and character-sheet owner for Magical Discoveries cross-list always-prepared spell choices and Bard-level replacement; parked outside this L6 full accounting pass. |
 |   5 | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION - Choose the level-5 MCP vertical scenario            | done               | L5UG-PRE-01-L5-FULL-QUEUE-CLOSED                                                                | Selected the Wizard 5 Fireball MCP vertical and rejected future-owner alternatives.     |
 |   6 | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO - Implement level-5 MCP creation and sheet scenario coverage | done | L5UG-MCP-01-LEVEL5-VERTICAL-DECISION                                                            | Adds Wizard 5 Fireball creation/finalization/sheet proof before battle handoff.         |
 |   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | done | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff after Task 6 sheet coverage; non-MCP support dependencies are complete. |
@@ -405,7 +412,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  15 | L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES - Explicitly close the twelve level-6 class-table summary rows | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Table/progression rows remain explicit non-runtime closures. |
 |  16 | L6FULL-ASI-01-FIGHTER-ASI-L6 - Admit or close Fighter level-6 Ability Score Improvement | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed repeated ASI grant occurrence with checker-owned unsupported-profile accounting. |
 |  17 | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE - Resolve level-6 owner evidence for Barbarian Mindless Rage | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed active Rage condition-immunity and enter-rage cleanup owner boundary. |
-|  18 | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES - Resolve level-6 owner evidence for Bard Magical Discoveries | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  18 | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES - Resolve level-6 owner evidence for Bard Magical Discoveries | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Closed as a not-installed future-owner-before-SDK spell-access selection boundary; future owner tracked by Task 49. |
 |  19 | L6FULL-OWN-03-CLERIC-BLESSED-HEALER - Resolve level-6 owner evidence for Cleric Blessed Healer | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  20 | L6FULL-OWN-04-DRUID-NATURAL-RECOVERY - Resolve level-6 owner evidence for Druid Natural Recovery | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  21 | L6FULL-OWN-05-MONK-EMPOWERED-STRIKES - Resolve level-6 owner evidence for Monk Empowered Strikes | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
@@ -1235,6 +1242,71 @@ Verification:
 - Focused battle-runtime tests and focused MBT only if battle runtime or QNT
   parity behavior changes.
 
+### Task 49 - L6-FOLLOWUP-BARD-MAGICAL-DISCOVERIES-SPELL-ACCESS
+
+Status: `future-follow-up`
+
+Future Follow-up Reason: Task 18 closed the current Bard Magical Discoveries
+row by explicit non-admission, but the durable owner for cross-list
+always-prepared spell choices and Bard-level replacement is still a separate
+character-creation, Character Sheet, and catalog modeling problem. This
+follow-up does not block Task 27 because the current L6 row is checker-closed
+as `catalog-only/dead-for-now`.
+
+Depends on: `L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES`
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `.references/srd-5.2.1/Classes/Bard.md:336`
+- `packages/surface/content/subclass_bard_college_of_lore.json`
+- `packages/surface/content/class_bard.json`
+- `packages/character-creation-runtime/src/index.test.ts`
+- `packages/character-sheet-runtime/src/class-feature-spells.test.ts`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Current state:
+
+- The Surface catalog has the College of Lore subclass record and installed
+  level-3 Lore feature rows, but no installed `bard_magical_discoveries`
+  feature record.
+- Bard class spellcasting already owns prepared-spell counts, ordinary Bard
+  Spell Access, and Bard Spell Slot facts. Current promoted spell-access
+  owners do not admit a College of Lore level-6 choice of exactly two
+  always-prepared spells from the Cleric, Druid, or Wizard spell lists with
+  Bard-level replacement.
+
+Output:
+
+- Promote a Surface, Character Creation, and Character Sheet owner that
+  consumes typed College of Lore feature facts, canonical spell-list facts, and
+  Bard Spell Slot facts to choose exactly two eligible spells.
+- Model eligibility as Cleric, Druid, or Wizard list membership plus cantrip or
+  Bard Spell Slot eligibility, and model replacement of one chosen spell when
+  the character gains a Bard level.
+- Retain the selected spells as source-scoped Spell Access facts without
+  duplicating the prepared-spell list, duplicating Spell Slot state, or
+  dispatching on authored Bard, College of Lore, Magical Discoveries, or
+  selected Spell Definition identity.
+- Keep individual Spell Definition invocation behavior owned by spell
+  invocation profiles.
+
+Completion / Success Criteria:
+
+- `bard_magical_discoveries` is either admitted with real catalog,
+  Character Creation, Character Sheet, and evidence updates or remains
+  explicitly closed for a narrower durable reason discovered by this follow-up.
+- The implementation makes eligibility and Bard-level replacement executable
+  without overclaiming generic cross-list spell-choice support.
+
+Verification:
+
+- Shared verification, including RAW/ubiquitous-language traceability.
+- `pnpm unit-profile-coverage:check`
+- Focused character-creation and Character Sheet tests if creation,
+  advancement, or sheet projection behavior changes.
+
 ### Task 40 - L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES
 
 Status: `done`
@@ -2020,7 +2092,7 @@ Plan Impact:
 
 ### Task 18 - L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
 
@@ -2046,6 +2118,17 @@ Verification:
 
 - L6 shared verification plus focused character-creation tests if behavior
   changes.
+
+Plan Impact:
+
+- Applied. `bard_magical_discoveries` stays not-installed and is
+  checker-closed as `catalog-only/dead-for-now` with an `unsupported-profile`
+  claim for the future-owner-before-SDK Magical Discoveries spell-access
+  selection boundary.
+- Task 49 records the future Magical Discoveries spell-access owner so the
+  current L6 full accounting can close without duplicating prepared-spell
+  state, Spell Slot state, class/subclass selection state, or authored-identity
+  dispatch.
 
 ### Task 19 - L6FULL-OWN-03-CLERIC-BLESSED-HEALER
 

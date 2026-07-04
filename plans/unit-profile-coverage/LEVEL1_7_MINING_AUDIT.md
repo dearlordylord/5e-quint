@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 501 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 213 |
-| level-5-7-follow-up-required | 20 |
+| catalog-only/dead-for-now | 214 |
+| level-5-7-follow-up-required | 19 |
 | missing-authored-record | 32 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 140 |
+| not-recorded | 139 |
 | profile-subset-supported | 59 |
 | supported-profile | 309 |
-| unsupported-profile | 392 |
+| unsupported-profile | 393 |
 
 ### Battle Readiness Snapshot
 
@@ -313,7 +313,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Bard level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:39` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
 | Bard Font of Inspiration | level-5 | character-level | class feature | `bard_font_of_inspiration` | `.references/srd-5.2.1/Classes/Bard.md:113` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future character-sheet-runtime Bardic Inspiration resource-recovery owner plus existing battle-runtime Bardic Inspiration grant/use profiles | SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state. |
 | Bard level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Bard Magical Discoveries | level-6 | character-level | class feature | `bard_magical_discoveries` | `.references/srd-5.2.1/Classes/Bard.md:336` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Bard Magical Discoveries | level-6 | character-level | class feature | `bard_magical_discoveries` | `.references/srd-5.2.1/Classes/Bard.md:336` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future-owner-before-SDK character-creation and character-sheet Magical Discoveries spell-access selection owner plus selected Spell Definition invocation profiles | SRD Magical Discoveries grants two chosen always-prepared spells from the Cleric, Druid, or Wizard spell lists, limited to cantrips or spells for which the Bard has Spell Slots, and allows replacing one chosen spell whenever the character gains a Bard level. A future owner must consume typed Surface facts for the selected College of Lore feature, derive eligible cross-list options from canonical spell-list and Bard Spell Slot facts, retain selected Spell Access as source-scoped character facts, and perform Bard-level replacement without adding a duplicate prepared-spell list, duplicating Spell Slot state, or dispatching on Bard, College of Lore, Magical Discoveries, or selected spell authored identity. Individual Spell Definition invocation behavior remains owned by spell invocation profiles. |
 | Bard level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:41` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Bard Countercharm | level-7 | character-level | class feature | `bard_countercharm` | `.references/srd-5.2.1/Classes/Bard.md:119` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Bard level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:42` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
