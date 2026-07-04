@@ -284,6 +284,150 @@
             "null"
           ],
           "minLength": 1
+        },
+        "characterCreationFillBatchTasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/characterCreationFillBatchTask"
+          }
+        }
+      }
+    },
+    "characterCreationFillBatchTask": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "taskId",
+        "title",
+        "status",
+        "sourcePaths",
+        "semanticEvidence",
+        "routeEvidence",
+        "branchActions",
+        "acceptance",
+        "targetStateOwnerNotes",
+        "forbiddenShortcuts",
+        "verification"
+      ],
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "blocked",
+            "ready",
+            "applied",
+            "deferred"
+          ]
+        },
+        "sourcePaths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "semanticEvidence": {
+          "$ref": "#/$defs/semanticEvidence"
+        },
+        "routeEvidence": {
+          "$ref": "#/$defs/routeEvidence"
+        },
+        "branchActions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "acceptance": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "targetStateOwnerNotes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "forbiddenShortcuts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "verification": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "semanticEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "driverPath",
+        "ownerPath",
+        "projection",
+        "comparator"
+      ],
+      "properties": {
+        "driverPath": {
+          "type": "string",
+          "pattern": "^packages/(battle-runtime|character-battle-runtime|character-creation-runtime|character-sheet-runtime)/.+\\.mbt\\.qnt$"
+        },
+        "ownerPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "projection": {
+          "const": "qState"
+        },
+        "comparator": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "routeEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "connectorPath",
+        "projection",
+        "comparator"
+      ],
+      "properties": {
+        "connectorPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "projection": {
+          "const": "qRoute"
+        },
+        "comparator": {
+          "const": "route-event-list"
         }
       }
     }

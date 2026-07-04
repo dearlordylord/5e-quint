@@ -1413,12 +1413,182 @@
         "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "Character Draft owns draft revision and accepted creation selections; Creation Hole Frontier is derived from the draft plus support-profile admission; Character Build owns finalized build facts. A target must not store open holes, finalization status, or issue lists as duplicate durable state beside their source facts.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRP04-CCF-01..03",
+      "status": "ready",
+      "blockerId": null,
+      "characterCreationFillBatchTasks": [
+        {
+          "taskId": "CRP04-CCF-01",
+          "title": "Character creation accepted fill batches, hole rediscovery, and finalization",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+            "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
+            "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+            "packages/character-creation-runtime/character-creation-reducer-route.qnt",
+            "packages/character-creation-runtime/VOCABULARY.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Character-Creation.md",
+            ".references/srd-5.2.1/Character-Origins.md",
+            ".references/srd-5.2.1/Classes/Fighter.md",
+            ".references/srd-5.2.1/Equipment.md"
+          ],
+          "semanticEvidence": {
+            "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+            "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
+            "projection": "qState",
+            "comparator": "character-creation-runtime-state"
+          },
+          "routeEvidence": {
+            "connectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+            "projection": "qRoute",
+            "comparator": "route-event-list"
+          },
+          "branchActions": [
+            "doFillInitialManifest",
+            "doFillInitialChoicesOnly",
+            "doFillAbilityScoresOnly",
+            "doFillManifestChoices",
+            "doFillManifestPurchase",
+            "doFillManifestLoadout"
+          ],
+          "acceptance": [
+            "Target replay observes semantic qState for each accepted branch: CreationAccepted outcome, one revision increment per accepted batch, accepted fills applied to the Character Draft, openHoles equal to openCreationHoles(draft), and finalization equal to finalizeDraft(draft).",
+            "Target replay observes route qRoute for draft creation, RouteApplyCreationFillBatch, RouteDiscoverCreationHoles after every accepted batch, RouteRecordCreationFacts for partial draft facts where the route connector names them, and RouteFinalizeCharacterDraft only after the loadout batch reaches RuntimeFinalized.",
+            "Accepted fill application must preserve batch atomicity: validation happens for the whole submitted batch before draft mutation, and the target cannot apply a prefix of a later-rejected batch.",
+            "Hole rediscovery is derived after each accepted batch; an empty openHoles Set means there are no holes left, while an absent open-hole projection is not accepted as a second spelling of empty."
+          ],
+          "targetStateOwnerNotes": [
+            "Character Draft stores accepted source facts and revision; open holes and finalization are projections from Character Draft plus support-profile facts.",
+            "Character Build is created only through the finalization gate once holes are empty and support-profile admission succeeds.",
+            "Empty qState.batchIssueCodes and empty qState.fillIssues mean no issues; a missing issue collection is not equivalent to an empty one."
+          ],
+          "forbiddenShortcuts": [
+            "Do not copy TypeScript module shape or historical Rust July projection fields as target acceptance.",
+            "Do not branch target runtime behavior on authored ids, labels, slugs, or official catalog identity.",
+            "Do not store a duplicate durable open-hole or finalization ledger beside the draft facts that derive it."
+          ],
+          "verification": [
+            "Run target replay for packages/character-creation-runtime/character-creation-runtime.mbt.qnt and require semantic qState comparator character-creation-runtime-state.",
+            "Run target replay for packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt and require qRoute comparator route-event-list from public reducer entrypoints.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Character-Creation.md, Character-Origins.md, Classes/Fighter.md, Equipment.md, UBIQUITOUS_LANGUAGE.md, and packages/character-creation-runtime/VOCABULARY.md."
+          ]
+        },
+        {
+          "taskId": "CRP04-CCF-02",
+          "title": "Character creation stale revision, duplicate fill, wrong-kind, and closed-hole rejection",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+            "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
+            "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+            "packages/character-creation-runtime/character-creation-reducer-route.qnt",
+            "packages/character-creation-runtime/VOCABULARY.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Character-Creation.md"
+          ],
+          "semanticEvidence": {
+            "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+            "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
+            "projection": "qState",
+            "comparator": "character-creation-runtime-state"
+          },
+          "routeEvidence": {
+            "connectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+            "projection": "qRoute",
+            "comparator": "route-event-list"
+          },
+          "branchActions": [
+            "doRejectStaleInitialManifest",
+            "doRejectDuplicateFill",
+            "doRejectWrongKindPrimaryClass",
+            "doRejectClosedInitialProgressionHole",
+            "doRejectUnknownLoadoutArmor"
+          ],
+          "acceptance": [
+            "Target replay observes semantic qState rejection for stale revision with batchIssueCodes containing staleRevision, CreationRejected outcome, original draft preserved, original holes preserved, and finalization recomputed from the unchanged draft.",
+            "Target replay observes semantic qState rejection for duplicate fill in one batch with fillIssues containing duplicateFill for the repeated hole and no partial draft mutation.",
+            "Target replay observes semantic qState rejection for wrong fill kind with fillIssues containing wrongFillKind when an ability-score fill targets the progression choice hole.",
+            "Target replay observes semantic qState rejection for closed or non-open holes with fillIssues containing unknownHole and no draft mutation.",
+            "Target replay observes route qRoute rejection owners through RouteApplyCreationFillBatch and RouteDiscoverCreationHoles, with CreationStaleFillRejectionFact recorded for stale revision."
+          ],
+          "targetStateOwnerNotes": [
+            "Rejected batches return the unchanged Character Draft and the derived holes for that unchanged draft.",
+            "Batch-level issues and fill-level issues are distinct collections; empty collection and absent collection are not interchangeable.",
+            "Closed-hole and non-open-hole rejection is a fill validation result, not a separate durable hole-status field."
+          ],
+          "forbiddenShortcuts": [
+            "Do not copy TypeScript module shape or historical Rust July projection fields as target acceptance.",
+            "Do not implement rejection by mutating and rolling back draft state; the batch must be validated before mutation.",
+            "Do not introduce adapter-local expected routes in place of observed public reducer route events."
+          ],
+          "verification": [
+            "Run target replay for packages/character-creation-runtime/character-creation-runtime.mbt.qnt and require semantic qState comparator character-creation-runtime-state.",
+            "Run target replay for packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt and require qRoute comparator route-event-list from public reducer entrypoints.",
+            "Run reviewer-loop convergence for RAW traceability, domain language, architecture/connascence, and code-review checks."
+          ]
+        },
+        {
+          "taskId": "CRP04-CCF-03",
+          "title": "Character creation choice cardinality and support-profile rejection",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+            "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
+            "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+            "packages/character-creation-runtime/character-creation-reducer-route.qnt",
+            "packages/character-creation-runtime/VOCABULARY.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Character-Creation.md",
+            ".references/srd-5.2.1/Character-Origins.md",
+            ".references/srd-5.2.1/Classes/Fighter.md",
+            ".references/srd-5.2.1/Equipment.md"
+          ],
+          "semanticEvidence": {
+            "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+            "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt",
+            "projection": "qState",
+            "comparator": "character-creation-runtime-state"
+          },
+          "routeEvidence": {
+            "connectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+            "projection": "qRoute",
+            "comparator": "route-event-list"
+          },
+          "branchActions": [
+            "doRejectUnsupportedLanguage",
+            "doRejectDuplicateLanguage",
+            "doRejectTooFewLanguages",
+            "doRejectTooManyLanguages",
+            "doRejectUnsupportedClassEquipment"
+          ],
+          "acceptance": [
+            "Target replay observes semantic qState rejection for duplicate choices inside one language fill with fillIssues containing invalidChoice.",
+            "Target replay observes semantic qState rejection for too few and too many language choices with fillIssues containing tooFewChoices and tooManyChoices respectively.",
+            "Target replay observes semantic qState rejection for unsupported but valid choices with fillIssues containing unsupportedChoice and with Character Draft unchanged.",
+            "Target replay observes route qRoute assigning unsupported-option rejection to CreationSupportProfileAdmissionOwner where the connector names that owner, while ordinary cardinality and duplicate-choice rejection stays with CharacterDraftOwner.",
+            "The target must preserve SRD choice counts as executable validation facts, not as display labels or authored identity dispatch."
+          ],
+          "targetStateOwnerNotes": [
+            "Support Profile is a package-private runtime boundary for fill admission; it is not authored provenance and not a Surface content status label.",
+            "Valid-but-unsupported choices remain distinct from invalid choices; both issue collections must be present when non-empty and must be empty rather than absent on accepted branches.",
+            "Choice cardinality is derived from the hole family; the target must not store a separate mutable required-count copy per draft."
+          ],
+          "forbiddenShortcuts": [
+            "Do not copy TypeScript module shape or historical Rust July projection fields as target acceptance.",
+            "Do not collapse support-profile admission, authored provenance, and runtime projection into one field.",
+            "Do not accept catalog admission alone as proof that a fill is supported by the character creation runtime."
+          ],
+          "verification": [
+            "Run target replay for packages/character-creation-runtime/character-creation-runtime.mbt.qnt and require semantic qState comparator character-creation-runtime-state.",
+            "Run target replay for packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt and require qRoute comparator route-event-list from public reducer entrypoints.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Character-Creation.md, Character-Origins.md, Classes/Fighter.md, Equipment.md, UBIQUITOUS_LANGUAGE.md, and packages/character-creation-runtime/VOCABULARY.md."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",

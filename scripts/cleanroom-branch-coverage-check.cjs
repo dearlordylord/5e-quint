@@ -154,6 +154,19 @@ const reducerConvergenceRowKeys = [
   "status",
   "blockerId",
 ];
+const characterCreationFillBatchTaskKeys = [
+  "taskId",
+  "title",
+  "status",
+  "sourcePaths",
+  "semanticEvidence",
+  "routeEvidence",
+  "branchActions",
+  "acceptance",
+  "targetStateOwnerNotes",
+  "forbiddenShortcuts",
+  "verification",
+];
 const reducerConvergenceCitationPaths = [
   "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
   "plans/cleanroom-branch-coverage/source-branch-inventory.json",
@@ -2116,6 +2129,7 @@ function collectReducerConvergenceDenominatorFacts({
     return {
       routeAssignments: [],
       routeAssignmentByDriverPath: new Map(),
+      branchActionsByDriverPath: new Map(),
       laneDriverPathsByLane: new Map(
         scaffoldLaneOrder.map((lane) => [lane, new Set()]),
       ),
@@ -2137,6 +2151,18 @@ function collectReducerConvergenceDenominatorFacts({
   const inventoryDrivers = new Set(
     inventory.branchObligations.map((obligation) => obligation.driverPath),
   );
+  const branchActionsByDriverPath = new Map();
+  for (const obligation of inventory.branchObligations) {
+    if (!nonEmptyString(obligation.driverPath)) continue;
+    if (!branchActionsByDriverPath.has(obligation.driverPath)) {
+      branchActionsByDriverPath.set(obligation.driverPath, new Set());
+    }
+    if (nonEmptyString(obligation.branchAction)) {
+      branchActionsByDriverPath
+        .get(obligation.driverPath)
+        .add(obligation.branchAction);
+    }
+  }
   const routeAssignmentByDriverPath = new Map();
   const laneDriverPathsByLane = new Map(
     scaffoldLaneOrder.map((lane) => [lane, new Set()]),
@@ -2229,6 +2255,7 @@ function collectReducerConvergenceDenominatorFacts({
   return {
     routeAssignments,
     routeAssignmentByDriverPath,
+    branchActionsByDriverPath,
     diagnosticRouteConnectorByDriverPath,
     laneDriverPathsByLane,
     laneCounts: Object.fromEntries(
@@ -2317,6 +2344,24 @@ function validateReducerConvergenceBacklogSchema(schema, context) {
       `${context}: status enum must match ${Array.from(reducerConvergenceStatuses).join(", ")}.`,
     );
   }
+  const childTaskSchema = schema.$defs?.characterCreationFillBatchTask;
+  if (!isRecord(childTaskSchema)) {
+    issues.push(
+      `${context}: $defs.characterCreationFillBatchTask must be an object.`,
+    );
+  } else if (!Array.isArray(childTaskSchema.required)) {
+    issues.push(
+      `${context}: $defs.characterCreationFillBatchTask.required must be an array.`,
+    );
+  } else {
+    for (const key of characterCreationFillBatchTaskKeys) {
+      if (!childTaskSchema.required.includes(key)) {
+        issues.push(
+          `${context}: $defs.characterCreationFillBatchTask.required is missing ${key}.`,
+        );
+      }
+    }
+  }
   return issues;
 }
 
@@ -2324,6 +2369,178 @@ function validateNullableString(value, context, issues) {
   if (value === null) return;
   if (typeof value !== "string" || value.trim() === "") {
     issues.push(`${context} must be null or a non-empty string.`);
+  }
+}
+
+function validateStringArray(value, context, issues, options = {}) {
+  const minItems = options.minItems ?? 0;
+  if (!Array.isArray(value)) {
+    issues.push(`${context} must be an array.`);
+    return;
+  }
+  if (value.length < minItems) {
+    issues.push(`${context} must have at least ${minItems} item(s).`);
+  }
+  for (const [index, item] of value.entries()) {
+    if (!nonEmptyString(item)) {
+      issues.push(`${context}[${index}] must be a non-empty string.`);
+    }
+  }
+}
+
+function validateReducerConvergenceEvidence(evidence, context, issues, expected) {
+  if (!isRecord(evidence)) {
+    issues.push(`${context} must be an object.`);
+    return;
+  }
+  for (const field of expected.pathFields) {
+    if (!nonEmptyString(evidence[field])) {
+      issues.push(`${context}.${field} must be a non-empty string.`);
+    }
+  }
+  if (evidence.projection !== expected.projection) {
+    issues.push(`${context}.projection must be ${expected.projection}.`);
+  }
+  if (expected.comparator === undefined) {
+    if (!nonEmptyString(evidence.comparator)) {
+      issues.push(`${context}.comparator must be a non-empty string.`);
+    }
+  } else if (evidence.comparator !== expected.comparator) {
+    issues.push(`${context}.comparator must be ${expected.comparator}.`);
+  }
+}
+
+function validateCharacterCreationFillBatchTasks(
+  row,
+  facts,
+  rowContext,
+  issues,
+) {
+  if (row.characterCreationFillBatchTasks === undefined) return;
+  if (row.driverPath !== characterCreationFullVerticalDriverPath) {
+    issues.push(
+      `${rowContext}: characterCreationFillBatchTasks is only valid for ${characterCreationFullVerticalDriverPath}.`,
+    );
+  }
+  if (!Array.isArray(row.characterCreationFillBatchTasks)) {
+    issues.push(
+      `${rowContext}: characterCreationFillBatchTasks must be an array when present.`,
+    );
+    return;
+  }
+  const seenTaskIds = new Set();
+  const sourceBranchActions = facts.branchActionsByDriverPath.get(row.driverPath);
+  for (const [taskIndex, task] of row.characterCreationFillBatchTasks.entries()) {
+    const taskContext = `${rowContext}: characterCreationFillBatchTasks[${taskIndex}]`;
+    if (!isRecord(task)) {
+      issues.push(`${taskContext}: task must be an object.`);
+      continue;
+    }
+    for (const key of characterCreationFillBatchTaskKeys) {
+      if (!Object.prototype.hasOwnProperty.call(task, key)) {
+        issues.push(`${taskContext}: missing stable key ${key}.`);
+      }
+    }
+    if (!nonEmptyString(task.taskId)) {
+      issues.push(`${taskContext}: taskId must be a non-empty string.`);
+    } else if (seenTaskIds.has(task.taskId)) {
+      issues.push(`${taskContext}: duplicate taskId ${task.taskId}.`);
+    } else {
+      seenTaskIds.add(task.taskId);
+    }
+    if (!nonEmptyString(task.title)) {
+      issues.push(`${taskContext}: title must be a non-empty string.`);
+    }
+    if (!reducerConvergenceStatuses.has(task.status)) {
+      issues.push(
+        `${taskContext}: status must be one of ${Array.from(reducerConvergenceStatuses).join(", ")}.`,
+      );
+    }
+    validateStringArray(task.sourcePaths, `${taskContext}: sourcePaths`, issues, {
+      minItems: 1,
+    });
+    validateReducerConvergenceEvidence(
+      task.semanticEvidence,
+      `${taskContext}: semanticEvidence`,
+      issues,
+      {
+        pathFields: ["driverPath", "ownerPath"],
+        projection: "qState",
+        comparator: undefined,
+      },
+    );
+    validateReducerConvergenceEvidence(
+      task.routeEvidence,
+      `${taskContext}: routeEvidence`,
+      issues,
+      {
+        pathFields: ["connectorPath"],
+        projection: qntRouteProjection,
+        comparator: qntRouteComparator,
+      },
+    );
+    if (isRecord(task.semanticEvidence)) {
+      if (task.semanticEvidence.driverPath !== row.driverPath) {
+        issues.push(`${taskContext}: semanticEvidence.driverPath must match parent driverPath.`);
+      }
+      if (
+        row.driverPath === characterCreationFullVerticalDriverPath &&
+        task.semanticEvidence.ownerPath !==
+        characterCreationFullVerticalSemanticOwnerPath
+      ) {
+        issues.push(
+          `${taskContext}: semanticEvidence.ownerPath must be ${characterCreationFullVerticalSemanticOwnerPath}.`,
+        );
+      }
+      if (
+        row.driverPath === characterCreationFullVerticalDriverPath &&
+        task.semanticEvidence.comparator !== "character-creation-runtime-state"
+      ) {
+        issues.push(
+          `${taskContext}: semanticEvidence.comparator must be character-creation-runtime-state.`,
+        );
+      }
+    }
+    if (
+      isRecord(task.routeEvidence) &&
+      row.driverPath === characterCreationFullVerticalDriverPath &&
+      task.routeEvidence.connectorPath !==
+        characterCreationFullVerticalRouteConnectorPath
+    ) {
+      issues.push(
+        `${taskContext}: routeEvidence.connectorPath must be ${characterCreationFullVerticalRouteConnectorPath}.`,
+      );
+    }
+    validateStringArray(task.branchActions, `${taskContext}: branchActions`, issues, {
+      minItems: 1,
+    });
+    if (Array.isArray(task.branchActions) && sourceBranchActions !== undefined) {
+      for (const branchAction of task.branchActions) {
+        if (nonEmptyString(branchAction) && !sourceBranchActions.has(branchAction)) {
+          issues.push(
+            `${taskContext}: branchActions contains unknown character creation branch ${branchAction}.`,
+          );
+        }
+      }
+    }
+    validateStringArray(task.acceptance, `${taskContext}: acceptance`, issues, {
+      minItems: 1,
+    });
+    validateStringArray(
+      task.targetStateOwnerNotes,
+      `${taskContext}: targetStateOwnerNotes`,
+      issues,
+      { minItems: 1 },
+    );
+    validateStringArray(
+      task.forbiddenShortcuts,
+      `${taskContext}: forbiddenShortcuts`,
+      issues,
+      { minItems: 1 },
+    );
+    validateStringArray(task.verification, `${taskContext}: verification`, issues, {
+      minItems: 1,
+    });
   }
 }
 
@@ -2463,6 +2680,12 @@ function validateReducerConvergenceBacklogRows(backlog, facts, context, issues) 
     if (row.status !== "blocked" && row.blockerId !== null) {
       issues.push(`${rowContext}: non-blocked rows must use blockerId null.`);
     }
+    validateCharacterCreationFillBatchTasks(
+      row,
+      facts,
+      rowContext,
+      issues,
+    );
   }
   const missingRows = sortedSetDifference(denominatorDrivers, seenDriverPaths);
   for (const driverPath of missingRows) {
