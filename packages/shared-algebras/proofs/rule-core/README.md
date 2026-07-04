@@ -143,9 +143,11 @@ Out of scope for QCORE4:
 - broad battle action sequencing.
 
 `damage-component-adjustments-inductive.qnt` is the owned proof machine. It
-keeps state to aggregate fixed reducer-derived typed-damage, scalar-reduction,
-and damage-roll-floor fixtures, with the branch budget recorded near the `any`
-action.
+keeps only literal typed-damage, scalar-reduction, and damage-roll-floor fixture
+totals in state so the inductive lane stays small. The companion
+`damage-component-adjustments-inductive-tests.qnt` run blocks check those
+literals against the reducer, keeping the fixture coupling executable without
+importing the behavioral reducer into the Apalache proof machine.
 
 `damage-component-adjustments-examples.qnt` keeps QCORE4 run examples outside
 the generator-facing semantic core.

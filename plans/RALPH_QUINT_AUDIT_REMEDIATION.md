@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "QAR-20-FINAL-CONVERGENCE-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Run final Quint and architecture convergence audit"
     },
     {
@@ -216,7 +216,7 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 17 | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION - Move Hunter's Prey execution to semantic support profiles | done | QAR-01-TEST-LANE-ISOLATION | Removes execution dispatch on selected authored option ids. |
 | 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | done | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
 | 19 | QAR-19-AUTHORED-ID-CHECKER-HARDENING - Harden authored-identity dispatch checking | done | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES | Tightens the checker after known migrations land. |
-| 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | ready-for-research | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING, QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION, QAR-22-DEFAULT-TEST-BASELINE-REPAIRS, QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR, QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS | Final repeated review loop is runnable again after QAR-21 through QAR-24. |
+| 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | done | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING, QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION, QAR-22-DEFAULT-TEST-BASELINE-REPAIRS, QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR, QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS | Final convergence audit passed after repairing the shared-algebras damage-component inductive proof state space and rerunning final verification. |
 | 21 | QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION - Reconcile character-sheet runtime split export gate | done | none | Fix the `pnpm quality` blocker in the character-sheet split export gate. |
 | 22 | QAR-22-DEFAULT-TEST-BASELINE-REPAIRS - Repair default test baseline failures found by final audit | done | none | Fixed unrelated character-sheet and character-creation default `pnpm test` baseline failures found during final audit. |
 | 23 | QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR - Repair cleanroom harness sampled-input self-test | done | none | Fix the cleanroom harness checker self-test blocker found during final audit. |
@@ -1096,7 +1096,7 @@ Plan Impact:
 
 ### Task 20 - QAR-20-FINAL-CONVERGENCE-AUDIT
 
-Status: `ready-for-research`
+Status: `done`
 
 QAR-21 through QAR-24 repaired the concrete baseline blockers that prevented
 the previous final audit pass from converging. Rerun the final convergence audit
@@ -1168,10 +1168,20 @@ Verification:
 Plan Impact:
 
 - Applied: QAR-21 through QAR-24 cleared the concrete baseline blockers, so
-  QAR-20 is runnable for the final convergence rerun. The stale
-  `rogue_second_story_work` owner-evidence row is recorded as resolved by
-  existing unit-profile coverage evidence rather than promoted into unnecessary
-  follow-up work.
+  QAR-20 reran the final convergence audit. The audit found one real
+  shared-algebras proof-lane scalability issue:
+  `damage-component-adjustments-inductive.qnt` imported the behavioral damage
+  reducer to compute fixed witness values and exhausted Apalache heap in the
+  shared inductive proof lane. The repair keeps literal fixture totals in the
+  inductive proof machine and checks those literals against the reducer in
+  companion run-block tests, so the inductive state space is small while the
+  coupling remains executable. Final verification passed: static lane checks,
+  affected QNT proof lanes, the shared-algebras inductive proof lane,
+  `pnpm test`, and `pnpm quality`.
+- Applied: the stale `rogue_second_story_work` owner-evidence row is recorded
+  as resolved by existing unit-profile coverage evidence rather than promoted
+  into unnecessary follow-up work. No additional Second-Story Work follow-up
+  task is required.
 
 ### Task 21 - QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION
 

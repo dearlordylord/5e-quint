@@ -4,6 +4,19 @@ module damageComponentAdjustmentsInductiveTests {
   import damageComponentAdjustments.* from "./damage-component-adjustments"
   import damageComponentAdjustmentsInductive.* from "./damage-component-adjustments-inductive"
 
+  run resisted_slashing_fixture_matches_reducer = {
+    val adjusted = damageByTypeAfterTargetAdjustments(
+      addDamageAmountForType(emptyDamageByType, SlashingDamage, 5),
+      noDamageAdjustmentFacts.with("resistances", Set(SlashingDamage))
+    )
+    all {
+      assert(damageAmountForType(adjusted, SlashingDamage) == resistedSlashingFixtureSlashing),
+      assert(damageAmountForType(adjusted, FireDamage) == resistedSlashingFixtureFire),
+      assert(damageAmountForType(adjusted, PoisonDamage) == resistedSlashingFixturePoison),
+      assert(totalDamageByType(adjusted) == resistedSlashingFixtureTotal),
+    }
+  }
+
   run mixed_adjustments_reach_resisted_vulnerable_and_immune_totals = {
     val facts = noDamageAdjustmentFacts
       .with("immunities", Set(PoisonDamage))
@@ -39,5 +52,9 @@ module damageComponentAdjustmentsInductiveTests {
       assert(result.secondAmount == scalarReductionFixtureFire),
       assert(pairTotal(result) == scalarReductionFixtureTotal),
     }
+  }
+
+  run modifier_floor_fixture_matches_reducer = {
+    assert(adjustedDamageRollAmount(0, -5) == modifierFloorFixtureAmount)
   }
 }
