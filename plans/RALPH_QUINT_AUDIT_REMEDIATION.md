@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "QAR-22-DEFAULT-TEST-BASELINE-REPAIRS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Repair default test baseline failures found by final audit"
     },
     {
@@ -141,6 +141,12 @@
       "id": "QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR",
       "status": "ready-for-research",
       "title": "Repair cleanroom harness sampled-input self-test"
+    },
+    {
+      "number": 24,
+      "id": "QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS",
+      "status": "ready-for-research",
+      "title": "Repair battle-runtime default test baseline failures exposed after QAR-22"
     }
   ]
 }
@@ -210,10 +216,11 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 17 | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION - Move Hunter's Prey execution to semantic support profiles | done | QAR-01-TEST-LANE-ISOLATION | Removes execution dispatch on selected authored option ids. |
 | 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | done | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
 | 19 | QAR-19-AUTHORED-ID-CHECKER-HARDENING - Harden authored-identity dispatch checking | done | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES | Tightens the checker after known migrations land. |
-| 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | blocked | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING, QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION, QAR-22-DEFAULT-TEST-BASELINE-REPAIRS, QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR | Final repeated review loop found concrete follow-up blockers; rerun after QAR-21 through QAR-23. |
+| 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | blocked | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING, QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION, QAR-22-DEFAULT-TEST-BASELINE-REPAIRS, QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR, QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS | Final repeated review loop found concrete follow-up blockers; rerun after QAR-21 through QAR-24. |
 | 21 | QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION - Reconcile character-sheet runtime split export gate | done | none | Fix the `pnpm quality` blocker in the character-sheet split export gate. |
-| 22 | QAR-22-DEFAULT-TEST-BASELINE-REPAIRS - Repair default test baseline failures found by final audit | ready-for-research | none | Fix unrelated default `pnpm test` baseline failures found during final audit. |
+| 22 | QAR-22-DEFAULT-TEST-BASELINE-REPAIRS - Repair default test baseline failures found by final audit | done | none | Fixed unrelated character-sheet and character-creation default `pnpm test` baseline failures found during final audit. |
 | 23 | QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR - Repair cleanroom harness sampled-input self-test | ready-for-research | none | Fix the cleanroom harness checker self-test blocker found during final audit. |
+| 24 | QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS - Repair battle-runtime default test baseline failures exposed after QAR-22 | ready-for-research | QAR-22-DEFAULT-TEST-BASELINE-REPAIRS | Fix battle-runtime default `pnpm test` baseline failures exposed after QAR-22. |
 
 ## Shared Verification
 
@@ -1095,7 +1102,7 @@ Blocker Type: dependency
 
 Blocker Detail: QAR-02 through QAR-19 are done and Task 20 completed the
 final audit pass, but broad final verification cannot converge until QAR-21,
-QAR-22, and QAR-23 repair these concrete baseline failures:
+QAR-22, QAR-23, and QAR-24 repair these concrete baseline failures:
 
 - `pnpm quality` stops at `pnpm check:character-sheet-runtime-split`; the split
   expected export snapshot is missing current package exports including
@@ -1106,6 +1113,10 @@ QAR-22, and QAR-23 repair these concrete baseline failures:
   missing Draconic Ancestry support-profile options, and a Wizard duplicate
   Evocation Savant expectation.
 - `pnpm cleanroom-harness:check` fails its `sampled-input-leak` self-test.
+- After the QAR-22 default-test repairs, `pnpm test` reaches unrelated
+  `@dnd/battle-runtime` failures covering Rage stale subject expectation,
+  Archery adjacent passive bonus gate, Spike Growth movement-hazard admission,
+  and Spiritual Weapon counterspell frame.
 
 Second-Story Work owner evidence reconciliation: the task context packet's
 remaining `rogue_second_story_work` row is stale. Existing
@@ -1139,6 +1150,7 @@ Depends on:
 - QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION
 - QAR-22-DEFAULT-TEST-BASELINE-REPAIRS
 - QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR
+- QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS
 
 Output:
 
@@ -1171,10 +1183,10 @@ Verification:
 
 Plan Impact:
 
-- Applied: QAR-20 is blocked on executable follow-up tasks QAR-21, QAR-22, and
-  QAR-23. The stale `rogue_second_story_work` owner-evidence row is recorded as
-  resolved by existing unit-profile coverage evidence rather than promoted into
-  unnecessary follow-up work.
+- Applied: QAR-20 is blocked on executable follow-up tasks QAR-21, QAR-22,
+  QAR-23, and QAR-24. The stale `rogue_second_story_work` owner-evidence row is
+  recorded as resolved by existing unit-profile coverage evidence rather than
+  promoted into unnecessary follow-up work.
 
 ### Task 21 - QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION
 
@@ -1210,7 +1222,7 @@ Plan Impact:
 
 ### Task 22 - QAR-22-DEFAULT-TEST-BASELINE-REPAIRS
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: none
 
@@ -1237,8 +1249,9 @@ Verification:
 
 Plan Impact:
 
-- Update-required if default test repair exposes additional baseline failures
-  that require separate ownership tasks.
+- Applied: QAR-24 records the unrelated `@dnd/battle-runtime` default-test
+  baseline failures exposed after this task repaired the named
+  character-sheet and character-creation failures.
 
 ### Task 23 - QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR
 
@@ -1268,3 +1281,40 @@ Plan Impact:
 
 - Update-required if harness repair reveals additional cleanroom scaffold
   checker blockers.
+
+### Task 24 - QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS
+
+Status: `ready-for-research`
+
+Depends on:
+
+- QAR-22-DEFAULT-TEST-BASELINE-REPAIRS
+
+Output:
+
+- Repair the unrelated `@dnd/battle-runtime` default `pnpm test` baseline
+  failures exposed after QAR-22: Rage stale subject expectation, Archery
+  adjacent passive bonus gate, Spike Growth movement-hazard admission, and
+  Spiritual Weapon counterspell frame.
+- Keep fixes in the battle-runtime owning modules and tests. For behavior
+  changes, check the active QNT owner and run the focused MBT lane only after
+  code changes are complete, following the repository MBT protocol.
+
+Acceptance:
+
+- Focused tests for each repaired battle-runtime failure pass.
+- `pnpm test` passes or stops only at a newly discovered unrelated blocker that
+  is recorded as executable follow-up work.
+
+Verification:
+
+- Shared verification.
+- Focused `@dnd/battle-runtime` tests for each repaired failure.
+- Any focused battle-runtime MBT lane required by behavior changes, using the
+  repository MBT protocol.
+- `pnpm test`.
+
+Plan Impact:
+
+- Update-required if default test repair exposes additional baseline failures
+  that require separate ownership tasks.

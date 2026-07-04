@@ -216,7 +216,7 @@ describe("Character Sheet runtime / druid features", () => {
       createFreshCharacterSheet({
         characterId: characterSheetId("character:druid-wild-shape-rest"),
         build: druidBuild,
-        currentHp: Hp(16),
+        currentHp: Hp(15),
         tempHp: Hp(0),
         unitLibrary,
         druidWildShapeKnownFormStatBlockIds:
@@ -238,7 +238,7 @@ describe("Character Sheet runtime / druid features", () => {
             "character:druid-wild-shape-missing-forms",
           ),
           build: druidBuild,
-          currentHp: Hp(16),
+          currentHp: Hp(15),
           tempHp: Hp(0),
           unitLibrary,
         }),

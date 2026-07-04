@@ -493,6 +493,9 @@ export function supportedHoleOptionIds(
 ): readonly CreationChoiceOptionId[] | undefined {
   const source = hole.source;
   if (source.tag === "draft") {
+    if (hole.kind === "choice" && source.path === "draft.draconicAncestry") {
+      return hole.options.map((option) => option.optionId);
+    }
     return supportedDraftOptionIds(source);
   }
 

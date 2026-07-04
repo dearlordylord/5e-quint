@@ -432,7 +432,7 @@ export function spellbookRitualSheet(input: {
           },
         },
       },
-      currentHp: Hp(8),
+      currentHp: Hp(7),
       tempHp: Hp(0),
       unitLibrary,
     }),

@@ -406,11 +406,26 @@ describe("Wizard Scholar", () => {
           creationChoiceOptionId("arcana"),
         ],
         [testUnitChoiceSourceKey(
+          "class_wizard",
+          WIZARD_SPELLBOOK_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("detect_magic"),
+          creationChoiceOptionId("feather_fall"),
+          creationChoiceOptionId("mage_armor"),
+          creationChoiceOptionId("magic_missile"),
+          creationChoiceOptionId("shield"),
+          creationChoiceOptionId("sleep"),
+          creationChoiceOptionId("thunderwave"),
+          creationChoiceOptionId("chromatic_orb"),
+          creationChoiceOptionId("continual_flame"),
+          creationChoiceOptionId("misty_step"),
+        ],
+        [testUnitChoiceSourceKey(
           "wizard_evocation_savant",
           WIZARD_SPELLBOOK_CHOICE_KEY,
         )]: [
-          creationChoiceOptionId("magic_missile"),
           creationChoiceOptionId("continual_flame"),
+          creationChoiceOptionId("shatter"),
         ],
       },
     });
