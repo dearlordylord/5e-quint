@@ -188,6 +188,10 @@ import type {
   CharacterId,
   InitiativeScore,
 } from "./identity.ts";
+import type {
+  BattleReducerRouteEvent,
+  BattleReducerRouteEvents,
+} from "./battle-reducer/reducer-route.ts";
 import {
   BattleCombatantSide,
   BattleId,
@@ -268,6 +272,15 @@ export {
   validateWildShapeEquipmentDispositionFill,
   wildShapeLoadoutObjectRefs,
 } from "./battle-reducer/wild-shape-equipment.ts";
+export {
+  battleReducerStartRouteEvent,
+  type BattleReducerRouteEvent,
+  type BattleReducerRouteEvents,
+  type BattleReducerRouteFill,
+  type BattleReducerRouteHole,
+  type BattleReducerRouteOwnerGroup,
+  type BattleReducerRouteSubjectFamily,
+} from "./battle-reducer/reducer-route.ts";
 export {
   addBattleCombatant,
   applyInitiativeSwap,
@@ -4465,6 +4478,7 @@ export type AvailableBattleAct = {
   readonly label: string;
   readonly summary: string;
   readonly initialHoles: readonly BattleHole[];
+  readonly routeEvent?: BattleReducerRouteEvent;
 };
 
 export type BattleHoleId = HoleId;
@@ -6809,6 +6823,7 @@ export type BattleResolutionResult =
       readonly tag: "resolved";
       readonly state: BattleState;
       readonly snapshot: BattleSnapshot;
+      readonly routeEvents?: BattleReducerRouteEvents;
       readonly objectDamages?: readonly BattleObjectDamageOutcome[];
       readonly objectIgnitions?: readonly BattleObjectIgnitionOutcome[];
       readonly droppedObjects?: readonly BattleDroppedObjectOutcome[];
@@ -6821,6 +6836,7 @@ export type BattleResolutionResult =
       readonly subject: BattleSubject;
       readonly holes: readonly BattleHole[];
       readonly snapshot: BattleSnapshot;
+      readonly routeEvents?: BattleReducerRouteEvents;
     }
   | {
       readonly tag: "invalid";

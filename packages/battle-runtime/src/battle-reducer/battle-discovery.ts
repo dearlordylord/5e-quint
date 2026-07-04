@@ -198,7 +198,15 @@ import {
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
   discoverLegendaryActionActs,
 } from "../battle-reducer.ts";
+import { battleReducerRouteForDiscoveredAct } from "./reducer-route.ts";
+
 export function discoverBattleActs(
+  state: BattleState,
+): readonly AvailableBattleAct[] {
+  return withReducerRouteEvents(discoverBattleActsWithoutRouteEvents(state));
+}
+
+function discoverBattleActsWithoutRouteEvents(
   state: BattleState,
 ): readonly AvailableBattleAct[] {
   const actorId = currentActorId(state);
@@ -659,6 +667,15 @@ export function discoverBattleActs(
   acts.push(...discoverLegendaryActionActs(state));
 
   return acts;
+}
+
+function withReducerRouteEvents(
+  acts: readonly AvailableBattleAct[],
+): readonly AvailableBattleAct[] {
+  return acts.map((act) => {
+    const routeEvent = battleReducerRouteForDiscoveredAct(act);
+    return routeEvent === undefined ? act : { ...act, routeEvent };
+  });
 }
 
 function companionProtocolActs(

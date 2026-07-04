@@ -160,6 +160,7 @@ import {
   triggeredReactionSpellTurnResourceAvailable,
 } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { battleReducerRouteForResolution } from "./reducer-route.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { stateAfterSpellCastDeclared } from "./spell-cast-declaration.ts";
 import { releaseGlyphStoredSpell } from "./glyph-durable-occurrence.ts";
@@ -386,7 +387,10 @@ type ResolveBattleSubjectInternalOptions = {
 export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
-  return resolveBattleSubjectInternal(input, {});
+  const result = resolveBattleSubjectInternal(input, {});
+  if (result.tag === "invalid") return result;
+  const routeEvents = battleReducerRouteForResolution(input, result);
+  return routeEvents === undefined ? result : { ...result, routeEvents };
 }
 
 function validateD20TestNaturalOneRerollFills(

@@ -74,6 +74,7 @@ import {
   battleUnitRefWithSupportProfiles,
   battleId,
   battleCombatantSide,
+  battleReducerStartRouteEvent,
   breakBattleConcentration,
   cantripSpellInvocationRef,
   characterBattleResourceUsage,
@@ -9404,8 +9405,6 @@ export function createSpellAttackOrderingRouteDriver() {
   });
 }
 
-const CHAINED_ATTACK_PROCEDURE_ROUTE_SUBJECT =
-  "spellAttackProcedure" satisfies ReducerRouteSubjectFamily;
 const CHAINED_ATTACK_PROCEDURE_DAMAGE_TYPE = "fire" satisfies DamageType;
 const CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_FACES = [1, 2, 3] as const;
 const CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_SLOT2_FACES = [
@@ -9438,14 +9437,12 @@ export function createChainedAttackProcedureRouteDriver() {
       slotLevel = null;
       fills = [];
       holes = [];
-      route = [reducerRouteStartBattle("battleActionEconomy")];
+      route = [battleReducerStartRouteEvent(state)];
     }
 
     function recordResolvedFill(input: {
       readonly fill: BattleFill;
       readonly expectedTag: "needsHoles" | "resolved";
-      readonly routeFill: ReducerRouteFill;
-      readonly owners: readonly ReducerRouteOwnerGroup[];
     }): void {
       const currentSubject = requireChainedAttackProcedureSubject(subject);
       fills = [...fills, input.fill];
@@ -9454,6 +9451,11 @@ export function createChainedAttackProcedureRouteDriver() {
         subject: currentSubject,
         fills,
       });
+      if (result.tag === "invalid") {
+        throw new Error(
+          `Expected chained attack procedure ${input.expectedTag}, got invalid: ${result.message}`,
+        );
+      }
       if (result.tag !== input.expectedTag) {
         throw new Error(
           `Expected chained attack procedure ${input.expectedTag}, got ${
@@ -9462,17 +9464,7 @@ export function createChainedAttackProcedureRouteDriver() {
         );
       }
       holes = result.tag === "needsHoles" ? result.holes : [];
-      route = [
-        ...route,
-        ...input.owners.map((owner) =>
-          reducerRouteResolveBattleSubject({
-            subject: CHAINED_ATTACK_PROCEDURE_ROUTE_SUBJECT,
-            fill: input.routeFill,
-            holes,
-            owner,
-          }),
-        ),
-      ];
+      route = [...route, ...requireChainedAttackProcedureRouteEvents(result)];
     }
 
     reset();
@@ -9485,14 +9477,7 @@ export function createChainedAttackProcedureRouteDriver() {
         subject = act.subject;
         fills = [];
         holes = act.initialHoles;
-        route = [
-          ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: CHAINED_ATTACK_PROCEDURE_ROUTE_SUBJECT,
-            holes,
-            owner: "battleSpellSlotAndActionEconomy",
-          }),
-        ];
+        route = [...route, requireChainedAttackProcedureActRouteEvent(act)];
       },
       doChooseDamageType: () => {
         recordResolvedFill({
@@ -9501,8 +9486,6 @@ export function createChainedAttackProcedureRouteDriver() {
             CHAINED_ATTACK_PROCEDURE_DAMAGE_TYPE,
           ),
           expectedTag: "needsHoles",
-          routeFill: "damageTypeChoice",
-          owners: ["battleSpellAttackProcedure"],
         });
       },
       doChooseInitialTarget: () => {
@@ -9512,8 +9495,6 @@ export function createChainedAttackProcedureRouteDriver() {
             spellTargetId,
           ),
           expectedTag: "needsHoles",
-          routeFill: "targetChoice",
-          owners: ["battleTargetSelection", "battleSpellAttackProcedure"],
         });
       },
       doResolveStep0AttackHit: () => {
@@ -9523,8 +9504,6 @@ export function createChainedAttackProcedureRouteDriver() {
             naturalD20: 12,
           }),
           expectedTag: "needsHoles",
-          routeFill: "attackRoll",
-          owners: ["battleAttackRoll"],
         });
       },
       doResolveStep0DamageNoDuplicate: () => {
@@ -9536,8 +9515,6 @@ export function createChainedAttackProcedureRouteDriver() {
             ),
           ),
           expectedTag: "resolved",
-          routeFill: "rolledDice",
-          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
         });
       },
       doResolveStep0DamageDuplicate: () => {
@@ -9549,8 +9526,6 @@ export function createChainedAttackProcedureRouteDriver() {
             ),
           ),
           expectedTag: "needsHoles",
-          routeFill: "rolledDice",
-          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
         });
       },
       doChooseFirstLeapTarget: () => {
@@ -9559,8 +9534,6 @@ export function createChainedAttackProcedureRouteDriver() {
             requireTypedHole(holes, "targetChoice"),
           ),
           expectedTag: "needsHoles",
-          routeFill: "targetChoice",
-          owners: ["battleTargetSelection", "battleSpellAttackProcedure"],
         });
       },
       doResolveStep1AttackHit: () => {
@@ -9570,8 +9543,6 @@ export function createChainedAttackProcedureRouteDriver() {
             naturalD20: 12,
           }),
           expectedTag: "needsHoles",
-          routeFill: "attackRoll",
-          owners: ["battleAttackRoll"],
         });
       },
       doResolveStep1DuplicateDamageSlot1Limit: () => {
@@ -9581,8 +9552,6 @@ export function createChainedAttackProcedureRouteDriver() {
             CHAINED_ATTACK_PROCEDURE_STEP1_SLOT1_LIMIT_FACES,
           ),
           expectedTag: "resolved",
-          routeFill: "rolledDice",
-          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
         });
       },
       doResolveStep1DuplicateDamageSlot2AllowsLeap: () => {
@@ -9592,8 +9561,6 @@ export function createChainedAttackProcedureRouteDriver() {
             CHAINED_ATTACK_PROCEDURE_STEP1_SLOT2_LEAP_FACES,
           ),
           expectedTag: "needsHoles",
-          routeFill: "rolledDice",
-          owners: ["battleHitPoint", "battleSpellAttackProcedure"],
         });
       },
       step: () => {},
@@ -15919,6 +15886,29 @@ function requireChainedAttackProcedureSubject(
 ): ChainedAttackProcedureSubject {
   if (subject !== null) return subject;
   throw new Error("Expected chained attack procedure subject.");
+}
+
+function requireChainedAttackProcedureActRouteEvent(
+  act: ChainedAttackProcedureAct,
+): ReducerRouteEvent {
+  if (act.routeEvent !== undefined) return act.routeEvent;
+  throw new Error(
+    "Expected public reducer route event on chained attack procedure act.",
+  );
+}
+
+function requireChainedAttackProcedureRouteEvents(
+  result: Extract<
+    BattleResolutionResult,
+    { readonly tag: "needsHoles" | "resolved" }
+  >,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on chained attack procedure resolution.",
+  );
 }
 
 function independentSpellAttackSequenceTargetFill(

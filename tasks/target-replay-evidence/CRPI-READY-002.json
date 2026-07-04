@@ -1,0 +1,433 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts chained attack public reducer route-event replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "qntFileSha256": "1d91c14e26a451b94c59601f06fc2f4d881e8074ee2fcf392563cd44ce4792c1",
+      "branchFamily": "step",
+      "branchAction": "doChooseDamageType",
+      "observedActionTaken": "doChooseDamageType",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doChooseDamageType damageType=fire",
+      "sampledInputs": [
+        {
+          "pickName": "damageType",
+          "value": "fire"
+        }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "e4a59c4b955c5a1eda0dc9dfb8beeac8f8cd351773297465caba4afeacb1e380",
+        "observedProjectionSha256": "e4a59c4b955c5a1eda0dc9dfb8beeac8f8cd351773297465caba4afeacb1e380",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.actionSpell.invocation.slotLevel",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvent",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "qntFileSha256": "1d91c14e26a451b94c59601f06fc2f4d881e8074ee2fcf392563cd44ce4792c1",
+      "branchFamily": "step",
+      "branchAction": "doChooseFirstLeapTarget",
+      "observedActionTaken": "doChooseFirstLeapTarget",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doChooseFirstLeapTarget slotLevel=1 damageType=fire",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "4f16e15cf293a14ed4e984ecb5c7376c67dc0cf88549bcfc696f128927c77fac",
+        "observedProjectionSha256": "4f16e15cf293a14ed4e984ecb5c7376c67dc0cf88549bcfc696f128927c77fac",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleHole.kind",
+          "BattleCreatureState.hitPoints",
+          "AvailableBattleAct.routeEvent",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "qntFileSha256": "1d91c14e26a451b94c59601f06fc2f4d881e8074ee2fcf392563cd44ce4792c1",
+      "branchFamily": "step",
+      "branchAction": "doChooseInitialTarget",
+      "observedActionTaken": "doChooseInitialTarget",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doChooseInitialTarget slotLevel=1 damageType=fire",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9e99667a32b9f8cfa47c78d1121fab2f2fc04aef8f6dc6f12f22f6954188d182",
+        "observedProjectionSha256": "9e99667a32b9f8cfa47c78d1121fab2f2fc04aef8f6dc6f12f22f6954188d182",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleHole.kind",
+          "BattleFill.kind",
+          "AvailableBattleAct.routeEvent",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "qntFileSha256": "1d91c14e26a451b94c59601f06fc2f4d881e8074ee2fcf392563cd44ce4792c1",
+      "branchFamily": "step",
+      "branchAction": "doResolveStep0AttackHit",
+      "observedActionTaken": "doResolveStep0AttackHit",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doResolveStep0AttackHit slotLevel=1 damageType=fire",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "fca027ab38eb65120f1b6cb34a98b588a3da5c63cc0c22308990fcc180c5780f",
+        "observedProjectionSha256": "fca027ab38eb65120f1b6cb34a98b588a3da5c63cc0c22308990fcc180c5780f",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleHole.kind",
+          "BattleFill.kind",
+          "AvailableBattleAct.routeEvent",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "qntFileSha256": "1d91c14e26a451b94c59601f06fc2f4d881e8074ee2fcf392563cd44ce4792c1",
+      "branchFamily": "step",
+      "branchAction": "doResolveStep0DamageDuplicate",
+      "observedActionTaken": "doResolveStep0DamageDuplicate",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doResolveStep0DamageDuplicate slotLevel=1 damageType=fire",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "2efdf44e89851a504a412d3c779898149694959cb424ef1e632c242f44e65a05",
+        "observedProjectionSha256": "2efdf44e89851a504a412d3c779898149694959cb424ef1e632c242f44e65a05",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleCreatureState.hitPoints",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvent",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "qntFileSha256": "1d91c14e26a451b94c59601f06fc2f4d881e8074ee2fcf392563cd44ce4792c1",
+      "branchFamily": "step",
+      "branchAction": "doResolveStep0DamageNoDuplicate",
+      "observedActionTaken": "doResolveStep0DamageNoDuplicate",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doResolveStep0DamageNoDuplicate slotLevel=1 damageType=fire",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d49a14629fe59c3ea3d47a0ee263ba50d4146983c74217421ffdc2b16944b082",
+        "observedProjectionSha256": "d49a14629fe59c3ea3d47a0ee263ba50d4146983c74217421ffdc2b16944b082",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleCreatureState.hitPoints",
+          "BattleState.currentTurnResources",
+          "AvailableBattleAct.routeEvent",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "qntFileSha256": "1d91c14e26a451b94c59601f06fc2f4d881e8074ee2fcf392563cd44ce4792c1",
+      "branchFamily": "step",
+      "branchAction": "doResolveStep1AttackHit",
+      "observedActionTaken": "doResolveStep1AttackHit",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doResolveStep1AttackHit slotLevel=1 damageType=fire",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "c824314727586ec5ad8e08f43a72627c3578ba956a2073beec21a8645f78fd01",
+        "observedProjectionSha256": "c824314727586ec5ad8e08f43a72627c3578ba956a2073beec21a8645f78fd01",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleHole.kind",
+          "BattleCreatureState.hitPoints",
+          "AvailableBattleAct.routeEvent",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "qntFileSha256": "1d91c14e26a451b94c59601f06fc2f4d881e8074ee2fcf392563cd44ce4792c1",
+      "branchFamily": "step",
+      "branchAction": "doResolveStep1DuplicateDamageSlot1Limit",
+      "observedActionTaken": "doResolveStep1DuplicateDamageSlot1Limit",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doResolveStep1DuplicateDamageSlot1Limit slotLevel=1 damageType=fire",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "fc5fa9a4d49d225667486d972eba8bf7df25ea3b994437e11c85e8fb16b34fba",
+        "observedProjectionSha256": "fc5fa9a4d49d225667486d972eba8bf7df25ea3b994437e11c85e8fb16b34fba",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleCreatureState.hitPoints",
+          "BattleState.currentTurnResources",
+          "AvailableBattleAct.routeEvent",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "qntFileSha256": "1d91c14e26a451b94c59601f06fc2f4d881e8074ee2fcf392563cd44ce4792c1",
+      "branchFamily": "step",
+      "branchAction": "doResolveStep1DuplicateDamageSlot2AllowsLeap",
+      "observedActionTaken": "doResolveStep1DuplicateDamageSlot2AllowsLeap",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doResolveStep1DuplicateDamageSlot2AllowsLeap slotLevel=2 damageType=fire",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "18b7bfa78eb36f14384684f38180a25ada6327b16972fca07f06804cfa28550b",
+        "observedProjectionSha256": "18b7bfa78eb36f14384684f38180a25ada6327b16972fca07f06804cfa28550b",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.actionSpell.invocation.slotLevel",
+          "BattleCreatureState.hitPoints",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvent",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "qntFileSha256": "1d91c14e26a451b94c59601f06fc2f4d881e8074ee2fcf392563cd44ce4792c1",
+      "branchFamily": "step",
+      "branchAction": "doStartCast",
+      "observedActionTaken": "doStartCast",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doStartCast slotLevel=1",
+      "sampledInputs": [
+        {
+          "pickName": "slotLevel",
+          "value": 1
+        }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "112e9c6efd190a7fe6b76970c48f0f8178cdf2c98b2e7c45473c6a2925a57bb7",
+        "observedProjectionSha256": "112e9c6efd190a7fe6b76970c48f0f8178cdf2c98b2e7c45473c6a2925a57bb7",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.actionSpell.invocation.slotLevel",
+          "BattleState.currentTurnResources",
+          "AvailableBattleAct.routeEvent",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

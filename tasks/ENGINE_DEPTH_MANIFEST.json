@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-001",
+  "taskId": "CRPI-READY-002",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer.ts",
@@ -17,32 +17,41 @@
       "domainApis": ["discoverBattleActs"]
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "role": "public-reducer-route-observer",
+      "domainApis": [
+        "battleReducerStartRouteEvent",
+        "battleReducerRouteForDiscoveredAct",
+        "battleReducerRouteForResolution",
+        "BattleReducerRouteEvent",
+        "BattleReducerRouteEvents"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/spells-profiles-attack-damage.ts",
       "role": "domain-engine",
-      "domainApis": ["battleHoleFamilyKind", "requiredAbilityCheckRollMode"]
+      "domainApis": ["chainedSpellAttackDamage procedure profile"]
     },
     {
       "path": "packages/battle-runtime/src/battle-protocol-kinds.ts",
       "role": "domain-engine",
-      "domainApis": ["battleFillKind"]
+      "domainApis": ["battleFillKind", "battleSubjectKind"]
     }
   ],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
       "quarantinedWitnessNames": [
-        "doSearchTargetChoiceOpen",
-        "doSearchAbilityCheckOpen",
-        "doSearchInvalidTargetRejected",
-        "doSearchInvalidAbilityFillRejected",
-        "doSearchFails",
-        "doSearchSucceeds",
-        "doGuidanceSkillChoiceOpen",
-        "doGuidanceInvalidAbilityFillRejected",
-        "doGuidanceSkillAthletics",
-        "doEnhanceAbilityChoiceOpen",
-        "doEnhanceAbilityInvalidSkillFillRejected",
-        "doEnhanceAbilityDex",
+        "doStartCast",
+        "doChooseDamageType",
+        "doChooseInitialTarget",
+        "doResolveStep0AttackHit",
+        "doResolveStep0DamageNoDuplicate",
+        "doResolveStep0DamageDuplicate",
+        "doChooseFirstLeapTarget",
+        "doResolveStep1AttackHit",
+        "doResolveStep1DuplicateDamageSlot1Limit",
+        "doResolveStep1DuplicateDamageSlot2AllowsLeap",
         "mbt::actionTaken",
         "observedActionTaken",
         "traceId",
@@ -60,25 +69,25 @@
         "harnessTestPath"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-001.json"
+        "tasks/target-replay-evidence/CRPI-READY-002.json"
       ]
     }
   ],
   "accumulatorGrowth": [],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer.ts",
-      "api": "BattleCreatureState.activeEffects"
+      "api": "BattleSubject.actionSpell.invocation.procedure"
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-mixed-target-outcomes.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer.ts",
-      "api": "BattleCreatureState.concentration"
+      "api": "BattleCreatureState.hitPoints"
     }
   ],
   "completion": {
-    "tag": "existing-production-owner-with-adapter-replay",
-    "notes": "No new production module or durable state field was introduced for Task 1; the replay deepened the quarantined MBT route adapter to derive qRoute from public reducer entrypoints."
+    "tag": "public-reducer-route-replay",
+    "notes": "Task 5 introduces no durable state field. The replay uses the existing typed action-spell procedure subject and battle-owned Hit Point/current-turn resource state, while qRoute owner evidence is emitted by the public reducer route observer from startBattle/discoverBattleActs/resolveBattleSubject results."
   }
 }

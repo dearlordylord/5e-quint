@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-001",
+  "taskId": "CRPI-READY-002",
   "durableFields": [
     {
       "fieldPath": "BattleState.currentTurnResources",
@@ -11,7 +11,7 @@
       }
     },
     {
-      "fieldPath": "BattleCreatureState.hidden",
+      "fieldPath": "BattleCreatureState.hitPoints",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "battle-state",
       "derivability": {
@@ -19,24 +19,28 @@
       }
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects",
+      "fieldPath": "BattleSubject.actionSpell.invocation.procedure",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "battle-state",
+      "owner": "typed-battle-subject",
       "derivability": {
-        "tag": "canonical-source"
+        "tag": "boundary-projection",
+        "sourceField": "BattleState combatant spellcasting profile facts"
       }
     },
     {
-      "fieldPath": "BattleCreatureState.concentration",
+      "fieldPath": "BattleSubject.actionSpell.invocation.slotLevel",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "battle-state",
+      "owner": "typed-battle-subject",
       "derivability": {
-        "tag": "canonical-source"
+        "tag": "boundary-projection",
+        "sourceField": "BattleState combatant spell-slot facts"
       }
     }
   ],
   "notes": [
-    "Task 1 introduced no duplicate Search, hidden-target, roll-modifier, or Concentration state.",
-    "Target admission, vicinity, hidden candidate discovery, and roll totals remain caller/table fills."
+    "Task 5 introduced no duplicate chained-attack state.",
+    "Damage-type choice, per-step target history, Attack Roll fill ordering, Hit Point damage, and leap continuation flow through the typed spell procedure subject and BattleState reducer result.",
+    "AvailableBattleAct.routeEvent and BattleResolutionResult.routeEvents are public reducer boundary projections derived from existing subject, fill, hole, and result facts; they are not durable state.",
+    "Spell-target and leap-range eligibility remain caller/table fills."
   ]
 }
