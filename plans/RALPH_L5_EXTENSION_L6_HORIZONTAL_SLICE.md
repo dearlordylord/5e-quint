@@ -139,7 +139,7 @@
     {
       "number": 14,
       "id": "L6FULL-SEED-02-ROGUE-EXPERTISE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify existing Rogue Expertise level-6 support evidence"
     },
     {
@@ -387,7 +387,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  11 | L6FULL-PRE-01-L5-QUEUES-CLOSED - Verify L5 full and L5 ultra-golden queues are closed | done | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH | L6 starts only after the L5 extension has landed. |
 |  12 | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY - Verify level-6 scope and inventory baseline | done | L6FULL-PRE-01-L5-QUEUES-CLOSED | Confirms the 25-row L6 baseline and excludes spell-level-4. |
 |  13 | L6FULL-SEED-01-RANGER-ROVING - Verify existing Ranger Roving level-6 support evidence | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Existing catalog/runtime evidence remains checker-readable. |
-|  14 | L6FULL-SEED-02-ROGUE-EXPERTISE - Verify existing Rogue Expertise level-6 support evidence | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/character-creation evidence. |
+|  14 | L6FULL-SEED-02-ROGUE-EXPERTISE - Verify existing Rogue Expertise level-6 support evidence | done | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/character-creation evidence. |
 |  15 | L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES - Explicitly close the twelve level-6 class-table summary rows | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Table/progression rows remain explicit non-runtime closures. |
 |  16 | L6FULL-ASI-01-FIGHTER-ASI-L6 - Admit or close Fighter level-6 Ability Score Improvement | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Special repeated ASI/catalog admission task. |
 |  17 | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE - Resolve level-6 owner evidence for Barbarian Mindless Rage | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
@@ -1704,7 +1704,7 @@ Plan Impact:
 
 ### Task 14 - L6FULL-SEED-02-ROGUE-EXPERTISE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
 
@@ -1738,6 +1738,17 @@ Verification:
 
 - `pnpm --filter @dnd/character-creation-runtime test -- rogue-expertise-level6`
 - L6 shared verification.
+
+Plan Impact:
+
+- Applied. The checked-in `rogue_expertise` SRD catalog record remains
+  installed, the level-6 inventory row remains
+  `catalog-installed-owner-evidence-present`, and the level-6
+  character-creation evidence still finalizes four distinct Expertise skills
+  from the single authored feature record.
+- The evidence fixture fills the existing supported species draft hole before
+  finalization, so no runtime, QNT, MBT, or evidence artifact changes were
+  needed.
 
 ### Task 15 - L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES
 
