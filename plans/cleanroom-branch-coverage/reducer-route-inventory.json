@@ -275,14 +275,14 @@
       "excludedCharacterLevels": [6, 7],
       "excludedSpellLevels": [4, 5],
       "sourceBranchInventory": {
-        "driverFiles": 101,
+        "driverFiles": 104,
         "branchObligations": 738,
         "currentInScopeBranchObligations": 677,
         "currentOutOfScopeBranchObligations": 61,
         "sampledInputs": 24,
         "baselineWitnessDriverFiles": 1,
         "alreadyReducerRoutedDriverFiles": 3,
-        "currentNonBaselineRemainingDriverFiles": 97,
+        "currentNonBaselineRemainingDriverFiles": 100,
         "currentDriverFilesWithoutRouteOrComponentConnector": 87,
         "currentOutOfScopeBranchDecisionsInLevelDenominator": 43,
         "currentOutOfScopeBranchDecisionsOutsideLevelDenominator": 17,
@@ -2157,10 +2157,10 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
           "route": "component-first",
           "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-          "componentConnectorPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
           "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
           "dependentRouteTaskIds": [
             "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
@@ -2168,15 +2168,90 @@
             "L15-RR12-LEVEL5-SCOPE-PROMOTION"
           ],
           "subjectFamily": "rule-core reusable component",
-          "branchObligations": 27,
-          "currentOutOfScopeBranchObligations": 5,
+          "branchObligations": 12,
+          "currentOutOfScopeBranchObligations": 1,
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt is present in source-branch-inventory.json with 27 branch obligation(s).",
-              "packages/battle-runtime/rule-core-features.mbt.qnt exposes qComponentRoute through RuleCoreFeatureProfileSemanticsOwner."
+              "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt is present in source-branch-inventory.json with 12 branch obligation(s).",
+              "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt exposes qComponentRoute through RuleCoreFeatureProfileSemanticsOwner."
             ],
             "rawDomainFacts": [
-              "Local SRD action, attack, damage, reaction, movement, Hit Point, and feature profile facts define reusable feature components before battle feature substrate routes consume them."
+              "Local SRD action economy and feature profile facts define reusable Action Surge, Second Wind, Tactical Mind, Cunning Action, and bonus-action movement feature components before battle feature substrate routes consume them."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+          "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+            "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+            "L15-RR12-LEVEL5-SCOPE-PROMOTION"
+          ],
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 8,
+          "currentOutOfScopeBranchObligations": 1,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s).",
+              "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt exposes qComponentRoute through RuleCoreFeatureProfileSemanticsOwner."
+            ],
+            "rawDomainFacts": [
+              "Local SRD attack, damage, and feature profile facts define reusable rage, reckless attack, sneak attack, critical-hit, fighting-style, and attack-rider feature components before battle feature substrate routes consume them."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+          "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+            "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+            "L15-RR12-LEVEL5-SCOPE-PROMOTION"
+          ],
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 5,
+          "currentOutOfScopeBranchObligations": 3,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt is present in source-branch-inventory.json with 5 branch obligation(s).",
+              "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt exposes qComponentRoute through RuleCoreFeatureProfileSemanticsOwner."
+            ],
+            "rawDomainFacts": [
+              "Local SRD saving throw, reaction, damage reduction, and feature profile facts define reusable Evasion, Cutting Words, Deflect Attacks, and Uncanny Dodge feature components before battle feature substrate routes consume them."
+            ],
+            "blockers": []
+          }
+        },
+        {
+          "driverPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+          "route": "component-first",
+          "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+          "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"],
+          "dependentRouteTaskIds": [
+            "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+            "L15-RR11-LEVEL3-4-SCOPE-PROMOTION",
+            "L15-RR12-LEVEL5-SCOPE-PROMOTION"
+          ],
+          "subjectFamily": "rule-core reusable component",
+          "branchObligations": 2,
+          "currentOutOfScopeBranchObligations": 0,
+          "derivability": {
+            "qntFacts": [
+              "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt is present in source-branch-inventory.json with 2 branch obligation(s).",
+              "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt exposes qComponentRoute through RuleCoreFeatureProfileSemanticsOwner."
+            ],
+            "rawDomainFacts": [
+              "Local SRD Armor Class, Hit Point, dropping-to-0-Hit-Points, and feature profile facts define reusable passive defense and zero-hit-point replacement feature components before battle feature substrate routes consume them."
             ],
             "blockers": []
           }
@@ -3474,7 +3549,7 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doCombatProwessMissToHit",
           "currentScopeReason": "Boon of Combat Prowess is an Epic Boon with level 19+ prerequisite.",
@@ -3484,7 +3559,7 @@
           "routeTaskId": "out-of-level-1-5-denominator",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doCombatProwessMissToHit under branch family step."
+              "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt exposes doCombatProwessMissToHit under branch family step."
             ],
             "rawDomainFacts": [
               "Boon of Combat Prowess is an Epic Boon with level 19+ prerequisite.",
@@ -3496,7 +3571,7 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doEvasionFailure",
           "currentScopeReason": "Evasion is a level-7 Rogue or Monk feature.",
@@ -3506,7 +3581,7 @@
           "routeTaskId": "out-of-level-1-5-denominator",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doEvasionFailure under branch family step."
+              "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt exposes doEvasionFailure under branch family step."
             ],
             "rawDomainFacts": [
               "Evasion is a level-7 Rogue or Monk feature.",
@@ -3518,7 +3593,7 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doEvasionSuccess",
           "currentScopeReason": "Evasion is a level-7 Rogue or Monk feature.",
@@ -3528,7 +3603,7 @@
           "routeTaskId": "out-of-level-1-5-denominator",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doEvasionSuccess under branch family step."
+              "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt exposes doEvasionSuccess under branch family step."
             ],
             "rawDomainFacts": [
               "Evasion is a level-7 Rogue or Monk feature.",
@@ -3540,7 +3615,7 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doMyceliumStepDash",
           "currentScopeReason": "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level.",
@@ -3550,7 +3625,7 @@
           "routeTaskId": "source-qnt-corpus-blocker",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doMyceliumStepDash under branch family step."
+              "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt exposes doMyceliumStepDash under branch family step."
             ],
             "rawDomainFacts": [
               "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level.",
@@ -3562,7 +3637,7 @@
           }
         },
         {
-          "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "driverPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "branchFamily": "step",
           "branchAction": "doUncannyDodge",
           "currentScopeReason": "Rogue Uncanny Dodge is a level-5 feature.",
@@ -3570,11 +3645,11 @@
           "levelDenominatorScope": "in-denominator",
           "route": "component-first",
           "routeTaskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
-          "componentConnectorPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
           "derivability": {
             "qntFacts": [
-              "packages/battle-runtime/rule-core-features.mbt.qnt exposes doUncannyDodge under branch family step.",
-              "packages/battle-runtime/rule-core-features.mbt.qnt imports rule-core reaction-damage-reduction facts and exposes qComponentRoute through RuleCoreFeatureProfileSemanticsOwner."
+              "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt exposes doUncannyDodge under branch family step.",
+              "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt exposes qComponentRoute through RuleCoreFeatureProfileSemanticsOwner."
             ],
             "rawDomainFacts": [
               "Rogue Uncanny Dodge is a level-5 feature.",

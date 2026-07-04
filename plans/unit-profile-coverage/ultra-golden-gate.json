@@ -95,7 +95,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 5,
-              "focused-mbt": 52,
+              "focused-mbt": 55,
               "runtime-test": 14
             }
           },
@@ -358,7 +358,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 8,
-              "focused-mbt": 52,
+              "focused-mbt": 55,
               "runtime-test": 14
             }
           },
@@ -624,7 +624,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 71,
+              "focused-mbt": 74,
               "runtime-test": 22
             }
           },
@@ -853,7 +853,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 71,
+              "focused-mbt": 74,
               "runtime-test": 22
             }
           },

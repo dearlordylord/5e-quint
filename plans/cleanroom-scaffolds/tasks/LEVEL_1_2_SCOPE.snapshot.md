@@ -136,13 +136,16 @@ This queue is generated from `plans/cleanroom-branch-coverage/branch-scope.jsonl
 91. `cleanroom-input/qnt/battle-runtime/rule-core-ability-skill-command.mbt.qnt`
 92. `cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
 93. `cleanroom-input/qnt/battle-runtime/rule-core-exact-damage-projection.mbt.qnt`
-94. `cleanroom-input/qnt/battle-runtime/rule-core-features.mbt.qnt`
-95. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
-96. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
-97. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
-98. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
-99. `cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt`
-100. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+94. `cleanroom-input/qnt/battle-runtime/rule-core-feature-action-economy.mbt.qnt`
+95. `cleanroom-input/qnt/battle-runtime/rule-core-feature-attack-riders.mbt.qnt`
+96. `cleanroom-input/qnt/battle-runtime/rule-core-feature-save-reactions.mbt.qnt`
+97. `cleanroom-input/qnt/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt`
+98. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
+99. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
+100. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
+101. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
+102. `cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt`
+103. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
 
 ## Reducer-Spine Diagnostic Queue
 
@@ -294,13 +297,16 @@ Drivers are ordered by dependency lane, then by branch-scope row order.
 1. `cleanroom-input/qnt/battle-runtime/rule-core-ability-skill-command.mbt.qnt`
 2. `cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
 3. `cleanroom-input/qnt/battle-runtime/rule-core-exact-damage-projection.mbt.qnt`
-4. `cleanroom-input/qnt/battle-runtime/rule-core-features.mbt.qnt`
-5. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
-6. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
-7. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
-8. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
-9. `cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt`
-10. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+4. `cleanroom-input/qnt/battle-runtime/rule-core-feature-action-economy.mbt.qnt`
+5. `cleanroom-input/qnt/battle-runtime/rule-core-feature-attack-riders.mbt.qnt`
+6. `cleanroom-input/qnt/battle-runtime/rule-core-feature-save-reactions.mbt.qnt`
+7. `cleanroom-input/qnt/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt`
+8. `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
+9. `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`
+10. `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`
+11. `cleanroom-input/qnt/battle-runtime/rule-core-shove-outcome.mbt.qnt`
+12. `cleanroom-input/qnt/battle-runtime/rule-core-spells.mbt.qnt`
+13. `cleanroom-input/qnt/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
 
 ## Full Driver Decisions
 
@@ -470,7 +476,10 @@ Drivers are ordered by dependency lane, then by branch-scope row order.
 | out      | `cleanroom-input/qnt/battle-runtime/monk-martial-arts-selected-identity.mbt.qnt`                                       | `Classes/Monk.md` "Level 1: Martial Arts" and Monk table Martial Arts die progression                                                                                                                                   | Driver projects a d12 Martial Arts die, which is later-level, not level 1-2.                                                                                     |
 | in       | `cleanroom-input/qnt/battle-runtime/rule-core-ability-skill-command.mbt.qnt`                                           | `Playing-the-Game.md` "Search"; `Classes/Cleric.md` cantrip `Guidance`; `Classes/Bard.md` level-2 spell list `Enhance Ability`; `Classes/*` level-1 spell lists `Command`                                               | Branch-scoped: Search, Guidance, and Command branches are active; Enhance Ability is a spell-level-2 branch marked out and transit-only in branch inventory.     |
 | in       | `cleanroom-input/qnt/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`                                       | `Playing-the-Game.md` "Knocking Out a Creature"; `Playing-the-Game.md` "Damage Rolls"                                                                                                                                   | Attack damage disposition is a base combat rule.                                                                                                                 |
-| in       | `cleanroom-input/qnt/battle-runtime/rule-core-features.mbt.qnt`                                                        | `Classes/Fighter.md` level-2 Action Surge and level-3 Improved Critical; `Classes/Monk.md` level-3 Deflect Attacks; `Classes/Rogue.md` level-5 Uncanny Dodge                                                            | Branch-scoped: level-1/2 feature rule-core witnesses are active; later-level feature branches are out, and Mycelium Step is source-blocked, in branch inventory. |
+| in       | `cleanroom-input/qnt/battle-runtime/rule-core-feature-action-economy.mbt.qnt`                                         | `Classes/Fighter.md` level-2 Action Surge; feature action economy witnesses                                                                              | Branch-scoped: Action Surge, Second Wind, Tactical Mind, Cunning Action, and bonus-action movement feature witnesses; Mycelium Step is source-blocked.           |
+| in       | `cleanroom-input/qnt/battle-runtime/rule-core-feature-attack-riders.mbt.qnt`                                          | `Classes/Fighter.md` level-3 Improved Critical; feature attack-rider witnesses                                                                           | Branch-scoped: Rage, Reckless Attack, Sneak Attack, Frenzy, Improved Critical, Savage Attacker, and Archery witnesses; Combat Prowess is out.                    |
+| in       | `cleanroom-input/qnt/battle-runtime/rule-core-feature-save-reactions.mbt.qnt`                                         | `Classes/Monk.md` level-3 Deflect Attacks; `Classes/Rogue.md` level-5 Uncanny Dodge                                                                      | Branch-scoped: Cutting Words and Deflect Attacks witnesses are active; Evasion and Uncanny Dodge retain existing branch-scope decisions.                         |
+| in       | `cleanroom-input/qnt/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt`                                        | Defense armor-class and zero-hit-point feature witnesses                                                                                                 | Branch-scoped: passive armor-class and zero-hit-point replacement feature witnesses are active.                                                                   |
 | in       | `cleanroom-input/qnt/battle-runtime/rule-core-hit-point-damage.mbt.qnt`                                                | `Playing-the-Game.md` "Hit Points", "Dropping to 0 Hit Points", and "Temporary Hit Points"                                                                                                                              | Hit point damage is a base character combat rule.                                                                                                                |
 | in       | `cleanroom-input/qnt/battle-runtime/rule-core-movement.mbt.qnt`                                                        | `Playing-the-Game.md` "Movement and Position", "Actions", and "Opportunity Attacks"                                                                                                                                     | Movement, Dash, Disengage, Grapple, and Opportunity Attacks are base combat rules.                                                                               |
 | in       | `cleanroom-input/qnt/battle-runtime/rule-core-reactions.mbt.qnt`                                                       | `Playing-the-Game.md` "Reactions", "Ready", and "Opportunity Attacks"; `Rules-Glossary.md` "Concentration"                                                                                                              | Reaction and readied-action rules are base combat rules.                                                                                                         |

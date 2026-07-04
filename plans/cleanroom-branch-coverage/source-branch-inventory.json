@@ -8879,9 +8879,9 @@
         "doActionSurgeActivate"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doActionSurgeActivate",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doActionSurgeActivate",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8898,9 +8898,9 @@
         "doActionSurgeRejectTwice"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doActionSurgeRejectTwice",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doActionSurgeRejectTwice",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8917,55 +8917,15 @@
         "doActionSurgeSpendAttack"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doActionSurgeSpendAttack",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doActionSurgeSpendAttack",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
       },
       "scope": {
         "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doArcheryAttackRollBonus",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doArcheryAttackRollBonus"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doArcheryAttackRollBonus",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doCombatProwessMissToHit",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doCombatProwessMissToHit"
-      ],
-      "decisionSource": "branch-decision",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCombatProwessMissToHit",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "reason": "Boon of Combat Prowess is an Epic Boon with level 19+ prerequisite.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
       }
     },
     {
@@ -8976,9 +8936,9 @@
         "doCunningDash"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCunningDash",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doCunningDash",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -8995,9 +8955,9 @@
         "doCunningDisengage"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCunningDisengage",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doCunningDisengage",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9014,66 +8974,9 @@
         "doCunningHide"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCunningHide",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doCuttingWordsDamage",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doCuttingWordsDamage"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doCuttingWordsDamage",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doDefenseArmorClass",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doDefenseArmorClass"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doDefenseArmorClass",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doDeflectAttacksDamageReduction",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doDeflectAttacksDamageReduction"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doDeflectAttacksDamageReduction",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doCunningHide",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9090,9 +8993,338 @@
         "doDiscoverSecondWind"
       ],
       "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doDiscoverSecondWind",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doDiscoverSecondWind",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doMyceliumStepDash",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doMyceliumStepDash"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doMyceliumStepDash",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
+      "replay": {
+        "blockerId": "MYCELIUM_STEP_NO_SRD_SOURCE",
+        "reason": "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "source-blocker"
+      },
+      "scope": {
+        "reason": "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveSecondWindHigh",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveSecondWindHigh"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doResolveSecondWindHigh",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveSecondWindLow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveSecondWindLow"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doResolveSecondWindLow",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doTacticalMindConvertedSuccess",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doTacticalMindConvertedSuccess"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doTacticalMindConvertedSuccess",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doTacticalMindStillFailed",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doTacticalMindStillFailed"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt#step:doTacticalMindStillFailed",
+      "qntFileSha256": "4cd939c49b060ffa1336a3b0869b949031ef88d8c6d042122eddf23ff2e49ffa",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doArcheryAttackRollBonus",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doArcheryAttackRollBonus"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt#step:doArcheryAttackRollBonus",
+      "qntFileSha256": "0f9a4763883ff49e217119d87152fac84e2e7d7b25ea24a926539395f098ef32",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCombatProwessMissToHit",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCombatProwessMissToHit"
+      ],
+      "decisionSource": "branch-decision",
+      "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt#step:doCombatProwessMissToHit",
+      "qntFileSha256": "0f9a4763883ff49e217119d87152fac84e2e7d7b25ea24a926539395f098ef32",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "reason": "Boon of Combat Prowess is an Epic Boon with level 19+ prerequisite.",
+        "reviewedBy": "codex-2026-06-17",
+        "tag": "out-of-scope"
+      }
+    },
+    {
+      "branchAction": "doFrenzy",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doFrenzy"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt#step:doFrenzy",
+      "qntFileSha256": "0f9a4763883ff49e217119d87152fac84e2e7d7b25ea24a926539395f098ef32",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doImprovedCritical",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doImprovedCritical"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt#step:doImprovedCritical",
+      "qntFileSha256": "0f9a4763883ff49e217119d87152fac84e2e7d7b25ea24a926539395f098ef32",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRageActivateAndDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRageActivateAndDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt#step:doRageActivateAndDamage",
+      "qntFileSha256": "0f9a4763883ff49e217119d87152fac84e2e7d7b25ea24a926539395f098ef32",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doRecklessAttack",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doRecklessAttack"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt#step:doRecklessAttack",
+      "qntFileSha256": "0f9a4763883ff49e217119d87152fac84e2e7d7b25ea24a926539395f098ef32",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSavageAttackerDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSavageAttackerDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt#step:doSavageAttackerDamage",
+      "qntFileSha256": "0f9a4763883ff49e217119d87152fac84e2e7d7b25ea24a926539395f098ef32",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doSneakAttack",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doSneakAttack"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt#step:doSneakAttack",
+      "qntFileSha256": "0f9a4763883ff49e217119d87152fac84e2e7d7b25ea24a926539395f098ef32",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDefenseArmorClass",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDefenseArmorClass"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt#step:doDefenseArmorClass",
+      "qntFileSha256": "fc39b7c46e2006b0dd9c0d84ed58697d62b2a8aeaf22b3beefeb34f96743606e",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doZeroHitPointReplacement",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doZeroHitPointReplacement"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt#step:doZeroHitPointReplacement",
+      "qntFileSha256": "fc39b7c46e2006b0dd9c0d84ed58697d62b2a8aeaf22b3beefeb34f96743606e",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doCuttingWordsDamage",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doCuttingWordsDamage"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt#step:doCuttingWordsDamage",
+      "qntFileSha256": "80f99a81a3f33878ea206e9e8f167e7d052e348eb7b9836853ffa880598b6a5a",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doDeflectAttacksDamageReduction",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doDeflectAttacksDamageReduction"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt#step:doDeflectAttacksDamageReduction",
+      "qntFileSha256": "80f99a81a3f33878ea206e9e8f167e7d052e348eb7b9836853ffa880598b6a5a",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9109,9 +9341,9 @@
         "doEvasionFailure"
       ],
       "decisionSource": "branch-decision",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doEvasionFailure",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
+      "driverPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt#step:doEvasionFailure",
+      "qntFileSha256": "80f99a81a3f33878ea206e9e8f167e7d052e348eb7b9836853ffa880598b6a5a",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9130,9 +9362,9 @@
         "doEvasionSuccess"
       ],
       "decisionSource": "branch-decision",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doEvasionSuccess",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
+      "driverPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt#step:doEvasionSuccess",
+      "qntFileSha256": "80f99a81a3f33878ea206e9e8f167e7d052e348eb7b9836853ffa880598b6a5a",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9144,219 +9376,6 @@
       }
     },
     {
-      "branchAction": "doFrenzy",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doFrenzy"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doFrenzy",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doImprovedCritical",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doImprovedCritical"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doImprovedCritical",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doMyceliumStepDash",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doMyceliumStepDash"
-      ],
-      "decisionSource": "branch-decision",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doMyceliumStepDash",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "blockerId": "MYCELIUM_STEP_NO_SRD_SOURCE",
-        "reason": "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "source-blocker"
-      },
-      "scope": {
-        "reason": "No copied SRD 5.2.1 passage establishes Mycelium Step or its acquisition level.",
-        "reviewedBy": "codex-2026-06-17",
-        "tag": "out-of-scope"
-      }
-    },
-    {
-      "branchAction": "doRageActivateAndDamage",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doRageActivateAndDamage"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doRageActivateAndDamage",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doRecklessAttack",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doRecklessAttack"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doRecklessAttack",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doResolveSecondWindHigh",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doResolveSecondWindHigh"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doResolveSecondWindHigh",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doResolveSecondWindLow",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doResolveSecondWindLow"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doResolveSecondWindLow",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doSavageAttackerDamage",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doSavageAttackerDamage"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doSavageAttackerDamage",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doSneakAttack",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doSneakAttack"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doSneakAttack",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doTacticalMindConvertedSuccess",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doTacticalMindConvertedSuccess"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doTacticalMindConvertedSuccess",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
-      "branchAction": "doTacticalMindStillFailed",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doTacticalMindStillFailed"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doTacticalMindStillFailed",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
-      }
-    },
-    {
       "branchAction": "doUncannyDodge",
       "branchFamily": "step",
       "branchPath": [
@@ -9364,9 +9383,9 @@
         "doUncannyDodge"
       ],
       "decisionSource": "branch-decision",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doUncannyDodge",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
+      "driverPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+      "obligationId": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt#step:doUncannyDodge",
+      "qntFileSha256": "80f99a81a3f33878ea206e9e8f167e7d052e348eb7b9836853ffa880598b6a5a",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -9375,25 +9394,6 @@
         "reason": "Rogue Uncanny Dodge is a level-5 feature.",
         "reviewedBy": "codex-2026-06-17",
         "tag": "out-of-scope"
-      }
-    },
-    {
-      "branchAction": "doZeroHitPointReplacement",
-      "branchFamily": "step",
-      "branchPath": [
-        "step",
-        "doZeroHitPointReplacement"
-      ],
-      "decisionSource": "default",
-      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "obligationId": "packages/battle-runtime/rule-core-features.mbt.qnt#step:doZeroHitPointReplacement",
-      "qntFileSha256": "e3dd4814d2fe2b25e9a59458ea067b948e58c1aade6c578c11454ec43743fcb4",
-      "replay": {
-        "stepAction": "step",
-        "tag": "observable-from-step"
-      },
-      "scope": {
-        "tag": "in-scope"
       }
     },
     {

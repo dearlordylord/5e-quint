@@ -226,10 +226,6 @@ const ALLOWLIST = {
     classification: "computed oracle",
     rationale: "dispatch resolution depends on mutable remaining-dispatch counts",
   },
-  "rule-core-features.mbt.qnt": {
-    classification: "convertible",
-    rationale: "~32-action rule-core feature tracer (partly state-dependent)",
-  },
 };
 
 const IMPORT_RE = /from "((?:\.\/|\.\.\/)[A-Za-z0-9/\-]+)"/g;

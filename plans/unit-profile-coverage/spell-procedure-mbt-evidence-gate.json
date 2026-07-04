@@ -54,7 +54,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -70,7 +70,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -583,7 +583,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -599,7 +599,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -983,7 +983,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -999,7 +999,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1741,7 +1741,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -1757,7 +1757,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2553,7 +2553,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2569,7 +2569,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2884,7 +2884,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -2900,7 +2900,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -3319,7 +3319,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -3335,7 +3335,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -3705,7 +3705,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -3721,7 +3721,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -3911,7 +3911,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -3927,7 +3927,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -4467,7 +4467,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -4483,7 +4483,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -4867,7 +4867,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -4883,7 +4883,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -5267,7 +5267,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -5283,7 +5283,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -5667,7 +5667,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -5683,7 +5683,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -5943,7 +5943,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -5959,7 +5959,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -6343,7 +6343,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -6359,7 +6359,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -6786,7 +6786,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -6802,7 +6802,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -7386,7 +7386,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -7402,7 +7402,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -7821,7 +7821,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -7837,7 +7837,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -8062,7 +8062,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -8078,7 +8078,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -8268,7 +8268,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -8284,7 +8284,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -8529,7 +8529,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -8545,7 +8545,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -8960,7 +8960,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -8976,7 +8976,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -9489,7 +9489,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -9505,7 +9505,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -9889,7 +9889,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -9905,7 +9905,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -10647,7 +10647,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -10663,7 +10663,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -11459,7 +11459,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -11475,7 +11475,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -11790,7 +11790,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -11806,7 +11806,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -12225,7 +12225,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -12241,7 +12241,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -12611,7 +12611,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -12627,7 +12627,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -12817,7 +12817,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -12833,7 +12833,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -13373,7 +13373,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -13389,7 +13389,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -13773,7 +13773,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -13789,7 +13789,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -14228,7 +14228,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -14244,7 +14244,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -14628,7 +14628,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -14644,7 +14644,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -14904,7 +14904,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -14920,7 +14920,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -15304,7 +15304,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -15320,7 +15320,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -15747,7 +15747,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -15763,7 +15763,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -16347,7 +16347,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -16363,7 +16363,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -16782,7 +16782,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -16798,7 +16798,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -17023,7 +17023,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -17039,7 +17039,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -17229,7 +17229,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -17245,7 +17245,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -17490,7 +17490,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
@@ -17506,7 +17506,7 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
               "stepAction": "step"
             }
           ],
