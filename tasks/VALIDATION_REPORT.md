@@ -1,5 +1,99 @@
 # Validation Report
 
+## CRP07-DSR-06
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Scalar-buff active Spell Effect route replay now observes the copied `qRoute`
+projection through public battle reducer route events. The route starts with
+`battleReducerStartRouteEvent`, discovers scalar-buff spell acts through
+`AvailableBattleAct.routeEvents`, and resolves selected scalar-buff subjects
+through `BattleResolutionResult.routeEvents`. The public route records spell
+slot/action-economy discovery, active Spell Effect creation, movement-resource
+projection, Hit Point maximum projection, immediate Temporary Hit Points, and
+Concentration ownership from reducer-owned state deltas.
+
+The runtime does not add a parallel scalar-buff ledger. Magic Action
+availability remains `BattleState.currentTurnResources`, Spell Slot spend
+remains character spellcasting resource state, active Spell Effects and
+Concentration remain `BattleCreatureState.activeEffects` and
+`BattleCreatureState.concentration`, movement projections remain active effect
+facts consumed by movement readers, Hit Point maximum/current Hit Points remain
+`BattleCreatureState.maxHp` and `BattleCreatureState.hp`, and Temporary Hit
+Points remain `BattleCreatureState.tempHp`.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastShieldOfFaith` | `tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastShieldOfFaith#trace:MBT_TRACES=1 MBT_STEPS=6 action=doCastShieldOfFaith qRoute=scalar-buff-active-effects-public-route` | `packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts#observes scalar buff active-effect qRoute through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastLongstrider` | `tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastLongstrider#trace:MBT_TRACES=1 MBT_STEPS=6 action=doCastLongstrider qRoute=scalar-buff-active-effects-public-route` | `packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts#observes scalar buff active-effect qRoute through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastSpiderClimb` | `tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastSpiderClimb#trace:MBT_TRACES=1 MBT_STEPS=6 action=doCastSpiderClimb qRoute=scalar-buff-active-effects-public-route` | `packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts#observes scalar buff active-effect qRoute through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastAid` | `tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastAid#trace:MBT_TRACES=1 MBT_STEPS=6 action=doCastAid qRoute=scalar-buff-active-effects-public-route` | `packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts#observes scalar buff active-effect qRoute through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastFalseLife` | `tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastFalseLife#trace:MBT_TRACES=1 MBT_STEPS=6 action=doCastFalseLife qRoute=scalar-buff-active-effects-public-route` | `packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts#observes scalar buff active-effect qRoute through public reducer entrypoints` | `covered` |
+| `packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doStutter` | `tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doStutter#trace:MBT_TRACES=1 MBT_STEPS=6 action=doStutter qRoute=scalar-buff-active-effects-public-route` | `packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts#observes scalar buff active-effect qRoute through public reducer entrypoints` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP07-DSR-06.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=6 action=<branchAction> qRoute=scalar-buff-active-effects-public-route`
+- Public route assertion:
+  - `packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts#observes scalar buff active-effect qRoute through public reducer entrypoints`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP07-DSR-06/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 39.
+
+Verification results:
+
+- Base check passed: `ralph/crp07-dsr-06-scalar-buff-active-effects-route/integration`
+  and `HEAD` were both `d56438ff3 Mark Ralph task 38 done`, and
+  `git merge-base --is-ancestor d56438ff374260dd3d403a89b98c3829457468af HEAD`
+  exited 0.
+- RAW/ubiquitous-language review passed against Aid, False Life, Longstrider,
+  Shield of Faith, Spider Climb, Concentration, Speed, Temporary Hit Points,
+  Armor Class, Hit Points, and UBIQUITOUS_LANGUAGE.md terms for Armor Class,
+  Movement, Hit Points, Spell Invocation, Spell Effect, Spell Slot, and
+  Concentration.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- Before MBT, `ps aux | grep vitest | grep -v grep` and
+  `ps aux | grep quint_evaluator | grep -v grep` found no active runner or
+  evaluator.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/scalar-buff-active-effects.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests; final timed run `TOTAL: 9s`.
+- `node` target replay evidence schema check for CRP07-DSR-06 passed with 6 covered obligations.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- Reviewer-loop convergence passed: round 1 promoted scalar-buff route events into the public reducer route surface and target evidence; round 2 found no remaining reasonable RAW/domain, architecture/connascence, or code-review findings.
+
 ## CRP07-DSR-02
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

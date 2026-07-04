@@ -235,7 +235,7 @@
     {
       "number": 39,
       "id": "CRP07-DSR-06",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Scalar-buff active effects through public battle reducer route"
     },
     {
@@ -2911,7 +2911,7 @@ Plan Impact:
 
 ### Task 39 - CRP07-DSR-06
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

@@ -926,6 +926,75 @@
           "detail": "Round 1 promoted existing public save-gated spell route evidence into Task 38 artifacts; round 2 found no remaining reasonable RAW/domain, architecture/connascence, or code-review findings."
         }
       ]
+    },
+    {
+      "taskId": "CRP07-DSR-06",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "b987c6d6fe5d3fdea8be06f644594027e9efff812b820404f48d431e21b901ce"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "aeaf71c628677252f1bb9c57bee2b5761fdb081033f7142378e9a69f62f67150"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "bd24e11f8c7dea24ad85c5afccaf9a8739d81084b9d25d36274983e84c3cc15a"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP07-DSR-06.json",
+          "sha256": "273857368d2f28d82cd766f566077be8841321f213af0964fdb2c2b731bd8881",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastShieldOfFaith#trace:MBT_TRACES=1 MBT_STEPS=6 action=doCastShieldOfFaith qRoute=scalar-buff-active-effects-public-route",
+            "tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastLongstrider#trace:MBT_TRACES=1 MBT_STEPS=6 action=doCastLongstrider qRoute=scalar-buff-active-effects-public-route",
+            "tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastSpiderClimb#trace:MBT_TRACES=1 MBT_STEPS=6 action=doCastSpiderClimb qRoute=scalar-buff-active-effects-public-route",
+            "tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastAid#trace:MBT_TRACES=1 MBT_STEPS=6 action=doCastAid qRoute=scalar-buff-active-effects-public-route",
+            "tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doCastFalseLife#trace:MBT_TRACES=1 MBT_STEPS=6 action=doCastFalseLife qRoute=scalar-buff-active-effects-public-route",
+            "tasks/target-replay-evidence/CRP07-DSR-06.json#driver:packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt#step:doStutter#trace:MBT_TRACES=1 MBT_STEPS=6 action=doStutter qRoute=scalar-buff-active-effects-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/crp07-dsr-06-scalar-buff-active-effects-route/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor d56438ff374260dd3d403a89b98c3829457468af HEAD",
+          "status": "pass",
+          "detail": "Integration and HEAD were d56438ff3; base SHA is an ancestor."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/scalar-buff-active-effects.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed; public qRoute replay included; final timed run TOTAL: 9s."
+        },
+        {
+          "command": "node target replay evidence schema check for CRP07-DSR-06",
+          "status": "pass",
+          "detail": "6 covered obligations."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 promoted scalar-buff active-effect qRoute replay into public reducer route events and artifacts; round 2 found no remaining reasonable findings."
+        }
+      ]
     }
   ]
 }

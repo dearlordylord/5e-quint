@@ -22,24 +22,31 @@ import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintRecordField,
   quintStateRecord,
   quintVariantTag,
+  quintVariantMappedValue,
   run,
   stateCheck,
+  type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { describe, expect, it } from "vitest";
 
 import {
+  battleReducerStartRouteEvent,
   resolveBattleSubject,
   snapshotBattle,
+  type AvailableBattleAct,
   type BattleCreatureSnapshot,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
   type CombatantId,
@@ -113,6 +120,36 @@ type ScalarBuffRuntimeState = {
   readonly projection: ScalarBuffActiveEffectsProjection;
 };
 
+type ScalarBuffResolvedCast = {
+  readonly state: BattleState;
+  readonly affectedId: CombatantId;
+  readonly routeEvents: readonly BattleReducerRouteEvent[];
+};
+
+const SCALAR_BUFF_ROUTE_SURFACE_BY_TAG = {
+  FreshRouteSurface: "fresh",
+  ArmorClassBonusActiveEffectRouteSurface:
+    "armorClassBonusActiveEffect",
+  SpeedDeltaActiveEffectRouteSurface: "speedDeltaActiveEffect",
+  SpecialSpeedGrantActiveEffectRouteSurface:
+    "specialSpeedGrantActiveEffect",
+  HitPointMaximumIncreaseActiveEffectRouteSurface:
+    "hitPointMaximumIncreaseActiveEffect",
+  TemporaryHitPointEffectRouteSurface: "temporaryHitPointEffect",
+} as const satisfies Readonly<Record<string, string>>;
+type ScalarBuffRouteSurface =
+  (typeof SCALAR_BUFF_ROUTE_SURFACE_BY_TAG)[keyof typeof SCALAR_BUFF_ROUTE_SURFACE_BY_TAG];
+
+type ScalarBuffRouteRuntimeState = {
+  readonly surface: ScalarBuffRouteSurface;
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+type ScalarBuffRouteProjection = {
+  readonly surface: ScalarBuffRouteSurface;
+  readonly route: readonly ReducerRouteEvent[];
+};
+
 const driverSchema = {
   init: {},
   doCastShieldOfFaith: {},
@@ -153,9 +190,63 @@ function createScalarBuffActiveEffectsDriver() {
   });
 }
 
+function createScalarBuffActiveEffectsRouteDriver() {
+  return defineDriver(driverSchema, () => {
+    let state = initialRouteRuntimeState();
+    return {
+      init: () => {
+        state = initialRouteRuntimeState();
+      },
+      doCastShieldOfFaith: () => {
+        state = appendScalarBuffRoute(
+          state,
+          "armorClassBonusActiveEffect",
+          resolveShieldOfFaithCast().routeEvents,
+        );
+      },
+      doCastLongstrider: () => {
+        state = appendScalarBuffRoute(
+          state,
+          "speedDeltaActiveEffect",
+          resolveLongstriderCast().routeEvents,
+        );
+      },
+      doCastSpiderClimb: () => {
+        state = appendScalarBuffRoute(
+          state,
+          "specialSpeedGrantActiveEffect",
+          resolveSpiderClimbCast().routeEvents,
+        );
+      },
+      doCastAid: () => {
+        state = appendScalarBuffRoute(
+          state,
+          "hitPointMaximumIncreaseActiveEffect",
+          resolveAidCast().routeEvents,
+        );
+      },
+      doCastFalseLife: () => {
+        state = appendScalarBuffRoute(
+          state,
+          "temporaryHitPointEffect",
+          resolveFalseLifeCast().routeEvents,
+        );
+      },
+      doStutter: () => {},
+      step: () => {},
+      getState: () => state,
+    };
+  });
+}
+
 const scalarBuffActiveEffectsStateCheck = stateCheck(
   normalizeScalarBuffQuintState,
   compareScalarBuffStates,
+);
+
+const scalarBuffRouteStateCheck = stateCheck(
+  normalizeScalarBuffRouteQuintState,
+  compareScalarBuffRouteStates,
 );
 
 describe("scalar buff active-effects MBT parity", () => {
@@ -208,6 +299,26 @@ describe("scalar buff active-effects MBT parity", () => {
     },
     MBT_TEST_TIMEOUT_MS,
   );
+
+  it(
+    "observes scalar buff active-effect qRoute through public reducer entrypoints",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createScalarBuffActiveEffectsRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: scalarBuffRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function initialRuntimeState(): ScalarBuffRuntimeState {
@@ -229,7 +340,35 @@ function initialRuntimeState(): ScalarBuffRuntimeState {
   };
 }
 
+function initialRouteRuntimeState(): ScalarBuffRouteRuntimeState {
+  const battle = spellBattle({});
+  return {
+    surface: "fresh",
+    route: [battleReducerStartRouteEvent(battle)],
+  };
+}
+
+function appendScalarBuffRoute(
+  state: ScalarBuffRouteRuntimeState,
+  surface: ScalarBuffRouteSurface,
+  routeEvents: readonly BattleReducerRouteEvent[],
+): ScalarBuffRouteRuntimeState {
+  return {
+    surface,
+    route: [...state.route, ...routeEvents],
+  };
+}
+
 function castShieldOfFaith(): ScalarBuffRuntimeState {
+  const resolved = resolveShieldOfFaithCast();
+  return projectScalarBuffState(
+    resolved.state,
+    resolved.affectedId,
+    "shieldOfFaith",
+  );
+}
+
+function resolveShieldOfFaithCast(): ScalarBuffResolvedCast {
   const state = spellBattle({
     preparedSpells: [spellRecord(shieldOfFaithUnitId)],
   });
@@ -250,10 +389,19 @@ function castShieldOfFaith(): ScalarBuffRuntimeState {
     }),
     "Expected Shield of Faith to resolve.",
   );
-  return projectScalarBuffState(resolved.state, spellTargetId, "shieldOfFaith");
+  return scalarBuffResolvedCast(act, resolved, spellTargetId);
 }
 
 function castLongstrider(): ScalarBuffRuntimeState {
+  const resolved = resolveLongstriderCast();
+  return projectScalarBuffState(
+    resolved.state,
+    resolved.affectedId,
+    "longstrider",
+  );
+}
+
+function resolveLongstriderCast(): ScalarBuffResolvedCast {
   const state = spellBattle({
     preparedSpells: [spellRecord(longstriderUnitId)],
   });
@@ -274,10 +422,19 @@ function castLongstrider(): ScalarBuffRuntimeState {
     }),
     "Expected Longstrider to resolve.",
   );
-  return projectScalarBuffState(resolved.state, spellTargetId, "longstrider");
+  return scalarBuffResolvedCast(act, resolved, spellTargetId);
 }
 
 function castSpiderClimb(): ScalarBuffRuntimeState {
+  const resolved = resolveSpiderClimbCast();
+  return projectScalarBuffState(
+    resolved.state,
+    resolved.affectedId,
+    "spiderClimb",
+  );
+}
+
+function resolveSpiderClimbCast(): ScalarBuffResolvedCast {
   const state = spellBattle({
     preparedSpells: [spellRecord(spiderClimbUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -299,10 +456,15 @@ function castSpiderClimb(): ScalarBuffRuntimeState {
     }),
     "Expected Spider Climb to resolve.",
   );
-  return projectScalarBuffState(resolved.state, spellCasterId, "spiderClimb");
+  return scalarBuffResolvedCast(act, resolved, spellCasterId);
 }
 
 function castAid(): ScalarBuffRuntimeState {
+  const resolved = resolveAidCast();
+  return projectScalarBuffState(resolved.state, resolved.affectedId, "aid");
+}
+
+function resolveAidCast(): ScalarBuffResolvedCast {
   const state = spellBattle({
     preparedSpells: [spellRecord(aidUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -321,10 +483,19 @@ function castAid(): ScalarBuffRuntimeState {
     }),
     "Expected Aid to resolve.",
   );
-  return projectScalarBuffState(resolved.state, spellTargetId, "aid");
+  return scalarBuffResolvedCast(act, resolved, spellTargetId);
 }
 
 function castFalseLife(): ScalarBuffRuntimeState {
+  const resolved = resolveFalseLifeCast();
+  return projectScalarBuffState(
+    resolved.state,
+    resolved.affectedId,
+    "falseLife",
+  );
+}
+
+function resolveFalseLifeCast(): ScalarBuffResolvedCast {
   const state = spellBattle({
     preparedSpells: [spellRecord(falseLifeUnitId)],
   });
@@ -338,7 +509,40 @@ function castFalseLife(): ScalarBuffRuntimeState {
     }),
     "Expected False Life to resolve.",
   );
-  return projectScalarBuffState(resolved.state, spellCasterId, "falseLife");
+  return scalarBuffResolvedCast(act, resolved, spellCasterId);
+}
+
+function scalarBuffResolvedCast(
+  act: AvailableBattleAct,
+  resolved: Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+  affectedId: CombatantId,
+): ScalarBuffResolvedCast {
+  return {
+    state: resolved.state,
+    affectedId,
+    routeEvents: [
+      ...requireScalarBuffActRouteEvents(act),
+      ...requireScalarBuffResolutionRouteEvents(resolved),
+    ],
+  };
+}
+
+function requireScalarBuffActRouteEvents(
+  act: AvailableBattleAct,
+): readonly BattleReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error("Expected public scalar buff route events on discovered act.");
+}
+
+function requireScalarBuffResolutionRouteEvents(
+  result: Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+): readonly BattleReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error("Expected public scalar buff route events on resolution.");
 }
 
 function projectScalarBuffState(
@@ -467,11 +671,43 @@ function normalizeScalarBuffQuintState(
   };
 }
 
+function normalizeScalarBuffRouteQuintState(
+  raw: unknown,
+): ScalarBuffRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    surface: quintVariantMappedValue(
+      quintField(state, "qSurface"),
+      "qSurface",
+      SCALAR_BUFF_ROUTE_SURFACE_BY_TAG,
+      "scalar-buff active-effects route surface",
+    ),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
 function compareScalarBuffStates(
   runtime: ScalarBuffActiveEffectsProjection,
   quint: ScalarBuffActiveEffectsProjection,
 ): boolean {
   expect(runtime).toStrictEqual(quint);
+  return true;
+}
+
+function compareScalarBuffRouteStates(
+  runtime: ScalarBuffRouteProjection,
+  quint: ScalarBuffRouteProjection,
+): boolean {
+  try {
+    expect(runtime).toStrictEqual(quint);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(
+        `${error.message}\nruntime=${JSON.stringify(runtime)}\nquint=${JSON.stringify(quint)}`,
+      );
+    }
+    throw error;
+  }
   return true;
 }
 

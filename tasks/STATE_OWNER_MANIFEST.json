@@ -1,33 +1,178 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP07-DSR-02",
+  "taskId": "CRP07-DSR-06",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "public-reducer-boundary-projection",
+      "owner": "executable-boundary-projection",
       "derivability": {
-        "tag": "boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.invocation.procedure, BattleHole.kind, and reducer route owner facts"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject.actionSpell.invocation.procedure and reducer route owner facts",
+        "boundary": "discoverBattleActs public reducer boundary"
       }
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "public-reducer-boundary-projection",
+      "owner": "executable-boundary-projection",
       "derivability": {
-        "tag": "boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.invocation.procedure, BattleFill.kind, BattleHole.kind, BattleCreatureState.hp, BattleCreatureState.conditions, character spellcasting resource state, and reducer route owner facts"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject action/bonus-action scalarBuff procedure, BattleFill kind, BattleCreatureState activeEffects/hp/maxHp/tempHp/concentration deltas, and reducer route owner facts",
+        "boundary": "resolveBattleSubject public reducer boundary"
+      }
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=scalarBuffEffect",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject.actionSpell.invocation.procedure=scalarBuff or BattleSubject.bonusActionSpell.invocation.procedure=scalarBuff",
+        "boundary": "battleReducerRouteEventsForDiscoveredAct and battleReducerRouteForResolution"
+      }
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "public scalar-buff spell act discovery",
+        "boundary": "battleReducerRouteEventsForDiscoveredAct"
+      }
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleActiveEffect",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleCreatureState.activeEffects added scalar-buff effect kind",
+        "boundary": "battleReducerRouteForResolution"
+      }
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleMovementResource",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleCreatureState.activeEffects added speedDelta or specialSpeedGrant effect kind",
+        "boundary": "battleReducerRouteForResolution"
+      }
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleHitPoint",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleCreatureState.activeEffects added hitPointMaximumIncrease effect kind",
+        "boundary": "battleReducerRouteForResolution"
+      }
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleTemporaryHitPoint",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleCreatureState.tempHp increase",
+        "boundary": "battleReducerRouteForResolution"
+      }
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleConcentration",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleCreatureState.concentration changed for the scalar-buff actor",
+        "boundary": "battleReducerRouteForResolution"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.activeEffects[kind=spellArmorClassBonus]",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.activeEffects[kind=speedDelta]",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.activeEffects[kind=specialSpeedGrant]",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.activeEffects[kind=hitPointMaximumIncrease]",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.concentration",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.hp",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.maxHp",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.tempHp",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleSubject.actionSpell.invocation.procedure=scalarBuff",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "SupportedSpellInvocation.procedure=scalarBuff admitted by spell profile support",
+        "boundary": "discoverBattleActs public subject availability"
       }
     }
   ],
   "notes": [
-    "Task 38 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Task 39 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
     "Magic Action availability remains existing BattleState.currentTurnResources.",
     "Spell Slot expenditure remains existing character spellcasting resource state carried by the spell invocation route substrate.",
-    "Saving Throw outcomes, target lists, condition choices, and damage dice remain BattleFill boundary facts consumed by the shared subject frontier.",
-    "Target Hit Point effects remain BattleCreatureState.hp; condition effects remain BattleCreatureState.conditions.",
-    "Ordering labels are reducer result facts projected by the harness, not adapter-side durable state.",
-    "Route events are public reducer boundary projections, not duplicated save-gated spell state."
+    "Armor Class, Speed, special Speed, Hit Point maximum, Temporary Hit Point, and Concentration effects remain BattleCreatureState facts.",
+    "Route events are public reducer boundary projections derived from subject procedure and BattleState deltas, not duplicated scalar-buff state.",
+    "The route never dispatches on authored spell identity; scalar-buff route ownership is admitted by procedure shape and executable state deltas."
   ]
 }

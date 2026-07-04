@@ -26,6 +26,7 @@ export type BattleReducerRouteSubjectFamily =
   | "reactionSpell"
   | "rollModifierEffect"
   | "saveGatedSpell"
+  | "scalarBuffEffect"
   | "slotSpell"
   | "spellAttackProcedure"
   | "weaponAttack";
@@ -46,6 +47,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleConditionLifecycle"
   | "battleFeatureResource"
   | "battleMovementResource"
+  | "battleTemporaryHitPoint"
   | "battleInterruptStack"
   | "battleTurnBoundary";
 
@@ -164,6 +166,10 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (rollModifierRoute !== undefined) {
     return [rollModifierRoute];
   }
+  const scalarBuffRoute = scalarBuffRouteForDiscoveredAct(act);
+  if (scalarBuffRoute !== undefined) {
+    return [scalarBuffRoute];
+  }
   if (isConcentrationTeardownDiscoverySubject(act.subject)) {
     return [
       {
@@ -259,6 +265,10 @@ export function battleReducerRouteForResolution(
   const rollModifierRoute = rollModifierRouteForResolution(input, result);
   if (rollModifierRoute !== undefined) {
     return rollModifierRoute;
+  }
+  const scalarBuffRoute = scalarBuffRouteForResolution(input, result);
+  if (scalarBuffRoute !== undefined) {
+    return scalarBuffRoute;
   }
   const rollModifierConcentrationRoute =
     rollModifierConcentrationBreakRouteForResolution(input, result);
@@ -1165,6 +1175,154 @@ function rollModifierResolveWithoutFill(
   };
 }
 
+function scalarBuffRouteForDiscoveredAct(
+  act: AvailableBattleAct,
+): BattleReducerRouteEvent | undefined {
+  if (!isScalarBuffEffectSubject(act.subject)) {
+    return undefined;
+  }
+  return {
+    kind: "discoverBattleActs",
+    subject: "scalarBuffEffect",
+    holes: [],
+    owner: "battleSpellSlotAndActionEconomy",
+  };
+}
+
+function scalarBuffRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (!isScalarBuffEffectSubject(input.subject)) {
+    return undefined;
+  }
+  if (result.tag !== "resolved") {
+    return undefined;
+  }
+
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (
+    routeFill !== "targetChoice" &&
+    routeFill !== "spellTargetList" &&
+    routeFill !== "rolledDice"
+  ) {
+    return undefined;
+  }
+
+  return nonEmptyRouteEvents(
+    scalarBuffResolveOwners(input.state, result.state, input.subject.actorId).map(
+      (owner) => scalarBuffResolveWithoutFill([], owner),
+    ),
+  );
+}
+
+function scalarBuffResolveOwners(
+  before: BattleState,
+  after: BattleState,
+  actorId: CombatantId,
+): readonly BattleReducerRouteOwnerGroup[] {
+  if (combatantTemporaryHitPointsIncreased(before, after)) {
+    return ["battleTemporaryHitPoint"];
+  }
+
+  const addedEffectKinds = scalarBuffAddedActiveEffectKinds(before, after);
+  const activeEffectOwners: readonly BattleReducerRouteOwnerGroup[] =
+    addedEffectKinds.size > 0 ? ["battleActiveEffect"] : [];
+  const projectionOwners: readonly BattleReducerRouteOwnerGroup[] =
+    addedEffectKinds.has("speedDelta") ||
+    addedEffectKinds.has("specialSpeedGrant")
+      ? ["battleMovementResource"]
+      : [];
+  const hitPointOwners: readonly BattleReducerRouteOwnerGroup[] =
+    addedEffectKinds.has("hitPointMaximumIncrease")
+      ? ["battleHitPoint"]
+      : [];
+  const concentrationOwners: readonly BattleReducerRouteOwnerGroup[] =
+    combatantConcentrationChanged(before, after, actorId)
+      ? ["battleConcentration"]
+      : [];
+  return [
+    ...activeEffectOwners,
+    ...projectionOwners,
+    ...hitPointOwners,
+    ...concentrationOwners,
+  ];
+}
+
+function nonEmptyRouteEvents(
+  events: readonly BattleReducerRouteEvent[],
+): BattleReducerRouteEvents | undefined {
+  const [first, ...rest] = events;
+  return first === undefined ? undefined : [first, ...rest];
+}
+
+function combatantTemporaryHitPointsIncreased(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  return [...after.combatants.values()].some(
+    (combatant) =>
+      Number(combatant.tempHp) >
+      Number(before.combatants.get(combatant.combatantId)?.tempHp ?? 0),
+  );
+}
+
+function scalarBuffAddedActiveEffectKinds(
+  before: BattleState,
+  after: BattleState,
+): ReadonlySet<BattleActiveEffect["kind"]> {
+  const added = new Set<BattleActiveEffect["kind"]>();
+  for (const combatant of after.combatants.values()) {
+    const beforeCounts = activeEffectKindCounts(
+      before.combatants.get(combatant.combatantId)?.activeEffects ?? [],
+    );
+    const afterCounts = activeEffectKindCounts(combatant.activeEffects);
+    for (const [kind, count] of afterCounts) {
+      if (count > (beforeCounts.get(kind) ?? 0)) {
+        added.add(kind);
+      }
+    }
+  }
+  return added;
+}
+
+function activeEffectKindCounts(
+  activeEffects: readonly BattleActiveEffect[],
+): ReadonlyMap<BattleActiveEffect["kind"], number> {
+  const counts = new Map<BattleActiveEffect["kind"], number>();
+  for (const effect of activeEffects) {
+    counts.set(effect.kind, (counts.get(effect.kind) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function combatantConcentrationChanged(
+  before: BattleState,
+  after: BattleState,
+  combatantId: CombatantId,
+): boolean {
+  return (
+    before.combatants.get(combatantId)?.concentration !==
+    after.combatants.get(combatantId)?.concentration
+  );
+}
+
+function scalarBuffResolveWithoutFill(
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "scalarBuffEffect",
+    holes,
+    owner,
+  };
+}
+
 function hasConcentratingRollModifierEffect(
   state: BattleState,
   combatantId: CombatantId,
@@ -1398,6 +1556,18 @@ function isRollModifierEffectResolutionSubject(
     subject.tag === "actionSpell" &&
     (subject.invocation.procedure === "rollModifier" ||
       subject.invocation.procedure === "thaumaturgyBoomingVoice")
+  );
+}
+
+function isScalarBuffEffectSubject(
+  subject: BattleResolutionInput["subject"],
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "actionSpell" | "bonusActionSpell" }
+> {
+  return (
+    (subject.tag === "actionSpell" || subject.tag === "bonusActionSpell") &&
+    subject.invocation.procedure === "scalarBuff"
   );
 }
 
