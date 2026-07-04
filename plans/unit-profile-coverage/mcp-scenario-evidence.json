@@ -102,6 +102,16 @@
     },
     {
       "kind": "mcp-scenario",
+      "flowId": "mcp-workflow-discovery",
+      "scopeIds": ["level-1-5"],
+      "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+      "summary": "The protocol acceptance scenario reads the MCP workflow guide and catalog units before selecting the returned level-5 Wizard progression, spellbook, prepared-spell, equipment, loadout, and battle result paths."
+    },
+    {
+      "kind": "mcp-scenario",
       "flowId": "character-creation",
       "scopeIds": ["level-1-3"],
       "scenarioId": "create-level-three-wizard-and-cast-scorching-ray",
@@ -119,6 +129,16 @@
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
       "summary": "The protocol acceptance scenario creates and finalizes a supported level-4 Elf Soldier Wizard while selecting the SRD Evoker subclass, the returned Ability Score Improvement feat choice, the returned Intelligence +2 ASI option, Wizard spell choices, equipment, and loadout holes."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scopeIds": ["level-1-5"],
+      "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+      "summary": "The protocol acceptance scenario creates and finalizes a supported level-5 Elf Soldier Wizard while selecting Fireball only through returned spellbook and prepared-spell option ids plus returned Wizard creation holes."
     },
     {
       "kind": "mcp-scenario",
@@ -173,6 +193,16 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
+      "scopeIds": ["level-1-5"],
+      "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+      "summary": "The protocol acceptance scenario reads list_characters after finalization and verifies the durable level-5 Wizard Character Sheet exposes Fireball Spell Access, 32 Hit Points, and unexpended level-1, level-2, and level-3 Spell Slots."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "create-baseline-character",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
@@ -219,6 +249,16 @@
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
       "summary": "The protocol acceptance scenario starts battle from the finalized level-4 Wizard and an SRD Sphinx of Wonder Stat Block, verifies the returned battle state carries four level-1 Spell Slots and three level-2 Spell Slots, and discovers the Scorching Ray battle act."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scopeIds": ["level-1-5"],
+      "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+      "summary": "The protocol acceptance scenario starts battle from the finalized level-5 Wizard and an SRD Sphinx of Wonder Stat Block, discovers the Fireball battle act, fills returned saving throw and rolled-dice holes, and verifies one level-3 Spell Slot is expended."
     },
     {
       "kind": "mcp-scenario",
@@ -319,16 +359,14 @@
     {
       "scopeId": "level-1-5",
       "auditTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
-      "result": "new-scenario-required",
-      "reason": "Level-1-5 is now in the ultra-golden aggregate, but no executable level-5 MCP scenario evidence has been admitted yet.",
-      "reusedFlowIds": [],
-      "requiredEvidence": {
-        "scenarioGoal": "Admit a registered executable level-5 MCP acceptance scenario that covers workflow discovery, character creation, Character Sheet durability, and battle handoff for the level-1-5 scope.",
-        "inputs": [
-          "Registered scenario id from L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY",
-          "Executable @dnd/mcp test evidence covering mcp-workflow-discovery, character-creation, character-sheet, and battle for level-1-5"
-        ]
-      }
+      "result": "reuse-existing-evidence",
+      "reason": "Task 8 registered the executable create-level-five-wizard-fireball-and-battle-handoff MCP acceptance scenario. It covers workflow discovery, level-5 Wizard creation with Fireball through returned holes, durable Character Sheet state with level-3 Spell Slots, and battle handoff through returned Fireball battle holes.",
+      "reusedFlowIds": [
+        "mcp-workflow-discovery",
+        "character-creation",
+        "character-sheet",
+        "battle"
+      ]
     }
   ]
 }
