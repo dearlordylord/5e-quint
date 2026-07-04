@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-010",
+  "taskId": "CRPI-READY-011",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -8,7 +8,7 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.invocation.procedure=sleepTargetAdmission",
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=saving_throw_protection and public act initial holes",
         "boundary": "discoverBattleActs public reducer boundary"
       }
     },
@@ -18,60 +18,37 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject, BattleFill kind, BattleCreatureState activeEffects, BattleCreatureState.concentration, and BattleCreatureState.conditions",
+        "sourceField": "BattleSubject, BattleFill kind, and save-gated damage adjustment frontier",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
+      "fieldPath": "BattleReducerRouteEvent.subject=metamagicSavingThrowProtection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "SupportedSpellInvocation.procedure=sleepTargetAdmission and BattleSleepRepeatSavingThrowOutcomeHole",
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=saving_throw_protection, public act initial holes, and save-gated damage resolution frontier",
         "boundary": "battleReducerRouteEventsForDiscoveredAct and battleReducerRouteForResolution"
       }
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects[kind=sleepPendingRepeatSave]",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "battle-state",
+      "fieldPath": "BattleReducerRouteEvent.owner=battleDamageAdjustment",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "owner": "executable-boundary-projection",
       "derivability": {
-        "tag": "canonical-source"
-      }
-    },
-    {
-      "fieldPath": "BattleCreatureState.activeEffects[kind=sleepUnconscious]",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "battle-state",
-      "derivability": {
-        "tag": "canonical-source"
-      }
-    },
-    {
-      "fieldPath": "BattleCreatureState.concentration",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "battle-state",
-      "derivability": {
-        "tag": "canonical-source"
-      }
-    },
-    {
-      "fieldPath": "BattleCreatureState.conditions",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "battle-state",
-      "derivability": {
-        "tag": "canonical-source"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "Careful Spell protected-target saving-throw outcome and pending rolled-dice frontier",
+        "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 41 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
-    "Sleep turn-boundary repeat-save frontier remains existing BattleCreatureState.activeEffects[kind=sleepPendingRepeatSave].",
-    "Failed repeat-save Unconscious state remains existing BattleCreatureState.activeEffects[kind=sleepUnconscious] plus BattleCreatureState.conditions.",
-    "Concentration ownership remains existing BattleCreatureState.concentration.",
-    "Route events are public reducer boundary projections derived from typed procedure facts, holes/fills, and executable state deltas.",
-    "The route does not dispatch on the Sleep authored spell id; production routing is admitted by the sleepTargetAdmission procedure shape and sleep repeat-save hole/effect facts.",
-    "The restored copied connector's post-Concentration-cleanup turn-boundary no-op events have no reducer-owned frontier in BattleState and are recorded as a source-QNT-corpus blocker."
+    "Task 42 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
+    "Selected Metamagic option identity remains at catalog, selection, admission, and fixture boundaries.",
+    "Route events are public reducer boundary projections derived from typed Metamagic effect facts, spell procedure facts, holes/fills, and executable state deltas.",
+    "The diagnostic damage route does not dispatch on Sorcerer authored feature identity or the Careful Spell option name; production routing is admitted by effectKind=saving_throw_protection and the public reducer subject/holes/fills.",
+    "Careful Command no-effect route replay is blocked rather than modeled with duplicate state: the public reducer owns that branch as commandEffect with no rolled-dice damage-adjustment frontier, while the copied metamagic route connector is damage-shaped."
   ]
 }

@@ -17,10 +17,14 @@
 //   successful save.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Saving Throw,
 //   Sorcery Points as a Pool, and Spend.
+import { expect, it } from "vitest";
+
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
+  observeCarefulCommandNoEffectRoute,
   carefulSorcererMetamagicBattle,
+  observeCarefulSavingThrowProtectionRoute,
   projectBattleState,
   resolveCarefulBurningHands,
   resolveCarefulCommand,
@@ -98,4 +102,72 @@ defineSelectedIdentityWitness({
       ],
     },
   ],
+});
+
+it("observes Careful Spell save-protection route through public reducer entrypoints", () => {
+  expect(
+    observeCarefulSavingThrowProtectionRoute(carefulSorcererMetamagicBattle()),
+  ).toEqual([
+    { kind: "startBattle", owner: "battleActionEconomy" },
+    {
+      kind: "discoverBattleActs",
+      subject: "metamagicSavingThrowProtection",
+      holes: ["spellTargetList"],
+      owner: "battleFeatureResource",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicSavingThrowProtection",
+      fill: "spellTargetList",
+      holes: ["savingThrowOutcome"],
+      owner: "battleFeatureResource",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicSavingThrowProtection",
+      fill: "savingThrowOutcome",
+      holes: ["rolledDice"],
+      owner: "battleSavingThrowOutcome",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicSavingThrowProtection",
+      holes: ["rolledDice"],
+      owner: "battleDamageAdjustment",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicSavingThrowProtection",
+      holes: [],
+      owner: "battleFeatureResource",
+    },
+  ]);
+});
+
+it("observes Careful Command no-effect route through public reducer entrypoints", () => {
+  expect(
+    observeCarefulCommandNoEffectRoute(carefulSorcererMetamagicBattle()),
+  ).toEqual([
+    { kind: "startBattle", owner: "battleActionEconomy" },
+    {
+      kind: "discoverBattleActs",
+      subject: "commandEffect",
+      holes: ["commandOptionChoice", "spellTargetList"],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "commandEffect",
+      fill: "commandOptionChoice",
+      holes: ["savingThrowOutcome"],
+      owner: "battleHoleFrontier",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "commandEffect",
+      fill: "savingThrowOutcome",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+  ]);
 });

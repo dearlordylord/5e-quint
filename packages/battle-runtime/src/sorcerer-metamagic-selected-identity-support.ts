@@ -14,8 +14,10 @@ import {
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleState,
   type CharacterBattleMetamagicOptionFact,
+  battleReducerStartRouteEvent,
   battleLineDirectionId,
   characterBattleResourceIsPointPool,
   discoverBattleActs,
@@ -338,6 +340,104 @@ export function resolveCarefulCommand(state: BattleState): BattleState {
       ],
     }),
   ).state;
+}
+
+export function observeCarefulSavingThrowProtectionRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const act = carefulBurningHandsAct(state);
+  const protectedTargets = targetListFill(
+    act.initialHoles,
+    "Burning Hands Careful Spell protected targets",
+    "burning_hands",
+    [fighterId],
+  );
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [protectedTargets],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error("Expected Careful Burning Hands to request a save hole.");
+  }
+  const savingThrowFill = carefulBurningHandsMixedSaveFill(
+    awaitingSave.holes,
+  );
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [protectedTargets, savingThrowFill],
+  });
+  if (awaitingDamage.tag !== "needsHoles") {
+    throw new Error("Expected Careful Burning Hands to request damage dice.");
+  }
+  const damage = findHole(awaitingDamage.holes, "rolledDice");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        protectedTargets,
+        savingThrowFill,
+        damageRollFillWithGroups(damage, [[4, 3, 2]]),
+      ],
+    }),
+  );
+
+  return [
+    battleReducerStartRouteEvent(state),
+    ...(act.routeEvents ?? []),
+    ...(awaitingSave.routeEvents ?? []),
+    ...(awaitingDamage.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
+export function observeCarefulCommandNoEffectRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const act = carefulCommandAct(state);
+  const target = targetListFill(act.initialHoles, "Command targets", "command");
+  const protectedTargets = targetListFill(
+    act.initialHoles,
+    "Command Careful Spell protected targets",
+    "command",
+  );
+  const option = commandOptionFill(act.initialHoles);
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, protectedTargets, option],
+  });
+  if (awaitingSave.tag !== "needsHoles") {
+    throw new Error("Expected Careful Command to request a save hole.");
+  }
+  const savingThrow = findHole(awaitingSave.holes, "savingThrowOutcome");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        target,
+        protectedTargets,
+        option,
+        {
+          kind: "savingThrowOutcome",
+          holeId: savingThrow.holeId,
+          value: {
+            outcomes: [{ targetId: skeletonId, succeeded: true }],
+          },
+        },
+      ],
+    }),
+  );
+
+  return [
+    battleReducerStartRouteEvent(state),
+    ...(act.routeEvents ?? []),
+    ...(awaitingSave.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
 }
 
 export function resolveHeightenedBurningHands(state: BattleState): BattleState {
@@ -1296,6 +1396,26 @@ function protectedTargetsFill(
     "Burning Hands Careful Spell protected targets",
     "burning_hands",
   );
+}
+
+function carefulBurningHandsMixedSaveFill(
+  holes: readonly BattleHole[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const savingThrow = findHole(holes, "savingThrowOutcome");
+  return {
+    kind: "savingThrowOutcome",
+    holeId: savingThrow.holeId,
+    value: {
+      area: {
+        originAnchorId: wizardId,
+        affectedTargetIds: [fighterId, skeletonId],
+      },
+      outcomes: [
+        { targetId: fighterId, succeeded: true },
+        { targetId: skeletonId, succeeded: false },
+      ],
+    },
+  };
 }
 
 function targetListFill(

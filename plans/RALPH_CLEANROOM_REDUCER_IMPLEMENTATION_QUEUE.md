@@ -253,7 +253,7 @@
     {
       "number": 42,
       "id": "CRPI-READY-011",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Implement route replay: battle-runtime-sorcerer-metamagic-careful-selected-identity"
     },
     {
@@ -694,7 +694,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRP07-DSR-06` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-009` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-010` | `blocked` | source-qnt-corpus-blocker | owner/source-corpus decision before implementation |
-| `CRPI-READY-011` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-011` | `blocked` | source-qnt-corpus-blocker | owner/source-corpus decision before implementation |
 | `CRPI-READY-012` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-013` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-014` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -3087,11 +3087,15 @@ Plan Impact:
 
 ### Task 42 - CRPI-READY-011
 
-Status: `ready-for-research`
+Status: `blocked`
+
+Blocker Type: owner-decision
+
+Blocker Detail: Copied connector `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt#doRouteSavingThrowProtection` is damage-shaped and begins at `savingThrowOutcome` / `RolledDiceHoleKind` / `BattleDamageAdjustmentOwner`. Ralph Task 42 evidence shows the target public reducer route for Careful Burning Hands starts earlier at the protected-target `spellTargetList` frontier, while the Careful Command/no-effect branch routes as `commandEffect` with no rolled-dice damage-adjustment frontier. The owner must decide whether to refresh/reclassify the copied connector obligation or introduce an honest reducer-owned route fact; synthetic damage route events or duplicate replay-history state are not acceptable.
 
 Goal:
 
-Implement target replay for `packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt` as a `reducer-routed` reducer-convergence task.
+Unblock and then implement target replay for `packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt` as a `reducer-routed` reducer-convergence task.
 
 Starting Points:
 

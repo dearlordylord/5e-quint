@@ -1,5 +1,165 @@
 # Validation Report
 
+## CRPI-READY-011
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `blocked`
+
+Task 42 does not satisfy its current acceptance criteria as a normal
+implementation item. Neither selected-identity branch has passing
+copied-connector `qRoute` replay through public reducer entrypoints. The
+save-gated damage branch now records the honest public protected-target
+frontier, which does not match the copied connector's damage-shaped
+`savingThrowOutcome` discovery frontier. The current task and plan files are
+outside the permitted implementation workspace, so this report records the
+blocker and the concrete plan edits the decider must apply before this work can
+be merged as anything other than blocked/partial.
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Partial behavior implemented:
+
+Careful Spell selected-identity diagnostics now observe the target public route
+events for the save-gated damage and no-effect semantic projections. The
+save-gated damage diagnostic observes the shared
+`metamagicSavingThrowProtection` substrate from
+`battleReducerStartRouteEvent`, `AvailableBattleAct.routeEvents`, and
+`BattleResolutionResult.routeEvents` for the Burning Hands damage procedure,
+including the reducer-owned protected-target `spellTargetList` frontier before
+the saving-throw frontier exists.
+
+The no-effect selected-identity branch is Careful Command. Public reducer route
+observation confirms Command subjects are routed as `commandEffect` before the
+new metamagic route predicate, and Command has no rolled-dice damage-adjustment
+frontier. The copied metamagic route connector exposes only a damage-shaped
+`metamagicSavingThrowProtection` `qRoute` for saving-throw protection, so the
+Command/no-effect branch is recorded as a source-QNT-corpus blocker rather than
+accepted copied-route replay.
+
+The runtime does not add a parallel Careful Spell ledger: action availability
+remains `BattleState.currentTurnResources`, Sorcery Point spend remains
+character point-pool resource state, selected Metamagic identity remains a
+catalog/selection/admission boundary, protected-target selection remains a
+spell target-list fill, and damage prevention remains the existing
+save-gated-damage adjustment path.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt#step:doResolveCarefulSaveGatedDamage` | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-011.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt#step:doResolveCarefulSaveGatedDamage#trace:public-route=metamagicSavingThrowProtection action=doResolveCarefulSaveGatedDamage qRoute=blocked-copied-connector-discovery-frontier` | `packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts#observes Careful Spell save-protection route through public reducer entrypoints` | `not-covered: source-qnt-corpus-blocked` |
+| `packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt#step:doResolveCarefulSaveGatedNoEffect` | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-011.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt#step:doResolveCarefulSaveGatedNoEffect#trace:public-route=commandEffect action=doResolveCarefulSaveGatedNoEffect qRoute=blocked-copied-connector-damage-route` | `packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts#observes Careful Command no-effect route through public reducer entrypoints` | `not-covered: source-qnt-corpus-blocked` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-011.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace ids:
+  - `public-route=metamagicSavingThrowProtection action=doResolveCarefulSaveGatedDamage qRoute=blocked-copied-connector-discovery-frontier`
+  - `public-route=commandEffect action=doResolveCarefulSaveGatedNoEffect qRoute=blocked-copied-connector-damage-route`
+- Public route assertion:
+  - `packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts#observes Careful Spell save-protection route through public reducer entrypoints`
+  - `packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts#observes Careful Command no-effect route through public reducer entrypoints`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-011/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- Source-QNT-corpus blocker: copied connector
+  `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+  exposes `doRouteSavingThrowProtection` only as a damage-shaped route that
+  starts at `SavingThrowOutcomeFillKind`, then `RolledDiceHoleKind` and
+  `BattleDamageAdjustmentOwner`. The target public route for Careful Burning
+  Hands starts earlier at the protected-target `spellTargetList` frontier. The
+  selected-identity no-effect branch is Careful Command, which the public
+  reducer routes as `commandEffect` with `commandOptionChoice` and
+  `savingThrowOutcome` fills and no rolled-dice damage-adjustment frontier.
+
+Required plan edits:
+
+- In `/workspace/typescript/dnd/.ralph/runs/crpi-ready-011-metamagic-careful-route/plan.md`,
+  change Task 42 / `CRPI-READY-011` from ready/accepted coverage to blocked or
+  partial-blocked for both copied `qRoute` obligations.
+- Add blocker details: the copied metamagic route connector omits the
+  protected-target `spellTargetList` discovery frontier for Careful
+  save-gated-damage spells and lacks a Command/no-effect saving-throw-protection
+  route shape; target public reducer evidence shows the no-effect branch is
+  `commandEffect`, not `metamagicSavingThrowProtection`.
+- Add a follow-up queue item to either refresh/reclassify the copied connector
+  obligation or add a reducer-owned route fact for Careful no-effect Command
+  without synthetic damage events or duplicate replay-history state.
+
+Plan Impact:
+
+- Status: `update-required`
+- Affected tasks:
+  - Task 42 / `CRPI-READY-011`: `blocked`; neither copied `qRoute` obligation
+    has passing target replay evidence.
+  - Task 43 / `CRPI-READY-012` and later metamagic route tasks: `left
+    unchanged`; future implementers should check whether their selected-identity
+    branches actually match the copied metamagic route connector shape.
+- Observations:
+  - The copied metamagic saving-throw-protection route is damage-shaped and
+    begins after the target public protected-target frontier.
+  - The target public reducer routes Careful Command/no-effect as
+    `commandEffect`, not `metamagicSavingThrowProtection`.
+  - Matching the copied route for either branch would require either a refreshed
+    connector obligation or a real reducer-owned route fact; synthetic route
+    events or replay-only duplicate state are not acceptable.
+- Required plan edits:
+  - Recast Task 42 / `CRPI-READY-011` from `ready-for-research` to blocked or
+    partial-blocked.
+  - Add the protected-target frontier mismatch and Command/no-effect
+    copied-route mismatch as blocker details.
+  - Add a follow-up item to refresh/reclassify the copied connector obligation
+    or implement an honest reducer-owned no-effect route fact.
+
+Verification results:
+
+- Base check passed: `ralph/crpi-ready-011-metamagic-careful-route/integration`
+  and `HEAD` were both `0755a79b Mark Task 41 sleep repeat-save route blocked`,
+  and `git merge-base --is-ancestor 0755a79b9d087bdc0a6599a705ca28a71b4d2925 HEAD`
+  exited 0.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts -t "observes (Careful Spell save-protection route|Careful Command no-effect route)"` passed with 2 tests and 2 skipped.
+- MBT was not rerun in revision round 5. The acceptance blocker is the copied
+  connector/public route-shape mismatch already recorded in target replay
+  evidence, and the changed production route projection is covered by the
+  focused public reducer route tests above.
+- `pnpm cleanroom-branch-coverage:check -- --target-replay-evidence tasks/target-replay-evidence/CRPI-READY-011.json` exited 1 with corpus-wide missing-evidence output. For Task 42, `tasks/target-replay-evidence/CRPI-READY-011.json` records both `doResolveCarefulSaveGatedDamage` and `doResolveCarefulSaveGatedNoEffect` as non-passing route-shape blockers.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- RAW/ubiquitous-language review passed against Sorcerer Metamagic, Careful
+  Spell, Sorcery Points, Burning Hands, Command, and UBIQUITOUS_LANGUAGE.md
+  terms for Magic Action, Spell Invocation, Saving Throw, Pool, and Spend.
+- Reviewer-loop convergence completed with a blocker: round 1 found the missing
+  public `metamagicSavingThrowProtection` route subject and
+  `battleDamageAdjustment` owner; revision round 2 removed overclaimed
+  Command/no-effect coverage; revision round 5 corrected the damage diagnostic
+  to expose the protected-target frontier before `savingThrowOutcome` and
+  recorded both copied route-shape mismatches as source-QNT-corpus blockers. No
+  duplicate durable state or authored-identity dispatch was added.
+
 ## CRPI-READY-010
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

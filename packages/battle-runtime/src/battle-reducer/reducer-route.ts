@@ -13,7 +13,10 @@ import type {
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import { battleHoleFamilyKind } from "./hole-helpers.ts";
-import { QUICKENED_METAMAGIC_EFFECT_KIND } from "./metamagic-support.ts";
+import {
+  CAREFUL_METAMAGIC_EFFECT_KIND,
+  QUICKENED_METAMAGIC_EFFECT_KIND,
+} from "./metamagic-support.ts";
 
 export type BattleReducerRouteSubjectFamily =
   | "concentrationTeardown"
@@ -22,6 +25,7 @@ export type BattleReducerRouteSubjectFamily =
   | "hitPointRestoration"
   | "interruptStackResume"
   | "metamagicBonusActionCastingTime"
+  | "metamagicSavingThrowProtection"
   | "metamagicSpellGovernor"
   | "reactionSpell"
   | "rollModifierEffect"
@@ -46,6 +50,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleConcentration"
   | "battleActiveEffect"
   | "battleConditionLifecycle"
+  | "battleDamageAdjustment"
   | "battleFeatureResource"
   | "battleMovementResource"
   | "battleTemporaryHitPoint"
@@ -206,6 +211,16 @@ export function battleReducerRouteEventsForDiscoveredAct(
       {
         kind: "discoverBattleActs",
         subject: "metamagicBonusActionCastingTime",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner: "battleFeatureResource",
+      },
+    ];
+  }
+  if (isCarefulSavingThrowProtectionSubject(act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicSavingThrowProtection",
         holes: battleReducerRouteHoles(act.initialHoles),
         owner: "battleFeatureResource",
       },
@@ -470,7 +485,11 @@ function metamagicRouteForResolution(
     return [metamagicGovernorInvalidRoute(input)];
   }
   if (!isQuickenedBonusActionCastingTimeSubject(input.subject)) {
-    return undefined;
+    return metamagicSavingThrowProtectionRouteForResolution(
+      input,
+      result,
+      fill,
+    );
   }
 
   if (fill === undefined) {
@@ -572,6 +591,74 @@ function metamagicRouteForResolution(
   return undefined;
 }
 
+function metamagicSavingThrowProtectionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+  fill: BattleFill | undefined,
+): BattleReducerRouteEvents | undefined {
+  if (!isCarefulSavingThrowProtectionSubject(input.subject)) {
+    return undefined;
+  }
+  if (fill === undefined) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "spellTargetList") {
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicSavingThrowProtection",
+        fill: routeFill,
+        holes:
+          result.tag === "needsHoles"
+            ? battleReducerRouteHoles(result.holes)
+            : [],
+        owner: "battleFeatureResource",
+      },
+    ];
+  }
+  if (routeFill === "savingThrowOutcome") {
+    const holes =
+      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicSavingThrowProtection",
+        fill: routeFill,
+        holes,
+        owner: "battleSavingThrowOutcome",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicSavingThrowProtection",
+        holes,
+        owner: "battleDamageAdjustment",
+      },
+      ...(result.tag === "resolved"
+        ? [
+            {
+              kind: "resolveBattleSubjectWithoutFill",
+              subject: "metamagicSavingThrowProtection",
+              holes: [],
+              owner: "battleFeatureResource",
+            } satisfies BattleReducerRouteEvent,
+          ]
+        : []),
+    ];
+  }
+  if (routeFill === "rolledDice" && result.tag === "resolved") {
+    return [
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicSavingThrowProtection",
+        holes: [],
+        owner: "battleFeatureResource",
+      },
+    ];
+  }
+  return undefined;
+}
+
 function metamagicBonusActionTimingRoutes(
   holes: readonly BattleReducerRouteHole[],
 ): readonly [BattleReducerRouteEvent, BattleReducerRouteEvent] {
@@ -633,6 +720,17 @@ function metamagicGovernorInvalidRoute(
     holes: [],
     owner: "battleFeatureResource",
   };
+}
+
+function isCarefulSavingThrowProtectionSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  return (
+    subject.tag === "actionSpell" &&
+    subject.metamagic?.some(
+      (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
+    ) === true
+  );
 }
 
 function deathSavingThrowRouteForResolution(

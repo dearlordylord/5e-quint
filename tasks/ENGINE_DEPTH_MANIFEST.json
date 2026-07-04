@@ -1,17 +1,15 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-010",
+  "taskId": "CRPI-READY-011",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "domain-api",
       "domainApis": [
-        "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
-        "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
-        "BattleReducerRouteEvent.owner=battleConditionLifecycle",
-        "BattleReducerRouteEvent.owner=battleActiveEffect",
-        "BattleReducerRouteEvent.owner=battleConcentration",
-        "BattleReducerRouteEvent.owner=battleTurnBoundary",
+        "BattleReducerRouteEvent.subject=metamagicSavingThrowProtection",
+        "BattleReducerRouteEvent.owner=battleFeatureResource",
+        "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
+        "BattleReducerRouteEvent.owner=battleDamageAdjustment",
         "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution"
       ]
@@ -19,57 +17,57 @@
   ],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "RepeatSaveConditionEffectRouteSubject",
+        "MetamagicSavingThrowProtectionRouteSubject",
         "SavingThrowOutcomeFillKind",
-        "BattleSpellSlotAndActionEconomyOwner",
-        "BattleConditionLifecycleOwner",
-        "BattleActiveEffectOwner",
-        "BattleConcentrationOwner",
-        "BattleTurnBoundaryOwner"
+        "RolledDiceHoleKind",
+        "BattleFeatureResourceOwner",
+        "BattleSavingThrowOutcomeOwner",
+        "BattleDamageAdjustmentOwner"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-010.json"
+        "tasks/target-replay-evidence/CRPI-READY-011.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
+      "path": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "observes Sleep repeat-save qRoute through public reducer entrypoints",
-        "createSleepRepeatSavePublicRouteDriver",
-        "sleepRepeatSaveRouteStateCheck"
+        "observes Careful Spell save-protection route through public reducer entrypoints",
+        "observes Careful Command no-effect route through public reducer entrypoints",
+        "observeCarefulSavingThrowProtectionRoute",
+        "observeCarefulCommandNoEffectRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-010.json"
+        "tasks/target-replay-evidence/CRPI-READY-011.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Sleep repeat-save replay exposes copied qRoute discovery evidence through public Sleep act discovery."
+      "reason": "Careful Spell diagnostics expose the public Metamagic save-protection discovery frontier before copied qRoute comparison."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Sleep repeat-save replay exposes condition lifecycle, active-effect, Concentration, and turn-boundary owner evidence through public subject resolution."
+      "reason": "Careful Spell diagnostics expose protected-target, saving-throw outcome, damage-adjustment, and feature-resource owner evidence through public subject resolution."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "repeatSaveConditionEffect condition lifecycle and active-effect owner projection"
+      "api": "Metamagic save-affecting option route projection"
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "turn-boundary repeat-save frontier projection while sleepPendingRepeatSave exists"
+      "api": "Metamagic option route projection through typed effect facts"
     }
   ],
   "completion": {
-    "tag": "source-qnt-corpus-blocker",
-    "notes": "Task 41 routes executable Sleep repeat-save discovery, initial failed-save admission, Concentration cleanup, pending repeat-save turn-boundary frontier events, and repeat-save success/failure cleanup through public reducer route events. The restored copied connector still expects post-concentration-cleanup turn-boundary no-op qRoute events after no sleepPendingRepeatSave frontier remains; matching that projection would require duplicate replay-history state or a broad synthetic end-turn route."
+    "tag": "blocked",
+    "notes": "Task 42 records honest public route diagnostics for Careful Spell selected identity, but accepts no copied qRoute replay. The Burning Hands damage branch is blocked because the public reducer route starts at the protected-target spellTargetList frontier before the copied connector's savingThrowOutcome frontier. The no-effect Command branch is blocked because public reducer route events expose commandEffect, while the copied metamagic route connector only has a damage-shaped saving-throw-protection qRoute. No new BattleState field was introduced."
   }
 }
