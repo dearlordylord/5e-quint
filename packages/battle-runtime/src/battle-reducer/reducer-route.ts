@@ -15,6 +15,7 @@ export type BattleReducerRouteSubjectFamily =
   | "concentrationTeardown"
   | "commandEffect"
   | "deathSavingThrow"
+  | "hitPointRestoration"
   | "spellAttackProcedure";
 
 export type BattleReducerRouteOwnerGroup =
@@ -40,6 +41,7 @@ export type BattleReducerRouteHole =
   | "interruptDecision"
   | "concentrationSavingThrow"
   | "deathSavingThrow"
+  | "hitPointHealingDistribution"
   | "movement"
   | "rolledDice"
   | "savingThrowOutcome"
@@ -51,6 +53,7 @@ export type BattleReducerRouteFill =
   | "commandOptionChoice"
   | "concentrationSavingThrow"
   | "deathSavingThrow"
+  | "hitPointHealingDistribution"
   | "damageTypeChoice"
   | "movement"
   | "rolledDice"
@@ -119,6 +122,18 @@ export function battleReducerRouteEventsForDiscoveredAct(
           : "battleActiveEffect",
     }];
   }
+  if (isHitPointRestorationDiscoverySubject(act)) {
+    return [{
+      kind: "discoverBattleActs",
+      subject: "hitPointRestoration",
+      holes: battleReducerRouteHoles(act.initialHoles),
+      owner:
+        act.subject.tag === "actionSpell" ||
+        act.subject.tag === "bonusActionSpell"
+          ? "battleSpellSlotAndActionEconomy"
+          : "battleActionEconomy",
+    }];
+  }
   if (!isSpellAttackProcedureSubject(act.subject)) {
     return undefined;
   }
@@ -169,6 +184,13 @@ export function battleReducerRouteForResolution(
   const commandRoute = commandRouteForResolution(input, result);
   if (commandRoute !== undefined) {
     return [commandRoute];
+  }
+  const hitPointRestorationRoute = hitPointRestorationRouteForResolution(
+    input,
+    result,
+  );
+  if (hitPointRestorationRoute !== undefined) {
+    return [hitPointRestorationRoute];
   }
   if (!isSpellAttackProcedureSubject(input.subject)) {
     return undefined;
@@ -375,6 +397,49 @@ function concentrationRouteForResolution(
   return undefined;
 }
 
+function hitPointRestorationRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvent | undefined {
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  if (!isHitPointRestorationResolution(input.subject, fill)) {
+    return undefined;
+  }
+  if (result.tag === "invalid" && result.reason !== "invalidFill") {
+    return undefined;
+  }
+
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === undefined) {
+    return undefined;
+  }
+
+  return {
+    kind: "resolveBattleSubject",
+    subject: "hitPointRestoration",
+    fill: routeFill,
+    holes:
+      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    owner: hitPointRestorationRouteOwner(routeFill, result),
+  };
+}
+
+function hitPointRestorationRouteOwner(
+  fill: BattleReducerRouteFill,
+  result: BattleResolutionResult,
+): BattleReducerRouteOwnerGroup {
+  if (fill === "rolledDice" && result.tag === "resolved") {
+    return "battleHitPointAndZeroHpLifecycle";
+  }
+  if (fill === "hitPointHealingDistribution") {
+    return "battleHitPointAndZeroHpLifecycle";
+  }
+  return "battleHoleFrontier";
+}
+
 function commandRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -578,6 +643,46 @@ function isCommandEffectDiscoverySubject(
   return isCommandPendingRuntimeSubject(subject);
 }
 
+function isHitPointRestorationSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  if (subject.tag === "actionSpell" || subject.tag === "bonusActionSpell") {
+    return subject.invocation.procedure === "directHitPointRestoration";
+  }
+  return false;
+}
+
+function isHitPointRestorationResolution(
+  subject: BattleResolutionInput["subject"],
+  fill: BattleFill,
+): boolean {
+  if (isHitPointRestorationSubject(subject)) {
+    return true;
+  }
+  return (
+    subject.tag === "unitFeature" &&
+    fill.kind === "hitPointHealingDistribution"
+  );
+}
+
+function isHitPointRestorationDiscoverySubject(
+  act: AvailableBattleAct,
+): boolean {
+  if (isHitPointRestorationSubject(act.subject)) {
+    return act.initialHoles.some(
+      (hole) =>
+        battleReducerRouteHole(hole).includes("targetChoice") ||
+        battleReducerRouteHole(hole).includes("spellTargetList"),
+    );
+  }
+  return (
+    act.subject.tag === "unitFeature" &&
+    act.initialHoles.some((hole) =>
+      battleReducerRouteHole(hole).includes("hitPointHealingDistribution"),
+    )
+  );
+}
+
 function isCommandPendingRuntimeSubject(
   subject: Extract<
     BattleResolutionInput["subject"],
@@ -609,6 +714,9 @@ function battleReducerRouteHole(
   }
   if (family === "damageTypeChoice") return ["damageTypeChoice"];
   if (family === "deathSavingThrow") return ["deathSavingThrow"];
+  if (family === "hitPointHealingDistribution") {
+    return ["hitPointHealingDistribution"];
+  }
   if (family === "interruptDecision") return ["interruptDecision"];
   if (family === "movement") return ["movement"];
   if (family === "rolledDice") return ["rolledDice"];
@@ -626,7 +734,11 @@ function battleReducerRouteFill(
   if (kind === "concentrationSavingThrow") return "concentrationSavingThrow";
   if (kind === "damageTypeChoice") return "damageTypeChoice";
   if (kind === "deathSavingThrow") return "deathSavingThrow";
+  if (kind === "hitPointHealingDistribution") {
+    return "hitPointHealingDistribution";
+  }
   if (kind === "rolledDice") return "rolledDice";
+  if (kind === "spellTargetList") return "spellTargetList";
   if (kind === "targetChoice") return "targetChoice";
   return undefined;
 }

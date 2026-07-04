@@ -425,6 +425,77 @@
           "detail": "Round 2 moved Eldritch Blast discovery qRoute evidence to public AvailableBattleAct.routeEvents and kept object target facts at the table boundary; no remaining reasonable Task 15 findings after RAW/domain, architecture/connascence, code-review, typecheck, focused MBT, cleanroom check, and diff check."
         }
       ]
+    },
+    {
+      "taskId": "CRP07-DSR-03",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "b57b2edde2153635ba1ff07047ada7d329b795b8f9a9bf71126739b49df7f37d"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "3804224c5bb6c2e429099c53bb02d0737f34b645bbfb23325682c6750568e25d"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "858e022133daf581c1303310b3da029dd1871a15821aa13b68178884c77a5445"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP07-DSR-03.json",
+          "sha256": "73eb5df6e553cea7f0887b3a49df1ddd9e5f7a9b3c18b9b7d210f9cd2b57c062",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doDiscoverFeatureHealingPool#trace:MBT_TRACES=1 MBT_STEPS=4 action=doDiscoverFeatureHealingPool",
+            "tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doDiscoverSingleTargetSpellHealing#trace:MBT_TRACES=1 MBT_STEPS=4 action=doDiscoverSingleTargetSpellHealing",
+            "tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doDiscoverTargetListSpellHealing#trace:MBT_TRACES=1 MBT_STEPS=4 action=doDiscoverTargetListSpellHealing",
+            "tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillFeatureHealingDistribution#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillFeatureHealingDistribution",
+            "tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillSpellHealingRoll#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSpellHealingRoll",
+            "tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillSpellHealingTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSpellHealingTargetChoice",
+            "tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillSpellHealingTargetList#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSpellHealingTargetList",
+            "tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doSubmitHealingRollBeforeTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=4 action=doSubmitHealingRollBeforeTargetChoice",
+            "tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doSubmitHealingRollBeforeTargetList#trace:MBT_TRACES=1 MBT_STEPS=4 action=doSubmitHealingRollBeforeTargetList"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/hit-point-restoration-ordering.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Hit Point restoration\"",
+          "status": "fail",
+          "detail": "Initial focused route run failed because Hit Point restoration discovery qRoute evidence was adapter-local instead of AvailableBattleAct.routeEvents."
+        },
+        {
+          "command": "MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/hit-point-restoration-ordering.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Hit Point restoration\"",
+          "status": "pass",
+          "detail": "2 tests passed; final timed run TOTAL: 9s"
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 moved Hit Point restoration qRoute evidence to public reducer route events; round 2 found no remaining reasonable Task 21 findings."
+        }
+      ]
     }
   ]
 }

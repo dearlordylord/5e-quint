@@ -412,3 +412,78 @@ Verification results:
 - `git diff --check` passed after the adapter-boundary follow-up.
 - RAW/ubiquitous-language review passed against Rules Glossary Death Saving Throw, Playing the Game Death Saving Throws and Dropping to 0 Hit Points, and UBIQUITOUS_LANGUAGE.md Hit Points and Death.
 - Reviewer-loop convergence passed: round 2 tightened the replay adapter so the End Turn subject comes from public `discoverBattleActs`; architecture/connascence review found death-save route subject/fill/hole/owner string coupling localized in the reducer route vocabulary and mapper, while production death-save state remains the existing BattleState-owned lifecycle.
+
+## CRP07-DSR-03
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The route replay for Hit Point restoration ordering now observes the copied
+`qRoute` projection through public battle reducer route events. Spell healing
+target choice/list discovery and feature healing-pool discovery are emitted
+from `AvailableBattleAct.routeEvents`; target/list fills, premature healing
+rolls, final healing rolls, and feature healing-pool distribution are emitted
+from `BattleResolutionResult.routeEvents`. The runtime does not add a parallel
+healing HP ledger: restored HP remains `BattleCreatureState.hp`, zero-HP
+condition and death-save cleanup remain `BattleCreatureState.zeroHpLifecycle`
+plus condition lifecycle, and healing target/distribution progress remains the
+existing subject hole frontier.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doDiscoverFeatureHealingPool` | `tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doDiscoverFeatureHealingPool#trace:MBT_TRACES=1 MBT_STEPS=4 action=doDiscoverFeatureHealingPool` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Hit Point restoration through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doDiscoverSingleTargetSpellHealing` | `tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doDiscoverSingleTargetSpellHealing#trace:MBT_TRACES=1 MBT_STEPS=4 action=doDiscoverSingleTargetSpellHealing` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Hit Point restoration through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doDiscoverTargetListSpellHealing` | `tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doDiscoverTargetListSpellHealing#trace:MBT_TRACES=1 MBT_STEPS=4 action=doDiscoverTargetListSpellHealing` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Hit Point restoration through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillFeatureHealingDistribution` | `tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillFeatureHealingDistribution#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillFeatureHealingDistribution` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Hit Point restoration through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillSpellHealingRoll` | `tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillSpellHealingRoll#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSpellHealingRoll` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Hit Point restoration through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillSpellHealingTargetChoice` | `tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillSpellHealingTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSpellHealingTargetChoice` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Hit Point restoration through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillSpellHealingTargetList` | `tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doFillSpellHealingTargetList#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillSpellHealingTargetList` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Hit Point restoration through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doSubmitHealingRollBeforeTargetChoice` | `tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doSubmitHealingRollBeforeTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=4 action=doSubmitHealingRollBeforeTargetChoice` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Hit Point restoration through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doSubmitHealingRollBeforeTargetList` | `tasks/target-replay-evidence/CRP07-DSR-03.json#driver:packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt#step:doSubmitHealingRollBeforeTargetList#trace:MBT_TRACES=1 MBT_STEPS=4 action=doSubmitHealingRollBeforeTargetList` | `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes Hit Point restoration through the shared reducer surface` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP07-DSR-03.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=4 action=<branchAction>`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP07-DSR-03/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 21.
+
+Verification results:
+
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- First focused MBT attempt `MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/hit-point-restoration-ordering.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Hit Point restoration"` failed because discovery qRoute evidence was still adapter-local for Hit Point restoration.
+- `MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/hit-point-restoration-ordering.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Hit Point restoration"` passed after moving discovery and resolution qRoute evidence to public reducer route events; final timed run `TOTAL: 9s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- RAW/ubiquitous-language review passed against Playing the Game Healing and Dropping to 0 Hit Points, Rules Glossary Hit Points and Healing, and UBIQUITOUS_LANGUAGE.md Hit Points and Death.
+- Reviewer-loop convergence passed: round 1 found and fixed the adapter-local qRoute shortcut by adding Hit Point restoration to the public reducer route vocabulary; round 2 found no remaining reasonable RAW/domain, architecture/connascence, or code-review findings.

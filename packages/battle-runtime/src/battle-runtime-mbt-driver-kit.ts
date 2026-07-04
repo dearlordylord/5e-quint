@@ -9954,7 +9954,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
       subject = healingWordSubject();
       fills = [];
       holes = [];
-      route = [reducerRouteStartBattle("battleActionEconomy")];
+      route = [battleReducerStartRouteEvent(state)];
       stage = "actSelection";
       lastResult = "init";
       orderingError = "";
@@ -9967,8 +9967,6 @@ export function createHitPointRestorationOrderingRouteDriver() {
     function recordAccepted(
       result: BattleResolutionResult,
       nextStage: HitPointRestorationOrderingProjection["stage"],
-      fill: ReducerRouteFill,
-      owner: ReducerRouteOwnerGroup,
     ): void {
       lastResult = result.tag;
       if (result.tag === "resolved") {
@@ -9976,12 +9974,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
         holes = [];
         route = [
           ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "hitPointRestoration",
-            fill,
-            holes,
-            owner,
-          }),
+          ...requireHitPointRestorationOrderingRouteEvents(result),
         ];
         stage = nextStage;
         orderingError = "";
@@ -9992,12 +9985,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
         holes = result.holes;
         route = [
           ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "hitPointRestoration",
-            fill,
-            holes,
-            owner,
-          }),
+          ...requireHitPointRestorationOrderingRouteEvents(result),
         ];
         stage = nextStage;
         orderingError = "";
@@ -10017,7 +10005,6 @@ export function createHitPointRestorationOrderingRouteDriver() {
         ""
       >,
       expectedStage: HitPointRestorationOrderingProjection["stage"],
-      fill: ReducerRouteFill,
     ): void {
       if (result.tag !== "needsHoles") {
         throw new Error(
@@ -10028,12 +10015,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
       holes = result.holes;
       route = [
         ...route,
-        reducerRouteResolveBattleSubject({
-          subject: "hitPointRestoration",
-          fill,
-          holes,
-          owner: "battleHoleFrontier",
-        }),
+        ...requireHitPointRestorationOrderingRouteEvents(result),
       ];
       stage = expectedStage;
       orderingError = expectedOrderingError;
@@ -10041,21 +10023,24 @@ export function createHitPointRestorationOrderingRouteDriver() {
 
     function discoverHealingAct(input: {
       readonly nextState: BattleState;
-      readonly nextSubject: BattleSubject;
+      readonly findAct: (
+        act: ReturnType<typeof discoverBattleActs>[number],
+      ) => boolean;
       readonly nextStage: HitPointRestorationOrderingProjection["stage"];
-      readonly owner: ReducerRouteOwnerGroup;
     }): void {
       state = input.nextState;
-      subject = input.nextSubject;
+      const act = discoverBattleActs(state).find(input.findAct);
+      if (act === undefined) {
+        throw new Error(
+          "Expected public Hit Point restoration act discovery.",
+        );
+      }
+      subject = act.subject;
       fills = [];
-      holes = healingOrderingHolesAfterFills(state, subject, []);
+      holes = act.initialHoles;
       route = [
         ...route,
-        reducerRouteDiscoverBattleActs({
-          subject: "hitPointRestoration",
-          holes,
-          owner: input.owner,
-        }),
+        ...requireHitPointRestorationOrderingActRouteEvents(act),
       ];
       stage = input.nextStage;
       lastResult = "needsHoles";
@@ -10069,9 +10054,11 @@ export function createHitPointRestorationOrderingRouteDriver() {
       doDiscoverSingleTargetSpellHealing: () => {
         discoverHealingAct({
           nextState: healingSpellOrderingBattle(),
-          nextSubject: healingWordSubject(),
+          findAct: (act) =>
+            act.subject.tag === "bonusActionSpell" &&
+            act.subject.invocation.procedure === "directHitPointRestoration" &&
+            act.subject.invocation.spellId === "healing_word",
           nextStage: "spellHealingTargetChoice",
-          owner: "battleSpellSlotAndActionEconomy",
         });
         spellTargetHp = 0;
         spellTargetZeroHpLifecycleCleared = false;
@@ -10092,7 +10079,6 @@ export function createHitPointRestorationOrderingRouteDriver() {
           }),
           "healingTargetRequired",
           "spellHealingTargetChoice",
-          "rolledDice",
         );
       },
       doFillSpellHealingTargetChoice: () => {
@@ -10101,16 +10087,16 @@ export function createHitPointRestorationOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "spellHealingRoll",
-          "targetChoice",
-          "battleHoleFrontier",
         );
       },
       doDiscoverTargetListSpellHealing: () => {
         discoverHealingAct({
           nextState: healingTargetListSpellOrderingBattle(),
-          nextSubject: massHealingWordSubject(),
+          findAct: (act) =>
+            act.subject.tag === "bonusActionSpell" &&
+            act.subject.invocation.procedure === "directHitPointRestoration" &&
+            act.subject.invocation.spellId === "mass_healing_word",
           nextStage: "spellHealingTargetList",
-          owner: "battleSpellSlotAndActionEconomy",
         });
         spellTargetHp = 0;
         spellTargetZeroHpLifecycleCleared = false;
@@ -10131,7 +10117,6 @@ export function createHitPointRestorationOrderingRouteDriver() {
           }),
           "healingTargetRequired",
           "spellHealingTargetList",
-          "rolledDice",
         );
       },
       doFillSpellHealingTargetList: () => {
@@ -10142,8 +10127,6 @@ export function createHitPointRestorationOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "spellHealingRoll",
-          "spellTargetList",
-          "battleHoleFrontier",
         );
       },
       doFillSpellHealingRoll: () => {
@@ -10152,8 +10135,6 @@ export function createHitPointRestorationOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "resolved",
-          "rolledDice",
-          "battleHitPointAndZeroHpLifecycle",
         );
         const healedTarget = snapshotCombatant(state, skeletonId);
         spellTargetHp = healedTarget.hp;
@@ -10163,9 +10144,10 @@ export function createHitPointRestorationOrderingRouteDriver() {
       doDiscoverFeatureHealingPool: () => {
         discoverHealingAct({
           nextState: featureHealingPoolOrderingBattle(),
-          nextSubject: preserveLifeSubject(),
+          findAct: (act) =>
+            act.subject.tag === "unitFeature" &&
+            act.subject.unitId === "cleric_preserve_life",
           nextStage: "featureHealingPoolDistribution",
-          owner: "battleActionEconomy",
         });
         featureTargetHp = 0;
         featureTargetZeroHpLifecycleCleared = false;
@@ -10180,8 +10162,6 @@ export function createHitPointRestorationOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "resolved",
-          "hitPointHealingDistribution",
-          "battleHitPointAndZeroHpLifecycle",
         );
         const healedTarget = snapshotCombatant(state, skeletonId);
         featureTargetHp = healedTarget.hp;
@@ -15816,6 +15796,28 @@ function requireIndependentSpellAttackSequenceRouteEvents(
   }
   throw new Error(
     "Expected public reducer route events on independent spell attack sequence resolution.",
+  );
+}
+
+function requireHitPointRestorationOrderingActRouteEvents(
+  act: ReturnType<typeof discoverBattleActs>[number],
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on Hit Point restoration act.",
+  );
+}
+
+function requireHitPointRestorationOrderingRouteEvents(
+  result: BattleResolutionResult,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on Hit Point restoration resolution.",
   );
 }
 
