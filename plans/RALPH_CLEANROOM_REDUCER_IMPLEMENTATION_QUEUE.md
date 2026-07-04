@@ -193,7 +193,7 @@
     {
       "number": 32,
       "id": "CRPI-READY-007",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-reaction-casting-time"
     },
     {
@@ -2519,7 +2519,7 @@ Plan Impact:
 
 ### Task 32 - CRPI-READY-007
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
