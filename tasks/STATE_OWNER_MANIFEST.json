@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-009",
+  "taskId": "CRPI-READY-010",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -8,7 +8,7 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.invocation.procedure",
+        "sourceField": "BattleSubject.actionSpell.invocation.procedure=sleepTargetAdmission",
         "boundary": "discoverBattleActs public reducer boundary"
       }
     },
@@ -18,62 +18,22 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject action scalarBuff procedure, BattleFill kind, BattleCreatureState activeEffects delta, and stale-subject result",
+        "sourceField": "BattleSubject, BattleFill kind, BattleCreatureState activeEffects, BattleCreatureState.concentration, and BattleCreatureState.conditions",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=scalarBuffEffect",
+      "fieldPath": "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.invocation.procedure=scalarBuff",
+        "sourceField": "SupportedSpellInvocation.procedure=sleepTargetAdmission and BattleSleepRepeatSavingThrowOutcomeHole",
         "boundary": "battleReducerRouteEventsForDiscoveredAct and battleReducerRouteForResolution"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "public scalar-buff spell act discovery",
-        "boundary": "battleReducerRouteEventsForDiscoveredAct"
-      }
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleActiveEffect",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleCreatureState.activeEffects added speedDelta effect",
-        "boundary": "battleReducerRouteForResolution"
-      }
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleMovementResource",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleCreatureState.activeEffects added speedDelta effect consumed by movement projection",
-        "boundary": "battleReducerRouteForResolution"
-      }
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleHoleFrontier",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleResolutionResult invalid staleSubject for already-resolved scalar-buff subject",
-        "boundary": "battleReducerRouteForResolution"
-      }
-    },
-    {
-      "fieldPath": "BattleCreatureState.activeEffects[kind=speedDelta]",
+      "fieldPath": "BattleCreatureState.activeEffects[kind=sleepPendingRepeatSave]",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "battle-state",
       "derivability": {
@@ -81,22 +41,37 @@
       }
     },
     {
-      "fieldPath": "BattleSubject.actionSpell.invocation.procedure=scalarBuff",
+      "fieldPath": "BattleCreatureState.activeEffects[kind=sleepUnconscious]",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "executable-boundary-projection",
+      "owner": "battle-state",
       "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "SupportedSpellInvocation.procedure=scalarBuff admitted by spell profile support",
-        "boundary": "discoverBattleActs public subject availability"
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.concentration",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.conditions",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
       }
     }
   ],
   "notes": [
-    "Task 40 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
-    "Magic Action availability remains existing BattleState.currentTurnResources.",
-    "Spell Slot expenditure remains existing character spellcasting resource state carried by the spell invocation route substrate.",
-    "Longstrider Speed ownership remains BattleCreatureState.activeEffects[kind=speedDelta], consumed by movement projection readers.",
-    "Route events are public reducer boundary projections derived from subject procedure, result state deltas, and stale-subject result facts.",
-    "The route never dispatches on authored spell identity; scalar-buff route ownership is admitted by procedure shape and executable state deltas."
+    "Task 41 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Sleep turn-boundary repeat-save frontier remains existing BattleCreatureState.activeEffects[kind=sleepPendingRepeatSave].",
+    "Failed repeat-save Unconscious state remains existing BattleCreatureState.activeEffects[kind=sleepUnconscious] plus BattleCreatureState.conditions.",
+    "Concentration ownership remains existing BattleCreatureState.concentration.",
+    "Route events are public reducer boundary projections derived from typed procedure facts, holes/fills, and executable state deltas.",
+    "The route does not dispatch on the Sleep authored spell id; production routing is admitted by the sleepTargetAdmission procedure shape and sleep repeat-save hole/effect facts.",
+    "The restored copied connector's post-Concentration-cleanup turn-boundary no-op events have no reducer-owned frontier in BattleState and are recorded as a source-QNT-corpus blocker."
   ]
 }

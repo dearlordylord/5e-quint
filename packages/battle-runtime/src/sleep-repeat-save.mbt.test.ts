@@ -3,16 +3,19 @@
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
+  quintField,
   quintRecordField,
   quintStateRecord,
   quintVariantTag,
   run,
   stateCheck,
+  type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
@@ -36,6 +39,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import {
   battleId,
+  battleReducerStartRouteEvent,
   breakBattleConcentration,
   characterId,
   discoverBattleActs,
@@ -72,6 +76,16 @@ type SleepRepeatSaveMbtLastInvalidReason =
   | "staleSubject"
   | "wrongActor";
 type SleepRepeatSaveMbtTurnRole = "caster" | "target";
+type SleepRepeatSaveRouteSurface =
+  | "fresh"
+  | "initialSaveConditionApplied"
+  | "concentrationBrokenBeforeRepeat"
+  | "casterTurnEndedWithEffect"
+  | "casterTurnEndedAfterConcentrationBreak"
+  | "targetTurnEndedAfterConcentrationBreak"
+  | "repeatSaveFrontier"
+  | "repeatSaveSuccessCleanup"
+  | "repeatSaveFailureUnconscious";
 type SleepSavingThrowOutcomeHole = Extract<
   BattleHole,
   { readonly kind: "savingThrowOutcome" }
@@ -88,6 +102,27 @@ type SleepRepeatSaveMbtProjection = {
   readonly lastResult: SleepRepeatSaveMbtLastResult;
   readonly lastInvalidReason: SleepRepeatSaveMbtLastInvalidReason;
 };
+type SleepRepeatSaveRouteProjection = {
+  readonly surface: SleepRepeatSaveRouteSurface;
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG = {
+  FreshRouteSurface: "fresh",
+  InitialSaveConditionAppliedRouteSurface:
+    "initialSaveConditionApplied",
+  ConcentrationBrokenBeforeRepeatRouteSurface:
+    "concentrationBrokenBeforeRepeat",
+  CasterTurnEndedWithEffectRouteSurface: "casterTurnEndedWithEffect",
+  CasterTurnEndedAfterConcentrationBreakRouteSurface:
+    "casterTurnEndedAfterConcentrationBreak",
+  TargetTurnEndedAfterConcentrationBreakRouteSurface:
+    "targetTurnEndedAfterConcentrationBreak",
+  RepeatSaveFrontierRouteSurface: "repeatSaveFrontier",
+  RepeatSaveSuccessCleanupRouteSurface: "repeatSaveSuccessCleanup",
+  RepeatSaveFailureUnconsciousRouteSurface:
+    "repeatSaveFailureUnconscious",
+} as const satisfies Readonly<Record<string, SleepRepeatSaveRouteSurface>>;
 
 const sleepUnit = unitLibrary.requireUnit("sleep");
 if (sleepUnit.kind !== "spell") {
@@ -200,9 +235,141 @@ function createSleepRepeatSaveDriver() {
   });
 }
 
+function createSleepRepeatSavePublicRouteDriver() {
+  return defineDriver(sleepRepeatSaveDriverSchema, () => {
+    let state = sleepRepeatSaveBattle();
+    let subject: BattleSubject = sleepSubject();
+    let holes: readonly BattleHole[] = [];
+    let surface: SleepRepeatSaveRouteSurface = "fresh";
+    let route: readonly ReducerRouteEvent[] = [
+      battleReducerStartRouteEvent(state),
+    ];
+
+    function reset(): void {
+      state = sleepRepeatSaveBattle();
+      subject = sleepSubject();
+      holes = [];
+      surface = "fresh";
+      route = [battleReducerStartRouteEvent(state)];
+    }
+
+    function appendRouteEvents(
+      events: readonly ReducerRouteEvent[] | undefined,
+    ): void {
+      if (events !== undefined) {
+        route = [...route, ...events];
+      }
+    }
+
+    function recordResult(
+      result: BattleResolutionResult,
+      nextSurface: SleepRepeatSaveRouteSurface,
+    ): void {
+      appendRouteEvents(result.routeEvents);
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        surface = nextSurface;
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        surface = nextSurface;
+      }
+    }
+
+    function submit(
+      nextFills: readonly BattleFill[],
+      nextSurface: SleepRepeatSaveRouteSurface,
+    ): void {
+      const fills = fillsWithSleepRepeatSaveSpatialFacts(holes, nextFills);
+      recordResult(resolveBattleSubject({ state, subject, fills }), nextSurface);
+    }
+
+    function fillRepeatSave(
+      succeeded: boolean,
+      nextSurface: SleepRepeatSaveRouteSurface,
+    ): void {
+      const repeatSave = findSleepRepeatSaveSavingThrowHole(holes);
+      submit(
+        [sleepSavingThrowOutcomeFill(repeatSave, skeletonId, succeeded)],
+        nextSurface,
+      );
+    }
+
+    return {
+      init: reset,
+      doFillInitialSaveFailure: () => {
+        const act = discoverSleepAct(state, sleepSubject());
+        appendRouteEvents(act.routeEvents);
+        subject = act.subject;
+        holes = act.initialHoles;
+        const initialSave = findSleepRepeatSaveSavingThrowHole(holes);
+        submit(
+          [sleepSavingThrowOutcomeFill(initialSave, skeletonId, false)],
+          "initialSaveConditionApplied",
+        );
+      },
+      doBreakConcentrationBeforeRepeat: () => {
+        subject = endConcentrationSubjectFor(fighterId);
+        recordResult(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "concentrationBrokenBeforeRepeat",
+        );
+      },
+      doEndCasterTurn: () => {
+        subject = endTurnSubjectFor(fighterId);
+        recordResult(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "casterTurnEndedWithEffect",
+        );
+      },
+      doEndCasterTurnAfterConcentrationBreak: () => {
+        subject = endTurnSubjectFor(fighterId);
+        recordResult(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "casterTurnEndedAfterConcentrationBreak",
+        );
+      },
+      doEndTargetTurnAfterConcentrationBreak: () => {
+        subject = endTurnSubjectFor(skeletonId);
+        recordResult(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "targetTurnEndedAfterConcentrationBreak",
+        );
+      },
+      doDiscoverRepeatSave: () => {
+        subject = endTurnSubjectFor(skeletonId);
+        recordResult(
+          resolveBattleSubject({ state, subject, fills: [] }),
+          "repeatSaveFrontier",
+        );
+      },
+      doFillRepeatSaveSuccess: () =>
+        fillRepeatSave(true, "repeatSaveSuccessCleanup"),
+      doFillRepeatSaveFailure: () =>
+        fillRepeatSave(false, "repeatSaveFailureUnconscious"),
+      step: () => {},
+      getState: (): SleepRepeatSaveRouteProjection => ({ surface, route }),
+    };
+  });
+}
+
 const sleepRepeatSaveStateCheck = stateCheck(
   normalizeSleepRepeatSaveQuintState,
   (spec: SleepRepeatSaveMbtProjection, impl: SleepRepeatSaveMbtProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+
+const sleepRepeatSaveRouteStateCheck = stateCheck(
+  normalizeSleepRepeatSaveRouteQuintState,
+  (
+    spec: SleepRepeatSaveRouteProjection,
+    impl: SleepRepeatSaveRouteProjection,
+  ) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -228,6 +395,94 @@ describe("Sleep repeat-save MBT parity", () => {
     },
     MBT_TEST_TIMEOUT_MS,
   );
+
+  it.skip(
+    "blocked: copied Sleep repeat-save qRoute expects post-cleanup turn-boundary events with no reducer-owned frontier",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-sleep-repeat-save.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createSleepRepeatSavePublicRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(5),
+        stateCheck: sleepRepeatSaveRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it("does not route repeat-save turn-boundary events after repeat-save failure consumes the frontier", () => {
+    const initialState = sleepRepeatSaveBattle();
+    const act = discoverSleepAct(initialState, sleepSubject());
+    const initialSave = findSleepRepeatSaveSavingThrowHole(act.initialHoles);
+    const initialFailure = requireResolved(
+      resolveBattleSubject({
+        state: initialState,
+        subject: act.subject,
+        fills: fillsWithSleepRepeatSaveSpatialFacts(act.initialHoles, [
+          sleepSavingThrowOutcomeFill(initialSave, skeletonId, false),
+        ]),
+      }),
+    );
+
+    const casterTurnEnded = requireResolved(
+      resolveBattleSubject({
+        state: initialFailure.state,
+        subject: endTurnSubjectFor(fighterId),
+        fills: [],
+      }),
+    );
+
+    const repeatSaveFrontier = requireNeedsHoles(
+      resolveBattleSubject({
+        state: casterTurnEnded.state,
+        subject: endTurnSubjectFor(skeletonId),
+        fills: [],
+      }),
+    );
+    const repeatSave = findSleepRepeatSaveSavingThrowHole(
+      repeatSaveFrontier.holes,
+    );
+    const repeatSaveFailure = requireResolved(
+      resolveBattleSubject({
+        state: repeatSaveFrontier.state,
+        subject: endTurnSubjectFor(skeletonId),
+        fills: fillsWithSleepRepeatSaveSpatialFacts(repeatSaveFrontier.holes, [
+          sleepSavingThrowOutcomeFill(repeatSave, skeletonId, false),
+        ]),
+      }),
+    );
+
+    const target = repeatSaveFailure.state.combatants.get(skeletonId);
+    expect(
+      target?.activeEffects.some(
+        (effect) => effect.kind === "sleepPendingRepeatSave",
+      ),
+    ).toBe(false);
+    expect(
+      target?.activeEffects.some((effect) => effect.kind === "sleepUnconscious"),
+    ).toBe(true);
+
+    const nextEndTurn = requireResolved(
+      resolveBattleSubject({
+        state: repeatSaveFailure.state,
+        subject: endTurnSubjectFor(fighterId),
+        fills: [],
+      }),
+    );
+
+    expect(nextEndTurn.routeEvents ?? []).not.toContainEqual({
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "repeatSaveConditionEffect",
+      holes: [],
+      owner: "battleTurnBoundary",
+    });
+  });
 });
 
 function normalizeSleepRepeatSaveQuintState(
@@ -257,6 +512,18 @@ function normalizeSleepRepeatSaveQuintState(
     lastInvalidReason: sleepRepeatSaveMbtLastInvalidReason(
       protocol.lastInvalidReason,
     ),
+  };
+}
+
+function normalizeSleepRepeatSaveRouteQuintState(
+  raw: unknown,
+): SleepRepeatSaveRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    surface: sleepRepeatSaveRouteSurface(
+      quintVariantTag(quintField(state, "qSurface"), "qSurface"),
+    ),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 
@@ -399,6 +666,23 @@ function discoverSleepHoles(
   return act.initialHoles;
 }
 
+function discoverSleepAct(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+): ReturnType<typeof discoverBattleActs>[number] {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      candidate.subject.invocation.spellId === subject.invocation.spellId,
+  );
+  if (act == null) {
+    throw new Error("Expected Sleep spell act.");
+  }
+
+  return act;
+}
+
 function endTurnSubjectFor(
   actorId: CombatantId,
 ): Extract<
@@ -406,6 +690,15 @@ function endTurnSubjectFor(
   { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
 > {
   return { tag: "runtimeCommand", actorId, command: "endTurn" };
+}
+
+function endConcentrationSubjectFor(
+  actorId: CombatantId,
+): Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+> {
+  return { tag: "runtimeCommand", actorId, command: "endConcentration" };
 }
 
 function startBattleRight(
@@ -416,6 +709,26 @@ function startBattleRight(
     throw new Error(result.left.message);
   }
   return result.right;
+}
+
+function requireResolved(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  expect(result.tag).toBe("resolved");
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected resolved result, got ${result.tag}.`);
+  }
+  return result;
+}
+
+function requireNeedsHoles(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  expect(result.tag).toBe("needsHoles");
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected needsHoles result, got ${result.tag}.`);
+  }
+  return result;
 }
 
 function baseUnarmedStrike(): Extract<
@@ -580,4 +893,14 @@ function sleepRepeatSaveMbtLastInvalidReason(
   }
 
   throw new Error(`Unknown Quint invalid reason: ${String(raw)}.`);
+}
+
+function sleepRepeatSaveRouteSurface(raw: string): SleepRepeatSaveRouteSurface {
+  if (raw in SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG) {
+    return SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG[
+      raw as keyof typeof SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG
+    ];
+  }
+
+  throw new Error(`Unexpected Sleep repeat-save route surface: ${raw}`);
 }

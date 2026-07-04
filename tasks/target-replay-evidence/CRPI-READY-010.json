@@ -1,0 +1,63 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts Sleep repeat-save public reducer qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "source-qnt-corpus-blocker",
+      "driverPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+      "qntFileSha256": "9e42d259271ffcd600df8d7436d281d7f95043cab520a705f7c578df5934866f",
+      "routeConnectorSha256": "c124d6c23ba30449dcceb346d88f57a321ccf9c953db6af627285b60861d95d2",
+      "branchFamily": "step",
+      "branchAction": "doEndCasterTurnAfterConcentrationBreak",
+      "observedActionTaken": "doEndCasterTurnAfterConcentrationBreak",
+      "harnessTestPath": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
+      "traceId": "MBT_TRACES=8 MBT_STEPS=5 route-driver-focused-maxSteps=5 qRoute=blocked-copied-connector-post-cleanup-no-op",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "source-qnt-corpus-blocker",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents from resolveBattleSubject; copied connector expects post-concentration-cleanup battleTurnBoundary no-op events after no reducer-owned Sleep repeat-save frontier remains",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleReducerRouteEvent.owner=battleConditionLifecycle",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleConcentration",
+          "BattleReducerRouteEvent.owner=battleTurnBoundary",
+          "BattleCreatureState.activeEffects[kind=sleepPendingRepeatSave]",
+          "BattleCreatureState.activeEffects[kind=sleepUnconscious]",
+          "BattleCreatureState.concentration",
+          "BattleCreatureState.conditions.directIncapacitated",
+          "BattleSubject.actionSpell.invocation.procedure=sleepTargetAdmission"
+        ]
+      },
+      "result": {
+        "tag": "blocked",
+        "reason": "Copied connector c124d6c23ba30449dcceb346d88f57a321ccf9c953db6af627285b60861d95d2 appends repeatSaveConditionEffect battleTurnBoundary no-op events after concentration cleanup. The target reducer has no remaining sleepPendingRepeatSave frontier or Sleep active-effect ownership fact at that point; matching the connector would require duplicate replay-history state or a broad synthetic end-turn route."
+      }
+    }
+  ]
+}

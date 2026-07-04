@@ -27,6 +27,7 @@ export type BattleReducerRouteSubjectFamily =
   | "rollModifierEffect"
   | "saveGatedSpell"
   | "scalarBuffEffect"
+  | "repeatSaveConditionEffect"
   | "slotSpell"
   | "spellAttackProcedure"
   | "weaponAttack";
@@ -170,6 +171,10 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (scalarBuffRoute !== undefined) {
     return [scalarBuffRoute];
   }
+  const sleepRepeatSaveRoute = sleepRepeatSaveRouteForDiscoveredAct(act);
+  if (sleepRepeatSaveRoute !== undefined) {
+    return [sleepRepeatSaveRoute];
+  }
   if (isConcentrationTeardownDiscoverySubject(act.subject)) {
     return [
       {
@@ -274,6 +279,13 @@ export function battleReducerRouteForResolution(
     rollModifierConcentrationBreakRouteForResolution(input, result);
   if (rollModifierConcentrationRoute !== undefined) {
     return rollModifierConcentrationRoute;
+  }
+  const sleepRepeatSaveRoute = sleepRepeatSaveRouteForResolution(
+    input,
+    result,
+  );
+  if (sleepRepeatSaveRoute !== undefined) {
+    return sleepRepeatSaveRoute;
   }
   const deathSavingThrowRoute = deathSavingThrowRouteForResolution(
     input,
@@ -1349,6 +1361,310 @@ function scalarBuffResolveWithoutFill(
   };
 }
 
+function sleepRepeatSaveRouteForDiscoveredAct(
+  act: AvailableBattleAct,
+): BattleReducerRouteEvent | undefined {
+  if (!isSleepTargetAdmissionSubject(act.subject)) {
+    return undefined;
+  }
+  return {
+    kind: "discoverBattleActs",
+    subject: "repeatSaveConditionEffect",
+    holes: sleepTargetAdmissionRouteHoles(act.initialHoles),
+    owner: "battleSpellSlotAndActionEconomy",
+  };
+}
+
+function sleepRepeatSaveRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  const endConcentrationRoute = sleepRepeatSaveConcentrationBreakRoute(
+    input,
+    result,
+  );
+  if (endConcentrationRoute !== undefined) {
+    return endConcentrationRoute;
+  }
+
+  const turnBoundaryRoute = sleepRepeatSaveTurnBoundaryRoute(input, result);
+  if (turnBoundaryRoute !== undefined) {
+    return turnBoundaryRoute;
+  }
+
+  if (!isSleepTargetAdmissionSubject(input.subject)) {
+    return undefined;
+  }
+  if (result.tag !== "resolved") {
+    return undefined;
+  }
+  const fill = sleepRepeatSaveSavingThrowFill(input.fills);
+  if (fill === undefined) {
+    return undefined;
+  }
+  return sleepRepeatSaveResolvedRoutes({
+    before: input.state,
+    after: result.state,
+    fill: "savingThrowOutcome",
+    includeActiveEffectTransition: false,
+    sourceCombatantId: input.subject.actorId,
+  });
+}
+
+function sleepRepeatSaveConcentrationBreakRoute(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    result.tag !== "resolved" ||
+    input.subject.tag !== "runtimeCommand" ||
+    input.subject.command !== "endConcentration" ||
+    !combatantOwnsSleepRepeatSaveEffect(input.state, input.subject.actorId)
+  ) {
+    return undefined;
+  }
+  return nonEmptyRouteEvents([
+    sleepRepeatSaveResolveWithoutFill([], "battleConcentration"),
+    sleepRepeatSaveResolveWithoutFill([], "battleActiveEffect"),
+    ...sleepRepeatSaveConditionCleanupRoutes(input.state, result.state),
+  ]);
+}
+
+function sleepRepeatSaveTurnBoundaryRoute(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (!isEndTurnSubject(input.subject)) {
+    return undefined;
+  }
+  const fill = sleepRepeatSaveSavingThrowFill(input.fills);
+  if (fill === undefined) {
+    if (result.tag === "needsHoles") {
+      const holes = sleepRepeatSaveRouteHoles(result.holes);
+      return holes.length === 0
+        ? undefined
+        : [
+            {
+              kind: "discoverBattleActs",
+              subject: "repeatSaveConditionEffect",
+              holes,
+              owner: "battleTurnBoundary",
+            },
+          ];
+    }
+    if (
+      result.tag === "resolved" &&
+      hasPendingSleepRepeatSaveEffect(input.state)
+    ) {
+      return [
+        sleepRepeatSaveResolveWithoutFill([], "battleTurnBoundary"),
+      ];
+    }
+    return undefined;
+  }
+  if (
+    result.tag !== "resolved" ||
+    !hasPendingSleepRepeatSaveEffect(input.state)
+  ) {
+    return undefined;
+  }
+  return sleepRepeatSaveResolvedRoutes({
+    before: input.state,
+    after: result.state,
+    fill: "savingThrowOutcome",
+    includeActiveEffectTransition: false,
+    sourceCombatantId: fill.value.outcomes[0]?.targetId,
+  });
+}
+
+function sleepRepeatSaveResolvedRoutes(input: {
+  readonly before: BattleState;
+  readonly after: BattleState;
+  readonly fill: Extract<BattleReducerRouteFill, "savingThrowOutcome">;
+  readonly includeActiveEffectTransition: boolean;
+  readonly sourceCombatantId: CombatantId | undefined;
+}): BattleReducerRouteEvents | undefined {
+  const conditionRoutes = combatantConditionsChanged(input.before, input.after)
+    ? [
+        {
+          kind: "resolveBattleSubject" as const,
+          subject: "repeatSaveConditionEffect" as const,
+          fill: input.fill,
+          holes: [],
+          owner: "battleConditionLifecycle" as const,
+        },
+      ]
+    : [];
+  const activeEffectRoutes =
+    input.includeActiveEffectTransition ||
+    sleepRepeatSaveEffectCount(input.after) !==
+      sleepRepeatSaveEffectCount(input.before)
+      ? [
+          sleepRepeatSaveResolveWithoutFill([], "battleActiveEffect"),
+        ]
+      : [];
+  const concentrationRoutes =
+    input.sourceCombatantId !== undefined &&
+    combatantConcentrationChanged(
+      input.before,
+      input.after,
+      input.sourceCombatantId,
+    )
+      ? [
+          sleepRepeatSaveResolveWithoutFill([], "battleConcentration"),
+        ]
+      : [];
+  return nonEmptyRouteEvents([
+    ...conditionRoutes,
+    ...activeEffectRoutes,
+    ...concentrationRoutes,
+  ]);
+}
+
+function sleepRepeatSaveConditionCleanupRoutes(
+  before: BattleState,
+  after: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  return combatantConditionsChanged(before, after)
+    ? [sleepRepeatSaveResolveWithoutFill([], "battleConditionLifecycle")]
+    : [];
+}
+
+function sleepRepeatSaveResolveWithoutFill(
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "repeatSaveConditionEffect",
+    holes,
+    owner,
+  };
+}
+
+function sleepRepeatSaveSavingThrowFill(
+  fills: readonly BattleFill[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  return fills.find(
+    (fill): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome",
+  );
+}
+
+function sleepRepeatSaveRouteHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return battleReducerRouteHoles(
+    holes.filter(
+      (hole) =>
+        hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
+    ),
+  );
+}
+
+function sleepTargetAdmissionRouteHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return battleReducerRouteHoles(
+    holes.filter(
+      (hole) =>
+        hole.kind === "savingThrowOutcome" &&
+        "spell" in hole &&
+        hole.spell.procedure === "sleepTargetAdmission",
+    ),
+  );
+}
+
+function hasPendingSleepRepeatSaveEffect(state: BattleState): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) => effect.kind === "sleepPendingRepeatSave",
+    ),
+  );
+}
+
+function combatantOwnsSleepRepeatSaveEffect(
+  state: BattleState,
+  combatantId: CombatantId,
+): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) =>
+        (effect.kind === "sleepPendingRepeatSave" ||
+          effect.kind === "sleepUnconscious") &&
+        effect.expiresAt.combatantId === combatantId,
+    ),
+  );
+}
+
+function sleepRepeatSaveEffectCount(state: BattleState): number {
+  return [...state.combatants.values()].reduce(
+    (count, combatant) =>
+      count +
+      combatant.activeEffects.filter(
+        (effect) =>
+          effect.kind === "sleepPendingRepeatSave" ||
+          effect.kind === "sleepUnconscious",
+      ).length,
+    0,
+  );
+}
+
+function combatantConditionsChanged(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  return [...after.combatants.values()].some((combatant) => {
+    const beforeConditions =
+      before.combatants.get(combatant.combatantId)?.conditions;
+    return (
+      beforeConditions !== undefined &&
+      !sameBooleanRecord(beforeConditions, combatant.conditions)
+    );
+  });
+}
+
+type ComparableConditionState = {
+  readonly blinded: boolean;
+  readonly charmed: boolean;
+  readonly deafened: boolean;
+  readonly frightened: boolean;
+  readonly grappled: boolean;
+  readonly invisible: boolean;
+  readonly paralyzed: boolean;
+  readonly petrified: boolean;
+  readonly poisoned: boolean;
+  readonly prone: boolean;
+  readonly restrained: boolean;
+  readonly stunned: boolean;
+  readonly unconscious: boolean;
+  readonly directIncapacitated: boolean;
+};
+
+const CONDITION_STATE_KEYS = [
+  "blinded",
+  "charmed",
+  "deafened",
+  "frightened",
+  "grappled",
+  "invisible",
+  "paralyzed",
+  "petrified",
+  "poisoned",
+  "prone",
+  "restrained",
+  "stunned",
+  "unconscious",
+  "directIncapacitated",
+] as const satisfies ReadonlyArray<keyof ComparableConditionState>;
+
+function sameBooleanRecord(
+  left: ComparableConditionState,
+  right: ComparableConditionState,
+): boolean {
+  return CONDITION_STATE_KEYS.every((key) => left[key] === right[key]);
+}
+
 function hasConcentratingRollModifierEffect(
   state: BattleState,
   combatantId: CombatantId,
@@ -1594,6 +1910,18 @@ function isScalarBuffEffectSubject(
   return (
     (subject.tag === "actionSpell" || subject.tag === "bonusActionSpell") &&
     subject.invocation.procedure === "scalarBuff"
+  );
+}
+
+function isSleepTargetAdmissionSubject(
+  subject: BattleResolutionInput["subject"],
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "actionSpell" }
+> {
+  return (
+    subject.tag === "actionSpell" &&
+    subject.invocation.procedure === "sleepTargetAdmission"
   );
 }
 

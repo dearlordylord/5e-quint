@@ -1,80 +1,75 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-009",
+  "taskId": "CRPI-READY-010",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "domain-api",
       "domainApis": [
-        "BattleReducerRouteEvent.subject=scalarBuffEffect",
+        "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
+        "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+        "BattleReducerRouteEvent.owner=battleConditionLifecycle",
         "BattleReducerRouteEvent.owner=battleActiveEffect",
-        "BattleReducerRouteEvent.owner=battleMovementResource",
-        "BattleReducerRouteEvent.owner=battleHoleFrontier",
+        "BattleReducerRouteEvent.owner=battleConcentration",
+        "BattleReducerRouteEvent.owner=battleTurnBoundary",
         "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
-      "role": "verification-support",
-      "domainApis": [
-        "createScalarBuffRouteDriver",
-        "reducerRoutedScalarBuffStateCheck"
       ]
     }
   ],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-scalar-buff.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "ScalarBuffEffectRouteSubject",
-        "TargetChoiceFillKind",
+        "RepeatSaveConditionEffectRouteSubject",
+        "SavingThrowOutcomeFillKind",
         "BattleSpellSlotAndActionEconomyOwner",
+        "BattleConditionLifecycleOwner",
         "BattleActiveEffectOwner",
-        "BattleMovementResourceOwner",
-        "BattleHoleFrontierOwner"
+        "BattleConcentrationOwner",
+        "BattleTurnBoundaryOwner"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-009.json"
+        "tasks/target-replay-evidence/CRPI-READY-010.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/scalar-buff.mbt.test.ts",
+      "path": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "observes Longstrider qRoute through public reducer entrypoints",
-        "createScalarBuffRouteDriver",
-        "reducerRoutedScalarBuffStateCheck"
+        "observes Sleep repeat-save qRoute through public reducer entrypoints",
+        "createSleepRepeatSavePublicRouteDriver",
+        "sleepRepeatSaveRouteStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-009.json"
+        "tasks/target-replay-evidence/CRPI-READY-010.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Scalar-buff replay exposes copied qRoute discovery evidence through public act discovery."
+      "reason": "Sleep repeat-save replay exposes copied qRoute discovery evidence through public Sleep act discovery."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Scalar-buff replay exposes copied qRoute active Spell Effect, movement-resource, and stale hole-frontier owner evidence through public subject resolution."
+      "reason": "Sleep repeat-save replay exposes condition lifecycle, active-effect, Concentration, and turn-boundary owner evidence through public subject resolution."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "scalarBuffEffect route subject and movement-resource owner projection"
+      "api": "repeatSaveConditionEffect condition lifecycle and active-effect owner projection"
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-level2-protection-spell-selected-identity.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "scalarBuffEffect active Spell Effect owner projection"
+      "api": "turn-boundary repeat-save frontier projection while sleepPendingRepeatSave exists"
     }
   ],
   "completion": {
-    "tag": "public-reducer-route-replay",
-    "notes": "Task 40 routes Longstrider target-fill and stale-subject replay through public reducer route events. It introduces no parallel scalar-buff Speed or active Spell Effect ledger."
+    "tag": "source-qnt-corpus-blocker",
+    "notes": "Task 41 routes executable Sleep repeat-save discovery, initial failed-save admission, Concentration cleanup, pending repeat-save turn-boundary frontier events, and repeat-save success/failure cleanup through public reducer route events. The restored copied connector still expects post-concentration-cleanup turn-boundary no-op qRoute events after no sleepPendingRepeatSave frontier remains; matching that projection would require duplicate replay-history state or a broad synthetic end-turn route."
   }
 }

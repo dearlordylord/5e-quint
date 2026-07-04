@@ -247,7 +247,7 @@
     {
       "number": 41,
       "id": "CRPI-READY-010",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Implement route replay: battle-runtime-sleep-repeat-save"
     },
     {
@@ -693,7 +693,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRP07-DSR-02` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-06` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-009` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-READY-010` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-010` | `blocked` | source-qnt-corpus-blocker | owner/source-corpus decision before implementation |
 | `CRPI-READY-011` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-012` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-013` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -3028,11 +3028,15 @@ Plan Impact:
 
 ### Task 41 - CRPI-READY-010
 
-Status: `ready-for-research`
+Status: `blocked`
+
+Blocker Type: owner-decision
+
+Blocker Detail: Copied connector `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt` expects post-Concentration-cleanup `battleTurnBoundary` no-op `qRoute` events after no reducer-owned `sleepPendingRepeatSave` frontier remains. The owner must decide whether to refresh/reclassify that copied connector obligation or introduce a durable reducer-owned route fact that permits unskipped copied `qRoute` replay without duplicate replay-history state.
 
 Goal:
 
-Implement target replay for `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt` as a `reducer-routed` reducer-convergence task.
+Unblock and then implement target replay for `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt` as a `reducer-routed` reducer-convergence task.
 
 Starting Points:
 
