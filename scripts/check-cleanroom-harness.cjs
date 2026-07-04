@@ -2646,7 +2646,7 @@ function validFixture(rootPath) {
       {
         path: "engine/rules/force_projectiles.aster",
         role: "domain-engine",
-        domainApis: ["allocateForceProjectiles", "resolveForceProjectileDamage"],
+        domainApis: ["allocateForceProjectiles", "resolveProjectileImpact"],
       },
     ],
     adapterModules: [
@@ -2668,7 +2668,7 @@ function validFixture(rootPath) {
       {
         driver: "cleanroom-input/qnt/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
         module: "engine/rules/force_projectiles.aster",
-        api: "resolveForceProjectileDamage",
+        api: "resolveProjectileImpact",
       },
     ],
   });
@@ -2740,9 +2740,9 @@ function validFixture(rootPath) {
   fs.writeFileSync(
     path.join(rootPath, "engine/rules/force_projectiles.aster"),
     [
-      "fn resolveForceProjectileDamage(input) = input\n",
-      "fn resolveAttackHit(hit) = hit\n",
-      "fn resolveD20Roll(roll) = roll\n",
+      "fn allocateForceProjectiles(input) = input\n",
+      "fn resolveProjectileImpact(input) = input\n",
+      "fn resolveProjectileCheck(input) = input\n",
     ].join(""),
   );
   fs.mkdirSync(path.join(rootPath, "engine/qnt-adapters"), { recursive: true });
@@ -3039,7 +3039,7 @@ function runSelfTest() {
       (rootPath) => {
         fs.appendFileSync(
           path.join(rootPath, "engine/rules/force_projectiles.aster"),
-          "fn sampledWordsAreDomainVocabulary(roll, hit, damage) = damage\n",
+          "fn projectileDomainVocabulary(impact, count, force) = impact\n",
         );
       },
     );
@@ -3241,7 +3241,7 @@ function runSelfTest() {
             "if (",
             "  spell.name",
             "  == \"Magic Missile\"",
-            ") { resolveForceProjectileDamage(spell) }",
+            ") { resolveProjectileImpact(spell) }",
             "",
           ].join("\n"),
         );
@@ -3255,7 +3255,7 @@ function runSelfTest() {
       (rootPath) => {
         fs.appendFileSync(
           path.join(rootPath, "engine/rules/force_projectiles.aster"),
-          "if spell.source == \"PHB\" { resolveForceProjectileDamage(spell) }\n",
+          "if spell.source == \"PHB\" { resolveProjectileImpact(spell) }\n",
         );
       },
       "authored identity dispatch",
