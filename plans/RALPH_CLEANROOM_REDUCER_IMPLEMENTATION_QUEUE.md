@@ -175,7 +175,7 @@
     {
       "number": 29,
       "id": "CRP07-DSR-01",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Magic Missile allocation and damage through public battle reducer route"
     },
     {
@@ -2347,7 +2347,7 @@ Plan Impact:
 
 ### Task 29 - CRP07-DSR-01
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
