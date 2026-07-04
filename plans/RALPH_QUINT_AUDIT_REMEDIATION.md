@@ -139,7 +139,7 @@
     {
       "number": 23,
       "id": "QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Repair cleanroom harness sampled-input self-test"
     },
     {
@@ -219,7 +219,7 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | blocked | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING, QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION, QAR-22-DEFAULT-TEST-BASELINE-REPAIRS, QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR, QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS | Final repeated review loop found concrete follow-up blockers; rerun after QAR-21 through QAR-24. |
 | 21 | QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION - Reconcile character-sheet runtime split export gate | done | none | Fix the `pnpm quality` blocker in the character-sheet split export gate. |
 | 22 | QAR-22-DEFAULT-TEST-BASELINE-REPAIRS - Repair default test baseline failures found by final audit | done | none | Fixed unrelated character-sheet and character-creation default `pnpm test` baseline failures found during final audit. |
-| 23 | QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR - Repair cleanroom harness sampled-input self-test | ready-for-research | none | Fix the cleanroom harness checker self-test blocker found during final audit. |
+| 23 | QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR - Repair cleanroom harness sampled-input self-test | done | none | Fix the cleanroom harness checker self-test blocker found during final audit. |
 | 24 | QAR-24-BATTLE-RUNTIME-DEFAULT-TEST-BASELINE-REPAIRS - Repair battle-runtime default test baseline failures exposed after QAR-22 | ready-for-research | QAR-22-DEFAULT-TEST-BASELINE-REPAIRS | Fix battle-runtime default `pnpm test` baseline failures exposed after QAR-22. |
 
 ## Shared Verification
@@ -1255,7 +1255,7 @@ Plan Impact:
 
 ### Task 23 - QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: none
 
