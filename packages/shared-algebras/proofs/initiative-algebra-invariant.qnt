@@ -26,11 +26,16 @@ module initiativeAlgebraMbt::Impl {
     | InsertWithInitiativeDecide(List[CreatureId])
     | InsertWithInitiativeErrorDecisionSuppliedWithoutTie
 
+  type LastInsertOutcome =
+    | LastInsertNone
+    | LastInsertOk
+    | LastInsertDecision(List[CreatureId])
+    | LastInsertErrorDecisionSuppliedWithoutTie
+
   var qRound: int
   var qAlreadyActed: List[InitiativeEntry]
   var qStillToAct: List[InitiativeEntry]
-  var qLastInsertStatus: str
-  var qLastTie: List[CreatureId]
+  var qLastInsert: LastInsertOutcome
 
   pure def initiativeOrder(stack: InitiativeStack): List[InitiativeEntry] =
     stack.alreadyActed.concat(stack.stillToAct)
@@ -48,9 +53,6 @@ module initiativeAlgebraMbt::Impl {
             ok: acc.ok and acc.prev >= current.initiative,
           }
     ).ok
-
-  pure def qKnownInsertStatus(status: str): bool =
-    Set("none", "ok", "decide", "error").contains(status)
 
   pure def qKnownCreature(creature: CreatureId): bool =
     Set("c1", "c2", "c2b", "c3", "c4", "cx").contains(creature)
@@ -85,6 +87,14 @@ module initiativeAlgebraMbt::Impl {
     tie.length() <= 3
       and tie.foldl(true, (ok, creature) => ok and qKnownCreature(creature))
       and qNoDuplicateCreatures(tie)
+
+  pure def qLastInsertInvariant(outcome: LastInsertOutcome): bool =
+    match outcome {
+      | LastInsertNone => true
+      | LastInsertOk => true
+      | LastInsertDecision(tie) => tie.length() > 0 and qKnownTie(tie)
+      | LastInsertErrorDecisionSuppliedWithoutTie => true
+    }
 
   pure def qStackInvariant(round: int, alreadyActed: List[InitiativeEntry], stillToAct: List[InitiativeEntry]): bool =
     val order = alreadyActed.concat(stillToAct)
@@ -250,8 +260,7 @@ module initiativeAlgebraMbt::Impl {
       { creature: "c2b", initiative: 2 },
       { creature: "c1", initiative: 1 },
     ],
-    qLastInsertStatus' = "none",
-    qLastTie' = List(),
+    qLastInsert' = LastInsertNone,
   }
 
   action doNext = all {
@@ -259,8 +268,7 @@ module initiativeAlgebraMbt::Impl {
     qRound' = nextInitiative({ round: qRound, alreadyActed: qAlreadyActed, stillToAct: qStillToAct }).stack.round,
     qAlreadyActed' = nextInitiative({ round: qRound, alreadyActed: qAlreadyActed, stillToAct: qStillToAct }).stack.alreadyActed,
     qStillToAct' = nextInitiative({ round: qRound, alreadyActed: qAlreadyActed, stillToAct: qStillToAct }).stack.stillToAct,
-    qLastInsertStatus' = qLastInsertStatus,
-    qLastTie' = qLastTie,
+    qLastInsert' = qLastInsert,
   }
 
   action doRemoveC1 = all {
@@ -268,8 +276,7 @@ module initiativeAlgebraMbt::Impl {
     qRound' = normalizeAfterRemove(removeFromInitiative({ round: qRound, alreadyActed: qAlreadyActed, stillToAct: qStillToAct }, "c1")).round,
     qAlreadyActed' = normalizeAfterRemove(removeFromInitiative({ round: qRound, alreadyActed: qAlreadyActed, stillToAct: qStillToAct }, "c1")).alreadyActed,
     qStillToAct' = normalizeAfterRemove(removeFromInitiative({ round: qRound, alreadyActed: qAlreadyActed, stillToAct: qStillToAct }, "c1")).stillToAct,
-    qLastInsertStatus' = qLastInsertStatus,
-    qLastTie' = qLastTie,
+    qLastInsert' = qLastInsert,
   }
 
   action doRemoveC2 = all {
@@ -277,8 +284,7 @@ module initiativeAlgebraMbt::Impl {
     qRound' = normalizeAfterRemove(removeFromInitiative({ round: qRound, alreadyActed: qAlreadyActed, stillToAct: qStillToAct }, "c2")).round,
     qAlreadyActed' = normalizeAfterRemove(removeFromInitiative({ round: qRound, alreadyActed: qAlreadyActed, stillToAct: qStillToAct }, "c2")).alreadyActed,
     qStillToAct' = normalizeAfterRemove(removeFromInitiative({ round: qRound, alreadyActed: qAlreadyActed, stillToAct: qStillToAct }, "c2")).stillToAct,
-    qLastInsertStatus' = qLastInsertStatus,
-    qLastTie' = qLastTie,
+    qLastInsert' = qLastInsert,
   }
 
   action doInsertC3NoDecision = match insertWithInitiative(
@@ -292,24 +298,21 @@ module initiativeAlgebraMbt::Impl {
             qRound' = stack.round,
             qAlreadyActed' = stack.alreadyActed,
             qStillToAct' = stack.stillToAct,
-            qLastInsertStatus' = "ok",
-            qLastTie' = List(),
+            qLastInsert' = LastInsertOk,
           }
       | InsertWithInitiativeDecide(tie) =>
           all {
             qRound' = qRound,
             qAlreadyActed' = qAlreadyActed,
             qStillToAct' = qStillToAct,
-            qLastInsertStatus' = "decide",
-            qLastTie' = tie,
+            qLastInsert' = LastInsertDecision(tie),
           }
       | InsertWithInitiativeErrorDecisionSuppliedWithoutTie =>
           all {
             qRound' = qRound,
             qAlreadyActed' = qAlreadyActed,
             qStillToAct' = qStillToAct,
-            qLastInsertStatus' = "error",
-            qLastTie' = List(),
+            qLastInsert' = LastInsertErrorDecisionSuppliedWithoutTie,
           }
   }
 
@@ -324,24 +327,21 @@ module initiativeAlgebraMbt::Impl {
             qRound' = stack.round,
             qAlreadyActed' = stack.alreadyActed,
             qStillToAct' = stack.stillToAct,
-            qLastInsertStatus' = "ok",
-            qLastTie' = List(),
+            qLastInsert' = LastInsertOk,
           }
       | InsertWithInitiativeDecide(tie) =>
           all {
             qRound' = qRound,
             qAlreadyActed' = qAlreadyActed,
             qStillToAct' = qStillToAct,
-            qLastInsertStatus' = "decide",
-            qLastTie' = tie,
+            qLastInsert' = LastInsertDecision(tie),
           }
       | InsertWithInitiativeErrorDecisionSuppliedWithoutTie =>
           all {
             qRound' = qRound,
             qAlreadyActed' = qAlreadyActed,
             qStillToAct' = qStillToAct,
-            qLastInsertStatus' = "error",
-            qLastTie' = List(),
+            qLastInsert' = LastInsertErrorDecisionSuppliedWithoutTie,
           }
   }
 
@@ -356,24 +356,21 @@ module initiativeAlgebraMbt::Impl {
             qRound' = stack.round,
             qAlreadyActed' = stack.alreadyActed,
             qStillToAct' = stack.stillToAct,
-            qLastInsertStatus' = "ok",
-            qLastTie' = List(),
+            qLastInsert' = LastInsertOk,
           }
       | InsertWithInitiativeDecide(tie) =>
           all {
             qRound' = qRound,
             qAlreadyActed' = qAlreadyActed,
             qStillToAct' = qStillToAct,
-            qLastInsertStatus' = "decide",
-            qLastTie' = tie,
+            qLastInsert' = LastInsertDecision(tie),
           }
       | InsertWithInitiativeErrorDecisionSuppliedWithoutTie =>
           all {
             qRound' = qRound,
             qAlreadyActed' = qAlreadyActed,
             qStillToAct' = qStillToAct,
-            qLastInsertStatus' = "error",
-            qLastTie' = List(),
+            qLastInsert' = LastInsertErrorDecisionSuppliedWithoutTie,
           }
   }
 
@@ -388,24 +385,21 @@ module initiativeAlgebraMbt::Impl {
             qRound' = stack.round,
             qAlreadyActed' = stack.alreadyActed,
             qStillToAct' = stack.stillToAct,
-            qLastInsertStatus' = "ok",
-            qLastTie' = List(),
+            qLastInsert' = LastInsertOk,
           }
       | InsertWithInitiativeDecide(tie) =>
           all {
             qRound' = qRound,
             qAlreadyActed' = qAlreadyActed,
             qStillToAct' = qStillToAct,
-            qLastInsertStatus' = "decide",
-            qLastTie' = tie,
+            qLastInsert' = LastInsertDecision(tie),
           }
       | InsertWithInitiativeErrorDecisionSuppliedWithoutTie =>
           all {
             qRound' = qRound,
             qAlreadyActed' = qAlreadyActed,
             qStillToAct' = qStillToAct,
-            qLastInsertStatus' = "error",
-            qLastTie' = List(),
+            qLastInsert' = LastInsertErrorDecisionSuppliedWithoutTie,
           }
   }
 
@@ -421,7 +415,5 @@ module initiativeAlgebraMbt::Impl {
 
   val invariant =
     qStackInvariant(qRound, qAlreadyActed, qStillToAct)
-      and qKnownInsertStatus(qLastInsertStatus)
-      and qKnownTie(qLastTie)
-      and ((qLastInsertStatus == "decide") == (qLastTie.length() > 0))
+      and qLastInsertInvariant(qLastInsert)
 }

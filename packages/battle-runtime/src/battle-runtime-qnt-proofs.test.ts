@@ -26,9 +26,10 @@ test("QNT proof lane is opt-in -- run `pnpm test:qnt-proofs` to check SRD parity
   }
 });
 
-// Heavy SRD-parity proofs: one bounded, isolated `quint test` per module,
-// concurrency-capped by vitest's maxConcurrency. Skipped unless RUN_QNT_PROOFS=1
-// so a normal `pnpm test` never stumbles into the multi-minute corpus run.
+// Heavy SRD-parity proofs: one bounded, isolated `quint test` per module.
+// Concurrent module tests are capped by the package Vitest maxConcurrency
+// setting. Skipped unless RUN_QNT_PROOFS=1 so a normal `pnpm test` never
+// stumbles into the multi-minute corpus run.
 describe.skipIf(!runProofs)("QNT proofs (opt-in, bounded per module)", () => {
   test.concurrent.each(proofModules)(
     "%s",

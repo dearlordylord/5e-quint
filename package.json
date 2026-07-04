@@ -11,6 +11,7 @@
     "check:mbt-driver-closure": "node scripts/check-mbt-driver-closure.cjs",
     "check:qnt-inventory": "node scripts/check-qnt-inventory.cjs",
     "check:reducer-route-connectors": "node scripts/check-reducer-route-connectors.cjs",
+    "proof:qnt": "pnpm check:qnt-inventory && pnpm check:mbt-driver-closure && pnpm --filter @dnd/battle-runtime test:qnt-proofs && pnpm --filter @dnd/shared-algebras proof:quint && pnpm --filter @dnd/character-creation-runtime test:qnt-slice",
     "raw-coverage:check": "node scripts/raw-coverage-check.cjs",
     "raw-coverage:check:self-test": "node scripts/raw-coverage-check.cjs --self-test",
     "rules-kernel-coverage:check": "node scripts/rules-kernel-coverage-check.cjs",

@@ -11,6 +11,7 @@
   },
   "scripts": {
     "test": "vitest run",
+    "test:qnt-slice": "vitest run src/index.test.ts -t \"character creation QNT slice parity\"",
     "test:mbt:weapon-mastery-level-gain": "vitest run src/weapon-mastery-level-gain.mbt.test.ts",
     "typecheck": "tsc --noEmit"
   },
