@@ -301,13 +301,13 @@
     {
       "number": 30,
       "id": "L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Wire level-1-6 into the ultra-golden aggregate"
     },
     {
       "number": 31,
       "id": "L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Reconcile level-1-6 non-MCP ultra-golden layers"
     },
     {
@@ -480,8 +480,8 @@ Every Ralph task must run the task-base check before research or edits:
 |  27 | L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH - Refresh and verify level-6 full SRD accounting | done | L6FULL-SEED-01-RANGER-ROVING, L6FULL-SEED-02-ROGUE-EXPERTISE, L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES, L6FULL-ASI-01-FIGHTER-ASI-L6, L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE, L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES, L6FULL-OWN-03-CLERIC-BLESSED-HEALER, L6FULL-OWN-04-DRUID-NATURAL-RECOVERY, L6FULL-OWN-05-MONK-EMPOWERED-STRIKES, L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY, L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION, L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY, L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK, L6FULL-OWN-10-WIZARD-SCULPT-SPELLS | Final generated refresh after all L6 rows are supported or explicitly closed. |
 |  28 | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED - Verify the L6 full SRD queue is closed | done | L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH | L6 full closure is verified; ultra-golden L6 prerequisite is satisfied. |
 |  29 | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING - Add level-1-6 support report plumbing | done | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Adds checker-owned `level-1-6` report artifacts. |
-|  30 | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-6 into the ultra-golden aggregate | ready-for-research | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING | Extends aggregate scope without weakening older scopes. |
-|  31 | L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-6 non-MCP ultra-golden layers | blocked | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Support, QNT/generator, and parity layers before MCP closeout. |
+|  30 | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-6 into the ultra-golden aggregate | done | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING | Extends aggregate scope without weakening older scopes. |
+|  31 | L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-6 non-MCP ultra-golden layers | ready-for-research | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Support, QNT/generator, and parity layers before MCP closeout. |
 |  32 | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION - Choose the level-6 MCP vertical scenario | ready-for-research | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Chooses the smallest honest SRD-only L6 vertical. |
 |  33 | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO - Implement level-6 MCP creation and sheet scenario coverage | blocked | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION | Proves creation/advancement and durable sheet state. |
 |  34 | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF - Extend the level-6 MCP scenario through battle handoff | blocked | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO, L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Battle handoff only after non-MCP blockers are known. |
@@ -3204,13 +3204,9 @@ Verification:
 
 ### Task 30 - L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING`.
 
 Inputs:
 
@@ -3236,15 +3232,22 @@ Verification:
 - `pnpm unit-profile-coverage:check --write`
 - L6 shared verification.
 
+Plan Impact:
+
+- Applied. `level-1-6` is now a generated ultra-golden aggregate scope in
+  `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md` and
+  `plans/unit-profile-coverage/ultra-golden-gate.json`.
+- Existing `level-1` through `level-1-5` scope results still pass.
+- The generated `level-1-6` scope is blocked only by MCP scenario evidence;
+  its support-completeness, QNT/generator-readiness, and MBT/parity-evidence
+  layers pass.
+- Task 31 is unblocked for research.
+
 ### Task 31 - L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE`.
 
 Inputs:
 

@@ -17,6 +17,7 @@ const ultraGoldenScopeFields = Object.freeze([
   { scopeId: "level-1-3", reportField: "level13FullSupport" },
   { scopeId: "level-1-4", reportField: "level14FullSupport" },
   { scopeId: "level-1-5", reportField: "level15FullSupport" },
+  { scopeId: "level-1-6", reportField: "level16FullSupport" },
 ]);
 const ultraGoldenScopeIds = Object.freeze(
   ultraGoldenScopeFields.map((scope) => scope.scopeId),
@@ -1063,6 +1064,7 @@ function buildSelectedIdentityEvidenceAudit({
   level13FullSupport,
   level14FullSupport,
   level15FullSupport,
+  level16FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityMbtEvidenceTag,
@@ -1075,6 +1077,7 @@ function buildSelectedIdentityEvidenceAudit({
     level13FullSupport,
     level14FullSupport,
     level15FullSupport,
+    level16FullSupport,
   };
   return stable({
     criteria: {
@@ -1133,6 +1136,7 @@ function buildUltraGoldenGate({
   level13FullSupport,
   level14FullSupport,
   level15FullSupport,
+  level16FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityMbtEvidenceTag,
@@ -1144,6 +1148,7 @@ function buildUltraGoldenGate({
     level13FullSupport,
     level14FullSupport,
     level15FullSupport,
+    level16FullSupport,
   };
   const scopes = ultraGoldenScopeFields.map(({ reportField, scopeId }) =>
     buildScopeGate({
@@ -1160,6 +1165,7 @@ function buildUltraGoldenGate({
     level13FullSupport,
     level14FullSupport,
     level15FullSupport,
+    level16FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix,
     selectedIdentityMbtEvidenceTag,
@@ -1177,6 +1183,8 @@ function buildUltraGoldenGate({
         "plans/unit-profile-coverage/level1-4-full-support.json",
       level15FullSupport:
         "plans/unit-profile-coverage/level1-5-full-support.json",
+      level16FullSupport:
+        "plans/unit-profile-coverage/level1-6-full-support.json",
       mcpScenarioEvidence: mcpScenarioEvidenceSourcePath,
       rulesKernelMatrix: "plans/rules-kernel-coverage/matrix.json",
       unitMatrix: "plans/unit-profile-coverage/unit-matrix.json",

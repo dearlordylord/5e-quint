@@ -261,6 +261,7 @@ function main() {
     level13FullSupport,
     level14FullSupport,
     level15FullSupport,
+    level16FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
     selectedIdentityMbtEvidenceTag,
